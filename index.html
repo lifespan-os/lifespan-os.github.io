@@ -254,6 +254,9 @@ footer .links { display: flex; gap: 18px; }
 .coach .lines span:nth-child(2) { color: var(--orange); }
 .coach .lines span:nth-child(3) { color: var(--ink-fg); }
 @media (max-width: 760px) { .coach { margin-top: 80px; } .coach .wrap { padding-block: 80px; } }
+.dl-sub { color: var(--ink-muted); font-size: .86rem; margin-top: -8px; }
+.btn-ghost-dark { color: var(--ink-fg); border-color: var(--ink-line); background: rgba(255,255,255,.04); font-size: .92rem; padding: 10px 20px; }
+.btn-ghost-dark:hover { border-color: var(--ink-muted); transform: translateY(-1px); }
 footer .wrap { padding-block: 28px 40px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; color: var(--muted); font-size: .8rem; }
 footer .wrap span:last-child { max-width: 62ch; }
 
@@ -548,6 +551,11 @@ footer .wrap span:last-child { max-width: 62ch; }
       <a class="btn btn-orange reveal" href="https://github.com/lifespan-os/lifespan-os.github.io/releases/latest/download/LIFESPAN-OS.zip" id="dl-btn" style="margin-top:10px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6 11l6 6 6-6M4 21h16"/></svg>
         Installations-ZIP herunterladen
+      </a>
+      <p class="dl-sub reveal">Komplettpaket mit App, Maschinendatenbank und Lebensmittel- und Supplement-Katalog</p>
+      <a class="btn btn-ghost-dark reveal" href="https://github.com/lifespan-os/lifespan-os.github.io/releases/latest/download/LIFESPAN-OS-Setup.exe" id="dl-exe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6 11l6 6 6-6M4 21h16"/></svg>
+        Nur die App (Setup.exe, ca. 29 MB)
       </a>
     </div>
   </section>

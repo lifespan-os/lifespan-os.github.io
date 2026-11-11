@@ -128,7 +128,7 @@ nav.main a:hover { color: var(--fg); }
 @media (max-width: 720px) { .panel-body { grid-template-columns: 1fr; } .panel-main { border-right: 0; border-bottom: 1px solid var(--line); } .panel-side { grid-template-columns: 1fr 1fr; } }
 
 /* Zahlen */
-.stats .wrap { padding-block: 24px 96px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.stats .wrap { padding-block: 24px 96px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px 20px; }
 .stat { display: grid; gap: 4px; padding-top: 16px; border-top: 1px solid var(--line); }
 .stat b { font-family: var(--f-display); font-weight: 800; font-size: clamp(2.2rem, 4.6vw, 3.4rem); letter-spacing: -0.045em; line-height: 1; font-variant-numeric: tabular-nums; }
 .stat span { color: var(--muted); font-size: .95rem; }
@@ -337,10 +337,12 @@ footer .wrap span:last-child { max-width: 62ch; }
 
   <section class="stats" aria-label="LIFESPAN OS in Zahlen">
     <div class="wrap">
-      <div class="stat reveal"><b data-count="1400" data-plus>1.400+</b><span>Maschinen in der Datenbank</span></div>
+      <div class="stat reveal"><b data-count="1588">1.588</b><span>Maschinen in der Datenbank</span></div>
+      <div class="stat reveal"><b data-count="9300" data-plus>9.300+</b><span>Lebensmittel</span></div>
+      <div class="stat reveal"><b data-count="3709">3.709</b><span>Supplements</span></div>
+      <div class="stat reveal"><b data-count="724">724</b><span>Nährstoffe</span></div>
       <div class="stat reveal"><b data-count="1600" data-plus>1.600+</b><span>Antworten im iCoach.me-Bereich</span></div>
       <div class="stat reveal"><b class="grad-text">100 %</b><span>lokal auf deinem PC</span></div>
-      <div class="stat reveal"><b>0</b><span>Konten, Abos oder Cloud</span></div>
     </div>
   </section>
 
@@ -377,7 +379,7 @@ footer .wrap span:last-child { max-width: 62ch; }
       <p class="lead reveal">Eine Maschinendatenbank nach Hersteller, mit Bildern, Muskelzuordnung und Biomechanik. Du siehst, was eine Maschine wirklich trainiert.</p>
       <div class="tiles">
         <div class="tile ink s2 reveal">
-          <span class="num bignum"><span class="grad-text" data-count="1400" data-plus>1.400+</span></span>
+          <span class="num bignum"><span class="grad-text" data-count="1588">1.588</span></span>
           <h3>Maschinen hinzugefügt</h3>
           <p>Mit Bildern und Muskelzuordnung. Jede Maschine bekommt deine eigene Nummer, passend zu deinem Studio.</p>
         </div>
@@ -416,7 +418,7 @@ footer .wrap span:last-child { max-width: 62ch; }
     <div class="wrap">
       <p class="eyebrow reveal">Ernährung, Schlaf &amp; Recovery</p>
       <h2 class="reveal">Alles, was du isst.<br><span class="grad-text">Und was du nimmst.</span></h2>
-      <p class="lead reveal">Die offizielle deutsche Nährwertdatenbank, dazu Lebensmittel und Supplements bekannter Marken. Schlaf und Erholung laufen im selben System mit.</p>
+      <p class="lead reveal">Über 9.300 Lebensmittel, 3.709 Supplements und 724 Nährstoffe. Mit der offiziellen deutschen Nährwertdatenbank und Produkten bekannter Marken. Schlaf und Erholung laufen im selben System mit.</p>
     </div>
     <div class="marquee reveal" aria-label="Enthaltene Marken: VAST, More Nutrition, GymBeam, Peak, ESN, Vitaminversand24 und viele weitere">
       <div class="marquee-track">
@@ -441,7 +443,7 @@ footer .wrap span:last-child { max-width: 62ch; }
           <h3>Bundeslebensmittelschlüssel</h3>
           <p>BLS 4.0, die deutsche Referenzdatenbank für Nährwerte, komplett lokal in der App.</p>
           <h3 style="margin-top:10px">Supplements</h3>
-          <p>Eigene Supplement-Datenbank mit Markenprodukten.</p>
+          <p>3.709 Supplements, darunter viele Markenprodukte.</p>
           <h3 style="margin-top:10px">Schlaf &amp; Recovery</h3>
           <p>Erholung dokumentieren und neben Training und Ernährung auswerten.</p>
         </div>
@@ -532,7 +534,7 @@ footer .wrap span:last-child { max-width: 62ch; }
       <h2 class="reveal">In drei Schritten startklar.</h2>
       <div class="steps">
         <div class="step reveal"><span class="n">1</span><h3>ZIP herunterladen</h3><p>Lade das Installationspaket für Windows herunter.</p></div>
-        <div class="step reveal"><span class="n">2</span><h3>Entpacken &amp; installieren</h3><p>ZIP entpacken und den Installer starten. Ein Konto brauchst du nicht.</p></div>
+        <div class="step reveal"><span class="n">2</span><h3>Entpacken &amp; installieren</h3><p>ZIP entpacken und Einrichten.cmd starten: installiert die App und legt Maschinen, Lebensmittel und Supplemente bereit. Ein Konto brauchst du nicht.</p></div>
         <div class="step reveal"><span class="n">3</span><h3>Loslegen</h3><p>App öffnen und Training, Ernährung und Schlaf erfassen. Alles bleibt auf deinem Rechner.</p></div>
       </div>
     </div>
@@ -542,8 +544,8 @@ footer .wrap span:last-child { max-width: 62ch; }
     <div class="wrap">
       <h2 class="reveal">Hol dir<br><span class="grad-text">LIFESPAN OS.</span></h2>
       <p class="lead reveal">Für Windows-PCs. Deine Daten bleiben bei dir.</p>
-      <div class="spec reveal"><span>System <b>Windows</b></span><span>Sprache <b>Deutsch</b></span><span>Einheiten <b>metrisch</b></span><span>Internet <b>nicht nötig</b></span></div>
-      <a class="btn btn-orange reveal" href="#download" id="dl-btn" style="margin-top:10px">
+      <div class="spec reveal"><span>System <b>Windows</b></span><span>Sprache <b>Deutsch</b></span><span>Einheiten <b>metrisch</b></span><span>Internet <b>nicht nötig</b></span><span>Download <b>ca. 800 MB</b></span></div>
+      <a class="btn btn-orange reveal" href="https://github.com/lifespan-os/lifespan-os.github.io/releases/latest/download/LIFESPAN-OS.zip" id="dl-btn" style="margin-top:10px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6 11l6 6 6-6M4 21h16"/></svg>
         Installations-ZIP herunterladen
       </a>
@@ -555,7 +557,7 @@ footer .wrap span:last-child { max-width: 62ch; }
       <h2>Impressum</h2>
       <dl>
         <dt>Medieninhaber &amp; verantwortlich</dt><dd>Philipp Schmidt</dd>
-        <dt>Anschrift</dt><dd>Meiereistraße 14, Top 330<br>1020 Wien, Österreich</dd>
+        <dt>Anschrift</dt><dd>Meiereistraße 14<br>1020 Wien, Österreich</dd>
         <dt>E-Mail</dt><dd><span class="mail" id="mail">lifespan@phinance.family</span> <button type="button" class="copy" id="copy-mail">Kopieren</button></dd>
         <dt>Projekt</dt><dd>LIFESPAN OS, ein Projekt von iCoach.Me</dd>
         <dt>Hinweis</dt><dd>Die Inhalte und Berechnungen in LIFESPAN OS dienen der Information und Dokumentation und ersetzen keine medizinische Beratung.</dd>
@@ -568,7 +570,7 @@ footer .wrap span:last-child { max-width: 62ch; }
       <div><h2>Datenschutz&shy;erklärung</h2><p class="stand">Stand: November 2026</p></div>
       <div class="legal">
         <h3>1. Verantwortlicher</h3>
-        <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist Philipp Schmidt, Meiereistraße 14, Top 330, 1020 Wien, Österreich. E-Mail: lifespan@phinance.family</p>
+        <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist Philipp Schmidt, Meiereistraße 14, 1020 Wien, Österreich. E-Mail: lifespan@phinance.family</p>
 
         <h3>2. Die App LIFESPAN OS</h3>
         <p>LIFESPAN OS läuft ausschließlich lokal auf deinem Computer. Alle Daten, die du in der App erfasst, etwa Trainings-, Ernährungs-, Schlaf- und Gesundheitsdaten, werden nur auf deinem Gerät gespeichert. Wir erhalten diese Daten nicht, es gibt kein Benutzerkonto, keine Cloud-Synchronisierung und keine Übermittlung an uns oder Dritte. Exportdateien erstellst du selbst und entscheidest selbst, wohin du sie überträgst.</p>

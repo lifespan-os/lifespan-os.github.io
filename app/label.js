@@ -78,7 +78,7 @@ function gramsIn(row) {
     if (!mg && toNumber(text) > 100 && /\d9$/.test(text)) text = text.slice(0, -1);
     return { value: toNumber(text) / (mg ? 1000 : 1), lessThan: Boolean(m[1]) };
   }
-  const n = new RegExp(String.raw`(<|unter|weniger als)?\s*(?<![\d,])${NUM}(?![\d,]|\s*(%|kj|kcal|ml|l)\b)`, "i").exec(row);
+  const n = new RegExp(String.raw`(<|unter|weniger als)?\s*(?<![\d,A-Za-zÄÖÜäöüß])${NUM}(?![\d,]|\s*(%|kj|kcal|ml|l)\b)`, "i").exec(row);
   if (!n) return null;
   let text = n[2];
   if (/,\d*9$/.test(text) || (toNumber(text) > 100 && /\d9$/.test(text))) text = text.slice(0, -1);

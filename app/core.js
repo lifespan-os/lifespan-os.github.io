@@ -4,7 +4,7 @@
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.1.3";
+export const MOBILE_VERSION = "1.1.4";
 
 // ------------------------------------------------------------------ IDs und Zeit
 

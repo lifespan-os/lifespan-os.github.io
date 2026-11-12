@@ -196,7 +196,7 @@ function lastText(last, cardio) {
     .map((s) =>
       cardio
         ? [s.durationSeconds ? `${Math.round(s.durationSeconds / 60)} min` : "", s.distanceM ? `${C.fmtNum(s.distanceM / 1000)} km` : ""].filter(Boolean).join(" ")
-        : `${s.reps ?? "–"}×${s.weightKg !== null ? C.fmtNum(s.weightKg) : "–"}`,
+        : `${s.reps ?? "–"}×${s.weightKg !== null ? C.fmtNum(s.weightKg) : "–"}${C.usedProfiles(s.rp).length ? ` (${C.describeProfiles(s.rp)})` : ""}`,
     );
   return `<p class="last">Letztes Mal (${fmtDate(last.date)}): <b>${esc(parts.join(" · ") || "–")}</b>${cardio ? "" : " kg"}</p>`;
 }
@@ -245,9 +245,10 @@ function exerciseCard(we, i, exs, machines) {
           <input id="rest-${we.id}" type="text" inputmode="numeric" value="${we.restSeconds ?? ""}" data-we="${we.id}" data-field="restSeconds"></div>
       </div>
     </details>
+    ${cardio ? "" : profilePicker(we, ex)}
     <div class="set-head${cardio ? " cardio" : ""}"><span>#</span>${cardio ? "<span>Minuten</span><span>km</span>" : "<span>kg</span><span>Wdh.</span><span>RPE</span>"}<span>✓</span></div>
     <div class="sets">
-      ${we.sets.map((s, si) => setRow(we, s, si, cardio)).join("")}
+      ${we.sets.map((s, si) => setRow(we, s, si, cardio, cardio ? [] : C.visibleProfiles(we, ex))).join("")}
     </div>
     <div class="ex-foot">
       <button class="btn sm" data-act="add-set" data-we="${we.id}">+ Satz</button>
@@ -257,19 +258,42 @@ function exerciseCard(we, i, exs, machines) {
   </section>`;
 }
 
-function setRow(we, s, si, cardio) {
+function profilePicker(we, ex) {
+  const vis = C.visibleProfiles(we, ex);
+  const locked = new Set(C.PROFILE_KEYS.filter((k) => we.sets.some((s) => s.rp?.[k] !== null && s.rp?.[k] !== undefined)));
+  const both = vis.includes("conc") && vis.includes("ecc");
+  return `<details class="settings resist"${vis.length ? " open" : ""}>
+    <summary>Widerstand${vis.length ? `: ${esc(vis.map((k) => C.PROFILES.find((p) => p.key === k).short).join(", "))}` : ""}</summary>
+    <div class="chips">${C.PROFILES.map(
+      (p) => `<button class="chip${vis.includes(p.key) ? " on" : ""}" data-act="toggle-profile" data-we="${we.id}" data-arg="${p.key}" ${locked.has(p.key) ? 'data-locked="1"' : ""} title="${esc(p.label)}">${esc(p.short)}</button>`,
+    ).join("")}</div>
+    <p class="muted small">${vis.length ? "Sobald Profilgewichte eingetragen sind, ist das Gewicht ihre Summe." : "Profil wählen, um das Gewicht in Profile aufzuteilen."}${both ? " " + esc(C.CONC_ECC_RULE) : ""}</p>
+  </details>`;
+}
+
+function setRow(we, s, si, cardio, profiles = []) {
   const id = `${we.id}-${s.id}`;
   const warmIdx = we.sets.slice(0, si + 1).filter((x) => !x.isWarmup).length;
   const idx = s.isWarmup ? `<span class="idx w">W</span>` : `<span class="idx">${warmIdx}</span>`;
   const inputs = cardio
     ? `<input id="d-${id}" type="text" inputmode="decimal" placeholder="min" value="${s.durationSeconds ? C.fmtNum(s.durationSeconds / 60) : ""}" data-we="${we.id}" data-set="${s.id}" data-f="durationMin" aria-label="Dauer in Minuten">
        <input id="k-${id}" type="text" inputmode="decimal" placeholder="km" value="${s.distanceM !== null ? C.fmtNum(s.distanceM / 1000, 3) : ""}" data-we="${we.id}" data-set="${s.id}" data-f="distanceKm" aria-label="Strecke in km">`
-    : `<input id="w-${id}" type="text" inputmode="decimal" placeholder="kg" value="${C.fmtNum(s.weightKg)}" data-we="${we.id}" data-set="${s.id}" data-f="weightKg" aria-label="Gewicht in kg">
+    : `<input id="w-${id}" type="text" inputmode="decimal" placeholder="kg" value="${C.fmtNum(C.profileTotal(s.rp) ?? s.weightKg)}" data-we="${we.id}" data-set="${s.id}" data-f="weightKg" aria-label="Gewicht in kg"${C.profileTotal(s.rp) !== null ? ' readonly class="sum" title="Summe der Profilgewichte"' : ""}>
        <input id="r-${id}" type="text" inputmode="numeric" placeholder="Wdh." value="${s.reps ?? ""}" data-we="${we.id}" data-set="${s.id}" data-f="reps" aria-label="Wiederholungen">
        <input id="p-${id}" class="rpe" type="text" inputmode="decimal" placeholder="–" value="${C.fmtNum(s.rpe, 1)}" data-we="${we.id}" data-set="${s.id}" data-f="rpe" aria-label="RPE">`;
   return `<div class="set${cardio ? " cardio" : ""}${s.isDone ? " done" : ""}">${idx}${inputs}
       <button class="check${s.isDone ? " on" : ""}" data-act="toggle-done" data-we="${we.id}" data-set="${s.id}" aria-label="Satz abhaken" aria-pressed="${s.isDone}">✓</button>
     </div>
+    ${
+      profiles.length
+        ? `<div class="rp-grid">${profiles
+            .map((k) => {
+              const p = C.PROFILES.find((x) => x.key === k);
+              return `<label class="rp"><span>${esc(p.short)}</span><input id="rp-${id}-${k}" type="text" inputmode="decimal" placeholder="kg" value="${C.fmtNum(s.rp?.[k])}" data-we="${we.id}" data-set="${s.id}" data-f="rp:${k}" aria-label="${esc(p.label)} in kg"></label>`;
+            })
+            .join("")}</div>`
+        : ""
+    }
     <div class="set-opts">
       <button class="chip${s.isWarmup ? " on" : ""}" data-act="flag" data-flag="isWarmup" data-we="${we.id}" data-set="${s.id}">Aufwärmen</button>
       ${cardio ? "" : `<button class="chip${s.isFailure ? " on" : ""}" data-act="flag" data-flag="isFailure" data-we="${we.id}" data-set="${s.id}">Fail</button>
@@ -509,6 +533,16 @@ const actions = {
     saveSoon();
     rerenderKeepScroll();
   },
+  "toggle-profile": (el) => {
+    const we = findWe(el.dataset.we);
+    const ex = exById().get(we.exerciseId);
+    const vis = C.visibleProfiles(we, ex);
+    const k = el.dataset.arg;
+    if (vis.includes(k) && el.dataset.locked) return toast("Erst die Werte in dieser Spalte löschen.", true);
+    we.profiles = vis.includes(k) ? vis.filter((x) => x !== k) : C.PROFILE_KEYS.filter((x) => x === k || vis.includes(x));
+    saveSoon();
+    rerenderKeepScroll();
+  },
   "add-set": (el) => {
     const we = findWe(el.dataset.we);
     const prev = we.sets[we.sets.length - 1] || null;
@@ -665,6 +699,20 @@ app.addEventListener("input", (ev) => {
     el.setAttribute("aria-invalid", ok ? "false" : "true");
     el.style.borderColor = ok ? "" : "var(--danger)";
     const f = el.dataset.f;
+    if (f.startsWith("rp:")) {
+      if (!s.rp) s.rp = C.emptyProfiles();
+      s.rp[f.slice(3)] = v;
+      const total = C.profileTotal(s.rp);
+      if (total !== null) s.weightKg = total;
+      const kg = document.getElementById(`w-${el.dataset.we}-${el.dataset.set}`);
+      if (kg) {
+        kg.value = C.fmtNum(s.weightKg);
+        kg.readOnly = total !== null;
+        kg.classList.toggle("sum", total !== null);
+      }
+      saveSoon();
+      return;
+    }
     if (f === "reps") s.reps = v === null ? null : Number.isNaN(v) ? NaN : Math.round(v);
     else if (f === "weightKg") s.weightKg = v;
     else if (f === "rpe") s.rpe = v;

@@ -4,7 +4,7 @@
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.0.0";
+export const MOBILE_VERSION = "1.1.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -81,6 +81,70 @@ export const SETTING_LABELS = {
 };
 
 export const GRIP_LABELS = { supinated: "Untergriff", neutral: "Neutral", pronated: "Obergriff" };
+
+// Widerstandsprofil wie in der Desktop-App (src/domain/resistance.ts), feste Reihenfolge Feld 1–9
+export const PROFILES = [
+  { key: "mid", col: "rp_mid_kg", label: "Middle Range", short: "Middle" },
+  { key: "end", col: "rp_end_kg", label: "End Range (Kontraktion)", short: "End" },
+  { key: "begin", col: "rp_begin_kg", label: "Beginning Range (Dehnung)", short: "Beginning" },
+  { key: "mid_end", col: "rp_mid_end_kg", label: "Middle + End Range", short: "Middle + End" },
+  { key: "mid_begin", col: "rp_mid_begin_kg", label: "Middle + Beginning Range", short: "Middle + Beginning" },
+  { key: "isokin", col: "rp_isokinetic_kg", label: "Isokinetisch", short: "Isokinetisch" },
+  { key: "ecc", col: "rp_eccentric_kg", label: "Exzentrisch", short: "Exzentrisch" },
+  { key: "conc", col: "rp_concentric_kg", label: "Konzentrisch", short: "Konzentrisch" },
+  { key: "isom", col: "rp_isometric_kg", label: "Isometrisch", short: "Isometrisch" },
+];
+export const PROFILE_KEYS = PROFILES.map((p) => p.key);
+export const CONC_ECC_RULE =
+  "Sind Konzentrisch und Exzentrisch beide eingetragen, zählt für das Gewicht nur der konzentrische Wert.";
+
+export function emptyProfiles() {
+  return Object.fromEntries(PROFILE_KEYS.map((k) => [k, null]));
+}
+
+function profilesFromRow(row) {
+  const rp = emptyProfiles();
+  if (!row) return rp;
+  for (const p of PROFILES) rp[p.key] = row[p.col] ?? null;
+  return rp;
+}
+
+const filled = (v) => v !== null && v !== undefined && !Number.isNaN(v);
+
+/** Eingetragene Profile (feste Reihenfolge). */
+export function usedProfiles(rp) {
+  return PROFILE_KEYS.filter((k) => filled(rp?.[k]));
+}
+
+/**
+ * Gesamtgewicht aus den Profilgewichten (null, wenn keins eingetragen ist), auf 2 Nachkommastellen.
+ * Alle Profile werden addiert; sind Konzentrisch und Exzentrisch beide eingetragen, zählt nur Konzentrisch.
+ */
+export function profileTotal(rp) {
+  const entered = usedProfiles(rp);
+  if (!entered.length) return null;
+  const counted = entered.includes("conc") && entered.includes("ecc") ? entered.filter((k) => k !== "ecc") : entered;
+  return Math.round(counted.reduce((a, k) => a + rp[k], 0) * 100) / 100;
+}
+
+/** Standardprofile einer Übung aus exercise.resistance_profiles („mid,end“). */
+export function defaultProfiles(exercise) {
+  const keys = String(exercise?.resistance_profiles ?? "").split(",").map((k) => k.trim());
+  return PROFILE_KEYS.filter((k) => keys.includes(k));
+}
+
+/** Sichtbare Profilspalten: gewählte (sonst Standard der Übung) plus alle mit Werten. */
+export function visibleProfiles(we, exercise) {
+  const base = we.profiles ?? defaultProfiles(exercise);
+  return PROFILE_KEYS.filter((k) => base.includes(k) || we.sets.some((s) => filled(s.rp?.[k])));
+}
+
+/** Kurztext wie „Middle 40 + End 20“. */
+export function describeProfiles(rp) {
+  return usedProfiles(rp)
+    .map((k) => `${PROFILES.find((p) => p.key === k).short} ${fmtNum(rp[k])}`)
+    .join(" + ");
+}
 
 export function emptySettings() {
   return Object.fromEntries(SETTING_KEYS.map(([, k]) => [k, null]));
@@ -161,6 +225,7 @@ export function parseExport(text) {
               targetRepsMax: e.target_reps_max ?? null,
               targetRepsMin: e.target_reps_min ?? null,
               targetWeightKg: e.target_weight_kg ?? null,
+              rp: profilesFromRow(e),
               sets: psetRows
                 .filter((s) => s.plan_exercise_id === e.id)
                 .sort(byPosition)
@@ -172,6 +237,7 @@ export function parseExport(text) {
                   rpe: s.rpe ?? null,
                   isWarmup: !!s.is_warmup,
                   isUnilateral: !!s.is_unilateral,
+                  rp: profilesFromRow(s),
                 })),
             })),
         })),
@@ -224,6 +290,7 @@ export function lastSessionsFromRows(workouts, wexRows, wsetRows) {
         isWarmup: !!s.is_warmup,
         isUnilateral: !!s.is_unilateral,
         isFailure: !!s.is_failure,
+        rp: profilesFromRow(s),
       })),
     };
   }
@@ -352,6 +419,7 @@ export function newSet(from = null) {
     isDone: false,
     isFailure: false,
     notes: null,
+    rp: { ...emptyProfiles(), ...(from?.rp ?? {}) },
   };
 }
 
@@ -382,7 +450,7 @@ export function workoutExercise({ exerciseId, planExercise = null, last = null }
   if (planExercise?.sets?.length) sets = planExercise.sets.map((s) => newSet(s));
   else if (planExercise?.targetSets) {
     for (let i = 0; i < planExercise.targetSets; i++) {
-      sets.push(newSet({ reps: planExercise.targetRepsMax ?? planExercise.targetRepsMin, weightKg: planExercise.targetWeightKg }));
+      sets.push(newSet({ reps: planExercise.targetRepsMax ?? planExercise.targetRepsMin, weightKg: planExercise.targetWeightKg, rp: planExercise.rp }));
     }
   } else if (last?.sets?.length) {
     sets = last.sets.map((s) => newSet(s));
@@ -394,6 +462,7 @@ export function workoutExercise({ exerciseId, planExercise = null, last = null }
     notes: null,
     settings: { ...emptySettings(), ...(fromPlan ? planExercise.settings : last?.settings ?? {}) },
     restSeconds: planExercise?.restSeconds ?? last?.restSeconds ?? 90,
+    profiles: null, // null = Standardprofile der Übung
     sets,
   };
 }
@@ -422,6 +491,7 @@ export function checkWorkout(w, { keepUnticked = false } = {}) {
         [s.rpe, 1, 10, "RPE"],
         [s.durationSeconds, 1, 86400, "Dauer"],
         [s.distanceM, 0, 1000000, "Strecke"],
+        ...PROFILES.map((p) => [s.rp?.[p.key] ?? null, 0, 1000, p.short]),
       ]) {
         if (v === null || v === undefined) continue;
         if (Number.isNaN(v) || v < lo || v > hi) errors.push(`${label}: Wert ${fmtNum(v)} ist ungültig.`);
@@ -560,12 +630,14 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
         grip_position: st.gripPosition || null,
       });
       we.sets.forEach((s, si) => {
+        const total = profileTotal(s.rp);
+        const rpCols = Object.fromEntries(PROFILES.map((p) => [p.col, filled(s.rp?.[p.key]) ? s.rp[p.key] : null]));
         out.workout_set.push({
           id: s.id,
           workout_exercise_id: we.id,
           position: si,
           reps: nn(s.reps),
-          weight_kg: nn(s.weightKg),
+          weight_kg: total !== null ? total : nn(s.weightKg),
           duration_seconds: nn(s.durationSeconds),
           distance_m: nn(s.distanceM),
           rpe: nn(s.rpe),
@@ -576,6 +648,7 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
           is_unilateral: s.isUnilateral ? 1 : 0,
           is_done: s.isDone ? 1 : 0,
           is_failure: s.isFailure ? 1 : 0,
+          ...rpCols,
         });
       });
     });

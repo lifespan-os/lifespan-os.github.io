@@ -259,7 +259,11 @@ export function viewFoodReview() {
   const days = N.unsentDays(X.S.catalog, local);
   const foods = Object.values(local.foods).filter((f) => !f.sent);
   const recipes = Object.values(local.recipes).filter((r) => !r.sent);
-  const codes = Object.entries(local.barcodes).filter(([, b]) => !b.sent);
+  const allCodes = Object.entries(local.barcodes).filter(([, b]) => !b.sent);
+  // Strichcodes neuer Lebensmittel stehen beim Lebensmittel, nur die übrigen (z. B. für ein Lebensmittel vom PC) einzeln
+  const newIds = new Set(foods.map((f) => f.row.id));
+  const codesOf = (id) => allCodes.filter(([, b]) => b.foodId === id).map(([c]) => c);
+  const codes = allCodes.filter(([, b]) => !newIds.has(b.foodId));
   const all = N.allFoods(X.S.catalog, local);
   const empty = !days.length && !foods.length && !recipes.length && !codes.length;
   const itemRow = (m, it) => `<div class="rv-item">
@@ -294,7 +298,9 @@ export function viewFoodReview() {
         ? `<section class="card"><h3>Neue oder geänderte Lebensmittel</h3>
           ${foods
             .map(
-              (f) => `<div class="meal-item"><span><b>${esc(N.foodLabel(f.row))}</b> <span class="muted small">${Math.round(f.row.energy_kcal)} kcal · E ${num(f.row.protein_g)} g je 100 ${f.row.basis_unit}</span></span>
+              (f) => `<div class="meal-item"><span><b>${esc(N.foodLabel(f.row))}</b> <span class="muted small">${Math.round(f.row.energy_kcal)} kcal · E ${num(f.row.protein_g)} g je 100 ${f.row.basis_unit}${
+                codesOf(f.row.id).length ? ` · Strichcode ${codesOf(f.row.id).map(esc).join(", ")}` : ""
+              }</span></span>
               <span class="row"><button class="btn sm" data-act="rv-food-edit" data-arg="${esc(f.row.id)}">Bearbeiten</button>
               <button class="btn sm ghost" data-act="rv-food-discard" data-arg="${esc(f.row.id)}" aria-label="Lebensmittel verwerfen">✕</button></span></div>`,
             )
@@ -316,7 +322,7 @@ export function viewFoodReview() {
     }
     ${
       codes.length
-        ? `<section class="card"><h3>Neue Strichcodes</h3>
+        ? `<section class="card"><h3>Neue Strichcodes für Lebensmittel vom PC</h3>
           ${codes
             .map(
               ([code, b]) => `<div class="meal-item"><span>${esc(code)} → <b>${esc(all.get(b.foodId)?.name ?? "?")}</b></span>

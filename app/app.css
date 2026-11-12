@@ -158,3 +158,4 @@ details.settings summary { color: var(--blue); font-size: .9rem; padding: 6px 0;
 .rp span { font-size: .7rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rp input { min-height: 44px; text-align: center; font-size: 1.02rem; font-weight: 650; padding: 4px; }
 .set input.sum { background: var(--surface-2); color: var(--orange); border-style: dashed; }
+.new-ex { display: grid; gap: 10px; margin-top: 10px; }

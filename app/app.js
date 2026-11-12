@@ -325,8 +325,10 @@ function pickerResults() {
         const nr = m.own_number || m.gym_number;
         return `<button class="item" data-act="pick-machine" data-arg="${esc(m.id)}">
           <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>
-          <span class="main"><b>${esc(m.display_name)}</b><span class="muted small">${esc([m.manufacturer, m.series, C.machineMuscles(m).slice(0, 3).join(", ")].filter(Boolean).join(" · "))}</span></span>
-          <span class="chev">+</span></button>`;
+          <span class="main"><b>${esc(m.display_name)}</b><span class="muted small">${esc([m.manufacturer, m.series, C.machineMuscles(m).slice(0, 3).join(", ")].filter(Boolean).join(" · "))}</span>${
+            h.exercises.length ? `<span class="small">Übungen: ${esc(h.exercises.map((e) => e.name).join(" · "))}</span>` : ""
+          }</span>
+          <span class="chev">${h.exercises.length ? "›" : "+"}</span></button>`;
       }
       const e = h.exercise;
       return `<button class="item" data-act="pick-exercise" data-arg="${esc(e.id)}">
@@ -335,6 +337,30 @@ function pickerResults() {
         <span class="chev">+</span></button>`;
     })
     .join("");
+}
+
+/** Maschine mit Übungen: eine davon wählen oder eine weitere anlegen. */
+function viewMachine() {
+  const m = S.catalog.machines.find((x) => x.id === S.arg);
+  if (!m) return viewPicker();
+  const nr = m.own_number || m.gym_number;
+  const list = C.machineExercises(S.catalog, S.localExercises, m.id);
+  return `${header(m.display_name, { back: "picker", sub: [nr ? `Nr. ${nr}` : "", m.manufacturer].filter(Boolean).join(" · ") })}<main class="wrap">
+    <p class="muted small">Übungen an dieser Maschine – der Verlauf gehört jeweils zur Übung.</p>
+    <div class="list">${list
+      .map(
+        (e) => `<button class="item" data-act="pick-exercise" data-arg="${esc(e.id)}">
+        <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>
+        <span class="main"><b>${esc(e.name)}</b><span class="muted small">${esc(e.muscle_group ?? "")}</span></span>
+        <span class="chev">+</span></button>`,
+      )
+      .join("")}</div>
+    <section class="card"><h3>Weitere Übung an dieser Maschine</h3>
+      <p class="small muted">Zum Beispiel „Butterfly“ und „Rear Delt“ an derselben Maschine. Die Übung wird gespeichert, steht hier beim nächsten Mal zur Auswahl und kommt mit „An den PC senden“ auch in die Desktop-App.</p>
+      <div class="new-ex"><input id="new-ex-name" type="text" placeholder="Name der Übung, z. B. Butterfly" autocomplete="off" enterkeyhint="done" maxlength="80">
+      <button class="btn primary" data-act="new-machine-ex" data-arg="${esc(m.id)}">Übung anlegen und hinzufügen</button></div>
+    </section>
+  </main>`;
 }
 
 function viewFinish() {
@@ -444,6 +470,7 @@ const VIEWS = {
   plans: viewPlans,
   workout: viewWorkout,
   picker: viewPicker,
+  machine: viewMachine,
   finish: viewFinish,
   send: viewSend,
   detail: viewDetail,
@@ -508,6 +535,11 @@ const actions = {
     }
   },
   "pick-machine": (el) => {
+    // Maschine mit Übungen: Auswahl zeigen (mehrere Übungen an einer Maschine sind möglich)
+    if (C.machineExercises(S.catalog, S.localExercises, el.dataset.arg).length > 0) {
+      go("machine", el.dataset.arg);
+      return;
+    }
     try {
       const { exercise, created } = C.exerciseForMachine(S.catalog, S.localExercises, el.dataset.arg);
       if (created) S.localExercises.push(exercise);
@@ -517,6 +549,16 @@ const actions = {
     }
   },
   "pick-exercise": (el) => addExercise(el.dataset.arg),
+  "new-machine-ex": (el) => {
+    const name = document.getElementById("new-ex-name")?.value ?? "";
+    try {
+      const { exercise, created } = C.newMachineExercise(S.catalog, S.localExercises, el.dataset.arg, name);
+      if (created) S.localExercises.push(exercise);
+      addExercise(exercise.id);
+    } catch (e) {
+      toast(e.message, true);
+    }
+  },
   "toggle-done": (el) => {
     const we = findWe(el.dataset.we);
     const s = findSet(el.dataset.we, el.dataset.set);

@@ -4,7 +4,7 @@
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.1.2";
+export const MOBILE_VERSION = "1.1.3";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -324,14 +324,39 @@ export function allExercises(catalog, localExercises) {
 }
 
 /**
+ * Alle nicht archivierten Übungen an einer Maschine (vom PC und auf dem Handy angelegt), älteste
+ * zuerst. An einer Maschine kann es mehrere geben, z. B. „Butterfly“ und „Rear Delt“.
+ */
+export function machineExercises(catalog, localExercises, machineId) {
+  return allExercises(catalog, localExercises)
+    .filter((e) => e.machine_id === machineId && !e.archived)
+    .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+}
+
+function buildMachineExercise(m, name, now) {
+  const muscles = machineMuscles(m);
+  const ts = isoNow(now);
+  return {
+    id: uuidv7(now.getTime()),
+    name,
+    category: "strength",
+    muscle_group: muscles.length ? [...muscles.join(", ")].slice(0, 60).join("") : null,
+    equipment: m.gym_number || m.own_number || null,
+    notes: null,
+    archived: 0,
+    created_at: ts,
+    updated_at: ts,
+    machine_id: m.id,
+  };
+}
+
+/**
  * Übung zu einer Maschine – wie in der Desktop-App (repo/machine_merge.rs,
  * exercise_for_machine): vorhandene nicht archivierte Übung, sonst neue mit freiem Namen.
  */
 export function exerciseForMachine(catalog, localExercises, machineId, now = new Date()) {
   const all = allExercises(catalog, localExercises);
-  const existing = all
-    .filter((e) => e.machine_id === machineId && !e.archived)
-    .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))[0];
+  const existing = machineExercises(catalog, localExercises, machineId)[0];
   if (existing) return { exercise: existing, created: false };
   const m = catalog.machines.find((x) => x.id === machineId);
   if (!m) throw new Error("Maschine nicht gefunden.");
@@ -345,26 +370,37 @@ export function exerciseForMachine(catalog, localExercises, machineId, now = new
   }
   const name = candidates.find((c) => c && !taken.has(c.toLowerCase()));
   if (!name) throw new Error("Kein freier Übungsname für diese Maschine.");
-  const muscles = machineMuscles(m);
-  const ts = isoNow(now);
-  const exercise = {
-    id: uuidv7(now.getTime()),
-    name,
-    category: "strength",
-    muscle_group: muscles.length ? [...muscles.join(", ")].slice(0, 60).join("") : null,
-    equipment: m.gym_number || m.own_number || null,
-    notes: null,
-    archived: 0,
-    created_at: ts,
-    updated_at: ts,
-    machine_id: machineId,
-  };
-  return { exercise, created: true };
+  return { exercise: buildMachineExercise(m, name, now), created: true };
+}
+
+/**
+ * Weitere Übung an einer Maschine mit eigenem Namen. Gibt es den Namen an dieser Maschine schon,
+ * wird diese Übung genommen; gehört er zu einer anderen Übung, gibt es einen Fehler (Übungsnamen
+ * sind in der Desktop-App eindeutig).
+ */
+export function newMachineExercise(catalog, localExercises, machineId, name, now = new Date()) {
+  const m = catalog.machines.find((x) => x.id === machineId);
+  if (!m) throw new Error("Maschine nicht gefunden.");
+  const clean = [...String(name ?? "").trim().replace(/\s+/g, " ")].slice(0, 80).join("").trim();
+  if (!clean) throw new Error("Bitte einen Namen für die Übung eingeben.");
+  const same = allExercises(catalog, localExercises).find(
+    (e) => String(e.name).toLowerCase() === clean.toLowerCase(),
+  );
+  if (same) {
+    if (same.machine_id === machineId && !same.archived) return { exercise: same, created: false };
+    throw new Error(`Den Namen „${same.name}“ hat schon eine andere Übung. Bitte einen anderen wählen.`);
+  }
+  return { exercise: buildMachineExercise(m, clean, now), created: true };
 }
 
 /** Suche über Maschinen (Nummern, Name, Hersteller) und freie Übungen. */
 export function search(catalog, localExercises, query, { onlyNumbered = false, limit = 60 } = {}) {
   const q = query.trim().toLowerCase();
+  const byMachine = new Map();
+  for (const e of allExercises(catalog, localExercises)) {
+    if (!e.machine_id || e.archived) continue;
+    byMachine.set(e.machine_id, [...(byMachine.get(e.machine_id) ?? []), e]);
+  }
   const machineHits = [];
   for (const m of catalog.machines) {
     if (m.archived) continue;
@@ -377,10 +413,11 @@ export function search(catalog, localExercises, query, { onlyNumbered = false, l
     else if (m.own_number && String(m.own_number).toLowerCase().startsWith(q)) score = 60;
     else if (m.gym_number && String(m.gym_number).toLowerCase().startsWith(q)) score = 55;
     else {
-      const hay = `${m.display_name} ${m.name} ${m.manufacturer} ${m.series} ${m.muscle_groups}`.toLowerCase();
+      const names = (byMachine.get(m.id) ?? []).map((e) => e.name).join(" ");
+      const hay = `${m.display_name} ${m.name} ${m.manufacturer} ${m.series} ${m.muscle_groups} ${names}`.toLowerCase();
       if (q.split(/\s+/).every((w) => hay.includes(w))) score = 20;
     }
-    if (score >= 0) machineHits.push({ kind: "machine", score, machine: m });
+    if (score >= 0) machineHits.push({ kind: "machine", score, machine: m, exercises: byMachine.get(m.id) ?? [] });
   }
   const exHits = [];
   for (const e of allExercises(catalog, localExercises)) {

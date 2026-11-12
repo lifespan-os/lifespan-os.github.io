@@ -163,3 +163,23 @@ details.settings summary { color: var(--blue); font-size: .9rem; padding: 6px 0;
 .rp input { min-height: 44px; text-align: center; font-size: 1.02rem; font-weight: 650; padding: 4px; }
 .set input.sum { background: var(--surface-2); color: var(--orange); border-style: dashed; }
 .new-ex { display: grid; gap: 10px; margin-top: 10px; }
+
+/* Ernährung (1.2.0) */
+.nf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.nf-grid .wide { grid-column: 1 / -1; }
+.nf-grid .field label { min-height: 2.3em; }
+.err { color: var(--danger); margin: 0; }
+input[aria-invalid="true"] { border-color: var(--danger); }
+details.livetext summary { color: var(--blue); font-size: .92rem; padding: 6px 0; cursor: pointer; }
+details.livetext { display: grid; gap: 10px; }
+details.livetext[open] > * + * { margin-top: 10px; }
+.ocr-raw { white-space: pre-wrap; font-size: .78rem; max-height: 220px; overflow: auto; background: var(--surface-2); border-radius: 10px; padding: 10px; margin: 8px 0 0; }
+.meal-block { display: grid; gap: 4px; padding-top: 6px; border-top: 1px solid var(--line); }
+.meal-block p { margin: 0; }
+.meal-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: .92rem; }
+.meal-item .btn.sm { min-height: 34px; padding: 4px 10px; }
+.dish-item { display: grid; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.dish-item .row { flex-wrap: nowrap; }
+.dish-item input { flex: 1 1 90px; min-width: 0; }
+.dish-item select { flex: 1 1 110px; min-width: 0; width: auto; }
+.dish-item .btn.sm { flex: 0 0 auto; }

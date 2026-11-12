@@ -1,6 +1,8 @@
 // LIFESPAN OS Mobil – Oberfläche. Logik in core.js, Speicher in store.js.
 import * as C from "./core.js";
 import * as store from "./store.js";
+import * as N from "./nutrition.js";
+import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, viewFood } from "./food.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -17,6 +19,7 @@ const S = {
   query: "",
   rest: null, // { endsAt, total, label }
   pendingFinish: null,
+  food: null, // Ernährung (siehe food.js)
 };
 
 // ------------------------------------------------------------------ Hilfen
@@ -69,6 +72,7 @@ async function saveNow() {
 const exById = () => new Map(C.allExercises(S.catalog, S.localExercises).map((e) => [e.id, e]));
 const machineById = () => new Map(S.catalog.machines.map((m) => [m.id, m]));
 const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported);
+const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0);
 
 function go(view, arg = null) {
   S.view = view;
@@ -135,11 +139,21 @@ function viewHome() {
           </div>`
     }
     <section class="card">
-      <div class="wo-head"><h3>An den PC senden</h3><span class="tag">${open.length} offen</span></div>
+      <div class="wo-head"><h3>Ernährung</h3><span class="tag">Scanner</span></div>
+      <p class="muted small">Etikett fotografieren, Nährwerte übernehmen, Mengen tracken und Gerichte zusammenstellen.</p>
+      <button class="btn blue block" data-go="food">Etikett scannen &amp; tracken</button>
+    </section>
+    <section class="card">
+      <div class="wo-head"><h3>An den PC senden</h3><span class="tag">${open.length + unsentFood()} offen</span></div>
       ${
-        open.length
-          ? `<p class="muted small">${open.length === 1 ? "1 Training ist" : `${open.length} Trainings sind`} noch nicht am PC.</p>
-             <button class="btn block" data-go="send">Trainings an PC senden</button>`
+        open.length || unsentFood()
+          ? `<p class="muted small">${[
+              open.length ? (open.length === 1 ? "1 Training" : `${open.length} Trainings`) : "",
+              unsentFood() ? `${unsentFood()} Ernährungseinträge` : "",
+            ]
+              .filter(Boolean)
+              .join(" und ")} noch nicht am PC.</p>
+             <button class="btn block" data-go="send">An den PC senden</button>`
           : `<p class="muted small">Alles übertragen.</p>`
       }
     </section>
@@ -418,21 +432,23 @@ function viewFinish() {
 function viewSend() {
   const open = unsent();
   const all = S.workouts.filter((w) => w.status === "done");
+  const food = unsentFood();
+  const ready = [open.length ? `${open.length} ${open.length === 1 ? "Training" : "Trainings"}` : "", food ? `${food} Ernährungseinträge` : ""].filter(Boolean);
   return `${header("An den PC senden", { back: "home" })}<main class="wrap">
     <section class="card">
-      <h3>${open.length ? `${open.length} ${open.length === 1 ? "Training" : "Trainings"} bereit` : "Alles übertragen"}</h3>
+      <h3>${ready.length ? `${ready.join(" und ")} bereit` : "Alles übertragen"}</h3>
       <ol class="steps small">
         <li>Auf <b>„Datei erstellen“</b> tippen und die Datei in <b>Google Drive</b> sichern („In Drive sichern“ bzw. „In Dateien sichern“ → Google Drive).</li>
         <li>Am PC in LIFESPAN OS: <b>Settings → Daten importieren → Exportdatei auswählen …</b> und die Datei aus Google Drive wählen.</li>
         <li>Als Art <b>„Abgleichen (zweites Gerät)“</b> wählen und bestätigen.</li>
       </ol>
       <p class="warn">Bitte nie „Ersetzen“ wählen: Dann würden am PC alle anderen Daten gelöscht. „Abgleichen“ ist sicher, vorher legt die App automatisch ein Backup an.</p>
-      <button class="btn primary block" data-act="send" data-arg="open" ${open.length ? "" : "disabled"}>Datei erstellen</button>
+      <button class="btn primary block" data-act="send" data-arg="open" ${ready.length ? "" : "disabled"}>Datei erstellen</button>
     </section>
     ${
-      all.length
-        ? `<section class="card"><h3>Alle Trainings vom Handy</h3>
-            <p class="muted small">Falls eine Datei verloren ging: Du kannst alle ${all.length} Trainings noch einmal senden. Am PC entstehen dabei keine doppelten Einträge.</p>
+      all.length || Object.keys(S.food?.local.meals ?? {}).length
+        ? `<section class="card"><h3>Alles vom Handy</h3>
+            <p class="muted small">Falls eine Datei verloren ging: Du kannst alle ${all.length} Trainings und die Ernährungseinträge noch einmal senden. Am PC entstehen dabei keine doppelten Einträge.</p>
             <button class="btn block" data-act="send" data-arg="all">Alle erneut senden</button></section>`
         : ""
     }
@@ -486,6 +502,8 @@ function viewHelp() {
 }
 
 const VIEWS = {
+  food: viewFood,
+  dish: viewDish,
   setup: viewSetup,
   home: viewHome,
   plans: viewPlans,
@@ -548,6 +566,7 @@ function addExercise(exerciseId) {
 }
 
 const actions = {
+  ...foodActions,
   "start-free": () => startWorkout("Freies Training"),
   "start-plan": (el) => {
     for (const p of S.catalog.plans) {
@@ -684,6 +703,10 @@ const actions = {
   "mark-sent": async (el) => {
     const ids = el.dataset.arg.split(",");
     for (const w of S.workouts) if (ids.includes(w.id)) w.exported = true;
+    if (S.food) {
+      N.markNutritionSent(S.food.local);
+      await store.set("nutrition", S.food.local);
+    }
     await saveNow();
     toast("Als übertragen markiert");
     go("home");
@@ -727,10 +750,10 @@ function confirmTwice(el, text) {
 
 async function sendFile(all) {
   const list = S.workouts.filter((w) => w.status === "done" && (all || !w.exported));
-  if (!list.length) return;
   let doc;
   try {
-    doc = C.buildReturnFile(S.catalog, S.localExercises, list);
+    const food = S.food ? N.nutritionTables(S.catalog, S.food.local, { all }) : {};
+    doc = C.buildReturnFile(S.catalog, S.localExercises, list, new Date(), food);
   } catch (e) {
     return toast(e.message, true);
   }
@@ -780,6 +803,7 @@ restEl.addEventListener("click", (ev) => {
 
 app.addEventListener("input", (ev) => {
   const el = ev.target;
+  if (foodInput(el)) return;
   if (el.id === "q") {
     S.query = el.value;
     document.getElementById("results").innerHTML = pickerResults();
@@ -837,6 +861,7 @@ app.addEventListener("input", (ev) => {
 
 app.addEventListener("change", async (ev) => {
   const el = ev.target;
+  if (foodChange(el)) return;
   if (el.id === "only-nr") {
     S.prefs.onlyNumbered = el.checked;
     saveSoon();
@@ -865,8 +890,10 @@ async function loadFile(file) {
     S.localExercises = C.keepLocalExercises(catalog, S.localExercises, [...S.workouts, ...(S.active ? [S.active] : [])]);
     S.catalog = catalog;
     await store.set("catalog", catalog);
+    N.pruneLocal(catalog, S.food.local);
+    await store.set("nutrition", S.food.local);
     await saveNow();
-    toast(`Geladen: ${catalog.machines.length.toLocaleString("de-DE")} Maschinen, ${catalog.plans.length} Pläne`);
+    toast(`Geladen: ${catalog.machines.length.toLocaleString("de-DE")} Maschinen, ${catalog.plans.length} Pläne, ${catalog.nutrition.foods.length.toLocaleString("de-DE")} Lebensmittel`);
     go("home");
   } catch (e) {
     toast(e.message || "Die Datei konnte nicht gelesen werden.", true);
@@ -998,6 +1025,19 @@ function fixSafeTop() {
   }
 }
 
+initFood({
+  get S() {
+    return S;
+  },
+  esc,
+  header,
+  toast,
+  store,
+  uuid: () => C.uuidv7(),
+  rerender: () => rerenderKeepScroll(),
+  confirmTwice: (el, text) => confirmTwice(el, text),
+});
+
 async function boot() {
   fixSafeTop();
   try {
@@ -1006,6 +1046,7 @@ async function boot() {
     S.workouts = (await store.get("workouts")) || [];
     S.active = await store.get("active");
     S.prefs = { ...S.prefs, ...((await store.get("prefs")) || {}) };
+    S.food = foodState(await store.get("nutrition"));
     delete S.prefs.topOffset; // Einstellung aus 1.1.7 entfällt
   } catch (e) {
     app.innerHTML = `<p class="boot">Der Gerätespeicher ist nicht verfügbar (${esc(e.message)}). Im privaten Modus funktioniert LIFESPAN OS Mobil nicht.</p>`;

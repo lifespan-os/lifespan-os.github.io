@@ -2,9 +2,11 @@
 // Läuft im Browser und unter Node (Tests). Format und Prüfregeln folgen
 // docs/EXPORTFORMAT.md und den Migrationen der Desktop-App.
 
+import { nutritionFromRows } from "./nutrition.js";
+
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.1.8";
+export const MOBILE_VERSION = "1.2.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -258,6 +260,7 @@ export function parseExport(text) {
     sports,
     plans,
     last,
+    nutrition: nutritionFromRows(rows, doc.exportedAt ?? null),
   };
 }
 
@@ -644,7 +647,7 @@ const txt = (v, max) => {
  * Sportarten, Planttage), damit die Desktop-App sie vollständig prüfen kann.
  * Am PC mit „Abgleichen (zweites Gerät)“ importieren.
  */
-export function buildReturnFile(catalog, localExercises, workouts, now = new Date()) {
+export function buildReturnFile(catalog, localExercises, workouts, now = new Date(), extraTables = {}) {
   const done = workouts.filter((w) => w.status === "done");
   const exById = new Map(allExercises(catalog, localExercises).map((e) => [e.id, e]));
   const machineById = new Map(catalog.machines.map((m) => [m.id, m]));
@@ -764,6 +767,11 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
     const list = Array.isArray(val) ? val : [...val.values()];
     if (list.length) tables[name] = list.map((r) => fit(name, r));
   }
+  // Ernährung vom Handy (Lebensmittel, Strichcodes, Mahlzeiten, Rezepte; siehe nutrition.js)
+  for (const [name, list] of Object.entries(extraTables)) {
+    if (list.length) tables[name] = [...(tables[name] ?? []), ...list.map((r) => fit(name, r))];
+  }
+  if (!Object.keys(tables).length) throw new Error("Es gibt nichts zu senden.");
 
   return {
     format: FORMAT_NAME,

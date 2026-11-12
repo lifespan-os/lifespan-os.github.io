@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar. Speichert nur die App-Dateien,
 // niemals Trainingsdaten (die liegen in IndexedDB auf dem Gerät).
-const VERSION = "lifespan-mobil-1.1.8";
+const VERSION = "lifespan-mobil-1.2.0";
 const FILES = [
   "./",
   "index.html",
@@ -8,14 +8,36 @@ const FILES = [
   "app.js",
   "core.js",
   "store.js",
+  "label.js",
+  "nutrition.js",
+  "food.js",
+  "ocr.js",
   "manifest.webmanifest",
   "icons/icon-192.png",
   "icons/icon-512.png",
   "icons/apple-touch-icon.png",
 ];
 
+// Texterkennung (Tesseract.js mit deutschen Sprachdaten, ca. 6 MB): wird mitgespeichert, damit der
+// Etikett-Scanner offline läuft. Fehlt eine Datei, bleibt die App trotzdem nutzbar.
+const OCR_FILES = [
+  "vendor/ocr/tesseract.min.js",
+  "vendor/ocr/worker.min.js",
+  "vendor/ocr/tesseract-core-lstm.wasm.js",
+  "vendor/ocr/tesseract-core-simd-lstm.wasm.js",
+  "vendor/ocr/deu.traineddata.gz",
+];
+
 self.addEventListener("install", (ev) => {
-  ev.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
+  ev.waitUntil(
+    caches
+      .open(VERSION)
+      .then(async (c) => {
+        await c.addAll(FILES);
+        await Promise.all(OCR_FILES.map((f) => c.add(f).catch(() => {})));
+      })
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener("activate", (ev) => {

@@ -2,7 +2,7 @@
 import * as C from "./core.js";
 import * as store from "./store.js";
 import * as N from "./nutrition.js";
-import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, viewFood } from "./food.js";
+import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, viewFood, viewFoodReview } from "./food.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -75,6 +75,7 @@ const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported
 const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0);
 
 function go(view, arg = null) {
+  if (view === "food-review" && S.view !== "food-review") S.reviewFrom = S.view === "send" ? "send" : S.view === "food" ? "food" : "home";
   S.view = view;
   S.arg = arg;
   render();
@@ -153,7 +154,8 @@ function viewHome() {
             ]
               .filter(Boolean)
               .join(" und ")} noch nicht am PC.</p>
-             <button class="btn block" data-go="send">An den PC senden</button>`
+             <button class="btn block" data-go="send">An den PC senden</button>
+             ${unsentFood() ? `<button class="btn ghost block" data-go="food-review">Ernährungseinträge prüfen und bearbeiten</button>` : ""}`
           : `<p class="muted small">Alles übertragen.</p>`
       }
     </section>
@@ -444,6 +446,7 @@ function viewSend() {
       </ol>
       <p class="warn">Bitte nie „Ersetzen“ wählen: Dann würden am PC alle anderen Daten gelöscht. „Abgleichen“ ist sicher, vorher legt die App automatisch ein Backup an.</p>
       <button class="btn primary block" data-act="send" data-arg="open" ${ready.length ? "" : "disabled"}>Datei erstellen</button>
+      ${food ? `<button class="btn block" data-go="food-review">Vorher Ernährungseinträge prüfen und bearbeiten</button>` : ""}
     </section>
     ${
       all.length || Object.keys(S.food?.local.meals ?? {}).length
@@ -503,6 +506,7 @@ function viewHelp() {
 
 const VIEWS = {
   food: viewFood,
+  "food-review": viewFoodReview,
   dish: viewDish,
   setup: viewSetup,
   home: viewHome,
@@ -1035,6 +1039,7 @@ initFood({
   store,
   uuid: () => C.uuidv7(),
   rerender: () => rerenderKeepScroll(),
+  go: (view, arg) => go(view, arg),
   confirmTwice: (el, text) => confirmTwice(el, text),
 });
 

@@ -328,6 +328,99 @@ export function addToMeal(catalog, local, { date, mealType, items }, { uuid, now
   return meal;
 }
 
+/** Mahlzeit am Handy für Tag und Platz finden oder anlegen (wie `addToMeal`). */
+function mealFor(catalog, local, date, mealType, { uuid, now }) {
+  let meal = Object.values(local.meals).find((m) => m.row.date === date && m.row.meal_type === mealType && m.row.name === null);
+  if (meal) return meal;
+  const iso = now.toISOString();
+  const pc = (catalog.nutrition?.meals ?? []).find((m) => m.date === date && m.meal_type === mealType && (m.name ?? null) === null);
+  const row = pc
+    ? { ...pc }
+    : { id: uuid(), date, meal_type: mealType, time: localTime(now), notes: null, created_at: iso, updated_at: iso, name: null };
+  meal = { row, items: [], fromPc: Boolean(pc) };
+  local.meals[row.id] = meal;
+  return meal;
+}
+
+/**
+ * Noch nicht gesendete Einträge (1.2.2): alle Tage, neueste zuerst, je Mahlzeit in der Reihenfolge
+ * des Tages. Rückgabe [{ date, meals: [{ meal, items: [{ ...item, food, n }], total }] }].
+ */
+export function unsentDays(catalog, local) {
+  const foods = allFoods(catalog, local);
+  const order = MEAL_TYPES.map((m) => m.value);
+  const byDate = new Map();
+  for (const m of Object.values(local.meals)) {
+    const items = m.items
+      .filter((i) => !i.sent)
+      .map((it) => {
+        const food = foods.get(it.food_id);
+        return { ...it, food, n: food ? nutrientsFor(food, it.amount) : null };
+      });
+    if (!items.length) continue;
+    if (!byDate.has(m.row.date)) byDate.set(m.row.date, []);
+    byDate.get(m.row.date).push({ meal: m, items, total: sumNutrients(items.filter((i) => i.n).map((i) => i.n)) });
+  }
+  return [...byDate.entries()]
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([date, meals]) => ({ date, meals: meals.sort((a, b) => order.indexOf(a.meal.row.meal_type) - order.indexOf(b.meal.row.meal_type)) }));
+}
+
+/**
+ * Noch nicht gesendeten Eintrag ändern (1.2.2): Menge in g/ml, Tag und Mahlzeit. Bei anderem Tag
+ * oder anderer Mahlzeit wandert der Eintrag (gleiche ID) in die passende Mahlzeit; eine leer
+ * gewordene, nie gesendete Mahlzeit entfällt.
+ */
+export function updateItem(catalog, local, mealId, itemId, { amount, date, mealType }, { uuid, now = new Date() }) {
+  const meal = local.meals[mealId];
+  const item = meal?.items.find((i) => i.id === itemId);
+  if (!item) throw new Error("Der Eintrag ist nicht mehr vorhanden.");
+  if (item.sent) throw new Error("Dieser Eintrag ist schon am PC – dort bearbeiten.");
+  const a = amount === undefined ? item.amount : amount;
+  if (!(a > 0 && a <= 10000)) throw new Error("Menge muss zwischen 0 und 10.000 g/ml liegen.");
+  const d = date ?? meal.row.date;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || Number.isNaN(new Date(`${d}T12:00:00`).getTime())) throw new Error("Bitte ein gültiges Datum wählen.");
+  const t = mealType ?? meal.row.meal_type;
+  if (!MEAL_TYPES.some((m) => m.value === t)) throw new Error("Unbekannte Mahlzeit.");
+  const iso = now.toISOString();
+  item.amount = Math.round(a * 10) / 10;
+  item.updated_at = iso;
+  if (d === meal.row.date && t === meal.row.meal_type) {
+    meal.sent = false;
+    return meal;
+  }
+  meal.items = meal.items.filter((i) => i.id !== itemId);
+  if (!meal.items.length) delete local.meals[mealId];
+  const target = mealFor(catalog, local, d, t, { uuid, now });
+  item.meal_id = target.row.id;
+  item.position = 1000 + target.items.length;
+  target.items.push(item);
+  target.sent = false;
+  return target;
+}
+
+/** Am Handy angelegtes oder geändertes Lebensmittel verwerfen (nur ungesendet, nicht in Gebrauch). */
+export function discardFood(local, foodId) {
+  const f = local.foods[foodId];
+  if (!f) return;
+  if (f.sent) throw new Error("Das Lebensmittel ist schon am PC – dort bearbeiten.");
+  const used =
+    Object.values(local.meals).some((m) => m.items.some((i) => i.food_id === foodId)) ||
+    Object.values(local.recipes).some((r) => r.items.some((i) => i.food_id === foodId)) ||
+    local.dish.items.some((i) => i.foodId === foodId);
+  if (used) throw new Error("Das Lebensmittel wird noch in Einträgen, Rezepten oder im Gericht verwendet.");
+  delete local.foods[foodId];
+  for (const [code, b] of Object.entries(local.barcodes)) if (b.foodId === foodId && !b.sent) delete local.barcodes[code];
+}
+
+/** Noch nicht gesendetes Rezept bzw. Strichcode verwerfen. */
+export function discardRecipe(local, id) {
+  if (local.recipes[id] && !local.recipes[id].sent) delete local.recipes[id];
+}
+export function discardBarcode(local, code) {
+  if (local.barcodes[code] && !local.barcodes[code].sent) delete local.barcodes[code];
+}
+
 /** Noch nicht gesendeten Eintrag entfernen. */
 export function removeItem(local, mealId, itemId) {
   const meal = local.meals[mealId];

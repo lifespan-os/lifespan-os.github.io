@@ -172,7 +172,8 @@ function dayCard() {
           .join("")}</div>`,
       )
       .join("")}
-    <p class="muted small">Gesamt: ${esc(N.describeNutrients(total))}. Am PC mit „An den PC senden“ übernehmen.</p></section>`;
+    <p class="muted small">Gesamt: ${esc(N.describeNutrients(total))}. Am PC mit „An den PC senden“ übernehmen.</p>
+    ${N.unsentCount(F().local) ? `<button class="btn block" data-go="food-review">Offene Einträge prüfen und bearbeiten</button>` : ""}</section>`;
 }
 
 function cropCard() {
@@ -241,6 +242,115 @@ export function viewFood() {
     </section>
     ${dayCard()}
   </main>`;
+}
+
+// ------------------------------------------------------------------ Ansicht „Vor dem Senden prüfen“ (1.2.2)
+
+const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+function dayTitle(iso) {
+  const [y, m, d] = iso.split("-");
+  const wd = WEEKDAYS[new Date(`${iso}T12:00:00`).getDay()];
+  return `${iso === today() ? "Heute, " : ""}${wd} ${d}.${m}.${y}`;
+}
+
+export function viewFoodReview() {
+  const s = F();
+  const local = s.local;
+  const days = N.unsentDays(X.S.catalog, local);
+  const foods = Object.values(local.foods).filter((f) => !f.sent);
+  const recipes = Object.values(local.recipes).filter((r) => !r.sent);
+  const codes = Object.entries(local.barcodes).filter(([, b]) => !b.sent);
+  const all = N.allFoods(X.S.catalog, local);
+  const empty = !days.length && !foods.length && !recipes.length && !codes.length;
+  const itemRow = (m, it) => `<div class="rv-item">
+      <div class="rv-name"><b>${esc(it.food ? N.foodLabel(it.food) : "Unbekanntes Lebensmittel")}</b>
+        <span class="muted small">${it.n ? esc(N.describeNutrients(it.n)) : ""}</span></div>
+      <div class="rv-edit">
+        <label class="rv-f"><span class="muted small">Menge (${it.food?.basis_unit ?? "g"})</span>
+          <input type="text" inputmode="decimal" data-rv="amount" data-meal="${esc(m.row.id)}" data-item="${esc(it.id)}" value="${esc(num(it.amount))}" aria-label="Menge"></label>
+        <label class="rv-f"><span class="muted small">Mahlzeit</span>
+          <select data-rv="mealType" data-meal="${esc(m.row.id)}" data-item="${esc(it.id)}" aria-label="Mahlzeit">${mealOptions(m.row.meal_type)}</select></label>
+        <label class="rv-f"><span class="muted small">Tag</span>
+          <input type="date" data-rv="date" data-meal="${esc(m.row.id)}" data-item="${esc(it.id)}" value="${esc(m.row.date)}" max="${today()}" aria-label="Tag"></label>
+        <button class="btn sm ghost" data-act="rv-remove" data-arg="${esc(m.row.id)}|${esc(it.id)}" >Löschen</button>
+      </div></div>`;
+  return `${X.header("Vor dem Senden prüfen", { back: X.S.reviewFrom || "home" })}<main class="wrap">
+    <p class="muted small">Hier siehst du alles, was noch nicht am PC ist. Änderungen gelten sofort; gesendet wird erst mit „An den PC senden“.</p>
+    ${empty ? `<section class="card"><p class="empty">Keine offenen Ernährungseinträge.</p></section>` : ""}
+    ${days
+      .map(
+        (d) => `<section class="card"><div class="wo-head"><h3>${esc(dayTitle(d.date))}</h3>
+          <span class="tag">${Math.round(N.sumNutrients(d.meals.map((m) => m.total)).kcal)} kcal</span></div>
+          ${d.meals
+            .map(
+              (m) => `<div class="meal-block"><p class="small"><b>${esc(N.mealLabel(m.meal.row.meal_type))}</b> · ${esc(N.describeNutrients(m.total))}</p>
+              ${m.items.map((it) => itemRow(m.meal, it)).join("")}</div>`,
+            )
+            .join("")}</section>`,
+      )
+      .join("")}
+    ${
+      foods.length
+        ? `<section class="card"><h3>Neue oder geänderte Lebensmittel</h3>
+          ${foods
+            .map(
+              (f) => `<div class="meal-item"><span><b>${esc(N.foodLabel(f.row))}</b> <span class="muted small">${Math.round(f.row.energy_kcal)} kcal · E ${num(f.row.protein_g)} g je 100 ${f.row.basis_unit}</span></span>
+              <span class="row"><button class="btn sm" data-act="rv-food-edit" data-arg="${esc(f.row.id)}">Bearbeiten</button>
+              <button class="btn sm ghost" data-act="rv-food-discard" data-arg="${esc(f.row.id)}" aria-label="Lebensmittel verwerfen">✕</button></span></div>`,
+            )
+            .join("")}</section>`
+        : ""
+    }
+    ${
+      recipes.length
+        ? `<section class="card"><h3>Neue Rezepte</h3>
+          ${recipes
+            .map(
+              (r) => `<div class="meal-item"><span><b>${esc(r.row.name)}</b> <span class="muted small">${num(r.row.servings)} Portion(en) · ${r.items
+                .map((i) => `${esc(all.get(i.food_id)?.name ?? "?")} ${num(i.amount)}`)
+                .join(", ")}</span></span>
+              <button class="btn sm ghost" data-act="rv-recipe-discard" data-arg="${esc(r.row.id)}" aria-label="Rezept verwerfen">✕</button></div>`,
+            )
+            .join("")}</section>`
+        : ""
+    }
+    ${
+      codes.length
+        ? `<section class="card"><h3>Neue Strichcodes</h3>
+          ${codes
+            .map(
+              ([code, b]) => `<div class="meal-item"><span>${esc(code)} → <b>${esc(all.get(b.foodId)?.name ?? "?")}</b></span>
+              <button class="btn sm ghost" data-act="rv-code-discard" data-arg="${esc(code)}" aria-label="Strichcode verwerfen">✕</button></div>`,
+            )
+            .join("")}</section>`
+        : ""
+    }
+    ${empty ? "" : `<button class="btn primary block" data-go="send">Weiter zu „An den PC senden“</button>`}
+  </main>`;
+}
+
+/** Änderung in „Vor dem Senden prüfen“ übernehmen (beim Verlassen eines Feldes). */
+async function reviewChange(el) {
+  const s = F();
+  const field = el.dataset.rv;
+  const patch = {};
+  if (field === "amount") {
+    const v = N.parseNum(el.value);
+    if (v === null || Number.isNaN(v)) {
+      X.toast("Bitte eine Menge eingeben, z. B. 150 oder 12,5.", true);
+      X.rerender();
+      return;
+    }
+    patch.amount = v;
+  } else patch[field] = el.value;
+  try {
+    N.updateItem(X.S.catalog, s.local, el.dataset.meal, el.dataset.item, patch, { uuid: () => X.uuid(), now: new Date() });
+    await persist();
+    if (field !== "amount") X.toast(field === "date" ? "Eintrag auf den Tag verschoben" : "Eintrag verschoben");
+  } catch (e) {
+    X.toast(e.message, true);
+  }
+  X.rerender();
 }
 
 // ------------------------------------------------------------------ Ansicht „Gericht“
@@ -437,6 +547,44 @@ async function track(items, mealType, label) {
 }
 
 export const foodActions = {
+  "rv-remove": async (el) => {
+    if (!X.confirmTwice(el, "Nochmal tippen: löschen")) return;
+    const [mealId, itemId] = el.dataset.arg.split("|");
+    N.removeItem(F().local, mealId, itemId);
+    await persist();
+    X.rerender();
+  },
+  "rv-food-edit": (el) => {
+    const s = F();
+    const food = N.allFoods(X.S.catalog, s.local).get(el.dataset.arg);
+    if (!food) return;
+    select(food, { known: true });
+    foodActions["food-edit"]();
+    X.go("food");
+    requestAnimationFrame(() => document.getElementById("food-form")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  },
+  "rv-food-discard": async (el) => {
+    if (!X.confirmTwice(el, "Nochmal tippen: verwerfen")) return;
+    try {
+      N.discardFood(F().local, el.dataset.arg);
+      await persist();
+    } catch (e) {
+      X.toast(e.message, true);
+    }
+    X.rerender();
+  },
+  "rv-recipe-discard": async (el) => {
+    if (!X.confirmTwice(el, "Nochmal tippen: verwerfen")) return;
+    N.discardRecipe(F().local, el.dataset.arg);
+    await persist();
+    X.rerender();
+  },
+  "rv-code-discard": async (el) => {
+    if (!X.confirmTwice(el, "Nochmal tippen: verwerfen")) return;
+    N.discardBarcode(F().local, el.dataset.arg);
+    await persist();
+    X.rerender();
+  },
   "crop-rotate": async () => {
     const p = F().photo;
     const { rotated } = await import("./ocr.js");
@@ -630,6 +778,10 @@ export function foodChange(el) {
     const file = el.files[0];
     el.value = "";
     startPhoto(file);
+    return true;
+  }
+  if (el.dataset.rv) {
+    reviewChange(el);
     return true;
   }
   if (el.dataset.ff === "basis" || el.dataset.ft || el.dataset.fd || el.dataset.du !== undefined) return foodInput(el);

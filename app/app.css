@@ -79,7 +79,7 @@ p { margin: 0; }
 
 .field { display: grid; gap: 6px; }
 .field label { font-size: .84rem; color: var(--muted); }
-input[type="text"], input[type="search"], input[type="number"], textarea, select {
+input[type="text"], input[type="search"], input[type="number"], input[type="date"], textarea, select {
   width: 100%; min-height: 48px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-size: 1.05rem;
 }
 textarea { min-height: 80px; resize: vertical; }
@@ -189,3 +189,11 @@ details.livetext[open] > * + * { margin-top: 10px; }
 .crop-area img { display: block; width: 100%; height: auto; pointer-events: none; }
 .crop-rect { position: absolute; border: 2px solid var(--blue); background: rgba(31, 111, 209, .10); box-shadow: 0 0 0 9999px rgba(0, 0, 0, .38); pointer-events: none; }
 .field-warn { color: var(--orange-text); margin: 0; }
+
+/* Ernährung: vor dem Senden prüfen (1.2.2) */
+.rv-item { display: grid; gap: 6px; padding: 10px 0; border-top: 1px solid var(--line); }
+.rv-name { display: grid; gap: 2px; }
+.rv-edit { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; }
+.rv-edit .btn.sm { min-height: 44px; }
+.rv-f { display: grid; gap: 2px; min-width: 0; }
+.rv-f input, .rv-f select { width: 100%; min-width: 0; }

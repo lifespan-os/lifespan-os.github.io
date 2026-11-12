@@ -6,7 +6,7 @@ import { nutritionFromRows } from "./nutrition.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.2.1";
+export const MOBILE_VERSION = "1.2.2";
 
 // ------------------------------------------------------------------ IDs und Zeit
 

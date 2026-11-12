@@ -1,0 +1,850 @@
+// LIFESPAN OS Mobil – Oberfläche. Logik in core.js, Speicher in store.js.
+import * as C from "./core.js";
+import * as store from "./store.js";
+
+const app = document.getElementById("app");
+const restEl = document.getElementById("rest");
+const toastEl = document.getElementById("toast");
+
+const S = {
+  catalog: null,
+  localExercises: [],
+  workouts: [], // abgeschlossene Trainings vom Handy
+  active: null, // laufendes Training
+  prefs: { onlyNumbered: true, keepUnticked: false },
+  view: "home",
+  arg: null,
+  query: "",
+  rest: null, // { endsAt, total, label }
+  pendingFinish: null,
+};
+
+// ------------------------------------------------------------------ Hilfen
+
+const esc = (v) =>
+  String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+const fmtDate = (iso) => {
+  if (!iso) return "–";
+  const [y, m, d] = iso.slice(0, 10).split("-");
+  return `${d}.${m}.${y}`;
+};
+const fmtDateTime = (iso) => {
+  if (!iso) return "–";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return `${fmtDate(C.localDate(d))}, ${C.localTime(d)} Uhr`;
+};
+const fmtSec = (s) => {
+  const a = Math.max(0, Math.round(s));
+  return `${Math.floor(a / 60)}:${String(a % 60).padStart(2, "0")}`;
+};
+
+function toast(text, err = false) {
+  toastEl.textContent = text;
+  toastEl.className = err ? "toast err" : "toast";
+  toastEl.hidden = false;
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => (toastEl.hidden = true), err ? 5000 : 2200);
+}
+
+let saveTimer = null;
+function saveSoon() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 250);
+}
+async function saveNow() {
+  clearTimeout(saveTimer);
+  try {
+    if (S.active) S.active.updatedAt = C.isoNow();
+    await store.set("active", S.active);
+    await store.set("workouts", S.workouts);
+    await store.set("localExercises", S.localExercises);
+    await store.set("prefs", S.prefs);
+  } catch (e) {
+    toast("Speichern auf dem Gerät fehlgeschlagen: " + e.message, true);
+  }
+}
+
+const exById = () => new Map(C.allExercises(S.catalog, S.localExercises).map((e) => [e.id, e]));
+const machineById = () => new Map(S.catalog.machines.map((m) => [m.id, m]));
+const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported);
+
+function go(view, arg = null) {
+  S.view = view;
+  S.arg = arg;
+  render();
+  window.scrollTo(0, 0);
+}
+
+// ------------------------------------------------------------------ Ansichten
+
+function header(title, { back = null, sub = "" } = {}) {
+  return `<header class="top"><div class="wrap">
+    ${back ? `<button class="back" data-go="${back}">‹ Zurück</button>` : ""}
+    <h1>${esc(title)}${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</h1>
+  </div></header>`;
+}
+
+function brandHeader() {
+  return `<header class="top"><div class="wrap">
+    <div class="brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b> <small>Mobil</small></div></div>
+    <button class="back" data-go="help">Hilfe</button>
+  </div></header>`;
+}
+
+function viewSetup() {
+  return `${brandHeader()}<main class="wrap">
+    <h2>Willkommen</h2>
+    <p class="muted">Hier erfasst du dein Training im Studio. Alles bleibt auf diesem Gerät, ohne Konto und ohne Cloud. Zuerst brauchst du deine Daten vom PC: Trainingspläne, Maschinen und Übungen.</p>
+    <section class="card">
+      <h3>So holst du deine Daten aufs Handy</h3>
+      <ol class="steps small">
+        <li>Am PC in LIFESPAN OS unter <b>Settings</b> einen <b>Export</b> erstellen.</li>
+        <li>Die Datei <b>performance-os-export.json</b> in deinen <b>Google-Drive</b>-Ordner kopieren.</li>
+        <li>Hier auf <b>„Exportdatei laden“</b> tippen und die Datei in Google Drive auswählen.</li>
+      </ol>
+      ${fileButton("Exportdatei laden")}
+    </section>
+    <p class="muted small">Tipp fürs iPhone: Tippe in Safari auf „Teilen“ → „Zum Home-Bildschirm“. Nur so bleiben deine Daten dauerhaft gespeichert.</p>
+  </main>`;
+}
+
+function fileButton(label) {
+  return `<label class="btn primary block" for="file-in">${esc(label)}</label>
+    <input id="file-in" type="file" accept=".json,application/json" hidden>`;
+}
+
+function viewHome() {
+  const c = S.catalog;
+  const open = unsent();
+  const a = S.active;
+  return `${brandHeader()}<main class="wrap">
+    ${
+      a
+        ? `<section class="card hl"><div class="wo-head"><h3>Training läuft: ${esc(a.title)}</h3><span class="clock" data-clock>${fmtSec((Date.now() - new Date(a.startedAt)) / 1000)}</span></div>
+            <p class="muted small">${a.exercises.length} Übungen · gestartet ${esc(C.localTime(new Date(a.startedAt)))} Uhr</p>
+            <button class="btn primary block" data-go="workout">Weiter trainieren</button></section>`
+        : `<div class="big-actions">
+            <button class="btn primary" data-go="plans">Plan starten<small>${c.plans.length ? `${c.plans.length} Trainingspläne` : "Noch keine Pläne am PC angelegt"}</small></button>
+            <button class="btn blue" data-act="start-free">Freies Training<small>Maschinen spontan auswählen</small></button>
+          </div>`
+    }
+    <section class="card">
+      <div class="wo-head"><h3>An den PC senden</h3><span class="tag">${open.length} offen</span></div>
+      ${
+        open.length
+          ? `<p class="muted small">${open.length === 1 ? "1 Training ist" : `${open.length} Trainings sind`} noch nicht am PC.</p>
+             <button class="btn block" data-go="send">Trainings an PC senden</button>`
+          : `<p class="muted small">Alles übertragen.</p>`
+      }
+    </section>
+    ${
+      S.workouts.length
+        ? `<section class="card"><h3>Letzte Trainings auf dem Handy</h3><div class="list">
+            ${S.workouts
+              .slice()
+              .sort((x, y) => y.createdAt.localeCompare(x.createdAt))
+              .slice(0, 5)
+              .map(
+                (w) => `<button class="item" data-go="detail" data-arg="${w.id}"><span class="main"><b>${esc(w.title)}</b>
+                  <span class="muted small">${fmtDate(w.date)} · ${w.exercises.length} Übungen · ${C.fmtNum(C.volumeKg(w), 0)} kg</span></span>
+                  <span class="tag">${w.exported ? "am PC" : "offen"}</span></button>`,
+              )
+              .join("")}</div></section>`
+        : ""
+    }
+    <section class="card">
+      <h3>Daten vom PC</h3>
+      <p class="muted small">Stand: ${fmtDateTime(c.exportedAt)} · ${c.machines.length.toLocaleString("de-DE")} Maschinen · ${c.exercises.length} Übungen · ${c.plans.length} Pläne</p>
+      ${fileButton("Neue Exportdatei laden")}
+    </section>
+  </main>`;
+}
+
+function viewPlans() {
+  const plans = S.catalog.plans;
+  return `${header("Plan starten", { back: "home" })}<main class="wrap">
+    ${
+      plans.length
+        ? plans
+            .map(
+              (p) => `<section class="card"><h3>${esc(p.row.name)}</h3><div class="list">
+              ${p.days
+                .map(
+                  (d) => `<button class="item" data-act="start-plan" data-arg="${d.row.id}"><span class="main"><b>${esc(d.row.name)}</b>
+                    <span class="muted small">${d.exercises.length} Übungen</span></span><span class="chev">›</span></button>`,
+                )
+                .join("")}</div></section>`,
+            )
+            .join("")
+        : `<p class="empty">Noch keine Trainingspläne. Lege sie am PC an und lade danach eine neue Exportdatei.</p>`
+    }
+  </main>`;
+}
+
+function exLabel(ex, machines) {
+  const m = ex?.machine_id ? machines.get(ex.machine_id) : null;
+  const nr = m?.own_number || m?.gym_number || ex?.equipment || null;
+  return { name: ex?.name ?? "Unbekannte Übung", nr, m };
+}
+
+function lastText(last, cardio) {
+  if (!last?.sets?.length) return "";
+  const parts = last.sets
+    .filter((s) => !s.isWarmup)
+    .map((s) =>
+      cardio
+        ? [s.durationSeconds ? `${Math.round(s.durationSeconds / 60)} min` : "", s.distanceM ? `${C.fmtNum(s.distanceM / 1000)} km` : ""].filter(Boolean).join(" ")
+        : `${s.reps ?? "–"}×${s.weightKg !== null ? C.fmtNum(s.weightKg) : "–"}`,
+    );
+  return `<p class="last">Letztes Mal (${fmtDate(last.date)}): <b>${esc(parts.join(" · ") || "–")}</b>${cardio ? "" : " kg"}</p>`;
+}
+
+function viewWorkout() {
+  const w = S.active;
+  if (!w) return viewHome();
+  const exs = exById();
+  const machines = machineById();
+  return `${header(w.title, { back: "home", sub: `${fmtDate(w.date)} · seit ${C.localTime(new Date(w.startedAt))} Uhr` })}<main class="wrap">
+    <div class="wo-head"><span class="muted small">${w.exercises.length} Übungen · ${C.fmtNum(C.volumeKg(w), 0)} kg Volumen</span><span class="clock" data-clock>${fmtSec((Date.now() - new Date(w.startedAt)) / 1000)}</span></div>
+    ${w.exercises.map((we, i) => exerciseCard(we, i, exs, machines)).join("")}
+    <button class="btn block" data-go="picker">+ Übung oder Maschine hinzufügen</button>
+    <button class="btn danger block" data-act="discard">Training verwerfen</button>
+  </main>
+  <div class="bottom"><div class="inner"><button class="btn primary" data-go="finish">Training beenden</button></div></div>`;
+}
+
+function exerciseCard(we, i, exs, machines) {
+  const ex = exs.get(we.exerciseId);
+  const { name, nr, m } = exLabel(ex, machines);
+  const cardio = ex?.category === "cardio";
+  const last = C.lastSessionFor(S.catalog, S.workouts, we.exerciseId, S.active.id);
+  const st = we.settings || C.emptySettings();
+  return `<section class="ex" id="ex-${we.id}">
+    <div class="ex-head">
+      <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>
+      <div class="main"><b>${esc(name)}</b><span class="muted small">${esc([m?.manufacturer, ex?.muscle_group].filter(Boolean).join(" · "))}</span></div>
+    </div>
+    ${lastText(last, cardio)}
+    <details class="settings"${Object.values(st).some((v) => v) ? "" : ""}>
+      <summary>Geräteeinstellungen${Object.values(st).some((v) => v) ? `: ${esc(Object.entries(C.SETTING_LABELS).filter(([k]) => st[k]).map(([k, l]) => `${l} ${st[k]}`).join(", "))}` : ""}</summary>
+      <div class="settings-grid">
+        ${Object.entries(C.SETTING_LABELS)
+          .map(
+            ([k, l]) => `<div class="field"><label for="st-${we.id}-${k}">${l}</label>
+            <input id="st-${we.id}-${k}" type="text" maxlength="40" value="${esc(st[k] ?? "")}" data-we="${we.id}" data-setting="${k}"></div>`,
+          )
+          .join("")}
+        <div class="field"><label for="st-${we.id}-grip">Griffstellung</label>
+          <select id="st-${we.id}-grip" data-we="${we.id}" data-setting="gripPosition">
+            <option value="">–</option>
+            ${Object.entries(C.GRIP_LABELS).map(([k, l]) => `<option value="${k}"${st.gripPosition === k ? " selected" : ""}>${l}</option>`).join("")}
+          </select></div>
+        <div class="field"><label for="rest-${we.id}">Pause (Sekunden)</label>
+          <input id="rest-${we.id}" type="text" inputmode="numeric" value="${we.restSeconds ?? ""}" data-we="${we.id}" data-field="restSeconds"></div>
+      </div>
+    </details>
+    <div class="set-head${cardio ? " cardio" : ""}"><span>#</span>${cardio ? "<span>Minuten</span><span>km</span>" : "<span>kg</span><span>Wdh.</span><span>RPE</span>"}<span>✓</span></div>
+    <div class="sets">
+      ${we.sets.map((s, si) => setRow(we, s, si, cardio)).join("")}
+    </div>
+    <div class="ex-foot">
+      <button class="btn sm" data-act="add-set" data-we="${we.id}">+ Satz</button>
+      <button class="btn sm ghost" data-act="move-up" data-we="${we.id}" ${i === 0 ? "disabled" : ""}>↑</button>
+      <button class="btn sm danger" data-act="remove-ex" data-we="${we.id}">Entfernen</button>
+    </div>
+  </section>`;
+}
+
+function setRow(we, s, si, cardio) {
+  const id = `${we.id}-${s.id}`;
+  const warmIdx = we.sets.slice(0, si + 1).filter((x) => !x.isWarmup).length;
+  const idx = s.isWarmup ? `<span class="idx w">W</span>` : `<span class="idx">${warmIdx}</span>`;
+  const inputs = cardio
+    ? `<input id="d-${id}" type="text" inputmode="decimal" placeholder="min" value="${s.durationSeconds ? C.fmtNum(s.durationSeconds / 60) : ""}" data-we="${we.id}" data-set="${s.id}" data-f="durationMin" aria-label="Dauer in Minuten">
+       <input id="k-${id}" type="text" inputmode="decimal" placeholder="km" value="${s.distanceM !== null ? C.fmtNum(s.distanceM / 1000, 3) : ""}" data-we="${we.id}" data-set="${s.id}" data-f="distanceKm" aria-label="Strecke in km">`
+    : `<input id="w-${id}" type="text" inputmode="decimal" placeholder="kg" value="${C.fmtNum(s.weightKg)}" data-we="${we.id}" data-set="${s.id}" data-f="weightKg" aria-label="Gewicht in kg">
+       <input id="r-${id}" type="text" inputmode="numeric" placeholder="Wdh." value="${s.reps ?? ""}" data-we="${we.id}" data-set="${s.id}" data-f="reps" aria-label="Wiederholungen">
+       <input id="p-${id}" class="rpe" type="text" inputmode="decimal" placeholder="–" value="${C.fmtNum(s.rpe, 1)}" data-we="${we.id}" data-set="${s.id}" data-f="rpe" aria-label="RPE">`;
+  return `<div class="set${cardio ? " cardio" : ""}${s.isDone ? " done" : ""}">${idx}${inputs}
+      <button class="check${s.isDone ? " on" : ""}" data-act="toggle-done" data-we="${we.id}" data-set="${s.id}" aria-label="Satz abhaken" aria-pressed="${s.isDone}">✓</button>
+    </div>
+    <div class="set-opts">
+      <button class="chip${s.isWarmup ? " on" : ""}" data-act="flag" data-flag="isWarmup" data-we="${we.id}" data-set="${s.id}">Aufwärmen</button>
+      ${cardio ? "" : `<button class="chip${s.isFailure ? " on" : ""}" data-act="flag" data-flag="isFailure" data-we="${we.id}" data-set="${s.id}">Fail</button>
+      <button class="chip${s.isUnilateral ? " on" : ""}" data-act="flag" data-flag="isUnilateral" data-we="${we.id}" data-set="${s.id}">Einseitig</button>`}
+      <button class="chip del" data-act="del-set" data-we="${we.id}" data-set="${s.id}" aria-label="Satz löschen">✕</button>
+    </div>`;
+}
+
+function viewPicker() {
+  return `${header("Übung hinzufügen", { back: "workout" })}<main class="wrap">
+    <div class="search">
+      <input id="q" type="search" placeholder="Nummer oder Name, z. B. 47 oder Beinpresse" value="${esc(S.query)}" autocomplete="off" enterkeyhint="search">
+      <label class="toggle"><input id="only-nr" type="checkbox" ${S.prefs.onlyNumbered ? "checked" : ""}> Nur Maschinen mit Nummer (dein Studio)</label>
+    </div>
+    <div class="list" id="results">${pickerResults()}</div>
+  </main>`;
+}
+
+function pickerResults() {
+  const anyNumbered = S.catalog.machines.some((m) => m.own_number || m.gym_number);
+  const hits = C.search(S.catalog, S.localExercises, S.query, { onlyNumbered: S.prefs.onlyNumbered && anyNumbered });
+  if (!hits.length) {
+    return `<p class="empty">Nichts gefunden.${S.prefs.onlyNumbered ? " Schalte „Nur Maschinen mit Nummer“ aus, um alle Maschinen zu durchsuchen." : ""}</p>`;
+  }
+  return hits
+    .map((h) => {
+      if (h.kind === "machine") {
+        const m = h.machine;
+        const nr = m.own_number || m.gym_number;
+        return `<button class="item" data-act="pick-machine" data-arg="${esc(m.id)}">
+          <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>
+          <span class="main"><b>${esc(m.display_name)}</b><span class="muted small">${esc([m.manufacturer, m.series, C.machineMuscles(m).slice(0, 3).join(", ")].filter(Boolean).join(" · "))}</span></span>
+          <span class="chev">+</span></button>`;
+      }
+      const e = h.exercise;
+      return `<button class="item" data-act="pick-exercise" data-arg="${esc(e.id)}">
+        <span class="num none">Übung</span>
+        <span class="main"><b>${esc(e.name)}</b><span class="muted small">${esc([e.muscle_group, e.equipment].filter(Boolean).join(" · "))}</span></span>
+        <span class="chev">+</span></button>`;
+    })
+    .join("");
+}
+
+function viewFinish() {
+  const w = S.active;
+  if (!w) return viewHome();
+  const unticked = C.untickedCount(w);
+  const errors = C.checkWorkout(w, { keepUnticked: S.prefs.keepUnticked });
+  return `${header("Training beenden", { back: "workout" })}<main class="wrap">
+    <section class="card">
+      <div class="stat">
+        <div><b>${fmtSec((Date.now() - new Date(w.startedAt)) / 1000)}</b><span>Dauer</span></div>
+        <div><b>${w.exercises.length}</b><span>Übungen</span></div>
+        <div><b>${C.fmtNum(C.volumeKg(w), 0)}</b><span>kg Volumen</span></div>
+      </div>
+    </section>
+    <section class="card">
+      <h3>Wie anstrengend war es? (1–10)</h3>
+      <div class="rpe-row">${Array.from({ length: 10 }, (_, i) => i + 1)
+        .map((n) => `<button data-act="exertion" data-arg="${n}" class="${w.perceivedExertion === n ? "on" : ""}">${n}</button>`)
+        .join("")}</div>
+      <div class="field"><label for="wo-notes">Notiz (optional)</label><textarea id="wo-notes" maxlength="2000" data-wfield="notes">${esc(w.notes ?? "")}</textarea></div>
+      <div class="field"><label for="wo-title">Titel</label><input id="wo-title" type="text" maxlength="80" value="${esc(w.title)}" data-wfield="title"></div>
+    </section>
+    ${
+      unticked
+        ? `<section class="card"><p class="warn">${unticked === 1 ? "1 Satz ist" : `${unticked} Sätze sind`} eingetragen, aber nicht abgehakt.</p>
+           <label class="toggle"><input id="keep-unticked" type="checkbox" ${S.prefs.keepUnticked ? "checked" : ""}> Nicht abgehakte Sätze trotzdem speichern</label></section>`
+        : ""
+    }
+    ${errors.length ? `<div class="errors">${errors.map((e) => `<p>${esc(e)}</p>`).join("")}</div>` : ""}
+  </main>
+  <div class="bottom"><div class="inner"><button class="btn primary" data-act="finish" ${errors.length ? "disabled" : ""}>Speichern</button></div></div>`;
+}
+
+function viewSend() {
+  const open = unsent();
+  const all = S.workouts.filter((w) => w.status === "done");
+  return `${header("An den PC senden", { back: "home" })}<main class="wrap">
+    <section class="card">
+      <h3>${open.length ? `${open.length} ${open.length === 1 ? "Training" : "Trainings"} bereit` : "Alles übertragen"}</h3>
+      <ol class="steps small">
+        <li>Auf <b>„Datei erstellen“</b> tippen und die Datei in <b>Google Drive</b> sichern („In Drive sichern“ bzw. „In Dateien sichern“ → Google Drive).</li>
+        <li>Am PC in LIFESPAN OS: <b>Settings → Daten importieren → Exportdatei auswählen …</b> und die Datei aus Google Drive wählen.</li>
+        <li>Als Art <b>„Abgleichen (zweites Gerät)“</b> wählen und bestätigen.</li>
+      </ol>
+      <p class="warn">Bitte nie „Ersetzen“ wählen: Dann würden am PC alle anderen Daten gelöscht. „Abgleichen“ ist sicher, vorher legt die App automatisch ein Backup an.</p>
+      <button class="btn primary block" data-act="send" data-arg="open" ${open.length ? "" : "disabled"}>Datei erstellen</button>
+    </section>
+    ${
+      all.length
+        ? `<section class="card"><h3>Alle Trainings vom Handy</h3>
+            <p class="muted small">Falls eine Datei verloren ging: Du kannst alle ${all.length} Trainings noch einmal senden. Am PC entstehen dabei keine doppelten Einträge.</p>
+            <button class="btn block" data-act="send" data-arg="all">Alle erneut senden</button></section>`
+        : ""
+    }
+    <div id="send-result"></div>
+  </main>`;
+}
+
+function viewDetail() {
+  const w = S.workouts.find((x) => x.id === S.arg);
+  if (!w) return viewHome();
+  const exs = exById();
+  const machines = machineById();
+  return `${header(w.title, { back: "home", sub: `${fmtDate(w.date)} · ${w.startTime} Uhr` })}<main class="wrap">
+    <section class="card"><div class="stat">
+      <div><b>${w.durationMin ?? "–"}</b><span>Minuten</span></div>
+      <div><b>${w.perceivedExertion ?? "–"}</b><span>Anstrengung</span></div>
+      <div><b>${C.fmtNum(C.volumeKg(w), 0)}</b><span>kg Volumen</span></div>
+    </div>${w.notes ? `<p class="small">${esc(w.notes)}</p>` : ""}
+    <p class="muted small">${w.exported ? "An den PC gesendet." : "Noch nicht an den PC gesendet."}</p></section>
+    ${w.exercises
+      .map((we) => {
+        const { name, nr } = exLabel(exs.get(we.exerciseId), machines);
+        return `<section class="card"><div class="row"><span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span><h3 style="flex:1">${esc(name)}</h3></div>
+          <p class="small">${we.sets
+            .map((s) => `${s.isWarmup ? "W " : ""}${s.reps ?? "–"} × ${s.weightKg !== null ? C.fmtNum(s.weightKg) + " kg" : "–"}${s.rpe ? ` @${C.fmtNum(s.rpe, 1)}` : ""}${s.isFailure ? " (Fail)" : ""}`)
+            .map(esc)
+            .join("<br>")}</p></section>`;
+      })
+      .join("")}
+    ${w.exported ? "" : `<button class="btn danger block" data-act="delete-workout" data-arg="${w.id}">Training löschen</button>`}
+  </main>`;
+}
+
+function viewHelp() {
+  return `${header("Hilfe", { back: S.catalog ? "home" : "setup" })}<main class="wrap">
+    <section class="card"><h3>Wo sind meine Daten?</h3>
+      <p class="small">Nur auf diesem Gerät, im Speicher des Browsers. Es gibt kein Konto und keinen Server. Die App selbst wird einmal von lifespan-os.github.io geladen und läuft danach auch offline.</p></section>
+    <section class="card"><h3>iPhone: unbedingt zum Home-Bildschirm</h3>
+      <p class="small">In Safari auf „Teilen“ → „Zum Home-Bildschirm“ tippen und LIFESPAN danach immer über das Symbol öffnen. Sonst darf Safari die gespeicherten Daten nach längerer Pause löschen. Sende deine Trainings regelmäßig an den PC.</p></section>
+    <section class="card"><h3>Ablauf</h3>
+      <ol class="steps small">
+        <li>PC → Handy: Am PC exportieren, Datei in Google Drive legen, hier laden.</li>
+        <li>Im Studio: Plan starten oder freies Training, Sätze eintragen und abhaken. Der Pausentimer startet beim Abhaken.</li>
+        <li>Handy → PC: „An den PC senden“, Datei in Google Drive sichern, am PC mit „Abgleichen (zweites Gerät)“ importieren.</li>
+      </ol></section>
+    <section class="card"><h3>Gut zu wissen</h3>
+      <p class="small">Neue Pläne oder Maschinen vom PC kommen erst mit einer neuen Exportdatei aufs Handy. Trainings auf dem Handy bleiben beim Laden neuer Daten erhalten.</p>
+      <p class="small">LIFESPAN OS Mobil ${C.MOBILE_VERSION} · ein Non-Profit-Projekt</p></section>
+  </main>`;
+}
+
+const VIEWS = {
+  setup: viewSetup,
+  home: viewHome,
+  plans: viewPlans,
+  workout: viewWorkout,
+  picker: viewPicker,
+  finish: viewFinish,
+  send: viewSend,
+  detail: viewDetail,
+  help: viewHelp,
+};
+
+function render() {
+  if (!S.catalog && S.view !== "help") S.view = "setup";
+  app.innerHTML = (VIEWS[S.view] || viewHome)();
+  if (S.view === "picker") {
+    const q = document.getElementById("q");
+    q?.focus();
+  }
+  renderRest();
+}
+
+// ------------------------------------------------------------------ Aktionen
+
+function findWe(id) {
+  return S.active?.exercises.find((e) => e.id === id) || null;
+}
+function findSet(weId, setId) {
+  return findWe(weId)?.sets.find((s) => s.id === setId) || null;
+}
+
+function rerenderKeepScroll() {
+  const y = window.scrollY;
+  render();
+  window.scrollTo(0, y);
+}
+
+async function startWorkout(title, planDay = null) {
+  if (S.active) return go("workout");
+  const w = C.newWorkout({ title, planDayId: planDay?.row.id ?? null });
+  if (planDay) {
+    for (const pe of planDay.exercises) {
+      w.exercises.push(C.workoutExercise({ exerciseId: pe.exerciseId, planExercise: pe, last: C.lastSessionFor(S.catalog, S.workouts, pe.exerciseId) }));
+    }
+  }
+  S.active = w;
+  await saveNow();
+  wakeLock(true);
+  go(planDay ? "workout" : "picker");
+}
+
+function addExercise(exerciseId) {
+  const last = C.lastSessionFor(S.catalog, S.workouts, exerciseId, S.active.id);
+  const we = C.workoutExercise({ exerciseId, last });
+  S.active.exercises.push(we);
+  saveSoon();
+  S.query = "";
+  go("workout");
+  requestAnimationFrame(() => document.getElementById(`ex-${we.id}`)?.scrollIntoView({ block: "start", behavior: "smooth" }));
+}
+
+const actions = {
+  "start-free": () => startWorkout("Freies Training"),
+  "start-plan": (el) => {
+    for (const p of S.catalog.plans) {
+      const d = p.days.find((x) => x.row.id === el.dataset.arg);
+      if (d) return startWorkout(d.row.name, d);
+    }
+  },
+  "pick-machine": (el) => {
+    try {
+      const { exercise, created } = C.exerciseForMachine(S.catalog, S.localExercises, el.dataset.arg);
+      if (created) S.localExercises.push(exercise);
+      addExercise(exercise.id);
+    } catch (e) {
+      toast(e.message, true);
+    }
+  },
+  "pick-exercise": (el) => addExercise(el.dataset.arg),
+  "toggle-done": (el) => {
+    const we = findWe(el.dataset.we);
+    const s = findSet(el.dataset.we, el.dataset.set);
+    if (!s) return;
+    s.isDone = !s.isDone;
+    if (s.isDone && we.restSeconds) startRest(we.restSeconds);
+    saveSoon();
+    rerenderKeepScroll();
+  },
+  flag: (el) => {
+    const s = findSet(el.dataset.we, el.dataset.set);
+    if (!s) return;
+    s[el.dataset.flag] = !s[el.dataset.flag];
+    saveSoon();
+    rerenderKeepScroll();
+  },
+  "add-set": (el) => {
+    const we = findWe(el.dataset.we);
+    const prev = we.sets[we.sets.length - 1] || null;
+    we.sets.push(C.newSet(prev ? { ...prev, isWarmup: false } : null));
+    saveSoon();
+    rerenderKeepScroll();
+  },
+  "del-set": (el) => {
+    const we = findWe(el.dataset.we);
+    we.sets = we.sets.filter((s) => s.id !== el.dataset.set);
+    saveSoon();
+    rerenderKeepScroll();
+  },
+  "remove-ex": (el) => {
+    const we = findWe(el.dataset.we);
+    if (we.sets.some((s) => s.isDone) && !confirmTwice(el, "Wirklich entfernen?")) return;
+    S.active.exercises = S.active.exercises.filter((e) => e.id !== el.dataset.we);
+    saveSoon();
+    rerenderKeepScroll();
+  },
+  "move-up": (el) => {
+    const list = S.active.exercises;
+    const i = list.findIndex((e) => e.id === el.dataset.we);
+    if (i > 0) [list[i - 1], list[i]] = [list[i], list[i - 1]];
+    saveSoon();
+    rerenderKeepScroll();
+  },
+  discard: async (el) => {
+    if (!confirmTwice(el, "Nochmal tippen: Training wirklich verwerfen")) return;
+    S.active = null;
+    stopRest();
+    wakeLock(false);
+    await saveNow();
+    toast("Training verworfen");
+    go("home");
+  },
+  exertion: (el) => {
+    const n = Number(el.dataset.arg);
+    S.active.perceivedExertion = S.active.perceivedExertion === n ? null : n;
+    saveSoon();
+    rerenderKeepScroll();
+  },
+  finish: async () => {
+    const opts = { keepUnticked: S.prefs.keepUnticked };
+    if (C.checkWorkout(S.active, opts).length) return render();
+    const done = C.finishWorkout(S.active, new Date(), opts);
+    S.workouts.push(done);
+    S.active = null;
+    stopRest();
+    wakeLock(false);
+    await saveNow();
+    toast("Training gespeichert");
+    go("detail", done.id);
+  },
+  send: (el) => sendFile(el.dataset.arg === "all"),
+  "mark-sent": async (el) => {
+    const ids = el.dataset.arg.split(",");
+    for (const w of S.workouts) if (ids.includes(w.id)) w.exported = true;
+    await saveNow();
+    toast("Als übertragen markiert");
+    go("home");
+  },
+  "delete-workout": async (el) => {
+    if (!confirmTwice(el, "Nochmal tippen: Training löschen")) return;
+    S.workouts = S.workouts.filter((w) => w.id !== el.dataset.arg);
+    await saveNow();
+    go("home");
+  },
+  "rest-plus": () => adjustRest(15),
+  "rest-minus": () => adjustRest(-15),
+  "rest-stop": () => stopRest(),
+};
+
+/** Zweistufige Bestätigung im Knopf selbst (Browser-Dialoge sind auf dem Handy unpraktisch). */
+function confirmTwice(el, text) {
+  if (el.dataset.armed === "1") return true;
+  el.dataset.armed = "1";
+  const old = el.textContent;
+  el.textContent = text;
+  setTimeout(() => {
+    if (el.isConnected) {
+      el.dataset.armed = "";
+      el.textContent = old;
+    }
+  }, 3500);
+  return false;
+}
+
+async function sendFile(all) {
+  const list = S.workouts.filter((w) => w.status === "done" && (all || !w.exported));
+  if (!list.length) return;
+  let doc;
+  try {
+    doc = C.buildReturnFile(S.catalog, S.localExercises, list);
+  } catch (e) {
+    return toast(e.message, true);
+  }
+  const name = C.returnFileName();
+  const blob = new Blob([JSON.stringify(doc)], { type: "application/json" });
+  const file = new File([blob], name, { type: "application/json" });
+  const ids = list.map((w) => w.id).join(",");
+  const result = document.getElementById("send-result");
+  let shared = false;
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: name });
+      shared = true;
+    } catch (e) {
+      if (e.name === "AbortError") return toast("Abgebrochen");
+    }
+  }
+  if (!shared) {
+    const url = URL.createObjectURL(blob);
+    result.innerHTML = `<section class="card"><p class="small">Die Datei ist bereit. Tippe darauf und sichere sie in Google Drive:</p>
+      <a class="btn blue block" href="${url}" download="${esc(name)}">${esc(name)}</a></section>`;
+  }
+  result.insertAdjacentHTML(
+    "beforeend",
+    `<section class="card"><p class="small">${shared ? "Datei weitergegeben." : ""} Sobald die Datei in Google Drive liegt:</p>
+     <button class="btn primary block" data-act="mark-sent" data-arg="${ids}">Als übertragen markieren</button></section>`,
+  );
+}
+
+// ------------------------------------------------------------------ Eingaben
+
+app.addEventListener("click", (ev) => {
+  const el = ev.target.closest("[data-act],[data-go]");
+  if (!el || el.disabled) return;
+  unlockAudio();
+  if (el.dataset.go) {
+    if (el.dataset.go === "detail") return go("detail", el.dataset.arg);
+    return go(el.dataset.go);
+  }
+  const fn = actions[el.dataset.act];
+  if (fn) fn(el);
+});
+restEl.addEventListener("click", (ev) => {
+  const el = ev.target.closest("[data-act]");
+  if (el) actions[el.dataset.act]?.(el);
+});
+
+app.addEventListener("input", (ev) => {
+  const el = ev.target;
+  if (el.id === "q") {
+    S.query = el.value;
+    document.getElementById("results").innerHTML = pickerResults();
+    return;
+  }
+  if (el.dataset.f) {
+    const s = findSet(el.dataset.we, el.dataset.set);
+    if (!s) return;
+    const v = C.parseNum(el.value);
+    const ok = v === null || !Number.isNaN(v);
+    el.setAttribute("aria-invalid", ok ? "false" : "true");
+    el.style.borderColor = ok ? "" : "var(--danger)";
+    const f = el.dataset.f;
+    if (f === "reps") s.reps = v === null ? null : Number.isNaN(v) ? NaN : Math.round(v);
+    else if (f === "weightKg") s.weightKg = v;
+    else if (f === "rpe") s.rpe = v;
+    else if (f === "durationMin") s.durationSeconds = v === null ? null : Number.isNaN(v) ? NaN : Math.round(v * 60);
+    else if (f === "distanceKm") s.distanceM = v === null ? null : Number.isNaN(v) ? NaN : Math.round(v * 1000);
+    saveSoon();
+    return;
+  }
+  if (el.dataset.setting) {
+    const we = findWe(el.dataset.we);
+    we.settings[el.dataset.setting] = el.value.trim() || null;
+    saveSoon();
+    return;
+  }
+  if (el.dataset.field === "restSeconds") {
+    const we = findWe(el.dataset.we);
+    const v = C.parseNum(el.value);
+    we.restSeconds = v === null || Number.isNaN(v) ? null : Math.min(3600, Math.max(0, Math.round(v)));
+    saveSoon();
+    return;
+  }
+  if (el.dataset.wfield) {
+    S.active[el.dataset.wfield] = el.dataset.wfield === "title" ? el.value : el.value.trim() || null;
+    saveSoon();
+  }
+});
+
+app.addEventListener("change", async (ev) => {
+  const el = ev.target;
+  if (el.id === "only-nr") {
+    S.prefs.onlyNumbered = el.checked;
+    saveSoon();
+    document.getElementById("results").innerHTML = pickerResults();
+  } else if (el.id === "keep-unticked") {
+    S.prefs.keepUnticked = el.checked;
+    saveSoon();
+    rerenderKeepScroll();
+  } else if (el.id === "file-in" && el.files?.[0]) {
+    await loadFile(el.files[0]);
+  } else if (el.dataset.wfield === "title") {
+    if (!S.active.title.trim()) S.active.title = "Training";
+  }
+});
+
+// Satzfelder: beim Antippen alles markieren, damit man direkt überschreiben kann
+app.addEventListener("focusin", (ev) => {
+  if (ev.target.dataset?.f) setTimeout(() => ev.target.select?.(), 0);
+});
+
+async function loadFile(file) {
+  try {
+    toast("Datei wird gelesen …");
+    const text = await file.text();
+    const catalog = C.parseExport(text);
+    S.localExercises = C.keepLocalExercises(catalog, S.localExercises, [...S.workouts, ...(S.active ? [S.active] : [])]);
+    S.catalog = catalog;
+    await store.set("catalog", catalog);
+    await saveNow();
+    toast(`Geladen: ${catalog.machines.length.toLocaleString("de-DE")} Maschinen, ${catalog.plans.length} Pläne`);
+    go("home");
+  } catch (e) {
+    toast(e.message || "Die Datei konnte nicht gelesen werden.", true);
+  }
+}
+
+// ------------------------------------------------------------------ Pausentimer
+
+let audioCtx = null;
+function unlockAudio() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  } catch {
+    /* ohne Ton */
+  }
+}
+function beep() {
+  try {
+    if (!audioCtx) return;
+    for (const [t, f] of [[0, 880], [0.25, 880], [0.5, 1320]]) {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.25, audioCtx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + t + 0.2);
+      o.connect(g).connect(audioCtx.destination);
+      o.start(audioCtx.currentTime + t);
+      o.stop(audioCtx.currentTime + t + 0.22);
+    }
+  } catch {
+    /* ohne Ton */
+  }
+  navigator.vibrate?.([200, 100, 200]);
+}
+
+function startRest(seconds) {
+  S.rest = { endsAt: Date.now() + seconds * 1000, total: seconds, beeped: false };
+  renderRest();
+}
+function adjustRest(delta) {
+  if (!S.rest) return;
+  S.rest.endsAt += delta * 1000;
+  S.rest.total = Math.max(1, S.rest.total + delta);
+  S.rest.beeped = false;
+  renderRest();
+}
+function stopRest() {
+  S.rest = null;
+  renderRest();
+}
+function renderRest() {
+  if (!S.rest || S.view !== "workout") {
+    restEl.hidden = true;
+    return;
+  }
+  const left = (S.rest.endsAt - Date.now()) / 1000;
+  const over = left <= 0;
+  if (over && !S.rest.beeped) {
+    S.rest.beeped = true;
+    beep();
+  }
+  if (left < -60) return stopRest();
+  restEl.hidden = false;
+  restEl.className = over ? "rest over" : "rest";
+  const pct = Math.max(0, Math.min(100, (left / S.rest.total) * 100));
+  restEl.innerHTML = `<div class="box"><span class="t">${over ? "Los!" : fmtSec(left)}</span>
+    <span class="lbl">${over ? "Pause vorbei" : "Pause"}</span>
+    <button data-act="rest-minus" aria-label="15 Sekunden weniger">−15</button>
+    <button data-act="rest-plus" aria-label="15 Sekunden mehr">+15</button>
+    <button data-act="rest-stop">✕</button>
+    <span class="bar" style="width:${pct}%"></span></div>`;
+}
+
+setInterval(() => {
+  if (S.rest) renderRest();
+  const clock = document.querySelector("[data-clock]");
+  if (clock && S.active) clock.textContent = fmtSec((Date.now() - new Date(S.active.startedAt)) / 1000);
+}, 500);
+
+// ------------------------------------------------------------------ Bildschirm anlassen
+
+let lock = null;
+async function wakeLock(on) {
+  try {
+    if (on && "wakeLock" in navigator && !lock) {
+      lock = await navigator.wakeLock.request("screen");
+      lock.addEventListener("release", () => (lock = null));
+    } else if (!on && lock) {
+      await lock.release();
+      lock = null;
+    }
+  } catch {
+    lock = null;
+  }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && S.active) wakeLock(true);
+  if (document.visibilityState === "hidden") saveNow();
+});
+
+// ------------------------------------------------------------------ Start
+
+async function boot() {
+  try {
+    S.catalog = await store.get("catalog");
+    S.localExercises = (await store.get("localExercises")) || [];
+    S.workouts = (await store.get("workouts")) || [];
+    S.active = await store.get("active");
+    S.prefs = { ...S.prefs, ...((await store.get("prefs")) || {}) };
+  } catch (e) {
+    app.innerHTML = `<p class="boot">Der Gerätespeicher ist nicht verfügbar (${esc(e.message)}). Im privaten Modus funktioniert LIFESPAN OS Mobil nicht.</p>`;
+    return;
+  }
+  store.persist();
+  S.view = S.catalog ? (S.active ? "workout" : "home") : "setup";
+  render();
+  if (S.active) wakeLock(true);
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+}
+
+boot();

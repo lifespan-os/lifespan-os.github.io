@@ -8,7 +8,14 @@ let X = null; // Verbindung zur App (Zustand, Anzeige, Speichern)
 /** Wird einmal von app.js aufgerufen. */
 export function initFood(ctx) {
   X = ctx;
+  document.addEventListener("pointerdown", cropStart);
+  document.addEventListener("pointermove", cropMove);
+  document.addEventListener("pointerup", cropEnd);
+  document.addEventListener("pointercancel", cropEnd);
 }
+
+/** iPhone/iPad: „Text scannen“ der Tastatur ist genauer als die Erkennung im Browser. */
+const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
 export function foodState(local) {
   const hour = new Date().getHours();
@@ -29,6 +36,7 @@ export function foodState(local) {
     dishMeal: N.suggestMealType(hour),
     status: "",
     busy: false,
+    photo: null, // { img, rotate, preview, crop, done } – Foto vor der Texterkennung
   };
 }
 
@@ -66,14 +74,38 @@ export function foodResults(query, act) {
 
 // ------------------------------------------------------------------ Ansicht „Ernährung“
 
+/** Hinweise zur Plausibilität der eingetragenen Werte (gelb, nur Hinweis). */
+function formWarnings() {
+  const s = F();
+  const values = {};
+  for (const k of L.LABEL_KEYS) {
+    const v = N.parseNum(s.form.values[k]);
+    if (v !== null && Number.isFinite(v)) values[k] = v;
+  }
+  return L.checkValues(values, !s.form.id && s.scan ? s.scan.energyKj : null);
+}
+
+function updateWarnings() {
+  const w = formWarnings();
+  for (const k of [...L.LABEL_KEYS, "sum"]) {
+    const el = document.getElementById(`fw-${k}`);
+    if (!el) continue;
+    el.hidden = !w[k];
+    el.textContent = w[k] ? `⚠ ${w[k]}` : "";
+  }
+}
+
 function formCard() {
   const s = F();
   const f = s.form;
   const e = s.errors;
+  const w = formWarnings();
+  const fixed = (k) => (!f.id && s.scan?.corrected?.includes(k) ? `<p class="muted small">Lesefehler automatisch korrigiert – bitte prüfen.</p>` : "");
+  const warn = (k) => `<p class="field-warn small" id="fw-${k}" ${w[k] ? "" : "hidden"}>${w[k] ? `⚠ ${esc(w[k])}` : ""}</p>`;
   const field = (key, label, value, { unit = "", mode = "decimal", wide = false } = {}) => `
     <div class="field${wide ? " wide" : ""}"><label for="ff-${key}">${esc(label)}${unit ? ` <span class="muted">(${esc(unit)})</span>` : ""}</label>
       <input id="ff-${key}" type="text" inputmode="${mode}" data-ff="${key}" value="${esc(value)}" autocomplete="off" ${e[key] ? 'aria-invalid="true"' : ""}>
-      ${e[key] ? `<p class="err small">${esc(e[key])}</p>` : ""}</div>`;
+      ${e[key] ? `<p class="err small">${esc(e[key])}</p>` : ""}${key.startsWith("v.") ? warn(key.slice(2)) + fixed(key.slice(2)) : ""}</div>`;
   const hint = (k) => (s.scan?.lessThan.includes(k) ? " (<)" : "");
   return `<section class="card" id="food-form">
     <div class="wo-head"><h3>${s.known ? "Gespeichertes Lebensmittel" : "Erkannte Nährwerte"}</h3>${
@@ -91,6 +123,7 @@ function formCard() {
       <div class="field wide"><label for="ff-notes">Notiz (Vitamine, Mineralstoffe, Koffein …)</label>
         <textarea id="ff-notes" data-ff="notes" rows="2">${esc(f.notes)}</textarea>${e.notes ? `<p class="err small">${esc(e.notes)}</p>` : ""}</div>
     </div>
+    ${warn("sum")}
     ${s.text ? `<details><summary class="muted small">Erkannter Text</summary><pre class="ocr-raw">${esc(s.text)}</pre></details>` : ""}
     <button class="btn primary block" data-act="food-save">${s.form.id ? "Änderungen speichern" : "Als Lebensmittel speichern"}</button>
   </section>`;
@@ -142,6 +175,40 @@ function dayCard() {
     <p class="muted small">Gesamt: ${esc(N.describeNutrients(total))}. Am PC mit „An den PC senden“ übernehmen.</p></section>`;
 }
 
+function cropCard() {
+  const p = F().photo;
+  if (p.done) {
+    return `<section class="card" id="food-crop"><div class="row">
+      <button class="btn sm" data-act="crop-edit">Ausschnitt ändern und neu erkennen</button>
+      <button class="btn sm ghost" data-act="crop-cancel">Foto verwerfen</button></div></section>`;
+  }
+  const r = p.crop;
+  const style = r ? `left:${r.x * 100}%;top:${r.y * 100}%;width:${r.w * 100}%;height:${r.h * 100}%` : "";
+  return `<section class="card hl" id="food-crop">
+    <h3>Ausschnitt wählen</h3>
+    <p class="muted small">Mit dem Finger einen Rahmen <b>nur um die Nährwerttabelle</b> ziehen – dann liest die Erkennung keine anderen Texte mit. Steht das Etikett quer oder auf dem Kopf, zuerst drehen.</p>
+    <div class="crop-area" id="crop-area"><img src="${p.preview}" alt="Foto des Etiketts" draggable="false">
+      <div class="crop-rect" id="crop-rect" style="${style}" ${r ? "" : "hidden"}></div></div>
+    <div class="row">
+      <button class="btn sm" data-act="crop-rotate">Drehen ↻</button>
+      <button class="btn sm" data-act="crop-reset" ${r ? "" : "disabled"}>Ganzes Bild</button>
+    </div>
+    <button class="btn primary block" data-act="crop-run" ${F().busy ? "disabled" : ""}>${r ? "Ausschnitt erkennen" : "Ganzes Bild erkennen"}</button>
+    <button class="btn ghost block" data-act="crop-cancel">Abbrechen</button>
+  </section>`;
+}
+
+function liveTextBlock(open) {
+  const s = F();
+  return `<details class="livetext" ${open ? "open" : ""}><summary>${IOS ? "„Text scannen“ des iPhones (am genauesten)" : "Text einfügen oder scannen"}</summary>
+        <ol class="steps small"><li>In das Feld unten tippen, dann auf <b>„Text scannen“</b> (Symbol mit Klammern über der Tastatur bzw. im Menü).</li>
+        <li>Die Kamera <b>nur auf die Nährwerttabelle</b> (und die Ziffern unter dem Strichcode) halten und <b>„Einsetzen“</b> tippen.</li>
+        <li><b>„Text auswerten“</b> tippen.</li></ol>
+        <textarea id="ocr-text" rows="5" placeholder="Hier tippen → „Text scannen“">${esc(s.text)}</textarea>
+        <button class="btn ${IOS ? "primary" : ""} block" data-act="food-parse">Text auswerten</button>
+      </details>`;
+}
+
 export function viewFood() {
   const s = F();
   const dish = s.local.dish;
@@ -150,20 +217,16 @@ export function viewFood() {
     ${oldExport ? `<p class="warn">Deine Lebensmittel vom PC fehlen noch: Bitte am PC neu exportieren und hier „Neue Exportdatei laden“. Scannen und Tracken geht trotzdem.</p>` : ""}
     <section class="card">
       <h3>Etikett scannen</h3>
-      <p class="muted small">Fotografiere die Nährwerttabelle (gerade, scharf, bildfüllend). Erkannt werden die Werte je 100 g/ml, die Packungsgröße und der Strichcode – offline auf dem Handy.</p>
-      <label class="btn primary block" for="ocr-cam">Etikett fotografieren</label>
+      <p class="muted small">Erkannt werden die Werte je 100 g/ml, die Packungsgröße und der Strichcode – offline auf dem Handy. Am besten gerade, scharf und ohne Spiegelung.</p>
+      ${IOS ? liveTextBlock(true) + `<p class="muted small">Oder ein Foto in der App erkennen lassen:</p>` : ""}
+      <label class="btn ${IOS ? "" : "primary"} block" for="ocr-cam">Etikett fotografieren</label>
       <input id="ocr-cam" type="file" accept="image/*" capture="environment" hidden>
       <label class="btn block" for="ocr-pick">Foto aus der Mediathek</label>
       <input id="ocr-pick" type="file" accept="image/*" hidden>
       <p class="small" id="ocr-status" ${s.status ? "" : "hidden"}>${esc(s.status)}</p>
-      <details class="livetext"><summary>iPhone: „Text scannen“ (genauer)</summary>
-        <ol class="steps small"><li>In das Feld unten tippen, dann auf <b>„Text scannen“</b> (Symbol mit Klammern über der Tastatur bzw. im Menü).</li>
-        <li>Die Kamera auf die Nährwerttabelle (und die Ziffern unter dem Strichcode) halten und <b>„Einsetzen“</b> tippen.</li>
-        <li><b>„Text auswerten“</b> tippen.</li></ol>
-        <textarea id="ocr-text" rows="5" placeholder="Hier tippen → „Text scannen“">${esc(s.text)}</textarea>
-        <button class="btn block" data-act="food-parse">Text auswerten</button>
-      </details>
+      ${IOS ? "" : liveTextBlock(false)}
     </section>
+    ${s.photo ? cropCard() : ""}
     ${s.selected && !s.form ? trackCard() : ""}
     ${s.form ? formCard() : ""}
     <section class="card">
@@ -252,7 +315,7 @@ function select(food, { known = false } = {}) {
 function useText(text) {
   const s = F();
   s.text = text.trim();
-  const scan = L.parseLabel(s.text);
+  const scan = L.repairScan(L.parseLabel(s.text));
   s.scan = scan;
   const known = scan.barcode ? N.foodByBarcode(X.S.catalog, s.local, scan.barcode) : null;
   if (known) {
@@ -263,35 +326,96 @@ function useText(text) {
     s.form = N.scanToForm(scan, s.text);
     s.errors = {};
     const count = L.recognizedCount(scan);
-    s.status = s.text ? `${count} von 8 Nährwerten erkannt – bitte prüfen und ergänzen.` : "Kein Text erkannt.";
+    const fixedNote = scan.corrected.length ? ` ${scan.corrected.length} Lesefehler korrigiert.` : "";
+    s.status = s.text ? `${count} von 8 Nährwerten erkannt.${fixedNote} Bitte prüfen und ergänzen.` : "Kein Text erkannt.";
   }
   X.rerender();
   requestAnimationFrame(() => document.getElementById(known ? "food-track" : "food-form")?.scrollIntoView({ block: "start", behavior: "smooth" }));
 }
 
-async function recognizePhoto(file) {
+/** Foto übernehmen: Vorschau zum Wählen des Ausschnitts. */
+async function startPhoto(file) {
   const s = F();
-  if (s.busy) return;
+  try {
+    const { loadImage, rotated } = await import("./ocr.js");
+    const img = await loadImage(file);
+    s.photo = { img, rotate: 0, crop: null, done: false, preview: rotated(img, 0, 1000).toDataURL("image/jpeg", 0.8) };
+    s.status = "";
+    X.rerender();
+    requestAnimationFrame(() => document.getElementById("food-crop")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  } catch (e) {
+    X.toast(e.message || "Das Foto lässt sich nicht öffnen.", true);
+  }
+}
+
+/** Texterkennung des gewählten Ausschnitts (mehrere Durchgänge, der beste zählt). */
+async function recognizePhoto() {
+  const s = F();
+  if (s.busy || !s.photo) return;
   s.busy = true;
-  const status = document.getElementById("ocr-status");
   const show = (t) => {
     s.status = t;
+    const status = document.getElementById("ocr-status");
     if (status) {
       status.hidden = false;
       status.textContent = t;
     }
   };
   show("Foto wird vorbereitet …");
+  document.querySelector('[data-act="crop-run"]')?.setAttribute("disabled", "");
+  document.getElementById("ocr-status")?.scrollIntoView({ block: "center", behavior: "smooth" });
   try {
-    const { recognize } = await import("./ocr.js");
-    const text = await recognize(file, (t, p) => show(`${t} ${p ? Math.round(p * 100) + " %" : ""}`));
-    useText(text);
+    const { recognizeBest, rotated } = await import("./ocr.js");
+    const source = rotated(s.photo.img, s.photo.rotate);
+    const best = await recognizeBest(
+      source,
+      { crop: s.photo.crop, score: (text) => L.scanScore(L.repairScan(L.parseLabel(text))), goodEnough: 72 },
+      (t, p) => show(`${t} ${p ? Math.round(p * 100) + " %" : ""}`),
+    );
+    s.photo.done = true;
+    s.busy = false;
+    useText(best.text);
   } catch (e) {
     show(e.message || "Die Texterkennung ist fehlgeschlagen.");
     X.toast(e.message || "Die Texterkennung ist fehlgeschlagen.", true);
   } finally {
     s.busy = false;
+    document.querySelector('[data-act="crop-run"]')?.removeAttribute("disabled");
   }
+}
+
+// Rahmen ziehen (Zeiger-Ereignisse auf dem Foto)
+let drag = null;
+function cropPoint(ev) {
+  const img = document.querySelector("#crop-area img");
+  const r = img.getBoundingClientRect();
+  return { x: Math.min(1, Math.max(0, (ev.clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, (ev.clientY - r.top) / r.height)) };
+}
+function cropStart(ev) {
+  if (!ev.target.closest?.("#crop-area") || !F()?.photo) return;
+  ev.preventDefault();
+  drag = { start: cropPoint(ev), id: ev.pointerId };
+  ev.target.setPointerCapture?.(ev.pointerId);
+}
+function cropRect(a, b) {
+  return { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(a.x - b.x), h: Math.abs(a.y - b.y) };
+}
+function cropMove(ev) {
+  if (!drag || ev.pointerId !== drag.id) return;
+  const r = cropRect(drag.start, cropPoint(ev));
+  const el = document.getElementById("crop-rect");
+  if (!el) return;
+  el.hidden = false;
+  Object.assign(el.style, { left: `${r.x * 100}%`, top: `${r.y * 100}%`, width: `${r.w * 100}%`, height: `${r.h * 100}%` });
+}
+function cropEnd(ev) {
+  if (!drag || ev.pointerId !== drag.id) return;
+  const r = cropRect(drag.start, cropPoint(ev));
+  drag = null;
+  const p = F().photo;
+  if (!p) return;
+  p.crop = r.w > 0.05 && r.h > 0.03 ? r : null;
+  X.rerender();
 }
 
 function addToDish(food, amount, unit) {
@@ -313,6 +437,29 @@ async function track(items, mealType, label) {
 }
 
 export const foodActions = {
+  "crop-rotate": async () => {
+    const p = F().photo;
+    const { rotated } = await import("./ocr.js");
+    p.rotate = (p.rotate + 90) % 360;
+    p.crop = null;
+    p.preview = rotated(p.img, p.rotate, 1000).toDataURL("image/jpeg", 0.8);
+    X.rerender();
+  },
+  "crop-reset": () => {
+    F().photo.crop = null;
+    X.rerender();
+  },
+  "crop-run": () => recognizePhoto(),
+  "crop-edit": () => {
+    F().photo.done = false;
+    X.rerender();
+    requestAnimationFrame(() => document.getElementById("food-crop")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  },
+  "crop-cancel": () => {
+    F().photo = null;
+    F().status = "";
+    X.rerender();
+  },
   "food-parse": () => useText(document.getElementById("ocr-text")?.value ?? ""),
   "food-pick": (el) => {
     const food = N.allFoods(X.S.catalog, F().local).get(el.dataset.arg);
@@ -350,6 +497,7 @@ export const foodActions = {
     s.selected = null;
     s.form = null;
     s.scan = null;
+    s.photo = null;
     s.status = "";
     X.rerender();
   },
@@ -440,8 +588,10 @@ export function foodInput(el) {
   }
   if (el.dataset.ff) {
     const k = el.dataset.ff;
-    if (k.startsWith("v.")) s.form.values[k.slice(2)] = el.value;
-    else s.form[k] = el.value;
+    if (k.startsWith("v.")) {
+      s.form.values[k.slice(2)] = el.value;
+      updateWarnings();
+    } else s.form[k] = el.value;
     return true;
   }
   if (el.dataset.ft) {
@@ -479,7 +629,7 @@ export function foodChange(el) {
   if ((el.id === "ocr-cam" || el.id === "ocr-pick") && el.files?.[0]) {
     const file = el.files[0];
     el.value = "";
-    recognizePhoto(file);
+    startPhoto(file);
     return true;
   }
   if (el.dataset.ff === "basis" || el.dataset.ft || el.dataset.fd || el.dataset.du !== undefined) return foodInput(el);

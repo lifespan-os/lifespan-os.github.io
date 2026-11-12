@@ -183,3 +183,9 @@ details.livetext[open] > * + * { margin-top: 10px; }
 .dish-item input { flex: 1 1 90px; min-width: 0; }
 .dish-item select { flex: 1 1 110px; min-width: 0; width: auto; }
 .dish-item .btn.sm { flex: 0 0 auto; }
+
+/* Etikett: Ausschnitt wählen und Hinweise (1.2.1) */
+.crop-area { position: relative; overflow: hidden; border-radius: 10px; touch-action: none; user-select: none; -webkit-user-select: none; margin: 10px 0; }
+.crop-area img { display: block; width: 100%; height: auto; pointer-events: none; }
+.crop-rect { position: absolute; border: 2px solid var(--blue); background: rgba(31, 111, 209, .10); box-shadow: 0 0 0 9999px rgba(0, 0, 0, .38); pointer-events: none; }
+.field-warn { color: var(--orange-text); margin: 0; }

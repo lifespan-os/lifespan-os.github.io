@@ -440,19 +440,22 @@ function viewSend() {
     <section class="card">
       <h3>${ready.length ? `${ready.join(" und ")} bereit` : "Alles übertragen"}</h3>
       <ol class="steps small">
-        <li>Auf <b>„Datei erstellen“</b> tippen und die Datei in <b>Google Drive</b> sichern („In Drive sichern“ bzw. „In Dateien sichern“ → Google Drive).</li>
+        <li>Auf <b>„Trainings senden“</b> bzw. <b>„Lebensmittel senden“</b> tippen und die Datei in <b>Google Drive</b> sichern („In Drive sichern“ bzw. „In Dateien sichern“ → Google Drive).</li>
         <li>Am PC in LIFESPAN OS: <b>Settings → Daten importieren → Exportdatei auswählen …</b> und die Datei aus Google Drive wählen.</li>
         <li>Als Art <b>„Abgleichen (zweites Gerät)“</b> wählen und bestätigen.</li>
       </ol>
       <p class="warn">Bitte nie „Ersetzen“ wählen: Dann würden am PC alle anderen Daten gelöscht. „Abgleichen“ ist sicher, vorher legt die App automatisch ein Backup an.</p>
-      <button class="btn primary block" data-act="send" data-arg="open" ${ready.length ? "" : "disabled"}>Datei erstellen</button>
+      <p class="muted small">Trainings und Ernährung kommen in getrennte Dateien: „LIFESPAN Smartphone-Training …“ und „LIFESPAN Lebensmittel …“. Am PC beide gleich importieren.</p>
+      <button class="btn primary block" data-act="send" data-arg="training" ${open.length ? "" : "disabled"}>${open.length ? `Trainings senden (${open.length})` : "Keine offenen Trainings"}</button>
+      <button class="btn primary block" data-act="send" data-arg="food" ${food ? "" : "disabled"}>${food ? `Lebensmittel senden (${food} Einträge)` : "Keine offenen Ernährungseinträge"}</button>
       ${food ? `<button class="btn block" data-go="food-review">Vorher Ernährungseinträge prüfen und bearbeiten</button>` : ""}
     </section>
     ${
-      all.length || Object.keys(S.food?.local.meals ?? {}).length
+      all.length || Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length
         ? `<section class="card"><h3>Alles vom Handy</h3>
             <p class="muted small">Falls eine Datei verloren ging: Du kannst alle ${all.length} Trainings und die Ernährungseinträge noch einmal senden. Am PC entstehen dabei keine doppelten Einträge.</p>
-            <button class="btn block" data-act="send" data-arg="all">Alle erneut senden</button></section>`
+            ${all.length ? `<button class="btn block" data-act="send" data-arg="training|all">Alle Trainings erneut senden</button>` : ""}
+            ${Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length ? `<button class="btn block" data-act="send" data-arg="food|all">Alle Ernährungseinträge erneut senden</button>` : ""}</section>`
         : ""
     }
     <div id="send-result"></div>
@@ -703,11 +706,15 @@ const actions = {
     toast("Training gespeichert");
     go("detail", done.id);
   },
-  send: (el) => sendFile(el.dataset.arg === "all"),
+  send: (el) => {
+    const [kind, scope] = el.dataset.arg.split("|");
+    sendFile(kind, scope === "all");
+  },
   "mark-sent": async (el) => {
-    const ids = el.dataset.arg.split(",");
-    for (const w of S.workouts) if (ids.includes(w.id)) w.exported = true;
-    if (S.food) {
+    const [kind, idList = ""] = el.dataset.arg.split("|");
+    const ids = idList.split(",");
+    if (kind === "training") for (const w of S.workouts) if (ids.includes(w.id)) w.exported = true;
+    if (kind === "food" && S.food) {
       N.markNutritionSent(S.food.local);
       await store.set("nutrition", S.food.local);
     }
@@ -752,20 +759,27 @@ function confirmTwice(el, text) {
   return false;
 }
 
-async function sendFile(all) {
-  const list = S.workouts.filter((w) => w.status === "done" && (all || !w.exported));
+/**
+ * Rückgabedatei erstellen (1.2.4): Trainings und Ernährung getrennt – `kind` „training“ oder „food“,
+ * `all` = auch schon gesendete.
+ */
+async function sendFile(kind, all) {
+  const list = kind === "training" ? S.workouts.filter((w) => w.status === "done" && (all || !w.exported)) : [];
   let doc;
   try {
-    const food = S.food ? N.nutritionTables(S.catalog, S.food.local, { all }) : {};
+    const food = kind === "food" && S.food ? N.nutritionTables(S.catalog, S.food.local, { all }) : {};
+    if (kind === "food" && !Object.keys(food).length) return toast("Keine Ernährungseinträge zum Senden.", true);
+    if (kind === "training" && !list.length) return toast("Keine Trainings zum Senden.", true);
     doc = C.buildReturnFile(S.catalog, S.localExercises, list, new Date(), food);
   } catch (e) {
     return toast(e.message, true);
   }
-  const name = C.returnFileName();
+  const name = C.returnFileName(new Date(), kind);
   const blob = new Blob([JSON.stringify(doc)], { type: "application/json" });
   const file = new File([blob], name, { type: "application/json" });
-  const ids = list.map((w) => w.id).join(",");
+  const arg = kind === "food" ? "food" : `training|${list.map((w) => w.id).join(",")}`;
   const result = document.getElementById("send-result");
+  result.innerHTML = "";
   let shared = false;
   if (navigator.canShare?.({ files: [file] })) {
     try {
@@ -782,9 +796,10 @@ async function sendFile(all) {
   }
   result.insertAdjacentHTML(
     "beforeend",
-    `<section class="card"><p class="small">${shared ? "Datei weitergegeben." : ""} Sobald die Datei in Google Drive liegt:</p>
-     <button class="btn primary block" data-act="mark-sent" data-arg="${ids}">Als übertragen markieren</button></section>`,
+    `<section class="card"><p class="small">${shared ? `„${esc(name)}“ weitergegeben.` : ""} Sobald die Datei in Google Drive liegt:</p>
+     <button class="btn primary block" data-act="mark-sent" data-arg="${esc(arg)}">Als übertragen markieren</button></section>`,
   );
+  result.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
 // ------------------------------------------------------------------ Eingaben

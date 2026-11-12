@@ -6,7 +6,7 @@ import { nutritionFromRows } from "./nutrition.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.2.3";
+export const MOBILE_VERSION = "1.2.4";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -784,9 +784,13 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
   };
 }
 
-/** Dateiname der Rückgabedatei, z. B. „LIFESPAN Handy-Training 2026-11-12 1810.json“ */
-export function returnFileName(now = new Date()) {
-  return `LIFESPAN Handy-Training ${localDate(now)} ${localTime(now).replace(":", "")}.json`;
+/**
+ * Dateiname der Rückgabedatei (1.2.4): Trainings „LIFESPAN Smartphone-Training 2026-11-12 1810.json“,
+ * Ernährung „LIFESPAN Lebensmittel 2026-11-12 1810.json“.
+ */
+export function returnFileName(now = new Date(), kind = "training") {
+  const label = kind === "food" ? "Lebensmittel" : "Smartphone-Training";
+  return `LIFESPAN ${label} ${localDate(now)} ${localTime(now).replace(":", "")}.json`;
 }
 
 /** Beim Laden neuer Daten: Handy-Übungen behalten, die noch von offenen Trainings gebraucht werden. */

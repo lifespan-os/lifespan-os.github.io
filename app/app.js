@@ -986,7 +986,7 @@ function fixSafeTop() {
     const standalone = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
     const fullScreen = window.innerHeight >= screen.height - 2; // Inhalt reicht bis unter die Statusleiste
     if (ios && standalone && inset < 20 && fullScreen) {
-      document.documentElement.style.setProperty("--safe-top", "54px");
+      document.documentElement.style.setProperty("--safe-top", "46px");
     }
   } catch {
     /* Standardabstand */

@@ -875,7 +875,31 @@ document.addEventListener("visibilitychange", () => {
 
 // ------------------------------------------------------------------ Start
 
+/**
+ * iPhone-Sicherheitsabstand: Manche iOS-Versionen melden env(safe-area-inset-top) = 0, obwohl die
+ * App als Home-Bildschirm-App unter Statusleiste und Notch beginnt (z. B. wenn sie mit
+ * durchsichtiger Statusleiste installiert wurde). Dann wird ein fester Abstand gesetzt.
+ */
+function fixSafeTop() {
+  try {
+    const probe = document.createElement("div");
+    probe.style.cssText = "position:fixed;top:0;height:0;padding-top:env(safe-area-inset-top,0px);visibility:hidden";
+    document.body.appendChild(probe);
+    const inset = parseFloat(getComputedStyle(probe).paddingTop) || 0;
+    probe.remove();
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const standalone = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+    const fullScreen = window.innerHeight >= screen.height - 2; // Inhalt reicht bis unter die Statusleiste
+    if (ios && standalone && inset < 20 && fullScreen) {
+      document.documentElement.style.setProperty("--safe-top", "54px");
+    }
+  } catch {
+    /* Standardabstand */
+  }
+}
+
 async function boot() {
+  fixSafeTop();
   try {
     S.catalog = await store.get("catalog");
     S.localExercises = (await store.get("localExercises")) || [];

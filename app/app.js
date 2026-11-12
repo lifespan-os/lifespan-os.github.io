@@ -11,9 +11,7 @@ const S = {
   localExercises: [],
   workouts: [], // abgeschlossene Trainings vom Handy
   active: null, // laufendes Training
-  prefs: { onlyNumbered: true, keepUnticked: false, topOffset: null },
-  /** Messwerte für den Abstand oben (Hilfe → Abstand oben) */
-  topInfo: null,
+  prefs: { onlyNumbered: true, keepUnticked: false },
   view: "home",
   arg: null,
   query: "",
@@ -470,18 +468,7 @@ function viewDetail() {
 }
 
 function viewHelp() {
-  const t = S.topInfo;
-  const manual = Number.isFinite(S.prefs.topOffset);
   return `${header("Hilfe", { back: S.catalog ? "home" : "setup" })}<main class="wrap">
-    <section class="card"><h3>Abstand oben</h3>
-      <p class="small">Abstand der Kopfzeile zur Statusleiste: ${manual ? `von Hand ${S.prefs.topOffset} px` : "automatisch"}.</p>
-      <div class="row">
-        <button class="btn sm" data-act="top" data-arg="-6" aria-label="Abstand kleiner">− kleiner</button>
-        <button class="btn sm" data-act="top" data-arg="6" aria-label="Abstand größer">+ größer</button>
-        ${manual ? `<button class="btn sm ghost" data-act="top" data-arg="auto">Automatisch</button>` : ""}
-      </div>
-      <p class="muted small">Gemessen: iOS meldet ${t ? `${Math.round(t.inset)} px` : "–"} · Fenster ${t ? `${t.innerHeight} von ${t.screenHeight}` : "–"} px · ${t?.standalone ? "Home-Bildschirm" : "Browser"} · automatisch: ${t?.auto ?? "–"} · Kopfzeile oben ${currentTop()} px.</p>
-    </section>
     <section class="card"><h3>Wo sind meine Daten?</h3>
       <p class="small">Nur auf diesem Gerät, im Speicher des Browsers. Es gibt kein Konto und keinen Server. Die App selbst wird einmal von lifespan-os.github.io geladen und läuft danach auch offline.</p></section>
     <section class="card"><h3>iPhone: unbedingt zum Home-Bildschirm</h3>
@@ -717,17 +704,6 @@ const actions = {
     S.workouts = S.workouts.filter((w) => w.id !== el.dataset.arg);
     await saveNow();
     go("home");
-  },
-  top: async (el) => {
-    const arg = el.dataset.arg;
-    if (arg === "auto") S.prefs.topOffset = null;
-    else {
-      const base = Number.isFinite(S.prefs.topOffset) ? S.prefs.topOffset : Math.max(0, currentTop() - 2);
-      S.prefs.topOffset = Math.min(120, Math.max(0, base + Number(arg)));
-    }
-    fixSafeTop();
-    await saveNow();
-    render();
   },
   "rest-plus": () => adjustRest(15),
   "rest-minus": () => adjustRest(-15),
@@ -1000,14 +976,13 @@ document.addEventListener("visibilitychange", () => {
  * durchsichtiger Statusleiste installiert wurde). Dann wird ein fester Abstand gesetzt.
  */
 /**
- * Abstand der Kopfzeile zur Statusleiste. Automatisch: Sicherheitsabstand von iOS (minus 10 px, siehe
- * app.css); meldet iOS im Vollbild 0, ein fester Ersatzwert. Von Hand (Hilfe → Abstand oben) gilt der
- * eingestellte Wert in Pixeln.
+ * Abstand der Kopfzeile zur Statusleiste (1.1.8, am iPhone des Nutzers abgestimmt): Sicherheitsabstand
+ * von iOS minus 58 px (siehe app.css). Meldet iOS im Vollbild 0, gilt derselbe Abzug vom Ersatzwert
+ * 46 px – also 0.
  */
 function fixSafeTop() {
   const root = document.documentElement;
   root.style.removeProperty("--safe-top");
-  let auto = "Sicherheitsabstand von iOS";
   try {
     const probe = document.createElement("div");
     probe.style.cssText = "position:fixed;top:0;height:0;padding-top:env(safe-area-inset-top,0px);visibility:hidden";
@@ -1017,21 +992,10 @@ function fixSafeTop() {
     const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
     const standalone = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
     const fullScreen = window.innerHeight >= screen.height - 2; // Inhalt reicht bis unter die Statusleiste
-    if (ios && standalone && inset < 20 && fullScreen) {
-      root.style.setProperty("--safe-top", "46px");
-      auto = "Ersatzwert 46 px";
-    }
-    S.topInfo = { inset, innerHeight: window.innerHeight, screenHeight: screen.height, standalone, auto };
+    if (ios && standalone && inset < 20 && fullScreen) root.style.setProperty("--safe-top", "0px");
   } catch {
     /* Standardabstand */
   }
-  if (Number.isFinite(S.prefs.topOffset)) root.style.setProperty("--safe-top", `${S.prefs.topOffset}px`);
-}
-
-/** Aktuell wirksamer Abstand in Pixeln (für die Anzeige in der Hilfe) */
-function currentTop() {
-  const v = getComputedStyle(document.querySelector(".top") || document.body).paddingTop;
-  return Math.round(parseFloat(v) || 0);
 }
 
 async function boot() {
@@ -1042,7 +1006,7 @@ async function boot() {
     S.workouts = (await store.get("workouts")) || [];
     S.active = await store.get("active");
     S.prefs = { ...S.prefs, ...((await store.get("prefs")) || {}) };
-    fixSafeTop();
+    delete S.prefs.topOffset; // Einstellung aus 1.1.7 entfällt
   } catch (e) {
     app.innerHTML = `<p class="boot">Der Gerätespeicher ist nicht verfügbar (${esc(e.message)}). Im privaten Modus funktioniert LIFESPAN OS Mobil nicht.</p>`;
     return;

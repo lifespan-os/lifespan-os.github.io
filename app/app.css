@@ -19,7 +19,7 @@
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
   /* Abstand zur Statusleiste/Notch; app.js setzt einen festen Wert, falls iOS 0 meldet */
   /* Statusleiste: Sicherheitsabstand minus 10 px – der Bereich unter Uhrzeit/Dynamic Island bleibt frei */
-  --safe-top: max(0px, calc(env(safe-area-inset-top, 0px) - 10px));
+  --safe-top: max(0px, calc(env(safe-area-inset-top, 0px) - 58px));
   color-scheme: light;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }

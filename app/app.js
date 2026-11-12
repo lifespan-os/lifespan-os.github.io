@@ -122,7 +122,11 @@ function viewHome() {
   return `${brandHeader()}<main class="wrap">
     ${
       a
-        ? `<section class="card hl"><div class="wo-head"><h3>Training läuft: ${esc(a.title)}</h3><span class="clock" data-clock>${fmtSec((Date.now() - new Date(a.startedAt)) / 1000)}</span></div>
+        ? a.editOf
+          ? `<section class="card hl"><div class="wo-head"><h3>Bearbeitung: ${esc(a.title)}</h3><span class="tag">${fmtDate(a.date)}</span></div>
+            <p class="muted small">${a.exercises.length} Übungen · Änderungen noch nicht gespeichert</p>
+            <button class="btn primary block" data-go="workout">Weiter bearbeiten</button></section>`
+          : `<section class="card hl"><div class="wo-head"><h3>Training läuft: ${esc(a.title)}</h3><span class="clock" data-clock>${fmtSec((Date.now() - new Date(a.startedAt)) / 1000)}</span></div>
             <p class="muted small">${a.exercises.length} Übungen · gestartet ${esc(C.localTime(new Date(a.startedAt)))} Uhr</p>
             <button class="btn primary block" data-go="workout">Weiter trainieren</button></section>`
         : `<div class="big-actions">
@@ -206,13 +210,19 @@ function viewWorkout() {
   if (!w) return viewHome();
   const exs = exById();
   const machines = machineById();
-  return `${header(w.title, { back: "home", sub: `${fmtDate(w.date)} · seit ${C.localTime(new Date(w.startedAt))} Uhr` })}<main class="wrap">
-    <div class="wo-head"><span class="muted small">${w.exercises.length} Übungen · ${C.fmtNum(C.volumeKg(w), 0)} kg Volumen</span><span class="clock" data-clock>${fmtSec((Date.now() - new Date(w.startedAt)) / 1000)}</span></div>
+  const edit = !!w.editOf;
+  const sub = edit
+    ? `${fmtDate(w.date)} · bearbeiten`
+    : `${fmtDate(w.date)} · seit ${C.localTime(new Date(w.startedAt))} Uhr`;
+  return `${header(w.title, { back: "home", sub })}<main class="wrap">
+    <div class="wo-head"><span class="muted small">${w.exercises.length} Übungen · ${C.fmtNum(C.volumeKg(w), 0)} kg Volumen</span>${
+      edit ? `<span class="tag">Bearbeitung</span>` : `<span class="clock" data-clock>${fmtSec((Date.now() - new Date(w.startedAt)) / 1000)}</span>`
+    }</div>
     ${w.exercises.map((we, i) => exerciseCard(we, i, exs, machines)).join("")}
     <button class="btn block" data-go="picker">+ Übung oder Maschine hinzufügen</button>
-    <button class="btn danger block" data-act="discard">Training verwerfen</button>
+    <button class="btn danger block" data-act="discard">${edit ? "Änderungen verwerfen" : "Training verwerfen"}</button>
   </main>
-  <div class="bottom"><div class="inner"><button class="btn primary" data-go="finish">Training beenden</button></div></div>`;
+  <div class="bottom"><div class="inner"><button class="btn primary" data-go="finish">${edit ? "Änderungen speichern" : "Training beenden"}</button></div></div>`;
 }
 
 function exerciseCard(we, i, exs, machines) {
@@ -368,8 +378,18 @@ function viewFinish() {
   if (!w) return viewHome();
   const unticked = C.untickedCount(w);
   const errors = C.checkWorkout(w, { keepUnticked: S.prefs.keepUnticked });
-  return `${header("Training beenden", { back: "workout" })}<main class="wrap">
-    <section class="card">
+  const edit = !!w.editOf;
+  if (edit && w.durationMin !== null && (!Number.isFinite(w.durationMin) || w.durationMin < 1 || w.durationMin > 1440)) {
+    errors.push("Dauer: bitte 1 bis 1440 Minuten eintragen.");
+  }
+  return `${header(edit ? "Änderungen speichern" : "Training beenden", { back: "workout" })}<main class="wrap">
+    ${
+      edit
+        ? `<section class="card"><div class="field"><label for="wo-duration">Dauer in Minuten</label><input id="wo-duration" type="text" inputmode="numeric" value="${w.durationMin ?? ""}" data-wfield="durationMin"></div>
+           <p class="muted small">${w.exercises.length} Übungen · ${C.fmtNum(C.volumeKg(w), 0)} kg Volumen. Nach dem Speichern zählt das Training wieder als „offen“ – mit „An den PC senden“ und „Abgleichen (zweites Gerät)“ übernimmt der PC die Änderungen, auch entfernte Sätze und Übungen.</p></section>`
+        : ""
+    }
+    <section class="card"${edit ? " hidden" : ""}>
       <div class="stat">
         <div><b>${fmtSec((Date.now() - new Date(w.startedAt)) / 1000)}</b><span>Dauer</span></div>
         <div><b>${w.exercises.length}</b><span>Übungen</span></div>
@@ -442,6 +462,7 @@ function viewDetail() {
             .join("<br>")}</p></section>`;
       })
       .join("")}
+    <button class="btn block" data-act="edit-workout" data-arg="${w.id}">Training bearbeiten</button>
     ${w.exported ? "" : `<button class="btn danger block" data-act="delete-workout" data-arg="${w.id}">Training löschen</button>`}
   </main>`;
 }
@@ -613,13 +634,15 @@ const actions = {
     rerenderKeepScroll();
   },
   discard: async (el) => {
-    if (!confirmTwice(el, "Nochmal tippen: Training wirklich verwerfen")) return;
+    const editOf = S.active?.editOf ?? null;
+    if (!confirmTwice(el, editOf ? "Nochmal tippen: Änderungen verwerfen" : "Nochmal tippen: Training wirklich verwerfen")) return;
     S.active = null;
     stopRest();
     wakeLock(false);
     await saveNow();
-    toast("Training verworfen");
-    go("home");
+    toast(editOf ? "Änderungen verworfen" : "Training verworfen");
+    if (editOf) go("detail", editOf);
+    else go("home");
   },
   exertion: (el) => {
     const n = Number(el.dataset.arg);
@@ -630,6 +653,24 @@ const actions = {
   finish: async () => {
     const opts = { keepUnticked: S.prefs.keepUnticked };
     if (C.checkWorkout(S.active, opts).length) return render();
+    if (S.active.editOf) {
+      const d = S.active.durationMin;
+      if (d !== null && (!Number.isFinite(d) || d < 1 || d > 1440)) return render();
+      const i = S.workouts.findIndex((x) => x.id === S.active.editOf);
+      if (i < 0) {
+        toast("Das ursprüngliche Training gibt es nicht mehr.", true);
+        return;
+      }
+      const saved = C.saveEdit(S.workouts[i], S.active, new Date(), opts);
+      S.workouts[i] = saved;
+      S.active = null;
+      stopRest();
+      wakeLock(false);
+      await saveNow();
+      toast("Änderungen gespeichert");
+      go("detail", saved.id);
+      return;
+    }
     const done = C.finishWorkout(S.active, new Date(), opts);
     S.workouts.push(done);
     S.active = null;
@@ -646,6 +687,17 @@ const actions = {
     await saveNow();
     toast("Als übertragen markiert");
     go("home");
+  },
+  "edit-workout": async (el) => {
+    if (S.active) {
+      toast(S.active.editOf ? "Erst die laufende Bearbeitung speichern oder verwerfen." : "Erst das laufende Training beenden.", true);
+      return;
+    }
+    const w = S.workouts.find((x) => x.id === el.dataset.arg);
+    if (!w) return;
+    S.active = C.startEdit(w);
+    await saveNow();
+    go("workout");
   },
   "delete-workout": async (el) => {
     if (!confirmTwice(el, "Nochmal tippen: Training löschen")) return;
@@ -777,7 +829,8 @@ app.addEventListener("input", (ev) => {
     return;
   }
   if (el.dataset.wfield) {
-    S.active[el.dataset.wfield] = el.dataset.wfield === "title" ? el.value : el.value.trim() || null;
+    const f = el.dataset.wfield;
+    S.active[f] = f === "title" ? el.value : f === "durationMin" ? C.parseNum(el.value) : el.value.trim() || null;
     saveSoon();
   }
 });

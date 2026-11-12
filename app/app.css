@@ -31,9 +31,9 @@ button { cursor: pointer; }
 .boot { padding: 40px 20px; color: var(--muted); }
 
 .wrap { max-width: 640px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); }
-/* Abstand nach oben: Statusleiste/Notch (safe-area) plus eigener Luftraum */
-.top { position: sticky; top: 0; padding-top: calc(var(--safe-top) + 18px); z-index: 10; background: var(--surface); border-bottom: 1px solid var(--line); }
-.top .wrap { display: flex; align-items: center; gap: 10px; min-height: 60px; padding-bottom: 4px; }
+/* Abstand nach oben: Statusleiste/Notch (safe-area) plus kleiner eigener Luftraum (1.1.5) */
+.top { position: sticky; top: 0; padding-top: calc(var(--safe-top) + 4px); z-index: 10; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 10px; min-height: 52px; padding-bottom: 4px; }
 .top h1 { font-size: 1.08rem; margin: 0; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .top .sub { color: var(--muted); font-size: .8rem; font-weight: 500; display: block; }
 .back { background: none; border: 0; color: var(--blue); font-size: 1rem; padding: 10px 6px 10px 0; font-weight: 600; }
@@ -82,7 +82,7 @@ input[type="text"], input[type="search"], input[type="number"], textarea, select
   width: 100%; min-height: 48px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-size: 1.05rem;
 }
 textarea { min-height: 80px; resize: vertical; }
-.search { position: sticky; top: calc(var(--safe-top) + 83px); z-index: 5; background: var(--bg); padding: 4px 0 8px; display: grid; gap: 8px; }
+.search { position: sticky; top: calc(var(--safe-top) + 61px); z-index: 5; background: var(--bg); padding: 4px 0 8px; display: grid; gap: 8px; }
 .search input { font-size: 1.15rem; min-height: 54px; }
 .toggle { display: flex; align-items: center; gap: 10px; font-size: .92rem; color: var(--muted); }
 .toggle input { width: 22px; height: 22px; accent-color: var(--orange); }
@@ -135,7 +135,7 @@ details.settings summary { color: var(--blue); font-size: .9rem; padding: 6px 0;
 .rest.over .box { background: var(--ok); color: #fff; }
 .rest.over button { color: #fff; }
 
-.toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(var(--safe-top) + 96px); z-index: 50; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 600; max-width: calc(100% - 32px); box-shadow: 0 10px 30px rgba(15,27,45,.25); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); top: calc(var(--safe-top) + 74px); z-index: 50; background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 600; max-width: calc(100% - 32px); box-shadow: 0 10px 30px rgba(15,27,45,.25); }
 .toast.err { background: var(--danger); color: #fff; }
 
 .steps { margin: 0; padding-left: 20px; display: grid; gap: 8px; }

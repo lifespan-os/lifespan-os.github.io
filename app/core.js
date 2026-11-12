@@ -4,7 +4,7 @@
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.1.4";
+export const MOBILE_VERSION = "1.1.5";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -566,6 +566,57 @@ export function finishWorkout(w, now = new Date(), { keepUnticked = false } = {}
   };
 }
 
+/**
+ * Abgeschlossenes Training bearbeiten (1.1.5): Kopie als laufendes Training mit `editOf`.
+ * Alle Sätze bleiben abgehakt; Dauer, Datum und Startzeit bleiben, bis sie geändert werden.
+ */
+export function startEdit(w) {
+  const copy = JSON.parse(JSON.stringify(w));
+  delete copy.exported;
+  return { ...copy, status: "active", editOf: w.id };
+}
+
+/**
+ * Bearbeitung übernehmen: Sätze wie beim Abschließen filtern, `updatedAt` neu (gewinnt beim
+ * Abgleich am PC), Dauer aus `durationMin`. Entfernte Übungen und Sätze werden als
+ * Löschvermerk (`deleted_record` der Rückgabedatei) gemerkt, damit sie auch am PC verschwinden.
+ * Das Training gilt danach wieder als „noch nicht an den PC gesendet“.
+ */
+export function saveEdit(original, edited, now = new Date(), { keepUnticked = false } = {}) {
+  const ts = isoNow(now);
+  const exercises = edited.exercises
+    .map((e) => ({ ...e, sets: e.sets.filter((s) => hasValue(s) && (keepUnticked || s.isDone)) }))
+    .filter((e) => e.sets.length);
+  const keptWe = new Set(exercises.map((e) => e.id));
+  const keptSets = new Set(exercises.flatMap((e) => e.sets.map((x) => x.id)));
+  const tombstones = [...(original.tombstones || [])];
+  const known = new Set(tombstones.map((t) => `${t.table}:${t.id}`));
+  const add = (table, id) => {
+    const key = `${table}:${id}`;
+    if (known.has(key)) return;
+    known.add(key);
+    tombstones.push({ table, id, at: ts });
+  };
+  for (const e of original.exercises) {
+    for (const x of e.sets) if (!keptSets.has(x.id)) add("workout_set", x.id);
+    if (!keptWe.has(e.id)) add("workout_exercise", e.id);
+  }
+  const minutes = Number.isFinite(edited.durationMin) ? Math.round(edited.durationMin) : original.durationMin;
+  const { editOf, ...rest } = edited;
+  void editOf;
+  return {
+    ...rest,
+    exercises,
+    status: "done",
+    startedAt: original.startedAt,
+    finishedAt: original.finishedAt,
+    updatedAt: ts,
+    durationMin: Math.min(1440, Math.max(1, minutes ?? 1)),
+    tombstones,
+    exported: false,
+  };
+}
+
 /** Volumen wie in der Desktop-App: Wdh. × kg der Arbeitssätze, „Fail“ mit 50 %. */
 export function volumeKg(w) {
   let v = 0;
@@ -614,6 +665,8 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
     workout: [],
     workout_exercise: [],
     workout_set: [],
+    /** Löschvermerke aus bearbeiteten Trainings (entfernte Übungen und Sätze) */
+    deleted_record: [],
   };
 
   for (const w of done) {
@@ -689,6 +742,14 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
         });
       });
     });
+    for (const t of w.tombstones || []) {
+      out.deleted_record.push({
+        id: `${t.table}:${t.id}`,
+        table_name: t.table,
+        record_id: t.id,
+        deleted_at: t.at,
+      });
+    }
   }
 
   // Nur Spalten, die die Desktop-App beim Export kannte (passend zum Schemastand)

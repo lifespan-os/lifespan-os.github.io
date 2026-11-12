@@ -257,6 +257,36 @@ footer .links { display: flex; gap: 18px; }
 .dl-sub { color: var(--ink-muted); font-size: .86rem; margin-top: -8px; }
 .btn-ghost-dark { color: var(--ink-fg); border-color: var(--ink-line); background: rgba(255,255,255,.04); font-size: .92rem; padding: 10px 20px; }
 .btn-ghost-dark:hover { border-color: var(--ink-muted); transform: translateY(-1px); }
+.handy { display: grid; grid-template-columns: minmax(0, 300px) 1fr; gap: 40px; align-items: center; width: 100%; margin: 40px 0 16px; text-align: left; }
+.handy-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; min-width: 0; }
+.handy-hint { color: var(--muted); font-size: .9rem; max-width: 60ch; text-align: center; }
+.phone { width: 100%; max-width: 300px; justify-self: center; background: #0b1220; border-radius: 40px; padding: 12px; box-shadow: 0 40px 80px -30px rgba(10,26,48,.55), inset 0 0 0 2px #26334b; }
+.ph-screen { background: #0b1220; border-radius: 30px; overflow: hidden; display: grid; gap: 10px; padding: 14px 12px 12px; color: #eef2f8; font-size: 12px; }
+.ph-top { display: flex; justify-content: space-between; align-items: center; color: #8e9bb3; padding: 4px 4px 8px; border-bottom: 1px solid #26334b; }
+.ph-top span:first-child { color: #3a9be0; font-weight: 600; }
+.ph-top b { color: #eef2f8; font-size: 14px; }
+.ph-clock { color: #f28a1a !important; font-weight: 700; font-variant-numeric: tabular-nums; }
+.ph-card { background: #131c2e; border: 1px solid #26334b; border-radius: 14px; overflow: hidden; }
+.ph-head { display: flex; gap: 10px; align-items: center; padding: 10px; }
+.ph-head div { display: grid; }
+.ph-head b { font-size: 14px; }
+.ph-head small { color: #8e9bb3; }
+.ph-num { min-width: 38px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: #1a2539; border: 1px solid #26334b; color: #f28a1a; font-weight: 800; font-size: 14px; }
+.ph-last { color: #8e9bb3; padding: 0 10px 8px; font-size: 11px; }
+.ph-last b { color: #eef2f8; }
+.ph-set { display: grid; grid-template-columns: 18px 1fr 1fr 36px; gap: 6px; align-items: center; padding: 6px 10px; border-top: 1px solid #26334b; }
+.ph-set.done { background: rgba(63,191,127,.1); }
+.ph-set i { font-style: normal; color: #8e9bb3; text-align: center; font-weight: 700; }
+.ph-set span { background: #0b1220; border: 1px solid #26334b; border-radius: 8px; text-align: center; padding: 6px 0; font-weight: 700; font-size: 14px; }
+.ph-set em { height: 30px; border-radius: 8px; border: 2px solid #26334b; display: grid; place-items: center; font-style: normal; font-weight: 800; }
+.ph-set.done em { background: #3fbf7f; border-color: #3fbf7f; color: #04150c; }
+.ph-rest { display: flex; align-items: center; gap: 8px; background: #3a9be0; border-radius: 12px; padding: 8px 10px; color: #fff; }
+.ph-rest b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.ph-rest span { flex: 1; opacity: .9; }
+.ph-rest small { background: rgba(255,255,255,.2); border-radius: 8px; padding: 4px 8px; font-weight: 700; }
+.ph-btn { background: #f28a1a; color: #1d0f00; border-radius: 12px; text-align: center; padding: 11px; font-weight: 700; font-size: 13px; }
+@media (max-width: 860px) { .handy { grid-template-columns: 1fr; gap: 28px; } }
+@media (max-width: 480px) { .handy-list { grid-template-columns: 1fr; } }
 footer .wrap { padding-block: 28px 40px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; color: var(--muted); font-size: .8rem; }
 footer .wrap span:last-child { max-width: 62ch; }
 
@@ -297,6 +327,7 @@ footer .wrap span:last-child { max-width: 62ch; }
       <a class="hide-s" href="#ernaehrung">Ernährung</a>
       <a class="hide-s" href="#icoach">iCoach.me</a>
       <a class="hide-s" href="#hrt">HRT</a>
+      <a class="hide-s" href="#handy">Handy-App</a>
       <a class="btn btn-primary btn-s" href="#download">Download</a>
     </nav>
   </div>
@@ -519,6 +550,41 @@ footer .wrap span:last-child { max-width: 62ch; }
     </div>
   </section>
 
+  <section class="chapter" id="handy">
+    <div class="wrap">
+      <p class="eyebrow reveal">Neu: Handy-App</p>
+      <h2 class="reveal">Dein Training.<br><span class="grad-text">Direkt im Studio.</span></h2>
+      <p class="lead reveal">Mit der Handy-App erfasst du dein Training am iPhone oder Android-Handy, genau dort, wo es passiert. Sie läuft im Browser, funktioniert offline und speichert alles nur auf deinem Handy. Zurück an den PC kommt dein Training per Datei über dein eigenes Google Drive.</p>
+      <div class="handy">
+        <div class="phone reveal" role="img" aria-label="Beispielansicht der Handy-App: Maschine 47 Brustpresse mit drei Sätzen und laufendem Pausentimer">
+          <div class="ph-screen">
+            <div class="ph-top"><span>‹ Zurück</span><b>Push</b><span class="ph-clock">42:18</span></div>
+            <div class="ph-card">
+              <div class="ph-head"><span class="ph-num">47</span><div><b>Brustpresse</b><small>gym80 · Brust, Trizeps</small></div></div>
+              <p class="ph-last">Letztes Mal: <b>10×62,5 · 9×62,5 kg</b></p>
+              <div class="ph-set done"><i>1</i><span>65</span><span>10</span><em>✓</em></div>
+              <div class="ph-set done"><i>2</i><span>65</span><span>9</span><em>✓</em></div>
+              <div class="ph-set"><i>3</i><span>65</span><span>8</span><em></em></div>
+            </div>
+            <div class="ph-rest"><b>1:24</b><span>Pause</span><small>+15</small></div>
+            <div class="ph-btn">Training beenden</div>
+          </div>
+        </div>
+        <div class="handy-list">
+          <div class="pillar reveal"><span class="k">Plan oder spontan</span><p>Trainingsplan vom PC starten oder Maschinen frei auswählen, auch gemischt.</p></div>
+          <div class="pillar reveal"><span class="k">Maschine per Nummer</span><p>Deine eigene Nummer oder die Studionummer eintippen, fertig. Mit deinen Werten vom letzten Mal.</p></div>
+          <div class="pillar reveal"><span class="k">Abhaken und Pause</span><p>Satz abhaken, der Pausentimer startet automatisch. Der Bildschirm bleibt an.</p></div>
+          <div class="pillar reveal"><span class="k grad-text">Ohne Konto</span><p>Keine Registrierung, keine Cloud. Deine Daten bleiben auf dem Handy, bis du sie an den PC schickst.</p></div>
+        </div>
+      </div>
+      <a class="btn btn-primary reveal" href="app/" id="open-app">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg>
+        Handy-App öffnen
+      </a>
+      <p class="handy-hint reveal">Auf dem iPhone: In Safari öffnen, „Teilen“ → „Zum Home-Bildschirm“. Auf Android: Im Chrome-Menü „App installieren“. Adresse: <b>lifespan-os.github.io/app</b></p>
+    </div>
+  </section>
+
   <section class="coach" id="coach">
     <div class="wrap">
       <p class="eyebrow reveal">Call to Action</p>
@@ -582,6 +648,9 @@ footer .wrap span:last-child { max-width: 62ch; }
 
         <h3>2. Die App LIFESPAN OS</h3>
         <p>LIFESPAN OS läuft ausschließlich lokal auf deinem Computer. Alle Daten, die du in der App erfasst, etwa Trainings-, Ernährungs-, Schlaf- und Gesundheitsdaten, werden nur auf deinem Gerät gespeichert. Wir erhalten diese Daten nicht, es gibt kein Benutzerkonto, keine Cloud-Synchronisierung und keine Übermittlung an uns oder Dritte. Exportdateien erstellst du selbst und entscheidest selbst, wohin du sie überträgst.</p>
+
+        <h3>2a. Die Handy-App</h3>
+        <p>Die Handy-App unter lifespan-os.github.io/app speichert deine Trainingsdaten ausschließlich im Speicher des Browsers auf deinem Gerät. Sie überträgt keine Daten an uns oder Dritte. Die Datei für den Abgleich mit dem PC erstellst du selbst und entscheidest selbst, wo du sie ablegst. Beim Aufruf der App gilt für das Hosting dasselbe wie unter Punkt 3.</p>
 
         <h3>3. Hosting und Aufruf dieser Website</h3>
         <p>Diese Website wird über GitHub Pages bereitgestellt, einen Dienst der GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA. Beim Aufruf verarbeitet GitHub technisch notwendige Daten, die dein Browser automatisch übermittelt: IP-Adresse, Datum und Uhrzeit des Zugriffs, aufgerufene Seite, Browsertyp und Betriebssystem. Diese Daten dienen ausschließlich der sicheren und stabilen Bereitstellung der Website und werden nicht mit anderen Daten zusammengeführt. Dabei werden Daten in die USA übermittelt; GitHub ist nach dem EU-US Data Privacy Framework zertifiziert. Details findest du in der Datenschutzerklärung von GitHub (docs.github.com/site-policy/privacy-policies). Rechtsgrundlage ist unser berechtigtes Interesse am sicheren Betrieb der Website (Art. 6 Abs. 1 lit. f DSGVO).</p>

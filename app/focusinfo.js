@@ -1,4 +1,4 @@
-// LIFESPAN OS Mobil – Muskelverteilung einer Übung (1.4.1), gleiche Regeln wie am PC
+// LIFESPAN OS Mobil – Muskelverteilung einer Übung (1.4.1, Stand 1.5.2), gleiche Regeln wie am PC
 // (src/domain/focusInfo.ts): 1. eigener Muskelfokus der Übung, 2. Muskelfokus der Maschine,
 // 3. Standardverteilung des Bewegungsmusters der Maschine, 4. Muskelgruppe als Text (erste
 // Angabe 100 %, weitere 50 %), 5. nichts hinterlegt.
@@ -66,12 +66,14 @@ export function focusInfo({ exerciseId, exerciseName, muscleGroup, machineId, ma
   if (own?.length) return { source: "exercise", title: "Eigener Muskelfokus der Übung", note: gripNote, groups: grouped(own), terms: [] };
   const mach = machineId ? focus?.machines?.[machineId] : null;
   if (mach?.length) return { source: "machine", title: "Muskelfokus der Maschine", note: gripNote, groups: grouped(mach), terms: [] };
-  if (pattern && D.standard[pattern]) {
+  // Maschine mit eigener Griffbreite ohne Angabe (z. B. Rudern mit hohen Ellbogen, 1.5.2)
+  const machineStd = machineId && D.patternOf[machineId] === pattern ? D.machineStandard?.[machineId] : null;
+  if (pattern && (machineStd || D.standard[pattern])) {
     return {
       source: "pattern",
-      title: `Standardverteilung „${D.labels[pattern]}“`,
+      title: `Standardverteilung „${D.labels[pattern]}“${machineStd ? " mit hohen Ellbogen" : ""}`,
       note: `Kein eigener Muskelfokus hinterlegt – diese Standardverteilung des Bewegungsmusters wird genommen. ${gripNote}`,
-      groups: grouped(D.standard[pattern]),
+      groups: grouped(machineStd ?? D.standard[pattern]),
       terms: [],
     };
   }

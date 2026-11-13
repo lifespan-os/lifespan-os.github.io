@@ -104,7 +104,7 @@ textarea { min-height: 80px; resize: vertical; }
 .set .idx { font-weight: 700; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
 .set .idx.w { color: var(--blue); font-size: .82rem; }
 .set input { min-height: 50px; text-align: center; font-size: 1.15rem; font-weight: 650; padding: 6px; font-variant-numeric: tabular-nums; }
-.set input.rpe { font-size: .98rem; }
+.set input.rpe { font-size: 1rem; }
 .set .unit { font-size: .7rem; color: var(--muted); text-align: center; margin-top: -4px; }
 .set-head { display: grid; grid-template-columns: 30px 1fr 1fr 64px 52px; gap: 8px; padding: 0 14px 6px; font-size: .72rem; color: var(--muted); text-align: center; text-transform: uppercase; letter-spacing: .04em; }
 .set-head.cardio { grid-template-columns: 30px 1fr 1fr 52px; }
@@ -121,7 +121,7 @@ details.settings { padding: 0 14px 10px; }
 details.settings summary { color: var(--blue); font-size: .9rem; padding: 6px 0; cursor: pointer; }
 .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 6px; }
 .settings-grid .field label { font-size: .76rem; }
-.settings-grid input, .settings-grid select { min-height: 42px; font-size: .98rem; }
+.settings-grid input, .settings-grid select { min-height: 42px; font-size: 1rem; }
 
 .bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: rgba(255,255,255,.96); border-top: 1px solid var(--line); box-shadow: 0 -2px 10px rgba(15,27,45,.06); padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
 .bottom .inner { max-width: 640px; margin: 0 auto; display: flex; gap: 10px; }
@@ -266,3 +266,30 @@ body.menu-open { overflow: hidden; }
 .pc-only-card__icon svg { width: 40px; height: 40px; }
 .pc-only-card .btn { justify-self: stretch; }
 @media (prefers-reduced-motion: reduce) { .drawer, .drawer-backdrop { transition: none; } }
+
+/* Training: nur aktuelle Übung aufgeklappt, Notizen (1.4.1) */
+/* iOS zoomt bei Feldern unter 16 px hinein – alle Eingaben mindestens 16 px */
+input, textarea, select { font-size: max(16px, 1em); }
+.ex-toggle { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+.ex-toggle .main { display: grid; flex: 1; min-width: 0; }
+.ex-progress { flex: none; font-size: .8rem; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; font-variant-numeric: tabular-nums; }
+.ex-progress.all { color: var(--ok); border-color: var(--ok); }
+.ex-toggle .chev { flex: none; color: var(--muted); font-size: 1rem; width: 14px; }
+.ex.collapsed { padding-bottom: 0; }
+.ex.collapsed .ex-toggle { padding-bottom: 12px; }
+.ex-note-line { margin: -6px 14px 10px; overflow-wrap: anywhere; }
+.ex-notes textarea { width: 100%; margin-top: 6px; resize: vertical; }
+
+.usage { color: var(--blue); font-weight: 600; }
+
+/* Übungen an der Maschine: Info-Symbol mit Muskelverteilung (1.4.1) */
+.item-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; gap: 0; }
+.item-row > .item { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.info-btn { display: grid; place-items: center; width: 48px; border: 1px solid var(--line); border-left: 0; border-radius: 0 var(--radius) var(--radius) 0; background: var(--surface); color: var(--blue); cursor: pointer; }
+.info-btn[aria-expanded="true"] { background: rgba(31, 111, 209, .10); }
+.focus-panel { grid-column: 1 / -1; display: grid; gap: 8px; margin: 6px 0 4px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.focus-panel p { margin: 0; }
+.fp-group { display: grid; gap: 2px; }
+.fp-head, .fp-row { display: flex; justify-content: space-between; gap: 12px; font-variant-numeric: tabular-nums; }
+.fp-head { font-weight: 700; border-bottom: 1px solid var(--line); padding-bottom: 2px; }
+.fp-row { font-size: .9rem; padding-left: 8px; }

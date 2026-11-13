@@ -4,10 +4,11 @@
 
 import { nutritionFromRows } from "./nutrition.js";
 import { bodyFromRows } from "./bodydata.js";
+import { focusFromRows } from "./focusinfo.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.4.0";
+export const MOBILE_VERSION = "1.4.1";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -249,6 +250,7 @@ export function parseExport(text) {
     .sort((a, b) => String(a.row.name).localeCompare(String(b.row.name), "de"));
 
   const last = lastSessionsFromRows(rows("workout"), rows("workout_exercise"), rows("workout_set"));
+  const usage = usageFromRows(rows("workout"), rows("workout_exercise"));
 
   return {
     schemaVersion: doc.schemaVersion,
@@ -261,8 +263,10 @@ export function parseExport(text) {
     sports,
     plans,
     last,
+    usage,
     nutrition: nutritionFromRows(rows, doc.exportedAt ?? null),
     body: bodyFromRows(rows),
+    focus: focusFromRows(rows),
   };
 }
 
@@ -300,6 +304,44 @@ export function lastSessionsFromRows(workouts, wexRows, wsetRows) {
     };
   }
   return last;
+}
+
+/**
+ * Nutzung je Übung (1.4.1): IDs der abgeschlossenen Trainings mit dieser Übung und das letzte
+ * Datum – für „wie oft benutzt, wann zuletzt“ bei der Maschinensuche.
+ */
+export function usageFromRows(workouts, wexRows) {
+  const done = new Map(workouts.filter((w) => w.status !== "active").map((w) => [w.id, w]));
+  const usage = {};
+  for (const we of wexRows) {
+    const w = done.get(we.workout_id);
+    if (!w) continue;
+    const u = (usage[we.exercise_id] ??= { workouts: [], last: null });
+    if (!u.workouts.includes(w.id)) u.workouts.push(w.id);
+    if (!u.last || w.date > u.last) u.last = w.date;
+  }
+  return usage;
+}
+
+/**
+ * Wie oft eine Maschine (alle ihre Übungen) bzw. eine Übung benutzt wurde und wann zuletzt –
+ * Trainings vom PC und abgeschlossene Trainings auf dem Handy, jedes Training einmal gezählt.
+ */
+export function usageOf(catalog, localWorkouts, exerciseIds) {
+  const ids = new Set();
+  let last = null;
+  for (const id of exerciseIds) {
+    const u = catalog.usage?.[id];
+    if (!u) continue;
+    for (const w of u.workouts) ids.add(w);
+    if (u.last && (!last || u.last > last)) last = u.last;
+  }
+  for (const w of localWorkouts) {
+    if (w.status !== "done" || !w.exercises.some((e) => exerciseIds.includes(e.exerciseId))) continue;
+    ids.add(w.editOf ?? w.id);
+    if (!last || w.date > last) last = w.date;
+  }
+  return { count: ids.size, last };
 }
 
 /** Letzte Einheit je Übung aus Export und den auf dem Handy erfassten Trainings. */

@@ -6,6 +6,7 @@ import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, view
 import { bodyActions, bodyChange, bodyInput, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
 import * as BD from "./bodydata.js";
 import { SECTIONS, drawerHtml, icon, pcOnlyHtml } from "./nav.js";
+import { focusInfo } from "./focusinfo.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -312,17 +313,50 @@ function viewWorkout() {
   <div class="bottom"><div class="inner"><button class="btn primary" data-go="finish">${edit ? "Änderungen speichern" : "Training beenden"}</button></div></div>`;
 }
 
+/**
+ * Nur die aktuelle Übung ist aufgeklappt (1.4.1): die erste mit offenen Sätzen bzw. die zuletzt
+ * hinzugefügte; von Hand auf- oder zugeklappte Übungen bleiben so, bis die aktuelle wechselt.
+ */
+const exComplete = (e) => e.sets.length > 0 && e.sets.every((x) => x.isDone);
+/** Wie am PC (domain/workoutFocus.ts): zuletzt begonnene offene Übung, sonst die nächste offene danach, sonst die erste offene. */
+function focusExId(w) {
+  if (w.focusEx && w.exercises.some((e) => e.id === w.focusEx)) return w.focusEx;
+  const list = w.exercises;
+  let started = -1;
+  list.forEach((e, i) => {
+    if (e.sets.some((x) => x.isDone)) started = i;
+  });
+  if (started >= 0 && !exComplete(list[started])) return list[started].id;
+  return (list.slice(started + 1).find((e) => !exComplete(e)) ?? list.find((e) => !exComplete(e)))?.id ?? null;
+}
+function isOpen(w, we) {
+  const manual = S.exOpen?.[we.id];
+  return manual ?? we.id === focusExId(w);
+}
+function setFocus(w, id) {
+  w.focusEx = id;
+  S.exOpen = {};
+}
+
 function exerciseCard(we, i, exs, machines) {
   const ex = exs.get(we.exerciseId);
   const { name, nr, m } = exLabel(ex, machines);
   const cardio = ex?.category === "cardio";
   const last = C.lastSessionFor(S.catalog, S.workouts, we.exerciseId, S.active.id);
   const st = we.settings || C.emptySettings();
-  return `<section class="ex" id="ex-${we.id}">
-    <div class="ex-head">
+  const open = isOpen(S.active, we);
+  const done = we.sets.filter((x) => x.isDone).length;
+  const head = `<button class="ex-head ex-toggle" data-act="toggle-ex" data-we="${we.id}" aria-expanded="${open}">
       <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>
-      <div class="main"><b>${esc(name)}</b><span class="muted small">${esc([m?.manufacturer, ex?.muscle_group].filter(Boolean).join(" · "))}</span></div>
-    </div>
+      <span class="main"><b>${esc(name)}</b><span class="muted small">${esc([m?.manufacturer, ex?.muscle_group].filter(Boolean).join(" · "))}</span></span>
+      <span class="ex-progress${we.sets.length && done === we.sets.length ? " all" : ""}">${done}/${we.sets.length}</span>
+      <span class="chev" aria-hidden="true">${open ? "▾" : "▸"}</span>
+    </button>`;
+  if (!open) {
+    return `<section class="ex collapsed" id="ex-${we.id}">${head}${we.notes ? `<p class="ex-note-line muted small">📝 ${esc(we.notes)}</p>` : ""}</section>`;
+  }
+  return `<section class="ex" id="ex-${we.id}">
+    ${head}
     ${lastText(last, cardio)}
     <details class="settings"${Object.values(st).some((v) => v) ? "" : ""}>
       <summary>Geräteeinstellungen${Object.values(st).some((v) => v) ? `: ${esc(Object.entries(C.SETTING_LABELS).filter(([k]) => st[k]).map(([k, l]) => `${l} ${st[k]}`).join(", "))}` : ""}</summary>
@@ -343,6 +377,10 @@ function exerciseCard(we, i, exs, machines) {
       </div>
     </details>
     ${cardio ? "" : profilePicker(we, ex)}
+    <details class="settings ex-notes"${we.notes ? " open" : ""}>
+      <summary>Notiz zur Übung${we.notes ? "" : " (optional)"}</summary>
+      <textarea id="note-${we.id}" rows="2" maxlength="500" placeholder="z. B. Sitz zu tief, nächstes Mal mehr Gewicht" data-we="${we.id}" data-field="notes">${esc(we.notes ?? "")}</textarea>
+    </details>
     <div class="set-head${cardio ? " cardio" : ""}"><span>#</span>${cardio ? "<span>Minuten</span><span>km</span>" : "<span>kg</span><span>Wdh.</span><span>RPE</span>"}<span>✓</span></div>
     <div class="sets">
       ${we.sets.map((s, si) => setRow(we, s, si, cardio, cardio ? [] : C.visibleProfiles(we, ex))).join("")}
@@ -409,6 +447,11 @@ function viewPicker() {
   </main>`;
 }
 
+/** „12× benutzt · zuletzt 03.11.2026“ bzw. „noch nicht benutzt“. */
+function usageText(u) {
+  return u.count ? `${u.count}× benutzt · zuletzt ${fmtDate(u.last)}` : "noch nicht benutzt";
+}
+
 function pickerResults() {
   const anyNumbered = S.catalog.machines.some((m) => m.own_number || m.gym_number);
   const hits = C.search(S.catalog, S.localExercises, S.query, { onlyNumbered: S.prefs.onlyNumbered && anyNumbered });
@@ -424,19 +467,40 @@ function pickerResults() {
           <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>
           <span class="main"><b>${esc(m.display_name)}</b><span class="muted small">${esc([m.manufacturer, m.series, C.machineMuscles(m).slice(0, 3).join(", ")].filter(Boolean).join(" · "))}</span>${
             h.exercises.length ? `<span class="small">Übungen: ${esc(h.exercises.map((e) => e.name).join(" · "))}</span>` : ""
-          }</span>
+          }<span class="usage small">${esc(usageText(C.usageOf(S.catalog, S.workouts, C.machineExercises(S.catalog, S.localExercises, m.id).map((e) => e.id))))}</span></span>
           <span class="chev">${h.exercises.length ? "›" : "+"}</span></button>`;
       }
       const e = h.exercise;
       return `<button class="item" data-act="pick-exercise" data-arg="${esc(e.id)}">
         <span class="num none">Übung</span>
-        <span class="main"><b>${esc(e.name)}</b><span class="muted small">${esc([e.muscle_group, e.equipment].filter(Boolean).join(" · "))}</span></span>
+        <span class="main"><b>${esc(e.name)}</b><span class="muted small">${esc([e.muscle_group, e.equipment].filter(Boolean).join(" · "))}</span>
+          <span class="usage small">${esc(usageText(C.usageOf(S.catalog, S.workouts, [e.id])))}</span></span>
         <span class="chev">+</span></button>`;
     })
     .join("");
 }
 
 /** Maschine mit Übungen: eine davon wählen oder eine weitere anlegen. */
+/** Muskelverteilung einer Übung (Info-Symbol), gleiche Regeln wie am PC. */
+function focusPanel(e, m) {
+  const info = focusInfo(
+    { exerciseId: e.id, exerciseName: e.name, muscleGroup: e.muscle_group, machineId: m?.id ?? e.machine_id, machineMuscleGroups: m ? C.machineMuscles(m) : [] },
+    S.catalog.focus,
+  );
+  return `<div class="focus-panel">
+    <b>${esc(info.title)}</b>
+    ${info.groups
+      .map(
+        (g) => `<div class="fp-group"><div class="fp-head"><span>${esc(g.label)}</span><span>${g.total} %</span></div>
+        ${g.rows.map((r) => `<div class="fp-row"><span>${esc(r.label)}</span><span>${r.percent} %</span></div>`).join("")}</div>`,
+      )
+      .join("")}
+    ${info.terms.length ? `<div class="fp-group">${info.terms.map((t) => `<div class="fp-row"><span>${esc(t.label)}</span><span>${t.percent} %</span></div>`).join("")}</div>` : ""}
+    ${info.note ? `<p class="muted small">${esc(info.note)}</p>` : ""}
+    ${S.catalog.focus ? "" : `<p class="muted small">Für den eigenen Muskelfokus bitte eine neue Exportdatei vom PC laden.</p>`}
+  </div>`;
+}
+
 function viewMachine() {
   const m = S.catalog.machines.find((x) => x.id === S.arg);
   if (!m) return viewPicker();
@@ -446,10 +510,15 @@ function viewMachine() {
     <p class="muted small">Übungen an dieser Maschine – der Verlauf gehört jeweils zur Übung.</p>
     <div class="list">${list
       .map(
-        (e) => `<button class="item" data-act="pick-exercise" data-arg="${esc(e.id)}">
+        (e) => `<div class="item-row">
+        <button class="item" data-act="pick-exercise" data-arg="${esc(e.id)}">
         <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>
-        <span class="main"><b>${esc(e.name)}</b><span class="muted small">${esc(e.muscle_group ?? "")}</span></span>
-        <span class="chev">+</span></button>`,
+        <span class="main"><b>${esc(e.name)}</b><span class="muted small">${esc(e.muscle_group ?? "")}</span>
+          <span class="usage small">${esc(usageText(C.usageOf(S.catalog, S.workouts, [e.id])))}</span></span>
+        <span class="chev">+</span></button>
+        <button class="info-btn" data-act="focus-info" data-arg="${esc(e.id)}" aria-expanded="${S.focusOpen === e.id}" aria-label="Muskelverteilung von ${esc(e.name)}">${icon("info")}</button>
+        ${S.focusOpen === e.id ? focusPanel(e, m) : ""}
+      </div>`,
       )
       .join("")}</div>
     <section class="card"><h3>Weitere Übung an dieser Maschine</h3>
@@ -670,6 +739,27 @@ document.addEventListener("keydown", (ev) => {
   if (ev.key === "Escape" && S.menuOpen) setMenu(false);
 });
 
+/**
+ * iOS vergrößert beim Tippen in ein Feld und bleibt danach vergrößert. Nach dem Bestätigen eines
+ * Wertes (Feld verlassen, Satz abhaken) wieder auf die optimale Breite zurück (1.4.1): kurz
+ * „maximum-scale=1“ setzen, dann wieder freigeben (Zoomen mit zwei Fingern bleibt möglich).
+ */
+const viewportMeta = document.querySelector('meta[name="viewport"]');
+const VIEWPORT = viewportMeta?.getAttribute("content") ?? "width=device-width, initial-scale=1, viewport-fit=cover";
+function resetZoom() {
+  if (!viewportMeta || !/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
+  if ((window.visualViewport?.scale ?? 1) <= 1.01) return;
+  viewportMeta.setAttribute("content", `${VIEWPORT}, maximum-scale=1`);
+  setTimeout(() => viewportMeta.setAttribute("content", VIEWPORT), 350);
+}
+// Wert bestätigt (Feld verlassen bzw. „Fertig“): Zoom zurück, sofern kein anderes Feld folgt
+document.addEventListener("focusout", (ev) => {
+  if (!ev.target.matches?.("input, textarea, select")) return;
+  setTimeout(() => {
+    if (!document.activeElement?.matches?.("input, textarea, select")) resetZoom();
+  }, 60);
+});
+
 function rerenderKeepScroll() {
   const y = window.scrollY;
   render();
@@ -694,6 +784,7 @@ function addExercise(exerciseId) {
   const last = C.lastSessionFor(S.catalog, S.workouts, exerciseId, S.active.id);
   const we = C.workoutExercise({ exerciseId, last });
   S.active.exercises.push(we);
+  setFocus(S.active, we.id);
   saveSoon();
   S.query = "";
   go("workout");
@@ -741,8 +832,26 @@ const actions = {
     if (!s) return;
     s.isDone = !s.isDone;
     if (s.isDone && we.restSeconds) startRest(we.restSeconds);
+    // Übung fertig: nächste offene Übung wird die aktuelle (aufgeklappt), diese klappt zu
+    if (s.isDone && we.sets.every((x) => x.isDone)) {
+      const list = S.active.exercises;
+      const idx = list.findIndex((e) => e.id === we.id);
+      const next = [...list.slice(idx + 1), ...list.slice(0, idx)].find((e) => !e.sets.length || e.sets.some((x) => !x.isDone));
+      if (next) {
+        setFocus(S.active, next.id);
+        delete S.exOpen?.[we.id];
+        saveSoon();
+        render();
+        requestAnimationFrame(() => document.getElementById(`ex-${next.id}`)?.scrollIntoView({ block: "start", behavior: "smooth" }));
+        resetZoom();
+        return;
+      }
+    }
+    // abgehakte Übung wird die aktuelle (wie am PC)
+    if (s.isDone && !exComplete(we) && focusExId(S.active) !== we.id) setFocus(S.active, we.id);
     saveSoon();
     rerenderKeepScroll();
+    resetZoom();
   },
   flag: (el) => {
     const s = findSet(el.dataset.we, el.dataset.set);
@@ -759,6 +868,17 @@ const actions = {
     if (vis.includes(k) && el.dataset.locked) return toast("Erst die Werte in dieser Spalte löschen.", true);
     we.profiles = vis.includes(k) ? vis.filter((x) => x !== k) : C.PROFILE_KEYS.filter((x) => x === k || vis.includes(x));
     saveSoon();
+    rerenderKeepScroll();
+  },
+  "focus-info": (el) => {
+    S.focusOpen = S.focusOpen === el.dataset.arg ? null : el.dataset.arg;
+    rerenderKeepScroll();
+  },
+  "toggle-ex": (el) => {
+    const we = findWe(el.dataset.we);
+    if (!we) return;
+    if (!S.exOpen) S.exOpen = {};
+    S.exOpen[we.id] = !isOpen(S.active, we);
     rerenderKeepScroll();
   },
   "add-set": (el) => {
@@ -1006,6 +1126,12 @@ app.addEventListener("input", (ev) => {
   if (el.dataset.setting) {
     const we = findWe(el.dataset.we);
     we.settings[el.dataset.setting] = el.value.trim() || null;
+    saveSoon();
+    return;
+  }
+  if (el.dataset.field === "notes") {
+    const we = findWe(el.dataset.we);
+    we.notes = el.value.slice(0, 500) || null;
     saveSoon();
     return;
   }

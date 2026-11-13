@@ -6,6 +6,7 @@
 import * as P from "./pcdb.js";
 import * as D from "./pcdomain.js";
 import * as N from "./nutrition.js";
+import { phoneLogs } from "./logsdata.js";
 import { CATALOG, GROUPS } from "./nutrientcatalog.js";
 import { barTrendSvg, compareHtml, COLOR, dayGoalHtml, macroBreakdownHtml } from "./pcview.js";
 
@@ -52,6 +53,7 @@ export function buildDb() {
     body: Object.values(S.body?.local.entries ?? {}).map((e) => e.row),
     workouts,
     exercises: S.localExercises ?? [],
+    logs: phoneLogs(S.logs),
   });
   // Eigene Namen der Standardmahlzeiten wie am PC (Settings → meal_name.*)
   const names = {};

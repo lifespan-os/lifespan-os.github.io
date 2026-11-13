@@ -503,3 +503,55 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .muscle-map__legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 12px; margin: 0; padding: 0; list-style: none; font-size: .76rem; color: var(--muted); }
 .muscle-map__legend li { display: inline-flex; align-items: center; gap: 4px; }
 .muscle-map__swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid #c3cedc; }
+
+/* ------------------------------------------------------------ Sleep und Recovery (1.7.0) */
+.logs-toolbar { gap: 10px; }
+.logs-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.logs-actions .btn { min-height: 48px; }
+.logs-select { display: grid; gap: 4px; }
+.logs-select span { font-size: .84rem; color: var(--muted); }
+.logs-sub { margin: 6px 0 0; font-size: .9rem; font-weight: 650; }
+.logs-list { display: grid; gap: 8px; }
+.logs-list .item { align-items: flex-start; }
+.logs-list .item .main { gap: 3px; }
+.logs-list .nap-item { margin-left: 18px; width: calc(100% - 18px); background: var(--surface-2); }
+.logs-list .phase-bar { margin: 4px 0 0; height: 10px; }
+.logs-form { gap: 14px; }
+.logs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.logs-grid .field, .logs-form .field { min-width: 0; }
+.input-row { display: flex; align-items: center; gap: 8px; }
+.input-row input { flex: 1; min-width: 0; }
+.input-row .unit { color: var(--muted); font-size: .9rem; white-space: nowrap; }
+.field-error { margin: 0; color: var(--danger); font-size: .82rem; }
+.field.has-error input, .field.has-error select { border-color: var(--danger); }
+.logs-phases { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 12px; margin: 0; display: grid; gap: 10px; }
+.logs-phases legend { font-weight: 650; font-size: .9rem; padding: 0 4px; }
+.logs-form-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.logs-form-actions .btn.danger { grid-column: 1 / -1; border-color: var(--danger); }
+.logs-help { line-height: 1.5; }
+.phase-summary { display: grid; gap: 6px; }
+.phase-summary .goal-bar { height: 16px; }
+.phase-legend { display: grid; gap: 4px; }
+.phase-nights { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.phase-nights li { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 3px 10px; font-size: .84rem; }
+.phase-nights li .muted { text-align: right; }
+.phase-nights li .phase-bar { grid-column: 1 / -1; grid-row: 2; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll .data-table td, .table-scroll .data-table th { white-space: nowrap; }
+.phase-nights .phase-bar { height: 12px; }
+.data-table .sub { display: block; color: var(--muted); font-size: .74rem; }
+.ans-bar { margin: 4px 0 8px; }
+.ans-bar__track { position: relative; height: 14px; border-radius: 7px; background: linear-gradient(90deg, #F5F7FA 0%, #E3EBFA 50%, #F5F7FA 100%); border: 1px solid var(--line); }
+.ans-bar__zero { position: absolute; top: -3px; bottom: -3px; width: 1px; background: #c3cedc; }
+.ans-bar__value, .ans-bar__mean { position: absolute; top: 50%; transform: translate(-50%, -50%); border-radius: 50%; }
+.ans-bar__value { width: 18px; height: 18px; background: #1E7A72; border: 2px solid var(--surface); box-shadow: 0 0 0 1px #1E7A72; z-index: 2; }
+.ans-bar__mean { width: 14px; height: 14px; background: var(--surface); border: 2px dashed var(--muted); z-index: 1; }
+.ans-bar__ticks { position: relative; height: 16px; margin-top: 2px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ans-bar__ticks > span { position: absolute; transform: translateX(-50%); }
+.ans-bar__legend { margin: 4px 0 0; font-size: .84rem; }
+.ans-bar__key { display: inline-block; width: 10px; height: 10px; margin: 0 4px 0 8px; border-radius: 50%; vertical-align: -1px; }
+.ans-bar__key:first-child { margin-left: 0; }
+.ans-bar__key--value { background: #1E7A72; }
+.ans-bar__key--mean { border: 2px dashed var(--muted); }
+.logs-grid { align-items: start; }
+.logs-grid .field > label { min-height: 2.6em; display: flex; align-items: flex-end; }

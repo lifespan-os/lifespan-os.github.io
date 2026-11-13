@@ -6187,6 +6187,120 @@ function parseMuscleMapSettings(json) {
   }
 }
 
+// src/domain/models.ts
+var WEIGHT_METRIC_ID = "00000000-0000-7000-8000-000000000001";
+var BODY_FAT_METRIC_ID = "00000000-0000-7000-8000-000000000002";
+var RESTING_HR_METRIC_ID = "00000000-0000-7000-8000-000000000018";
+var HRV_METRIC_ID = "00000000-0000-7000-8000-000000000019";
+var BREATHING_RATE_METRIC_ID = "00000000-0000-7000-8000-000000000020";
+var BEAT_INTERVAL_METRIC_ID = "00000000-0000-7000-8000-000000000021";
+var ANS_STATUS_METRIC_ID = "00000000-0000-7000-8000-000000000022";
+
+// src/domain/bodyLayout.ts
+var builtinMetricId = (n) => `00000000-0000-7000-8000-${String(n).padStart(12, "0")}`;
+var ANS_METRIC_IDS = [
+  RESTING_HR_METRIC_ID,
+  HRV_METRIC_ID,
+  BREATHING_RATE_METRIC_ID,
+  BEAT_INTERVAL_METRIC_ID,
+  ANS_STATUS_METRIC_ID
+];
+var ANS_TITLE = "ANS - Autonomes Nervensystem Status";
+var METRIC_HINTS = {
+  [builtinMetricId(14)]: "Oberer Blutdruckwert: Druck in den Arterien, w\xE4hrend sich das Herz zusammenzieht und Blut in den K\xF6rper pumpt.",
+  [builtinMetricId(15)]: "Unterer Blutdruckwert: Druck in den Arterien, w\xE4hrend sich das Herz entspannt und wieder mit Blut f\xFCllt.",
+  [builtinMetricId(16)]: "Maximale Sauerstoffaufnahme: wie viele Milliliter Sauerstoff der K\xF6rper je Kilogramm K\xF6rpergewicht und Minute bei voller Belastung h\xF6chstens aufnehmen und verwerten kann \u2013 ein Ma\xDF f\xFCr die Ausdauerleistungsf\xE4higkeit."
+};
+var METRIC_SUBSECTIONS = {
+  composition: [
+    { label: "Kennzahlen", ids: [builtinMetricId(23), builtinMetricId(37)] },
+    {
+      label: "Fett",
+      ids: [
+        BODY_FAT_METRIC_ID,
+        builtinMetricId(25),
+        builtinMetricId(26),
+        builtinMetricId(27),
+        builtinMetricId(28),
+        builtinMetricId(38),
+        builtinMetricId(40),
+        builtinMetricId(41)
+      ]
+    },
+    {
+      label: "Muskulatur & Magermasse",
+      ids: [
+        builtinMetricId(3),
+        builtinMetricId(24),
+        builtinMetricId(39),
+        builtinMetricId(29),
+        builtinMetricId(30),
+        builtinMetricId(36)
+      ]
+    },
+    {
+      label: "K\xF6rperwasser",
+      ids: [builtinMetricId(32), builtinMetricId(33), builtinMetricId(34)]
+    },
+    { label: "Knochen & Mineralien", ids: [builtinMetricId(31), builtinMetricId(35)] }
+  ],
+  vital: [
+    { label: ANS_TITLE, ids: ANS_METRIC_IDS },
+    { label: "Blutdruck", ids: [builtinMetricId(14), builtinMetricId(15)] }
+  ]
+};
+var ANS_MIN = -10;
+var ANS_MAX = 10;
+function ansPercent(value) {
+  const clamped = Math.min(ANS_MAX, Math.max(ANS_MIN, value));
+  return (clamped - ANS_MIN) / (ANS_MAX - ANS_MIN) * 100;
+}
+function previousMean(values, date) {
+  const before = values.filter((v) => v.date < date);
+  if (before.length === 0) return null;
+  const mean2 = before.reduce((s, v) => s + v.value, 0) / before.length;
+  return { mean: Math.round(mean2 * 10) / 10, count: before.length };
+}
+
+// src/domain/helpTexts.ts
+var ANS_INFO = `Messmethoden : RMSSD (Root Mean Square of Successive Differences):
+* Berechnung: Die quadratische Wurzel aus dem Mittelwert der quadrierten Differenzen aufeinanderfolgender Herzschlagintervalle.
+* Bedeutung: Gilt als der wichtigste Indikator f\xFCr die Aktivit\xE4t des Parasympathikus (Ruhe- und Erholungsnerv bzw. Vagusnerv).
+SDNN (Standard Deviation of Normal-to-Normal Intervals):
+* Berechnung: Die Standardabweichung aller normalen Herzschlagintervalle \xFCber den gesamten Messzeitraum.
+* Bedeutung: Spiegelt die gesamt-autonome Variabilit\xE4t wider und reagiert sowohl auf sympathische als auch auf parasympathische Einfl\xFCsse \xFCber l\xE4ngere Zeitfenster (z. B. 5 Minuten oder 24 Stunden).`;
+var AG_RATIO_INFO = `Das Android/Gynoid-Verh\xE4ltnis (A/G-Ratio) bei Waagen.
+* Android-Fett (Apfeltyp): Fett, das sich bevorzugt im Bauchraum (viszeral) ansammelt.
+* Gynoid-Fett (Birnentyp): Fett, das sich an den H\xFCften und Oberschenkeln ansammelt.
+* Bedeutung: Ein hohes Android/Gynoid-Verh\xE4ltnis bedeutet, dass mehr Fett im Bauchbereich gespeichert wird, was medizinisch oft mit einem h\xF6heren Risiko f\xFCr Stoffwechselprobleme einhergeht. Ein niedrigeres Verh\xE4ltnis weist auf eine gleichm\xE4\xDFigere oder unterk\xF6rperbetonte Verteilung hin.`;
+var AG_RATIO_METRIC_ID = "00000000-0000-7000-8000-000000000038";
+var METRIC_INFO = {
+  [AG_RATIO_METRIC_ID]: AG_RATIO_INFO
+};
+
+// src/domain/methods.ts
+function methodChoices(list, current) {
+  const c = current?.trim() ?? "";
+  if (c === "" || list.some((m) => m.toLowerCase() === c.toLowerCase())) return [...list];
+  return [...list, c];
+}
+function dominantMethod(values) {
+  const counts = /* @__PURE__ */ new Map();
+  for (const v of values) {
+    const t = v?.trim();
+    if (t) counts.set(t, (counts.get(t) ?? 0) + 1);
+  }
+  let best = null;
+  let max = 0;
+  for (const [k, n] of counts) {
+    if (n > max) {
+      best = k;
+      max = n;
+    }
+  }
+  return best;
+}
+
 // src/domain/energy.ts
 var energy_exports = {};
 __export(energy_exports, {
@@ -6371,11 +6485,6 @@ __export(dashboard_exports, {
   weekGoalsFromInput: () => weekGoalsFromInput,
   weeklyGoals: () => weeklyGoals
 });
-
-// src/domain/models.ts
-var WEIGHT_METRIC_ID = "00000000-0000-7000-8000-000000000001";
-var RESTING_HR_METRIC_ID = "00000000-0000-7000-8000-000000000018";
-var HRV_METRIC_ID = "00000000-0000-7000-8000-000000000019";
 
 // src/domain/insights.ts
 var insights_exports = {};
@@ -7645,6 +7754,10 @@ function formatScale(key, value) {
   return `${value} / ${recoveryScale(key).max}`;
 }
 export {
+  ANS_INFO,
+  ANS_MAX,
+  ANS_MIN,
+  ANS_TITLE,
   DEFAULT_LAYOUT,
   DISPLAY_DECIMALS,
   FASTED_LABEL,
@@ -7665,6 +7778,7 @@ export {
   addNutrientValues,
   addNutrients,
   amountFromPortions,
+  ansPercent,
   arrange,
   buildFocusIndex,
   countAfterClick,
@@ -7681,6 +7795,7 @@ export {
   describeScheduled,
   describeSupplements,
   describeTiming,
+  dominantMethod,
   drinkText,
   drinksMl,
   energy_exports as energy,
@@ -7714,6 +7829,7 @@ export {
   mealDisplayName,
   mealHasContent,
   mealTypeLabel,
+  methodChoices,
   microValues,
   muscleLevels,
   muscleMapForRange,
@@ -7727,6 +7843,7 @@ export {
   perServing,
   percentText,
   portionsFromAmount,
+  previousMean,
   recovery_exports as recovery,
   referenceGroup,
   roundAmount,

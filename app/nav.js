@@ -36,8 +36,8 @@ export const SECTIONS = [
     views: ["training", "plans", "workout", "picker", "machine", "finish", "detail"],
   },
   { id: "nutrition", label: "Nutrition", view: "diary", views: ["diary", "food-history", "food", "food-review", "dish"] },
-  { id: "sleep", label: "Sleep", pc: "Schlaf erfassen, Schlafphasen, Verlauf und Auswertung." },
-  { id: "recovery", label: "Recovery", pc: "Regeneration, HRV, Ruhepuls und Erholungsmaßnahmen." },
+  { id: "sleep", label: "Sleep", view: "sleep", views: ["sleep"] },
+  { id: "recovery", label: "Recovery", view: "recovery", views: ["recovery"] },
   { id: "body", label: "Body & Longevity", view: "body", views: ["body", "body-metric", "body-entry"] },
   { id: "health", label: "Health", pc: "Blutwerte, Laborimport, Verläufe, Arztbericht und Lebenszeit." },
   { id: "superhuman", label: "Superhuman", pc: "HRT, Hormonspiegel, Dosisrechner und Checklisten." },
@@ -49,14 +49,15 @@ export const SECTIONS = [
 export const icon = (name) => ICONS[name] ?? "";
 
 /** Bereich einer Ansicht (für die Markierung im Menü). */
-export function sectionOf(view, arg) {
+export function sectionOf(view, arg, back = null) {
   if (view === "pc-only") return arg;
+  if (view === "log-edit") return back === "recovery" ? "recovery" : "sleep";
   return SECTIONS.find((s) => s.views?.includes(view))?.id ?? "overview";
 }
 
 /** Menü (Schublade von links). */
-export function drawerHtml({ view, arg, open, esc }) {
-  const current = sectionOf(view, arg);
+export function drawerHtml({ view, arg, open, esc, back = null }) {
+  const current = sectionOf(view, arg, back);
   return `<div class="drawer-backdrop ${open ? "open" : ""}" data-act="menu-close"></div>
   <nav class="drawer ${open ? "open" : ""}" aria-label="Hauptmenü" ${open ? "" : 'aria-hidden="true" inert'}>
     <div class="drawer__brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b><small>Mobil</small></div></div>

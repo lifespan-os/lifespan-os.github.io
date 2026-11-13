@@ -226,3 +226,17 @@ Fassung laden.
 - Gerechnet mit `muscleMapForRange` und `muscleLevels` aus src/domain/muscleMap.ts (in `pcdomain.js`), mit eigenem Muskelfokus von Maschinen und Übungen, Bewegungsmustern, Griffbreite und Griffstellung.
 - Bilder und Flächen wie am PC: `musclemap/male.webp`, `musclemap/female.webp`, `musclemap/regions.js` (aus src/data/muscle-map). Einen Muskel antippen zeigt Sätze und Stufe.
 - Die Darstellung kommt vom PC (Settings `ui.muscle_map`); eine Umstellung am Handy gilt nur auf dem Handy. Zielwerte für „Individuell“ werden am PC eingestellt. Die 3D-Ansicht gibt es nur am PC.
+
+## Version 1.7.0 (14.11.2026): Sleep und Recovery am Handy
+
+- **Sleep** wie am PC (SleepPage.tsx):
+  - Ansicht: Schlafdauer je Nacht, Schlafphasen (Mittel und je Nacht), Wochen- und Monatstrend, Einträge mit Nickerchen.
+  - Nacht erfassen und bearbeiten: Zeiten, Einschlafdauer, Wachzeit, Wachphasen, Qualität, Efficiency, Light/Deep/REM, Messmethode, Notiz.
+  - Nickerchen erfassen und bearbeiten. Einträge (auch die vom PC) lassen sich löschen.
+- **Recovery** wie am PC (RecoveryPage.tsx):
+  - Ansicht: Selbsteinschätzung je Skala, zeitlicher Vergleich mit Schlaf und Trainingsbelastung (mit den Beobachtungen wie am PC), Einschätzungen.
+  - Tag einschätzen (Erholung, Müdigkeit, Muskelkater, Stress).
+  - ANS-Werte (Ruhepuls, HRV, Atemfrequenz, Schlag-zu-Schlag-Intervall, ANS-Status mit Balken −10…+10) als Körperwerte erfassen.
+- Prüfregeln wie im Rust-Kern (`logsdata.js`, mit Tests): eine Nacht bzw. Einschätzung je Tag, Bereiche der Felder, Nickerchen höchstens 6 Stunden.
+- Änderungen gehen mit „Körperwerte, Schlaf & Regeneration senden“ in die Datei „LIFESPAN Körperwerte …“: `sleep_log`, `sleep_nap`, `recovery_log` und Löschvermerke (`deleted_record`). Am PC mit „Abgleichen“ importieren; je Nacht bzw. Tag gilt der neuere Stand.
+- Overview, Tagesbereitschaft und Streaks rechnen sofort mit den Einträgen vom Handy.

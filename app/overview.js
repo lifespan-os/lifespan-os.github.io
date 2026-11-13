@@ -560,9 +560,9 @@ function liveCards(data, week, widgets, isToday) {
             today.readiness !== null ? metric(isToday ? "Erholung heute (1–10)" : "Erholung (1–10)", String(today.readiness), "/ 10", true) : "",
             ...D.recovery.RECOVERY_SCALES.filter((s) => s.key !== "readiness" && today[s.key] !== null).map((s) => metric(`${s.label} (0–10)`, String(today[s.key]), "/ 10")),
           )
-        : missing(`${onDay} noch nicht erfasst.`, "recovery", "Jetzt erfassen (am PC)")
+        : missing(`${onDay} noch nicht erfasst.`, "recovery", "Jetzt erfassen")
     }
-    ${recovery.length >= 2 ? trendSvg(recovery, { color: COLOR.recovery, decimals: 0, height: 150, label: "Selbsteinschätzung der letzten 7 Tage" }) : ""}
+    ${recovery.length >= 2 ? trendSvg(recovery, { color: COLOR.recovery, decimals: 0, height: 150, label: "Selbsteinschätzung der letzten 7 Tage", domain: [1, 10] }) : ""}
     ${hr || hrv ? row(hr ? metric(vitalLabel("Ruhepuls", hr.date), F(hr.value), "bpm") : "", hrv ? metric(vitalLabel("HRV (RMSSD)", hrv.date), F(hrv.value, 1), "ms") : "") : ""}
     ${note(`Eigene Einschätzung, kein berechneter Wert.${hr || hrv ? " Ruhepuls und HRV: zuletzt erfasste Messung, ohne Bewertung." : ""}`)}`,
     { area: "recovery" },
@@ -637,7 +637,7 @@ function liveCards(data, week, widgets, isToday) {
             metric(`${data.sleepToday.bedTime} bis ${data.sleepToday.wakeTime} Uhr`, dur(D.sleep.sleepWithNaps(data.sleepToday, naps)), "", true),
             sleepAvg !== null && nights.length > 1 ? metric(`Mittel, ${nights.length} Nächte`, dur(sleepAvg)) : "",
           )
-        : missing(isToday ? "Letzte Nacht noch nicht erfasst." : "Für diese Nacht nichts erfasst.", "sleep", "Jetzt erfassen (am PC)")
+        : missing(isToday ? "Letzte Nacht noch nicht erfasst." : "Für diese Nacht nichts erfasst.", "sleep", "Jetzt erfassen")
     }
     ${
       nights.length >= 2

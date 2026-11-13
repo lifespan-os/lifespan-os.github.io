@@ -104,7 +104,8 @@ export function pcFromRows(rows) {
 /**
  * Daten vom PC und vom Handy zusammenführen (gleiche ID: der Stand vom Handy gilt).
  * `phone` = { foods: Map, meals: [{row, items}], water: {rows, deleted}, body: [row],
- *   workouts: {workout, workout_exercise, workout_set}, exercises: [row] }
+ *   workouts: {workout, workout_exercise, workout_set}, exercises: [row],
+ *   logs: {sleep: [row], naps: [row], recovery: [row], deleted: [{table, id}]} }
  */
 export function makeDb(catalog, phone = {}) {
   const pc = catalog?.pc ?? {};
@@ -148,6 +149,14 @@ export function makeDb(catalog, phone = {}) {
   }
   const body = [...bodyByKey.values()];
 
+  // Schlaf und Regeneration (1.7.0): Einträge vom Handy ersetzen die vom PC (gleiche ID),
+  // Löschvermerke vom Handy blenden Einträge vom PC aus
+  const logs = phone.logs ?? {};
+  const gone = (table) => new Set((logs.deleted ?? []).filter((d) => d.table === table).map((d) => d.id));
+  const sleep = merge(t("sleep_log"), logs.sleep ?? [], gone("sleep_log"));
+  const naps = merge(t("sleep_nap"), logs.naps ?? [], gone("sleep_nap"));
+  const recovery = merge(t("recovery_log"), logs.recovery ?? [], gone("recovery_log"));
+
   const settings = new Map(t("settings").map((s) => [s.key, s.value]));
   for (const [k, v] of Object.entries(phone.settings ?? {})) settings.set(k, v);
 
@@ -179,9 +188,9 @@ export function makeDb(catalog, phone = {}) {
     body,
     bodyByMetric: groupBy(body, "metric_id"),
     settings,
-    sleep: t("sleep_log"),
-    naps: t("sleep_nap"),
-    recovery: t("recovery_log"),
+    sleep,
+    naps,
+    recovery,
     pc,
   };
 }

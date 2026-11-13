@@ -187,7 +187,7 @@ export function barTrendSvg(data, { color = COLOR.training, format = (v) => D.fo
 }
 
 /** Linie über Datumswerte wie `TrendChart.tsx` (optional Mittel-/Trendlinie). */
-export function trendSvg(points, { color = COLOR.body, decimals = 1, height = 160, label = "", trend = null } = {}) {
+export function trendSvg(points, { color = COLOR.body, decimals = 1, height = 160, label = "", trend = null, from = null, to = null, domain = null } = {}) {
   if (!points.length) return "";
   const W = 340;
   const H = height;
@@ -196,17 +196,21 @@ export function trendSvg(points, { color = COLOR.body, decimals = 1, height = 16
   const T = 10;
   const B = 22;
   const all = [...points.map((p) => p.value), ...(trend ?? []).map((p) => p.value)];
-  let lo = Math.min(...all);
-  let hi = Math.max(...all);
+  // Feste Achse (z. B. Skala 1–10) wie TrendChart `domain`
+  let lo = domain ? domain[0] : Math.min(...all);
+  let hi = domain ? domain[1] : Math.max(...all);
   if (hi === lo) {
     lo -= 1;
     hi += 1;
   }
-  const pad = (hi - lo) * 0.12;
+  const pad = domain ? 0 : (hi - lo) * 0.12;
   lo -= pad;
   hi += pad;
-  const t0 = Date.parse(`${points[0].date}T12:00:00Z`);
-  const t1 = Date.parse(`${points[points.length - 1].date}T12:00:00Z`);
+  // Zeitachse: erster bis letzter Wert oder fester Zeitraum (für untereinander stehende Grafiken)
+  const first = from ?? points[0].date;
+  const last = to ?? points[points.length - 1].date;
+  const t0 = Date.parse(`${first}T12:00:00Z`);
+  const t1 = Date.parse(`${last}T12:00:00Z`);
   const x = (d) => L + (t1 === t0 ? (W - L - R) / 2 : ((Date.parse(`${d}T12:00:00Z`) - t0) / (t1 - t0)) * (W - L - R));
   const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
   const line = (list) => list.map((p) => `${x(p.date).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
@@ -216,8 +220,8 @@ export function trendSvg(points, { color = COLOR.body, decimals = 1, height = 16
     ${trend && trend.length > 1 ? `<polyline points="${line(trend)}" fill="none" stroke="${COLOR.ink}" stroke-width="2.5" stroke-linejoin="round"/>` : ""}
     <polyline points="${line(points)}" fill="none" stroke="${color}" stroke-width="${trend ? 1.4 : 2}" stroke-linejoin="round" ${trend ? 'stroke-opacity=".7"' : ""}/>
     ${points.map((p) => `<circle cx="${x(p.date).toFixed(1)}" cy="${y(p.value).toFixed(1)}" r="2.4" fill="${color}"><title>${esc(D.formatDate(p.date))}: ${esc(D.formatNumber(p.value, decimals))}</title></circle>`).join("")}
-    <text x="${L}" y="${H - 6}" text-anchor="start">${shortDate(points[0].date)}</text>
-    <text x="${W - R}" y="${H - 6}" text-anchor="end">${shortDate(points[points.length - 1].date)}</text>
+    <text x="${L}" y="${H - 6}" text-anchor="start">${shortDate(first)}</text>
+    <text x="${W - R}" y="${H - 6}" text-anchor="end">${shortDate(last)}</text>
   </svg>`;
 }
 

@@ -7,6 +7,8 @@ import { bodyActions, bodyChange, bodyInput, bodyState, initBody, viewBody, view
 import * as BD from "./bodydata.js";
 import { SECTIONS, drawerHtml, icon, pcOnlyHtml } from "./nav.js";
 import { focusInfo } from "./focusinfo.js";
+import * as P from "./pcdb.js";
+import { diaryActions, diaryChange, initDiary, viewDiary, viewNutritionHistory } from "./diary.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -76,7 +78,7 @@ async function saveNow() {
 const exById = () => new Map(C.allExercises(S.catalog, S.localExercises).map((e) => [e.id, e]));
 const machineById = () => new Map(S.catalog.machines.map((m) => [m.id, m]));
 const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported);
-const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0);
+const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWater(S.water);
 const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0);
 
 function go(view, arg = null) {
@@ -655,6 +657,8 @@ function viewHelp() {
 }
 
 const VIEWS = {
+  diary: viewDiary,
+  "food-history": viewNutritionHistory,
   food: viewFood,
   "food-review": viewFoodReview,
   body: viewBody,
@@ -793,6 +797,7 @@ function addExercise(exerciseId) {
 
 const actions = {
   ...foodActions,
+  ...diaryActions,
   ...bodyActions,
   "start-free": () => startWorkout("Freies Training"),
   "start-plan": (el) => {
@@ -970,6 +975,8 @@ const actions = {
     if (kind === "food" && S.food) {
       N.markNutritionSent(S.food.local);
       await store.set("nutrition", S.food.local);
+      P.markWaterSent(S.water);
+      await store.set("water", S.water);
     }
     await saveNow();
     toast("Als übertragen markiert");
@@ -1018,6 +1025,13 @@ function confirmTwice(el, text) {
   return false;
 }
 
+/** Tabellen zweier Teile zusammenlegen (z. B. `settings` aus Strichcodes und Glasgröße). */
+function mergeTables(a, b) {
+  const out = { ...a };
+  for (const [name, list] of Object.entries(b)) out[name] = [...(out[name] ?? []), ...list];
+  return out;
+}
+
 /**
  * Rückgabedatei erstellen (1.2.4): Trainings und Ernährung getrennt – `kind` „training“ oder „food“,
  * `all` = auch schon gesendete.
@@ -1028,7 +1042,7 @@ async function sendFile(kind, all) {
   try {
     const food =
       kind === "food" && S.food
-        ? N.nutritionTables(S.catalog, S.food.local, { all })
+        ? mergeTables(N.nutritionTables(S.catalog, S.food.local, { all }), P.waterTables(S.water, { all }))
         : kind === "body" && S.body
           ? BD.bodyTables(S.catalog, S.body.local, { all })
           : {};
@@ -1153,6 +1167,7 @@ app.addEventListener("change", async (ev) => {
   const el = ev.target;
   if (foodChange(el)) return;
   if (bodyChange(el)) return;
+  if (diaryChange(el)) return;
   if (el.id === "only-nr") {
     S.prefs.onlyNumbered = el.checked;
     saveSoon();
@@ -1185,6 +1200,8 @@ async function loadFile(file) {
     await store.set("nutrition", S.food.local);
     BD.pruneBody(catalog, S.body.local);
     await store.set("body", S.body.local);
+    S.water = P.pruneWater(catalog, S.water);
+    await store.set("water", S.water);
     await saveNow();
     toast(`Geladen: ${catalog.machines.length.toLocaleString("de-DE")} Maschinen, ${catalog.plans.length} Pläne, ${catalog.nutrition.foods.length.toLocaleString("de-DE")} Lebensmittel`);
     go("home");
@@ -1330,8 +1347,12 @@ const moduleCtx = {
   rerender: () => rerenderKeepScroll(),
   go: (view, arg) => go(view, arg),
   confirmTwice: (el, text) => confirmTwice(el, text),
+  /** Trainings vom Handy als Tabellen (für die Rechnung wie am PC) */
+  buildReturnTables: () =>
+    C.buildReturnFile(S.catalog, S.localExercises, S.workouts.filter((w) => w.status === "done"), new Date()).tables,
 };
 initBody(moduleCtx);
+initDiary(moduleCtx);
 
 initFood({
   get S() {
@@ -1357,6 +1378,7 @@ async function boot() {
     S.prefs = { ...S.prefs, ...((await store.get("prefs")) || {}) };
     S.food = foodState(await store.get("nutrition"));
     S.body = bodyState(await store.get("body"));
+    S.water = (await store.get("water")) || P.emptyWaterLocal();
     delete S.prefs.topOffset; // Einstellung aus 1.1.7 entfällt
   } catch (e) {
     app.innerHTML = `<p class="boot">Der Gerätespeicher ist nicht verfügbar (${esc(e.message)}). Im privaten Modus funktioniert LIFESPAN OS Mobil nicht.</p>`;

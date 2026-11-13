@@ -35,7 +35,7 @@ export const SECTIONS = [
     view: "training",
     views: ["training", "plans", "workout", "picker", "machine", "finish", "detail"],
   },
-  { id: "nutrition", label: "Nutrition", view: "food", views: ["food", "food-review", "dish"] },
+  { id: "nutrition", label: "Nutrition", view: "diary", views: ["diary", "food-history", "food", "food-review", "dish"] },
   { id: "sleep", label: "Sleep", pc: "Schlaf erfassen, Schlafphasen, Verlauf und Auswertung." },
   { id: "recovery", label: "Recovery", pc: "Regeneration, HRV, Ruhepuls und Erholungsmaßnahmen." },
   { id: "body", label: "Body & Longevity", view: "body", views: ["body", "body-metric", "body-entry"] },

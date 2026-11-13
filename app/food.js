@@ -2,6 +2,7 @@
 // tracken, Gerichte zusammenstellen. Logik in nutrition.js und label.js, Texterkennung in ocr.js.
 import * as N from "./nutrition.js";
 import * as L from "./label.js";
+import { nutritionTabs } from "./diary.js";
 
 let X = null; // Verbindung zur App (Zustand, Anzeige, Speichern)
 
@@ -145,7 +146,7 @@ function trackCard() {
     <div class="nf-grid">
       <div class="field"><label for="ft-amount">Menge</label><input id="ft-amount" type="text" inputmode="decimal" data-ft="amount" value="${esc(s.amount)}" autocomplete="off"></div>
       <div class="field"><label for="ft-unit">Einheit</label><select id="ft-unit" data-ft="unit"><option value="base" ${s.unit === "base" ? "selected" : ""}>${f.basis_unit}</option>${portion}</select></div>
-      <div class="field wide"><label for="ft-meal">Mahlzeit (heute)</label><select id="ft-meal" data-ft="mealType">${mealOptions(s.mealType)}</select></div>
+      <div class="field wide"><label for="ft-meal">Mahlzeit (${esc(trackDayLabel())})</label><select id="ft-meal" data-ft="mealType">${mealOptions(s.mealType)}</select></div>
     </div>
     <p class="small" id="track-preview">${esc(trackPreview())}</p>
     <div class="row">
@@ -214,7 +215,9 @@ export function viewFood() {
   const s = F();
   const dish = s.local.dish;
   const oldExport = !X.S.catalog.nutrition;
-  return `${X.header("Nutrition", { back: "home" })}<main class="wrap">
+  return `${X.header("Nutrition")}<main class="wrap">
+    ${nutritionTabs("food")}
+    ${s.trackDate && s.trackDate !== today() ? `<p class="warn small">Einträge gehen in den ${esc(trackDayLabel())} (aus dem Tagebuch). <button class="btn sm ghost" data-act="food-track-today">Lieber heute</button></p>` : ""}
     ${oldExport ? `<p class="warn">Deine Lebensmittel vom PC fehlen noch: Bitte am PC neu exportieren und hier „Neue Exportdatei laden“. Scannen und Tracken geht trotzdem.</p>` : ""}
     <section class="card">
       <h3>Etikett scannen</h3>
@@ -540,11 +543,27 @@ function addToDish(food, amount, unit) {
   persist();
 }
 
+/** Tag für „Eintragen“: aus dem Tagebuch gewählter Tag, sonst heute (1.5.0). */
+const trackDate = () => F().trackDate ?? today();
+function trackDayLabel() {
+  const d = trackDate();
+  return d === today() ? "heute" : `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
+}
+
 async function track(items, mealType, label) {
   try {
-    N.addToMeal(X.S.catalog, F().local, { date: today(), mealType, items }, { uuid: () => X.uuid(), now: new Date() });
+    N.addToMeal(X.S.catalog, F().local, { date: trackDate(), mealType, items }, { uuid: () => X.uuid(), now: new Date() });
     await persist();
-    X.toast(`Eingetragen: ${label} bei ${N.mealLabel(mealType)}`);
+    X.toast(`Eingetragen: ${label} bei ${N.mealLabel(mealType)}${trackDate() === today() ? "" : ` (${trackDayLabel()})`}`);
+    // Aus dem Tagebuch gekommen: zurück zum Tag
+    if (F().returnTo) {
+      const to = F().returnTo;
+      F().returnTo = null;
+      F().trackDate = null;
+      F().selected = null;
+      X.go(to);
+      return false;
+    }
     return true;
   } catch (e) {
     X.toast(e.message, true);
@@ -553,6 +572,11 @@ async function track(items, mealType, label) {
 }
 
 export const foodActions = {
+  "food-track-today": () => {
+    F().trackDate = null;
+    F().returnTo = null;
+    X.rerender();
+  },
   "rv-remove": async (el) => {
     if (!X.confirmTwice(el, "Nochmal tippen: löschen")) return;
     const [mealId, itemId] = el.dataset.arg.split("|");

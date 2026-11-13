@@ -293,3 +293,125 @@ input, textarea, select { font-size: max(16px, 1em); }
 .fp-head, .fp-row { display: flex; justify-content: space-between; gap: 12px; font-variant-numeric: tabular-nums; }
 .fp-head { font-weight: 700; border-bottom: 1px solid var(--line); padding-bottom: 2px; }
 .fp-row { font-size: .9rem; padding-left: 8px; }
+
+/* ------------------------------------------------------------------ Wie am PC (1.5.0) */
+:root {
+  --c-protein: #2B59C3; --c-carbs: #9A6210; --c-fat: #1E7A72; --c-nutrition: #9A6210;
+  --c-water: #1F6E9C; --c-water-soft: #D6ECF8; --c-success: #1D7048; --c-danger: #B42318;
+  --c-sunken: #F5F7FA;
+}
+.tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font-weight: 600; font-size: .9rem; }
+.tab.active { background: var(--fg); border-color: var(--fg); color: #fff; }
+.card--nutrition { border-top: 3px solid var(--c-nutrition); }
+.card__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; }
+.card__meta { color: var(--muted); font-size: .82rem; }
+.card__note { color: var(--muted); font-size: .8rem; }
+.warn.small { font-size: .86rem; }
+
+.swatch { display: inline-block; width: 10px; height: 10px; flex: none; border-radius: 2px; }
+.swatch--marker { background: var(--fg); width: 3px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: .82rem; }
+.legend li { display: flex; align-items: center; gap: 6px; }
+
+.day-goal { display: grid; gap: 14px; }
+.day-goal__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; margin-bottom: 6px; }
+.day-goal__value { margin: 0; font-size: 1.1rem; }
+.day-goal__need { margin: 4px 0 6px; }
+.balance { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .82rem; font-weight: 600; }
+.balance--deficit { background: rgba(29, 112, 72, .12); color: var(--c-success); }
+.balance--surplus { background: rgba(180, 35, 24, .12); color: var(--c-danger); }
+.balance--exact { background: #E7EDFB; color: #2B59C3; }
+.goal-bar { position: relative; display: flex; height: 10px; border-radius: 999px; background: var(--c-sunken); border: 1px solid var(--line); overflow: hidden; }
+.goal-bar--energy { height: 18px; margin-bottom: 8px; }
+.goal-bar__fill { display: block; height: 100%; }
+.goal-bar__marker { position: absolute; top: -2px; bottom: -2px; width: 3px; margin-left: -1px; background: var(--fg); }
+.day-goal__macros { display: grid; gap: 12px; }
+.macro-goal__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-bottom: 4px; font-size: .88rem; }
+.macro-goal__label { font-weight: 600; }
+.macro-goal__status { margin-left: auto; color: var(--muted); }
+.macro-goal__status.is-reached { color: var(--c-success); font-weight: 600; }
+.macro-goal__over { margin-top: 4px; }
+
+.compare-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; margin: 0; }
+.compare-list dd { margin: 0; font-size: 1.1rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.compare-list dt { font-size: .82rem; }
+.compare-list .of { margin-left: .3em; font-weight: 400; font-size: .82rem; color: var(--muted); }
+.goal-note { display: block; font-size: .78rem; font-weight: 500; color: var(--muted); }
+.macros { display: grid; gap: 8px; }
+.macros__bar { display: flex; height: 10px; overflow: hidden; border-radius: 999px; background: var(--c-sunken); gap: 2px; }
+.macros__bar span { display: block; height: 100%; }
+.macros__list { display: grid; gap: 4px; margin: 0; }
+.macros__item { display: flex; justify-content: space-between; gap: 8px; font-size: .88rem; }
+.macros__item dt { display: flex; align-items: center; gap: 6px; }
+.macros__item dd { margin: 0; display: flex; gap: 10px; }
+.macros__share { color: var(--muted); }
+.optional-nutrients { font-size: .88rem; }
+.optional-nutrients summary { cursor: pointer; font-weight: 600; }
+.optional-nutrients dl { display: grid; gap: 4px; margin: 8px 0; }
+.optional-nutrients dl div { display: flex; justify-content: space-between; gap: 10px; }
+.optional-nutrients dd { margin: 0; text-align: right; }
+
+/* Wasserhaushalt */
+.water-card__summary { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 14px; }
+.water-card__amount { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.water-card__amount strong { font-size: 1.45rem; color: var(--c-water); font-variant-numeric: tabular-nums; }
+.water-card__amount .of { color: var(--muted); }
+.water-card__size { display: grid; gap: 2px; min-width: 120px; }
+.water-card__bar { height: 6px; border-radius: 999px; background: var(--c-water-soft); overflow: hidden; }
+.water-card__bar > span { display: block; height: 100%; border-radius: inherit; background: var(--c-water); transition: width .25s ease; }
+.water-glasses { display: flex; flex-wrap: wrap; gap: 4px 8px; margin: 0; padding: 0; list-style: none; }
+button.water-glass { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px; min-width: 52px; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--muted); }
+button.water-glass:active { background: var(--c-sunken); border-color: var(--line); }
+.water-glass__svg { width: 40px; height: 50px; display: block; }
+.water-glass__body { fill: var(--c-water-soft); stroke: var(--c-water); stroke-opacity: .35; stroke-width: 1.2; }
+.water-glass__rim { fill: #fff; fill-opacity: .55; stroke: var(--c-water); stroke-opacity: .35; stroke-width: 1; }
+.water-glass__water { fill: var(--c-water); fill-opacity: .8; }
+.water-glass__surface { fill: var(--c-water); }
+.water-glass__plus { stroke: var(--fg); stroke-width: 2.6; fill: none; }
+.water-glass__amount { font-size: .74rem; font-variant-numeric: tabular-nums; }
+.water-glass.is-filled .water-glass__amount { color: var(--c-water); font-weight: 600; }
+
+/* Mahlzeiten, Supplements, Fasttracking */
+.meal-slot { display: grid; gap: 6px; padding: 10px 0; border-top: 1px solid var(--line); }
+.meal-slot.is-empty { gap: 4px; }
+.meal-slot__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.meal-slot__kcal { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.meal-slot .btn.sm { justify-self: start; }
+.meal-items { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.meal-items li { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .9rem; }
+.meal-items__name { display: grid; overflow-wrap: anywhere; }
+.meal-items__kcal { display: flex; align-items: center; gap: 4px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.supp-group { display: grid; gap: 4px; }
+.supp-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.supp-list li { display: grid; gap: 1px; padding: 6px 0; border-top: 1px solid var(--line); font-size: .9rem; }
+.fast-values { display: grid; gap: 4px; }
+.fast-values__title { font-size: .84rem; font-weight: 650; color: var(--muted); }
+.fast-values dl { display: grid; gap: 2px; margin: 0; }
+.fast-values dl div { display: flex; justify-content: space-between; gap: 10px; font-size: .88rem; }
+.fast-values dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.table-scroll { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+.data-table th, .data-table td { padding: 5px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+.data-table th { color: var(--muted); font-weight: 600; font-size: .78rem; }
+.data-table .tnum { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Diagramme */
+.pc-chart { width: 100%; height: auto; display: block; }
+.pc-chart .grid { stroke: var(--line); stroke-width: 1; }
+.pc-chart text { font-size: 9px; fill: var(--muted); }
+.day-chart { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+.day-chart__ring { position: relative; flex: none; width: 132px; height: 132px; margin: 0; }
+.day-chart__ring svg { display: block; }
+.day-chart__center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; line-height: 1.2; }
+.day-chart__center strong { font-size: 1.35rem; }
+.day-chart__center span { font-size: .72rem; color: var(--muted); }
+.day-chart__center .day-chart__pct { margin-top: 2px; font-weight: 600; color: var(--c-nutrition); }
+.day-chart__bars { flex: 1 1 200px; min-width: 0; display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.day-chart__bar-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; margin-bottom: 4px; font-size: .84rem; }
+.day-chart__bar-head .swatch { margin-right: 6px; }
+.day-chart__value { font-variant-numeric: tabular-nums; }
+.day-chart__track { position: relative; display: block; height: 10px; border-radius: 999px; background: var(--c-sunken); border: 1px solid var(--line); overflow: hidden; }
+.day-chart__fill { display: block; height: 100%; border-radius: 999px; }
+.day-chart__track.is-over { border-color: var(--c-danger); }

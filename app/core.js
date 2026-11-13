@@ -5,10 +5,11 @@
 import { nutritionFromRows } from "./nutrition.js";
 import { bodyFromRows } from "./bodydata.js";
 import { focusFromRows } from "./focusinfo.js";
+import { pcFromRows } from "./pcdb.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.4.1";
+export const MOBILE_VERSION = "1.5.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -267,6 +268,8 @@ export function parseExport(text) {
     nutrition: nutritionFromRows(rows, doc.exportedAt ?? null),
     body: bodyFromRows(rows),
     focus: focusFromRows(rows),
+    /** Tabellen für die Ansichten wie am PC (Overview, Nutrition; seit 1.5.0) */
+    pc: pcFromRows(rows),
   };
 }
 

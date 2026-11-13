@@ -214,7 +214,7 @@ export function viewFood() {
   const s = F();
   const dish = s.local.dish;
   const oldExport = !X.S.catalog.nutrition;
-  return `${X.header("Ernährung", { back: "home" })}<main class="wrap">
+  return `${X.header("Nutrition", { back: "home" })}<main class="wrap">
     ${oldExport ? `<p class="warn">Deine Lebensmittel vom PC fehlen noch: Bitte am PC neu exportieren und hier „Neue Exportdatei laden“. Scannen und Tracken geht trotzdem.</p>` : ""}
     <section class="card">
       <h3>Etikett scannen</h3>

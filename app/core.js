@@ -7,7 +7,7 @@ import { bodyFromRows } from "./bodydata.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.3.1";
+export const MOBILE_VERSION = "1.4.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 

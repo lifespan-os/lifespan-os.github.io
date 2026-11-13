@@ -5,6 +5,7 @@ import * as N from "./nutrition.js";
 import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, viewFood, viewFoodReview } from "./food.js";
 import { bodyActions, bodyChange, bodyInput, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
 import * as BD from "./bodydata.js";
+import { SECTIONS, drawerHtml, icon, pcOnlyHtml } from "./nav.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -87,17 +88,23 @@ function go(view, arg = null) {
 
 // ------------------------------------------------------------------ Ansichten
 
+/** Knopf für das Menü (wie die linke Leiste am PC). */
+const menuButton = () =>
+  S.catalog ? `<button class="menu-btn" data-act="menu-open" aria-label="Menü öffnen" aria-expanded="${S.menuOpen ? "true" : "false"}">${icon("menu")}</button>` : "";
+
 function header(title, { back = null, sub = "" } = {}) {
   return `<header class="top"><div class="wrap">
-    ${back ? `<button class="back" data-go="${back}">‹ Zurück</button>` : ""}
+    ${menuButton()}
+    ${back ? `<button class="back back--icon" data-go="${back}" aria-label="Zurück">‹</button>` : ""}
     <h1>${esc(title)}${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</h1>
   </div></header>`;
 }
 
 function brandHeader() {
   return `<header class="top"><div class="wrap">
+    ${menuButton()}
     <div class="brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b> <small>Mobil</small></div></div>
-    <button class="back" data-go="help">Hilfe</button>
+    ${S.catalog ? "" : `<button class="back" data-go="help">Hilfe</button>`}
   </div></header>`;
 }
 
@@ -168,13 +175,43 @@ function viewHome() {
           : `<p class="muted small">Alles übertragen.</p>`
       }
     </section>
+    <section class="card">
+      <div class="wo-head"><h3>Training</h3><span class="tag">${S.workouts.filter((w) => w.status === "done").length} auf dem Handy</span></div>
+      <p class="muted small">Pläne, freies Training und die letzten Trainings auf dem Handy.</p>
+      <button class="btn block" data-go="training">Zum Training</button>
+    </section>
+    <section class="card">
+      <h3>Daten vom PC</h3>
+      <p class="muted small">Stand: ${fmtDateTime(c.exportedAt)} · ${c.machines.length.toLocaleString("de-DE")} Maschinen · ${c.exercises.length} Übungen · ${c.plans.length} Pläne</p>
+      ${fileButton("Neue Exportdatei laden")}
+    </section>
+  </main>`;
+}
+
+/** Training (wie der Bereich am PC): starten, laufendes Training, letzte Trainings. */
+function viewTraining() {
+  const c = S.catalog;
+  const a = S.active;
+  return `${header("Training")}<main class="wrap">
+    ${
+      a
+        ? `<section class="card hl"><div class="wo-head"><h3>${a.editOf ? "Bearbeitung" : "Training läuft"}: ${esc(a.title)}</h3>${
+            a.editOf ? `<span class="tag">${fmtDate(a.date)}</span>` : `<span class="clock" data-clock>${fmtSec((Date.now() - new Date(a.startedAt)) / 1000)}</span>`
+          }</div>
+          <p class="muted small">${a.exercises.length} Übungen</p>
+          <button class="btn primary block" data-go="workout">${a.editOf ? "Weiter bearbeiten" : "Weiter trainieren"}</button></section>`
+        : `<div class="big-actions">
+            <button class="btn primary" data-go="plans">Plan starten<small>${c.plans.length ? `${c.plans.length} Trainingspläne` : "Noch keine Pläne am PC angelegt"}</small></button>
+            <button class="btn blue" data-act="start-free">Freies Training<small>Maschinen spontan auswählen</small></button>
+          </div>`
+    }
     ${
       S.workouts.length
         ? `<section class="card"><h3>Letzte Trainings auf dem Handy</h3><div class="list">
             ${S.workouts
               .slice()
               .sort((x, y) => y.createdAt.localeCompare(x.createdAt))
-              .slice(0, 5)
+              .slice(0, 20)
               .map(
                 (w) => `<button class="item" data-go="detail" data-arg="${w.id}"><span class="main"><b>${esc(w.title)}</b>
                   <span class="muted small">${fmtDate(w.date)} · ${w.exercises.length} Übungen · ${C.fmtNum(C.volumeKg(w), 0)} kg</span></span>
@@ -183,12 +220,37 @@ function viewHome() {
               .join("")}</div></section>`
         : ""
     }
+    ${S.workouts.length ? "" : `<section class="card"><p class="empty">Noch keine Trainings auf dem Handy.</p></section>`}
+  </main>`;
+}
+
+/** Settings (wie am PC): Daten vom PC, an den PC senden, Hilfe. */
+function viewSettings() {
+  const c = S.catalog;
+  const total = unsent().length + unsentFood() + unsentBodyCount();
+  return `${header("Settings")}<main class="wrap">
     <section class="card">
       <h3>Daten vom PC</h3>
       <p class="muted small">Stand: ${fmtDateTime(c.exportedAt)} · ${c.machines.length.toLocaleString("de-DE")} Maschinen · ${c.exercises.length} Übungen · ${c.plans.length} Pläne</p>
       ${fileButton("Neue Exportdatei laden")}
     </section>
+    <section class="card">
+      <div class="wo-head"><h3>An den PC senden</h3><span class="tag">${total} offen</span></div>
+      <p class="muted small">Trainings, Lebensmittel und Körperwerte als Dateien für den Import am PC (Settings → Daten importieren → „Abgleichen“).</p>
+      <button class="btn block" data-go="send">An den PC senden</button>
+    </section>
+    <section class="card">
+      <h3>Hilfe</h3>
+      <p class="muted small">Version ${esc(C.MOBILE_VERSION)} · Bedienung, Datenschutz und Datenaustausch.</p>
+      <button class="btn block" data-go="help">Hilfe öffnen</button>
+    </section>
   </main>`;
+}
+
+/** Bereich, den es bisher nur am PC gibt. */
+function viewPcOnly() {
+  const sec = SECTIONS.find((x) => x.id === S.arg) ?? SECTIONS[0];
+  return `${header(sec.label)}<main class="wrap">${pcOnlyHtml(sec.id, esc)}</main>`;
 }
 
 function viewPlans() {
@@ -532,6 +594,9 @@ const VIEWS = {
   dish: viewDish,
   setup: viewSetup,
   home: viewHome,
+  training: viewTraining,
+  settings: viewSettings,
+  "pc-only": viewPcOnly,
   plans: viewPlans,
   workout: viewWorkout,
   picker: viewPicker,
@@ -545,6 +610,7 @@ const VIEWS = {
 function render() {
   if (!S.catalog && S.view !== "help") S.view = "setup";
   app.innerHTML = (VIEWS[S.view] || viewHome)();
+  renderNav();
   if (S.view === "picker") {
     const q = document.getElementById("q");
     q?.focus();
@@ -560,6 +626,49 @@ function findWe(id) {
 function findSet(weId, setId) {
   return findWe(weId)?.sets.find((s) => s.id === setId) || null;
 }
+
+// ------------------------------------------------------------------ Menü (wie die linke Leiste am PC)
+
+const navRoot = document.createElement("div");
+navRoot.id = "nav-root";
+document.body.appendChild(navRoot);
+
+function renderNav() {
+  navRoot.innerHTML = S.catalog ? drawerHtml({ view: S.view, arg: S.arg, open: S.menuOpen, esc }) : "";
+  document.body.classList.toggle("menu-open", Boolean(S.menuOpen));
+}
+
+function setMenu(open) {
+  S.menuOpen = open;
+  const drawer = navRoot.querySelector(".drawer");
+  if (!drawer) renderNav();
+  else {
+    // Klassen umschalten statt neu zeichnen – so gleitet das Menü herein
+    drawer.classList.toggle("open", open);
+    navRoot.querySelector(".drawer-backdrop")?.classList.toggle("open", open);
+    drawer.toggleAttribute("inert", !open);
+    if (open) drawer.removeAttribute("aria-hidden");
+    else drawer.setAttribute("aria-hidden", "true");
+    document.body.classList.toggle("menu-open", open);
+  }
+  document.querySelector(".menu-btn")?.setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) navRoot.querySelector(".drawer__item.active, .drawer__item")?.focus();
+}
+
+navRoot.addEventListener("click", (ev) => {
+  const el = ev.target.closest("[data-act]");
+  if (!el) return;
+  if (el.dataset.act === "menu-close") return setMenu(false);
+  if (el.dataset.act === "menu-go") {
+    S.menuOpen = false;
+    const sec = SECTIONS.find((x) => x.id === el.dataset.arg);
+    return sec?.view ? go(sec.view) : go("pc-only", el.dataset.arg);
+  }
+});
+
+document.addEventListener("keydown", (ev) => {
+  if (ev.key === "Escape" && S.menuOpen) setMenu(false);
+});
 
 function rerenderKeepScroll() {
   const y = window.scrollY;
@@ -762,6 +871,12 @@ const actions = {
     S.workouts = S.workouts.filter((w) => w.id !== el.dataset.arg);
     await saveNow();
     go("home");
+  },
+  "menu-open": () => setMenu(true),
+  "menu-go": (el) => {
+    S.menuOpen = false;
+    const sec = SECTIONS.find((x) => x.id === el.dataset.arg);
+    return sec?.view ? go(sec.view) : go("pc-only", el.dataset.arg);
   },
   "rest-plus": () => adjustRest(15),
   "rest-minus": () => adjustRest(-15),

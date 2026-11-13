@@ -238,3 +238,31 @@ details.livetext[open] > * + * { margin-top: 10px; }
 .entry-row__input .unit { flex: none; width: 44px; font-size: .78rem; color: var(--muted); overflow-wrap: anywhere; }
 .entry-row__err { grid-column: 1 / -1; }
 .entry-save { position: sticky; bottom: 0; padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to top, var(--bg) 70%, transparent); z-index: 5; }
+
+/* Menü wie die linke Leiste am PC (1.4.0) */
+.menu-btn { flex: none; display: grid; place-items: center; width: 40px; height: 40px; margin-left: -6px; border: 0; border-radius: 10px; background: none; color: var(--fg); cursor: pointer; }
+.menu-btn:active { background: var(--line); }
+.back--icon { font-size: 1.6rem; line-height: 1; padding: 6px 8px 8px 2px; }
+.drawer-backdrop { position: fixed; inset: 0; background: rgba(15, 27, 45, .38); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
+.drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+.drawer { position: fixed; top: 0; bottom: 0; left: 0; width: min(80vw, 300px); background: var(--surface);
+  transform: translateX(-102%); transition: transform .22s ease; z-index: 41; overflow-y: auto;
+  padding: calc(var(--safe-top) + 12px) 10px calc(16px + env(safe-area-inset-bottom, 0px)); }
+.drawer.open { transform: none; box-shadow: 4px 0 24px rgba(15, 27, 45, .18); }
+.drawer__brand { display: flex; align-items: center; gap: 10px; padding: 6px 10px 14px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.drawer__brand img { width: 34px; height: 34px; border-radius: 9px; }
+.drawer__brand b { display: block; font-weight: 800; letter-spacing: -.01em; }
+.drawer__brand small { color: var(--muted); font-weight: 600; }
+.drawer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.drawer__item { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 46px; padding: 0 12px; border: 0; border-radius: 10px; background: none; color: var(--fg); font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+.drawer__item span { flex: 1; }
+.drawer__item small { font-size: .7rem; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; }
+.drawer__item.pc-only { color: var(--muted); }
+.drawer__item.active { background: rgba(31, 111, 209, .10); color: var(--blue); }
+.drawer__item:active { background: var(--line); }
+body.menu-open { overflow: hidden; }
+.pc-only-card { text-align: center; display: grid; gap: 8px; justify-items: center; }
+.pc-only-card__icon { color: var(--muted); }
+.pc-only-card__icon svg { width: 40px; height: 40px; }
+.pc-only-card .btn { justify-self: stretch; }
+@media (prefers-reduced-motion: reduce) { .drawer, .drawer-backdrop { transition: none; } }

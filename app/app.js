@@ -3,6 +3,8 @@ import * as C from "./core.js";
 import * as store from "./store.js";
 import * as N from "./nutrition.js";
 import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, viewFood, viewFoodReview } from "./food.js";
+import { bodyActions, bodyChange, bodyInput, bodyState, initBody, viewBody, viewBodyMetric } from "./body.js";
+import * as BD from "./bodydata.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -73,6 +75,7 @@ const exById = () => new Map(C.allExercises(S.catalog, S.localExercises).map((e)
 const machineById = () => new Map(S.catalog.machines.map((m) => [m.id, m]));
 const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported);
 const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0);
+const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0);
 
 function go(view, arg = null) {
   if (view === "food-review" && S.view !== "food-review") S.reviewFrom = S.view === "send" ? "send" : S.view === "food" ? "food" : "home";
@@ -145,12 +148,18 @@ function viewHome() {
       <button class="btn blue block" data-go="food">Etikett scannen &amp; tracken</button>
     </section>
     <section class="card">
-      <div class="wo-head"><h3>An den PC senden</h3><span class="tag">${open.length + unsentFood()} offen</span></div>
+      <div class="wo-head"><h3>Body &amp; Longevity</h3><span class="tag">Körperwerte</span></div>
+      <p class="muted small">Letzte Werte wie am PC (Körperzusammensetzung, Umfänge, Vitalwerte, Fitness), Verlauf je Messgröße und neue Werte erfassen.</p>
+      <button class="btn blue block" data-go="body">Körperwerte</button>
+    </section>
+    <section class="card">
+      <div class="wo-head"><h3>An den PC senden</h3><span class="tag">${open.length + unsentFood() + unsentBodyCount()} offen</span></div>
       ${
-        open.length || unsentFood()
+        open.length || unsentFood() || unsentBodyCount()
           ? `<p class="muted small">${[
               open.length ? (open.length === 1 ? "1 Training" : `${open.length} Trainings`) : "",
               unsentFood() ? `${unsentFood()} Ernährungseinträge` : "",
+              unsentBodyCount() ? `${unsentBodyCount()} Körperwerte` : "",
             ]
               .filter(Boolean)
               .join(" und ")} noch nicht am PC.</p>
@@ -435,7 +444,12 @@ function viewSend() {
   const open = unsent();
   const all = S.workouts.filter((w) => w.status === "done");
   const food = unsentFood();
-  const ready = [open.length ? `${open.length} ${open.length === 1 ? "Training" : "Trainings"}` : "", food ? `${food} Ernährungseinträge` : ""].filter(Boolean);
+  const body = unsentBodyCount();
+  const ready = [
+    open.length ? `${open.length} ${open.length === 1 ? "Training" : "Trainings"}` : "",
+    food ? `${food} Ernährungseinträge` : "",
+    body ? `${body} Körperwerte` : "",
+  ].filter(Boolean);
   return `${header("An den PC senden", { back: "home" })}<main class="wrap">
     <section class="card">
       <h3>${ready.length ? `${ready.join(" und ")} bereit` : "Alles übertragen"}</h3>
@@ -445,17 +459,19 @@ function viewSend() {
         <li>Als Art <b>„Abgleichen (zweites Gerät)“</b> wählen und bestätigen.</li>
       </ol>
       <p class="warn">Bitte nie „Ersetzen“ wählen: Dann würden am PC alle anderen Daten gelöscht. „Abgleichen“ ist sicher, vorher legt die App automatisch ein Backup an.</p>
-      <p class="muted small">Trainings und Ernährung kommen in getrennte Dateien: „LIFESPAN Smartphone-Training …“ und „LIFESPAN Lebensmittel …“. Am PC beide gleich importieren.</p>
+      <p class="muted small">Trainings, Ernährung und Körperwerte kommen in getrennte Dateien: „LIFESPAN Smartphone-Training …“, „LIFESPAN Lebensmittel …“ und „LIFESPAN Körperwerte …“. Am PC alle gleich importieren.</p>
       <button class="btn primary block" data-act="send" data-arg="training" ${open.length ? "" : "disabled"}>${open.length ? `Trainings senden (${open.length})` : "Keine offenen Trainings"}</button>
       <button class="btn primary block" data-act="send" data-arg="food" ${food ? "" : "disabled"}>${food ? `Lebensmittel senden (${food} Einträge)` : "Keine offenen Ernährungseinträge"}</button>
       ${food ? `<button class="btn block" data-go="food-review">Vorher Ernährungseinträge prüfen und bearbeiten</button>` : ""}
+      ${body ? `<button class="btn primary block" data-act="send" data-arg="body">Körperwerte senden (${body})</button>` : ""}
     </section>
     ${
-      all.length || Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length
+      all.length || Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length || Object.keys(S.body?.local.entries ?? {}).length
         ? `<section class="card"><h3>Alles vom Handy</h3>
             <p class="muted small">Falls eine Datei verloren ging: Du kannst alle ${all.length} Trainings und die Ernährungseinträge noch einmal senden. Am PC entstehen dabei keine doppelten Einträge.</p>
             ${all.length ? `<button class="btn block" data-act="send" data-arg="training|all">Alle Trainings erneut senden</button>` : ""}
-            ${Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length ? `<button class="btn block" data-act="send" data-arg="food|all">Alle Ernährungseinträge erneut senden</button>` : ""}</section>`
+            ${Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length ? `<button class="btn block" data-act="send" data-arg="food|all">Alle Ernährungseinträge erneut senden</button>` : ""}
+            ${Object.keys(S.body?.local.entries ?? {}).length ? `<button class="btn block" data-act="send" data-arg="body|all">Alle Körperwerte erneut senden</button>` : ""}</section>`
         : ""
     }
     <div id="send-result"></div>
@@ -510,6 +526,8 @@ function viewHelp() {
 const VIEWS = {
   food: viewFood,
   "food-review": viewFoodReview,
+  body: viewBody,
+  "body-metric": viewBodyMetric,
   dish: viewDish,
   setup: viewSetup,
   home: viewHome,
@@ -574,6 +592,7 @@ function addExercise(exerciseId) {
 
 const actions = {
   ...foodActions,
+  ...bodyActions,
   "start-free": () => startWorkout("Freies Training"),
   "start-plan": (el) => {
     for (const p of S.catalog.plans) {
@@ -714,6 +733,10 @@ const actions = {
     const [kind, idList = ""] = el.dataset.arg.split("|");
     const ids = idList.split(",");
     if (kind === "training") for (const w of S.workouts) if (ids.includes(w.id)) w.exported = true;
+    if (kind === "body" && S.body) {
+      BD.markBodySent(S.body.local);
+      await store.set("body", S.body.local);
+    }
     if (kind === "food" && S.food) {
       N.markNutritionSent(S.food.local);
       await store.set("nutrition", S.food.local);
@@ -767,8 +790,14 @@ async function sendFile(kind, all) {
   const list = kind === "training" ? S.workouts.filter((w) => w.status === "done" && (all || !w.exported)) : [];
   let doc;
   try {
-    const food = kind === "food" && S.food ? N.nutritionTables(S.catalog, S.food.local, { all }) : {};
+    const food =
+      kind === "food" && S.food
+        ? N.nutritionTables(S.catalog, S.food.local, { all })
+        : kind === "body" && S.body
+          ? BD.bodyTables(S.catalog, S.body.local, { all })
+          : {};
     if (kind === "food" && !Object.keys(food).length) return toast("Keine Ernährungseinträge zum Senden.", true);
+    if (kind === "body" && !Object.keys(food).length) return toast("Keine Körperwerte zum Senden.", true);
     if (kind === "training" && !list.length) return toast("Keine Trainings zum Senden.", true);
     doc = C.buildReturnFile(S.catalog, S.localExercises, list, new Date(), food);
   } catch (e) {
@@ -777,7 +806,7 @@ async function sendFile(kind, all) {
   const name = C.returnFileName(new Date(), kind);
   const blob = new Blob([JSON.stringify(doc)], { type: "application/json" });
   const file = new File([blob], name, { type: "application/json" });
-  const arg = kind === "food" ? "food" : `training|${list.map((w) => w.id).join(",")}`;
+  const arg = kind === "training" ? `training|${list.map((w) => w.id).join(",")}` : kind;
   const result = document.getElementById("send-result");
   result.innerHTML = "";
   let shared = false;
@@ -809,8 +838,7 @@ app.addEventListener("click", (ev) => {
   if (!el || el.disabled) return;
   unlockAudio();
   if (el.dataset.go) {
-    if (el.dataset.go === "detail") return go("detail", el.dataset.arg);
-    return go(el.dataset.go);
+    return go(el.dataset.go, el.dataset.arg ?? null);
   }
   const fn = actions[el.dataset.act];
   if (fn) fn(el);
@@ -823,6 +851,7 @@ restEl.addEventListener("click", (ev) => {
 app.addEventListener("input", (ev) => {
   const el = ev.target;
   if (foodInput(el)) return;
+  if (bodyInput(el)) return;
   if (el.id === "q") {
     S.query = el.value;
     document.getElementById("results").innerHTML = pickerResults();
@@ -881,6 +910,7 @@ app.addEventListener("input", (ev) => {
 app.addEventListener("change", async (ev) => {
   const el = ev.target;
   if (foodChange(el)) return;
+  if (bodyChange(el)) return;
   if (el.id === "only-nr") {
     S.prefs.onlyNumbered = el.checked;
     saveSoon();
@@ -911,6 +941,8 @@ async function loadFile(file) {
     await store.set("catalog", catalog);
     N.pruneLocal(catalog, S.food.local);
     await store.set("nutrition", S.food.local);
+    BD.pruneBody(catalog, S.body.local);
+    await store.set("body", S.body.local);
     await saveNow();
     toast(`Geladen: ${catalog.machines.length.toLocaleString("de-DE")} Maschinen, ${catalog.plans.length} Pläne, ${catalog.nutrition.foods.length.toLocaleString("de-DE")} Lebensmittel`);
     go("home");
@@ -1044,6 +1076,21 @@ function fixSafeTop() {
   }
 }
 
+const moduleCtx = {
+  get S() {
+    return S;
+  },
+  esc,
+  header,
+  toast,
+  store,
+  uuid: () => C.uuidv7(),
+  rerender: () => rerenderKeepScroll(),
+  go: (view, arg) => go(view, arg),
+  confirmTwice: (el, text) => confirmTwice(el, text),
+};
+initBody(moduleCtx);
+
 initFood({
   get S() {
     return S;
@@ -1067,6 +1114,7 @@ async function boot() {
     S.active = await store.get("active");
     S.prefs = { ...S.prefs, ...((await store.get("prefs")) || {}) };
     S.food = foodState(await store.get("nutrition"));
+    S.body = bodyState(await store.get("body"));
     delete S.prefs.topOffset; // Einstellung aus 1.1.7 entfällt
   } catch (e) {
     app.innerHTML = `<p class="boot">Der Gerätespeicher ist nicht verfügbar (${esc(e.message)}). Im privaten Modus funktioniert LIFESPAN OS Mobil nicht.</p>`;

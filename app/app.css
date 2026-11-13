@@ -79,7 +79,7 @@ p { margin: 0; }
 
 .field { display: grid; gap: 6px; }
 .field label { font-size: .84rem; color: var(--muted); }
-input[type="text"], input[type="search"], input[type="number"], input[type="date"], textarea, select {
+input[type="text"], input[type="search"], input[type="number"], input[type="date"], input[type="time"], textarea, select {
   width: 100%; min-height: 48px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); font-size: 1.05rem;
 }
 textarea { min-height: 80px; resize: vertical; }
@@ -197,3 +197,24 @@ details.livetext[open] > * + * { margin-top: 10px; }
 .rv-edit .btn.sm { min-height: 44px; }
 .rv-f { display: grid; gap: 2px; min-width: 0; }
 .rv-f input, .rv-f select { width: 100%; min-width: 0; }
+
+/* Body & Longevity (1.3.0) */
+.field > span { font-size: .84rem; color: var(--muted); }
+#body-form { display: grid; gap: 10px; }
+#body-form h3, #body-form p { margin: 0; }
+.body-sub { margin: 12px 0 2px; font-size: .84rem; font-weight: 600; color: var(--muted); }
+.latest { display: grid; }
+.latest-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: baseline;
+  width: 100%; padding: 9px 2px; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; cursor: pointer; }
+.latest-row:last-child { border-bottom: 0; }
+.latest-row__name { color: var(--blue); font-weight: 500; overflow-wrap: anywhere; }
+.latest-row__name .info { color: var(--muted); font-size: .8em; }
+.latest-row__value { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+.latest-row__meta { grid-column: 1 / -1; text-align: right; font-variant-numeric: tabular-nums; }
+.body-chart { width: 100%; height: auto; display: block; margin: 6px 0; }
+.body-chart .grid { stroke: var(--line); stroke-width: 1; }
+.body-chart .line { fill: none; stroke: var(--blue); stroke-width: 2; stroke-linejoin: round; }
+.body-chart .dot { fill: var(--blue); }
+.body-chart text { font-size: 9px; fill: var(--muted); }
+.body-facts { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
+.body-value { padding: 8px 0; border-top: 1px solid var(--line); }

@@ -3,10 +3,11 @@
 // docs/EXPORTFORMAT.md und den Migrationen der Desktop-App.
 
 import { nutritionFromRows } from "./nutrition.js";
+import { bodyFromRows } from "./bodydata.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.2.4";
+export const MOBILE_VERSION = "1.3.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -261,6 +262,7 @@ export function parseExport(text) {
     plans,
     last,
     nutrition: nutritionFromRows(rows, doc.exportedAt ?? null),
+    body: bodyFromRows(rows),
   };
 }
 
@@ -789,7 +791,7 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
  * Ernährung „LIFESPAN Lebensmittel 2026-11-12 1810.json“.
  */
 export function returnFileName(now = new Date(), kind = "training") {
-  const label = kind === "food" ? "Lebensmittel" : "Smartphone-Training";
+  const label = kind === "food" ? "Lebensmittel" : kind === "body" ? "Körperwerte" : "Smartphone-Training";
   return `LIFESPAN ${label} ${localDate(now)} ${localTime(now).replace(":", "")}.json`;
 }
 

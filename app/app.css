@@ -555,3 +555,13 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .ans-bar__key--mean { border: 2px dashed var(--muted); }
 .logs-grid { align-items: start; }
 .logs-grid .field > label { min-height: 2.6em; display: flex; align-items: flex-end; }
+/* Insights (1.8.0) */
+.insights-table td:last-child { text-align: right; }
+.insights-table .sub { white-space: normal; }
+.insight-list--muted { color: var(--muted); }
+.coverage-list { list-style: none; padding: 0; display: grid; gap: 8px; }
+.coverage-list li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; }
+.coverage-list li p { margin: 2px 0 0; }
+.coverage-list__icon { display: inline-flex; width: 20px; height: 20px; border-radius: 50%; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; background: #FFF4E8; color: var(--orange-text); }
+.coverage-list li.is-ok .coverage-list__icon { background: #E5F5EC; color: var(--ok); }
+.note-list li + li { margin-top: 8px; }

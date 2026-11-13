@@ -240,3 +240,12 @@ Fassung laden.
 - Prüfregeln wie im Rust-Kern (`logsdata.js`, mit Tests): eine Nacht bzw. Einschätzung je Tag, Bereiche der Felder, Nickerchen höchstens 6 Stunden.
 - Änderungen gehen mit „Körperwerte, Schlaf & Regeneration senden“ in die Datei „LIFESPAN Körperwerte …“: `sleep_log`, `sleep_nap`, `recovery_log` und Löschvermerke (`deleted_record`). Am PC mit „Abgleichen“ importieren; je Nacht bzw. Tag gilt der neuere Stand.
 - Overview, Tagesbereitschaft und Streaks rechnen sofort mit den Einträgen vom Handy.
+
+## Version 1.8.0 (14.11.2026): Insights am Handy
+
+- **Insights** wie am PC (InsightsPage.tsx), mit Wochenwahl:
+  - Beobachtungen dieser Woche (mit Datenlage), Wochenanalyse und Datenprüfung, die Bereiche der Woche (Schlaf, Regeneration, Training, Ernährung, Körper) und die Lebensstil-Notizen.
+  - Mögliche Zusammenhänge der letzten 12 Wochen (nach Aussagekraft gruppiert) und „Welche Daten die Auswertung verbessern“.
+- Die Karten stehen in der Anordnung vom PC (`ui.insights_layout`). Gerechnet wird mit `weeklyAnalysis`, `dataCheck`, `coverage`, `dailyAssociations`, `acwr` und `loadVsNextDay` aus `pcdomain.js`.
+- Noch nur am PC: Koffein und Schlaf, Hormongaben und Erholung sowie der Datenauszug (PDF).
+- Overview → „Diese Woche“ verlinkt jetzt auf den Wochenrückblick am Handy.

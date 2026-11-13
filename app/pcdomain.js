@@ -58,9 +58,9 @@ function parseInteger(input) {
   const value = input.trim();
   return INTEGER.test(value) ? Number(value) : Number.NaN;
 }
-function addDaysIso(iso, days) {
+function addDaysIso(iso, days2) {
   const date = parseIsoDate(iso);
-  date.setDate(date.getDate() + days);
+  date.setDate(date.getDate() + days2);
   return toIsoDate(date);
 }
 function formatDuration(totalMinutes) {
@@ -479,8 +479,8 @@ function sumOptional(items, key) {
   let value = 0;
   let known = 0;
   let missing = 0;
-  for (const item of items) {
-    const v = item[key];
+  for (const item2 of items) {
+    const v = item2[key];
     if (v === null || v === void 0) missing += 1;
     else {
       value += v;
@@ -654,8 +654,16 @@ var MEAL_TYPES = [
   { value: "snack", label: "Snacks" },
   { value: "other", label: "Sonstiges" }
 ];
+var LIFESTYLE_CATEGORIES = [
+  { value: "habit", label: "Gewohnheit" },
+  { value: "movement", label: "Bewegung im Alltag" },
+  { value: "nutrition", label: "Ern\xE4hrung" },
+  { value: "sleep", label: "Schlafumfeld & Abendroutine" },
+  { value: "stress", label: "Stress & Entspannung" },
+  { value: "other", label: "Sonstiges" }
+];
 function labelOf(list, value) {
-  return list.find((item) => item.value === value)?.label ?? value;
+  return list.find((item2) => item2.value === value)?.label ?? value;
 }
 var customMealNames = {};
 var listeners = /* @__PURE__ */ new Set();
@@ -664,6 +672,7 @@ function setMealNames(names) {
   listeners.forEach((l) => l());
 }
 var mealTypeLabel = (v) => customMealNames[v] ?? labelOf(MEAL_TYPES, v);
+var lifestyleCategoryLabel = (v) => labelOf(LIFESTYLE_CATEGORIES, v);
 
 // src/domain/resistance.ts
 var PROFILE_KEYS = [
@@ -769,13 +778,13 @@ function volumeBreakdown(sets) {
   }
   return result;
 }
-function formatKg(kg) {
-  const rounded = Math.round(kg * 100) / 100;
+function formatKg(kg2) {
+  const rounded = Math.round(kg2 * 100) / 100;
   const decimals = Math.min(2, neededDecimals(rounded));
   return `${formatNumber(rounded, decimals)} kg`;
 }
-function formatVolume(kg) {
-  return `${formatNumber(kg, Number.isInteger(kg) || kg >= 1e3 ? 0 : 1)} kg`;
+function formatVolume(kg2) {
+  return `${formatNumber(kg2, Number.isInteger(kg2) || kg2 >= 1e3 ? 0 : 1)} kg`;
 }
 function volumeFormula(sets) {
   const b = volumeBreakdown(sets);
@@ -957,13 +966,13 @@ function profileRecords(log) {
   for (const key of PROFILE_KEYS) {
     let best = null;
     for (const s of log) {
-      const kg = profileWeight(s, key);
-      if (s.isWarmup || kg === null || kg <= 0 || s.reps === null || s.reps <= 0) continue;
-      if (best === null || kg > best.value || kg === best.value && s.reps > best.reps) {
+      const kg2 = profileWeight(s, key);
+      if (s.isWarmup || kg2 === null || kg2 <= 0 || s.reps === null || s.reps <= 0) continue;
+      if (best === null || kg2 > best.value || kg2 === best.value && s.reps > best.reps) {
         best = {
-          value: kg,
+          value: kg2,
           reps: s.reps,
-          display: `${formatKg(kg)} \xD7 ${s.reps}`,
+          display: `${formatKg(kg2)} \xD7 ${s.reps}`,
           date: s.date,
           workoutId: s.workoutId
         };
@@ -1513,6 +1522,7 @@ function arrange(cards, layout) {
   if (!layout.emptyLast) return sorted;
   return [...sorted.filter((c) => !c.empty), ...sorted.filter((c) => c.empty)];
 }
+var INSIGHTS_LAYOUT_KEY = "ui.insights_layout";
 
 // src/domain/trends.ts
 var trends_exports = {};
@@ -1561,8 +1571,8 @@ function utcDay(iso) {
 function isoFromUtc(t) {
   return new Date(t).toISOString().slice(0, 10);
 }
-function shiftDays(iso, days) {
-  return isoFromUtc(utcDay(iso) + days * DAY_MS);
+function shiftDays(iso, days2) {
+  return isoFromUtc(utcDay(iso) + days2 * DAY_MS);
 }
 function daysBetween(from, to) {
   return Math.round((utcDay(to) - utcDay(from)) / DAY_MS) + 1;
@@ -1625,15 +1635,15 @@ function groupByPeriod(points, period) {
 function rangeStats(points, from, to) {
   if (from > to) throw new Error("Der Beginn des Zeitraums muss vor dem Ende liegen.");
   const inside = points.filter((p) => p.date >= from && p.date <= to && Number.isFinite(p.value)).sort((a, b) => a.date.localeCompare(b.date));
-  const days = daysBetween(from, to);
+  const days2 = daysBetween(from, to);
   if (inside.length === 0) {
-    return { from, to, days, count: 0, mean: null, min: null, max: null, first: null, last: null };
+    return { from, to, days: days2, count: 0, mean: null, min: null, max: null, first: null, last: null };
   }
   const s = stats(inside.map((p) => p.value));
   return {
     from,
     to,
-    days,
+    days: days2,
     count: s.count,
     mean: s.mean,
     min: s.min,
@@ -6258,8 +6268,8 @@ function ansPercent(value) {
 function previousMean(values, date) {
   const before = values.filter((v) => v.date < date);
   if (before.length === 0) return null;
-  const mean2 = before.reduce((s, v) => s + v.value, 0) / before.length;
-  return { mean: Math.round(mean2 * 10) / 10, count: before.length };
+  const mean3 = before.reduce((s, v) => s + v.value, 0) / before.length;
+  return { mean: Math.round(mean3 * 10) / 10, count: before.length };
 }
 
 // src/domain/helpTexts.ts
@@ -6301,190 +6311,387 @@ function dominantMethod(values) {
   return best;
 }
 
-// src/domain/energy.ts
-var energy_exports = {};
-__export(energy_exports, {
-  BASELINE_FACTOR: () => BASELINE_FACTOR,
-  TREND_WINDOW_DAYS: () => TREND_WINDOW_DAYS,
-  bmrMethodLabel: () => bmrMethodLabel,
-  describeCalibration: () => describeCalibration,
-  describeCardioEnergy: () => describeCardioEnergy,
-  describeTraining: () => describeTraining,
-  energyRows: () => energyRows,
-  formatPal: () => formatPal,
-  palLabel: () => palLabel,
-  weightTrendSeries: () => weightTrendSeries
-});
-
-// src/domain/stats.ts
-var stats_exports = {};
-__export(stats_exports, {
-  mean: () => mean,
-  movingAverage: () => movingAverage,
-  roundTo: () => roundTo,
-  windowMean: () => windowMean
-});
-function mean(values) {
-  if (values.length === 0) return Number.NaN;
-  return values.reduce((a, b) => a + b, 0) / values.length;
+// src/domain/plausibility.ts
+var MAX_PLAUSIBLE_REPS = 50;
+var DUPLICATE_WINDOW_MIN = 60;
+function looksSwapped(s) {
+  return s.reps !== null && s.reps > MAX_PLAUSIBLE_REPS && s.weightKg !== null && s.weightKg > 0 && s.weightKg < s.reps;
 }
-function movingAverage(values, window) {
-  if (window < 1 || !Number.isInteger(window)) {
-    throw new Error("Das Fenster muss eine positive ganze Zahl sein.");
+function topWorkWeight(sets) {
+  let top = null;
+  for (const s of sets) {
+    if (s.isWarmup || s.weightKg === null || s.weightKg <= 0 || looksSwapped(s)) continue;
+    if (top === null || s.weightKg > top) top = s.weightKg;
   }
-  return values.map((_, i) => i + 1 < window ? null : mean(values.slice(i + 1 - window, i + 1)));
+  return top;
 }
-function roundTo(value, digits) {
-  const f = 10 ** digits;
-  return Math.round(value * f) / f;
+function relativeChange(now, before) {
+  if (before <= 0) return null;
+  return (now - before) / before;
 }
-function windowMean(points, endDate, days) {
-  const end = Date.parse(`${endDate}T00:00:00Z`);
-  const start = end - (days - 1) * 864e5;
-  const inside = points.filter((p) => {
-    const t = Date.parse(`${p.date}T00:00:00Z`);
-    return t >= start && t <= end;
-  });
-  if (inside.length === 0) return null;
-  return { mean: mean(inside.map((p) => p.value)), count: inside.length };
-}
-
-// src/domain/energy.ts
-var BASELINE_FACTOR = 1.2;
-var TREND_WINDOW_DAYS = 7;
-var PAL_LEVELS = [
-  { below: 1.4, label: "\xFCberwiegend sitzend" },
-  { below: 1.7, label: "leicht aktiv" },
-  { below: 2, label: "aktiv" },
-  { below: Number.POSITIVE_INFINITY, label: "sehr aktiv" }
-];
-function palLabel(pal) {
-  return (PAL_LEVELS.find((l) => pal < l.below) ?? PAL_LEVELS[PAL_LEVELS.length - 1]).label;
-}
-function formatPal(pal) {
-  return formatNumber(pal, 2);
-}
-function bmrMethodLabel(e) {
-  if (e.bmrMethod === "katch") {
-    return `Katch-McArdle (K\xF6rperfett ${formatNumber(e.bodyFatPercent ?? 0, 1)} %)`;
-  }
-  if (e.bmrMethod === "mifflin") return "Mifflin-St Jeor";
-  return "\u2013";
-}
-function energyRows(e) {
-  if (e.baselineKcal === null || e.bmrKcal === null) return [];
-  const rows = [
-    {
-      key: "baseline",
-      label: "Grundbedarf im Alltag",
-      detail: `Grundumsatz ${formatNumber(e.bmrKcal, 0)} kcal (${bmrMethodLabel(e)}) \xD7 1,2`,
-      kcal: e.baselineKcal
+var kg = (v) => `${formatNumber(v, Number.isInteger(v) ? 0 : 1)} kg`;
+function setHints(sets, exerciseName, keyPrefix) {
+  const hints = [];
+  sets.forEach((s, i) => {
+    if (s.reps === null || s.reps <= MAX_PLAUSIBLE_REPS) return;
+    const where = `${exerciseName}, Satz ${i + 1}`;
+    if (looksSwapped(s)) {
+      hints.push({
+        key: `${keyPrefix}.${i}.swap`,
+        text: `${where}: ${s.reps} Wdh. \xD7 ${kg(s.weightKg)} \u2013 Wiederholungen und Gewicht vertauscht? Gemeint vielleicht ${formatNumber(s.weightKg, 0)} Wdh. \xD7 ${kg(s.reps)}.`
+      });
+    } else {
+      hints.push({
+        key: `${keyPrefix}.${i}.reps`,
+        text: `${where}: ${s.reps} Wiederholungen \u2013 mehr als ${MAX_PLAUSIBLE_REPS}. Tippfehler?`
+      });
     }
+  });
+  return hints;
+}
+function minutesOfDay(time) {
+  if (!time) return null;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
+  if (!m) return null;
+  return Number(m[1]) * 60 + Number(m[2]);
+}
+function withinWindow(a, b, windowMin = DUPLICATE_WINDOW_MIN) {
+  const ma = minutesOfDay(a);
+  const mb = minutesOfDay(b);
+  if (ma === null && mb === null) return true;
+  if (ma === null || mb === null) return false;
+  return Math.abs(ma - mb) <= windowMin;
+}
+var norm = (s) => s.trim().toLocaleLowerCase("de-DE");
+function exerciseSequence(w) {
+  return w.exercises.map((e) => e.exerciseId).join(",");
+}
+function duplicateWorkouts(input, sameDay) {
+  const seq = exerciseSequence(input);
+  return sameDay.filter((w) => {
+    if (w.id === input.id || w.date !== input.date) return false;
+    const sameContent = seq !== "" ? exerciseSequence(w) === seq : w.exercises.length === 0 && norm(w.title) === norm(input.title);
+    if (!sameContent) return false;
+    return withinWindow(input.startTime, w.startTime) || input.startTime === null || w.startTime === null;
+  });
+}
+function duplicateHrtEntries(input, entries, windowMin = DUPLICATE_WINDOW_MIN) {
+  return entries.filter(
+    (e) => e.id !== input.id && e.date === input.date && e.status === input.status && norm(e.hormone) === norm(input.hormone) && withinWindow(e.time, input.time, windowMin)
+  );
+}
+
+// src/domain/weeklyAnalysis.ts
+var MIN_VALUES = 3;
+var HRV_DROP = 0.2;
+var HRV_MIN_BASE = 3;
+var LATE_START_MIN = 20 * 60;
+var MEASUREMENT_JUMP = 0.2;
+var MIN_JUMP_BASE = 5;
+var STABLE_CATEGORIES = [
+  "weight",
+  "composition",
+  "circumference"
+];
+var inWeek = (date, w) => date >= w.from && date <= w.to;
+var prevWeek = (w) => ({ from: shiftDays(w.from, -7), to: shiftDays(w.from, -1) });
+var mean = (xs) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+function nightMinutes(time) {
+  const m = minutesOfDay(time);
+  if (m === null) return null;
+  return m < 12 * 60 ? m + 24 * 60 : m;
+}
+function clock(minutes) {
+  const m = (Math.round(minutes) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+}
+var signedMin = (d) => {
+  const r2 = Math.round(d);
+  return r2 === 0 ? "\xB10 min" : `${r2 > 0 ? "+" : "\u2212"}${Math.abs(r2)} min`;
+};
+function sleepTimingRow(sleep, week, key) {
+  const pick = (w) => sleep.flatMap((s) => {
+    if (!inWeek(s.date, w)) return [];
+    const v = key === "bedTime" ? nightMinutes(s.bedTime) : minutesOfDay(s.wakeTime);
+    return v === null ? [] : [v];
+  });
+  const cur = pick(week);
+  const prev = pick(prevWeek(week));
+  const label = key === "bedTime" ? "Zu Bett (Mittel)" : "Aufgestanden (Mittel)";
+  const m = mean(cur);
+  if (m === null) return { label, value: "\u2013", basis: "keine Nacht erfasst", note: null };
+  const pm = mean(prev);
+  let note;
+  if (cur.length >= MIN_VALUES && prev.length >= MIN_VALUES && pm !== null) {
+    note = `${signedMin(m - pm)} zur Vorwoche`;
+  } else {
+    note = prev.length === 0 ? "Vorwoche ohne Werte" : `Kein Vorwochenvergleich (mind. ${MIN_VALUES} N\xE4chte je Woche)`;
+  }
+  return {
+    label,
+    value: `${clock(m)} Uhr`,
+    basis: `${cur.length} ${cur.length === 1 ? "Nacht" : "N\xE4chte"}, Spanne ${clock(Math.min(...cur))}\u2013${clock(Math.max(...cur))} Uhr`,
+    note
+  };
+}
+function lateSessionsRow(workouts, week) {
+  const withTime = workouts.filter(
+    (w) => w.status === "done" && inWeek(w.date, week) && minutesOfDay(w.startTime) !== null
+  );
+  const late = withTime.filter((w) => minutesOfDay(w.startTime) >= LATE_START_MIN);
+  return {
+    label: "Einheiten mit Start ab 20:00 Uhr",
+    value: withTime.length ? `${late.length} von ${withTime.length}` : "\u2013",
+    basis: "abgeschlossene Einheiten mit Startzeit",
+    note: null
+  };
+}
+function hrvBelowBaseline(measurements, week) {
+  const hrv = measurements.filter((m) => m.metricId === HRV_METRIC_ID);
+  let checked = 0;
+  const below = [];
+  for (const m of hrv) {
+    if (!inWeek(m.date, week)) continue;
+    const base = hrv.filter((b) => b.date >= shiftDays(m.date, -7) && b.date < m.date).map((b) => b.value);
+    if (base.length < HRV_MIN_BASE) continue;
+    checked += 1;
+    const baseline = mean(base);
+    const change = relativeChange(m.value, baseline);
+    if (change !== null && change < -HRV_DROP)
+      below.push({ date: m.date, value: m.value, baseline, change });
+  }
+  return { checked, below: below.sort((a, b) => a.date.localeCompare(b.date)) };
+}
+var GRIP_DROP = 0.1;
+function gripComparison(grip, week) {
+  const prev = prevWeek(week);
+  const side = (key, label) => {
+    const cur = grip.filter((g) => inWeek(g.date, week)).map((g) => g[key]);
+    const before = grip.filter((g) => inWeek(g.date, prev)).map((g) => g[key]);
+    const m = mean(cur);
+    const pm = mean(before);
+    let note = null;
+    let change = null;
+    if (m !== null && cur.length >= 2 && before.length >= 2 && pm !== null) {
+      change = relativeChange(m, pm);
+      note = `${formatSigned(m - pm, 1)} kg (${formatSigned((change ?? 0) * 100, 0)} %) zur Vorwoche`;
+    } else if (m !== null) {
+      note = "Kein Vorwochenvergleich (mind. 2 Messungen je Woche)";
+    }
+    return {
+      row: {
+        label,
+        value: m === null ? "\u2013" : `${formatNumber(m, 1)} kg`,
+        basis: `${cur.length} ${cur.length === 1 ? "Messung" : "Messungen"}`,
+        note
+      },
+      change
+    };
+  };
+  return [
+    side("rightKg", "Griffkraft rechts (Mittel)"),
+    side("leftKg", "Griffkraft links (Mittel)")
   ];
-  if (e.step.kcal !== null && e.step.kcal > 0) {
-    rows.push({
-      key: "steps",
-      label: "Schritte",
-      detail: `${formatNumber(e.step.steps ?? 0, 0)} Schritte`,
-      kcal: e.step.kcal
-    });
-  }
-  for (const a of e.activities) {
-    if (a.kcal <= 0) continue;
-    rows.push({
-      key: `activity-${a.key}`,
-      label: a.label,
-      detail: `${formatNumber(a.minutes, 0)} min \xB7 MET ${formatNumber(a.met, 1)}`,
-      kcal: a.kcal
-    });
-  }
-  for (const t of e.trainings) {
-    rows.push({
-      key: `training-${t.workoutId}`,
-      label: `Training: ${t.title}`,
-      detail: describeTraining(t),
-      kcal: t.kcal
-    });
-  }
-  return rows;
 }
-function describeCardioEnergy(c) {
-  const parts = [c.exerciseName];
-  if (c.durationSeconds > 0) parts.push(formatDuration2(c.durationSeconds));
-  if (c.distanceM > 0) parts.push(`${formatNumber(c.distanceM / 1e3, 2)} km`);
-  const pace = cardioPace(c.kind, c.durationSeconds, c.distanceM);
-  if (pace) parts.push(pace);
-  parts.push(c.methods.map(cardioMethodLabel).join(" bzw. "));
-  let text = `${parts.join(" \xB7 ")}: ${formatNumber(c.kcal, 0)} kcal`;
-  if (c.deviceKcal !== null) text += ` (Ger\xE4t: ${formatNumber(c.deviceKcal, 0)} kcal brutto)`;
-  return text;
+function failureRow(setLog, week) {
+  const work = setLog.filter(
+    (s) => inWeek(s.date, week) && !s.isWarmup && s.exerciseCategory !== "cardio"
+  );
+  const fails = work.filter((s) => s.isFailure).length;
+  return {
+    label: "S\xE4tze bis zum Versagen (\u201EFail\u201C)",
+    value: work.length ? `${fails} von ${work.length}` : "\u2013",
+    basis: "Arbeitss\xE4tze ohne Cardio",
+    note: null
+  };
 }
-function describeTraining(t) {
-  const effort = t.perceivedExertion !== null ? `Anstrengung ${t.perceivedExertion}/10` : "ohne Anstrengung";
-  const cardio = t.cardio ?? [];
-  const strength = t.strength ? ` \xB7 Krafttraining \xD7 ${formatNumber(t.factor, 1)}` : "";
-  if (cardio.length === 0) {
-    return `${formatNumber(t.durationMin ?? 0, 0)} min \xB7 ${effort} \xB7 MET ${formatNumber(t.met, 1)}${strength}`;
-  }
-  const parts = cardio.map(describeCardioEnergy);
-  const otherMinutes = t.otherMinutes ?? 0;
-  if (otherMinutes > 0) {
-    parts.push(
-      `\xFCbrige ${formatNumber(otherMinutes, 0)} min \xB7 ${effort} \xB7 MET ${formatNumber(t.met, 1)}${strength}: ${formatNumber(t.otherKcal ?? 0, 0)} kcal`
+function proteinGoalRow(nutrition, goal, week) {
+  if (goal?.proteinG == null) return null;
+  const days2 = nutrition.filter(
+    (d) => inWeek(d.date, week) && (d.mealCount > 0 || d.fasttracking && d.proteinG > 0)
+  );
+  const m = mean(days2.map((d) => d.proteinG));
+  return {
+    label: "Eiwei\xDF gegen\xFCber Tagesziel",
+    value: m === null ? "\u2013" : `${formatSigned(m - goal.proteinG, 0)} g`,
+    basis: `${days2.length} von 7 Tagen erfasst`,
+    note: `Tagesziel ${formatNumber(goal.proteinG, 0)} g${m === null ? "" : `, Mittel ${formatNumber(m, 0)} g`}`
+  };
+}
+function weeklyAnalysis(input) {
+  const { week } = input;
+  const observations = [];
+  const hrv = hrvBelowBaseline(input.measurements, week);
+  const hrvRow = {
+    label: "HRV mehr als 20 % unter dem Mittel der 7 Vortage",
+    value: hrv.checked ? `${hrv.below.length} von ${hrv.checked}` : "\u2013",
+    basis: hrv.checked ? "Messungen mit mind. 3 Vergleichswerten in den 7 Vortagen" : "zu wenige Messungen f\xFCr den Vergleich",
+    note: hrv.below.length ? hrv.below.map((b) => formatDate(b.date)).join(", ") : null
+  };
+  if (hrv.below.length > 0) {
+    observations.push(
+      `HRV lag an ${hrv.below.length === 1 ? "einem Tag" : `${hrv.below.length} Tagen`} mehr als 20 % unter dem Mittel der jeweils 7 Vortage: ${hrv.below.map(
+        (b) => `${formatDate(b.date)} ${formatNumber(b.value, 0)} ms statt \xD8 ${formatNumber(b.baseline, 0)} ms`
+      ).join("; ")}. Das ist eine Rechnung, keine Bewertung \u2013 einzelne Messungen schwanken stark.`
     );
   }
-  return parts.join(" | ");
+  const gripCmp = gripComparison(input.grip, week);
+  const grip = gripCmp.map((c) => c.row);
+  for (const c of gripCmp) {
+    if (c.change !== null && c.change <= -GRIP_DROP) {
+      observations.push(
+        `${c.row.label.replace(" (Mittel)", "")}: Wochenmittel ${c.row.value}, ${c.row.note}.`
+      );
+    }
+  }
+  const protein = proteinGoalRow(input.nutrition, input.goal, week);
+  return {
+    sleep: [
+      sleepTimingRow(input.sleep, week, "bedTime"),
+      sleepTimingRow(input.sleep, week, "wakeTime"),
+      hrvRow
+    ],
+    training: [lateSessionsRow(input.workouts, week), failureRow(input.setLog, week)],
+    body: [...grip, ...protein ? [protein] : []],
+    observations
+  };
 }
-function describeCalibration(e) {
-  const c = e.calibration;
-  if (!c) return e.calibrationNote;
-  const change = c.trendEndKg - c.trendStartKg;
-  const sign = change > 0 ? "+" : change < 0 ? "\u2212" : "\xB1";
-  return `Kalibriert mit Faktor ${formatNumber(c.factor, 2)} aus ${c.daysUsed} Tagen: \xD8 ${formatNumber(c.avgIntakeKcal, 0)} kcal gegessen, Gewichtstrend ${sign}${formatNumber(Math.abs(change), 1)} kg \u2192 tats\xE4chlich ca. ${formatNumber(c.measuredKcal, 0)} kcal statt berechnet ${formatNumber(c.avgFormulaKcal, 0)} kcal je Tag.` + (c.limited ? " Der Faktor wurde auf 0,75\u20131,25 begrenzt \u2013 bitte Erfassung pr\xFCfen." : "");
+function sessions(setLog) {
+  const out = [];
+  const index = /* @__PURE__ */ new Map();
+  for (const s of setLog) {
+    const k = `${s.workoutId}|${s.exerciseId}`;
+    let entry = index.get(k);
+    if (!entry) {
+      entry = {
+        workoutId: s.workoutId,
+        date: s.date,
+        exerciseId: s.exerciseId,
+        exerciseName: s.exerciseName,
+        sets: []
+      };
+      index.set(k, entry);
+      out.push(entry);
+    }
+    entry.sets.push(s);
+  }
+  for (const e of out) e.sets.sort((a, b) => a.setIndex - b.setIndex);
+  return out;
 }
-function weightTrendSeries(points, days = TREND_WINDOW_DAYS) {
-  return points.map((p) => ({
-    date: p.date,
-    value: p.value,
-    average: windowMean(points, p.date, days)?.mean ?? null
+function trainingIssues(setLog, workouts, week) {
+  const issues = [];
+  const all = sessions(setLog.filter((s) => s.exerciseCategory !== "cardio"));
+  const lastByExercise = /* @__PURE__ */ new Map();
+  for (const s of all) {
+    const previous = lastByExercise.get(s.exerciseId);
+    if (inWeek(s.date, week)) {
+      const hints = setHints(
+        s.sets,
+        s.exerciseName,
+        `${s.workoutId}.${s.exerciseId}`
+      );
+      const now = topWorkWeight(s.sets);
+      const before = previous ? topWorkWeight(previous.sets) : null;
+      if (previous && now !== null && before !== null) {
+        const change = relativeChange(now, before);
+        if (change !== null && Math.abs(change) > 0.2) {
+          hints.push({
+            key: `${s.workoutId}.${s.exerciseId}.jump`,
+            text: `${s.exerciseName}: h\xF6chstes Arbeitsgewicht ${formatNumber(now, 1)} kg nach ${formatNumber(before, 1)} kg am ${formatDate(previous.date)} (${formatSigned(change * 100, 0)} %).`
+          });
+        }
+      }
+      for (const h of hints)
+        issues.push({ key: h.key, date: s.date, area: "Training", text: h.text });
+    }
+    lastByExercise.set(s.exerciseId, s);
+  }
+  const exercisesOf = /* @__PURE__ */ new Map();
+  for (const s of setLog) {
+    const list = exercisesOf.get(s.workoutId) ?? [];
+    if (!list.includes(s.exerciseId)) list.push(s.exerciseId);
+    exercisesOf.set(s.workoutId, list);
+  }
+  const done = workouts.filter((w) => w.status === "done").map((w) => ({
+    ...w,
+    exercises: (exercisesOf.get(w.id) ?? []).map((exerciseId) => ({ exerciseId }))
   }));
+  const reported = /* @__PURE__ */ new Set();
+  done.forEach((w, i) => {
+    if (!inWeek(w.date, week) || reported.has(w.id)) return;
+    const twins = duplicateWorkouts(w, done.slice(i + 1));
+    if (twins.length === 0) return;
+    for (const t of twins) reported.add(t.id);
+    const when = w.startTime ? `${formatDate(w.date)}, ${w.startTime} Uhr` : formatDate(w.date);
+    issues.push({
+      key: `dup.${w.id}`,
+      date: w.date,
+      area: "Training",
+      text: `\u201E${w.title}\u201C (${when}) ist ${twins.length + 1}\xD7 mit denselben \xDCbungen gespeichert \u2013 doppelt erfasst?`
+    });
+  });
+  return issues;
 }
-
-// src/domain/dashboard.ts
-var dashboard_exports = {};
-__export(dashboard_exports, {
-  BASELINE_DAYS: () => BASELINE_DAYS,
-  CARDIO_WEEK_MINUTES: () => CARDIO_WEEK_MINUTES,
-  DEFAULT_WEEK_TRAININGS: () => DEFAULT_WEEK_TRAININGS,
-  LEVEL_LABELS: () => LEVEL_LABELS,
-  MEAL_PROTEIN: () => MEAL_PROTEIN,
-  MIN_EXTRA_DAYS: () => MIN_EXTRA_DAYS,
-  MIN_OPEN_PROTEIN: () => MIN_OPEN_PROTEIN,
-  MIN_REGULARITY_NIGHTS: () => MIN_REGULARITY_NIGHTS,
-  NO_WEEK_GOALS: () => NO_WEEK_GOALS,
-  RECENT_VITAL_DAYS: () => RECENT_VITAL_DAYS,
-  REMINDER_RULES: () => REMINDER_RULES,
-  WEEK_CARDIO_MAX_MIN: () => WEEK_CARDIO_MAX_MIN,
-  WEEK_GOALS_KEY: () => WEEK_GOALS_KEY,
-  WEEK_PROTEIN_DAYS_MAX: () => WEEK_PROTEIN_DAYS_MAX,
-  WEEK_SLEEP_MAX_MIN: () => WEEK_SLEEP_MAX_MIN,
-  WEEK_SLEEP_MIN_MIN: () => WEEK_SLEEP_MIN_MIN,
-  WEEK_TRAININGS_MAX: () => WEEK_TRAININGS_MAX,
-  dueReminders: () => dueReminders,
-  exerciseProgress: () => exerciseProgress,
-  extrasCheck: () => extrasCheck,
-  metricChange: () => metricChange,
-  parseWeekGoals: () => parseWeekGoals,
-  progressExercises: () => progressExercises,
-  proteinSuggestions: () => proteinSuggestions,
-  proteinTarget: () => proteinTarget,
-  readiness: () => readiness,
-  sleepRegularity: () => sleepRegularity,
-  streakOf: () => streakOf,
-  streaks: () => streaks,
-  weekGoalsFromInput: () => weekGoalsFromInput,
-  weeklyGoals: () => weeklyGoals
-});
+function hrtIssues(entries, week) {
+  const issues = [];
+  const sorted = [...entries].sort(
+    (a, b) => `${a.date} ${a.time ?? ""}`.localeCompare(`${b.date} ${b.time ?? ""}`)
+  );
+  const reported = /* @__PURE__ */ new Set();
+  sorted.forEach((e, i) => {
+    if (!inWeek(e.date, week) || reported.has(e.id)) return;
+    const twins = duplicateHrtEntries(e, sorted.slice(i + 1));
+    if (twins.length === 0) return;
+    for (const t of twins) reported.add(t.id);
+    issues.push({
+      key: `hrt.${e.id}`,
+      date: e.date,
+      area: "HRT",
+      text: `${e.hormone} am ${formatDate(e.date)}: ${twins.length + 1} Gaben innerhalb von ${DUPLICATE_WINDOW_MIN} Minuten (${[
+        e,
+        ...twins
+      ].map((x) => x.time ?? "ohne Uhrzeit").join(", ")}) \u2013 doppelt erfasst?`
+    });
+  });
+  return issues;
+}
+function measurementIssues(measurements, categoryOf, week) {
+  const issues = [];
+  const byMetric = /* @__PURE__ */ new Map();
+  for (const m of measurements) {
+    const cat = categoryOf(m.metricId);
+    if (!cat || !STABLE_CATEGORIES.includes(cat)) continue;
+    const list = byMetric.get(m.metricId) ?? [];
+    list.push(m);
+    byMetric.set(m.metricId, list);
+  }
+  for (const list of byMetric.values()) {
+    list.sort((a, b) => `${a.date} ${a.time ?? ""}`.localeCompare(`${b.date} ${b.time ?? ""}`));
+    for (let i = 1; i < list.length; i++) {
+      const cur = list[i];
+      const prev = list[i - 1];
+      if (!inWeek(cur.date, week)) continue;
+      if (prev.value < MIN_JUMP_BASE) continue;
+      const change = relativeChange(cur.value, prev.value);
+      if (change === null || Math.abs(change) <= MEASUREMENT_JUMP) continue;
+      const fmt2 = (v) => `${formatNumber(v, cur.decimals)} ${cur.unit}`;
+      issues.push({
+        key: `m.${cur.id}`,
+        date: cur.date,
+        area: "K\xF6rper",
+        text: `${cur.metricName}: ${fmt2(cur.value)} am ${formatDate(cur.date)} nach ${fmt2(prev.value)} am ${formatDate(prev.date)} (${formatSigned(change * 100, 0)} %) \u2013 Tippfehler oder andere Messgr\xF6\xDFe?`
+      });
+    }
+  }
+  return issues;
+}
+function dataCheck(input) {
+  return [
+    ...trainingIssues(input.setLog, input.workouts, input.week),
+    ...measurementIssues(input.measurements, input.categoryOf, input.week),
+    ...input.hrt ? hrtIssues(input.hrt, input.week) : []
+  ].sort((a, b) => a.date.localeCompare(b.date));
+}
 
 // src/domain/insights.ts
 var insights_exports = {};
@@ -6512,10 +6719,10 @@ function sessionLoad(w) {
   return w.durationMin * w.perceivedExertion;
 }
 function trainingLoadByDay(workouts) {
-  const days = /* @__PURE__ */ new Map();
+  const days2 = /* @__PURE__ */ new Map();
   for (const w of workouts) {
     if (w.status !== "done") continue;
-    const d = days.get(w.date) ?? {
+    const d = days2.get(w.date) ?? {
       date: w.date,
       sessions: 0,
       durationMin: 0,
@@ -6529,9 +6736,9 @@ function trainingLoadByDay(workouts) {
     const l = sessionLoad(w);
     if (l === null) d.incomplete += 1;
     else d.load += l;
-    days.set(w.date, d);
+    days2.set(w.date, d);
   }
-  return [...days.values()].sort((a, b) => a.date.localeCompare(b.date));
+  return [...days2.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 function sleepSeries(sleep) {
   return sleep.map((s) => ({ date: s.date, value: s.sleepMin }));
@@ -6759,27 +6966,27 @@ function weeklySummary(data, weekFrom) {
   const weekLoads = loads.filter((l) => inRange(l.date, week.from, week.to));
   const prevLoads = loads.filter((l) => inRange(l.date, prev.from, prev.to));
   const sum = (ls, k) => ls.reduce((a, l) => a + l[k], 0);
-  const sessions = sum(weekLoads, "sessions");
+  const sessions2 = sum(weekLoads, "sessions");
   const prevSessions = sum(prevLoads, "sessions");
   const load = sum(weekLoads, "load");
   const prevLoad = sum(prevLoads, "load");
   const incomplete = sum(weekLoads, "incomplete");
   const prevIncomplete = sum(prevLoads, "incomplete");
   const volume = sum(weekLoads, "volumeKg");
-  const loadComparable = incomplete === 0 && prevIncomplete === 0 && sessions > 0 && prevSessions > 0 && prevLoad > 0;
+  const loadComparable = incomplete === 0 && prevIncomplete === 0 && sessions2 > 0 && prevSessions > 0 && prevLoad > 0;
   sections.push({
     area: "training",
     title: "Training",
     values: [
       {
         label: "Einheiten",
-        value: String(sessions),
+        value: String(sessions2),
         basis: `an ${weekLoads.length} ${weekLoads.length === 1 ? "Tag" : "Tagen"}`,
         change: `Vorwoche: ${prevSessions}`
       },
       {
         label: "Trainingszeit",
-        value: sessions > 0 ? formatDuration(sum(weekLoads, "durationMin")) : "\u2013",
+        value: sessions2 > 0 ? formatDuration(sum(weekLoads, "durationMin")) : "\u2013",
         basis: "Summe der erfassten Dauern",
         change: null
       },
@@ -6792,8 +6999,8 @@ function weeklySummary(data, weekFrom) {
       {
         label: "Belastung (Dauer \xD7 Anstrengung)",
         value: load > 0 ? formatNumber(load, 0) : "\u2013",
-        basis: sessions === 0 ? "keine abgeschlossene Einheit" : incomplete > 0 ? `${incomplete} ${incomplete === 1 ? "Einheit" : "Einheiten"} ohne Dauer oder Anstrengung nicht enthalten` : "alle Einheiten enthalten",
-        change: loadComparable ? `${formatSigned((load - prevLoad) / prevLoad * 100, 0)} % zur Vorwoche` : sessions > 0 ? "Kein Vorwochenvergleich (Angaben unvollst\xE4ndig oder Vorwoche ohne Training)" : null
+        basis: sessions2 === 0 ? "keine abgeschlossene Einheit" : incomplete > 0 ? `${incomplete} ${incomplete === 1 ? "Einheit" : "Einheiten"} ohne Dauer oder Anstrengung nicht enthalten` : "alle Einheiten enthalten",
+        change: loadComparable ? `${formatSigned((load - prevLoad) / prevLoad * 100, 0)} % zur Vorwoche` : sessions2 > 0 ? "Kein Vorwochenvergleich (Angaben unvollst\xE4ndig oder Vorwoche ohne Training)" : null
       }
     ]
   });
@@ -6956,7 +7163,521 @@ function weeklySummary(data, weekFrom) {
   };
 }
 
+// src/domain/insightsCoverage.ts
+var COVERAGE_DAYS = 28;
+var WEEKS = COVERAGE_DAYS / 7;
+var days = (n) => `${formatNumber(n, 0)} ${n === 1 ? "Tag" : "Tagen"}`;
+function distinctDays(dates, from, to) {
+  return new Set(dates.filter((d) => d >= from && d <= to)).size;
+}
+function item(key, label, have, need, benefit, status = `an ${days(have)} von ${COVERAGE_DAYS}`) {
+  return { key, label, have, need, ok: have >= need, status, benefit };
+}
+function coverage(data, today) {
+  const from = shiftDays(today, -(COVERAGE_DAYS - 1));
+  const weekly = MIN_WEEK_VALUES * WEEKS;
+  const metricDays = (id) => distinctDays(
+    data.measurements.filter((m) => m.metricId === id).map((m) => m.date),
+    from,
+    today
+  );
+  const recoveryDays = (key) => distinctDays(
+    data.recovery.filter((r2) => r2[key] !== null).map((r2) => r2.date),
+    from,
+    today
+  );
+  const items = [
+    item(
+      "sleep",
+      "Schlaf (Dauer)",
+      distinctDays(
+        data.sleep.map((s) => s.date),
+        from,
+        today
+      ),
+      weekly,
+      `Ab ${MIN_WEEK_VALUES} N\xE4chten je Woche: Wochenvergleich mit der Vorwoche; ab ${MIN_PAIRS} gemeinsamen Tagen mit der Erholung: m\xF6gliche Zusammenh\xE4nge mit Erholung und M\xFCdigkeit.`
+    ),
+    item(
+      "sleep-quality",
+      "Schlafqualit\xE4t",
+      distinctDays(
+        data.sleep.filter((s) => s.quality !== null).map((s) => s.date),
+        from,
+        today
+      ),
+      MIN_PAIRS,
+      `Qualit\xE4t beim Schlaf mit angeben: ab ${MIN_PAIRS} N\xE4chten (mit Stress am Vortag) l\xE4sst sich \u201EStress und folgende Nacht\u201C beschreiben.`
+    ),
+    item(
+      "readiness",
+      "Erholung (Selbsteinsch\xE4tzung)",
+      recoveryDays("readiness"),
+      weekly,
+      `Ab ${MIN_WEEK_VALUES} Einsch\xE4tzungen je Woche: Wochenvergleich; zusammen mit dem Schlaf ab ${MIN_PAIRS} gemeinsamen Tagen: m\xF6glicher Zusammenhang Schlafdauer und Erholung.`
+    ),
+    item(
+      "fatigue",
+      "M\xFCdigkeit",
+      recoveryDays("fatigue"),
+      MIN_PAIRS,
+      `Ab ${MIN_PAIRS} Tagen (mit Schlaf): m\xF6glicher Zusammenhang Schlafdauer und M\xFCdigkeit.`
+    ),
+    item(
+      "stress",
+      "Stress",
+      recoveryDays("stress"),
+      MIN_PAIRS,
+      `Ab ${MIN_PAIRS} Tagen (mit Schlafqualit\xE4t der folgenden Nacht): m\xF6glicher Zusammenhang Stress und Schlaf.`
+    ),
+    item(
+      "soreness",
+      "Muskelkater",
+      recoveryDays("soreness"),
+      6,
+      "Je mindestens 3 Tage nach einem Training und ohne Training: Vergleich des Muskelkaters an Tagen nach dem Training."
+    ),
+    item(
+      "nutrition",
+      "Ern\xE4hrung (Tagebuch)",
+      distinctDays(
+        data.nutrition.map((n) => n.date),
+        from,
+        today
+      ),
+      weekly,
+      `Ab ${MIN_WEEK_VALUES} Tagen je Woche: Wochenmittel und Vergleich von Energie und Makron\xE4hrstoffen; vollst\xE4ndige Tage machen die Energiebilanz aussagekr\xE4ftig.`
+    ),
+    item(
+      "weight",
+      "Gewicht",
+      metricDays(WEIGHT_METRIC_ID),
+      2 * WEEKS,
+      "Ab 2 Messungen je Woche: Wochenvergleich des Gewichts und Abgleich des Gesamtverbrauchs (Kalibrierung) \xFCber den Gewichtsverlauf."
+    ),
+    item(
+      "resting-hr",
+      "Ruhepuls",
+      metricDays(RESTING_HR_METRIC_ID),
+      weekly,
+      `Ab ${MIN_WEEK_VALUES} Messungen je Woche: Wochenvergleich; Messungen morgens zur gleichen Zeit sind besser vergleichbar.`
+    ),
+    item(
+      "hrv",
+      "HRV",
+      metricDays(HRV_METRIC_ID),
+      weekly,
+      `Ab ${MIN_WEEK_VALUES} Messungen je Woche: Wochenvergleich; gleiche Messmethode und Tageszeit machen die Werte vergleichbar.`
+    ),
+    item(
+      "steps",
+      "Schritte",
+      distinctDays(
+        (data.neat ?? []).filter((n) => n.steps !== null).map((n) => n.date),
+        from,
+        today
+      ),
+      weekly,
+      `Ab ${MIN_WEEK_VALUES} Tagen je Woche: Wochenmittel der Schritte; jeder eingetragene Tag verbessert den berechneten Gesamtverbrauch und damit Tagesbedarf und Bilanz.`
+    )
+  ];
+  const done = data.workouts.filter(
+    (w) => w.status === "done" && w.date >= from && w.date <= today
+  );
+  const complete = done.filter((w) => w.durationMin !== null && w.perceivedExertion !== null);
+  items.push({
+    key: "training-load",
+    label: "Training mit Dauer und Anstrengung",
+    have: complete.length,
+    need: done.length,
+    ok: done.length > 0 && complete.length === done.length,
+    status: done.length === 0 ? "keine abgeschlossene Einheit" : `${formatNumber(complete.length, 0)} von ${formatNumber(done.length, 0)} Einheiten`,
+    benefit: "Dauer und Anstrengung (1\u201310) bei jeder Einheit eintragen: nur dann z\xE4hlt sie in die Trainingsbelastung (Dauer \xD7 Anstrengung) und in Vergleiche mit Schlaf und Erholung."
+  });
+  if (data.goal === null) {
+    items.push({
+      key: "goal",
+      label: "Tagesziele",
+      have: 0,
+      need: 1,
+      ok: false,
+      status: "nicht festgelegt",
+      benefit: "Tagesziele (Settings \u2192 Tagesziele) festlegen: dann vergleicht die Auswertung Energie, Eiwei\xDF und Schritte mit deinem Ziel."
+    });
+  }
+  return [...items.filter((i) => !i.ok), ...items.filter((i) => i.ok)];
+}
+
+// src/domain/caffeine.ts
+var MAYO = "https://www.mayoclinic.org/healthy-lifestyle/nutrition-and-healthy-eating/in-depth/caffeine/art-20049372";
+var CAFFEINE_DRINKS = [
+  { id: "espresso", label: "Espresso", portionMl: 30, portionMg: 63, source: MAYO },
+  {
+    id: "flat-white",
+    label: "Flat White (2 Shots)",
+    portionMl: 160,
+    portionMg: 126,
+    source: `Berechnet mit 2 \xD7 63 mg Espresso; ${MAYO}`
+  },
+  {
+    id: "filter",
+    label: "Filterkaffee",
+    portionMl: 200,
+    portionMg: 90,
+    source: `Sch\xE4tzwert; ${MAYO}`
+  },
+  {
+    id: "monster",
+    label: "Monster Energy",
+    portionMl: 500,
+    portionMg: 160,
+    source: "https://www.monsterenergy.com/de-at/energy-drinks/"
+  },
+  {
+    id: "red-bull",
+    label: "Red Bull",
+    portionMl: 250,
+    portionMg: 80,
+    source: "https://www.redbull.com/at-de/energydrink"
+  },
+  {
+    id: "black-tea",
+    label: "Schwarzer Tee",
+    portionMl: 250,
+    portionMg: 55,
+    source: `Sch\xE4tzwert; ${MAYO}`
+  },
+  {
+    id: "green-tea",
+    label: "Gr\xFCner Tee",
+    portionMl: 250,
+    portionMg: 38,
+    source: `Sch\xE4tzwert; ${MAYO}`
+  },
+  {
+    id: "pre-workout",
+    label: "Pre-Workout",
+    portionMl: null,
+    portionMg: null,
+    source: "Eigene Angabe (Koffein laut Etikett)"
+  }
+];
+var DAY_MIN = 24 * 60;
+
+// src/domain/insightsDaily.ts
+var MIN_SAME_TITLE = 2;
+var titleKey = (t) => t.trim().toLocaleLowerCase("de-DE");
+function relativePerformanceSeries(workouts) {
+  const done = workouts.filter((w) => w.status === "done" && w.volumeKg > 0);
+  const groups = /* @__PURE__ */ new Map();
+  for (const w of done) {
+    const k = titleKey(w.title);
+    groups.set(k, [...groups.get(k) ?? [], w]);
+  }
+  const byDay = /* @__PURE__ */ new Map();
+  for (const list of groups.values()) {
+    if (list.length < MIN_SAME_TITLE) continue;
+    const mean3 = list.reduce((a, w) => a + w.volumeKg, 0) / list.length;
+    for (const w of list)
+      byDay.set(w.date, [...byDay.get(w.date) ?? [], w.volumeKg / mean3 * 100]);
+  }
+  return [...byDay.entries()].map(([date, values]) => ({ date, value: values.reduce((a, b) => a + b, 0) / values.length })).sort((a, b) => a.date.localeCompare(b.date));
+}
+function proteinSeries(nutrition) {
+  return nutrition.filter((d) => d.mealCount > 0 || d.fasttracking && d.proteinG > 0).map((d) => ({ date: d.date, value: d.proteinG }));
+}
+function dailyAssociations(data) {
+  const protein = proteinSeries(data.nutrition);
+  return [
+    {
+      label: "Schlafdauer und Trainingsleistung",
+      association: describeAssociation(
+        pairByDate(sleepSeries(data.sleep), relativePerformanceSeries(data.workouts)),
+        {
+          x: "L\xE4ngerer Schlaf in der Nacht davor",
+          pair: "deiner Schlafdauer und dem Volumen der Einheit am folgenden Tag",
+          higher: "mehr Volumen als bei deinen anderen Einheiten mit gleichem Titel",
+          lower: "weniger Volumen als bei deinen anderen Einheiten mit gleichem Titel"
+        }
+      )
+    },
+    {
+      label: "Eiwei\xDF und Erholung am Folgetag",
+      association: describeAssociation(
+        pairByDate(protein, recoverySeries(data.recovery, "readiness"), 1),
+        {
+          x: "Mehr Eiwei\xDF an einem Tag",
+          pair: "deiner Eiwei\xDFmenge und der Erholungs-Einsch\xE4tzung am n\xE4chsten Morgen",
+          higher: "einer h\xF6heren Erholungs-Einsch\xE4tzung am n\xE4chsten Morgen",
+          lower: "einer niedrigeren Erholungs-Einsch\xE4tzung am n\xE4chsten Morgen"
+        }
+      )
+    },
+    {
+      label: "Eiwei\xDF und Muskelkater am Folgetag",
+      association: describeAssociation(
+        pairByDate(protein, recoverySeries(data.recovery, "soreness"), 1),
+        {
+          x: "Mehr Eiwei\xDF an einem Tag",
+          pair: "deiner Eiwei\xDFmenge und dem Muskelkater am n\xE4chsten Tag",
+          higher: "mehr Muskelkater am n\xE4chsten Tag",
+          lower: "weniger Muskelkater am n\xE4chsten Tag"
+        }
+      )
+    }
+  ];
+}
+
+// src/domain/insightsLoad.ts
+var ACUTE_DAYS = 7;
+var CHRONIC_DAYS = 28;
+var MIN_ACWR_SESSIONS = 6;
+var ACWR_COMMON_RANGE = { low: 0.8, high: 1.3, steep: 1.5 };
+function dailyLoadSeries(loads, from, to) {
+  const byDate = new Map(loads.map((l) => [l.date, l]));
+  const out = [];
+  for (let d = from; d <= to; d = shiftDays(d, 1)) {
+    const l = byDate.get(d);
+    if (!l) out.push({ date: d, value: 0 });
+    else if (l.incomplete === 0) out.push({ date: d, value: l.load });
+  }
+  return out;
+}
+function loadVsNextDay(workouts, values, from, to, wording) {
+  const series = dailyLoadSeries(trainingLoadByDay(workouts), from, to);
+  return describeAssociation(pairByDate(series, values, 1), {
+    x: "Eine h\xF6here Trainingsbelastung an einem Tag",
+    ...wording
+  });
+}
+function acwr(workouts, date) {
+  const acuteFrom = shiftDays(date, -(ACUTE_DAYS - 1));
+  const chronicFrom = shiftDays(date, -(CHRONIC_DAYS - 1));
+  let acute = 0;
+  let total = 0;
+  let sessions2 = 0;
+  let incomplete = 0;
+  for (const l of trainingLoadByDay(workouts)) {
+    if (l.date < chronicFrom || l.date > date) continue;
+    total += l.load;
+    sessions2 += l.sessions - l.incomplete;
+    incomplete += l.incomplete;
+    if (l.date >= acuteFrom) acute += l.load;
+  }
+  const chronic = total / (CHRONIC_DAYS / ACUTE_DAYS);
+  const ratio = sessions2 >= MIN_ACWR_SESSIONS && chronic > 0 ? acute / chronic : null;
+  return { date, acute, chronic, ratio, sessions: sessions2, incomplete };
+}
+function describeAcwr(a) {
+  const missing = a.incomplete > 0 ? ` ${a.incomplete} ${a.incomplete === 1 ? "Einheit ist" : "Einheiten sind"} ohne Dauer oder Anstrengung erfasst und fehlen in der Rechnung.` : "";
+  if (a.ratio === null) {
+    return `F\xFCr das Verh\xE4ltnis braucht es mindestens ${MIN_ACWR_SESSIONS} Einheiten mit Dauer und Anstrengung in den letzten ${CHRONIC_DAYS} Tagen (vorhanden: ${a.sessions}).${missing}`;
+  }
+  const { low, high, steep } = ACWR_COMMON_RANGE;
+  const where = a.ratio > steep ? `\xFCber ${formatNumber(steep, 1)}: Die Belastung der letzten 7 Tage liegt deutlich \xFCber deinem Wochenmittel` : a.ratio > high ? `\xFCber dem h\xE4ufig genannten Bereich von ${formatNumber(low, 1)}\u2013${formatNumber(high, 1)}` : a.ratio < low ? `unter dem h\xE4ufig genannten Bereich von ${formatNumber(low, 1)}\u2013${formatNumber(high, 1)}: Die letzten 7 Tage waren leichter als dein Wochenmittel` : `im h\xE4ufig genannten Bereich von ${formatNumber(low, 1)}\u2013${formatNumber(high, 1)}`;
+  return `Belastung der letzten 7 Tage im Verh\xE4ltnis zur mittleren Woche der letzten ${CHRONIC_DAYS} Tage: ${formatNumber(a.ratio, 2)} (${formatNumber(a.acute)} zu ${formatNumber(a.chronic)} Punkten, ${a.sessions} Einheiten). Das liegt ${where}.${missing}`;
+}
+
+// src/domain/insightGroups.ts
+function associationKind(a) {
+  if (a.r === null) return "insufficient";
+  return Math.abs(a.r) < MIN_ABS_R ? "none" : "shown";
+}
+function associationItem(label, a) {
+  return { label, text: a.text, kind: associationKind(a) };
+}
+function groupInsights(items) {
+  return {
+    shown: items.filter((i) => i.kind === "shown"),
+    none: items.filter((i) => i.kind === "none"),
+    insufficient: items.filter((i) => i.kind === "insufficient")
+  };
+}
+
+// src/domain/energy.ts
+var energy_exports = {};
+__export(energy_exports, {
+  BASELINE_FACTOR: () => BASELINE_FACTOR,
+  TREND_WINDOW_DAYS: () => TREND_WINDOW_DAYS,
+  bmrMethodLabel: () => bmrMethodLabel,
+  describeCalibration: () => describeCalibration,
+  describeCardioEnergy: () => describeCardioEnergy,
+  describeTraining: () => describeTraining,
+  energyRows: () => energyRows,
+  formatPal: () => formatPal,
+  palLabel: () => palLabel,
+  weightTrendSeries: () => weightTrendSeries
+});
+
+// src/domain/stats.ts
+var stats_exports = {};
+__export(stats_exports, {
+  mean: () => mean2,
+  movingAverage: () => movingAverage,
+  roundTo: () => roundTo,
+  windowMean: () => windowMean
+});
+function mean2(values) {
+  if (values.length === 0) return Number.NaN;
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+function movingAverage(values, window) {
+  if (window < 1 || !Number.isInteger(window)) {
+    throw new Error("Das Fenster muss eine positive ganze Zahl sein.");
+  }
+  return values.map((_, i) => i + 1 < window ? null : mean2(values.slice(i + 1 - window, i + 1)));
+}
+function roundTo(value, digits) {
+  const f = 10 ** digits;
+  return Math.round(value * f) / f;
+}
+function windowMean(points, endDate, days2) {
+  const end = Date.parse(`${endDate}T00:00:00Z`);
+  const start = end - (days2 - 1) * 864e5;
+  const inside = points.filter((p) => {
+    const t = Date.parse(`${p.date}T00:00:00Z`);
+    return t >= start && t <= end;
+  });
+  if (inside.length === 0) return null;
+  return { mean: mean2(inside.map((p) => p.value)), count: inside.length };
+}
+
+// src/domain/energy.ts
+var BASELINE_FACTOR = 1.2;
+var TREND_WINDOW_DAYS = 7;
+var PAL_LEVELS = [
+  { below: 1.4, label: "\xFCberwiegend sitzend" },
+  { below: 1.7, label: "leicht aktiv" },
+  { below: 2, label: "aktiv" },
+  { below: Number.POSITIVE_INFINITY, label: "sehr aktiv" }
+];
+function palLabel(pal) {
+  return (PAL_LEVELS.find((l) => pal < l.below) ?? PAL_LEVELS[PAL_LEVELS.length - 1]).label;
+}
+function formatPal(pal) {
+  return formatNumber(pal, 2);
+}
+function bmrMethodLabel(e) {
+  if (e.bmrMethod === "katch") {
+    return `Katch-McArdle (K\xF6rperfett ${formatNumber(e.bodyFatPercent ?? 0, 1)} %)`;
+  }
+  if (e.bmrMethod === "mifflin") return "Mifflin-St Jeor";
+  return "\u2013";
+}
+function energyRows(e) {
+  if (e.baselineKcal === null || e.bmrKcal === null) return [];
+  const rows = [
+    {
+      key: "baseline",
+      label: "Grundbedarf im Alltag",
+      detail: `Grundumsatz ${formatNumber(e.bmrKcal, 0)} kcal (${bmrMethodLabel(e)}) \xD7 1,2`,
+      kcal: e.baselineKcal
+    }
+  ];
+  if (e.step.kcal !== null && e.step.kcal > 0) {
+    rows.push({
+      key: "steps",
+      label: "Schritte",
+      detail: `${formatNumber(e.step.steps ?? 0, 0)} Schritte`,
+      kcal: e.step.kcal
+    });
+  }
+  for (const a of e.activities) {
+    if (a.kcal <= 0) continue;
+    rows.push({
+      key: `activity-${a.key}`,
+      label: a.label,
+      detail: `${formatNumber(a.minutes, 0)} min \xB7 MET ${formatNumber(a.met, 1)}`,
+      kcal: a.kcal
+    });
+  }
+  for (const t of e.trainings) {
+    rows.push({
+      key: `training-${t.workoutId}`,
+      label: `Training: ${t.title}`,
+      detail: describeTraining(t),
+      kcal: t.kcal
+    });
+  }
+  return rows;
+}
+function describeCardioEnergy(c) {
+  const parts = [c.exerciseName];
+  if (c.durationSeconds > 0) parts.push(formatDuration2(c.durationSeconds));
+  if (c.distanceM > 0) parts.push(`${formatNumber(c.distanceM / 1e3, 2)} km`);
+  const pace = cardioPace(c.kind, c.durationSeconds, c.distanceM);
+  if (pace) parts.push(pace);
+  parts.push(c.methods.map(cardioMethodLabel).join(" bzw. "));
+  let text = `${parts.join(" \xB7 ")}: ${formatNumber(c.kcal, 0)} kcal`;
+  if (c.deviceKcal !== null) text += ` (Ger\xE4t: ${formatNumber(c.deviceKcal, 0)} kcal brutto)`;
+  return text;
+}
+function describeTraining(t) {
+  const effort = t.perceivedExertion !== null ? `Anstrengung ${t.perceivedExertion}/10` : "ohne Anstrengung";
+  const cardio = t.cardio ?? [];
+  const strength = t.strength ? ` \xB7 Krafttraining \xD7 ${formatNumber(t.factor, 1)}` : "";
+  if (cardio.length === 0) {
+    return `${formatNumber(t.durationMin ?? 0, 0)} min \xB7 ${effort} \xB7 MET ${formatNumber(t.met, 1)}${strength}`;
+  }
+  const parts = cardio.map(describeCardioEnergy);
+  const otherMinutes = t.otherMinutes ?? 0;
+  if (otherMinutes > 0) {
+    parts.push(
+      `\xFCbrige ${formatNumber(otherMinutes, 0)} min \xB7 ${effort} \xB7 MET ${formatNumber(t.met, 1)}${strength}: ${formatNumber(t.otherKcal ?? 0, 0)} kcal`
+    );
+  }
+  return parts.join(" | ");
+}
+function describeCalibration(e) {
+  const c = e.calibration;
+  if (!c) return e.calibrationNote;
+  const change = c.trendEndKg - c.trendStartKg;
+  const sign = change > 0 ? "+" : change < 0 ? "\u2212" : "\xB1";
+  return `Kalibriert mit Faktor ${formatNumber(c.factor, 2)} aus ${c.daysUsed} Tagen: \xD8 ${formatNumber(c.avgIntakeKcal, 0)} kcal gegessen, Gewichtstrend ${sign}${formatNumber(Math.abs(change), 1)} kg \u2192 tats\xE4chlich ca. ${formatNumber(c.measuredKcal, 0)} kcal statt berechnet ${formatNumber(c.avgFormulaKcal, 0)} kcal je Tag.` + (c.limited ? " Der Faktor wurde auf 0,75\u20131,25 begrenzt \u2013 bitte Erfassung pr\xFCfen." : "");
+}
+function weightTrendSeries(points, days2 = TREND_WINDOW_DAYS) {
+  return points.map((p) => ({
+    date: p.date,
+    value: p.value,
+    average: windowMean(points, p.date, days2)?.mean ?? null
+  }));
+}
+
 // src/domain/dashboard.ts
+var dashboard_exports = {};
+__export(dashboard_exports, {
+  BASELINE_DAYS: () => BASELINE_DAYS,
+  CARDIO_WEEK_MINUTES: () => CARDIO_WEEK_MINUTES,
+  DEFAULT_WEEK_TRAININGS: () => DEFAULT_WEEK_TRAININGS,
+  LEVEL_LABELS: () => LEVEL_LABELS,
+  MEAL_PROTEIN: () => MEAL_PROTEIN,
+  MIN_EXTRA_DAYS: () => MIN_EXTRA_DAYS,
+  MIN_OPEN_PROTEIN: () => MIN_OPEN_PROTEIN,
+  MIN_REGULARITY_NIGHTS: () => MIN_REGULARITY_NIGHTS,
+  NO_WEEK_GOALS: () => NO_WEEK_GOALS,
+  RECENT_VITAL_DAYS: () => RECENT_VITAL_DAYS,
+  REMINDER_RULES: () => REMINDER_RULES,
+  WEEK_CARDIO_MAX_MIN: () => WEEK_CARDIO_MAX_MIN,
+  WEEK_GOALS_KEY: () => WEEK_GOALS_KEY,
+  WEEK_PROTEIN_DAYS_MAX: () => WEEK_PROTEIN_DAYS_MAX,
+  WEEK_SLEEP_MAX_MIN: () => WEEK_SLEEP_MAX_MIN,
+  WEEK_SLEEP_MIN_MIN: () => WEEK_SLEEP_MIN_MIN,
+  WEEK_TRAININGS_MAX: () => WEEK_TRAININGS_MAX,
+  dueReminders: () => dueReminders,
+  exerciseProgress: () => exerciseProgress,
+  extrasCheck: () => extrasCheck,
+  metricChange: () => metricChange,
+  parseWeekGoals: () => parseWeekGoals,
+  progressExercises: () => progressExercises,
+  proteinSuggestions: () => proteinSuggestions,
+  proteinTarget: () => proteinTarget,
+  readiness: () => readiness,
+  sleepRegularity: () => sleepRegularity,
+  streakOf: () => streakOf,
+  streaks: () => streaks,
+  weekGoalsFromInput: () => weekGoalsFromInput,
+  weeklyGoals: () => weeklyGoals
+});
 var BASELINE_DAYS = 28;
 var RECENT_VITAL_DAYS = 3;
 var HEADLINES = {
@@ -6980,7 +7701,7 @@ function vitalFactor(data, today, metricId) {
     return { ok: false, reason: `keine Messung in den letzten ${RECENT_VITAL_DAYS} Tagen` };
   const base = list.filter((m) => inRange2(m.date, from, shiftDays(today, -1)) && m !== recent).map((m) => m.value);
   if (base.length < 3) return { ok: false, reason: "weniger als 3 fr\xFChere Werte in 28 Tagen" };
-  return { ok: true, value: recent.value, base: mean(base), date: recent.date };
+  return { ok: true, value: recent.value, base: mean2(base), date: recent.date };
 }
 function fromDay(date, today) {
   if (date === today) return "";
@@ -7013,7 +7734,7 @@ function readiness(data, today, sleepGoalMin) {
   const night = data.sleep.find((s) => s.date === today);
   const from = shiftDays(today, -BASELINE_DAYS);
   const earlier = data.sleep.filter((s) => inRange2(s.date, from, shiftDays(today, -1))).map((s) => s.sleepMin);
-  const sleepTarget = sleepGoalMin ?? (earlier.length >= 3 ? mean(earlier) : null);
+  const sleepTarget = sleepGoalMin ?? (earlier.length >= 3 ? mean2(earlier) : null);
   if (night && sleepTarget) {
     const ratio = night.sleepMin / sleepTarget;
     factors.push({
@@ -7124,12 +7845,12 @@ function weeklyGoals(input) {
   const { today, data } = input;
   const monday = weekStart(today);
   const elapsed = daysBetween(monday, today);
-  const inWeek = (d) => inRange2(d, monday, today);
+  const inWeek2 = (d) => inRange2(d, monday, today);
   const out = [];
   const fromPlan = own.trainings === null && !!input.planDays && input.planDays > 0;
   const target = own.trainings ?? (fromPlan && input.planDays ? input.planDays : DEFAULT_WEEK_TRAININGS);
   const done = new Set(
-    data.workouts.filter((w) => w.status === "done" && inWeek(w.date)).map((w) => w.id)
+    data.workouts.filter((w) => w.status === "done" && inWeek2(w.date)).map((w) => w.id)
   ).size;
   out.push({
     key: "trainings",
@@ -7139,7 +7860,7 @@ function weeklyGoals(input) {
     note: own.trainings !== null ? `Eigenes Ziel: ${target} ${target === 1 ? "Einheit" : "Einheiten"} je Woche` : fromPlan ? `Ziel: ${target} Tage deines Plans \u201E${input.planName ?? ""}\u201C` : `Ziel: ${target} Einheiten (ohne Plan)`
   });
   const minutes = Math.round(
-    input.cardio.filter((s) => inWeek(s.date)).reduce((a, s) => a + s.durationSeconds, 0) / 60
+    input.cardio.filter((s) => inWeek2(s.date)).reduce((a, s) => a + s.durationSeconds, 0) / 60
   );
   const cardioTarget = own.cardioMin ?? CARDIO_WEEK_MINUTES;
   out.push({
@@ -7151,7 +7872,7 @@ function weeklyGoals(input) {
   });
   const protein = proteinTarget(data.goal, input.weightKg);
   if (protein !== null && protein > 0) {
-    const met = data.nutrition.filter((n) => inWeek(n.date) && n.proteinG >= protein).length;
+    const met = data.nutrition.filter((n) => inWeek2(n.date) && n.proteinG >= protein).length;
     const proteinDays = own.proteinDays ?? elapsed;
     out.push({
       key: "protein",
@@ -7162,9 +7883,9 @@ function weeklyGoals(input) {
     });
   }
   const sleepGoal = own.sleepMin ?? data.goal?.sleepMin ?? null;
-  const nights = data.sleep.filter((s) => inWeek(s.date));
+  const nights = data.sleep.filter((s) => inWeek2(s.date));
   if (sleepGoal) {
-    const avg = nights.length > 0 ? mean(nights.map((s) => s.sleepMin)) : 0;
+    const avg = nights.length > 0 ? mean2(nights.map((s) => s.sleepMin)) : 0;
     out.push({
       key: "sleep",
       label: "Schlaf",
@@ -7175,8 +7896,8 @@ function weeklyGoals(input) {
   }
   return out;
 }
-function streakOf(met, today, days) {
-  const first = shiftDays(today, -(days - 1));
+function streakOf(met, today, days2) {
+  const first = shiftDays(today, -(days2 - 1));
   const todayMet = met(today);
   let current = 0;
   let day = todayMet ? today : shiftDays(today, -1);
@@ -7193,7 +7914,7 @@ function streakOf(met, today, days) {
   return { current, best, today: todayMet, atLimit: current > 0 && day < first };
 }
 function streaks(input) {
-  const { today, days, data, dashboard } = input;
+  const { today, days: days2, data, dashboard } = input;
   const goal = data.goal;
   const out = [];
   const add = (key, label, goalText, value, target, show) => {
@@ -7202,7 +7923,7 @@ function streaks(input) {
       key,
       label,
       goal: goalText,
-      ...streakOf((d) => value(d) >= target, today, days),
+      ...streakOf((d) => value(d) >= target, today, days2),
       todayShare: Math.max(0, Math.min(1, now / target)),
       todayText: `heute ${show(now)} von ${show(target)}`
     });
@@ -7322,11 +8043,11 @@ function formatClock(minutes) {
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
 function sd(values) {
-  const avg = mean(values);
-  return Math.sqrt(mean(values.map((v) => (v - avg) ** 2)));
+  const avg = mean2(values);
+  return Math.sqrt(mean2(values.map((v) => (v - avg) ** 2)));
 }
-function sleepRegularity(sleep, today, days = 14) {
-  const from = shiftDays(today, -(days - 1));
+function sleepRegularity(sleep, today, days2 = 14) {
+  const from = shiftDays(today, -(days2 - 1));
   const beds = [];
   const wakes = [];
   for (const s of sleep) {
@@ -7345,16 +8066,16 @@ function sleepRegularity(sleep, today, days = 14) {
   const text = level === "good" ? "Regelm\xE4\xDFig \u2013 dein Schlafrhythmus ist stabil." : level === "caution" ? "Mittel \u2013 die Zeiten schwanken sp\xFCrbar." : "Unregelm\xE4\xDFig \u2013 feste Zeiten (auch am Wochenende) helfen oft mehr als l\xE4ngerer Schlaf.";
   return {
     nights: beds.length,
-    bedMean: formatClock(mean(beds)),
-    wakeMean: formatClock(mean(wakes)),
+    bedMean: formatClock(mean2(beds)),
+    wakeMean: formatClock(mean2(wakes)),
     bedSd,
     wakeSd,
     level,
     text
   };
 }
-function metricChange(measurements, metricId, today, days = 30) {
-  const from = shiftDays(today, -(days - 1));
+function metricChange(measurements, metricId, today, days2 = 30) {
+  const from = shiftDays(today, -(days2 - 1));
   const list = measurements.filter((m) => m.metricId === metricId && inRange2(m.date, from, today)).sort((a, b) => a.date.localeCompare(b.date));
   const last = list.at(-1);
   if (!last) return null;
@@ -7369,8 +8090,8 @@ function metricChange(measurements, metricId, today, days = 30) {
     decimals: last.decimals
   };
 }
-function progressExercises(log, today, days = 90) {
-  const from = shiftDays(today, -(days - 1));
+function progressExercises(log, today, days2 = 90) {
+  const from = shiftDays(today, -(days2 - 1));
   const byExercise = /* @__PURE__ */ new Map();
   for (const s of log) {
     if (s.isWarmup || s.exerciseCategory === "cardio" || !inRange2(s.date, from, today)) continue;
@@ -7381,8 +8102,8 @@ function progressExercises(log, today, days = 90) {
   }
   return [...byExercise.entries()].map(([exerciseId, e]) => ({ exerciseId, name: e.name, sessions: e.workouts.size })).sort((a, b) => b.sessions - a.sessions || a.name.localeCompare(b.name, "de"));
 }
-function exerciseProgress(log, exerciseId, today, days = 180) {
-  const from = shiftDays(today, -(days - 1));
+function exerciseProgress(log, exerciseId, today, days2 = 180) {
+  const from = shiftDays(today, -(days2 - 1));
   const points = e1rmBySession(
     log.filter((s) => s.exerciseId === exerciseId && inRange2(s.date, from, today))
   ).sort((a, b) => a.date.localeCompare(b.date));
@@ -7396,18 +8117,18 @@ function exerciseProgress(log, exerciseId, today, days = 180) {
 }
 var MIN_EXTRA_DAYS = 3;
 function extrasCheck(extras) {
-  const days = extras.filter((d) => d.items > 0);
-  if (days.length < MIN_EXTRA_DAYS) return { days: days.length, checks: [] };
-  const items = days.reduce((a, d) => a + d.items, 0);
-  const avg = (f) => mean(days.map(f));
+  const days2 = extras.filter((d) => d.items > 0);
+  if (days2.length < MIN_EXTRA_DAYS) return { days: days2.length, checks: [] };
+  const items = days2.reduce((a, d) => a + d.items, 0);
+  const avg = (f) => mean2(days2.map(f));
   const kcal2 = avg((d) => d.energyKcal);
-  const share = (missing) => days.reduce((a, d) => a + missing(d), 0) / items;
+  const share = (missing) => days2.reduce((a, d) => a + missing(d), 0) / items;
   const fiber = avg((d) => d.fiberG);
   const salt = avg((d) => d.saltG);
   const sugarPct = kcal2 > 0 ? avg((d) => d.sugarG) * 4 / kcal2 * 100 : 0;
   const satPct = kcal2 > 0 ? avg((d) => d.saturatedFatG) * 9 / kcal2 * 100 : 0;
   return {
-    days: days.length,
+    days: days2.length,
     checks: [
       {
         key: "fiber",
@@ -7758,12 +8479,14 @@ export {
   ANS_MAX,
   ANS_MIN,
   ANS_TITLE,
+  COVERAGE_DAYS,
   DEFAULT_LAYOUT,
   DISPLAY_DECIMALS,
   FASTED_LABEL,
   GLASS_SIZES_ML,
   GROUP_LABELS,
   INDEPENDENT_LABEL,
+  INSIGHTS_LAYOUT_KEY,
   KCAL_PER_GRAM,
   LEVEL_NAMES,
   MACRO_KEYS,
@@ -7774,19 +8497,25 @@ export {
   OVERVIEW_LAYOUT_KEY,
   SCALE_MODE_LABELS,
   ZERO,
+  acwr,
   addDaysIso,
   addNutrientValues,
   addNutrients,
   amountFromPortions,
   ansPercent,
   arrange,
+  associationItem,
   buildFocusIndex,
   countAfterClick,
+  coverage,
+  dailyAssociations,
   dailyNeed,
   dashboard_exports as dashboard,
+  dataCheck,
   dayChart,
   dayMacroGoals,
   daySlots,
+  describeAcwr,
   describeGoalProgress,
   describeMacroGoals,
   describeNeed,
@@ -7818,10 +8547,13 @@ export {
   goalGlasses,
   goalProgress,
   gramsFromPercent,
+  groupInsights,
   groupIntakes,
   groupedValues,
   insights_exports as insights,
   legendLabels,
+  lifestyleCategoryLabel,
+  loadVsNextDay,
   macroBaseKcal,
   macroEnergyShares,
   macroGoalRows,
@@ -7862,6 +8594,7 @@ export {
   waterGlasses,
   waterPercent,
   waterSummary,
+  weeklyAnalysis,
   weeklyMuscleSets,
   withDayMacros,
   withProteinFromWeight

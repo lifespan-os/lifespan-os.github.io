@@ -769,7 +769,7 @@ function liveCards(data, week, widgets, isToday) {
                 .join("")}</ul>`
             : `<p class="muted">Noch keine deutlichen Veränderungen gegenüber der Vorwoche – oder zu wenige Werte für einen Vergleich.</p>`
         }
-        ${note("Nur aus deinen erfassten Daten, ohne Diagnose oder Empfehlung. Wochenrückblick am PC unter Insights.")}`,
+        ${note(`Nur aus deinen erfassten Daten, ohne Diagnose oder Empfehlung. ${link("insights", "Zum Wochenrückblick")}`)}`,
         { wide: true },
       ),
     });

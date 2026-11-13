@@ -12,6 +12,7 @@ import { buildDb, diaryActions, diaryChange, initDiary, today as todayIso, viewD
 import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewDayNav } from "./overview.js";
 import { initLogs, logsActions, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
+import { initInsights, insightsActions, viewInsights } from "./insightsview.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -702,6 +703,7 @@ const VIEWS = {
   sleep: viewSleep,
   recovery: viewRecovery,
   "log-edit": viewLogEdit,
+  insights: viewInsights,
   diary: viewDiary,
   "food-history": viewNutritionHistory,
   food: viewFood,
@@ -845,6 +847,7 @@ const actions = {
   ...diaryActions,
   ...overviewActions,
   ...logsActions,
+  ...insightsActions,
   ...bodyActions,
   "start-free": () => startWorkout("Freies Training"),
   "start-plan": (el) => {
@@ -1409,6 +1412,7 @@ initBody(moduleCtx);
 initDiary(moduleCtx);
 initOverview({ ...moduleCtx, S, today: todayIso });
 initLogs(moduleCtx);
+initInsights(moduleCtx);
 
 initFood({
   get S() {

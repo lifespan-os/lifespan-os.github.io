@@ -218,4 +218,11 @@ Fassung laden.
 - Die Overview lässt sich wie am PC auf einen früheren Tag umschalten.
 - `pcoverview.js` rechnet wie der Rust-Kern (overview.rs, insights.rs, dashboard.rs, Cardio, Satzprotokoll). Die Rechenregeln kommen aus `pcdomain.js`, neu erzeugt mit weeklyMuscleSets, describeScheduled und exportReminderState.
 - Der Export behält dafür zusätzlich die Termine der Trainingstage, die Messgrößen und die Daten der Check-In-Fotos (ohne Bilder). Für „Nächstes Training“ mit Termin und die Check-In-Erinnerung braucht es einmal einen neuen Export vom PC.
-- Noch nicht am Handy: die Muskel-Körperkarte und der Wirkstoffspiegel.
+- Noch nicht am Handy: der Wirkstoffspiegel.
+
+## Version 1.6.1 (13.11.2026): Muskel-Körperkarte in der Overview
+
+- Karte „Muskel-Körperkarte“ wie am PC (2D): Vorder- und Rückansicht des Modells aus dem Profil, Arbeitssätze je Muskelteil der laufenden Woche bzw. der Vorwoche, Darstellung Standard / Individuell / Relativ.
+- Gerechnet mit `muscleMapForRange` und `muscleLevels` aus src/domain/muscleMap.ts (in `pcdomain.js`), mit eigenem Muskelfokus von Maschinen und Übungen, Bewegungsmustern, Griffbreite und Griffstellung.
+- Bilder und Flächen wie am PC: `musclemap/male.webp`, `musclemap/female.webp`, `musclemap/regions.js` (aus src/data/muscle-map). Einen Muskel antippen zeigt Sätze und Stufe.
+- Die Darstellung kommt vom PC (Settings `ui.muscle_map`); eine Umstellung am Handy gilt nur auf dem Handy. Zielwerte für „Individuell“ werden am PC eingestellt. Die 3D-Ansicht gibt es nur am PC.

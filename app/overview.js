@@ -7,6 +7,7 @@ import * as P from "./pcdb.js";
 import * as O from "./pcoverview.js";
 import * as D from "./pcdomain.js";
 import { barTrendSvg, COLOR, dayChartHtml, esc, trendSvg } from "./pcview.js";
+import { REGIONS } from "./musclemap/regions.js";
 
 let X = null; // { S, buildDb, rerender, today }
 
@@ -76,6 +77,10 @@ export function overviewData(db, catalog, date) {
       exercises: O.exercisesOf(db),
       foods: O.foodsWithUsage(db),
       weekGoals: D.dashboard.parseWeekGoals(db.settings.get(D.dashboard.WEEK_GOALS_KEY) ?? null),
+      machines: machinesOf(catalog),
+      sex: db.profile?.sex === "female" || db.profile?.sex === "male" ? db.profile.sex : null,
+      focus: focusIndex(catalog),
+      mapSettings: D.parseMuscleMapSettings(db.settings.get(D.MUSCLE_MAP_SETTINGS_KEY) ?? null),
     },
   };
 }
@@ -330,12 +335,136 @@ function dashboardCards(data, w, isToday) {
     { id: "weekly", node: weeklyCard },
     { id: "streaks", node: streaksCard },
     { id: "next", empty: next === null, node: nextCard },
+    { id: "bodymap", node: bodyMapCard(w, today) },
     { id: "muscles", empty: mrows.length === 0, node: musclesCard },
     { id: "progress", empty: w.log.length === 0, node: progressCard },
     { id: "sleepreg", empty: regularity === null, node: sleepregCard },
     { id: "extras", empty: w.dashboard.extras.length === 0, node: extrasCard },
     { id: "reminders", empty: none, node: remindersCard },
   ];
+}
+
+// ------------------------------------------------------------------ Muskel-Körperkarte (BodyMapCard.tsx)
+
+const groupsOf = (v) => {
+  if (Array.isArray(v)) return v.map(String);
+  if (typeof v === "string" && v.trim()) {
+    try {
+      const a = JSON.parse(v);
+      if (Array.isArray(a)) return a.map(String);
+    } catch {
+      return v.split(",").map((x) => x.trim()).filter(Boolean);
+    }
+  }
+  return [];
+};
+
+/** Maschinen für die Zuordnung wie `listMachines` (Muskelgruppen und Namen). */
+function machinesOf(catalog) {
+  return (catalog?.machines ?? []).map((m) => ({
+    id: m.id,
+    muscleGroups: groupsOf(m.muscle_groups),
+    name: m.name ?? undefined,
+    displayName: m.display_name ?? undefined,
+    manufacturer: m.manufacturer ?? undefined,
+  }));
+}
+
+/** Eigener Muskelfokus von Maschinen und Übungen (Exportdatei) wie `muscle_focus_list`. */
+function focusIndex(catalog) {
+  const f = catalog?.focus ?? { machines: {}, exercises: {} };
+  return D.buildFocusIndex({
+    machines: Object.entries(f.machines).flatMap(([machineId, list]) => list.map(([muscle, percent]) => ({ machineId, muscle, percent }))),
+    exercises: Object.entries(f.exercises).flatMap(([exerciseId, list]) => list.map(([muscle, percent]) => ({ exerciseId, muscle, percent }))),
+  });
+}
+
+const HEAT = ["#FDE7C8", "#FBB46A", "#F57C1F", "#D9480F", "#8F1D0A"];
+const MODE_KEY = "overview.muscleMapMode";
+const VIEW_LABELS = { front: "Vorderansicht", back: "Rückansicht" };
+
+function storedMode(fallback) {
+  try {
+    const v = localStorage.getItem(MODE_KEY);
+    return v === "standard" || v === "individual" || v === "relative" ? v : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+const setsText = (n) => `${F(n, 1)} ${n === 1 ? "Satz" : "Sätze"}`;
+
+function bodyMapCard(w, today) {
+  const S = X.S;
+  const previous = Boolean(S.ovBodyPrev);
+  const monday = D.trends.weekStart(today);
+  const from = previous ? D.trends.shiftDays(monday, -7) : monday;
+  const to = previous ? D.trends.shiftDays(monday, -1) : today;
+  const mode = storedMode(w.mapSettings.mode);
+  const targets = w.mapSettings.targets;
+  const data = D.muscleMapForRange(w.log, w.exercises, w.machines, from, to, w.focus);
+  const levels = D.muscleLevels(data.sets, mode, targets);
+  const describe = (m) => {
+    let t = `${D.MUSCLE_LABELS[m]} · ${setsText(data.sets[m])}`;
+    if (levels[m] > 0) t += ` · ${D.LEVEL_NAMES[levels[m] - 1]}`;
+    if (mode === "individual") t += ` · Aufbau ab ${F(D.targetFor(m, "individual", targets).build, 1)}`;
+    return t;
+  };
+  const sex = w.sex ?? "male";
+  const model = REGIONS[sex];
+  const active = S.ovMuscle ?? null;
+  const seg = (items, current, act) =>
+    `<div class="segmented" role="radiogroup">${items
+      .map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === current}" class="${v === current ? "is-active" : ""}" data-act="${act}" data-arg="${v}">${esc(l)}</button>`)
+      .join("")}</div>`;
+  const views = ["front", "back"]
+    .map((v) => {
+      const vd = model.views[v];
+      return `<svg class="muscle-map__svg" viewBox="0 0 ${vd.width} ${vd.height}" role="img" aria-label="${VIEW_LABELS[v]}">
+        <rect class="muscle-map__backdrop" x="0" y="0" width="${vd.width}" height="${vd.height}"/>
+        <image class="muscle-map__image" href="musclemap/${sex}.webp" x="${-vd.x0}" y="0" width="${model.width}" height="${model.height}"/>
+        <g class="muscle-map__regions">${vd.regions
+          .map((r) => {
+            const level = levels[r.muscle] ?? 0;
+            const on = active === r.muscle;
+            const fill = level > 0 ? HEAT[level - 1] : COLOR.training;
+            return `<path d="${r.d}" fill="${fill}" fill-opacity="${level > 0 ? (on ? 1 : 0.85) : on ? 0.2 : 0}" stroke="${on ? COLOR.training : "none"}" stroke-width="3" data-act="ov-muscle" data-arg="${esc(r.muscle)}"><title>${esc(describe(r.muscle))}</title></path>`;
+          })
+          .join("")}</g></svg>`;
+    })
+    .join("");
+  const legend = D.legendLabels(mode);
+  return card(
+    "bodymap",
+    "Muskel-Körperkarte",
+    D.trends.formatRange(from, to),
+    `<div class="muscle-map__tools">${seg(
+      [
+        ["0", "Diese Woche"],
+        ["1", "Vorwoche"],
+      ],
+      previous ? "1" : "0",
+      "ov-body-week",
+    )}${seg(
+      Object.entries(D.SCALE_MODE_LABELS),
+      mode,
+      "ov-body-mode",
+    )}</div>
+    ${data.totalSets === 0 ? `<p class="muted small">Im Zeitraum keine Arbeitssätze von Kraftübungen.</p>` : ""}
+    <div class="muscle-map"><div class="muscle-map__views">${views}</div>
+      <p class="muscle-map__hover" aria-live="polite">${esc(active ? describe(active) : "Muskel antippen")}</p>
+      <ul class="muscle-map__legend" aria-label="Legende">${legend.map((l, i) => `<li><span class="muscle-map__swatch" style="background:${HEAT[i]}"></span>${esc(l)}</li>`).join("")}</ul></div>
+    ${note(
+      esc(
+        `Arbeitssätze von Kraftübungen (Montag–Sonntag). Mit Muskelfokus (bei Maschine bzw. Übung in Prozent eingetragen) zählt jeder Muskelteil mit seinem Anteil; sonst Hauptmuskel = erste Muskelgruppe der Übung (bzw. der Maschine), weitere Muskelgruppen zählen als halber Satz.${
+          mode === "standard" ? " Standard: eine Skala für alle Muskeln." : mode === "individual" ? " Individuell: Stufen nach deinen Zielwerten je Muskel (am PC einstellbar)." : " Relativ: Anteil am meisttrainierten Muskel."
+        }${data.setsWithoutMuscle > 0 ? ` ${data.setsWithoutMuscle} ${data.setsWithoutMuscle === 1 ? "Satz" : "Sätze"} ohne zuordenbare Muskelgruppe.` : ""}${
+          data.unmapped.length > 0 ? ` Nicht zugeordnet: ${data.unmapped.map((u) => u.term).join(", ")}.` : ""
+        }${w.sex === null ? " Ohne Geschlecht im Profil wird das männliche Modell gezeigt – Profil am PC in Settings ergänzen." : ""}`,
+      ),
+    )}`,
+    { area: "training" },
+  );
 }
 
 // ------------------------------------------------------------------ Karten wie LiveOverview.tsx
@@ -670,6 +799,22 @@ export function overviewCardsHtml(db, catalog, date, today) {
 }
 
 export const overviewActions = {
+  "ov-body-week": (el) => {
+    X.S.ovBodyPrev = el.dataset.arg === "1";
+    X.rerender();
+  },
+  "ov-body-mode": (el) => {
+    try {
+      localStorage.setItem(MODE_KEY, el.dataset.arg);
+    } catch {
+      // ohne Speicher gilt die Wahl bis zum Schließen
+    }
+    X.rerender();
+  },
+  "ov-muscle": (el) => {
+    X.S.ovMuscle = X.S.ovMuscle === el.dataset.arg ? null : el.dataset.arg;
+    X.rerender();
+  },
   "ov-shift": (el) => {
     const S = X.S;
     const today = X.today();

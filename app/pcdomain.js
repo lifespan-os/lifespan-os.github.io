@@ -1808,6 +1808,4385 @@ function exportReminderState(r2, today) {
   return { due: old && !snoozed, daysSince, text };
 }
 
+// src/domain/gripFocus.ts
+var DEFAULT_GRIP_POSITION = {
+  narrow: "neutral",
+  wide: "pronated"
+};
+var DEFAULT_POSITION = {
+  biceps_curl: "supinated",
+  forearm: "supinated"
+};
+var DEFAULT_WIDTH = {
+  row: "narrow",
+  pulldown: "narrow",
+  press_flat: "wide",
+  press_incline: "wide",
+  press_decline: "wide",
+  shoulder_press: "wide",
+  dip: "narrow"
+};
+var P1 = [
+  { muscle: "lats", percent: 35 },
+  { muscle: "traps_middle", percent: 16 },
+  { muscle: "biceps", percent: 11 },
+  { muscle: "teres", percent: 10 },
+  { muscle: "brachialis", percent: 6 },
+  { muscle: "lower_back", percent: 6 },
+  { muscle: "traps_lower", percent: 5 },
+  { muscle: "rear_delts", percent: 3 },
+  { muscle: "infraspinatus", percent: 2 },
+  { muscle: "traps_upper", percent: 2 },
+  { muscle: "brachioradialis", percent: 2 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P2 = [
+  { muscle: "lats", percent: 33 },
+  { muscle: "traps_middle", percent: 18 },
+  { muscle: "teres", percent: 10 },
+  { muscle: "biceps", percent: 8 },
+  { muscle: "brachialis", percent: 6 },
+  { muscle: "lower_back", percent: 6 },
+  { muscle: "rear_delts", percent: 5 },
+  { muscle: "traps_lower", percent: 5 },
+  { muscle: "infraspinatus", percent: 3 },
+  { muscle: "traps_upper", percent: 2 },
+  { muscle: "brachioradialis", percent: 2 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P3 = [
+  { muscle: "lats", percent: 30 },
+  { muscle: "traps_middle", percent: 20 },
+  { muscle: "teres", percent: 9 },
+  { muscle: "rear_delts", percent: 8 },
+  { muscle: "brachialis", percent: 7 },
+  { muscle: "lower_back", percent: 6 },
+  { muscle: "biceps", percent: 5 },
+  { muscle: "traps_lower", percent: 5 },
+  { muscle: "infraspinatus", percent: 3 },
+  { muscle: "brachioradialis", percent: 3 },
+  { muscle: "traps_upper", percent: 2 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P4 = [
+  { muscle: "traps_middle", percent: 25 },
+  { muscle: "lats", percent: 18 },
+  { muscle: "rear_delts", percent: 15 },
+  { muscle: "traps_lower", percent: 8 },
+  { muscle: "biceps", percent: 8 },
+  { muscle: "teres", percent: 6 },
+  { muscle: "brachialis", percent: 5 },
+  { muscle: "infraspinatus", percent: 4 },
+  { muscle: "lower_back", percent: 4 },
+  { muscle: "traps_upper", percent: 3 },
+  { muscle: "brachioradialis", percent: 2 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P5 = [
+  { muscle: "traps_middle", percent: 27 },
+  { muscle: "rear_delts", percent: 18 },
+  { muscle: "lats", percent: 15 },
+  { muscle: "traps_lower", percent: 8 },
+  { muscle: "teres", percent: 6 },
+  { muscle: "infraspinatus", percent: 5 },
+  { muscle: "brachialis", percent: 5 },
+  { muscle: "traps_upper", percent: 4 },
+  { muscle: "biceps", percent: 4 },
+  { muscle: "brachioradialis", percent: 3 },
+  { muscle: "lower_back", percent: 3 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P6 = [
+  { muscle: "traps_middle", percent: 28 },
+  { muscle: "rear_delts", percent: 20 },
+  { muscle: "lats", percent: 13 },
+  { muscle: "traps_lower", percent: 8 },
+  { muscle: "teres", percent: 6 },
+  { muscle: "infraspinatus", percent: 5 },
+  { muscle: "brachialis", percent: 5 },
+  { muscle: "traps_upper", percent: 4 },
+  { muscle: "biceps", percent: 3 },
+  { muscle: "brachioradialis", percent: 3 },
+  { muscle: "lower_back", percent: 3 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P7 = [
+  { muscle: "lats", percent: 39 },
+  { muscle: "biceps", percent: 14 },
+  { muscle: "teres", percent: 11 },
+  { muscle: "brachialis", percent: 9 },
+  { muscle: "traps_lower", percent: 8 },
+  { muscle: "traps_middle", percent: 6 },
+  { muscle: "chest_lower", percent: 4 },
+  { muscle: "forearm_flexors", percent: 3 },
+  { muscle: "infraspinatus", percent: 2 },
+  { muscle: "rear_delts", percent: 2 },
+  { muscle: "brachioradialis", percent: 2 }
+];
+var P8 = [
+  { muscle: "lats", percent: 40 },
+  { muscle: "teres", percent: 11 },
+  { muscle: "biceps", percent: 11 },
+  { muscle: "brachialis", percent: 9 },
+  { muscle: "traps_lower", percent: 8 },
+  { muscle: "traps_middle", percent: 7 },
+  { muscle: "brachioradialis", percent: 4 },
+  { muscle: "rear_delts", percent: 3 },
+  { muscle: "forearm_flexors", percent: 3 },
+  { muscle: "infraspinatus", percent: 2 },
+  { muscle: "chest_lower", percent: 2 }
+];
+var P9 = [
+  { muscle: "lats", percent: 40 },
+  { muscle: "teres", percent: 11 },
+  { muscle: "traps_lower", percent: 9 },
+  { muscle: "brachialis", percent: 9 },
+  { muscle: "traps_middle", percent: 8 },
+  { muscle: "biceps", percent: 7 },
+  { muscle: "brachioradialis", percent: 6 },
+  { muscle: "rear_delts", percent: 4 },
+  { muscle: "infraspinatus", percent: 3 },
+  { muscle: "forearm_flexors", percent: 3 }
+];
+var P10 = [
+  { muscle: "lats", percent: 38 },
+  { muscle: "biceps", percent: 12 },
+  { muscle: "teres", percent: 11 },
+  { muscle: "traps_lower", percent: 9 },
+  { muscle: "traps_middle", percent: 8 },
+  { muscle: "brachialis", percent: 8 },
+  { muscle: "rear_delts", percent: 4 },
+  { muscle: "infraspinatus", percent: 3 },
+  { muscle: "forearm_flexors", percent: 3 },
+  { muscle: "brachioradialis", percent: 2 },
+  { muscle: "chest_lower", percent: 2 }
+];
+var P11 = [
+  { muscle: "lats", percent: 39 },
+  { muscle: "teres", percent: 12 },
+  { muscle: "traps_lower", percent: 10 },
+  { muscle: "traps_middle", percent: 9 },
+  { muscle: "brachialis", percent: 7 },
+  { muscle: "biceps", percent: 6 },
+  { muscle: "rear_delts", percent: 5 },
+  { muscle: "brachioradialis", percent: 5 },
+  { muscle: "infraspinatus", percent: 4 },
+  { muscle: "forearm_flexors", percent: 3 }
+];
+var P12 = [
+  { muscle: "lats", percent: 40 },
+  { muscle: "teres", percent: 12 },
+  { muscle: "traps_lower", percent: 10 },
+  { muscle: "traps_middle", percent: 9 },
+  { muscle: "brachialis", percent: 7 },
+  { muscle: "rear_delts", percent: 6 },
+  { muscle: "biceps", percent: 5 },
+  { muscle: "infraspinatus", percent: 4 },
+  { muscle: "brachioradialis", percent: 4 },
+  { muscle: "forearm_flexors", percent: 3 }
+];
+var P13 = [
+  { muscle: "chest_lower", percent: 32 },
+  { muscle: "chest_upper", percent: 20 },
+  { muscle: "front_delts", percent: 16 },
+  { muscle: "triceps_lateral", percent: 11 },
+  { muscle: "triceps_medial", percent: 10 },
+  { muscle: "triceps_long", percent: 4 },
+  { muscle: "serratus", percent: 4 },
+  { muscle: "forearm_flexors", percent: 2 },
+  { muscle: "side_delts", percent: 1 }
+];
+var P14 = [
+  { muscle: "chest_lower", percent: 30 },
+  { muscle: "front_delts", percent: 18 },
+  { muscle: "chest_upper", percent: 14 },
+  { muscle: "triceps_lateral", percent: 13 },
+  { muscle: "triceps_medial", percent: 12 },
+  { muscle: "triceps_long", percent: 5 },
+  { muscle: "serratus", percent: 5 },
+  { muscle: "forearm_flexors", percent: 2 },
+  { muscle: "side_delts", percent: 1 }
+];
+var P15 = [
+  { muscle: "chest_lower", percent: 32 },
+  { muscle: "front_delts", percent: 17 },
+  { muscle: "chest_upper", percent: 13 },
+  { muscle: "triceps_lateral", percent: 13 },
+  { muscle: "triceps_medial", percent: 11 },
+  { muscle: "triceps_long", percent: 5 },
+  { muscle: "serratus", percent: 5 },
+  { muscle: "side_delts", percent: 2 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P16 = [
+  { muscle: "chest_lower", percent: 38 },
+  { muscle: "front_delts", percent: 17 },
+  { muscle: "chest_upper", percent: 15 },
+  { muscle: "triceps_lateral", percent: 9 },
+  { muscle: "triceps_medial", percent: 8 },
+  { muscle: "serratus", percent: 5 },
+  { muscle: "triceps_long", percent: 4 },
+  { muscle: "side_delts", percent: 2 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P17 = [
+  { muscle: "chest_lower", percent: 40 },
+  { muscle: "front_delts", percent: 16 },
+  { muscle: "chest_upper", percent: 14 },
+  { muscle: "triceps_lateral", percent: 9 },
+  { muscle: "triceps_medial", percent: 8 },
+  { muscle: "serratus", percent: 5 },
+  { muscle: "triceps_long", percent: 4 },
+  { muscle: "side_delts", percent: 2 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P18 = [
+  { muscle: "chest_upper", percent: 36 },
+  { muscle: "front_delts", percent: 22 },
+  { muscle: "chest_lower", percent: 10 },
+  { muscle: "triceps_lateral", percent: 10 },
+  { muscle: "triceps_medial", percent: 9 },
+  { muscle: "serratus", percent: 6 },
+  { muscle: "triceps_long", percent: 3 },
+  { muscle: "side_delts", percent: 2 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P19 = [
+  { muscle: "chest_upper", percent: 30 },
+  { muscle: "front_delts", percent: 24 },
+  { muscle: "triceps_lateral", percent: 12 },
+  { muscle: "triceps_medial", percent: 11 },
+  { muscle: "chest_lower", percent: 8 },
+  { muscle: "serratus", percent: 7 },
+  { muscle: "triceps_long", percent: 4 },
+  { muscle: "side_delts", percent: 2 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P20 = [
+  { muscle: "chest_upper", percent: 29 },
+  { muscle: "front_delts", percent: 23 },
+  { muscle: "triceps_lateral", percent: 12 },
+  { muscle: "chest_lower", percent: 10 },
+  { muscle: "triceps_medial", percent: 10 },
+  { muscle: "serratus", percent: 7 },
+  { muscle: "triceps_long", percent: 4 },
+  { muscle: "side_delts", percent: 3 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P21 = [
+  { muscle: "chest_upper", percent: 31 },
+  { muscle: "front_delts", percent: 23 },
+  { muscle: "chest_lower", percent: 16 },
+  { muscle: "triceps_lateral", percent: 8 },
+  { muscle: "triceps_medial", percent: 7 },
+  { muscle: "serratus", percent: 7 },
+  { muscle: "side_delts", percent: 3 },
+  { muscle: "triceps_long", percent: 3 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P22 = [
+  { muscle: "chest_upper", percent: 30 },
+  { muscle: "front_delts", percent: 22 },
+  { muscle: "chest_lower", percent: 18 },
+  { muscle: "triceps_lateral", percent: 8 },
+  { muscle: "triceps_medial", percent: 7 },
+  { muscle: "serratus", percent: 7 },
+  { muscle: "side_delts", percent: 3 },
+  { muscle: "triceps_long", percent: 3 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P23 = [
+  { muscle: "chest_lower", percent: 39 },
+  { muscle: "chest_upper", percent: 14 },
+  { muscle: "triceps_lateral", percent: 13 },
+  { muscle: "triceps_medial", percent: 12 },
+  { muscle: "front_delts", percent: 10 },
+  { muscle: "triceps_long", percent: 7 },
+  { muscle: "serratus", percent: 3 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P24 = [
+  { muscle: "chest_lower", percent: 37 },
+  { muscle: "triceps_lateral", percent: 15 },
+  { muscle: "triceps_medial", percent: 14 },
+  { muscle: "front_delts", percent: 12 },
+  { muscle: "chest_upper", percent: 8 },
+  { muscle: "triceps_long", percent: 8 },
+  { muscle: "serratus", percent: 4 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P25 = [
+  { muscle: "chest_lower", percent: 39 },
+  { muscle: "triceps_lateral", percent: 15 },
+  { muscle: "triceps_medial", percent: 13 },
+  { muscle: "front_delts", percent: 11 },
+  { muscle: "triceps_long", percent: 8 },
+  { muscle: "chest_upper", percent: 7 },
+  { muscle: "serratus", percent: 4 },
+  { muscle: "forearm_flexors", percent: 2 },
+  { muscle: "side_delts", percent: 1 }
+];
+var P26 = [
+  { muscle: "chest_lower", percent: 45 },
+  { muscle: "front_delts", percent: 11 },
+  { muscle: "triceps_lateral", percent: 11 },
+  { muscle: "triceps_medial", percent: 10 },
+  { muscle: "chest_upper", percent: 9 },
+  { muscle: "triceps_long", percent: 7 },
+  { muscle: "serratus", percent: 4 },
+  { muscle: "forearm_flexors", percent: 2 },
+  { muscle: "side_delts", percent: 1 }
+];
+var P27 = [
+  { muscle: "chest_lower", percent: 47 },
+  { muscle: "triceps_lateral", percent: 11 },
+  { muscle: "front_delts", percent: 10 },
+  { muscle: "triceps_medial", percent: 10 },
+  { muscle: "chest_upper", percent: 8 },
+  { muscle: "triceps_long", percent: 7 },
+  { muscle: "serratus", percent: 4 },
+  { muscle: "forearm_flexors", percent: 2 },
+  { muscle: "side_delts", percent: 1 }
+];
+var P28 = [
+  { muscle: "front_delts", percent: 36 },
+  { muscle: "side_delts", percent: 12 },
+  { muscle: "triceps_lateral", percent: 12 },
+  { muscle: "triceps_medial", percent: 11 },
+  { muscle: "chest_upper", percent: 10 },
+  { muscle: "traps_upper", percent: 6 },
+  { muscle: "triceps_long", percent: 5 },
+  { muscle: "serratus", percent: 5 },
+  { muscle: "forearm_flexors", percent: 2 },
+  { muscle: "rear_delts", percent: 1 }
+];
+var P29 = [
+  { muscle: "front_delts", percent: 34 },
+  { muscle: "side_delts", percent: 15 },
+  { muscle: "triceps_lateral", percent: 12 },
+  { muscle: "triceps_medial", percent: 10 },
+  { muscle: "chest_upper", percent: 8 },
+  { muscle: "traps_upper", percent: 7 },
+  { muscle: "triceps_long", percent: 5 },
+  { muscle: "serratus", percent: 5 },
+  { muscle: "rear_delts", percent: 2 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P30 = [
+  { muscle: "front_delts", percent: 35 },
+  { muscle: "side_delts", percent: 16 },
+  { muscle: "triceps_lateral", percent: 10 },
+  { muscle: "triceps_medial", percent: 9 },
+  { muscle: "chest_upper", percent: 9 },
+  { muscle: "traps_upper", percent: 7 },
+  { muscle: "serratus", percent: 6 },
+  { muscle: "triceps_long", percent: 4 },
+  { muscle: "rear_delts", percent: 2 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P31 = [
+  { muscle: "front_delts", percent: 34 },
+  { muscle: "side_delts", percent: 18 },
+  { muscle: "triceps_lateral", percent: 10 },
+  { muscle: "triceps_medial", percent: 9 },
+  { muscle: "chest_upper", percent: 8 },
+  { muscle: "traps_upper", percent: 7 },
+  { muscle: "serratus", percent: 6 },
+  { muscle: "triceps_long", percent: 4 },
+  { muscle: "rear_delts", percent: 2 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P32 = [
+  { muscle: "chest_lower", percent: 24 },
+  { muscle: "triceps_lateral", percent: 20 },
+  { muscle: "triceps_medial", percent: 18 },
+  { muscle: "triceps_long", percent: 12 },
+  { muscle: "front_delts", percent: 12 },
+  { muscle: "chest_upper", percent: 4 },
+  { muscle: "traps_lower", percent: 4 },
+  { muscle: "lats", percent: 3 },
+  { muscle: "forearm_flexors", percent: 3 }
+];
+var P33 = [
+  { muscle: "chest_lower", percent: 34 },
+  { muscle: "triceps_lateral", percent: 15 },
+  { muscle: "front_delts", percent: 14 },
+  { muscle: "triceps_medial", percent: 13 },
+  { muscle: "triceps_long", percent: 8 },
+  { muscle: "chest_upper", percent: 5 },
+  { muscle: "traps_lower", percent: 4 },
+  { muscle: "lats", percent: 4 },
+  { muscle: "forearm_flexors", percent: 3 }
+];
+var P34 = [
+  { muscle: "chest_lower", percent: 53 },
+  { muscle: "chest_upper", percent: 23 },
+  { muscle: "front_delts", percent: 15 },
+  { muscle: "serratus", percent: 4 },
+  { muscle: "biceps", percent: 3 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P35 = [
+  { muscle: "rear_delts", percent: 42 },
+  { muscle: "traps_middle", percent: 22 },
+  { muscle: "traps_lower", percent: 10 },
+  { muscle: "infraspinatus", percent: 10 },
+  { muscle: "teres", percent: 6 },
+  { muscle: "side_delts", percent: 5 },
+  { muscle: "traps_upper", percent: 3 },
+  { muscle: "forearm_flexors", percent: 2 }
+];
+var P36 = [
+  { muscle: "vastus_lateralis", percent: 25 },
+  { muscle: "vastus_medialis", percent: 23 },
+  { muscle: "glutes", percent: 18 },
+  { muscle: "rectus_femoris", percent: 12 },
+  { muscle: "adductors", percent: 8 },
+  { muscle: "soleus", percent: 4 },
+  { muscle: "hamstrings_lateral", percent: 3 },
+  { muscle: "hamstrings_medial", percent: 3 },
+  { muscle: "gastrocnemius", percent: 3 },
+  { muscle: "glute_medius", percent: 1 }
+];
+var P37 = [
+  { muscle: "glutes", percent: 30 },
+  { muscle: "vastus_lateralis", percent: 18 },
+  { muscle: "vastus_medialis", percent: 17 },
+  { muscle: "adductors", percent: 16 },
+  { muscle: "rectus_femoris", percent: 8 },
+  { muscle: "glute_medius", percent: 3 },
+  { muscle: "hamstrings_lateral", percent: 3 },
+  { muscle: "hamstrings_medial", percent: 3 },
+  { muscle: "gastrocnemius", percent: 1 },
+  { muscle: "soleus", percent: 1 }
+];
+var P38 = [
+  { muscle: "glutes", percent: 24 },
+  { muscle: "vastus_lateralis", percent: 22 },
+  { muscle: "vastus_medialis", percent: 20 },
+  { muscle: "adductors", percent: 12 },
+  { muscle: "rectus_femoris", percent: 10 },
+  { muscle: "hamstrings_lateral", percent: 3 },
+  { muscle: "hamstrings_medial", percent: 3 },
+  { muscle: "glute_medius", percent: 2 },
+  { muscle: "gastrocnemius", percent: 2 },
+  { muscle: "soleus", percent: 2 }
+];
+var P39 = [
+  { muscle: "vastus_lateralis", percent: 28 },
+  { muscle: "vastus_medialis", percent: 26 },
+  { muscle: "glutes", percent: 16 },
+  { muscle: "rectus_femoris", percent: 12 },
+  { muscle: "adductors", percent: 9 },
+  { muscle: "hamstrings_lateral", percent: 2 },
+  { muscle: "hamstrings_medial", percent: 2 },
+  { muscle: "lower_back", percent: 2 },
+  { muscle: "soleus", percent: 2 },
+  { muscle: "glute_medius", percent: 1 }
+];
+var P40 = [
+  { muscle: "glutes", percent: 25 },
+  { muscle: "vastus_lateralis", percent: 21 },
+  { muscle: "vastus_medialis", percent: 20 },
+  { muscle: "adductors", percent: 16 },
+  { muscle: "rectus_femoris", percent: 8 },
+  { muscle: "glute_medius", percent: 3 },
+  { muscle: "hamstrings_lateral", percent: 2 },
+  { muscle: "hamstrings_medial", percent: 2 },
+  { muscle: "lower_back", percent: 2 },
+  { muscle: "soleus", percent: 1 }
+];
+var P41 = [
+  { muscle: "vastus_lateralis", percent: 25 },
+  { muscle: "vastus_medialis", percent: 23 },
+  { muscle: "glutes", percent: 20 },
+  { muscle: "adductors", percent: 12 },
+  { muscle: "rectus_femoris", percent: 10 },
+  { muscle: "glute_medius", percent: 2 },
+  { muscle: "hamstrings_lateral", percent: 2 },
+  { muscle: "hamstrings_medial", percent: 2 },
+  { muscle: "lower_back", percent: 2 },
+  { muscle: "soleus", percent: 2 }
+];
+var P42 = [
+  { muscle: "vastus_lateralis", percent: 24 },
+  { muscle: "vastus_medialis", percent: 22 },
+  { muscle: "glutes", percent: 20 },
+  { muscle: "rectus_femoris", percent: 11 },
+  { muscle: "adductors", percent: 10 },
+  { muscle: "hamstrings_lateral", percent: 3 },
+  { muscle: "hamstrings_medial", percent: 3 },
+  { muscle: "soleus", percent: 3 },
+  { muscle: "glute_medius", percent: 2 },
+  { muscle: "lower_back", percent: 2 }
+];
+var P43 = [
+  { muscle: "glutes", percent: 28 },
+  { muscle: "vastus_lateralis", percent: 18 },
+  { muscle: "adductors", percent: 18 },
+  { muscle: "vastus_medialis", percent: 16 },
+  { muscle: "rectus_femoris", percent: 7 },
+  { muscle: "glute_medius", percent: 4 },
+  { muscle: "hamstrings_lateral", percent: 3 },
+  { muscle: "hamstrings_medial", percent: 3 },
+  { muscle: "lower_back", percent: 2 },
+  { muscle: "soleus", percent: 1 }
+];
+var P44 = [
+  { muscle: "glutes", percent: 24 },
+  { muscle: "vastus_lateralis", percent: 21 },
+  { muscle: "vastus_medialis", percent: 19 },
+  { muscle: "adductors", percent: 14 },
+  { muscle: "rectus_femoris", percent: 9 },
+  { muscle: "glute_medius", percent: 3 },
+  { muscle: "hamstrings_lateral", percent: 3 },
+  { muscle: "hamstrings_medial", percent: 3 },
+  { muscle: "lower_back", percent: 2 },
+  { muscle: "soleus", percent: 2 }
+];
+var P45 = [
+  { muscle: "vastus_lateralis", percent: 36 },
+  { muscle: "vastus_medialis", percent: 34 },
+  { muscle: "rectus_femoris", percent: 30 }
+];
+var P46 = [
+  { muscle: "hamstrings_medial", percent: 47 },
+  { muscle: "hamstrings_lateral", percent: 42 },
+  { muscle: "sartorius", percent: 6 },
+  { muscle: "gastrocnemius", percent: 5 }
+];
+var P47 = [
+  { muscle: "hamstrings_lateral", percent: 41 },
+  { muscle: "hamstrings_medial", percent: 41 },
+  { muscle: "gastrocnemius", percent: 13 },
+  { muscle: "sartorius", percent: 5 }
+];
+var P48 = [
+  { muscle: "adductors", percent: 90 },
+  { muscle: "hamstrings_medial", percent: 6 },
+  { muscle: "glutes", percent: 4 }
+];
+var P49 = [
+  { muscle: "glute_medius", percent: 50 },
+  { muscle: "glutes", percent: 25 },
+  { muscle: "tfl", percent: 20 },
+  { muscle: "sartorius", percent: 5 }
+];
+var P50 = [
+  { muscle: "glutes", percent: 60 },
+  { muscle: "hamstrings_lateral", percent: 12 },
+  { muscle: "hamstrings_medial", percent: 12 },
+  { muscle: "glute_medius", percent: 8 },
+  { muscle: "lower_back", percent: 8 }
+];
+var P51 = [
+  { muscle: "glutes", percent: 62 },
+  { muscle: "hamstrings_lateral", percent: 8 },
+  { muscle: "hamstrings_medial", percent: 8 },
+  { muscle: "glute_medius", percent: 6 },
+  { muscle: "adductors", percent: 6 },
+  { muscle: "vastus_lateralis", percent: 4 },
+  { muscle: "vastus_medialis", percent: 3 },
+  { muscle: "lower_back", percent: 2 },
+  { muscle: "rectus_femoris", percent: 1 }
+];
+var P52 = [
+  { muscle: "glutes", percent: 40 },
+  { muscle: "lower_back", percent: 30 },
+  { muscle: "hamstrings_lateral", percent: 15 },
+  { muscle: "hamstrings_medial", percent: 15 }
+];
+var P53 = [
+  { muscle: "lower_back", percent: 70 },
+  { muscle: "glutes", percent: 18 },
+  { muscle: "hamstrings_lateral", percent: 6 },
+  { muscle: "hamstrings_medial", percent: 6 }
+];
+var P54 = [
+  { muscle: "gastrocnemius", percent: 65 },
+  { muscle: "soleus", percent: 35 }
+];
+var P55 = [
+  { muscle: "soleus", percent: 75 },
+  { muscle: "gastrocnemius", percent: 25 }
+];
+var P56 = [{ muscle: "tibialis", percent: 100 }];
+var P57 = [
+  { muscle: "biceps", percent: 60 },
+  { muscle: "brachialis", percent: 25 },
+  { muscle: "brachioradialis", percent: 10 },
+  { muscle: "forearm_flexors", percent: 5 }
+];
+var P58 = [
+  { muscle: "biceps", percent: 35 },
+  { muscle: "brachialis", percent: 35 },
+  { muscle: "brachioradialis", percent: 25 },
+  { muscle: "forearm_flexors", percent: 5 }
+];
+var P59 = [
+  { muscle: "brachioradialis", percent: 40 },
+  { muscle: "brachialis", percent: 35 },
+  { muscle: "biceps", percent: 15 },
+  { muscle: "forearm_extensors", percent: 10 }
+];
+var P60 = [
+  { muscle: "triceps_lateral", percent: 35 },
+  { muscle: "triceps_medial", percent: 33 },
+  { muscle: "triceps_long", percent: 32 }
+];
+var P61 = [
+  { muscle: "triceps_long", percent: 45 },
+  { muscle: "triceps_lateral", percent: 28 },
+  { muscle: "triceps_medial", percent: 27 }
+];
+var P62 = [
+  { muscle: "forearm_flexors", percent: 85 },
+  { muscle: "forearm_extensors", percent: 10 },
+  { muscle: "brachioradialis", percent: 5 }
+];
+var P63 = [
+  { muscle: "brachioradialis", percent: 50 },
+  { muscle: "forearm_flexors", percent: 25 },
+  { muscle: "forearm_extensors", percent: 25 }
+];
+var P64 = [
+  { muscle: "forearm_extensors", percent: 80 },
+  { muscle: "brachioradialis", percent: 15 },
+  { muscle: "forearm_flexors", percent: 5 }
+];
+var P65 = [
+  { muscle: "abs_upper", percent: 45 },
+  { muscle: "abs_lower", percent: 30 },
+  { muscle: "obliques", percent: 20 },
+  { muscle: "rectus_femoris", percent: 3 },
+  { muscle: "sartorius", percent: 2 }
+];
+var P66 = [
+  { muscle: "obliques", percent: 70 },
+  { muscle: "abs_upper", percent: 10 },
+  { muscle: "abs_lower", percent: 10 },
+  { muscle: "lower_back", percent: 10 }
+];
+var P67 = [
+  { muscle: "side_delts", percent: 60 },
+  { muscle: "front_delts", percent: 12 },
+  { muscle: "traps_upper", percent: 12 },
+  { muscle: "rear_delts", percent: 8 },
+  { muscle: "serratus", percent: 4 },
+  { muscle: "traps_middle", percent: 4 }
+];
+var P68 = [
+  { muscle: "lats", percent: 48 },
+  { muscle: "teres", percent: 14 },
+  { muscle: "chest_lower", percent: 14 },
+  { muscle: "triceps_long", percent: 8 },
+  { muscle: "serratus", percent: 8 },
+  { muscle: "traps_lower", percent: 4 },
+  { muscle: "abs_upper", percent: 4 }
+];
+var P70 = [
+  { muscle: "rectus_femoris", percent: 35 },
+  { muscle: "sartorius", percent: 25 },
+  { muscle: "abs_lower", percent: 20 },
+  { muscle: "tfl", percent: 10 },
+  { muscle: "abs_upper", percent: 5 },
+  { muscle: "obliques", percent: 5 }
+];
+var P69 = [
+  { muscle: "traps_upper", percent: 70 },
+  { muscle: "traps_middle", percent: 15 },
+  { muscle: "forearm_flexors", percent: 10 },
+  { muscle: "neck", percent: 5 }
+];
+var ROW_PROFILES = {
+  narrow: { supinated: P1, neutral: P2, pronated: P3 },
+  wide: { supinated: P4, neutral: P5, pronated: P6 }
+};
+var PULLDOWN_PROFILES = {
+  narrow: { supinated: P7, neutral: P8, pronated: P9 },
+  wide: { supinated: P10, neutral: P11, pronated: P12 }
+};
+var PRESS_FLAT_PROFILES = {
+  narrow: { supinated: P13, neutral: P14, pronated: P15 },
+  wide: { supinated: P13, neutral: P16, pronated: P17 }
+};
+var PRESS_INCLINE_PROFILES = {
+  narrow: { supinated: P18, neutral: P19, pronated: P20 },
+  wide: { supinated: P18, neutral: P21, pronated: P22 }
+};
+var PRESS_DECLINE_PROFILES = {
+  narrow: { supinated: P23, neutral: P24, pronated: P25 },
+  wide: { supinated: P23, neutral: P26, pronated: P27 }
+};
+var SHOULDER_PRESS_PROFILES = {
+  narrow: { supinated: P28, neutral: P28, pronated: P29 },
+  wide: { supinated: P30, neutral: P30, pronated: P31 }
+};
+var DIP_PROFILES = {
+  narrow: { supinated: P32, neutral: P32, pronated: P32 },
+  wide: { supinated: P33, neutral: P33, pronated: P33 }
+};
+var FLY_PROFILES = {
+  narrow: { supinated: P34, neutral: P34, pronated: P34 },
+  wide: { supinated: P34, neutral: P34, pronated: P34 }
+};
+var REVERSE_FLY_PROFILES = {
+  narrow: { supinated: P35, neutral: P35, pronated: P35 },
+  wide: { supinated: P35, neutral: P35, pronated: P35 }
+};
+var LEG_PRESS_PROFILES = {
+  narrow: { supinated: P36, neutral: P36, pronated: P36 },
+  wide: { supinated: P37, neutral: P37, pronated: P37 },
+  standard: P38
+};
+var HACK_SQUAT_PROFILES = {
+  narrow: { supinated: P39, neutral: P39, pronated: P39 },
+  wide: { supinated: P40, neutral: P40, pronated: P40 },
+  standard: P41
+};
+var BELT_SQUAT_PROFILES = {
+  narrow: { supinated: P42, neutral: P42, pronated: P42 },
+  wide: { supinated: P43, neutral: P43, pronated: P43 },
+  standard: P44
+};
+var LEG_EXTENSION_PROFILES = {
+  narrow: { supinated: P45, neutral: P45, pronated: P45 },
+  wide: { supinated: P45, neutral: P45, pronated: P45 }
+};
+var LEG_CURL_SEATED_PROFILES = {
+  narrow: { supinated: P46, neutral: P46, pronated: P46 },
+  wide: { supinated: P46, neutral: P46, pronated: P46 }
+};
+var LEG_CURL_LYING_PROFILES = {
+  narrow: { supinated: P47, neutral: P47, pronated: P47 },
+  wide: { supinated: P47, neutral: P47, pronated: P47 }
+};
+var ADDUCTION_PROFILES = {
+  narrow: { supinated: P48, neutral: P48, pronated: P48 },
+  wide: { supinated: P48, neutral: P48, pronated: P48 }
+};
+var ABDUCTION_PROFILES = {
+  narrow: { supinated: P49, neutral: P49, pronated: P49 },
+  wide: { supinated: P49, neutral: P49, pronated: P49 }
+};
+var GLUTE_KICK_PROFILES = {
+  narrow: { supinated: P50, neutral: P50, pronated: P50 },
+  wide: { supinated: P50, neutral: P50, pronated: P50 }
+};
+var HIP_THRUST_PROFILES = {
+  narrow: { supinated: P51, neutral: P51, pronated: P51 },
+  wide: { supinated: P51, neutral: P51, pronated: P51 }
+};
+var REVERSE_HYPER_PROFILES = {
+  narrow: { supinated: P52, neutral: P52, pronated: P52 },
+  wide: { supinated: P52, neutral: P52, pronated: P52 }
+};
+var BACK_EXTENSION_PROFILES = {
+  narrow: { supinated: P53, neutral: P53, pronated: P53 },
+  wide: { supinated: P53, neutral: P53, pronated: P53 }
+};
+var CALF_STANDING_PROFILES = {
+  narrow: { supinated: P54, neutral: P54, pronated: P54 },
+  wide: { supinated: P54, neutral: P54, pronated: P54 }
+};
+var CALF_SEATED_PROFILES = {
+  narrow: { supinated: P55, neutral: P55, pronated: P55 },
+  wide: { supinated: P55, neutral: P55, pronated: P55 }
+};
+var TIBIALIS_PROFILES = {
+  narrow: { supinated: P56, neutral: P56, pronated: P56 },
+  wide: { supinated: P56, neutral: P56, pronated: P56 }
+};
+var BICEPS_CURL_PROFILES = {
+  narrow: { supinated: P57, neutral: P58, pronated: P59 },
+  wide: { supinated: P57, neutral: P58, pronated: P59 }
+};
+var TRICEPS_PROFILES = {
+  narrow: { supinated: P60, neutral: P60, pronated: P60 },
+  wide: { supinated: P60, neutral: P60, pronated: P60 }
+};
+var TRICEPS_OVERHEAD_PROFILES = {
+  narrow: { supinated: P61, neutral: P61, pronated: P61 },
+  wide: { supinated: P61, neutral: P61, pronated: P61 }
+};
+var FOREARM_PROFILES = {
+  narrow: { supinated: P62, neutral: P63, pronated: P64 },
+  wide: { supinated: P62, neutral: P63, pronated: P64 }
+};
+var CRUNCH_PROFILES = {
+  narrow: { supinated: P65, neutral: P65, pronated: P65 },
+  wide: { supinated: P65, neutral: P65, pronated: P65 }
+};
+var ROTATION_PROFILES = {
+  narrow: { supinated: P66, neutral: P66, pronated: P66 },
+  wide: { supinated: P66, neutral: P66, pronated: P66 }
+};
+var LATERAL_RAISE_PROFILES = {
+  narrow: { supinated: P67, neutral: P67, pronated: P67 },
+  wide: { supinated: P67, neutral: P67, pronated: P67 }
+};
+var PULLOVER_PROFILES = {
+  narrow: { supinated: P68, neutral: P68, pronated: P68 },
+  wide: { supinated: P68, neutral: P68, pronated: P68 }
+};
+var SHRUG_PROFILES = {
+  narrow: { supinated: P69, neutral: P69, pronated: P69 },
+  wide: { supinated: P69, neutral: P69, pronated: P69 }
+};
+var HIP_FLEXION_PROFILES = {
+  narrow: { supinated: P70, neutral: P70, pronated: P70 },
+  wide: { supinated: P70, neutral: P70, pronated: P70 }
+};
+var P_DEADLIFT = [
+  { muscle: "glutes", percent: 24 },
+  { muscle: "lower_back", percent: 18 },
+  { muscle: "hamstrings_lateral", percent: 13 },
+  { muscle: "hamstrings_medial", percent: 13 },
+  { muscle: "adductors", percent: 7 },
+  { muscle: "vastus_lateralis", percent: 6 },
+  { muscle: "vastus_medialis", percent: 5 },
+  { muscle: "traps_upper", percent: 4 },
+  { muscle: "traps_middle", percent: 3 },
+  { muscle: "forearm_flexors", percent: 3 },
+  { muscle: "rectus_femoris", percent: 2 },
+  { muscle: "lats", percent: 2 }
+];
+var DEADLIFT_PROFILES = {
+  narrow: { supinated: P_DEADLIFT, neutral: P_DEADLIFT, pronated: P_DEADLIFT },
+  wide: { supinated: P_DEADLIFT, neutral: P_DEADLIFT, pronated: P_DEADLIFT },
+  standard: P_DEADLIFT
+};
+var P_SISSY_SQUAT = [
+  { muscle: "vastus_lateralis", percent: 30 },
+  { muscle: "rectus_femoris", percent: 30 },
+  { muscle: "vastus_medialis", percent: 28 },
+  { muscle: "abs_lower", percent: 4 },
+  { muscle: "glutes", percent: 4 },
+  { muscle: "adductors", percent: 4 }
+];
+var SISSY_SQUAT_PROFILES = {
+  narrow: { supinated: P_SISSY_SQUAT, neutral: P_SISSY_SQUAT, pronated: P_SISSY_SQUAT },
+  wide: { supinated: P_SISSY_SQUAT, neutral: P_SISSY_SQUAT, pronated: P_SISSY_SQUAT },
+  standard: P_SISSY_SQUAT
+};
+var P_ROTATOR_CUFF = [
+  { muscle: "infraspinatus", percent: 55 },
+  { muscle: "rear_delts", percent: 20 },
+  { muscle: "teres", percent: 15 },
+  { muscle: "traps_middle", percent: 5 },
+  { muscle: "traps_lower", percent: 5 }
+];
+var ROTATOR_CUFF_PROFILES = {
+  narrow: { supinated: P_ROTATOR_CUFF, neutral: P_ROTATOR_CUFF, pronated: P_ROTATOR_CUFF },
+  wide: { supinated: P_ROTATOR_CUFF, neutral: P_ROTATOR_CUFF, pronated: P_ROTATOR_CUFF },
+  standard: P_ROTATOR_CUFF
+};
+var P_NECK = [
+  { muscle: "neck", percent: 75 },
+  { muscle: "traps_upper", percent: 25 }
+];
+var NECK_PROFILES = {
+  narrow: { supinated: P_NECK, neutral: P_NECK, pronated: P_NECK },
+  wide: { supinated: P_NECK, neutral: P_NECK, pronated: P_NECK },
+  standard: P_NECK
+};
+var P_STEP_UP = [
+  { muscle: "glutes", percent: 30 },
+  { muscle: "vastus_lateralis", percent: 18 },
+  { muscle: "vastus_medialis", percent: 17 },
+  { muscle: "glute_medius", percent: 8 },
+  { muscle: "rectus_femoris", percent: 7 },
+  { muscle: "adductors", percent: 6 },
+  { muscle: "hamstrings_lateral", percent: 4 },
+  { muscle: "hamstrings_medial", percent: 4 },
+  { muscle: "gastrocnemius", percent: 3 },
+  { muscle: "soleus", percent: 3 }
+];
+var STEP_UP_PROFILES = {
+  narrow: { supinated: P_STEP_UP, neutral: P_STEP_UP, pronated: P_STEP_UP },
+  wide: { supinated: P_STEP_UP, neutral: P_STEP_UP, pronated: P_STEP_UP },
+  standard: P_STEP_UP
+};
+var P_UPRIGHT_ROW = [
+  { muscle: "side_delts", percent: 40 },
+  { muscle: "traps_upper", percent: 25 },
+  { muscle: "front_delts", percent: 12 },
+  { muscle: "traps_middle", percent: 6 },
+  { muscle: "biceps", percent: 5 },
+  { muscle: "brachialis", percent: 4 },
+  { muscle: "brachioradialis", percent: 4 },
+  { muscle: "rear_delts", percent: 4 }
+];
+var UPRIGHT_ROW_PROFILES = {
+  narrow: { supinated: P_UPRIGHT_ROW, neutral: P_UPRIGHT_ROW, pronated: P_UPRIGHT_ROW },
+  wide: { supinated: P_UPRIGHT_ROW, neutral: P_UPRIGHT_ROW, pronated: P_UPRIGHT_ROW },
+  standard: P_UPRIGHT_ROW
+};
+var GRIP_PROFILES = {
+  row: ROW_PROFILES,
+  pulldown: PULLDOWN_PROFILES,
+  press_flat: PRESS_FLAT_PROFILES,
+  press_incline: PRESS_INCLINE_PROFILES,
+  press_decline: PRESS_DECLINE_PROFILES,
+  shoulder_press: SHOULDER_PRESS_PROFILES,
+  dip: DIP_PROFILES,
+  fly: FLY_PROFILES,
+  reverse_fly: REVERSE_FLY_PROFILES,
+  leg_press: LEG_PRESS_PROFILES,
+  hack_squat: HACK_SQUAT_PROFILES,
+  belt_squat: BELT_SQUAT_PROFILES,
+  leg_extension: LEG_EXTENSION_PROFILES,
+  leg_curl_seated: LEG_CURL_SEATED_PROFILES,
+  leg_curl_lying: LEG_CURL_LYING_PROFILES,
+  adduction: ADDUCTION_PROFILES,
+  abduction: ABDUCTION_PROFILES,
+  glute_kick: GLUTE_KICK_PROFILES,
+  hip_thrust: HIP_THRUST_PROFILES,
+  reverse_hyper: REVERSE_HYPER_PROFILES,
+  back_extension: BACK_EXTENSION_PROFILES,
+  calf_standing: CALF_STANDING_PROFILES,
+  calf_seated: CALF_SEATED_PROFILES,
+  tibialis: TIBIALIS_PROFILES,
+  biceps_curl: BICEPS_CURL_PROFILES,
+  triceps: TRICEPS_PROFILES,
+  triceps_overhead: TRICEPS_OVERHEAD_PROFILES,
+  forearm: FOREARM_PROFILES,
+  crunch: CRUNCH_PROFILES,
+  rotation: ROTATION_PROFILES,
+  lateral_raise: LATERAL_RAISE_PROFILES,
+  pullover: PULLOVER_PROFILES,
+  shrug: SHRUG_PROFILES,
+  hip_flexion: HIP_FLEXION_PROFILES,
+  deadlift: DEADLIFT_PROFILES,
+  sissy_squat: SISSY_SQUAT_PROFILES,
+  rotator_cuff: ROTATOR_CUFF_PROFILES,
+  neck: NECK_PROFILES,
+  step_up: STEP_UP_PROFILES,
+  upright_row: UPRIGHT_ROW_PROFILES
+};
+var PATTERN_MACHINE_IDS = {
+  row: /* @__PURE__ */ new Set([
+    "prime-evolution-seated-row",
+    // PRIME Fitness – Evolution | Seated Row
+    "prime-hybrid-seated-row",
+    // PRIME Fitness – Hybrid | Seated Row
+    "prime-plate-loaded-extreme-row",
+    // PRIME Fitness – Plate Loaded | Extreme Row
+    "prime-plate-loaded-seated-row",
+    // PRIME Fitness – Plate Loaded | Seated Row
+    "gym80-3039",
+    // gym80 – 3039 Rudermaschine ohne Brustpolster
+    "gym80-3040",
+    // gym80 – 3040 Rudermaschine
+    "gym80-3045",
+    // gym80 – 3045 Rudermaschine Dual
+    "gym80-4016",
+    // gym80 – 4016 Ruderstation
+    "gym80-4900",
+    // gym80 – 4900 Incline Row Combo
+    "gym80-4018",
+    // gym80 – 4018 Rudermaschine T-Bar
+    "gym80-4318",
+    // gym80 – 4318 Bodenhantel Multi-Grip
+    "gym80-4319",
+    // gym80 – 4319 Low Row Dual
+    "gym80-4322",
+    // gym80 – 4322 Rudermaschine Sitzend Dual
+    "gym80-4327",
+    // gym80 – 4327 Power Row Dual
+    "gym80-4383",
+    // gym80 – 4383 55 Grad Rudermaschine
+    "gym80-5907",
+    // gym80 – 5907 Rudermaschine Stehend
+    "technogym-mk80eh",
+    // Technogym – Artis Low Row
+    "technogym-mk46eh",
+    // Technogym – Artis Rear Delt Row
+    "technogym-mnhc",
+    // Technogym – Selection 700 Low Row
+    "technogym-mnhp",
+    // Technogym – Selection 900 Low Row
+    "technogym-c98000-anvk",
+    // Technogym – Selection Low Row Med
+    "technogym-mg25",
+    // Technogym – Pure Strength Low Row
+    "technogym-mg30",
+    // Technogym – Pure Strength Row
+    "technogym-pg12",
+    // Technogym – T Bar Row
+    "lifefitness-axiom-series-seated-row",
+    // Life Fitness – Axiom Series - Seated Row
+    "lifefitness-hammer-strength-mts-iso-lateral-row",
+    // Life Fitness – MTS Iso-Lateral Row
+    "lifefitness-hammer-strength-select-seated-row",
+    // Life Fitness – Hammer Strength Select Seated Row
+    "lifefitness-insignia-series-row",
+    // Life Fitness – Insignia Series Row
+    "lifefitness-plate-loaded-iso-lateral-low-row",
+    // Life Fitness – Iso-Lateral Low Row
+    "lifefitness-iso-lateral-t-bar-row",
+    // Life Fitness – Iso-Lateral T-Bar Row
+    "lifefitness-plate-loaded-iso-lateral-d-y-row",
+    // Life Fitness – Plate Loaded Iso-Lateral D.Y. Row
+    "lifefitness-plate-loaded-iso-lateral-row",
+    // Life Fitness – Plate Loaded Iso-Lateral Row
+    "lifefitness-hammer-strength-plate-loaded-t-bar-row",
+    // Life Fitness – T-Bar Row
+    "lifefitness-life-fitness-row",
+    // Life Fitness – Plate Loaded Row
+    "atlantis-ms13a",
+    // Atlantis – MS13A Unilateral Low Row (NM510 Model) A
+    "atlantis-ms13b",
+    // Atlantis – MS13B Unilateral Low Row (NM510 Model) B
+    "atlantis-ms7a",
+    // Atlantis – MS7A Low Row (D124 Model) A
+    "atlantis-ms7b",
+    // Atlantis – MS7B Low Row (D124 Model) B
+    "atlantis-ms8a",
+    // Atlantis – MS8A Incline Row (D132 Model) A
+    "atlantis-ms8b",
+    // Atlantis – MS8B Incline Row (D132 Model) B
+    "atlantis-d124",
+    // Atlantis – D124 Low row
+    "atlantis-d132",
+    // Atlantis – D132 Incline row
+    "atlantis-d337",
+    // Atlantis – D337 Diverging row
+    "atlantis-d433",
+    // Atlantis – D433 Vertical row
+    "atlantis-pw437",
+    // Atlantis – PW437 Row
+    "atlantis-pw625",
+    // Atlantis – PW625 Incline T-Bar Row
+    "atlantis-pw637",
+    // Atlantis – PW637 Low row
+    "newtech-seated-row",
+    // Newtech – OnHim Seated Row
+    "newtech-seated-row-inward",
+    // Newtech – OnHim Seated Row (Inward)
+    "newtech-seated-row-outward",
+    // Newtech – OnHim Seated Row (Outward)
+    "newtech-two-way-row",
+    // Newtech – Torture 2 Way Row
+    "newtech-front-row",
+    // Newtech – Torture Front Row
+    "newtech-torture-linear-t-bar-row",
+    // Newtech – Torture Linear T-Bar Row
+    "newtech-low-row-2-r",
+    // Newtech – Torture Low Row (Rotary)
+    "newtech-torture-low-row-2",
+    // Newtech – Torture Low Row 2
+    "newtech-seated-row-2",
+    // Newtech – Torture Seated Row
+    "newtech-standing-seated-low-combo",
+    // Newtech – Torture Standing & Seated Row Combo
+    "newtech-torture-twist-row",
+    // Newtech – Torture Twist Row
+    "newtech-t-bar-row",
+    // Newtech – T-Bar Row
+    "watson-animal-dual-stack-high-pulley-row",
+    // Watson – DS Animal High Pulley Row
+    "watson-animal-dual-stack-mid-to-low-row",
+    // Watson – DS Animal Mid to Low Row
+    "watson-single-stack-dual-cable-low-pulley-row",
+    // Watson – SS Dual Cable Low Pulley Row
+    "watson-single-stack-low-pulley-row",
+    // Watson – SS Low Pulley Row
+    "watson-total-access-seated-row",
+    // Watson – Total Access Seated Row
+    "watson-animal-chest-supported-t-bar-row",
+    // Watson – PL Animal Chest Supported T-Bar Row
+    "watson-animal-plate-load-lateral-row",
+    // Watson – PL Animal Lateral Row
+    "watson-plate-load-lateral-row",
+    // Watson – PL Lateral Row
+    "watson-plate-load-low-row",
+    // Watson – PL Low Row
+    "watson-plate-load-perfect-row",
+    // Watson – PL Perfect Row
+    "watson-plate-load-t-bar-row",
+    // Watson – PL T-Bar Row
+    "gymleco-210-seated-row-cable-machine",
+    // Gymleco – 210 Seated Row
+    "gymleco-214-lateral-pulldown-seated-row",
+    // Gymleco – 214 Lateral Pulldown/Seated Row
+    "gymleco-310-seated-row",
+    // Gymleco – 310 Seated Row
+    "gymleco-312-iso-lateral-low-row",
+    // Gymleco – 312 Iso Lateral Low Row
+    "gymleco-010-seated-row",
+    // Gymleco – 010 Seated Row
+    "gymleco-012-iso-lateral-low-row",
+    // Gymleco – 012 Iso Lateral Low Row
+    "gymleco-017-d-y-row",
+    // Gymleco – 017 D.Y. Row
+    "gymleco-115-t-bar-row",
+    // Gymleco – 115 T-Bar Row
+    "gymleco-116-incline-t-bar-row",
+    // Gymleco – 116 Incline T-Bar Row
+    "nautilus-nautilus-impact-low-row",
+    // Nautilus – Impact Low Row
+    "nautilus-nautilus-impact-vertical-row",
+    // Nautilus – Impact Vertikale Rudermaschine
+    "nautilus-nautilus-inspiration-vertical-row",
+    // Nautilus – Inspiration Vertical Row
+    "nautilus-nautilus-instinct-dual-lat-pull-down-vertical-row",
+    // Nautilus – Instinct Dual Lat-Zug/Vertikal-Rudern
+    "nautilus-nautilus-instinct-vertical-row",
+    // Nautilus – Instinct Vertikal-Rudern
+    "nautilus-nautilus-leverage-low-row",
+    // Nautilus – Leverage Low Row
+    "nautilus-nautilus-plate-loaded-incline-lever-row",
+    // Nautilus – Leverage Rowing
+    "crossaxes-b-4000c",
+    // CrossAxes – B-4000c Cross Axes Vertical Row
+    "milon-pump-row",
+    // milon – 05 Row
+    "panatta-pulley-row",
+    // Panatta – 1FE003 Pulley row
+    "panatta-rowing-machine-circular",
+    // Panatta – 1FE004A Rowing machine circular
+    "panatta-total-back",
+    // Panatta – 1FE008 Total Back
+    "panatta-pulley-row-double",
+    // Panatta – 1FE103 Pulley row double Stack
+    "panatta-pulley-row-2",
+    // Panatta – 1MTH003 Pulley row
+    "panatta-rowing-machine-circular-2",
+    // Panatta – 1MTH004A Rowing machine circular
+    "panatta-high-row-convergent-2",
+    // Panatta – 1MTH006 High row convergent
+    "panatta-pulley-row-3",
+    // Panatta – 1SC003 Pulley row
+    "panatta-rowing-machine-2",
+    // Panatta – 1SC004 Rowing machine
+    "panatta-dual-lat-machine-pulley-row",
+    // Panatta – 1SCD010 Dual lat machine | pulley row
+    "panatta-low-row-2",
+    // Panatta – 1FO002 Low row
+    "panatta-rowing-machine-3",
+    // Panatta – 1FO004 Rowing machine
+    "panatta-power-row-copia",
+    // Panatta – 1FO102 Power row
+    "panatta-adjustable-row-45",
+    // Panatta – 1FO304 Adjustable Row 45°
+    "panatta-super-low-row",
+    // Panatta – 1FW002 Super low row
+    "panatta-t-bar-row",
+    // Panatta – 1FW007 T-bar row
+    "panatta-super-power-row",
+    // Panatta – 1FW102 Super power row
+    "panatta-super-rowing",
+    // Panatta – 1FW104 Super Rowing
+    "panatta-super-rowing-machine-circular",
+    // Panatta – 1FW204 Super rowing circular
+    "granite-leverage-row-3-0",
+    // Granite – Leverage Row 3.0
+    "granite-xpload-compound-row-2-0",
+    // Granite – Xpload Compound Row 2.0
+    "granite-xpload-compound-row-3-0",
+    // Granite – Xpload Compound Row 3.0
+    "citadel-t-bar-row",
+    // Citadel Strength – T-Bar Row
+    "eigen-mvzdskz9-2o3p1",
+    // Fusio Strenght Engineering – Leverage middle row
+    "eigen-mw165upg-yaa1i",
+    // gym80 – Low Row
+    "eigen-mw16cb9y-5152z",
+    // gym80 – 55 Grad Rudermaschine
+    "eigen-mw16ut6c-imxnz",
+    // Panatta – Fantastic Line | Row
+    "eigen-mw1b5zv4-w4kof",
+    // Cybex – Galileo Seated Row
+    "eigen-mw1b8das-7p8by",
+    // Galaxy Sport – Row
+    "eigen-mw1ba6ii-poz0x",
+    // gym80 – Seated Row
+    "eigen-mw1bd69p-bcx8b",
+    // L+K – Seated Row
+    "eigen-mw1bgko8-z25w4",
+    // Nautilus – Seated Row
+    "eigen-mw1bjw39-qaipd",
+    // Paramount – DRP 600 Low Row
+    "gym80-5003",
+    // gym80 – Innovation Rudermaschine (zugeordnet 13.11.2026)
+    "technogym-mn1p",
+    // Technogym – Selection 900 Upper Back (zugeordnet 13.11.2026)
+    "technogym-c94600-anvk",
+    // Technogym – Selection Upper Back Med (zugeordnet 13.11.2026)
+    "eigen-01a18e87-b438-7056-ab2a-7283cb421cdf",
+    // Eigene – Citadel High Row (zugeordnet 13.11.2026)
+    "panatta-dorsy-bar",
+    // Panatta – Dorsy Bar (zugeordnet 13.11.2026)
+    "panatta-super-dorsy-bar",
+    // Panatta – Super dorsy bar (zugeordnet 13.11.2026)
+    "panatta-front-dorsy-bar",
+    // Panatta – Front dorsy bar (zugeordnet 13.11.2026)
+    "eigen-mw4viggu-r24n7",
+    // Cybex – Eagle Row (zugeordnet 13.11.2026)
+    "eigen-mw4w0rj6-3demt",
+    // Hammer Strenght – Iso Lateral D.Y. Row (zugeordnet 13.11.2026)
+    "eigen-mw4w3hk1-w9kz7",
+    // EliteFTS – T-Bar Row (zugeordnet 13.11.2026)
+    "eigen-mw4w5fpj-mdyyl",
+    // Gym80 – T-Bar Row (zugeordnet 13.11.2026)
+    "eigen-mw55dwh8-u5chs"
+    // ZKC – Bench row (zugeordnet 13.11.2026)
+  ]),
+  pulldown: /* @__PURE__ */ new Set([
+    "prime-evolution-lat-pulldown",
+    // PRIME Fitness – Evolution | Lat Pulldown
+    "prime-hybrid-lat-pulldown",
+    // PRIME Fitness – Hybrid | Lat Pulldown
+    "prime-plate-loaded-lat-pulldown",
+    // PRIME Fitness – Plate Loaded | Lat Pulldown
+    "prime-plate-loaded-pulldown",
+    // PRIME Fitness – Plate Loaded | Pulldown
+    "gym80-3020",
+    // gym80 – 3020 Rückenzugmaschine
+    "gym80-3044",
+    // gym80 – 3044 Rückenzugmaschine Dual
+    "gym80-4116",
+    // gym80 – 4116 Rückenzugstation
+    "gym80-4311",
+    // gym80 – 4311 Rückenzugmaschine Dual
+    "gym80-5908",
+    // gym80 – 5908 Rückenzug
+    "technogym-mk12eh",
+    // Technogym – Artis Lat Machine
+    "technogym-mk71eh",
+    // Technogym – Artis Vertical Traction
+    "technogym-mnlc",
+    // Technogym – Selection 700 Lat Machine
+    "technogym-mngc",
+    // Technogym – Selection 700 Vertical Traction
+    "technogym-mnlp",
+    // Technogym – Selection 900 Lat Machine
+    "technogym-mnvp",
+    // Technogym – Selection 900 Pulldown
+    "technogym-mngp",
+    // Technogym – Selection 900 Vertical Traction
+    "technogym-c91200-anvk",
+    // Technogym – Selection Lat Machine Med
+    "technogym-c97100-anvk",
+    // Technogym – Selection Vertical Traction Med
+    "technogym-mg20",
+    // Technogym – Pure Strength Pulldown
+    "lifefitness-axiom-series-lat-pulldown",
+    // Life Fitness – Axiom Series - Lat Pulldown
+    "lifefitness-hammer-strength-mts-iso-lateral-front-pulldown",
+    // Life Fitness – MTS Iso-Lateral Front Pulldown
+    "lifefitness-hammer-strength-select-fixed-pulldown",
+    // Life Fitness – Hammer Strength Select Fixed Pulldown
+    "lifefitness-hammer-strength-select-lat-pulldown",
+    // Life Fitness – Hammer Strength Select Lat Pulldown
+    "lifefitness-insignia-series-pulldown",
+    // Life Fitness – Insignia Series Pulldown
+    "lifefitness-insignia-series-dual-axis-pulldown",
+    // Life Fitness – Insignia Series Pulldown - Dual Axis
+    "lifefitness-plate-loaded-iso-lateral-wide-pulldown",
+    // Life Fitness – Iso-Lateral Wide Pulldown
+    "lifefitness-plate-loaded-iso-lateral-front-lat-pulldown",
+    // Life Fitness – Plate Loaded Iso-Lateral Front Lat Pulldown
+    "lifefitness-life-fitness-front-pulldown",
+    // Life Fitness – Plate Loaded Front Pulldown
+    "atlantis-ms12a",
+    // Atlantis – MS12A Unilateral Lat Pulldown (NM500 Model) A
+    "atlantis-ms12b",
+    // Atlantis – MS12B Unilateral Lat Pulldown (NM500 Model) B
+    "atlantis-ms6a",
+    // Atlantis – MS6A Lat Pulldown (D123 Model) A
+    "atlantis-ms6b",
+    // Atlantis – MS6B Lat Pulldown (D123 Model) A
+    "atlantis-d123",
+    // Atlantis – D123 Lat pulldown
+    "atlantis-pw423",
+    // Atlantis – PW423 Front pulldown
+    "atlantis-pw623",
+    // Atlantis – PW623 Unilateral Lat Pulldown
+    "newtech-advance-pro-lat-pulldown",
+    // Newtech – OnHim Advance Pro Lat Pulldown
+    "newtech-lat-pulldown-high-pulley",
+    // Newtech – OnHim Lat Pulldown (High Pulley)
+    "newtech-vertical-pull-down",
+    // Newtech – Torture Vertical Pull Down
+    "newtech-wide-pulldown-front",
+    // Newtech – Torture Wide Pulldown Front
+    "newtech-wide-pulldown-rear-2",
+    // Newtech – Torture Wide Pulldown Rear 2
+    "watson-animal-dual-stack-front-pulldown",
+    // Watson – DS Animal Front Pulldown
+    "watson-animal-dual-stack-lat-pulldown",
+    // Watson – DS Animal Lat Pulldown
+    "watson-single-stack-dual-cable-lat-pulldown",
+    // Watson – SS Dual Cable Lat Pulldown
+    "watson-single-stack-lat-pulldown",
+    // Watson – SS Lat Pulldown
+    "watson-total-access-lat-pulldown",
+    // Watson – Total Access Lat Pulldown
+    "watson-plate-load-front-pulldown",
+    // Watson – PL Front Pulldown
+    "gymleco-211-lateral-pulldown",
+    // Gymleco – 211 Lateral Pulldown
+    "gymleco-211r-lateral-pulldown-rehab",
+    // Gymleco – 211R Lateral Pulldown, Adjustable
+    "gymleco-311-iso-lateral-pulldown",
+    // Gymleco – 311 Iso Lateral Pulldown
+    "gymleco-011-iso-lateral-pulldown",
+    // Gymleco – 011 Iso Lateral Pulldown
+    "nautilus-nautilus-humansport-lat-pulley",
+    // Nautilus – HumanSport Lat Pulley
+    "nautilus-nautilus-impact-fixed-lat-pull-down",
+    // Nautilus – Impact Fixed Lat Pull Down
+    "nautilus-nautilus-impact-lat-pull-down",
+    // Nautilus – Impact Latzug
+    "nautilus-nautilus-inspiration-lat-pull-down",
+    // Nautilus – Inspiration Latzug
+    "nautilus-nautilus-instinct-lat-pull-down",
+    // Nautilus – Instinct Lat-Zug
+    "nautilus-nautilus-leverage-lat-pull-down",
+    // Nautilus – Leverage Pull Down
+    "eigen-mw1b17h1-4eqyr",
+    // Nautilus – Lat Pulldown
+    "panatta-fantastic-lat-machine",
+    // Panatta – 1FT001 Lat Machine
+    "panatta-lat-pulldown",
+    // Panatta – 1FE001 Lat pulldown
+    "panatta-lat-pulldown-2",
+    // Panatta – 1MTH001 Lat pulldown
+    "panatta-lat-pulldown-3",
+    // Panatta – 1SC001 Lat pulldown
+    "panatta-lat-pulldown-circular",
+    // Panatta – 1FE002 Lat pulldown circular
+    "panatta-lat-pulldown-circular-2",
+    // Panatta – 1MTH002 Lat pulldown circular
+    "panatta-lat-pulldown-circular-3",
+    // Panatta – 1FO101 Lat pulldown circular
+    "panatta-lat-pulldown-convergent",
+    // Panatta – 1FE007 Lat pulldown convergent
+    "panatta-lat-pulldown-convergent-2",
+    // Panatta – 1MTH007 Lat pulldown convergent
+    "panatta-lat-pulldown-double",
+    // Panatta – 1FE101 Lat pulldown double Stack
+    "panatta-lat-machine-convergent-2",
+    // Panatta – 1FO001 Lat machine convergent
+    "panatta-super-lat-pulldown-circular",
+    // Panatta – 1FW101 Super lat pulldown circular
+    "granite-leverage-pulldown",
+    // Granite – Leverage Pulldown
+    "granite-leverage-pulldown-2-0",
+    // Granite – Leverage Pulldown 2.0
+    "granite-xpload-pulldown-2-0",
+    // Granite – Xpload Pulldown 2.0
+    "citadel-lat-pulldown",
+    // Citadel Strength – Lat Pulldown
+    "citadel-vertical-pulldown",
+    // Citadel Strength – Vertical Pulldown
+    "crossaxes-b-2000c",
+    // CrossAxes – B-2000c Cross Axes Pulldown
+    "milon-pump-pull-down",
+    // milon – 09 Pull Down
+    "gym80-4340",
+    // gym80 – 4340 High Row Dual
+    "gym80-4382",
+    // gym80 – 4382 High Row mit Beweglichen Griffen
+    "lifefitness-plate-loaded-iso-lateral-high-row",
+    // Life Fitness – Iso-Lateral High Row
+    "lifefitness-hammer-strength-mts-iso-lateral-high-row",
+    // Life Fitness – MTS Iso-Lateral High Row
+    "lifefitness-life-fitness-high-row",
+    // Life Fitness – Plate Loaded High Row
+    "newtech-high-row",
+    // Newtech – Torture High Row
+    "gymleco-013-iso-lateral-high-row",
+    // Gymleco – 013 Iso Lateral High Row
+    "nautilus-nautilus-leverage-high-row",
+    // Nautilus – Leverage Row
+    "panatta-high-row-convergent",
+    // Panatta – 1FE006 High row convergent
+    "panatta-high-row-2",
+    // Panatta – 1FO003 High row
+    "panatta-super-high-row",
+    // Panatta – 1FW003 Super high row
+    "lifefitness-axiom-series-lat-pulldown-low-row",
+    // Life Fitness – Axiom Series - Lat Pulldown/Low Row
+    "lifefitness-hd-elite-dual-pulldown-row",
+    // Life Fitness – Pulldown / Row
+    "atlantis-d438",
+    // Atlantis – D438 Lat pulldown/ Low row combo (heavy stack)
+    "watson-lat-pulldown-low-pulley",
+    // Watson – SS Lat Pulldown / Low Pulley Row
+    "gym80-5015",
+    // gym80 – 5015 Schulter und Latzug Combo
+    "gymleco-911-pulldown-shoulder-press",
+    // Gymleco – 911 Pulldown/Shoulder Press
+    "panatta-lat-pulley-module",
+    // Panatta – 4GRDFC51 Lat/ pulley module
+    "gym80-3047",
+    // gym80 – Iso Lat (zugeordnet 13.11.2026)
+    "atlantis-ms10",
+    // Atlantis – Chin-up beam (zugeordnet 13.11.2026)
+    "eigen-01a18e87-b44b-77d4-bbf2-25bf7ca52e93",
+    // Eigene – Klimmzüge (zugeordnet 13.11.2026)
+    "panatta-pang-machine",
+    // Panatta – Pang machine (zugeordnet 13.11.2026)
+    "eigen-mvwxzejn-g00rq"
+    // gym80 – Assisted Standing Pull Up Machine (zugeordnet 13.11.2026)
+  ]),
+  press_flat: /* @__PURE__ */ new Set([
+    "prime-evolution-chest-press",
+    // PRIME Fitness – Evolution | Chest Press
+    "prime-hybrid-chest-press",
+    // PRIME Fitness – Hybrid | Chest Press
+    "prime-plate-loaded-chest-press",
+    // PRIME Fitness – Plate Loaded | Chest Press
+    "gym80-3016",
+    // gym80 – 3016 Brustpresse
+    "gym80-3097",
+    // gym80 – 3097 Inner Chest Press
+    "gym80-3041",
+    // gym80 – 3041 Brustpresse Dual
+    "gym80-4328",
+    // gym80 – 4328 Bankdrückmaschine Sitzend Dual
+    "gym80-4331",
+    // gym80 – 4331 Drückbank Liegend Dual
+    "gym80-4376",
+    // gym80 – 4376 Inner Chest Liegend Dual
+    "gym80-4364",
+    // gym80 – 4364 Drückbank Dual
+    "gym80-5901",
+    // gym80 – 5901 Brustpresse Stehend
+    "gym80-80a00009",
+    // gym80 – 80A00009 Verstellbare Drückbank
+    "gym80-80a00014",
+    // gym80 – 80A00014 Stehende Brustpresse
+    "technogym-mk70eh",
+    // Technogym – Artis Chest Press
+    "technogym-mnfc",
+    // Technogym – Selection 700 Chest Press
+    "technogym-mnfp",
+    // Technogym – Selection 900 Chest Press
+    "technogym-c97000-anvk",
+    // Technogym – Selection Chest Press Med
+    "technogym-mg05",
+    // Technogym – Pure Strength Chest Press
+    "technogym-mg10",
+    // Technogym – Pure Strength Wide Chest Press
+    "lifefitness-axiom-series-chest-press",
+    // Life Fitness – Axiom Series - Chest Press
+    "lifefitness-axiom-series-multi-press",
+    // Life Fitness – Axiom Series - Multi-Press
+    "lifefitness-hammer-strength-mts-iso-lateral-chest-press",
+    // Life Fitness – MTS Iso-Lateral Chest Press
+    "lifefitness-hammer-strength-select-chest-press",
+    // Life Fitness – Hammer Strength Select Chest Press
+    "lifefitness-insignia-series-chest-press",
+    // Life Fitness – Insignia Series Chest Press
+    "lifefitness-insignia-series-dual-axis-chest-press",
+    // Life Fitness – Insignia Series Chest Press - Dual Axis
+    "lifefitness-plate-loaded-iso-lateral-horizontal-bench-press",
+    // Life Fitness – Iso-Lateral Horizontal Bench Press
+    "lifefitness-plate-loaded-iso-lateral-wide-chest",
+    // Life Fitness – Iso-Lateral Wide Chest
+    "lifefitness-plate-loaded-iso-lateral-bench-press",
+    // Life Fitness – Plate Loaded Iso-Lateral Bench Press
+    "lifefitness-plate-loaded-iso-lateral-chest-back",
+    // Life Fitness – Plate Loaded Iso-Lateral Chest/Back
+    "atlantis-p140",
+    // Atlantis – P140 Seated converging chest press
+    "atlantis-p439",
+    // Atlantis – P439 Decline / Flat converging bench press
+    "atlantis-p441",
+    // Atlantis – P441 Lying converging bench press
+    "atlantis-pw737",
+    // Atlantis – PW737 Vertical chest press
+    "newtech-seated-chest-press-1",
+    // Newtech – OnHim Chest Press (Rotary)
+    "newtech-chest-decline-combo",
+    // Newtech – Torture Chest & Decline Combo
+    "newtech-torture-chest-decline-combo-2",
+    // Newtech – Torture Chest & Decline Combo 2
+    "newtech-seated-chest-press-2",
+    // Newtech – Torture Seated Chest Press (Rotary)
+    "newtech-wide-chest-press",
+    // Newtech – Torture Wide Chest Press
+    "newtech-torture-wide-chest-press-2",
+    // Newtech – Torture Wide Chest Press 2
+    "newtech-plate-flat-press",
+    // Newtech – Plate Flat Press
+    "watson-animal-dual-stack-chest-press",
+    // Watson – DS Animal Chest Press
+    "watson-total-access-chest-press",
+    // Watson – Total Access Chest Press
+    "watson-single-stack-chest-press",
+    // Watson – SS Chest Press
+    "watson-single-stack-multi-press",
+    // Watson – SS Multi-Press
+    "watson-animal-converging-standing-chest-press",
+    // Watson – PL Animal Converging Standing Chest Press
+    "watson-plate-load-free-motion-chest-press",
+    // Watson – PL Free Motion Chest Press
+    "watson-standing-chest-press",
+    // Watson – PL Standing Chest Press
+    "gymleco-921-chest-press-back",
+    // Gymleco – 921 Chest Press/Back
+    "gymleco-321-seated-wide-chest-press",
+    // Gymleco – 321 Seated Wide Chest Press
+    "gymleco-021-seated-chest-press",
+    // Gymleco – 021 Seated Chest Press
+    "gymleco-022-iso-lateral-bench-press-horizontal",
+    // Gymleco – 022 ISO Lateral Bench Press, Horizontal
+    "gymleco-028-standing-chest-press",
+    // Gymleco – 028 Standing Chest Press
+    "nautilus-nautilus-impact-chest-press",
+    // Nautilus – Impact Chest Press
+    "nautilus-nautilus-inspiration-chest-press",
+    // Nautilus – Inspiration Brustpresse
+    "nautilus-nautilus-instinct-chest-press",
+    // Nautilus – Instinct Brustpresse
+    "nautilus-nautilus-instinct-dual-multi-press",
+    // Nautilus – Instinct Dual Multi-Presse
+    "nautilus-nautilus-leverage-chest-press",
+    // Nautilus – Leverage Chest Press
+    "crossaxes-c-2000c",
+    // CrossAxes – C-2000c Cross Axes Chest Press
+    "milon-pump-dual-chest-press",
+    // milon – 06 Dual Chest Press
+    "panatta-vertical-multi-press",
+    // Panatta – 1FT045 Vertical Multi Press
+    "panatta-total-press",
+    // Panatta – 1FE032 Total Press
+    "panatta-vertical-chest-press-circular",
+    // Panatta – 1FE033 Vertical chest press circular
+    "panatta-vertical-chest-press",
+    // Panatta – 1FE036 Vertical chest press
+    "panatta-multipurpose-press",
+    // Panatta – 1FE118A Multipurpose press
+    "panatta-vertical-chest-press-circular-2",
+    // Panatta – 1MTH033 Vertical chest press circular
+    "panatta-vertical-chest-convergent",
+    // Panatta – 1SC034 Vertical chest convergent
+    "panatta-certical-chest-press",
+    // Panatta – 1FO036 Vertical chest press
+    "panatta-super-vertical-chest-press",
+    // Panatta – 1FW036 Super vertical chest press
+    "panatta-super-horizontal-bench-press",
+    // Panatta – 1FW037 Super Horizontal Bench Press
+    "panatta-super-horizontal-multi-press",
+    // Panatta – 1FW042 Super horizontal multi press
+    "panatta-super-vertical-multi-press",
+    // Panatta – 1FW045 Super vertical multi press
+    "granite-leverage-chest-press-3-0",
+    // Granite – Leverage Chest Press 3.0
+    "granite-xpload-chest-press-2-0",
+    // Granite – Xpload Chest Press 2.0
+    "eigen-mw0xujbr-gmbq3",
+    // Flex – Leverage Chest Press
+    "eigen-mw2e5r3b-p9jvy",
+    // Schnell – Standig Chest Press
+    "eigen-mw2ej86w-bhbcc",
+    // Gym80 – Flat Chest Press
+    "eigen-mw2eqjgk-k9u0v",
+    // Galaxy Sport – Seated Chest Press
+    "eigen-mw2exhw2-5cp3y",
+    // Nautilus – XPload Chest Press
+    "eigen-mw2f33y3-n5ani",
+    // Galaxy Sport – Flat Chest Press
+    "eigen-mw2f8zz4-zskih",
+    // Rogers – Pendulum Chest Press
+    "gym80-3014",
+    // gym80 – Brustmaschine (zugeordnet 13.11.2026)
+    "gym80-3121",
+    // gym80 – Brustmaschine Stehend (zugeordnet 13.11.2026)
+    "gym80-4326",
+    // gym80 – Brustmaschine Dual (zugeordnet 13.11.2026)
+    "panatta-kito-machine"
+    // Panatta – Kito machine (zugeordnet 13.11.2026)
+  ]),
+  press_incline: /* @__PURE__ */ new Set([
+    "prime-hybrid-incline-press",
+    // PRIME Fitness – Hybrid | Incline Press
+    "prime-plate-loaded-incline-press",
+    // PRIME Fitness – Plate Loaded | Incline Press
+    "gym80-3023n",
+    // gym80 – 3023N Schrägbank
+    "gym80-3042",
+    // gym80 – 3042 Schrägbank Dual
+    "gym80-4329n",
+    // gym80 – 4329N Schrägbank Dual
+    "gym80-4365",
+    // gym80 – 4365 Schrägbank Dual
+    "technogym-mg15",
+    // Technogym – Pure Strength Incline Chest Press
+    "lifefitness-hammer-strength-mts-iso-lateral-incline-press",
+    // Life Fitness – MTS Iso-Lateral Incline Press
+    "lifefitness-plate-loaded-iso-lateral-incline-press",
+    // Life Fitness – Iso-Lateral Incline Press
+    "lifefitness-plate-loaded-iso-lateral-super-incline-press",
+    // Life Fitness – Plate Loaded Iso-Lateral Super Incline Press
+    "lifefitness-life-fitness-incline-press",
+    // Life Fitness – Plate Loaded Incline Press
+    "atlantis-p143",
+    // Atlantis – P143 Incline Converging Chest Press
+    "atlantis-p443",
+    // Atlantis – P443 Converging incline bench press
+    "newtech-incline-chest-press-1",
+    // Newtech – Torture Incline Chest Press
+    "newtech-torture-incline-chest-press-2",
+    // Newtech – Torture Incline Chest Press 2
+    "newtech-plate-incline-press",
+    // Newtech – Plate Incline Press
+    "watson-plate-load-super-incline-chest-press",
+    // Watson – PL Super Incline Chest Press
+    "gymleco-320-incline-chest-press",
+    // Gymleco – 320 Incline Chest Press
+    "gymleco-020-lateral-incline-bench-press",
+    // Gymleco – 020 Lateral Incline Bench Press
+    "nautilus-nautilus-impact-incline-press",
+    // Nautilus – Impact Incline Press
+    "nautilus-nautilus-leverage-incline-press",
+    // Nautilus – Leverage Incline Press
+    "panatta-inclined-chest-press-circular",
+    // Panatta – 1FE034 Inclined chest press circular
+    "panatta-inclined-chest-press",
+    // Panatta – 1FE037 Inclined chest press
+    "panatta-inclined-chest-press-circular-2",
+    // Panatta – 1MTH034 Inclined chest press circular
+    "panatta-inclined-chest-press-3",
+    // Panatta – 1SC037 Inclined chest press
+    "panatta-inclined-chest-press-4",
+    // Panatta – 1FO035 Inclined chest press
+    "panatta-super-inclined-bench-press",
+    // Panatta – 1FW033 Super inclined bench press
+    "panatta-super-inclined-chest-press",
+    // Panatta – 1FW035 Super inclined chest press
+    "granite-xpload-incline-chest-press",
+    // Granite – Xpload Incline Chest Press
+    "eigen-mw2dveah-lykc1",
+    // CrossAxes – Incline Chest Press
+    "eigen-mw2eugog-08mqb",
+    // Revive – Incline Chest Press
+    "eigen-mw2f5qtw-wmdn8",
+    // Galaxy Sport – Incline Chest Press
+    "gymleco-029-incline-press-chest-flyes"
+    // Gymleco – 029 Incline Press / Chest Flyes
+  ]),
+  press_decline: /* @__PURE__ */ new Set([
+    "gym80-4346",
+    // gym80 – 4346 Negativdrückbank Dual
+    "gym80-4362",
+    // gym80 – 4362 Negativdrückbank Dual
+    "lifefitness-hammer-strength-mts-iso-lateral-decline-press",
+    // Life Fitness – MTS Iso-Lateral Decline Press
+    "lifefitness-plate-loaded-iso-lateral-decline-chest-press",
+    // Life Fitness – Plate Loaded Iso-Lateral Decline Chest Press
+    "lifefitness-life-fitness-decline-chest-press",
+    // Life Fitness – Plate Loaded Decline Chest Press
+    "atlantis-pw739",
+    // Atlantis – PW739 Decline vertical chest press
+    "newtech-plate-decline-press",
+    // Newtech – Plate Decline Press
+    "watson-animal-dual-stack-decline-chest-press",
+    // Watson – DS Animal Decline Chest Press
+    "watson-plate-load-decline-chest-press",
+    // Watson – PL Decline Chest Press
+    "gymleco-027-decline-chest-press",
+    // Gymleco – 027 Decline Chest Press
+    "nautilus-nautilus-leverage-decline-press",
+    // Nautilus – Leverage Decline Press
+    "panatta-declined-chest-press",
+    // Panatta – 1FO041 Declined chest press
+    "panatta-super-declined-chest-press"
+    // Panatta – 1FW041 Super declined chest press
+  ]),
+  shoulder_press: /* @__PURE__ */ new Set([
+    "prime-evolution-shoulder-press",
+    // PRIME Fitness – Evolution | Shoulder Press
+    "prime-hybrid-shoulder-press",
+    // PRIME Fitness – Hybrid | Shoulder Press
+    "prime-plate-loaded-shoulder-press",
+    // PRIME Fitness – Plate Loaded | Shoulder Press
+    "gym80-3032",
+    // gym80 – 3032 Schulterpresse
+    "gym80-3043",
+    // gym80 – 3043 Schulterpresse Dual
+    "gym80-4363",
+    // gym80 – 4363 Schulterdrückmaschine Dual
+    "gym80-5902",
+    // gym80 – 5902 Schulterpresse Stehend
+    "gym80-3096",
+    // gym80 – 3096 Nackendrückmaschine
+    "gym80-4371",
+    // gym80 – 4371 Nackendrückmaschine
+    "technogym-mk69eh",
+    // Technogym – Artis Shoulder Press
+    "technogym-mnec",
+    // Technogym – Selection 700 Shoulder Press
+    "technogym-mnep",
+    // Technogym – Selection 900 Shoulder Press
+    "technogym-c96900-anvk",
+    // Technogym – Selection Shoulder Press Med
+    "technogym-mg35",
+    // Technogym – Pure Strength Shoulder Press
+    "lifefitness-axiom-series-shoulder-press",
+    // Life Fitness – Axiom Series - Shoulder Press
+    "lifefitness-mts-iso-lateral-shoulder-press",
+    // Life Fitness – MTS Iso-Lateral Shoulder Press
+    "lifefitness-hammer-strength-select-shoulder-press",
+    // Life Fitness – Hammer Strength Select Shoulder Press
+    "lifefitness-insignia-series-shoulder-press",
+    // Life Fitness – Insignia Series Shoulder Press
+    "lifefitness-plate-loaded-iso-lateral-shoulder-press",
+    // Life Fitness – Iso-Lateral Shoulder Press
+    "lifefitness-life-fitness-shoulder-press",
+    // Life Fitness – Plate Loaded Shoulder Press
+    "panatta-deltoid-press",
+    // Panatta – 1FE025 Deltoid press
+    "panatta-deltoid-press-3",
+    // Panatta – 1FO025 Deltoid press
+    "panatta-deltoid-press-circular",
+    // Panatta – 1FE024 Deltoid press circular
+    "panatta-deltoid-press-circular-2",
+    // Panatta – 1MTH024 Deltoid press circular
+    "panatta-deltoid-press-convergent",
+    // Panatta – 1SC024 Deltoid press convergent
+    "panatta-super-deltoid-press",
+    // Panatta – 1FW025 Super deltoid press
+    "atlantis-e149",
+    // Atlantis – E149 Converging shoulder press
+    "atlantis-e449",
+    // Atlantis – E449 Converging shoulder press
+    "newtech-shoulder-press",
+    // Newtech – OnHim Shoulder Press
+    "newtech-shoulder-press-2",
+    // Newtech – Torture Shoulder Press
+    "newtech-torture-shoulder-press-2",
+    // Newtech – Torture Shoulder Press 2
+    "newtech-plate-shouldwe-press",
+    // Newtech – Plate Shoulder Press
+    "watson-animal-dual-stack-shoulder-press",
+    // Watson – DS Animal Shoulder Press
+    "watson-single-stack-shoulder-press",
+    // Watson – SS Shoulder Press
+    "watson-plate-load-shoulder-press",
+    // Watson – PL Shoulder Press
+    "watson-plate-load-free-motion-shoulder-press",
+    // Watson – PL Free Motion Shoulder Press
+    "gymleco-330-shoulder-press",
+    // Gymleco – 330 Shoulder Press
+    "gymleco-030-shoulder-press",
+    // Gymleco – 030 Shoulder Press
+    "nautilus-nautilus-impact-shoulder-press",
+    // Nautilus – Impact Schulterpresse
+    "nautilus-nautilus-inspiration-shoulder-press",
+    // Nautilus – Inspiration Shoulder Press
+    "nautilus-nautilus-instinct-shoulder-press",
+    // Nautilus – Instinct Schulterpresse
+    "nautilus-nautilus-leverage-shoulder-press",
+    // Nautilus – Leverage Shoulder Press
+    "crossaxes-s-1000c",
+    // CrossAxes – S-1000c Cross Axes Shoulder Press
+    "milon-pump-shoulder-press",
+    // milon – 10 Shoulder Press
+    "granite-double-barrel-shoulder-press",
+    // Granite – Double Barrel Shoulder Press
+    "granite-xpload-shoulder-press-2-0",
+    // Granite – Xpload Shoulder Press 2.0
+    "gym80-4388",
+    // gym80 – 4388 Viking Press
+    "atlantis-pw549",
+    // Atlantis – PW549 Viking press
+    "watson-animal-viking-press",
+    // Watson – PL Animal Viking Press
+    "watson-viking-press",
+    // Watson – PL Viking Press
+    "gymleco-038-viking-press",
+    // Gymleco – 038 Viking Press
+    "panatta-viking-press",
+    // Panatta – 1FO029 Viking Press
+    "panatta-viking-press-and-calf",
+    // Panatta – 1FW029 Viking press and calf
+    "watson-plate-loaded-incline-shoulder-press",
+    // Watson – PL Incline Shoulder Press
+    "gym80-4320",
+    // gym80 – Schultermaschine Dual (zugeordnet 13.11.2026)
+    "gymleco-336-shoulder-front-press",
+    // Gymleco – Shoulder Front Press (zugeordnet 13.11.2026)
+    "panatta-max-machine",
+    // Panatta – Max machine (zugeordnet 13.11.2026)
+    "eigen-mwai6lum-i58bo",
+    // Atlantis – Converging Shoulder Press E-149 (zugeordnet 13.11.2026)
+    "eigen-mwaiadif-154hi"
+    // Nautilus – XPload ISO Lateral Plate Loaded Overhead Shoulder Press (zugeordnet 13.11.2026)
+  ]),
+  dip: /* @__PURE__ */ new Set([
+    "gym80-3036",
+    // gym80 – 3036 Dipmaschine
+    "gym80-4335",
+    // gym80 – 4335 Trizeps Dip Maschine Dual
+    "gym80-5904",
+    // gym80 – 5904 Trizeps Dip Stehend
+    "gym80-80a00015",
+    // gym80 – 80A00015 Trizeps Dip
+    "panatta-dips-press",
+    // Panatta – 1FE038 Dips press
+    "panatta-dips-press-3",
+    // Panatta – 1MTH138 Dips press
+    "panatta-dips-press-4",
+    // Panatta – 1FO140 Dips Press
+    "panatta-dips-press-2",
+    // Panatta – 1FW140 Dips press
+    "panatta-dips-press-dual-system",
+    // Panatta – 1FW040 Dips press dual system
+    "technogym-mg55",
+    // Technogym – Pure Strength Seated Dip
+    "lifefitness-plate-loaded-seated-dip",
+    // Life Fitness – Plate Loaded Seated Dip
+    "lifefitness-life-fitness-seated-dip",
+    // Life Fitness – Plate Loaded Seated Dip
+    "newtech-seated-dip",
+    // Newtech – OnHim Seated Dip
+    "watson-seated-single-stack-tricep-dip",
+    // Watson – SS Tricep Dip
+    "watson-total-access-tricep-dip",
+    // Watson – Total Access Tricep Dip
+    "watson-seated-plate-loaded-dip",
+    // Watson – PL Seated Dip
+    "watson-standing-iso-dip",
+    // Watson – PL Standing ISO Dip
+    "gymleco-055-dip-press",
+    // Gymleco – 055 Dip Press
+    "nautilus-nautilus-impact-dip-machine",
+    // Nautilus – Impact Dip
+    "nautilus-nautilus-inspiration-tricep-dip",
+    // Nautilus – Inspiration Tricep Dip
+    "nautilus-tricep-dip",
+    // Nautilus – Trizeps-Dip
+    "gymleco-954-shoulder-lift-dips",
+    // Gymleco – 954 Shoulder Lift/Dips
+    "gymleco-354-dips-press-shoulder-pull"
+    // Gymleco – 354 Dips Press/Shoulder Pull
+  ]),
+  fly: /* @__PURE__ */ new Set([
+    "gym80-3021",
+    // gym80 – 3021 Butterfly mit Pads
+    "gym80-3022",
+    // gym80 – 3022 Butterfly
+    "gym80-4341",
+    // gym80 – 4341 Butterfly Dual
+    "gym80-4390",
+    // gym80 – 4390 Butterfly 50 Grad
+    "gym80-5909",
+    // gym80 – 5909 Butterfly Stehend
+    "panatta-pectoral-machine",
+    // Panatta – 1FE035 Pectoral machine
+    "panatta-pectoral-machine-2",
+    // Panatta – 1mth035 Pectoral machine
+    "panatta-pectoral-machine-3",
+    // Panatta – 1SC035 Pectoral machine
+    "panatta-fantastic-vertical-pek-dek",
+    // Panatta – 1FT036 Vertical Pek Dek
+    "panatta-upper-chest-flight-machine",
+    // Panatta – 1FO038 Upper Chest Flight Machine
+    "panatta-super-upper-chest-flight-machine",
+    // Panatta – 1FW038 Super upper chest flight machine
+    "panatta-super-middle-chest-flight-machine-copia",
+    // Panatta – 1FO043 Middle chest flight machine
+    "panatta-super-middle-chest-flight-machine",
+    // Panatta – 1FW043 Super middle chest flight machine
+    "panatta-super-lower-chest-flight-machine",
+    // Panatta – 1FW044 Super lower chest flight machine
+    "prime-hybrid-pec-fly",
+    // PRIME Fitness – Hybrid | Pec Fly
+    "technogym-mk13eh",
+    // Technogym – Artis Pectoral
+    "technogym-mntp",
+    // Technogym – Selection 900 Pectoral
+    "lifefitness-hammer-strength-select-pectoral-fly",
+    // Life Fitness – Hammer Strength Select Pectoral Fly
+    "lifefitness-super-fly",
+    // Life Fitness – Super Fly
+    "atlantis-p356",
+    // Atlantis – P356 Vertical pec fly
+    "atlantis-pw256",
+    // Atlantis – PW256 Incline pec fly
+    "newtech-onhim-seated-chest-fly-new",
+    // Newtech – OnHim Seated Chest Fly
+    "newtech-pec-dec-fly",
+    // Newtech – Torture Pec Dec Fly
+    "watson-plate-load-pec-fly",
+    // Watson – PL Pec Fly
+    "watson-pl-arched-incline-pec-fly",
+    // Watson – PL Arched Incline Pec Fly
+    "gymleco-323-seated-pec-deck",
+    // Gymleco – 323 Seated Pec Deck
+    "gymleco-326-standing-pec-fly",
+    // Gymleco – 326 Standing Pec Fly
+    "gymleco-023-incline-pec-fly",
+    // Gymleco – 023 Incline Pec Fly
+    "milon-pump-chest-squeezer",
+    // milon – 07 Chest Squeezer
+    "eigen-mw4v4fyj-baelv",
+    // Schnell – Chest Fly (zugeordnet 13.11.2026)
+    "eigen-mw4v78cr-v5c17",
+    // EliteFTS – Chest Fly (zugeordnet 13.11.2026)
+    "eigen-mw4v8rmb-5vj8m",
+    // Atlantis – Chest Fly (zugeordnet 13.11.2026)
+    "eigen-mw4vcgwg-y0us0",
+    // Gym80 – Chest Fly (zugeordnet 13.11.2026)
+    "eigen-mw4veh6i-uqzbd"
+    // Gym80 – Chest Fly 2.0 (zugeordnet 13.11.2026)
+  ]),
+  reverse_fly: /* @__PURE__ */ new Set([
+    "gym80-3025",
+    // gym80 – 3025 Butterfly Reverse
+    "gym80-4344",
+    // gym80 – 4344 Butterfly Reverse Dual
+    "technogym-mnxp",
+    // Technogym – Selection 900 Reverse Fly
+    "gymleco-333-rear-deltoid-shoulder",
+    // Gymleco – 333 Rear Deltoid Shoulder
+    "gym80-80a00016",
+    // gym80 – 80A00016 Seithebemaschine Vorgebeugt
+    "nautilus-nautilus-impact-deltoid-fly",
+    // Nautilus – Impact Deltoid Fly
+    "panatta-back-deltoids-3",
+    // Panatta – Back deltoids (zugeordnet 13.11.2026)
+    "panatta-back-deltoids"
+    // Panatta – Back deltoids (zugeordnet 13.11.2026)
+  ]),
+  leg_press: /* @__PURE__ */ new Set([
+    "prime-evolution-leg-press",
+    // PRIME Fitness – Evolution | Leg Press
+    "prime-hybrid-leg-press",
+    // PRIME Fitness – Hybrid | Leg Press
+    "prime-plate-loaded-leg-press",
+    // PRIME Fitness – Plate Loaded | Leg Press
+    "gym80-3030",
+    // gym80 – 3030 Beinpresse Sitzend
+    "gym80-3031",
+    // gym80 – 3031 Beinpresse Liegend
+    "gym80-5001",
+    // gym80 – 5001 Innovation Beinpresse
+    "gym80-3046",
+    // gym80 – 3046 Beinpresse Dual
+    "gym80-4023",
+    // gym80 – 4023 45 Grad Beinpresse
+    "gym80-4314",
+    // gym80 – 4314 Beinpresse Sitzend Dual
+    "gym80-4324",
+    // gym80 – 4324 45 Grad Pivot Beinpresse
+    "gym80-4354",
+    // gym80 – 4354 Vertikale Beinpresse
+    "gym80-4361",
+    // gym80 – 4361 Beinpresse Dual
+    "technogym-mk51eh",
+    // Technogym – Artis Leg Press
+    "technogym-mnac",
+    // Technogym – Selection 700 Leg Press
+    "technogym-mnap",
+    // Technogym – Selection 900 Leg Press
+    "technogym-c99400-anvk",
+    // Technogym – Selection Leg Press Med
+    "technogym-mg50",
+    // Technogym – Pure Strength Leg Press
+    "technogym-mg75",
+    // Technogym – Pure Strength Linear Leg Press
+    "lifefitness-axiom-series-leg-press",
+    // Life Fitness – Axiom Series - Leg Press
+    "lifefitness-hammer-strength-select-seated-leg-press",
+    // Life Fitness – Hammer Strength Select Seated Leg Press
+    "lifefitness-insignia-series-arc-leg-press",
+    // Life Fitness – Insignia Series Arc Leg Press
+    "lifefitness-plate-loaded-linear-leg-press",
+    // Life Fitness – Plate Loaded Linear Leg Press
+    "lifefitness-super-squat-press",
+    // Life Fitness – Super Squat Press
+    "lifefitness-life-fitness-linear-leg-press",
+    // Life Fitness – Plate Loaded Linear Leg Press
+    "bootybuilder-booty-builder-multi-leg-press-hack-squat",
+    // Booty Builder – Selectorized Multi Leg Press/Hack Squat
+    "atlantis-c403",
+    // Atlantis – C403 Horizontal leg press
+    "atlantis-c401",
+    // Atlantis – C401 40 Degree leg press
+    "atlantis-pw419",
+    // Atlantis – PW419 Unilateral leg press pro
+    "newtech-seated-leg-press",
+    // Newtech – OnHim Seated Leg Press (Thomson)
+    "newtech-onhim-super-leg-press-new",
+    // Newtech – OnHim Super Leg Press (Thomson)
+    "newtech-power-leg-press",
+    // Newtech – Torture Power Leg Press (Thomson)
+    "newtech-toture-power-leg-press-premium-thomsonnew",
+    // Newtech – Torture Power Leg Press Premium (Thomson)
+    "watson-seated-single-stack-leg-press",
+    // Watson – SS Leg Press
+    "watson-45-leg-press",
+    // Watson – PL 45° Leg Press
+    "watson-animal-horizontal-leg-press",
+    // Watson – PL Animal Horizontal Leg Press
+    "watson-animal-plate-load-leg-press",
+    // Watson – PL Animal Leg Press
+    "watson-animal-vertical-leg-press",
+    // Watson – PL Animal Vertical Leg Press
+    "watson-plate-load-pivot-leg-press",
+    // Watson – PL Pivot Leg Press
+    "watson-rear-pivot-plate-loaded-leg-press",
+    // Watson – PL Rear Pivot Leg Press
+    "watson-vertical-plate-load-leg-press",
+    // Watson – PL Vertical Leg Press
+    "gymleco-343-seated-leg-press",
+    // Gymleco – 343 Seated Leg Press
+    "gymleco-344-horizontal-lying-leg-press",
+    // Gymleco – 344 Horizontal Lying Leg Press
+    "gymleco-243-leg-press-45",
+    // Gymleco – 243 Leg Press 45°
+    "nautilus-nautilus-impact-seated-leg-press",
+    // Nautilus – Impact Seated Leg Press
+    "nautilus-nautilus-inspiration-leg-press",
+    // Nautilus – Inspiration Beinpresse
+    "nautilus-nautilus-plate-loaded-angled-leg-press",
+    // Nautilus – Angled Leg Press
+    "nautilus-angled-leg-press-pro",
+    // Nautilus – Angled Leg Press Pro
+    "crossaxes-l-4000c",
+    // CrossAxes – L-4000c Seated Leg Press
+    "panatta-leg-press-45-3",
+    // Panatta – 1FT086 Leg Press 45
+    "panatta-horizontal-leg-press",
+    // Panatta – 1FE085 Horizontal leg press
+    "panatta-dual-system-horizontal-leg-press",
+    // Panatta – 1FE095 Dual system horizontal leg press
+    "panatta-horizontal-leg-press-2",
+    // Panatta – 1MTH085 Horizontal Adjustable leg press
+    "panatta-horizontal-leg-press-3",
+    // Panatta – 1SC085 Horizontal leg press
+    "panatta-horizontal-leg-press-medical",
+    // Panatta – 1SC085M Horizontal leg press medical
+    "panatta-leg-press-bridge-2",
+    // Panatta – 1FO085 Leg press bridge
+    "panatta-leg-press-45-2",
+    // Panatta – 1FO086 Leg press 45°
+    "panatta-super-leg-press-bridge",
+    // Panatta – 1FW085 Super leg press bridge
+    "panatta-super-leg-press-45",
+    // Panatta – 1FW086 Super leg press 45°
+    "panatta-super-leg-press-45-dual-system",
+    // Panatta – 1FW090 Super leg press 45° dual system
+    "panatta-super-vertical-leg-press",
+    // Panatta – 1FW093 Super vertical leg press
+    "panatta-super-horizontal-leg-press-dual-system",
+    // Panatta – 1FW100 Super Horizontal Leg Press Dual System
+    "panatta-vertical-leg-press",
+    // Panatta – 1FW193 Vertical leg press
+    "eigen-mw0xh345-967q6",
+    // EliteFTS – Monster Mondo Leg Press
+    "eigen-mw0xr41h-9wo3x",
+    // EliteFTS – Leg Press
+    "eigen-mw0y0u36-cs9e6",
+    // Nautilus – Duo Squat
+    "eigen-mw1a6mne-acwzp",
+    // EliteFTS – Monster Mondo Leg Press
+    "atlantis-c201",
+    // Atlantis – Pivot press (zugeordnet 13.11.2026)
+    "panatta-luiz-machine"
+    // Panatta – Luiz machine (zugeordnet 13.11.2026)
+  ]),
+  hack_squat: /* @__PURE__ */ new Set([
+    "prime-plate-loaded-hack-squat",
+    // PRIME Fitness – Plate Loaded | Hack Squat
+    "prime-plate-loaded-pendulum-squat",
+    // PRIME Fitness – Plate Loaded | Pendulum Squat
+    "gym80-4038n",
+    // gym80 – 4038N Kniebeugemaschine
+    "gym80-4159n",
+    // gym80 – 4159N Hackenschmidt
+    "gym80-4353n",
+    // gym80 – 4353N Pendulum Squat
+    "gym80-5906",
+    // gym80 – 5906 Kniebeugemaschine
+    "technogym-mg85",
+    // Technogym – Pure Strength Hack Squat
+    "lifefitness-pendulum-x-squat",
+    // Life Fitness – Pendulum-X Squat
+    "lifefitness-hack-squat",
+    // Life Fitness – Plate Loaded Hack Squat
+    "lifefitness-reverse-v-squat",
+    // Life Fitness – Plate Loaded Reverse V-Squat
+    "glutebuilder-glute-hack-squat",
+    // Glute Builder – Glute Hack Squat
+    "glutebuilder-pendulum-squat-pro",
+    // Glute Builder – Pendulum Squat Pro
+    "atlantis-c412",
+    // Atlantis – C412 Hack squat
+    "atlantis-pw212",
+    // Atlantis – PW212 Pendulum Squat Pro
+    "atlantis-pw412",
+    // Atlantis – PW412 Hack squat pro
+    "atlantis-pw611",
+    // Atlantis – PW611 Power Squat Pro
+    "newtech-hack-press",
+    // Newtech – Torture Hack Press (Thomson)
+    "newtech-hack-squat",
+    // Newtech – Torture Hack Squat (Thomson)
+    "newtech-torture-hack-squat-premium-thomsonnew",
+    // Newtech – Torture Hack Squat Premium Moving (Thomson)
+    "watson-30-degree-hack-squat",
+    // Watson – PL 30 Degree Hack Squat
+    "watson-adjustable-hack-squat",
+    // Watson – PL Animal Adjustable Hack Squat
+    "watson-plate-loaded-hack-squat",
+    // Watson – PL Hack Squat
+    "watson-linear-hack-squat",
+    // Watson – PL Linear Hack Squat
+    "watson-power-squat",
+    // Watson – PL Power Squat
+    "gymleco-044-v-squat-plate-loaded",
+    // Gymleco – 044 V-Squat, Plate Loaded
+    "gymleco-045-pendulum-squat",
+    // Gymleco – 045 Pendulum Squat
+    "gymleco-082-belt-squat-machine",
+    // Gymleco – 082 Belt Squat Machine
+    "nautilus-nautilus-plate-loaded-hack-squat",
+    // Nautilus – Hack Squat
+    "nautilus-pendulum-squat-1",
+    // Nautilus – Pendel-Kniebeuge
+    "nautilus-power-squat-1",
+    // Nautilus – Power-Kniebeuge
+    "panatta-pendulum-squat",
+    // Panatta – 1FO080 Pendulum squat
+    "panatta-hack-squat",
+    // Panatta – 1FO087 Hack Squat
+    "panatta-super-pendulum-squat",
+    // Panatta – 1FW080 Super pendulum squat
+    "panatta-super-power-squat",
+    // Panatta – 1FW084 Super power squat
+    "panatta-super-hack-squat",
+    // Panatta – 1FW087 Super hack squat
+    "panatta-super-squat-machine",
+    // Panatta – 1FW091 Super squat machine
+    "granite-dual-hack",
+    // Granite – Dual Hack
+    "citadel-3n1-hack-squat",
+    // Citadel Strength – 3n1 Hack Squat
+    "citadel-linear-hack-squat",
+    // Citadel Strength – Linear Hack Squat
+    "citadel-pendulum-squat",
+    // Citadel Strength – Pendulum Squat
+    "eigen-mw0xdfum-pzmgk",
+    // EliteFTS – Monster Hack Squat
+    "eigen-mw0y45kk-ib3wo",
+    // Predator Strenght – Pendulum Squat
+    "eigen-mw1acalz-0q31v",
+    // EliteFTS – Monster Hack Squat
+    "eigen-mw1akbdo-q1puv",
+    // Charged – Hack Squat
+    "eigen-mw1anesf-i4e0q",
+    // Cybex – Hack Squat
+    "eigen-mw2dl0xb-oi7u4",
+    // Icarian – Hack Squat
+    "eigen-mw2dnqvl-f0bub",
+    // Revive – Hack Squat
+    "glutebuilder-glute-squat",
+    // Glute Builder – Glute Squat
+    "lifefitness-plate-loaded-squat-lunge",
+    // Life Fitness – Plate Loaded Squat Lunge
+    "bootybuilder-booty-builder-reverse-lunge-machine",
+    // Booty Builder – Reverse Lunge Machine
+    "glutebuilder-glute-lunge",
+    // Glute Builder – Glute Lunge
+    "watson-plate-loaded-lunge-machine",
+    // Watson – PL Lunge Machine
+    "panatta-squat-lunge-module",
+    // Panatta – 4GRDFC3 Squat lunge module
+    "panatta-squat-lunge",
+    // Panatta – 1HP590 Squat lunge
+    "panatta-super-lunge-machine",
+    // Panatta – 1FW079 Super Lunge Machine
+    "gym80-4389",
+    // gym80 – Leverage Squat (zugeordnet 13.11.2026)
+    "technogym-mk16eh",
+    // Technogym – Artis Squat (zugeordnet 13.11.2026)
+    "bootybuilder-booty-builder-v-squat",
+    // Booty Builder – V Squat (zugeordnet 13.11.2026)
+    "newtech-drop-squat",
+    // Newtech – Torture Drop Squat (zugeordnet 13.11.2026)
+    "watson-leverage-squat",
+    // Watson – PL Leverage Squat (zugeordnet 13.11.2026)
+    "watson-trusquat",
+    // Watson – PL Tru Squat (zugeordnet 13.11.2026)
+    "gymleco-944-squats-hacklift",
+    // Gymleco – Squats/Hacklift (zugeordnet 13.11.2026)
+    "gymleco-244-hacklift"
+    // Gymleco – Hacklift (zugeordnet 13.11.2026)
+  ]),
+  hip_thrust: /* @__PURE__ */ new Set([
+    "bootybuilder-booty-builder-pendulum-hip-press",
+    // Booty Builder – Selectorized Pendulum Hip Press
+    "gym80-4416",
+    // gym80 – 4416 Bootymizer
+    "gym80-4352",
+    // gym80 – 4352 Booty Booster
+    "gym80-4386n",
+    // gym80 – 4386N Booty Booster Special
+    "technogym-mn2p",
+    // Technogym – Selection 900 Hip Thrust
+    "technogym-mg80",
+    // Technogym – Pure Strength Hip Thrust
+    "lifefitness-insignia-series-glute-bridge",
+    // Life Fitness – Insignia Series Glute Bridge
+    "lifefitness-hammer-strength-plate-loaded-glute-drive",
+    // Life Fitness – Plate Loaded Glute Drive
+    "bootybuilder-booty-builder-selectorized-standing-hip-thrust",
+    // Booty Builder – Selectorized Standing Hip Thrust
+    "bootybuilder-booty-builder-selectorized-hip-thrust-machine",
+    // Booty Builder – V8
+    "bootybuilder-booty-builder-dual-hip-thrust",
+    // Booty Builder – Dual Hip Thrust
+    "bootybuilder-booty-builder-platinum",
+    // Booty Builder – Platinum V4
+    "bootybuilder-booty-builder-standing-hip-thrust",
+    // Booty Builder – Standing Hip Thrust
+    "glutebuilder-selectorized-hip-thrust-elite",
+    // Glute Builder – Selectorized Hip Thrust Elite
+    "glutebuilder-hip-thrust-elite",
+    // Glute Builder – Hip Thrust Elite
+    "atlantis-pw702",
+    // Atlantis – PW702 Hip Thruster Pro
+    "newtech-onhim-kneeling-hip-raise",
+    // Newtech – OnHim Kneeling Hip Raise
+    "newtech-hip-thrust",
+    // Newtech – Torture Hip Thrust
+    "newtech-hip-thrust-1",
+    // Newtech – Torture Hip Thrust (Rotary)
+    "watson-pl-standing-hip-thrust",
+    // Watson – PL Standing Hip Thrust
+    "gymleco-043-hip-press",
+    // Gymleco – 043 Hip Press
+    "gymleco-066-hip-thrust",
+    // Gymleco – 066 Hip Thrust
+    "nautilus-nautilus-plate-loaded-glute-drive",
+    // Nautilus – Glute Drive
+    "milon-pump-hip-thrust",
+    // milon – 04 Hip Thrust
+    "panatta-hip-thrust",
+    // Panatta – 1FE097 Hip thrust
+    "panatta-standing-hip-thrust-2",
+    // Panatta – 1FE197 Standing Hip Thrust
+    "panatta-hip-thrust-3",
+    // Panatta – 1MTH097 Hip thrust
+    "panatta-hip-thrust-4",
+    // Panatta – 1FO097 Hip thrust
+    "panatta-standing-hip-thrust",
+    // Panatta – 1FO197 Standing Hip Thrust
+    "panatta-hip-thrust-2",
+    // Panatta – 1FW097 Hip thrust
+    "citadel-2n1-hip-press",
+    // Citadel Strength – 2n1 Hip Press
+    "citadel-hip-thrust",
+    // Citadel Strength – Hip Thrust
+    "eigen-mw0xxofg-2ukx2",
+    // Matrix – Magnum Glute Trainer
+    "eigen-mw0y25o7-6izcw",
+    // Nautilus – Glute Drive
+    "eigen-01a18e87-b441-7776-bbf5-aa101617ead3"
+    // gym80 – Gym80 Sliding Hip Extension (zugeordnet 13.11.2026)
+  ]),
+  glute_kick: /* @__PURE__ */ new Set([
+    "glutebuilder-selectorized-pendulum-kick-back",
+    // Glute Builder – Selectorized Pendulum Kick Back
+    "glutebuilder-pendulum-kick-back",
+    // Glute Builder – Pendulum Kick Back
+    "gym80-3004",
+    // gym80 – 3004 Gluteus Kick Kniend
+    "gym80-3005",
+    // gym80 – 3005 Gluteus Kick Radial
+    "gym80-3006",
+    // gym80 – 3006 Kickmaschine
+    "gym80-5002",
+    // gym80 – 5002 Innovation Gluteusmaschine
+    "gym80-4321",
+    // gym80 – 4321 Gluteus Kick Maschine
+    "technogym-mn4p",
+    // Technogym – Selection 900 Glute Press
+    "technogym-mg40",
+    // Technogym – Pure Strength Rear Kick
+    "lifefitness-insignia-series-glute",
+    // Life Fitness – Insignia Series Glute
+    "bootybuilder-booty-builder-selectorized-kick-back",
+    // Booty Builder – Selectorized Kick Back
+    "bootybuilder-booty-builder-multi-angle-glute-press",
+    // Booty Builder – Selectorized Multi-Angle Glute Press
+    "glutebuilder-selectorized-kneeling-glute-isolator",
+    // Glute Builder – Selectorized Kneeling Glute Isolator
+    "glutebuilder-glute-press",
+    // Glute Builder – Glute Press
+    "glutebuilder-kneeling-glute-isolator",
+    // Glute Builder – Kneeling Glute Isolator
+    "atlantis-c122",
+    // Atlantis – C122 Glute machine
+    "newtech-glute-kick-back",
+    // Newtech – OnHim Glute Kick-Back
+    "newtech-glute-kick-back-2",
+    // Newtech – Torture Glute Kick-Back
+    "watson-plate-load-glute-blaster",
+    // Watson – PL Glute Blaster
+    "gymleco-360-gluteus-one-leg-kick",
+    // Gymleco – 360 Gluteus, One Leg kick
+    "gymleco-060-glute-kickback",
+    // Gymleco – 060 Glute Kickback
+    "nautilus-nautilus-inspiration-glute-press",
+    // Nautilus – Inspiration Gesäßpresse
+    "nautilus-nautilus-instinct-glute-press",
+    // Nautilus – Instinct Gesäßpresse
+    "panatta-gluteus-machine",
+    // Panatta – 1FE088 Gluteus machine
+    "panatta-master-gluteus-plus",
+    // Panatta – 1FE094A Master gluteus plus
+    "panatta-gluteus-machine-2",
+    // Panatta – 1MTH088 Gluteus machine
+    "panatta-master-gluteus-plus-2",
+    // Panatta – 1MTH094A Master gluteus plus
+    "lifefitness-hammer-strength-select-hip-and-glute"
+    // Life Fitness – Hammer Strength Select Hip and Glute
+  ]),
+  reverse_hyper: /* @__PURE__ */ new Set([
+    "gymleco-063-reverse-hyper-pendulum",
+    // Gymleco – 063 Reverse Hyper Pendulum
+    "gym80-80a00033",
+    // gym80 – 80A00033 Sliding Hip Extension
+    "glutebuilder-selectorized-dual-45-hip-extension",
+    // Glute Builder – Selectorized Dual 45 Hip Extension
+    "glutebuilder-dual-45-hip-extension",
+    // Glute Builder – Dual 45 Hip Extension
+    "gymleco-067-gymleco-hip-and-back-extension",
+    // Gymleco – 067 Gymleco Hip & Back Extension
+    "gym80-80a00013",
+    // gym80 – 80A00013 Reverse Hyper Extension Machine
+    "atlantis-d215",
+    // Atlantis – D215 Reverse hyper extension
+    "newtech-onhim-reverse-hyper-new",
+    // Newtech – OnHim Reverse Hyper
+    "watson-deluxe-reverse-hyper-extension",
+    // Watson – PL Deluxe Reverse Hyper Extension
+    "watson-westside-ultra-supreme-reverse-hyper",
+    // Watson – PL Westside Ultra Supreme Reverse Hyper
+    "gymleco-061-reverse-hyper",
+    // Gymleco – 061 Reverse Hyper
+    "panatta-reverse-hyperextension"
+    // Panatta – 1FW096 Reverse hyperextension
+  ]),
+  calf_standing: /* @__PURE__ */ new Set([
+    "panatta-calf-hack-machine-2",
+    // Panatta – 1MTH092 Calf hack machine
+    "panatta-super-calf-hack",
+    // Panatta – 1FW092 Super calf hack
+    "prime-hybrid-seated-calf-press",
+    // PRIME Fitness – Hybrid | Seated Calf Press
+    "gym80-3018",
+    // gym80 – 3018 Wadenmaschine Stehend
+    "gym80-3027",
+    // gym80 – 3027 Wadenpresse Sitzend
+    "gym80-3094",
+    // gym80 – 3094 Donkey Calf Raise
+    "gym80-4345",
+    // gym80 – 4345 55 Grad Wadenmaschine Stehend
+    "gym80-4380",
+    // gym80 – 4380 Donkey Calf
+    "technogym-mn5p",
+    // Technogym – Selection 900 Standing Calf
+    "technogym-mg45",
+    // Technogym – Pure Strength Calf
+    "technogym-mg46",
+    // Technogym – Pure Strength Seated Calf
+    "lifefitness-hammer-strength-select-horizontal-calf",
+    // Life Fitness – Hammer Strength Select Horizontal Calf
+    "lifefitness-hammer-strength-select-standing-calf",
+    // Life Fitness – Hammer Strength Select Standing Calf
+    "lifefitness-insignia-series-calf-extension",
+    // Life Fitness – Insignia Series Calf Extension
+    "lifefitness-life-fitness-calf-raise",
+    // Life Fitness – Plate Loaded Calf Raise
+    "atlantis-m118",
+    // Atlantis – M118 Standing calf Raise
+    "atlantis-m318",
+    // Atlantis – M318 Incline calf raise
+    "atlantis-m219",
+    // Atlantis – M219 Seated calf
+    "atlantis-pw319",
+    // Atlantis – PW319 Seated Calf Press
+    "newtech-onhim-standing-calf-raise-new",
+    // Newtech – OnHim Standing Calf Raise
+    "watson-standing-single-stack-calf-raise",
+    // Watson – SS Calf Raise
+    "watson-45-calf-raise",
+    // Watson – PL 45º Calf Raise
+    "watson-plate-load-donkey-calf-raise",
+    // Watson – PL Donkey Calf Raise
+    "gymleco-345-seated-calf-press",
+    // Gymleco – 345 Seated Calf Press
+    "gymleco-347-standing-calf-press",
+    // Gymleco – 347 Standing Calf Press
+    "gymleco-348-seated-calf-press-45",
+    // Gymleco – 348 Seated Calf Press 45°
+    "gymleco-046-donkey-raise",
+    // Gymleco – 046 Donkey Raise
+    "gymleco-145-seated-calf-press",
+    // Gymleco – 145 Seated Calf Press
+    "nautilus-nautilus-impact-standing-calf",
+    // Nautilus – Impact Standing Calf
+    "nautilus-nautilus-instinct-dual-leg-press-calf-raise",
+    // Nautilus – Instinct Wadenheben
+    "nautilus-standing-calf",
+    // Nautilus – Standing Calf
+    "panatta-calf-machine",
+    // Panatta – 1FE089 Calf machine
+    "panatta-calf-machine-2",
+    // Panatta – 1SC089 Calf machine
+    "panatta-seated-calf",
+    // Panatta – 1FO088 Seated Calf
+    "panatta-donkey-calf",
+    // Panatta – 1FW089 Donkey calf
+    "eigen-mw0xpnf8-lquzo"
+    // gym80 – Donkey Calve Raises
+  ]),
+  belt_squat: /* @__PURE__ */ new Set([
+    "gym80-4360",
+    // gym80 – 4360 Belt Squat
+    "technogym-mg86",
+    // Technogym – Pure Strength Belt Squat
+    "lifefitness-hammer-strength-plate-loaded-belt-squat",
+    // Life Fitness – Plate Loaded Belt Squat
+    "glutebuilder-belt-squat-step-up",
+    // Glute Builder – Belt Squat / Step Up
+    "atlantis-pw511",
+    // Atlantis – PW511 Belt squat
+    "newtech-torture-belt-squat-new",
+    // Newtech – Torture Belt Squat
+    "watson-hip-belt-squat",
+    // Watson – PL Hip Belt Squat
+    "nautilus-nautilus-belt-squat",
+    // Nautilus – Belt Squat
+    "panatta-belt-squat",
+    // Panatta – 1FW095 Belt squat
+    "eigen-mw0xmvj3-ljstv",
+    // Pit Shark – Belt Squat
+    "bootybuilder-booty-builder-belt-squat"
+    // Booty Builder – Belt Squat
+  ]),
+  leg_extension: /* @__PURE__ */ new Set([
+    "prime-evolution-leg-extension",
+    // PRIME Fitness – Evolution | Leg Extension
+    "prime-hybrid-leg-extension",
+    // PRIME Fitness – Hybrid | Leg Extension
+    "prime-plate-loaded-leg-extension",
+    // PRIME Fitness – Plate Loaded | Leg Extension
+    "gym80-3001",
+    // gym80 – 3001 Beinstrecker
+    "gym80-3123",
+    // gym80 – 3123 Beinstrecker Liegend mit verstellbarer Rückenlehne
+    "gym80-4336n",
+    // gym80 – 4336N Beinstrecker
+    "gym80-4392",
+    // gym80 – 4392 Beinstrecker Stehend
+    "gym80-80a00029",
+    // gym80 – 80A00029 Beinstrecker
+    "technogym-mk91eh",
+    // Technogym – Artis Leg Extension
+    "technogym-mnjc",
+    // Technogym – Selection 700 Leg Extension
+    "technogym-mnjp",
+    // Technogym – Selection 900 Leg Extension
+    "technogym-c99600-anvk",
+    // Technogym – Selection Leg Extension Med
+    "technogym-mg65",
+    // Technogym – Pure Strength Leg Extension
+    "lifefitness-axiom-series-leg-extension",
+    // Life Fitness – Axiom Series - Leg Extension
+    "lifefitness-hammer-strength-mts-iso-lateral-leg-extension",
+    // Life Fitness – MTS Iso-Lateral Leg Extension
+    "lifefitness-hammer-strength-select-leg-extension",
+    // Life Fitness – Hammer Strength Select Leg Extension
+    "lifefitness-insignia-series-leg-extension",
+    // Life Fitness – Insignia Series Leg Extension
+    "lifefitness-hammer-strength-plate-loaded-iso-lateral-leg-extension",
+    // Life Fitness – Iso-Lateral Leg Extension
+    "lifefitness-life-fitness-leg-extension",
+    // Life Fitness – Plate Loaded Leg Extension
+    "atlantis-c105",
+    // Atlantis – C105 Leg Extension
+    "newtech-leg-extension",
+    // Newtech – OnHim Leg Extension
+    "newtech-leg-extension-2",
+    // Newtech – Torture Leg Extension
+    "watson-single-stack-leg-extension",
+    // Watson – SS Leg Extension
+    "watson-plate-load-leg-extension",
+    // Watson – PL Leg Extension
+    "gymleco-340-leg-extension",
+    // Gymleco – 340 Leg Extension
+    "gymleco-340r-leg-extension-rehab",
+    // Gymleco – 340R Leg Extension, Adjustable
+    "gymleco-040-leg-extension",
+    // Gymleco – 040 Leg Extension
+    "nautilus-nautilus-impact-leg-extension",
+    // Nautilus – Impact Leg Extension
+    "nautilus-nautilus-inspiration-leg-extension",
+    // Nautilus – Inspiration Beinstrecker
+    "nautilus-nautilus-instinct-leg-extension",
+    // Nautilus – Instinct Leg Extension
+    "nautilus-leg-extension",
+    // Nautilus – Beinstrecker
+    "milon-pump-leg-extension",
+    // milon – 01 Leg Extension
+    "panatta-fantastic-leg-extension",
+    // Panatta – 1FT081 Leg Extension
+    "panatta-leg-extension",
+    // Panatta – 1FE081 Leg extension
+    "panatta-leg-extension-3",
+    // Panatta – 1MTH081 Leg extension
+    "panatta-leg-extension-4",
+    // Panatta – 1SC081 Leg extension
+    "panatta-leg-extension-5",
+    // Panatta – 1FO181 Leg extension
+    "panatta-leg-extension-2",
+    // Panatta – 1FW181 Leg extension
+    "panatta-alternate-leg-extension-copia",
+    // Panatta – 1FW281 Alternate leg extension
+    "watson-westside-hip-quad-developer-pro",
+    // Watson – PL Westside Hip & Quad Developer Pro
+    "eigen-mw58ufod-xdptg"
+    // Schnell – Goliath Beinstrecker dual (zugeordnet 13.11.2026)
+  ]),
+  leg_curl_lying: /* @__PURE__ */ new Set([
+    "prime-evolution-prone-leg-curl",
+    // PRIME Fitness – Evolution | Prone Leg Curl
+    "prime-hybrid-prone-leg-curl",
+    // PRIME Fitness – Hybrid | Prone Leg Curl
+    "prime-plate-loaded-prone-leg-curl",
+    // PRIME Fitness – Plate Loaded | Prone Leg Curl
+    "gym80-3002",
+    // gym80 – 3002 Beinbeuger Liegend
+    "gym80-3013",
+    // gym80 – 3013 Beinbeuger Stehend
+    "gym80-4373",
+    // gym80 – 4373 Beinbeuger Stehend
+    "gym80-4375",
+    // gym80 – 4375 Inverse Leg Curl
+    "technogym-mnup",
+    // Technogym – Selection 900 Prone Leg Curl
+    "technogym-mg70",
+    // Technogym – Pure Strength Standing Leg Curl
+    "lifefitness-hammer-strength-mts-kneeling-leg-curl",
+    // Life Fitness – MTS Iso-Lateral Kneeling Leg Curl
+    "lifefitness-plate-loaded-iso-lateral-kneeling-leg-curl",
+    // Life Fitness – Plate Loaded Iso-Lateral Kneeling Leg Curl
+    "lifefitness-life-fitness-kneeling-leg-curl",
+    // Life Fitness – Plate Loaded Kneeling Leg Curl
+    "atlantis-c106",
+    // Atlantis – C106 Lying leg curl
+    "atlantis-c107",
+    // Atlantis – C107 Standing leg curl
+    "atlantis-c118",
+    // Atlantis – C118 Kneeling leg curl
+    "newtech-kneeling-leg-curl",
+    // Newtech – Torture Kneeling Leg Curl
+    "watson-lying-leg-curl",
+    // Watson – SS Lying Leg Curl
+    "watson-plate-loaded-standing-leg-curl",
+    // Watson – PL Standing Leg Curl
+    "gymleco-342-lying-leg-curl",
+    // Gymleco – 342 Lying Leg Curl
+    "gymleco-342r-lying-leg-curl-adjustable",
+    // Gymleco – 342R Lying Leg Curl, Adjustable
+    "gymleco-042-standing-leg-curl",
+    // Gymleco – 042 Standing Leg Curl
+    "nautilus-nautilus-impact-kneeling-leg-curl",
+    // Nautilus – Impact Kneeling Leg Curl
+    "nautilus-lying-leg-curl-1",
+    // Nautilus – Beinbeuger im Liegen
+    "milon-pump-prone-leg-curl",
+    // milon – 02 Prone Leg Curl
+    "panatta-standing-leg-curling",
+    // Panatta – 1FE084 Standing leg curling
+    "panatta-kneeling-leg-curling-copia",
+    // Panatta – 1FO094 Kneeling leg curling
+    "panatta-kneeling-leg-curling",
+    // Panatta – 1FW094 Kneeling leg curling
+    "watson-westside-inverse-curl-pro",
+    // Watson – PL Westside Inverse Curl Pro
+    "gym80-4337n",
+    // gym80 – 4337N Beinbeuger
+    "gym80-80a00030",
+    // gym80 – 80A00030 Beinbeuger
+    "lifefitness-axiom-series-leg-curl",
+    // Life Fitness – Axiom Series - Leg Curl
+    "lifefitness-hammer-strength-select-leg-curl",
+    // Life Fitness – Hammer Strength Select Leg Curl
+    "lifefitness-insignia-series-leg-curl",
+    // Life Fitness – Insignia Series Leg Curl
+    "lifefitness-plate-loaded-iso-lateral-leg-curl",
+    // Life Fitness – Iso-Lateral Leg Curl
+    "newtech-leg-curl",
+    // Newtech – OnHim Leg Curl
+    "newtech-leg-curl-2",
+    // Newtech – Torture Leg Curl
+    "nautilus-nautilus-impact-leg-curl",
+    // Nautilus – Impact Leg Curl
+    "nautilus-nautilus-inspiration-leg-curl",
+    // Nautilus – Inspiration Beinbeuger
+    "nautilus-nautilus-instinct-leg-curl",
+    // Nautilus – Instinct Leg Curl
+    "panatta-leg-curling",
+    // Panatta – 1FE082 Leg curling
+    "panatta-leg-curling-3",
+    // Panatta – 1MTH082 Leg curling
+    "panatta-leg-curling-4",
+    // Panatta – 1SC082 Leg curling
+    "panatta-alternate-leg-curling",
+    // Panatta – 1FW082 Alternate leg curling
+    "panatta-leg-curling-2",
+    // Panatta – 1FW182 Leg curling
+    "gym80-4434",
+    // gym80 – 4434 Glute Ham Developer
+    "lifefitness-glute-ham-reverse-hyper-combo",
+    // Life Fitness – Glute Ham / Reverse Hyper
+    "atlantis-pw322",
+    // Atlantis – PW322 Assisted glute and ham developer
+    "lifefitness-plate-loaded-assisted-nordic-ham"
+    // Life Fitness – Plate Loaded Assisted Nordic Ham (zugeordnet 13.11.2026)
+  ]),
+  leg_curl_seated: /* @__PURE__ */ new Set([
+    "prime-evolution-seated-leg-curl",
+    // PRIME Fitness – Evolution | Seated Leg Curl
+    "prime-hybrid-seated-leg-curl",
+    // PRIME Fitness – Hybrid | Seated Leg Curl
+    "gym80-3003",
+    // gym80 – 3003 Beinbeuger Sitzend
+    "lifefitness-hammer-strength-select-seated-leg-curl",
+    // Life Fitness – Hammer Strength Select Seated Leg Curl
+    "lifefitness-insignia-series-seated-leg-curl",
+    // Life Fitness – Insignia Series Seated Leg Curl
+    "atlantis-c108",
+    // Atlantis – C108 Seated leg curl
+    "newtech-onhim-seated-leg-curl-new",
+    // Newtech – OnHim Seated Leg Curl
+    "watson-seated-leg-curl",
+    // Watson – SS Seated Leg Curl
+    "gymleco-341-seated-leg-curl",
+    // Gymleco – 341 Seated Leg Curl
+    "gymleco-041-leg-curl-seated",
+    // Gymleco – 041 Leg Curl, Seated
+    "nautilus-nautilus-impact-seated-leg-curl",
+    // Nautilus – Impact Seated Leg Curl
+    "panatta-seated-leg-curling",
+    // Panatta – 1FE083 Seated leg curling
+    "panatta-seated-leg-curling-3",
+    // Panatta – 1MTH083 Seated leg curling
+    "panatta-seated-leg-curling-4",
+    // Panatta – 1SC083 Seated leg curling
+    "panatta-seated-leg-curling-5",
+    // Panatta – 1FO183 Seated leg curling
+    "panatta-seated-leg-curling-2",
+    // Panatta – 1FW183 Seated leg curling
+    "technogym-mk90eh",
+    // Technogym – Artis Leg Curl
+    "technogym-mnic",
+    // Technogym – Selection 700 Leg Curl
+    "technogym-mnip",
+    // Technogym – Selection 900 Leg Curl
+    "technogym-c99500-anvk",
+    // Technogym – Selection Leg Curl Med
+    "eigen-mw4wccvs-7pyn0"
+    // Cybex – Eagle Leg Curl (zugeordnet 13.11.2026)
+  ]),
+  adduction: /* @__PURE__ */ new Set([
+    "prime-hybrid-inner-thigh",
+    // PRIME Fitness – Hybrid | Inner Thigh
+    "gym80-3029",
+    // gym80 – 3029 Adduktionsmaschine
+    "technogym-mk17eh",
+    // Technogym – Artis Adductor
+    "technogym-mnqp",
+    // Technogym – Selection 900 Adductor
+    "technogym-c91700-anvk",
+    // Technogym – Selection Adductor Med
+    "lifefitness-hammer-strength-select-hip-adduction",
+    // Life Fitness – Hammer Strength Select Hip Adduction
+    "lifefitness-insignia-series-hip-adduction",
+    // Life Fitness – Insignia Series Hip Adduction
+    "watson-single-stack-hip-adductor",
+    // Watson – SS Hip Adductor
+    "watson-pl-hip-adductor",
+    // Watson – PL Hip Adductor
+    "nautilus-nautilus-impact-adductor",
+    // Nautilus – Impact Adduktor
+    "panatta-adductor-machine",
+    // Panatta – 1FE087 Adductor machine
+    "panatta-adductor-machine-2",
+    // Panatta – 1MTH087 Adductor machine
+    "panatta-adductor-machine-3",
+    // Panatta – 1SC087 Adductor machine
+    "bootybuilder-booty-builder-selectorized-standing-hip-adduction",
+    // Booty Builder – Selectorized Standing Hip Adduction
+    "bootybuilder-booty-builder-standing-hip-adduction",
+    // Booty Builder – Standing Hip Adduction
+    "eigen-01a18e87-b445-7251-9016-c95f1ee27d6a",
+    // Eigene – Hammer Adduktion (zugeordnet 13.11.2026)
+    "eigen-mwcn0mty-q8in0"
+    // Hammer Strength – Adduktion (zugeordnet 13.11.2026)
+  ]),
+  abduction: /* @__PURE__ */ new Set([
+    "prime-hybrid-outer-thigh",
+    // PRIME Fitness – Hybrid | Outer Thigh
+    "gym80-3028",
+    // gym80 – 3028 Abduktionsmaschine
+    "gym80-3069",
+    // gym80 – 3069 Stehende Abduktion
+    "gym80-4374",
+    // gym80 – 4374 Stehende Abduktion
+    "gym80-4384",
+    // gym80 – 4384 Abduktion 3D
+    "technogym-mk18eh",
+    // Technogym – Artis Abductor
+    "technogym-mnpp",
+    // Technogym – Selection 900 Abductor
+    "technogym-c91800-anvk",
+    // Technogym – Selection Abductor Med
+    "technogym-mg95",
+    // Technogym – Pure Strength Standing Abductor
+    "lifefitness-hammer-strength-select-hip-abduction",
+    // Life Fitness – Hammer Strength Select Hip Abduction
+    "lifefitness-insignia-series-sit-stand-hip-abductor",
+    // Life Fitness – Insignia Series Sit / Stand Hip Abductor
+    "glutebuilder-selectorized-3d-multi-abductor-pro",
+    // Glute Builder – Selectorized 3D Multi Abductor Pro
+    "glutebuilder-3d-multi-abductor",
+    // Glute Builder – 3D Multi Abductor
+    "atlantis-pw429",
+    // Atlantis – PW429 Glute Abductor
+    "newtech-hip-abduction-single-move",
+    // Newtech – OnHim Hip Abduction (Single Move)
+    "watson-single-stack-hip-abductor",
+    // Watson – SS Hip Abductor
+    "watson-single-stack-standing-hip-abductor",
+    // Watson – SS Standing Hip Abductor
+    "watson-pl-hip-abductor",
+    // Watson – PL Hip Abductor
+    "gymleco-362-standing-abductor",
+    // Gymleco – 362 Standing Abductor
+    "gymleco-062-standing-abductor-plate-loaded",
+    // Gymleco – 062 Standing Abductor, Plate Loaded
+    "nautilus-nautilus-impact-abductor",
+    // Nautilus – Impact Abduktor
+    "milon-pump-abductor-upright",
+    // milon – 03 Abductor Upright
+    "panatta-abductor-machine",
+    // Panatta – 1FE086 Abductor machine
+    "panatta-standing-abductor-machine",
+    // Panatta – 1FE096 Standing abductor machine
+    "panatta-abductor-machine-2",
+    // Panatta – 1MTH086 Abductor machine
+    "panatta-standing-abductor-2",
+    // Panatta – 1MTH096 Standing abductor
+    "panatta-abductor-machine-3",
+    // Panatta – 1SC086 Abductor machine
+    "panatta-standing-abductor",
+    // Panatta – 1FW099 Standing abductor
+    "panatta-3d-abductor",
+    // Panatta – 1FW199 3D Abductor
+    "bootybuilder-booty-builder-3d-multi-abductor",
+    // Booty Builder – Selectorized 3D Multi-Abductor
+    "bootybuilder-booty-builder-selectorized-standing-abductor",
+    // Booty Builder – Selectorized Standing Abductor
+    "bootybuilder-booty-builder-standing-abductor",
+    // Booty Builder – Standing Abductor
+    "granite-glutinator",
+    // Granite – Glutinator (zugeordnet 13.11.2026)
+    "eigen-mw54fps7-77iv4",
+    // Hammer Strenght – Abduktion Maschine (zugeordnet 13.11.2026)
+    "eigen-mwcmyaka-ocp34"
+    // Schnell – Abduktor (zugeordnet 13.11.2026)
+  ]),
+  calf_seated: /* @__PURE__ */ new Set([
+    "gym80-4026",
+    // gym80 – 4026 Wadenmaschine Sitzend
+    "lifefitness-plate-loaded-seated-calf-raise",
+    // Life Fitness – Plate Loaded Seated Calf Raise
+    "newtech-torture-seated-calf-raise",
+    // Newtech – Torture Seated Calf Raise
+    "newtech-seated-calf-raise",
+    // Newtech – Seated Calf Raise
+    "nautilus-nautilus-plate-loaded-tilt-seat-calf",
+    // Nautilus – Tilt Seat Calf
+    "panatta-super-seated-calf"
+    // Panatta – 1FW088 Super seated calf
+  ]),
+  tibialis: /* @__PURE__ */ new Set([
+    "gym80-4348",
+    // gym80 – 4348 Tibialismaschine Sitzend
+    "lifefitness-plate-loaded-tibia-dorsi-flexion",
+    // Life Fitness – Plate Loaded Tibia Dorsi-Flexion
+    "atlantis-m126",
+    // Atlantis – M126 Tibia dorsi flexion
+    "watson-tibialis-trainer",
+    // Watson – PL Tibialis Trainer
+    "gymleco-047-tibia-dorsi-flexion"
+    // Gymleco – 047 Tibia Dorsi Flexion
+  ]),
+  back_extension: /* @__PURE__ */ new Set([
+    "prime-evolution-low-back-extension",
+    // PRIME Fitness – Evolution | Low Back Extension
+    "prime-hybrid-low-back-extension",
+    // PRIME Fitness – Hybrid | Low Back Extension
+    "prime-plate-loaded-low-back-extension",
+    // PRIME Fitness – Plate Loaded | Low Back Extension
+    "gym80-3007",
+    // gym80 – 3007 Rückenstrecker
+    "gym80-3038",
+    // gym80 – 3038 Rückenstrecker
+    "technogym-mk58eh",
+    // Technogym – Artis Lower Back
+    "technogym-mncc",
+    // Technogym – Selection 700 Lower Back
+    "technogym-mncp",
+    // Technogym – Selection 900 Lower Back
+    "technogym-c95800-anvk",
+    // Technogym – Selection Lower Back Med
+    "lifefitness-hammer-strength-select-back-extension",
+    // Life Fitness – Hammer Strength Select Back Extension
+    "lifefitness-insignia-series-back-extension",
+    // Life Fitness – Insignia Series Back Extension
+    "bootybuilder-booty-builder-selectorized-back-extension",
+    // Booty Builder – Selectorized Back Extension
+    "watson-single-stack-back-extension",
+    // Watson – SS Back Extension
+    "nautilus-nautilus-impact-low-back",
+    // Nautilus – Impact Lower Back
+    "nautilus-nautilus-inspiration-back-extension",
+    // Nautilus – Inspiration Back Extension
+    "panatta-lower-back",
+    // Panatta – 1FE005 Lower back
+    "panatta-lower-back-2",
+    // Panatta – 1MTH005 Lower back
+    "panatta-lower-back-3",
+    // Panatta – 1SC005 Lower back
+    "watson-single-stack-hyper-extension",
+    // Watson – SS Hyper Extension
+    "eigen-mw54m4na-m97lg"
+    // Granite – Hyperextension (TbJP) (zugeordnet 13.11.2026)
+  ]),
+  biceps_curl: /* @__PURE__ */ new Set([
+    "prime-evolution-arm-curl",
+    // PRIME Fitness – Evolution | Arm Curl
+    "prime-hybrid-arm-curl",
+    // PRIME Fitness – Hybrid | Arm Curl
+    "prime-plate-loaded-arm-curl",
+    // PRIME Fitness – Plate Loaded | Arm Curl
+    "prime-specialty-double-sided-preacher",
+    // PRIME Fitness – Specialty | Double-Sided Preacher
+    "gym80-3010",
+    // gym80 – 3010 Bizepsmaschine
+    "gym80-3098",
+    // gym80 – 3098 Bizeps Horizontal
+    "gym80-5004",
+    // gym80 – 5004 Innovation Curler Maschine
+    "gym80-4338n",
+    // gym80 – 4338N Bizepsmaschine
+    "gym80-4355",
+    // gym80 – 4355 Bizepsmaschine Dual
+    "gym80-4366",
+    // gym80 – 4366 Bizeps Überkopf
+    "gym80-5903",
+    // gym80 – 5903 Bizepscurl Stehend
+    "technogym-mk92eh",
+    // Technogym – Artis Arm Curl
+    "technogym-mnrp",
+    // Technogym – Selection 900 Arm Curl
+    "technogym-mg60",
+    // Technogym – Pure Strength Biceps
+    "lifefitness-axiom-series-biceps-curl",
+    // Life Fitness – Axiom Series - Biceps Curl
+    "lifefitness-hammer-strength-mts-iso-lateral-biceps-curl",
+    // Life Fitness – MTS Iso-Lateral Biceps Curl
+    "lifefitness-hammer-strength-select-biceps-curl",
+    // Life Fitness – Hammer Strength Select Biceps-Curl
+    "lifefitness-insignia-series-biceps-curl",
+    // Life Fitness – Insignia Series Biceps Curl
+    "lifefitness-insignia-series-biceps-curl-dependent",
+    // Life Fitness – Insignia Series Biceps Curl - Dependent
+    "lifefitness-plate-loaded-seated-biceps",
+    // Life Fitness – Plate Loaded Seated Biceps
+    "atlantis-b157",
+    // Atlantis – B157 Biceps curl
+    "atlantis-b158",
+    // Atlantis – B158 Horizontal curl
+    "atlantis-b160",
+    // Atlantis – B160 Biceps isolator
+    "atlantis-b257",
+    // Atlantis – B257 Standing Bicep Curl
+    "atlantis-b260",
+    // Atlantis – B260 Horizontal biceps isolator
+    "atlantis-pw357",
+    // Atlantis – PW357 Preacher curl
+    "newtech-arm-curl",
+    // Newtech – OnHim Arm Curl
+    "newtech-arm-curl-2",
+    // Newtech – Torture Arm Curl
+    "watson-animal-dual-stack-bicep-curl",
+    // Watson – DS Animal Bicep Curl
+    "watson-single-stack-bicep-curl",
+    // Watson – SS Bicep Curl
+    "watson-plate-loaded-bicep-curl",
+    // Watson – PL Bicep Curl
+    "gymleco-350-biceps-curl-machine",
+    // Gymleco – 350 Biceps Curl Machine
+    "gymleco-050-biceps-curl-machine",
+    // Gymleco – 050 Biceps Curl Machine
+    "nautilus-nautilus-impact-biceps-curl",
+    // Nautilus – Impact Bizeps-Curl
+    "nautilus-nautilus-inspiration-biceps-curl",
+    // Nautilus – Inspiration Biceps Curl
+    "nautilus-nautilus-inspiration-bilateral-arm-curl",
+    // Nautilus – Inspiration Bilateral Arm Curl
+    "nautilus-nautilus-instinct-dual-biceps-curl-triceps-extension",
+    // Nautilus – Instinct Dual Bizeps-Curl/Trizeps-Extension
+    "nautilus-nautilus-leverage-biceps-curl",
+    // Nautilus – Leverage Curl
+    "nautilus-biceps-curl",
+    // Nautilus – Bizeps-Curl
+    "panatta-fantastic-biceps-machine",
+    // Panatta – 1FT051 Biceps Machine
+    "panatta-curling-machine",
+    // Panatta – 1FE051 Curling machine
+    "panatta-alternate-preacher-curl-machine",
+    // Panatta – 1FE052 Alternate preacher curl machine
+    "panatta-alternate-arm-curl",
+    // Panatta – 1FE056 Alternate arm curl
+    "panatta-alternate-arm-curl-120",
+    // Panatta – 1FE356 Alternate arm curl 120
+    "panatta-alternate-arm-curl-45",
+    // Panatta – 1FE456 Alternate arm curl -45
+    "panatta-alternate-supinating-biceps",
+    // Panatta – 1FE556 Alternate Supinating Biceps
+    "panatta-curling-machine-3",
+    // Panatta – 1MTH051 Curling machine
+    "panatta-alternate-arm-curl-2",
+    // Panatta – 1MTH056 Alternate arm curl
+    "panatta-curling-machine-4",
+    // Panatta – 1SC051 Curling machine
+    "panatta-curling-machine-5",
+    // Panatta – 1FO151 Curling machine
+    "panatta-alternate-preacher-curl-machine-2",
+    // Panatta – 1FW054 Alternate Preacher Curl Machine
+    "panatta-alternate-arm-curl-120-2",
+    // Panatta – 1FW055 Alternate Arm Curl 120
+    "panatta-alternate-arm-curl-45-2",
+    // Panatta – 1FW056 Alternate Arm Curl – 45
+    "panatta-alternate-curling-machine",
+    // Panatta – 1FW251 Alternate curling machine
+    "panatta-curling-machine-2",
+    // Panatta – 1FW351 Curling machine
+    "panatta-three-angles-bicep-machine",
+    // Panatta – 1FW451 Three Angles Biceps Machine
+    "panatta-four-angle-biceps-machines",
+    // Panatta – 1FW551 Four Angle Biceps Machines
+    "eigen-01a18e87-b446-7192-8043-aa7e15016a0c",
+    // Eigene – Hammer Curls Cable (zugeordnet 13.11.2026)
+    "eigen-01a18e87-b44e-758f-89b7-b9b95de29c92",
+    // Milon – Bizeps Curl (zugeordnet 13.11.2026)
+    "eigen-mw54sj42-o26sk",
+    // Schnell – Biceps Curl (zugeordnet 13.11.2026)
+    "eigen-mwahsytn-36s22",
+    // Icarian – Cable Biceps Curl (zugeordnet 13.11.2026)
+    "eigen-mwahwsy9-w7v6s",
+    // Nautilus – Multi Biceps (zugeordnet 13.11.2026)
+    "eigen-mwaynche-e9oxg"
+    // Galaxy Sport – Biceps Curl (zugeordnet 13.11.2026)
+  ]),
+  forearm: /* @__PURE__ */ new Set([
+    "gymleco-357-forearm-curl",
+    // Gymleco – 357 Forearm Curl
+    "gym80-3071",
+    // gym80 – 3071 Unterarmmaschine
+    "atlantis-a201",
+    // Atlantis – A201 Multi-forearm
+    "gymleco-356-forearm-machine-3-exercises",
+    // Gymleco – 356 Forearm Machine, 3 Exercises
+    "gym80-80a00032",
+    // gym80 – Gripper (zugeordnet 13.11.2026)
+    "lifefitness-plate-loaded-gripper",
+    // Life Fitness – Plate Loaded Gripper (zugeordnet 13.11.2026)
+    "watson-seated-plate-load-hand-gripper",
+    // Watson – PL Seated Hand Gripper (zugeordnet 13.11.2026)
+    "watson-standing-plate-load-hand-gripper",
+    // Watson – PL Standing Hand Gripper (zugeordnet 13.11.2026)
+    "eigen-mwahoir7-3v7rv"
+    // Nautilus – Superforearm (zugeordnet 13.11.2026)
+  ]),
+  triceps: /* @__PURE__ */ new Set([
+    "prime-evolution-tricep-extension",
+    // PRIME Fitness – Evolution | Tricep Extension
+    "prime-hybrid-seated-pushdown",
+    // PRIME Fitness – Hybrid | Seated Pushdown
+    "prime-hybrid-tricep-extension",
+    // PRIME Fitness – Hybrid | Tricep Extension
+    "prime-plate-loaded-tricep-extension",
+    // PRIME Fitness – Plate Loaded | Tricep Extension
+    "gym80-3011",
+    // gym80 – 3011 Trizepsmaschine
+    "gym80-4339n",
+    // gym80 – 4339N Trizepsmaschine
+    "technogym-mk45eh",
+    // Technogym – Artis Arm Extension
+    "technogym-mnsp",
+    // Technogym – Selection 900 Arm Extension
+    "lifefitness-axiom-series-triceps-extension",
+    // Life Fitness – Axiom Series - Triceps Extension
+    "lifefitness-mts-iso-lateral-triceps-extension",
+    // Life Fitness – MTS Iso-Lateral Triceps Extension
+    "lifefitness-hammer-strength-select-triceps-extension",
+    // Life Fitness – Hammer Strength Select Triceps Extension
+    "lifefitness-insignia-series-triceps-extension",
+    // Life Fitness – Insignia Series Triceps Extension
+    "lifefitness-insignia-series-triceps-press",
+    // Life Fitness – Insignia Series Triceps Press
+    "atlantis-t163",
+    // Atlantis – T163 Triceps pushdown
+    "atlantis-t164",
+    // Atlantis – T164 Triceps extension
+    "atlantis-t215",
+    // Atlantis – T215 Incline triceps pushdown
+    "atlantis-t262",
+    // Atlantis – T262 Selectorized French press
+    "watson-single-stack-tricep-extension",
+    // Watson – SS Tricep Extension
+    "gymleco-351-triceps-extension",
+    // Gymleco – 351 Triceps Extension
+    "gymleco-051-iso-lateral-triceps",
+    // Gymleco – 051 Iso Lateral Triceps
+    "nautilus-nautilus-impact-triceps-extension",
+    // Nautilus – Impact Trizeps-Extension
+    "nautilus-nautilus-inspiration-triceps-extension",
+    // Nautilus – Inspiration Triceps Extension
+    "panatta-triceps-machine-5",
+    // Panatta – 1FT053 Triceps Machine
+    "panatta-triceps-machine",
+    // Panatta – 1FE053 Triceps machine
+    "panatta-alternate-arm-extension",
+    // Panatta – 1FE057 Alternate arm extension
+    "panatta-french-press-machine",
+    // Panatta – 1FE153 French press machine
+    "panatta-alternate-arm-extension-90",
+    // Panatta – 1FE357 Alternate arm extension 90
+    "panatta-alternate-pronating-triceps",
+    // Panatta – 1FE557 Alternate Pronating Triceps
+    "panatta-triceps-machine-3",
+    // Panatta – 1MTH053 Triceps machine
+    "panatta-alternate-arm-extension-2",
+    // Panatta – 1MTH057 Alternate arm extension
+    "panatta-french-press-machine-2",
+    // Panatta – 1MTH153 French press machine
+    "panatta-triceps-machine-4",
+    // Panatta – 1SC053 Triceps machine
+    "panatta-french-press-machine-3",
+    // Panatta – 1FO053 French press machine
+    "panatta-super-french-press-machine",
+    // Panatta – 1FW053 Super french press machine
+    "panatta-alternate-triceps-machine",
+    // Panatta – 1FW252 Alternate triceps machine
+    "panatta-triceps-machine-2",
+    // Panatta – 1FW352 Triceps machine
+    "panatta-three-angles-triceps-machine",
+    // Panatta – 1FW452 Three Angles Triceps Machine
+    "gymleco-251-gymleco-triceps-pushdown",
+    // Gymleco – Triceps Pushdown (zugeordnet 13.11.2026)
+    "eigen-01a18e87-b455-7796-ba99-6f8ce86df17a",
+    // Eigene – PushnPull Triceps Press (zugeordnet 13.11.2026)
+    "eigen-01a18e87-b457-75ae-b197-d85db3a68c35",
+    // Eigene – Trizeps Press cable Seil (zugeordnet 13.11.2026)
+    "eigen-mw54ppq4-qbmqg",
+    // Atlantis – Seated Triceps Extension (zugeordnet 13.11.2026)
+    "eigen-mw5588yd-sb7mz",
+    // Push n Pull – Trimotion ft. Tim Budesheim (zugeordnet 13.11.2026)
+    "eigen-mwahuvvw-bamcd"
+    // MedX – Triceps Extension (zugeordnet 13.11.2026)
+  ]),
+  triceps_overhead: /* @__PURE__ */ new Set([
+    "gym80-3095",
+    // gym80 – 3095 Trizeps Überkopf
+    "gym80-4379",
+    // gym80 – 4379 Trizeps Überkopf
+    "atlantis-t162",
+    // Atlantis – T162 Overhead triceps
+    "newtech-over-head-extension",
+    // Newtech – Torture Overhead Extension
+    "watson-single-stack-overhead-tricep-extension",
+    // Watson – SS Overhead Tricep Extension
+    "eigen-mvwq46xb-cnfte",
+    // Panatta – Fantastic Line | Overhead Triceps Extension
+    "atlantis-t161",
+    // Atlantis – Overhead triceps (cable motion) (zugeordnet 13.11.2026)
+    "eigen-01a18e87-b449-7020-bb8e-8a2996a3e83f",
+    // Eigene – Katana Extension Cable (zugeordnet 13.11.2026)
+    "eigen-mw54tyl0-joncq"
+    // Gym80 – Overhead Triceps Extension (zugeordnet 13.11.2026)
+  ]),
+  crunch: /* @__PURE__ */ new Set([
+    "prime-evolution-abdominal-crunch",
+    // PRIME Fitness – Evolution | Abdominal Crunch
+    "prime-hybrid-abdominal-crunch",
+    // PRIME Fitness – Hybrid | Abdominal Crunch
+    "prime-plate-loaded-abdominal-crunch",
+    // PRIME Fitness – Plate Loaded | Abdominal Crunch
+    "gym80-3037",
+    // gym80 – 3037 Bauchmuskelmaschine
+    "gym80-3124",
+    // gym80 – 3124 Crunchmaschine
+    "gym80-4307",
+    // gym80 – 4307 Bauchmuskelbank Liegend
+    "gym80-4317",
+    // gym80 – 4317 Bauchmuskelmaschine AB Swing
+    "gym80-4342n",
+    // gym80 – 4342N Bauchmuskelmaschine Klappsitz
+    "gym80-4343",
+    // gym80 – 4343 Bauchmuskelmaschine Crunch
+    "technogym-mk83eh",
+    // Technogym – Artis Total Abdominal
+    "technogym-mnbc",
+    // Technogym – Selection 700 Abdominal Crunch
+    "technogym-mnbp",
+    // Technogym – Selection 900 Abdominal Crunch
+    "technogym-mnzp",
+    // Technogym – Selection 900 Total Abdominal
+    "technogym-c95700-anvk",
+    // Technogym – Selection Abdominal Crunch Med
+    "lifefitness-axiom-series-abdominal",
+    // Life Fitness – Axiom Series - Abdominal
+    "lifefitness-hammer-strength-mts-abdominal-crunch",
+    // Life Fitness – MTS Abdominal Crunch
+    "lifefitness-hammer-strength-select-abdominal-crunch",
+    // Life Fitness – Hammer Strength Select Abdominal Crunch
+    "lifefitness-insignia-series-abdominal",
+    // Life Fitness – Insignia Series Abdominal
+    "lifefitness-insignia-series-abdominal-advanced",
+    // Life Fitness – Insignia Series Abdominal Advanced
+    "lifefitness-plate-loaded-abdominal-oblique-crunch",
+    // Life Fitness – Abdominal / Oblique Crunch
+    "atlantis-a301",
+    // Atlantis – A301 Dual seated crunch
+    "watson-abdominal-crunch",
+    // Watson – SS Abdominal Crunch
+    "gymleco-370-seated-abs-machine",
+    // Gymleco – 370 Seated Abs Machine
+    "gymleco-376-knee-standing-abdominal",
+    // Gymleco – 376 Knee standing Abdominal
+    "gymleco-070-seated-abs-machine",
+    // Gymleco – 070 Seated Abs Machine
+    "gymleco-072-ab-roll-up",
+    // Gymleco – 072 Ab Roll Up
+    "nautilus-nautilus-humansport-arm-crunch",
+    // Nautilus – HumanSport Arm Crunch
+    "nautilus-nautilus-impact-abdominal",
+    // Nautilus – Impact Abdominal
+    "nautilus-nautilus-inspiration-abdominal-crunch",
+    // Nautilus – Inspiration Abdominal Crunch
+    "nautilus-nautilus-leverage-abdominal-crunch",
+    // Nautilus – Leverage Abdominal Crunch
+    "panatta-upper-abdominal",
+    // Panatta – 1FE065 Upper abdominal
+    "panatta-abdominal-crunch",
+    // Panatta – 1FE067 Abdominal crunch
+    "panatta-abdominal-crunch-3",
+    // Panatta – 1MTH067 Abdominal crunch
+    "panatta-upper-abdominal-2",
+    // Panatta – 1SC065 Upper abdominal
+    "panatta-abdominal-crunch-2",
+    // Panatta – 1FO065 Abdominal Crunch
+    "panatta-total-core-crunch-machine",
+    // Panatta – 1FW065 Total core crunch machine
+    "eigen-01a18e87-b43b-73f6-bd30-e91d028d16ae",
+    // Eigene – Cybex Bauchmaschine (zugeordnet 13.11.2026)
+    "eigen-mwahpx70-1g9ky"
+    // Gym80 – Abdominal Crunch (zugeordnet 13.11.2026)
+  ]),
+  rotation: /* @__PURE__ */ new Set([
+    "prime-hybrid-rotary-torso",
+    // PRIME Fitness – Hybrid | Rotary Torso
+    "gym80-3225",
+    // gym80 – 3225 Rotationsmaschine
+    "technogym-mk50eh",
+    // Technogym – Artis Rotary Torso
+    "technogym-mnyp",
+    // Technogym – Selection 900 Rotary Torso
+    "technogym-c95000-anvk",
+    // Technogym – Selection Rotary Torso Med
+    "lifefitness-insignia-series-torso-rotation",
+    // Life Fitness – Insignia Series Torso Rotation
+    "lifefitness-plate-loaded-combo-twist",
+    // Life Fitness – Ground Base Combo Twist
+    "newtech-rotary-torso",
+    // Newtech – OnHim Rotary Torso
+    "watson-ss-torso-twist",
+    // Watson – SS Torso Twist
+    "watson-plate-load-total-torso",
+    // Watson – PL Total Torso
+    "gymleco-375-torso-rotation",
+    // Gymleco – 375 Torso Rotation
+    "nautilus-inspiration-rotary-torso",
+    // Nautilus – Inspiration Rotary Torso
+    "nautilus-nautilus-instinct-rotary-torso",
+    // Nautilus – Instinct Rotary Torso
+    "panatta-combo-twist-module",
+    // Panatta – 4GRDFC5 Combo twist module
+    "panatta-combo-twist",
+    // Panatta – 1HP506 Combo twist
+    "gymleco-975-waist-rotator",
+    // Gymleco – Waist Rotator (zugeordnet 13.11.2026)
+    "panatta-torsion-machine"
+    // Panatta – Torsion machine (zugeordnet 13.11.2026)
+  ]),
+  lateral_raise: /* @__PURE__ */ new Set([
+    "prime-hybrid-lateral-raise",
+    // PRIME Fitness – Hybrid | Lateral Raise
+    "gym80-3050",
+    // gym80 – 3050 Seithebemaschine
+    "gym80-3099",
+    // gym80 – 3099 Seithebemaschine Stehend
+    "gym80-4325",
+    // gym80 – 4325 Seithebemaschine Dual
+    "gym80-4385",
+    // gym80 – 4385 Seithebemaschine Stehend
+    "technogym-mnkc",
+    // Technogym – Selection 700 Delts Machine
+    "technogym-mnkp",
+    // Technogym – Selection 900 Delts Machine
+    "lifefitness-hammer-strength-select-lateral-raise",
+    // Life Fitness – Hammer Strength Select Lateral Raise
+    "lifefitness-insignia-series-lateral-raise",
+    // Life Fitness – Insignia Series Lateral Raise
+    "lifefitness-plate-loaded-lateral-raise",
+    // Life Fitness – Plate Loaded Lateral Raise
+    "atlantis-e252",
+    // Atlantis – E252 Standing lateral raise
+    "newtech-lateral-raise",
+    // Newtech – OnHim Seated Lateral Raise
+    "newtech-single-lateral-raise",
+    // Newtech – OnHim Single Lateral Raise
+    "newtech-standing-lateral-raise",
+    // Newtech – OnHim Standing Lateral Raise
+    "newtech-lateral-raise-1",
+    // Newtech – Torture Lateral Raise
+    "newtech-multi-lateral-raise",
+    // Newtech – Multi Lateral Raise
+    "watson-seated-lateral-raise",
+    // Watson – SS Seated Lateral Raise
+    "watson-single-stack-standing-lateral-raise",
+    // Watson – SS Standing Lateral Raise
+    "watson-plate-load-standing-lateral-raise",
+    // Watson – PL Standing Lateral Raise
+    "milon-pump-side-raise",
+    // milon – 08 Side Raise
+    "panatta-lateral-deltoids",
+    // Panatta – 1FE026 Lateral deltoids
+    "panatta-lateral-deltoid",
+    // Panatta – 1MTH026 Lateral deltoid
+    "panatta-lateral-deltoids-3",
+    // Panatta – 1FO027 Lateral deltoids
+    "panatta-lateral-deltoids-2",
+    // Panatta – 1FW027 Lateral deltoids
+    "watson-plate-loaded-delt-builder",
+    // Watson – PL Delt Builder (zugeordnet 13.11.2026)
+    "gymleco-334-standing-side-lateral",
+    // Gymleco – Standing Side Lateral (zugeordnet 13.11.2026)
+    "nautilus-nautilus-impact-deltoid-raise",
+    // Nautilus – Impact Deltoid Raise (zugeordnet 13.11.2026)
+    "nautilus-nautilus-inspiration-deltoid-raise",
+    // Nautilus – Inspiration Deltoid Raise (zugeordnet 13.11.2026)
+    "eigen-01a18e87-b453-704d-aac4-dc59b88dc82f",
+    // PRIME Fitness – Prime Seitheben Maschine (zugeordnet 13.11.2026)
+    "eigen-01a18e87-b454-7000-8fc4-a0d8ffa303fd",
+    // PRIME Fitness – Prime Side raise cable (zugeordnet 13.11.2026)
+    "eigen-mwai0qx5-sthlv",
+    // MedX – Lateral Raise (zugeordnet 13.11.2026)
+    "eigen-mwai25cv-ezhva",
+    // Icarian – Standing Lateral Raise (zugeordnet 13.11.2026)
+    "eigen-mwai4ggz-dpa42"
+    // Atlantis – Standing Shoulder Lateral Raise E-252 (zugeordnet 13.11.2026)
+  ]),
+  pullover: /* @__PURE__ */ new Set([
+    "prime-hybrid-pullover",
+    // PRIME Fitness – Hybrid | Pullover
+    "gym80-3012n",
+    // gym80 – 3012N Überzugmaschine
+    "gym80-4350n",
+    // gym80 – 4350N Überzugmaschine
+    "technogym-mg90",
+    // Technogym – Pure Strength Pullover
+    "lifefitness-plate-loaded-pullover",
+    // Life Fitness – Plate Loaded Pullover
+    "atlantis-p144",
+    // Atlantis – P144 Pullover
+    "watson-pullover",
+    // Watson – SS Pullover
+    "watson-plate-load-independent-pullover",
+    // Watson – PL Independent Pullover
+    "gymleco-324-pullover",
+    // Gymleco – 324 Pullover
+    "panatta-pullover-machine-5",
+    // Panatta – 1FT039 Pullover Machine
+    "panatta-pullover-machine",
+    // Panatta – 1FE039 Pullover machine
+    "panatta-pullover-machine-3",
+    // Panatta – 1MTH039 Pullover machine
+    "panatta-pullover-machine-copia",
+    // Panatta – 1FO039 Pullover machine
+    "panatta-super-pullover-machine",
+    // Panatta – 1FW039 Super pullover machine
+    "panatta-pullover-machine-2",
+    // Panatta – 1FW139 Pullover machine
+    "nautilus-nautilus-inspiration-pull-over",
+    // Nautilus – Inspiration Pull Over (zugeordnet 13.11.2026)
+    "eigen-mwahz1fg-jtskc",
+    // MedX – Pullover (zugeordnet 13.11.2026)
+    "eigen-mwayk3xt-vn0km",
+    // Nautilus – Chain Driven SPO-3 Pullover (zugeordnet 13.11.2026)
+    "eigen-mwcmwuad-0n2h8"
+    // Eisenhauer Training – C1 Dual Pullover (zugeordnet 13.11.2026)
+  ]),
+  shrug: /* @__PURE__ */ new Set([
+    "lifefitness-plate-loaded-seated-standing-shrug",
+    // Life Fitness – Seated / Standing Shrug
+    "atlantis-pw335",
+    // Atlantis – PW335 Shrug and Deadlift Machine Pro
+    "watson-seated-standing-plate-load-shrug-machine",
+    // Watson – PL Seated / Standing Shrug Machine
+    "nautilus-nautilus-leverage-deadlift-shrug",
+    // Nautilus – Leverage Shrug
+    "panatta-shrug-machine",
+    // Panatta – 1FO010 Shrug Machine
+    "panatta-super-shrug-machine"
+    // Panatta – 1FW010 Super Shrug Machine
+  ]),
+  // Hüftbeugen nur über Kombigeräte und den Übungsnamen (`NAME_PATTERNS`)
+  hip_flexion: /* @__PURE__ */ new Set(),
+  deadlift: /* @__PURE__ */ new Set([
+    "gym80-4401",
+    // gym80 – FTM Deadlift Maschine (zugeordnet 13.11.2026)
+    "gym80-4332",
+    // gym80 – Deadlift Drehgriffe Dual (zugeordnet 13.11.2026)
+    "gym80-4333",
+    // gym80 – Deadlift Doppelgriffe Dual (zugeordnet 13.11.2026)
+    "technogym-mg87",
+    // Technogym – Pure Strength Deadlift (zugeordnet 13.11.2026)
+    "bootybuilder-booty-builder-deadlift",
+    // Booty Builder – Selectorized Deadlift (zugeordnet 13.11.2026)
+    "watson-plate-loaded-deadlift"
+    // Watson – PL Deadlift (zugeordnet 13.11.2026)
+  ]),
+  sissy_squat: /* @__PURE__ */ new Set([
+    "gym80-4347",
+    // gym80 – Sissy Squat (zugeordnet 13.11.2026)
+    "gym80-4381",
+    // gym80 – Sissy Squat Special (zugeordnet 13.11.2026)
+    "glutebuilder-bulgarian-sissy-squat-roller"
+    // Glute Builder – Bulgarian Sissy Squat Roller (zugeordnet 13.11.2026)
+  ]),
+  rotator_cuff: /* @__PURE__ */ new Set([
+    "watson-ss-rotator-cuff",
+    // Watson – SS Rotator Cuff (zugeordnet 13.11.2026)
+    "gymleco-331-shoulder-rotation",
+    // Gymleco – Shoulder Rotation (zugeordnet 13.11.2026)
+    "gymleco-031-shoulder-rotation",
+    // Gymleco – Shoulder Rotation (zugeordnet 13.11.2026)
+    "panatta-rotary-cuff"
+    // Panatta – Rotary cuff (zugeordnet 13.11.2026)
+  ]),
+  neck: /* @__PURE__ */ new Set([
+    "lifefitness-4-way-neck",
+    // Life Fitness – Plate Loaded 4-Way Neck (zugeordnet 13.11.2026)
+    "atlantis-pw120"
+    // Atlantis – Total neck (zugeordnet 13.11.2026)
+  ]),
+  step_up: /* @__PURE__ */ new Set([
+    "bootybuilder-booty-builder-step-up"
+    // Booty Builder – Selectorized Step-Up (zugeordnet 13.11.2026)
+  ]),
+  upright_row: /* @__PURE__ */ new Set([
+    "gymleco-032-upright-row"
+    // Gymleco – Upright Row (zugeordnet 13.11.2026)
+  ])
+};
+var COMBO_MACHINES = [
+  {
+    label: "Butterfly / Reverse Butterfly",
+    machines: /* @__PURE__ */ new Map([
+      [
+        "lifefitness-axiom-series-pectoral-fly-rear-deltoid",
+        "Axiom Series - Pectoral Fly/Rear Deltoid"
+      ],
+      // Life Fitness
+      [
+        "lifefitness-hammer-strength-select-pectoral-fly-rear-deltoid",
+        "Hammer Strength Select Pectoral Fly/Rear Deltoid"
+      ],
+      // Life Fitness
+      [
+        "lifefitness-insignia-series-pectoral-fly-rear-deltoid",
+        "Insignia Series Pectoral Fly/Rear Deltoid"
+      ],
+      // Life Fitness
+      ["panatta-peck-back-4", "1FT117 Peck Back"],
+      // Panatta
+      ["panatta-peck-back", "1FE117 Peck back"],
+      // Panatta
+      ["panatta-peck-back-2", "1MTH117 Peck back"],
+      // Panatta
+      ["panatta-super-peck-back", "1FW117 Super Peck Back"],
+      // Panatta
+      ["prime-hybrid-pec-rear-delt", "Hybrid | Pec/Rear Delt"],
+      // PRIME Fitness
+      ["gym80-5014", "5014 Butterfly und Butterfly Reverse Combo"],
+      // gym80
+      ["technogym-mnnc", "Selection 700 Dual Pectoral / Reverse Fly"],
+      // Technogym
+      ["atlantis-p156", "P156 Pec / Rear delt fly combo"],
+      // Atlantis
+      ["newtech-pec-dec-fly-with-reverse", "OnHim Pec Dec Fly (With Reverse)"],
+      // Newtech
+      ["newtech-standing-fly-chest-back", "OnHim Standing Fly Chest & Back"],
+      // Newtech
+      ["watson-single-stack-pec-fly-rear-delt", "SS Pec Fly / Rear Delt"],
+      // Watson
+      ["gymleco-935-pec-deck-rear-deltoid-shoulder", "935 Pec Deck/Rear Deltoid Shoulder"],
+      // Gymleco
+      ["gymleco-335-rear-deltoid-pec-deck", "335 Rear Deltoid/Pec Deck"],
+      // Gymleco
+      ["nautilus-nautilus-inspiration-pec-fly-rear-deltoid", "Inspiration Pec Fly/Rear Deltoid"],
+      // Nautilus
+      [
+        "nautilus-nautilus-instinct-dual-pectoral-fly-rear-deltoid",
+        "Instinct Dual Butterfly/Hintere Schulter"
+      ],
+      // Nautilus
+      ["technogym-mn3p", "Selection 900 Multi Flight"],
+      // Technogym
+      ["panatta-standing-multi-flight", "1FE028 Standing multi flight"],
+      // Panatta
+      ["panatta-standing-multi-flight-2", "1MTH028 Standing multi flight"],
+      // Panatta
+      ["watson-single-stack-multi-pec-delt", "SS Multi Pec / Delt"]
+      // Watson
+    ]),
+    rules: [[/reverse|rear|hintere/i, "reverse_fly"]],
+    fallback: "fly"
+  },
+  {
+    label: "Brustpresse / Butterfly",
+    machines: /* @__PURE__ */ new Map([
+      ["eigen-mw1bol46-s7z4y", "Double Chest"]
+      // Nautilus
+    ]),
+    rules: [[/fly|flye|butterfly|pec ?d[eu]c?k/i, "fly"]],
+    fallback: "press_flat"
+  },
+  {
+    label: "Beinstrecker / Beinbeuger sitzend",
+    machines: /* @__PURE__ */ new Map([
+      ["prime-hybrid-leg-extension-leg-curl-combo", "Hybrid | Leg Extension/Leg Curl Combo"],
+      // PRIME Fitness
+      [
+        "prime-plate-loaded-leg-extension-leg-curl-combo",
+        "Plate Loaded | Leg Extension/Leg Curl Combo"
+      ],
+      // PRIME Fitness
+      ["gym80-5013", "5013 Beinbeuger und Beinstrecker Combo"],
+      // gym80
+      ["lifefitness-axiom-series-leg-extension-leg-curl", "Axiom Series - Leg Extension/Leg Curl"],
+      // Life Fitness
+      ["atlantis-c230", "C230 Leg extension/Leg curl combo"],
+      // Atlantis
+      ["watson-single-stack-seated-leg-extension-leg-curl", "SS Leg Extension / Seated Leg Curl"],
+      // Watson
+      ["gymleco-949-leg-extension-leg-curl", "949 Leg Extension/Leg Curl"],
+      // Gymleco
+      ["gymleco-349-leg-extension-leg-curl", "349 Leg Extension/Leg Curl"],
+      // Gymleco
+      [
+        "nautilus-nautilus-instinct-dual-leg-extension-leg-curl",
+        "Instinct Dual Beinstrecker/Beinbeuger"
+      ],
+      // Nautilus
+      ["technogym-mnmc", "Selection 700 Dual Leg Curl / Extension"],
+      // Technogym
+      [
+        "lifefitness-axiom-series-seated-leg-curl-extension",
+        "Axiom Series - Seated Leg Curl/Extension"
+      ]
+      // Life Fitness
+    ]),
+    rules: [[/curl|beuger/i, "leg_curl_seated"]],
+    fallback: "leg_extension"
+  },
+  {
+    label: "Beinstrecker / Beinbeuger liegend",
+    machines: /* @__PURE__ */ new Map([
+      ["watson-single-stack-leg-extension-leg-curl", "SS Leg Extension / Lying Leg Curl"]
+      // Watson
+    ]),
+    rules: [[/curl|beuger/i, "leg_curl_lying"]],
+    fallback: "leg_extension"
+  },
+  {
+    label: "Adduktion / Abduktion",
+    machines: /* @__PURE__ */ new Map([
+      ["gym80-5011", "5011 Abduktion und Adduktion Combo"],
+      // gym80
+      ["technogym-mnoc", "Selection 700 Dual Abductor / Adductor"],
+      // Technogym
+      ["lifefitness-axiom-series-hip-abductor-adductor", "Axiom Series - Hip Abductor/Adductor"],
+      // Life Fitness
+      [
+        "lifefitness-insignia-series-hip-abductor-adductor",
+        "Insignia Series Hip Abductor / Adductor"
+      ],
+      // Life Fitness
+      ["atlantis-c329", "C329 Adductor / Abductor combo"],
+      // Atlantis
+      ["newtech-hip-adduction-abduction-combo", "OnHim Hip Adduction/Abduction Combo"],
+      // Newtech
+      ["watson-dual-hip-adductor-abductor", "SS Dual Hip Adductor / Abductor"],
+      // Watson
+      ["gymleco-964-abductor-adductor", "964 Abductor/Adductor"],
+      // Gymleco
+      ["gymleco-364-adductor-abductor", "364 Adductor/Abductor"],
+      // Gymleco
+      ["nautilus-nautilus-inspiration-abduction-adduction", "Inspiration Abduktion/Adduktion"],
+      // Nautilus
+      ["nautilus-nautilus-instinct-dual-inner-outer-thigh", "Instinct Dual Adduktoren/Abduktoren"],
+      // Nautilus
+      ["panatta-adductor-abductor-machine", "1FE093 Adductor/ abductor machine"],
+      // Panatta
+      ["panatta-adductor-abductor-machine-2", "1MTH093 Dual Adductor Abductor machine"],
+      // Panatta
+      ["prime-hybrid-inner-outer-thigh", "Hybrid | Inner/Outer Thigh"]
+      // PRIME Fitness
+    ]),
+    rules: [[/abd|outer|außen/i, "abduction"]],
+    fallback: "adduction"
+  },
+  {
+    label: "Multi-Hip",
+    machines: /* @__PURE__ */ new Map([
+      ["prime-hybrid-multi-hip", "Hybrid | Multi-Hip"],
+      // PRIME Fitness
+      ["technogym-mk67eh", "Artis Multi Hip"],
+      // Technogym
+      ["technogym-mndc", "Selection 700 Multi Hip"],
+      // Technogym
+      ["technogym-mndp", "Selection 900 Multi Hip"],
+      // Technogym
+      ["technogym-c96700-anvk", "Selection Multi Hip Med"],
+      // Technogym
+      ["watson-single-stack-multi-hip", "SS Multi-Hip"],
+      // Watson
+      ["gymleco-369-multihip-machine", "369 Multihip"],
+      // Gymleco
+      ["panatta-multi-hip", "1FE090 Multi hip"],
+      // Panatta
+      ["panatta-multi-hip-2", "1MTH090 Multi hip"]
+      // Panatta
+    ]),
+    rules: [
+      [/abd|outer|außen|seitlich/i, "abduction"],
+      [/add|inner|innen/i, "adduction"]
+    ],
+    fallback: "glute_kick"
+  },
+  {
+    label: "Bauch / R\xFCckenstrecker",
+    machines: /* @__PURE__ */ new Map([
+      [
+        "lifefitness-axiom-series-abdominal-back-extension",
+        "Axiom Series - Abdominal/Back Extension"
+      ],
+      // Life Fitness
+      ["gymleco-965-abs-lower-back", "965 Abs/Lower Back"],
+      // Gymleco
+      ["gym80-5012", "5012 Bauch und R\xFCcken Combo"],
+      // gym80
+      ["gymleco-365a-lumbar-abdominal", "365A Lumbar/Abdominal"],
+      // Gymleco
+      ["gymleco-365b-lumbar-abdominal-with-armrest", "365B Lumbar/Abdominal (with Armrest)"],
+      // Gymleco
+      [
+        "nautilus-nautilus-instinct-dual-abdominal-lower-back",
+        "Instinct Dual Bauchmuskel/Unterer R\xFCcken"
+      ]
+      // Nautilus
+    ]),
+    rules: [[/back|rücken|lumbar|extension|strecker/i, "back_extension"]],
+    fallback: "crunch"
+  },
+  {
+    label: "Bizeps / Trizeps",
+    machines: /* @__PURE__ */ new Map([
+      ["lifefitness-axiom-series-biceps-triceps", "Axiom Series - Biceps/Triceps"],
+      // Life Fitness
+      ["watson-single-stack-bicep-tricep-machine", "SS Bicep Tricep Machine"],
+      // Watson
+      ["gymleco-955-biceps-triceps", "955 Biceps/Triceps"],
+      // Gymleco
+      ["gymleco-355-biceps-triceps", "355 Biceps/Triceps"],
+      // Gymleco
+      ["panatta-dual-curling-triceps-machine", "1SCD050 Dual curling | triceps machine"],
+      // Panatta
+      ["gymleco-255-biceps-curl-triceps-extension", "Biceps Curl/Triceps Extension"],
+      // Gymleco
+      ["panatta-standing-total-arms", "Standing Total Arms"],
+      // Panatta
+      ["panatta-alternate-standing-total-arms", "Alternate standing total arms"],
+      // Panatta
+      ["panatta-standing-total-arms-2", "Standing total arms"]
+      // Panatta
+    ]),
+    rules: [[/tri|extension|strecker|drücken/i, "triceps"]],
+    fallback: "biceps_curl"
+  },
+  {
+    label: "Squat / Wade",
+    machines: /* @__PURE__ */ new Map([
+      ["newtech-squat-calf-raise", "Torture Squat & Calf Raise"],
+      // Newtech
+      ["panatta-squat-and-calf-machine", "1FT091 Squat and Calf Machine"],
+      // Panatta
+      ["panatta-squat-machine-and-calf", "1FO091 Squat and Calf Machine"]
+      // Panatta
+    ]),
+    rules: [[/calf|wade/i, "calf_standing"]],
+    fallback: "hack_squat"
+  },
+  {
+    label: "Wade / Tibialis",
+    machines: /* @__PURE__ */ new Map([
+      ["watson-total-calf-tibialis-developer", "PL Total Calf / Tibialis Developer"]
+      // Watson
+    ]),
+    rules: [[/tib/i, "tibialis"]],
+    fallback: "calf_standing"
+  },
+  {
+    label: "Seitheben / hintere Schulter",
+    machines: /* @__PURE__ */ new Map([
+      ["atlantis-e352", "E352 Seated side / Rear deltoid"]
+      // Atlantis
+    ]),
+    rules: [[/rear|hintere|reverse/i, "reverse_fly"]],
+    fallback: "lateral_raise"
+  },
+  {
+    label: "H\xFCftbeugen / Dips",
+    machines: /* @__PURE__ */ new Map([
+      ["technogym-pa11", "Leg Raise Dip"]
+      // Technogym
+    ]),
+    rules: [[/leg|bein|knie|knee|hüft|hip|captain/i, "hip_flexion"]],
+    fallback: "dip"
+  },
+  {
+    label: "Klimmzug / Dips",
+    machines: /* @__PURE__ */ new Map([
+      ["prime-specialty-chin-dip-assist", "Chin/Dip Assist"],
+      // PRIME Fitness
+      ["gym80-3017", "Klimmzug-Barrenmaschine"],
+      // gym80
+      ["technogym-mb91", "Kneeling Easy Chin Dip"],
+      // Technogym
+      ["lifefitness-hammer-strength-select-assist-dip-chin", "Hammer Strength Select Assist Dip Chin"],
+      // Life Fitness
+      ["lifefitness-insignia-series-assist-dip-chin", "Insignia Series Assist Dip Chin"],
+      // Life Fitness
+      ["atlantis-d131", "Assisted chin/dip"],
+      // Atlantis
+      ["newtech-chin-up-dip-assist", "OnHim Chin-Up, Dip Assist (Thomson)"],
+      // Newtech
+      ["watson-assisted-chin-dip", "SS Assisted Chin / Dip"],
+      // Watson
+      ["gymleco-314-chins-dips", "Chins/Dips"],
+      // Gymleco
+      ["nautilus-nautilus-impact-chin-dip-assist", "Impact Assisted Chin/Dip"],
+      // Nautilus
+      ["panatta-chin-and-dip-counterbalanced", "Chin and dip counterbalanced"]
+      // Panatta
+    ]),
+    rules: [[/dip|barren/i, "dip"]],
+    fallback: "pulldown"
+  },
+  {
+    label: "Brustpresse / Schulterpresse",
+    machines: /* @__PURE__ */ new Map([
+      ["gym80-4402", "FTM Schulter und Brustpresse"],
+      // gym80
+      ["nautilus-nautilus-humansport-shoulder-chest", "HumanSport Shoulder Chest"]
+      // Nautilus
+    ]),
+    rules: [[/schulter|shoulder|overhead|überkopf|military/i, "shoulder_press"]],
+    fallback: "press_flat"
+  },
+  {
+    label: "Beinpresse / Hack-Squat",
+    machines: /* @__PURE__ */ new Map([
+      ["gymleco-245-leg-press-hacklift", "Leg Press/Hacklift"]
+      // Gymleco
+    ]),
+    rules: [[/hack|squat|kniebeuge/i, "hack_squat"]],
+    fallback: "leg_press"
+  },
+  {
+    label: "Kreuzheben / Split Squat",
+    machines: /* @__PURE__ */ new Map([
+      ["bootybuilder-booty-builder-split-squat-deadlift", "Selectorized Deadlift/Split Squat"],
+      // Booty Builder
+      ["glutebuilder-deadlift-elite", "Deadlift / Bulgarian Squat Pro"]
+      // Glute Builder
+    ]),
+    rules: [[/split|bulgar|ausfall|lunge/i, "step_up"]],
+    fallback: "deadlift"
+  },
+  {
+    label: "Kreuzheben / Kniebeuge",
+    machines: /* @__PURE__ */ new Map([
+      ["gymleco-083-deadlift-squat-machine", "Deadlift / Squat Machine"]
+      // Gymleco
+    ]),
+    rules: [[/squat|kniebeuge/i, "hack_squat"]],
+    fallback: "deadlift"
+  }
+];
+var NAME_PATTERNS = [
+  [
+    /beinheben|knieheben|leg[- ]?raise|knee[- ]?raise|knee[- ]?up|captain|toes[- ]to[- ]bar|hüftbeug|hip[- ]?flex/i,
+    "hip_flexion"
+  ],
+  // Ergänzt 13.11.2026: freie Übungen, Körpergewicht und Übungen an Mehrzweckgeräten (Rack, Kabelzug …).
+  // Reihenfolge: genauere Begriffe zuerst (z. B. „Aufrechtes Rudern“ vor „Rudern“, „Beincurl“ vor „Curl“).
+  [/sissy/i, "sissy_squat"],
+  [/aufrecht\w* rudern|upright[- ]?row/i, "upright_row"],
+  [/rotator|außenrotation|aussenrotation|external[- ]?rotation|rotatorenmanschette/i, "rotator_cuff"],
+  [/nackendrücken/i, "shoulder_press"],
+  [/nacken|\bneck\b/i, "neck"],
+  [/nordic|glute[- ]?ham/i, "leg_curl_lying"],
+  [/(beincurl|leg[- ]?curl|beinbeuger).*(sitzend|seated)|(sitzend|seated).*(beincurl|leg[- ]?curl|beinbeuger)/i, "leg_curl_seated"],
+  [/beincurl|leg[- ]?curl|beinbeuger/i, "leg_curl_lying"],
+  [/beinstreck|leg[- ]?extension/i, "leg_extension"],
+  [/wadenheben sitzend|seated calf/i, "calf_seated"],
+  [/wadenheben|calf[- ]?raise|\bwade/i, "calf_standing"],
+  [/hip[- ]?thrust|glute[- ]?bridge|beckenheben|hüftheben/i, "hip_thrust"],
+  [/rumänisch|romanian|\brdl\b|kreuzheben|deadlift|good[- ]?morning/i, "deadlift"],
+  [/ausfallschritt|lunge|split[- ]?squat|bulgar|step[- ]?up|aufsteiger|pistol|shrimp/i, "step_up"],
+  [/hack|kniebeuge|squat/i, "hack_squat"],
+  [/beinpresse|leg[- ]?press/i, "leg_press"],
+  [/face[- ]?pull/i, "reverse_fly"],
+  [/australian|ring[- ]?rudern|inverted row|rudern|\brow\b/i, "row"],
+  [/klimmzug|chin[- ]?up|pull[- ]?up|latzug|lat[- ]?pull/i, "pulldown"],
+  [/pull[- ]?over|überzug/i, "pullover"],
+  [/reverse[- ]?(fly|butterfly)|rear[- ]?delt|vorgebeugt\w* seitheben|reverse[- ]?flye/i, "reverse_fly"],
+  [/seitheben|lateral[- ]?raise|side[- ]?raise/i, "lateral_raise"],
+  [/butterfly|\bfly\b|flye|fliegende|cable[- ]?cross|crossover/i, "fly"],
+  [/shrug|schulterheben/i, "shrug"],
+  [/\bdips?\b|barren/i, "dip"],
+  [/überkopf\w*.*trizeps|trizeps.*überkopf|overhead[- ]?(triceps|extension)|french[- ]?press/i, "triceps_overhead"],
+  [/trizeps|triceps|pushdown|skull ?crusher|kickback/i, "triceps"],
+  [/handgelenk|wrist|unterarm|forearm|reverse[- ]?curl/i, "forearm"],
+  [/curl|bizeps|biceps/i, "biceps_curl"],
+  [/pike|handstand|schulterdrücken|shoulder[- ]?press|military|overhead[- ]?press|arnold/i, "shoulder_press"],
+  [/schrägbank|incline[- ]?(bench|press)|decline[- ]?liegest|decline[- ]?push/i, "press_incline"],
+  [/negativ\w* bank|decline[- ]?(bench|press)|liegestütz erhöht|incline[- ]?push/i, "press_decline"],
+  [/bankdrücken|bench[- ]?press|brustpresse|chest[- ]?press|liegestütz|push[- ]?up/i, "press_flat"],
+  [/russian twist|holzhacker|woodchop|rotation|pallof/i, "rotation"],
+  [/rückenstreck|hyperextension|back[- ]?extension|superman/i, "back_extension"],
+  [/crunch|sit[- ]?up|bauch|dragon flag/i, "crunch"]
+];
+var ROW_GRIP_MACHINE_IDS = PATTERN_MACHINE_IDS.row;
+var PULLDOWN_GRIP_MACHINE_IDS = PATTERN_MACHINE_IDS.pulldown;
+var PRESS_FLAT_MACHINE_IDS = PATTERN_MACHINE_IDS.press_flat;
+var PRESS_INCLINE_MACHINE_IDS = PATTERN_MACHINE_IDS.press_incline;
+var PRESS_DECLINE_MACHINE_IDS = PATTERN_MACHINE_IDS.press_decline;
+var SHOULDER_PRESS_MACHINE_IDS = PATTERN_MACHINE_IDS.shoulder_press;
+var DIP_MACHINE_IDS = PATTERN_MACHINE_IDS.dip;
+var FLY_MACHINE_IDS = PATTERN_MACHINE_IDS.fly;
+var REVERSE_FLY_MACHINE_IDS = PATTERN_MACHINE_IDS.reverse_fly;
+var FLY_PROFILE = FLY_PROFILES.wide.pronated;
+var REVERSE_FLY_PROFILE = REVERSE_FLY_PROFILES.wide.pronated;
+var PATTERN_OF = new Map(
+  Object.entries(PATTERN_MACHINE_IDS).flatMap(
+    ([pattern, ids]) => [...ids].map((id) => [id, pattern])
+  )
+);
+function comboHint(exerciseName, machineName) {
+  const name = (exerciseName ?? "").toLowerCase();
+  const machine = machineName.trim().toLowerCase();
+  return machine ? name.split(machine).join(" ") : name;
+}
+function nameHint(exerciseName, machineNames = []) {
+  let name = (exerciseName ?? "").toLowerCase();
+  const names = machineNames.map((n) => n.trim().toLowerCase()).filter((n) => n.length > 0).sort((a, b) => b.length - a.length);
+  for (const n of names) name = name.split(n).join(" ");
+  return name.trim();
+}
+function machineNamesOf(m) {
+  if (!m) return [];
+  const out = [];
+  if (m.displayName) {
+    out.push(m.displayName);
+    if (m.manufacturer) out.push(`${m.manufacturer} ${m.displayName}`);
+  }
+  if (m.name) out.push(m.name);
+  return out;
+}
+function gripPatternOf(machineId, exerciseName, machineNames = []) {
+  if (machineId) {
+    for (const combo of COMBO_MACHINES) {
+      const machineName = combo.machines.get(machineId);
+      if (machineName === void 0) continue;
+      const hint = comboHint(exerciseName, machineName);
+      for (const [rule, pattern2] of combo.rules) if (rule.test(hint)) return pattern2;
+      return combo.fallback;
+    }
+    const pattern = PATTERN_OF.get(machineId);
+    if (pattern) return pattern;
+  }
+  const name = nameHint(exerciseName, machineId ? machineNames : []);
+  for (const [rule, pattern] of NAME_PATTERNS) if (rule.test(name)) return pattern;
+  return null;
+}
+var MACHINE_DEFAULT_WIDTH = /* @__PURE__ */ new Map([
+  ["technogym-mn1p", "wide"],
+  ["technogym-c94600-anvk", "wide"]
+]);
+function gripWidthChoice(text) {
+  const t = (text ?? "").trim().toLowerCase();
+  if (t === "eng") return "narrow";
+  if (t === "weit" || t === "breit") return "wide";
+  return null;
+}
+function isGripPosition(v) {
+  return v === "supinated" || v === "neutral" || v === "pronated";
+}
+function gripFocusFor(machineId, exerciseName, gripWidth, gripPosition, machineNames = []) {
+  const pattern = gripPatternOf(machineId, exerciseName, machineNames);
+  if (!pattern) return null;
+  const profiles = GRIP_PROFILES[pattern];
+  const chosen = gripWidthChoice(gripWidth);
+  if (chosen === null && profiles.standard)
+    return { pattern, focus: profiles.standard, explicit: false };
+  const width = chosen ?? (machineId ? MACHINE_DEFAULT_WIDTH.get(machineId) : void 0) ?? DEFAULT_WIDTH[pattern] ?? "wide";
+  const position = isGripPosition(gripPosition) ? gripPosition : DEFAULT_POSITION[pattern] ?? DEFAULT_GRIP_POSITION[width];
+  return { pattern, focus: profiles[width][position], explicit: chosen !== null };
+}
+
+// src/domain/muscleMap.ts
+var MUSCLE_IDS = [
+  "chest_upper",
+  "chest_lower",
+  "front_delts",
+  "side_delts",
+  "rear_delts",
+  "biceps",
+  "brachialis",
+  "triceps_long",
+  "triceps_lateral",
+  "triceps_medial",
+  "brachioradialis",
+  "forearm_flexors",
+  "forearm_extensors",
+  "abs_upper",
+  "abs_lower",
+  "obliques",
+  "serratus",
+  "neck",
+  "traps_upper",
+  "traps_middle",
+  "traps_lower",
+  "infraspinatus",
+  "teres",
+  "lats",
+  "lower_back",
+  "glutes",
+  "glute_medius",
+  "tfl",
+  "adductors",
+  "rectus_femoris",
+  "vastus_lateralis",
+  "vastus_medialis",
+  "sartorius",
+  "hamstrings_lateral",
+  "hamstrings_medial",
+  "gastrocnemius",
+  "soleus",
+  "tibialis"
+];
+var MUSCLE_LABELS = {
+  chest_upper: "Obere Brust (Pars clavicularis)",
+  chest_lower: "Mittlere / untere Brust (Pars sternocostalis)",
+  front_delts: "Vordere Schulter",
+  side_delts: "Seitliche Schulter",
+  rear_delts: "Hintere Schulter",
+  biceps: "Bizeps",
+  brachialis: "Oberarmmuskel (Brachialis)",
+  triceps_long: "Trizeps: langer Kopf",
+  triceps_lateral: "Trizeps: seitlicher Kopf",
+  triceps_medial: "Trizeps: mittlerer Kopf",
+  brachioradialis: "Oberarmspeichenmuskel (Brachioradialis)",
+  forearm_flexors: "Unterarmbeuger",
+  forearm_extensors: "Unterarmstrecker",
+  abs_upper: "Gerader Bauchmuskel oberhalb des Nabels",
+  abs_lower: "Gerader Bauchmuskel unterhalb des Nabels",
+  obliques: "Schr\xE4ge Bauchmuskeln",
+  serratus: "S\xE4gemuskel (Serratus anterior)",
+  neck: "Nacken / Hals",
+  traps_upper: "Oberer Trapez",
+  traps_middle: "Mittlerer Trapez",
+  traps_lower: "Unterer Trapez",
+  infraspinatus: "Untergr\xE4tenmuskel (Infraspinatus)",
+  teres: "Rundmuskeln (Teres)",
+  lats: "Latissimus",
+  lower_back: "Unterer R\xFCcken (R\xFCckenstrecker)",
+  glutes: "Gro\xDFer Ges\xE4\xDFmuskel (Gluteus maximus)",
+  glute_medius: "Mittlerer Ges\xE4\xDFmuskel (Gluteus medius)",
+  tfl: "Schenkelbindenspanner (TFL)",
+  adductors: "Adduktoren",
+  rectus_femoris: "Quadrizeps: Rectus femoris",
+  vastus_lateralis: "Quadrizeps: Vastus lateralis",
+  vastus_medialis: "Quadrizeps: Vastus medialis",
+  sartorius: "Schneidermuskel (H\xFCftbeuger)",
+  hamstrings_lateral: "Beinbeuger au\xDFen (Biceps femoris)",
+  hamstrings_medial: "Beinbeuger innen (Semitendinosus / Semimembranosus)",
+  gastrocnemius: "Zwillingswadenmuskel (Gastrocnemius)",
+  soleus: "Schollenmuskel (Soleus)",
+  tibialis: "Schienbeinmuskel"
+};
+var CHEST = ["chest_upper", "chest_lower"];
+var DELTS = ["front_delts", "side_delts", "rear_delts"];
+var ABS = ["abs_upper", "abs_lower"];
+var TRAPS = ["traps_upper", "traps_middle", "traps_lower"];
+var UPPER_BACK = ["infraspinatus", "teres", "traps_middle", "traps_lower"];
+var QUADS = ["rectus_femoris", "vastus_lateralis", "vastus_medialis"];
+var HAMS = ["hamstrings_lateral", "hamstrings_medial"];
+var CALVES = ["gastrocnemius", "soleus"];
+var ABDUCTORS = ["glute_medius", "tfl"];
+var TRICEPS = ["triceps_long", "triceps_lateral", "triceps_medial"];
+var FOREARMS = ["brachioradialis", "forearm_flexors", "forearm_extensors"];
+var ARM_FLEXORS = ["biceps", "brachialis", "brachioradialis"];
+var TERMS = {
+  brust: CHEST,
+  brustmuskel: CHEST,
+  "obere brust": ["chest_upper"],
+  "untere brust": ["chest_lower"],
+  "mittlere brust": ["chest_lower"],
+  latissimus: ["lats"],
+  lat: ["lats"],
+  r\u00FCcken: ["lats", ...UPPER_BACK, "traps_upper"],
+  "oberer r\xFCcken": [...UPPER_BACK, "traps_upper"],
+  rhomboiden: ["traps_middle", "traps_lower"],
+  trapez: TRAPS,
+  "oberer trapez": ["traps_upper"],
+  "mittlerer trapez": ["traps_middle"],
+  "unterer trapez": ["traps_lower"],
+  nacken: ["neck", "traps_upper"],
+  r\u00FCckenstrecker: ["lower_back"],
+  "unterer r\xFCcken": ["lower_back"],
+  infraspinatus: ["infraspinatus"],
+  rotatorenmanschette: ["infraspinatus", "teres"],
+  teres: ["teres"],
+  schulter: DELTS,
+  schultern: DELTS,
+  "vordere schulter": ["front_delts"],
+  "seitliche schulter": ["side_delts"],
+  "hintere schulter": ["rear_delts"],
+  bizeps: ["biceps"],
+  armbeuger: ARM_FLEXORS,
+  brachialis: ["brachialis"],
+  oberarmmuskel: ["brachialis"],
+  trizeps: TRICEPS,
+  "trizeps langer kopf": ["triceps_long"],
+  "trizeps seitlicher kopf": ["triceps_lateral"],
+  "trizeps mittlerer kopf": ["triceps_medial"],
+  "langer trizepskopf": ["triceps_long"],
+  "seitlicher trizepskopf": ["triceps_lateral"],
+  "mittlerer trizepskopf": ["triceps_medial"],
+  unterarme: FOREARMS,
+  unterarm: FOREARMS,
+  brachioradialis: ["brachioradialis"],
+  oberarmspeichenmuskel: ["brachioradialis"],
+  unterarmbeuger: ["forearm_flexors"],
+  unterarmstrecker: ["forearm_extensors"],
+  handgelenksbeuger: ["forearm_flexors"],
+  handgelenksstrecker: ["forearm_extensors"],
+  griffkraft: ["forearm_flexors"],
+  arme: ["biceps", "brachialis", ...TRICEPS],
+  bauch: [...ABS, "obliques"],
+  "gerade bauchmuskulatur": ABS,
+  "obere bauchmuskulatur": ["abs_upper"],
+  "untere bauchmuskulatur": ["abs_lower"],
+  "seitliche bauchmuskulatur": ["obliques"],
+  "seitlicher rumpf": ["obliques"],
+  "schr\xE4ge bauchmuskulatur": ["obliques"],
+  s\u00E4gemuskel: ["serratus"],
+  serratus: ["serratus"],
+  core: [...ABS, "obliques", "lower_back"],
+  rumpf: [...ABS, "obliques", "lower_back"],
+  quadrizeps: QUADS,
+  oberschenkel: QUADS,
+  beinstrecker: QUADS,
+  "rectus femoris": ["rectus_femoris"],
+  "vastus lateralis": ["vastus_lateralis"],
+  "vastus medialis": ["vastus_medialis"],
+  beinbeuger: HAMS,
+  "biceps femoris": ["hamstrings_lateral"],
+  semitendinosus: ["hamstrings_medial"],
+  semimembranosus: ["hamstrings_medial"],
+  gluteus: ["glutes"],
+  "gluteus maximus": ["glutes"],
+  "gluteus medius": ["glute_medius"],
+  ges\u00E4\u00DF: ["glutes"],
+  po: ["glutes"],
+  abduktoren: ABDUCTORS,
+  adduktoren: ["adductors"],
+  h\u00FCftbeuger: ["sartorius", "rectus_femoris"],
+  waden: CALVES,
+  wade: CALVES,
+  gastrocnemius: ["gastrocnemius"],
+  soleus: ["soleus"],
+  tibialis: ["tibialis"],
+  schienbein: ["tibialis"],
+  beine: [...QUADS, ...HAMS, "glutes"],
+  // Englische Bezeichnungen
+  chest: CHEST,
+  pecs: CHEST,
+  "upper chest": ["chest_upper"],
+  "lower chest": ["chest_lower"],
+  back: ["lats", ...UPPER_BACK, "traps_upper"],
+  lats: ["lats"],
+  "upper back": [...UPPER_BACK, "traps_upper"],
+  "lower back": ["lower_back"],
+  traps: TRAPS,
+  neck: ["neck", "traps_upper"],
+  shoulders: DELTS,
+  shoulder: DELTS,
+  delts: DELTS,
+  "front delts": ["front_delts"],
+  "side delts": ["side_delts"],
+  "lateral delts": ["side_delts"],
+  "rear delts": ["rear_delts"],
+  biceps: ["biceps"],
+  triceps: TRICEPS,
+  "triceps long head": ["triceps_long"],
+  "triceps lateral head": ["triceps_lateral"],
+  "triceps medial head": ["triceps_medial"],
+  forearms: FOREARMS,
+  "wrist flexors": ["forearm_flexors"],
+  "wrist extensors": ["forearm_extensors"],
+  grip: ["forearm_flexors"],
+  arms: ["biceps", "brachialis", ...TRICEPS],
+  abs: [...ABS, "obliques"],
+  obliques: ["obliques"],
+  quads: QUADS,
+  quadriceps: QUADS,
+  hamstrings: HAMS,
+  glutes: ["glutes"],
+  abductors: ABDUCTORS,
+  adductors: ["adductors"],
+  "hip flexors": ["sartorius", "rectus_femoris"],
+  calves: CALVES,
+  legs: [...QUADS, ...HAMS, "glutes"]
+};
+var LEGACY_MUSCLES = {
+  chest: CHEST,
+  abs: ABS,
+  traps: TRAPS,
+  upper_back: ["infraspinatus", "teres"],
+  abductors: ABDUCTORS,
+  quads: QUADS,
+  hamstrings: HAMS,
+  calves: CALVES,
+  triceps: TRICEPS,
+  forearms: FOREARMS
+};
+var SECONDARY_FACTOR = 0.5;
+function splitMuscleText(text) {
+  if (!text) return [];
+  return text.split(/[,;/+]|\s+und\s+/i).map((t) => t.trim()).filter((t) => t.length > 0);
+}
+function muscleIdsForTerm(term) {
+  return TERMS[term.trim().toLowerCase()] ?? null;
+}
+function isMuscleId(v) {
+  return MUSCLE_IDS.includes(v);
+}
+function focusFactors(focus) {
+  if (!focus || focus.length === 0) return null;
+  const factors = {};
+  for (const f of focus) {
+    if (f.percent > 0) factors[f.muscle] = Math.min(100, f.percent) / 100;
+  }
+  return Object.keys(factors).length > 0 ? { factors, unmapped: [] } : null;
+}
+function exerciseMuscles(muscleGroup, machineMuscleGroups = [], exerciseFocus, machineFocus) {
+  const focused = focusFactors(exerciseFocus) ?? focusFactors(machineFocus);
+  if (focused) return focused;
+  const own = splitMuscleText(muscleGroup);
+  const terms = own.length > 0 ? own : machineMuscleGroups.flatMap((t) => splitMuscleText(t));
+  const factors = {};
+  const unmapped = [];
+  terms.forEach((term, i) => {
+    const ids = muscleIdsForTerm(term);
+    if (!ids) {
+      unmapped.push(term);
+      return;
+    }
+    const factor = i === 0 ? 1 : SECONDARY_FACTOR;
+    for (const id of ids) factors[id] = Math.max(factors[id] ?? 0, factor);
+  });
+  return { factors, unmapped };
+}
+function emptyMuscleValues() {
+  return Object.fromEntries(MUSCLE_IDS.map((m) => [m, 0]));
+}
+var NO_FOCUS = { machines: /* @__PURE__ */ new Map(), exercises: /* @__PURE__ */ new Map() };
+function buildFocusIndex(rows) {
+  const machines = /* @__PURE__ */ new Map();
+  const exercises = /* @__PURE__ */ new Map();
+  for (const r2 of rows.machines) {
+    if (!isMuscleId(r2.muscle)) continue;
+    machines.set(r2.machineId, [
+      ...machines.get(r2.machineId) ?? [],
+      { muscle: r2.muscle, percent: r2.percent }
+    ]);
+  }
+  for (const r2 of rows.exercises) {
+    if (!isMuscleId(r2.muscle)) continue;
+    exercises.set(r2.exerciseId, [
+      ...exercises.get(r2.exerciseId) ?? [],
+      { muscle: r2.muscle, percent: r2.percent }
+    ]);
+  }
+  return { machines, exercises };
+}
+function muscleMapData(log, exercises, machines, include, focus = NO_FOCUS) {
+  const machineGroups = new Map(machines.map((m) => [m.id, m.muscleGroups]));
+  const machineNames = new Map(machines.map((m) => [m.id, machineNamesOf(m)]));
+  const exerciseById = new Map(exercises.map((e) => [e.id, e]));
+  const ownFocus = new Set(
+    exercises.filter(
+      (e) => focusFactors(focus.exercises.get(e.id)) !== null || e.machineId !== null && focusFactors(focus.machines.get(e.machineId)) !== null
+    ).map((e) => e.id)
+  );
+  const byExercise = new Map(
+    exercises.map((e) => [
+      e.id,
+      exerciseMuscles(
+        e.muscleGroup,
+        e.machineId ? machineGroups.get(e.machineId) ?? [] : [],
+        focus.exercises.get(e.id),
+        e.machineId ? focus.machines.get(e.machineId) : void 0
+      )
+    ])
+  );
+  const sets = emptyMuscleValues();
+  const volumeKg = emptyMuscleValues();
+  const unmapped = /* @__PURE__ */ new Map();
+  let totalSets = 0;
+  let setsWithoutMuscle = 0;
+  for (const s of log) {
+    if (s.isWarmup || s.exerciseCategory !== "strength" || !include(s)) continue;
+    totalSets += 1;
+    const ex = exerciseById.get(s.exerciseId);
+    const grip = gripFocusFor(
+      ex?.machineId,
+      ex?.name,
+      s.gripWidth,
+      s.gripPosition,
+      ex?.machineId ? machineNames.get(ex.machineId) ?? [] : []
+    );
+    const gripMuscles = grip && (grip.explicit || !ownFocus.has(s.exerciseId)) ? focusFactors(grip.focus) : null;
+    const m = gripMuscles ?? byExercise.get(s.exerciseId) ?? { factors: {}, unmapped: [] };
+    for (const term of m.unmapped) unmapped.set(term, (unmapped.get(term) ?? 0) + 1);
+    const entries = Object.entries(m.factors);
+    if (entries.length === 0) {
+      setsWithoutMuscle += 1;
+      continue;
+    }
+    const volume = setVolumeKg(s);
+    for (const [id, factor] of entries) {
+      sets[id] += factor;
+      volumeKg[id] += volume * factor;
+    }
+  }
+  return {
+    sets,
+    volumeKg,
+    totalSets,
+    setsWithoutMuscle,
+    unmapped: [...unmapped.entries()].map(([term, n]) => ({ term, sets: n })).sort((a, b) => b.sets - a.sets || a.term.localeCompare(b.term, "de"))
+  };
+}
+function muscleMapForRange(log, exercises, machines, from, to, focus = NO_FOCUS) {
+  return muscleMapData(log, exercises, machines, (s) => s.date >= from && s.date <= to, focus);
+}
+var SCALE_MODE_LABELS = {
+  standard: "Standard",
+  individual: "Individuell",
+  relative: "Relativ"
+};
+var LEVEL_NAMES = ["wenig", "moderat", "Aufbau", "hoch", "sehr hoch"];
+var STANDARD_TARGET = { moderate: 6, build: 10, high: 15, veryHigh: 21 };
+var RELATIVE_TARGET = {
+  moderate: 0.2,
+  build: 0.4,
+  high: 0.6,
+  veryHigh: 0.8
+};
+var DEFAULT_TARGETS = (() => {
+  const t = (moderate, build, high, veryHigh) => ({
+    moderate,
+    build,
+    high,
+    veryHigh
+  });
+  const chest = t(6, 10, 16, 22);
+  const abs = t(3, 8, 16, 22);
+  const traps = t(3, 8, 16, 22);
+  const upperBack = t(6, 10, 16, 22);
+  const quads = t(6, 9, 16, 20);
+  const hams = t(4, 7, 13, 18);
+  const calves = t(6, 10, 16, 22);
+  const small = t(3, 6, 12, 18);
+  return {
+    chest_upper: chest,
+    chest_lower: chest,
+    front_delts: t(3, 6, 10, 14),
+    side_delts: t(8, 12, 20, 26),
+    rear_delts: t(6, 10, 18, 24),
+    biceps: t(6, 10, 16, 22),
+    brachialis: t(6, 10, 16, 22),
+    triceps_long: t(5, 8, 14, 20),
+    triceps_lateral: t(5, 8, 14, 20),
+    triceps_medial: t(5, 8, 14, 20),
+    brachioradialis: small,
+    forearm_flexors: small,
+    forearm_extensors: small,
+    abs_upper: abs,
+    abs_lower: abs,
+    obliques: small,
+    serratus: small,
+    neck: t(2, 4, 8, 12),
+    traps_upper: traps,
+    traps_middle: traps,
+    traps_lower: traps,
+    infraspinatus: upperBack,
+    teres: upperBack,
+    lats: t(6, 10, 18, 24),
+    lower_back: t(2, 4, 8, 12),
+    glutes: small,
+    glute_medius: small,
+    tfl: small,
+    adductors: small,
+    rectus_femoris: quads,
+    vastus_lateralis: quads,
+    vastus_medialis: quads,
+    sartorius: small,
+    hamstrings_lateral: hams,
+    hamstrings_medial: hams,
+    gastrocnemius: calves,
+    soleus: calves,
+    tibialis: t(2, 4, 8, 12)
+  };
+})();
+function levelFor(value, t) {
+  if (!(value > 0)) return 0;
+  if (value >= t.veryHigh) return 5;
+  if (value >= t.high) return 4;
+  if (value >= t.build) return 3;
+  if (value >= t.moderate) return 2;
+  return 1;
+}
+function targetFor(m, mode, targets) {
+  if (mode === "relative") return RELATIVE_TARGET;
+  if (mode === "individual") return targets[m];
+  return STANDARD_TARGET;
+}
+function relativeValues(values) {
+  const max = Math.max(0, ...MUSCLE_IDS.map((m) => values[m]));
+  const out = emptyMuscleValues();
+  if (max > 0) for (const m of MUSCLE_IDS) out[m] = values[m] / max;
+  return out;
+}
+function muscleLevels(values, mode, targets = DEFAULT_TARGETS) {
+  const v = mode === "relative" ? relativeValues(values) : values;
+  return Object.fromEntries(
+    MUSCLE_IDS.map((m) => [m, levelFor(v[m], targetFor(m, mode, targets))])
+  );
+}
+function legendLabels(mode) {
+  if (mode === "individual") return [...LEVEL_NAMES];
+  if (mode === "relative") {
+    return ["unter 20 %", "20\u201340 %", "40\u201360 %", "60\u201380 %", "ab 80 %"].map(
+      (r2, i) => `${r2} \xB7 ${LEVEL_NAMES[i]}`
+    );
+  }
+  const t = STANDARD_TARGET;
+  const ranges = [
+    `1\u2013${t.moderate - 1}`,
+    `${t.moderate}\u2013${t.build - 1}`,
+    `${t.build}\u2013${t.high - 1}`,
+    `${t.high}\u2013${t.veryHigh - 1}`,
+    `ab ${t.veryHigh}`
+  ];
+  return ranges.map((r2, i) => `${r2} \xB7 ${LEVEL_NAMES[i]}`);
+}
+function validateTarget(t) {
+  const v = [t.moderate, t.build, t.high, t.veryHigh];
+  if (v.some((x) => !Number.isFinite(x) || x < 0)) return "Nur Zahlen ab 0";
+  for (let i = 1; i < v.length; i++) {
+    if (v[i] <= v[i - 1]) return "Die Werte m\xFCssen aufsteigen";
+  }
+  return null;
+}
+var MUSCLE_MAP_SETTINGS_KEY = "ui.muscle_map";
+var DEFAULT_MUSCLE_MAP_SETTINGS = {
+  mode: "standard",
+  targets: DEFAULT_TARGETS
+};
+function parseMuscleMapSettings(json) {
+  if (!json) return DEFAULT_MUSCLE_MAP_SETTINGS;
+  try {
+    const v = JSON.parse(json);
+    const mode = v.mode === "individual" || v.mode === "relative" || v.mode === "standard" ? v.mode : "standard";
+    const targets = { ...DEFAULT_TARGETS };
+    const legacy = /* @__PURE__ */ new Map();
+    for (const [old, parts] of Object.entries(LEGACY_MUSCLES)) {
+      const t = v.targets?.[old];
+      if (t) for (const p of parts) legacy.set(p, t);
+    }
+    for (const m of MUSCLE_IDS) {
+      const t = v.targets?.[m] ?? legacy.get(m);
+      if (!t) continue;
+      const candidate = {
+        moderate: Number(t.moderate),
+        build: Number(t.build),
+        high: Number(t.high),
+        veryHigh: Number(t.veryHigh)
+      };
+      if (validateTarget(candidate) === null) targets[m] = candidate;
+    }
+    return { mode, targets };
+  } catch {
+    return DEFAULT_MUSCLE_MAP_SETTINGS;
+  }
+}
+
 // src/domain/energy.ts
 var energy_exports = {};
 __export(energy_exports, {
@@ -3273,16 +7652,21 @@ export {
   GROUP_LABELS,
   INDEPENDENT_LABEL,
   KCAL_PER_GRAM,
+  LEVEL_NAMES,
   MACRO_KEYS,
+  MUSCLE_LABELS,
+  MUSCLE_MAP_SETTINGS_KEY,
   OPTIONAL_KEYS,
   OPTIONAL_LABELS,
   OVERVIEW_LAYOUT_KEY,
+  SCALE_MODE_LABELS,
   ZERO,
   addDaysIso,
   addNutrientValues,
   addNutrients,
   amountFromPortions,
   arrange,
+  buildFocusIndex,
   countAfterClick,
   dailyNeed,
   dashboard_exports as dashboard,
@@ -3322,6 +7706,7 @@ export {
   groupIntakes,
   groupedValues,
   insights_exports as insights,
+  legendLabels,
   macroBaseKcal,
   macroEnergyShares,
   macroGoalRows,
@@ -3330,12 +7715,15 @@ export {
   mealHasContent,
   mealTypeLabel,
   microValues,
+  muscleLevels,
+  muscleMapForRange,
   neat_exports as neat,
   nutrientPercents,
   nutrientsFor,
   optionalOf,
   parseIsoDate,
   parseLayout,
+  parseMuscleMapSettings,
   perServing,
   percentText,
   portionsFromAmount,
@@ -3351,6 +7739,7 @@ export {
   stats_exports as stats,
   sumNutrients,
   sumOptional,
+  targetFor,
   trainingCalc_exports as trainingCalc,
   trends_exports as trends,
   waterGlasses,

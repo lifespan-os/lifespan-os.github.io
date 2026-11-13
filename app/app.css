@@ -489,3 +489,17 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .reminders { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .reminders li { display: grid; justify-items: start; }
 .protein-suggest .plain-list { font-size: .86rem; }
+.segmented { display: inline-flex; align-self: flex-start; border: 1px solid #c3cedc; border-radius: 10px; overflow: hidden; }
+.segmented > button { border: 0; border-radius: 0; background: transparent; color: var(--muted); padding: 8px 12px; font-size: .84rem; min-height: 40px; }
+.segmented > button + button { border-left: 1px solid #c3cedc; }
+.segmented > button.is-active { background: #e3ebfa; color: var(--fg); font-weight: 650; }
+.muscle-map { display: flex; flex-direction: column; gap: 8px; }
+.muscle-map__tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.muscle-map__views { display: flex; gap: 6px; justify-content: center; }
+.muscle-map__svg { flex: 1 1 0; min-width: 0; max-width: 340px; height: auto; }
+.muscle-map__backdrop { fill: var(--surface); }
+.muscle-map__image, .muscle-map__regions { mix-blend-mode: multiply; }
+.muscle-map__hover { margin: 0; min-height: 1.4em; text-align: center; font-size: .84rem; color: var(--muted); }
+.muscle-map__legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 12px; margin: 0; padding: 0; list-style: none; font-size: .76rem; color: var(--muted); }
+.muscle-map__legend li { display: inline-flex; align-items: center; gap: 4px; }
+.muscle-map__swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid #c3cedc; }

@@ -3,7 +3,7 @@ import * as C from "./core.js";
 import * as store from "./store.js";
 import * as N from "./nutrition.js";
 import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, viewFood, viewFoodReview } from "./food.js";
-import { bodyActions, bodyChange, bodyInput, bodyState, initBody, viewBody, viewBodyMetric } from "./body.js";
+import { bodyActions, bodyChange, bodyInput, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
 import * as BD from "./bodydata.js";
 
 const app = document.getElementById("app");
@@ -528,6 +528,7 @@ const VIEWS = {
   "food-review": viewFoodReview,
   body: viewBody,
   "body-metric": viewBodyMetric,
+  "body-entry": viewBodyEntry,
   dish: viewDish,
   setup: viewSetup,
   home: viewHome,

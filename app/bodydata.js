@@ -226,3 +226,85 @@ export function methodsFor(values) {
 function fmt(v) {
   return Number.isFinite(v) ? String(v).replace(".", ",") : String(v);
 }
+
+/**
+ * Tageserfassung (1.3.1, wie „Erfassen“ am PC): alle Werte eines Tages auf einmal speichern.
+ * `values`: metricId → Text (leer = kein Wert), `methods`/`times`: je Bereich (category).
+ * Erst wird alles geprüft (Fehler je Feld), dann gespeichert. Ein geleertes Feld entfernt einen
+ * noch nicht gesendeten Handy-Wert dieses Tages; Werte vom PC bleiben (dort löschen).
+ * Rückgabe { errors, saved, removed, kept }.
+ */
+export function saveDay(catalog, local, { date, values, methods = {}, times = {} }, { uuid, now = new Date() }) {
+  const errors = {};
+  const metricsById = new Map((catalog?.body?.metrics ?? []).map((m) => [m.id, m]));
+  const existing = allValues(catalog, local);
+  const plan = [];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) return { errors: { date: "Bitte ein gültiges Datum wählen." }, saved: 0, removed: 0, kept: 0 };
+  if (date > localDate(now)) return { errors: { date: "Das Datum liegt in der Zukunft." }, saved: 0, removed: 0, kept: 0 };
+  for (const [cat, t] of Object.entries(times)) {
+    if (t && !TIME.test(t)) errors[`time-${cat}`] = "Uhrzeit bitte als HH:MM.";
+  }
+  for (const [id, text] of Object.entries(values)) {
+    const m = metricsById.get(id);
+    if (!m) continue;
+    const today = (existing.get(id) ?? []).find((v) => v.row.date === date);
+    const raw = String(text ?? "").trim().replace(/\s/g, "").replace(",", ".");
+    if (raw === "") {
+      if (today) plan.push({ kind: "clear", m, today });
+      continue;
+    }
+    const value = Number(raw);
+    if (!Number.isFinite(value)) {
+      errors[id] = "Bitte eine Zahl eingeben.";
+      continue;
+    }
+    if ((m.min_value != null && value < m.min_value) || (m.max_value != null && value > m.max_value)) {
+      errors[id] = `Erlaubt: ${fmt(m.min_value)} bis ${fmt(m.max_value)} ${m.unit}`;
+      continue;
+    }
+    const f = 10 ** (m.decimals ?? 1);
+    const rounded = Math.round(value * f) / f;
+    const method = (methods[m.category] || "").trim() || null;
+    const time = (times[m.category] || "").trim() || null;
+    if (today && today.row.value === rounded && (today.row.method ?? null) === method && (today.row.time ?? null) === time) continue;
+    plan.push({ kind: "save", m, value: rounded, method, time, notes: today?.row.notes ?? null });
+  }
+  if (Object.keys(errors).length) return { errors, saved: 0, removed: 0, kept: 0 };
+  let saved = 0;
+  let removed = 0;
+  let kept = 0;
+  for (const p of plan) {
+    if (p.kind === "save") {
+      saveValue(catalog, local, { metricId: p.m.id, date, value: p.value, method: p.method, time: p.time, notes: p.notes }, { uuid, now });
+      saved++;
+    } else if (p.today.local && !p.today.sent) {
+      delete local.entries[p.today.row.id];
+      removed++;
+    } else kept++;
+  }
+  return { errors, saved, removed, kept };
+}
+
+/** Vorbelegung der Tageserfassung: Werte, Messmethode und Uhrzeit (häufigste je Bereich) des Tages. */
+export function dayForm(catalog, local, date) {
+  const all = allValues(catalog, local);
+  const values = {};
+  const methodCount = {};
+  const timeCount = {};
+  for (const m of catalog?.body?.metrics ?? []) {
+    const v = (all.get(m.id) ?? []).find((x) => x.row.date === date);
+    values[m.id] = v ? String(v.row.value).replace(".", ",") : "";
+    if (v?.row.method) (methodCount[m.category] ??= {})[v.row.method] = ((methodCount[m.category] ?? {})[v.row.method] ?? 0) + 1;
+    if (v?.row.time) (timeCount[m.category] ??= {})[v.row.time] = ((timeCount[m.category] ?? {})[v.row.time] ?? 0) + 1;
+  }
+  const top = (c) => Object.fromEntries(Object.entries(c).map(([k, o]) => [k, Object.entries(o).sort((a, b) => b[1] - a[1])[0][0]]));
+  return { date, values, methods: top(methodCount), times: top(timeCount), errors: {} };
+}
+
+/** Messmethoden, die in einem Bereich schon verwendet wurden (für die Auswahl). */
+export function methodsInCategory(catalog, local, category) {
+  const ids = new Set((catalog?.body?.metrics ?? []).filter((m) => m.category === category).map((m) => m.id));
+  const out = new Set();
+  for (const [id, list] of allValues(catalog, local)) if (ids.has(id)) for (const v of list) if (v.row.method) out.add(v.row.method);
+  return [...out].slice(0, 10);
+}

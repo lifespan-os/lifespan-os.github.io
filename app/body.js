@@ -10,7 +10,7 @@ export function initBody(ctx) {
 }
 
 export function bodyState(local) {
-  return { local: local || B.emptyBodyLocal(), form: null };
+  return { local: local || B.emptyBodyLocal(), form: null, day: null };
 }
 
 const S = () => X.S.body;
@@ -107,7 +107,7 @@ export function viewBody() {
           <button class="btn block" data-go="send">An den PC senden</button></section>`
         : ""
     }
-    ${formCard()}
+    <button class="btn primary block big-entry" data-act="body-day-open">Werte erfassen<small>Alle Messgrößen eines Tages auf einen Blick</small></button>
     ${
       sections.length
         ? sections
@@ -122,7 +122,7 @@ export function viewBody() {
           </section>`,
             )
             .join("")
-        : `<section class="card"><p class="empty">Noch keine Werte. Erfasse oben den ersten Wert.</p></section>`
+        : `<section class="card"><p class="empty">Noch keine Werte. Tippe auf „Werte erfassen“.</p></section>`
     }
     <p class="muted small">Tippe auf eine Messgröße für ihren Verlauf. Je Messgröße: letzter Wert, Veränderung zum vorherigen Wert und Datum.</p>
   </main>`;
@@ -230,9 +230,106 @@ function chart(m, values) {
   </svg>`;
 }
 
+// ------------------------------------------------------------------ Ansicht „Werte erfassen“ (1.3.1)
+
+function shiftDate(iso, days) {
+  const d = new Date(`${iso}T12:00:00`);
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+
+export function viewBodyEntry() {
+  const st = S();
+  if (!X.S.catalog?.body) return viewBody();
+  if (!st.day) st.day = B.dayForm(X.S.catalog, st.local, today());
+  const d = st.day;
+  const all = B.allValues(X.S.catalog, st.local);
+  const sections = B.metricSections(metrics());
+  const wd = WEEKDAYS[new Date(`${d.date}T12:00:00`).getDay()];
+  return `${X.header("Werte erfassen", { back: "body" })}<main class="wrap body-entry">
+    <section class="card day-nav">
+      <button class="btn sm" data-act="body-day-shift" data-arg="-1" aria-label="Vortag">‹</button>
+      <label class="day-nav__date"><span class="muted small">${d.date === today() ? "Heute" : wd}</span>
+        <input type="date" data-bd="date" value="${esc(d.date)}" max="${today()}" aria-label="Tag"></label>
+      <button class="btn sm" data-act="body-day-shift" data-arg="1" aria-label="Folgetag" ${d.date >= today() ? "disabled" : ""}>›</button>
+    </section>
+    ${d.errors.date ? `<p class="err small">${esc(d.errors.date)}</p>` : ""}
+    <nav class="entry-jump">${sections.map((sec) => `<button type="button" data-act="body-jump" data-arg="be-${sec.category}">${esc(sec.label)}</button>`).join("")}</nav>
+    ${sections
+      .map((sec) => {
+        const methods = B.methodsInCategory(X.S.catalog, st.local, sec.category);
+        return `<section class="card" id="be-${sec.category}"><h3>${esc(sec.label)}</h3>
+        <div class="grid2 entry-meta">
+          <label class="field"><span>Messmethode</span>
+            <input type="text" data-bd="method" data-cat="${sec.category}" list="bm-${sec.category}" value="${esc(d.methods[sec.category] ?? "")}" placeholder="optional"></label>
+          <label class="field"><span>Uhrzeit</span>
+            <input type="time" data-bd="time" data-cat="${sec.category}" value="${esc(d.times[sec.category] ?? "")}"></label>
+        </div>
+        ${d.errors[`time-${sec.category}`] ? `<p class="err small">${esc(d.errors[`time-${sec.category}`])}</p>` : ""}
+        <datalist id="bm-${sec.category}">${methods.map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
+        ${sec.groups
+          .map(
+            (g) => `${g.label ? `<p class="body-sub">${esc(g.label)}</p>` : ""}${g.metrics
+              .map((m) => {
+                const last = (all.get(m.id) ?? []).find((v) => v.row.date < d.date);
+                const hint = B.metricHint(m);
+                return `<label class="entry-row" ${hint ? `title="${esc(hint)}"` : ""}>
+                  <span class="entry-row__name">${esc(m.name)}${hint ? ` <span class="info" aria-hidden="true">ⓘ</span>` : ""}
+                    ${last ? `<span class="muted small">zuletzt ${fmtNum(last.row.value, m.decimals)} (${fmtShort(last.row.date)})</span>` : ""}</span>
+                  <span class="entry-row__input"><input type="text" inputmode="decimal" enterkeyhint="next" data-bd="value" data-id="${esc(m.id)}"
+                    value="${esc(d.values[m.id] ?? "")}" ${d.errors[m.id] ? 'aria-invalid="true"' : ""} aria-label="${esc(m.name)}"><span class="unit">${esc(m.unit)}</span></span>
+                  ${d.errors[m.id] ? `<span class="err small entry-row__err">${esc(d.errors[m.id])}</span>` : ""}
+                </label>`;
+              })
+              .join("")}`,
+          )
+          .join("")}
+      </section>`;
+      })
+      .join("")}
+    <div class="entry-save"><button class="btn primary block" data-act="body-day-save">Werte speichern</button></div>
+    <p class="muted small">Messmethode und Uhrzeit gelten für alle Werte ihres Bereichs. Ein geleertes Feld entfernt einen noch nicht gesendeten Wert dieses Tages; Werte vom PC bleiben bestehen.</p>
+  </main>`;
+}
+
 // ------------------------------------------------------------------ Ereignisse
 
 export const bodyActions = {
+  "body-jump": (el) => document.getElementById(el.dataset.arg)?.scrollIntoView({ block: "start", behavior: "smooth" }),
+  "body-day-open": () => {
+    S().day = B.dayForm(X.S.catalog, S().local, today());
+    X.go("body-entry");
+  },
+  "body-day-shift": (el) => {
+    const d = S().day;
+    const next = shiftDate(d.date, Number(el.dataset.arg));
+    if (next > today()) return;
+    S().day = B.dayForm(X.S.catalog, S().local, next);
+    X.rerender();
+  },
+  "body-day-save": async () => {
+    const st = S();
+    const d = st.day;
+    const r = B.saveDay(X.S.catalog, st.local, d, { uuid: () => X.uuid(), now: new Date() });
+    if (Object.keys(r.errors).length) {
+      d.errors = r.errors;
+      X.rerender();
+      X.toast(`Bitte ${Object.keys(r.errors).length === 1 ? "einen Wert" : `${Object.keys(r.errors).length} Werte`} prüfen.`, true);
+      requestAnimationFrame(() => document.querySelector('[aria-invalid="true"], .err')?.scrollIntoView({ block: "center", behavior: "smooth" }));
+      return;
+    }
+    await persist();
+    const parts = [
+      r.saved ? `${r.saved} ${r.saved === 1 ? "Wert" : "Werte"} gespeichert` : "",
+      r.removed ? `${r.removed} entfernt` : "",
+    ].filter(Boolean);
+    X.toast(parts.length ? parts.join(", ") : "Keine Änderungen");
+    if (r.kept) X.toast(`${parts.join(", ")}${parts.length ? ". " : ""}Werte vom PC lassen sich nur am PC löschen.`);
+    st.day = B.dayForm(X.S.catalog, st.local, d.date);
+    X.go("body");
+  },
   "body-save": async () => {
     const st = S();
     const f = st.form;
@@ -289,6 +386,18 @@ export const bodyActions = {
 
 /** Eingaben im Formular (ohne neu zu zeichnen). */
 export function bodyInput(el) {
+  const d = S()?.day;
+  if (el.dataset.bd && d) {
+    if (el.dataset.bd === "value") {
+      d.values[el.dataset.id] = el.value;
+      if (d.errors[el.dataset.id]) {
+        delete d.errors[el.dataset.id];
+        el.removeAttribute("aria-invalid");
+      }
+    } else if (el.dataset.bd === "method") d.methods[el.dataset.cat] = el.value;
+    else if (el.dataset.bd === "time") d.times[el.dataset.cat] = el.value;
+    return el.dataset.bd !== "date";
+  }
   if (!el.dataset.bf || !S()?.form) return false;
   S().form[el.dataset.bf] = el.value;
   return true;
@@ -296,6 +405,11 @@ export function bodyInput(el) {
 
 /** Messgröße gewechselt: Formular neu zeichnen (Einheit, Bereich, Messmethoden). */
 export function bodyChange(el) {
+  if (el.dataset.bd === "date") {
+    if (el.value && el.value <= today()) S().day = B.dayForm(X.S.catalog, S().local, el.value);
+    X.rerender();
+    return true;
+  }
   if (el.dataset.bf !== "metricId") return false;
   S().form.metricId = el.value;
   X.rerender();

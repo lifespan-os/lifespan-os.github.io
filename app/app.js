@@ -465,12 +465,15 @@ function pickerResults() {
       if (h.kind === "machine") {
         const m = h.machine;
         const nr = m.own_number || m.gym_number;
-        return `<button class="item" data-act="pick-machine" data-arg="${esc(m.id)}">
+        const key = `machine:${m.id}`;
+        return `<div class="item-row"><button class="item" data-act="pick-machine" data-arg="${esc(m.id)}">
           <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>
           <span class="main"><b>${esc(m.display_name)}</b><span class="muted small">${esc([m.manufacturer, m.series, C.machineMuscles(m).slice(0, 3).join(", ")].filter(Boolean).join(" · "))}</span>${
             h.exercises.length ? `<span class="small">Übungen: ${esc(h.exercises.map((e) => e.name).join(" · "))}</span>` : ""
           }<span class="usage small">${esc(usageText(C.usageOf(S.catalog, S.workouts, C.machineExercises(S.catalog, S.localExercises, m.id).map((e) => e.id))))}</span></span>
-          <span class="chev">${h.exercises.length ? "›" : "+"}</span></button>`;
+          <span class="chev">${h.exercises.length ? "›" : "+"}</span></button>
+          <button class="info-btn" data-act="focus-info" data-arg="${esc(key)}" aria-expanded="${S.focusOpen === key}" aria-label="Muskelverteilung der Maschine ${esc(m.display_name)}">${icon("info")}</button>
+          ${S.focusOpen === key ? focusPanelHtml(machineFocusInfo(m)) : ""}</div>`;
       }
       const e = h.exercise;
       return `<button class="item" data-act="pick-exercise" data-arg="${esc(e.id)}">
@@ -485,10 +488,31 @@ function pickerResults() {
 /** Maschine mit Übungen: eine davon wählen oder eine weitere anlegen. */
 /** Muskelverteilung einer Übung (Info-Symbol), gleiche Regeln wie am PC. */
 function focusPanel(e, m) {
-  const info = focusInfo(
-    { exerciseId: e.id, exerciseName: e.name, muscleGroup: e.muscle_group, machineId: m?.id ?? e.machine_id, machineMuscleGroups: m ? C.machineMuscles(m) : [] },
+  return focusPanelHtml(
+    focusInfo(
+      { exerciseId: e.id, exerciseName: e.name, muscleGroup: e.muscle_group, machineId: m?.id ?? e.machine_id, machineMuscleGroups: m ? C.machineMuscles(m) : [] },
+      S.catalog.focus,
+    ),
+  );
+}
+
+/** Muskelverteilung der Maschine selbst (1.5.1): eigener Fokus der Maschine, sonst Standardverteilung, sonst Muskelgruppen. */
+function machineFocusInfo(m) {
+  return focusInfo(
+    { exerciseId: `machine:${m.id}`, exerciseName: m.name, muscleGroup: null, machineId: m.id, machineMuscleGroups: C.machineMuscles(m) },
     S.catalog.focus,
   );
+}
+
+/** Kurztext unter „Muskelverteilung der Maschine“. */
+function machineFocusText(info) {
+  if (info.source === "machine") return "Eigener Muskelfokus der Maschine";
+  if (info.source === "pattern") return info.title;
+  if (info.source === "text") return "Aus den Muskelgruppen der Maschine";
+  return "Keine Verteilung hinterlegt";
+}
+
+function focusPanelHtml(info) {
   return `<div class="focus-panel">
     <b>${esc(info.title)}</b>
     ${info.groups
@@ -509,6 +533,16 @@ function viewMachine() {
   const nr = m.own_number || m.gym_number;
   const list = C.machineExercises(S.catalog, S.localExercises, m.id);
   return `${header(m.display_name, { back: "picker", sub: [nr ? `Nr. ${nr}` : "", m.manufacturer].filter(Boolean).join(" · ") })}<main class="wrap">
+    ${(() => {
+      const info = machineFocusInfo(m);
+      const key = `machine:${m.id}`;
+      return `<div class="item-row machine-focus">
+        <div class="item machine-focus__text"><span class="main"><b>Muskelverteilung der Maschine</b>
+          <span class="muted small">${esc(machineFocusText(info))}</span></span></div>
+        <button class="info-btn" data-act="focus-info" data-arg="${esc(key)}" aria-expanded="${S.focusOpen === key}" aria-label="Muskelverteilung der Maschine ${esc(m.display_name)}">${icon("info")}</button>
+        ${S.focusOpen === key ? focusPanelHtml(info) : ""}
+      </div>`;
+    })()}
     <p class="muted small">Übungen an dieser Maschine – der Verlauf gehört jeweils zur Übung.</p>
     <div class="list">${list
       .map(

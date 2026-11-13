@@ -415,3 +415,7 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .day-chart__track { position: relative; display: block; height: 10px; border-radius: 999px; background: var(--c-sunken); border: 1px solid var(--line); overflow: hidden; }
 .day-chart__fill { display: block; height: 100%; border-radius: 999px; }
 .day-chart__track.is-over { border-color: var(--c-danger); }
+
+/* Muskelfokus der Maschine (1.5.1) */
+.machine-focus { margin-bottom: 4px; }
+.machine-focus__text { cursor: default; }

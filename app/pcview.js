@@ -157,7 +157,7 @@ export function dayChartHtml(chart) {
 const shortDate = (iso) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.`;
 
 /** Balken je Tag wie `BarTrend.tsx` (Werte 0 = kein Balken). */
-export function barTrendSvg(data, { color = COLOR.training, format = (v) => D.formatNumber(v, 0), height = 180, label = "" } = {}) {
+export function barTrendSvg(data, { color = COLOR.training, format = (v) => D.formatNumber(v, 0), height = 180, label = "", ticks = null, tickFormat = (v) => D.formatNumber(v, 0) } = {}) {
   const W = 340;
   const H = height;
   const L = 38;
@@ -165,14 +165,16 @@ export function barTrendSvg(data, { color = COLOR.training, format = (v) => D.fo
   const T = 10;
   const B = 22;
   const max = Math.max(1, ...data.map((d) => d.value));
-  const nice = niceMax(max);
+  // Mit festen Skalenstrichen (wie BarTrend `ticks`): Achse bis zum größten Wert bzw. Strich
+  const nice = ticks ? Math.max(max, ...ticks) : niceMax(max);
   const step = (W - L - R) / Math.max(1, data.length);
   const bw = Math.max(2, step * 0.66);
   const y = (v) => T + (1 - v / nice) * (H - T - B);
-  const ticks = [0, nice / 2, nice];
+  const lines = ticks ?? [0, nice / 2, nice];
+  const label0 = ticks ? tickFormat : (v) => D.formatNumber(v, 0);
   const every = Math.ceil(data.length / 7);
   return `<svg class="pc-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}">
-    ${ticks.map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="grid"/><text x="${L - 4}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end">${esc(D.formatNumber(v, 0))}</text>`).join("")}
+    ${lines.map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="grid"/><text x="${L - 4}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end">${esc(label0(v))}</text>`).join("")}
     ${data
       .map((d, i) => {
         const x = L + i * step + (step - bw) / 2;

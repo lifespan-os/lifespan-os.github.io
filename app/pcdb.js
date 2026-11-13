@@ -56,6 +56,7 @@ export const KEEP_TABLES = [
   "hrt_entry",
   "hrt_product",
   "grip_strength_measurement",
+  "training_plan_slot",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */
@@ -91,6 +92,10 @@ export function pcFromRows(rows) {
   pc.nutrient_field = rows("nutrient_field").map(({ key, label, unit, category, position }) => ({ key, label, unit, category, position }));
   const mealFoods = new Set(rows("meal_item").map((i) => i.food_id));
   pc.archived_food = rows("food").filter((f) => f.archived && mealFoods.has(f.id));
+  // Overview (1.6.0): Messgrößen auch archiviert (Einheit, Nachkommastellen, Kategorie) und nur
+  // das Datum der Check-In-Fotos (für die Erinnerungen), ohne Bilder
+  pc.body_metric = rows("body_metric").map(({ id, name, unit, decimals, category, position }) => ({ id, name, unit, decimals, category, position }));
+  pc.checkin_date = [...new Set(rows("checkin_photo").map((c) => c.date))].map((date) => ({ date }));
   return pc;
 }
 

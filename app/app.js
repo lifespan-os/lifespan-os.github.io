@@ -8,7 +8,8 @@ import * as BD from "./bodydata.js";
 import { SECTIONS, drawerHtml, icon, pcOnlyHtml } from "./nav.js";
 import { focusInfo, machineNamesOf } from "./focusinfo.js";
 import * as P from "./pcdb.js";
-import { diaryActions, diaryChange, initDiary, viewDiary, viewNutritionHistory } from "./diary.js";
+import { buildDb, diaryActions, diaryChange, initDiary, today as todayIso, viewDiary, viewNutritionHistory } from "./diary.js";
+import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewDayNav } from "./overview.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -133,10 +134,28 @@ function fileButton(label) {
     <input id="file-in" type="file" accept=".json,application/json" hidden>`;
 }
 
+/**
+ * Overview wie am PC (1.6.0): oben das Training am Handy (läuft bzw. starten) und offene
+ * Einträge für den PC, darunter die Karten der Desktop-App in deren Anordnung.
+ */
 function viewHome() {
   const c = S.catalog;
   const open = unsent();
   const a = S.active;
+  const offen = open.length + unsentFood() + unsentBodyCount();
+  const today = todayIso();
+  const date = S.ovDate && S.ovDate < today ? S.ovDate : today;
+  let cards;
+  if (!c.pc) {
+    cards = `<section class="card"><p class="warn">Für die Overview wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Settings „Neue Exportdatei laden“.</p></section>`;
+  } else {
+    try {
+      cards = `${overviewDayNav(date, today)}${overviewCardsHtml(buildDb(), c, date, today)}`;
+    } catch (e) {
+      console.error(e);
+      cards = `<section class="card"><p class="warn">Die Overview konnte nicht berechnet werden: ${esc(e.message)}</p></section>`;
+    }
+  }
   return `${brandHeader()}<main class="wrap">
     ${
       a
@@ -152,42 +171,21 @@ function viewHome() {
             <button class="btn blue" data-act="start-free">Freies Training<small>Maschinen spontan auswählen</small></button>
           </div>`
     }
-    <section class="card">
-      <div class="wo-head"><h3>Ernährung</h3><span class="tag">Scanner</span></div>
-      <p class="muted small">Etikett fotografieren, Nährwerte übernehmen, Mengen tracken und Gerichte zusammenstellen.</p>
-      <button class="btn blue block" data-go="food">Etikett scannen &amp; tracken</button>
-    </section>
-    <section class="card">
-      <div class="wo-head"><h3>Body &amp; Longevity</h3><span class="tag">Körperwerte</span></div>
-      <p class="muted small">Letzte Werte wie am PC (Körperzusammensetzung, Umfänge, Vitalwerte, Fitness), Verlauf je Messgröße und neue Werte erfassen.</p>
-      <button class="btn blue block" data-go="body">Körperwerte</button>
-    </section>
-    <section class="card">
-      <div class="wo-head"><h3>An den PC senden</h3><span class="tag">${open.length + unsentFood() + unsentBodyCount()} offen</span></div>
-      ${
-        open.length || unsentFood() || unsentBodyCount()
-          ? `<p class="muted small">${[
+    ${
+      offen
+        ? `<section class="card"><div class="wo-head"><h3>An den PC senden</h3><span class="tag">${offen} offen</span></div>
+            <p class="muted small">${[
               open.length ? (open.length === 1 ? "1 Training" : `${open.length} Trainings`) : "",
               unsentFood() ? `${unsentFood()} Ernährungseinträge` : "",
               unsentBodyCount() ? `${unsentBodyCount()} Körperwerte` : "",
             ]
               .filter(Boolean)
               .join(" und ")} noch nicht am PC.</p>
-             <button class="btn block" data-go="send">An den PC senden</button>
-             ${unsentFood() ? `<button class="btn ghost block" data-go="food-review">Ernährungseinträge prüfen und bearbeiten</button>` : ""}`
-          : `<p class="muted small">Alles übertragen.</p>`
-      }
-    </section>
-    <section class="card">
-      <div class="wo-head"><h3>Training</h3><span class="tag">${S.workouts.filter((w) => w.status === "done").length} auf dem Handy</span></div>
-      <p class="muted small">Pläne, freies Training und die letzten Trainings auf dem Handy.</p>
-      <button class="btn block" data-go="training">Zum Training</button>
-    </section>
-    <section class="card">
-      <h3>Daten vom PC</h3>
-      <p class="muted small">Stand: ${fmtDateTime(c.exportedAt)} · ${c.machines.length.toLocaleString("de-DE")} Maschinen · ${c.exercises.length} Übungen · ${c.plans.length} Pläne</p>
-      ${fileButton("Neue Exportdatei laden")}
-    </section>
+            <button class="btn block" data-go="send">An den PC senden</button></section>`
+        : ""
+    }
+    ${cards}
+    <p class="muted small ov-source">Stand der Daten vom PC: ${fmtDateTime(c.exportedAt)} – plus alles, was du seitdem am Handy erfasst hast. Anordnung der Karten wie am PC (Overview → Übersicht anpassen).</p>
   </main>`;
 }
 
@@ -839,6 +837,7 @@ function addExercise(exerciseId) {
 const actions = {
   ...foodActions,
   ...diaryActions,
+  ...overviewActions,
   ...bodyActions,
   "start-free": () => startWorkout("Freies Training"),
   "start-plan": (el) => {
@@ -1209,6 +1208,7 @@ app.addEventListener("change", async (ev) => {
   if (foodChange(el)) return;
   if (bodyChange(el)) return;
   if (diaryChange(el)) return;
+  if (overviewChange(el)) return;
   if (el.id === "only-nr") {
     S.prefs.onlyNumbered = el.checked;
     saveSoon();
@@ -1394,6 +1394,7 @@ const moduleCtx = {
 };
 initBody(moduleCtx);
 initDiary(moduleCtx);
+initOverview({ ...moduleCtx, S, today: todayIso });
 
 initFood({
   get S() {

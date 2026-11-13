@@ -1476,6 +1476,7 @@ function daySlots(day) {
 }
 
 // src/domain/overviewLayout.ts
+var OVERVIEW_LAYOUT_KEY = "ui.overview_layout";
 var DEFAULT_LAYOUT = { order: [], hidden: [], emptyLast: true };
 function parseLayout(json) {
   if (!json) return DEFAULT_LAYOUT;
@@ -1511,6 +1512,300 @@ function arrange(cards, layout) {
   const sorted = [...cards].filter((c) => !layout.hidden.includes(c.id)).sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
   if (!layout.emptyLast) return sorted;
   return [...sorted.filter((c) => !c.empty), ...sorted.filter((c) => c.empty)];
+}
+
+// src/domain/trends.ts
+var trends_exports = {};
+__export(trends_exports, {
+  RANGE_PRESETS: () => RANGE_PRESETS,
+  comparePeriods: () => comparePeriods,
+  dailySeries: () => dailySeries,
+  daysBetween: () => daysBetween,
+  formatRange: () => formatRange,
+  groupByPeriod: () => groupByPeriod,
+  isoFromUtc: () => isoFromUtc,
+  isoWeek: () => isoWeek,
+  periodStartBack: () => periodStartBack,
+  presetRanges: () => presetRanges,
+  rangeStats: () => rangeStats,
+  shiftDays: () => shiftDays,
+  utcDay: () => utcDay,
+  weekStart: () => weekStart
+});
+var DAY_MS = 864e5;
+var ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
+var MONTHS = [
+  "Jan.",
+  "Feb.",
+  "M\xE4rz",
+  "Apr.",
+  "Mai",
+  "Juni",
+  "Juli",
+  "Aug.",
+  "Sept.",
+  "Okt.",
+  "Nov.",
+  "Dez."
+];
+function utcDay(iso) {
+  const m = ISO.exec(iso);
+  if (!m) throw new Error(`Ung\xFCltiges Datum: "${iso}" (erwartet JJJJ-MM-TT)`);
+  const d = /* @__PURE__ */ new Date(0);
+  d.setUTCFullYear(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  if (d.getUTCDate() !== Number(m[3]) || d.getUTCMonth() !== Number(m[2]) - 1) {
+    throw new Error(`Ung\xFCltiges Datum: "${iso}"`);
+  }
+  return d.getTime();
+}
+function isoFromUtc(t) {
+  return new Date(t).toISOString().slice(0, 10);
+}
+function shiftDays(iso, days) {
+  return isoFromUtc(utcDay(iso) + days * DAY_MS);
+}
+function daysBetween(from, to) {
+  return Math.round((utcDay(to) - utcDay(from)) / DAY_MS) + 1;
+}
+function weekStart(iso) {
+  const t = utcDay(iso);
+  const weekday = (new Date(t).getUTCDay() + 6) % 7;
+  return isoFromUtc(t - weekday * DAY_MS);
+}
+function isoWeek(iso) {
+  const monday = utcDay(weekStart(iso));
+  const thursday = new Date(monday + 3 * DAY_MS);
+  const year = thursday.getUTCFullYear();
+  const jan1 = Date.UTC(year, 0, 1);
+  const week = Math.floor((thursday.getTime() - jan1) / DAY_MS / 7) + 1;
+  return { year, week };
+}
+function periodOf(iso, period) {
+  if (period === "week") {
+    const start2 = weekStart(iso);
+    const { year, week } = isoWeek(iso);
+    return {
+      key: `${year}-W${String(week).padStart(2, "0")}`,
+      start: start2,
+      end: shiftDays(start2, 6),
+      label: `KW ${week}`
+    };
+  }
+  const [y, m] = iso.split("-").map(Number);
+  const start = `${y}-${String(m).padStart(2, "0")}-01`;
+  const end = isoFromUtc(Date.UTC(y, m, 0));
+  return { key: start.slice(0, 7), start, end, label: `${MONTHS[m - 1]} ${y}` };
+}
+function stats(values) {
+  let sum = 0;
+  let min = Infinity;
+  let max = -Infinity;
+  for (const v of values) {
+    sum += v;
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+  return { count: values.length, mean: sum / values.length, min, max };
+}
+function groupByPeriod(points, period) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const p of points) {
+    if (!Number.isFinite(p.value)) continue;
+    const info = periodOf(p.date, period);
+    const g = groups.get(info.key) ?? { info, values: [] };
+    g.values.push(p.value);
+    groups.set(info.key, g);
+  }
+  return [...groups.values()].sort((a, b) => a.info.start.localeCompare(b.info.start)).map(({ info, values }) => ({
+    ...info,
+    ...stats(values),
+    days: daysBetween(info.start, info.end)
+  }));
+}
+function rangeStats(points, from, to) {
+  if (from > to) throw new Error("Der Beginn des Zeitraums muss vor dem Ende liegen.");
+  const inside = points.filter((p) => p.date >= from && p.date <= to && Number.isFinite(p.value)).sort((a, b) => a.date.localeCompare(b.date));
+  const days = daysBetween(from, to);
+  if (inside.length === 0) {
+    return { from, to, days, count: 0, mean: null, min: null, max: null, first: null, last: null };
+  }
+  const s = stats(inside.map((p) => p.value));
+  return {
+    from,
+    to,
+    days,
+    count: s.count,
+    mean: s.mean,
+    min: s.min,
+    max: s.max,
+    first: inside[0] ?? null,
+    last: inside.at(-1) ?? null
+  };
+}
+function comparePeriods(points, a, b, minCount = 2) {
+  const sa = rangeStats(points, a.from, a.to);
+  const sb = rangeStats(points, b.from, b.to);
+  if (sa.count < minCount || sb.count < minCount) {
+    const few = sa.count < minCount ? "im ersten Zeitraum" : "im zweiten Zeitraum";
+    const n = Math.min(sa.count, sb.count);
+    return {
+      a: sa,
+      b: sb,
+      difference: null,
+      reason: n === 0 ? `Kein Vergleich m\xF6glich: ${few} gibt es keine Werte.` : `Kein Vergleich m\xF6glich: ${few} gibt es nur ${n} ${n === 1 ? "Wert" : "Werte"} (mindestens ${minCount} n\xF6tig).`
+    };
+  }
+  return { a: sa, b: sb, difference: sb.mean - sa.mean, reason: null };
+}
+var RANGE_PRESETS = [
+  { value: "4w", label: "4 Wochen", days: 28 },
+  { value: "12w", label: "12 Wochen", days: 84 },
+  { value: "6m", label: "6 Monate", days: 182 },
+  { value: "12m", label: "12 Monate", days: 364 }
+];
+function presetRanges(preset, today) {
+  const p = RANGE_PRESETS.find((r2) => r2.value === preset);
+  if (!p) throw new Error(`Unbekannter Zeitraum: ${preset}`);
+  const from = shiftDays(today, -(p.days - 1));
+  return {
+    current: { from, to: today },
+    previous: { from: shiftDays(from, -p.days), to: shiftDays(from, -1) }
+  };
+}
+function dailySeries(points, from, to) {
+  const byDate = new Map(points.map((p) => [p.date, p.value]));
+  const n = daysBetween(from, to);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const date = shiftDays(from, i);
+    out.push({ date, value: byDate.get(date) ?? null });
+  }
+  return out;
+}
+function formatRange(from, to) {
+  const [fy, fm, fd] = from.split("-");
+  const [ty, tm, td] = to.split("-");
+  const end = `${td}.${tm}.${ty}`;
+  if (from === to) return end;
+  return fy === ty ? `${fd}.${fm}.\u2013${end}` : `${fd}.${fm}.${fy}\u2013${end}`;
+}
+function periodStartBack(today, period, count) {
+  if (period === "week") return shiftDays(weekStart(today), -7 * (count - 1));
+  const [y, m] = today.split("-").map(Number);
+  const index = y * 12 + (m - 1) - (count - 1);
+  return `${Math.floor(index / 12)}-${String(index % 12 + 1).padStart(2, "0")}-01`;
+}
+
+// src/domain/trainingVolume.ts
+var E1RM_MAX_REPS = 12;
+var NO_MUSCLE_GROUP = "Ohne Muskelgruppe";
+function epley1RM(weightKg, reps) {
+  if (weightKg === null || reps === null || weightKg <= 0 || reps < 1 || reps > E1RM_MAX_REPS) {
+    return null;
+  }
+  const value = reps === 1 ? weightKg : weightKg * (1 + reps / 30);
+  return Math.round(value * 10) / 10;
+}
+function e1rmBySession(log) {
+  const best = /* @__PURE__ */ new Map();
+  for (const s of log) {
+    if (s.isWarmup) continue;
+    const value = epley1RM(s.weightKg, s.reps);
+    if (value === null) continue;
+    const current = best.get(s.workoutId);
+    if (!current || value > current.value) {
+      best.set(s.workoutId, {
+        date: s.date,
+        workoutId: s.workoutId,
+        value,
+        weightKg: s.weightKg,
+        reps: s.reps
+      });
+    }
+  }
+  return [...best.values()];
+}
+function bestE1RM(log) {
+  return e1rmBySession(log).reduce(
+    (best, p) => best === null || p.value > best.value ? p : best,
+    null
+  );
+}
+function weeklyMuscleSets(log, exercises, today, count = 4) {
+  const lastMonday = weekStart(today);
+  const weeks = [];
+  for (let i = count - 1; i >= 0; i--) {
+    const start = shiftDays(lastMonday, -7 * i);
+    weeks.push({ start, end: shiftDays(start, 6), label: `KW ${isoWeek(start).week}` });
+  }
+  const groupOf = new Map(
+    exercises.map((e) => [e.id, e.muscleGroup?.trim() ? e.muscleGroup.trim() : NO_MUSCLE_GROUP])
+  );
+  const rows = /* @__PURE__ */ new Map();
+  for (const s of log) {
+    if (s.isWarmup || s.exerciseCategory !== "strength") continue;
+    const index = weeks.findIndex((w) => s.date >= w.start && s.date <= w.end);
+    if (index < 0) continue;
+    const group = groupOf.get(s.exerciseId) ?? NO_MUSCLE_GROUP;
+    let row = rows.get(group);
+    if (!row) {
+      row = { group, sets: weeks.map(() => 0), volumeKg: weeks.map(() => 0) };
+      rows.set(group, row);
+    }
+    row.sets[index] = (row.sets[index] ?? 0) + 1;
+    row.volumeKg[index] = (row.volumeKg[index] ?? 0) + setVolumeKg(s);
+  }
+  const sum = (xs) => xs.reduce((a, b) => a + b, 0);
+  const last = count - 1;
+  return {
+    weeks,
+    rows: [...rows.values()].sort(
+      (a, b) => (b.sets[last] ?? 0) - (a.sets[last] ?? 0) || sum(b.sets) - sum(a.sets) || a.group.localeCompare(b.group, "de")
+    )
+  };
+}
+
+// src/domain/planSchedule.ts
+var WEEKDAY_LABELS = {
+  1: "Montag",
+  2: "Dienstag",
+  3: "Mittwoch",
+  4: "Donnerstag",
+  5: "Freitag",
+  6: "Samstag",
+  7: "Sonntag"
+};
+function isoWeekday(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const day = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1)).getUTCDay();
+  return day === 0 ? 7 : day;
+}
+function germanDate(iso) {
+  const [y, m, d] = iso.split("-");
+  return `${d}.${m}.${y}`;
+}
+function daysBetween2(a, b) {
+  const ms = (iso) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    return Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1);
+  };
+  return Math.round((ms(b) - ms(a)) / 864e5);
+}
+function describeScheduled(date, time, today) {
+  const diff = daysBetween2(today, date);
+  const day = diff === 0 ? "heute" : diff === 1 ? "morgen" : `${WEEKDAY_LABELS[isoWeekday(date)]}, ${germanDate(date)}`;
+  return `${day}${time ? ` um ${time} Uhr` : ""}`;
+}
+
+// src/domain/backup.ts
+var EXPORT_REMINDER_DAYS = 7;
+var dayNumber = (iso) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 864e5;
+function exportReminderState(r2, today) {
+  const daysSince = r2.lastExportAt ? Math.max(0, Math.round(dayNumber(today) - dayNumber(r2.lastExportAt))) : null;
+  const old = daysSince === null || daysSince >= EXPORT_REMINDER_DAYS;
+  const snoozed = r2.snoozedUntil !== null && today <= r2.snoozedUntil;
+  const text = daysSince === null ? "Du hast deine Daten noch nie exportiert." : daysSince === 0 ? "Letzter Export: heute." : `Letzter Export vor ${daysSince} ${daysSince === 1 ? "Tag" : "Tagen"}.`;
+  return { due: old && !snoozed, daysSince, text };
 }
 
 // src/domain/energy.ts
@@ -1697,223 +1992,6 @@ __export(dashboard_exports, {
   weekGoalsFromInput: () => weekGoalsFromInput,
   weeklyGoals: () => weeklyGoals
 });
-
-// src/domain/trends.ts
-var trends_exports = {};
-__export(trends_exports, {
-  RANGE_PRESETS: () => RANGE_PRESETS,
-  comparePeriods: () => comparePeriods,
-  dailySeries: () => dailySeries,
-  daysBetween: () => daysBetween,
-  formatRange: () => formatRange,
-  groupByPeriod: () => groupByPeriod,
-  isoFromUtc: () => isoFromUtc,
-  isoWeek: () => isoWeek,
-  periodStartBack: () => periodStartBack,
-  presetRanges: () => presetRanges,
-  rangeStats: () => rangeStats,
-  shiftDays: () => shiftDays,
-  utcDay: () => utcDay,
-  weekStart: () => weekStart
-});
-var DAY_MS = 864e5;
-var ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
-var MONTHS = [
-  "Jan.",
-  "Feb.",
-  "M\xE4rz",
-  "Apr.",
-  "Mai",
-  "Juni",
-  "Juli",
-  "Aug.",
-  "Sept.",
-  "Okt.",
-  "Nov.",
-  "Dez."
-];
-function utcDay(iso) {
-  const m = ISO.exec(iso);
-  if (!m) throw new Error(`Ung\xFCltiges Datum: "${iso}" (erwartet JJJJ-MM-TT)`);
-  const d = /* @__PURE__ */ new Date(0);
-  d.setUTCFullYear(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  if (d.getUTCDate() !== Number(m[3]) || d.getUTCMonth() !== Number(m[2]) - 1) {
-    throw new Error(`Ung\xFCltiges Datum: "${iso}"`);
-  }
-  return d.getTime();
-}
-function isoFromUtc(t) {
-  return new Date(t).toISOString().slice(0, 10);
-}
-function shiftDays(iso, days) {
-  return isoFromUtc(utcDay(iso) + days * DAY_MS);
-}
-function daysBetween(from, to) {
-  return Math.round((utcDay(to) - utcDay(from)) / DAY_MS) + 1;
-}
-function weekStart(iso) {
-  const t = utcDay(iso);
-  const weekday = (new Date(t).getUTCDay() + 6) % 7;
-  return isoFromUtc(t - weekday * DAY_MS);
-}
-function isoWeek(iso) {
-  const monday = utcDay(weekStart(iso));
-  const thursday = new Date(monday + 3 * DAY_MS);
-  const year = thursday.getUTCFullYear();
-  const jan1 = Date.UTC(year, 0, 1);
-  const week = Math.floor((thursday.getTime() - jan1) / DAY_MS / 7) + 1;
-  return { year, week };
-}
-function periodOf(iso, period) {
-  if (period === "week") {
-    const start2 = weekStart(iso);
-    const { year, week } = isoWeek(iso);
-    return {
-      key: `${year}-W${String(week).padStart(2, "0")}`,
-      start: start2,
-      end: shiftDays(start2, 6),
-      label: `KW ${week}`
-    };
-  }
-  const [y, m] = iso.split("-").map(Number);
-  const start = `${y}-${String(m).padStart(2, "0")}-01`;
-  const end = isoFromUtc(Date.UTC(y, m, 0));
-  return { key: start.slice(0, 7), start, end, label: `${MONTHS[m - 1]} ${y}` };
-}
-function stats(values) {
-  let sum = 0;
-  let min = Infinity;
-  let max = -Infinity;
-  for (const v of values) {
-    sum += v;
-    if (v < min) min = v;
-    if (v > max) max = v;
-  }
-  return { count: values.length, mean: sum / values.length, min, max };
-}
-function groupByPeriod(points, period) {
-  const groups = /* @__PURE__ */ new Map();
-  for (const p of points) {
-    if (!Number.isFinite(p.value)) continue;
-    const info = periodOf(p.date, period);
-    const g = groups.get(info.key) ?? { info, values: [] };
-    g.values.push(p.value);
-    groups.set(info.key, g);
-  }
-  return [...groups.values()].sort((a, b) => a.info.start.localeCompare(b.info.start)).map(({ info, values }) => ({
-    ...info,
-    ...stats(values),
-    days: daysBetween(info.start, info.end)
-  }));
-}
-function rangeStats(points, from, to) {
-  if (from > to) throw new Error("Der Beginn des Zeitraums muss vor dem Ende liegen.");
-  const inside = points.filter((p) => p.date >= from && p.date <= to && Number.isFinite(p.value)).sort((a, b) => a.date.localeCompare(b.date));
-  const days = daysBetween(from, to);
-  if (inside.length === 0) {
-    return { from, to, days, count: 0, mean: null, min: null, max: null, first: null, last: null };
-  }
-  const s = stats(inside.map((p) => p.value));
-  return {
-    from,
-    to,
-    days,
-    count: s.count,
-    mean: s.mean,
-    min: s.min,
-    max: s.max,
-    first: inside[0] ?? null,
-    last: inside.at(-1) ?? null
-  };
-}
-function comparePeriods(points, a, b, minCount = 2) {
-  const sa = rangeStats(points, a.from, a.to);
-  const sb = rangeStats(points, b.from, b.to);
-  if (sa.count < minCount || sb.count < minCount) {
-    const few = sa.count < minCount ? "im ersten Zeitraum" : "im zweiten Zeitraum";
-    const n = Math.min(sa.count, sb.count);
-    return {
-      a: sa,
-      b: sb,
-      difference: null,
-      reason: n === 0 ? `Kein Vergleich m\xF6glich: ${few} gibt es keine Werte.` : `Kein Vergleich m\xF6glich: ${few} gibt es nur ${n} ${n === 1 ? "Wert" : "Werte"} (mindestens ${minCount} n\xF6tig).`
-    };
-  }
-  return { a: sa, b: sb, difference: sb.mean - sa.mean, reason: null };
-}
-var RANGE_PRESETS = [
-  { value: "4w", label: "4 Wochen", days: 28 },
-  { value: "12w", label: "12 Wochen", days: 84 },
-  { value: "6m", label: "6 Monate", days: 182 },
-  { value: "12m", label: "12 Monate", days: 364 }
-];
-function presetRanges(preset, today) {
-  const p = RANGE_PRESETS.find((r2) => r2.value === preset);
-  if (!p) throw new Error(`Unbekannter Zeitraum: ${preset}`);
-  const from = shiftDays(today, -(p.days - 1));
-  return {
-    current: { from, to: today },
-    previous: { from: shiftDays(from, -p.days), to: shiftDays(from, -1) }
-  };
-}
-function dailySeries(points, from, to) {
-  const byDate = new Map(points.map((p) => [p.date, p.value]));
-  const n = daysBetween(from, to);
-  const out = [];
-  for (let i = 0; i < n; i++) {
-    const date = shiftDays(from, i);
-    out.push({ date, value: byDate.get(date) ?? null });
-  }
-  return out;
-}
-function formatRange(from, to) {
-  const [fy, fm, fd] = from.split("-");
-  const [ty, tm, td] = to.split("-");
-  const end = `${td}.${tm}.${ty}`;
-  if (from === to) return end;
-  return fy === ty ? `${fd}.${fm}.\u2013${end}` : `${fd}.${fm}.${fy}\u2013${end}`;
-}
-function periodStartBack(today, period, count) {
-  if (period === "week") return shiftDays(weekStart(today), -7 * (count - 1));
-  const [y, m] = today.split("-").map(Number);
-  const index = y * 12 + (m - 1) - (count - 1);
-  return `${Math.floor(index / 12)}-${String(index % 12 + 1).padStart(2, "0")}-01`;
-}
-
-// src/domain/trainingVolume.ts
-var E1RM_MAX_REPS = 12;
-function epley1RM(weightKg, reps) {
-  if (weightKg === null || reps === null || weightKg <= 0 || reps < 1 || reps > E1RM_MAX_REPS) {
-    return null;
-  }
-  const value = reps === 1 ? weightKg : weightKg * (1 + reps / 30);
-  return Math.round(value * 10) / 10;
-}
-function e1rmBySession(log) {
-  const best = /* @__PURE__ */ new Map();
-  for (const s of log) {
-    if (s.isWarmup) continue;
-    const value = epley1RM(s.weightKg, s.reps);
-    if (value === null) continue;
-    const current = best.get(s.workoutId);
-    if (!current || value > current.value) {
-      best.set(s.workoutId, {
-        date: s.date,
-        workoutId: s.workoutId,
-        value,
-        weightKg: s.weightKg,
-        reps: s.reps
-      });
-    }
-  }
-  return [...best.values()];
-}
-function bestE1RM(log) {
-  return e1rmBySession(log).reduce(
-    (best, p) => best === null || p.value > best.value ? p : best,
-    null
-  );
-}
 
 // src/domain/models.ts
 var WEIGHT_METRIC_ID = "00000000-0000-7000-8000-000000000001";
@@ -3198,6 +3276,7 @@ export {
   MACRO_KEYS,
   OPTIONAL_KEYS,
   OPTIONAL_LABELS,
+  OVERVIEW_LAYOUT_KEY,
   ZERO,
   addDaysIso,
   addNutrientValues,
@@ -3215,12 +3294,14 @@ export {
   describeNeed,
   describeOptional,
   describeProteinPerKg,
+  describeScheduled,
   describeSupplements,
   describeTiming,
   drinkText,
   drinksMl,
   energy_exports as energy,
   energyGoalView,
+  exportReminderState,
   fastNutrients,
   formatAmount,
   formatDate,
@@ -3275,6 +3356,7 @@ export {
   waterGlasses,
   waterPercent,
   waterSummary,
+  weeklyMuscleSets,
   withDayMacros,
   withProteinFromWeight
 };

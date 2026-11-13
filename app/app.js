@@ -6,7 +6,7 @@ import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, view
 import { bodyActions, bodyChange, bodyInput, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
 import * as BD from "./bodydata.js";
 import { SECTIONS, drawerHtml, icon, pcOnlyHtml } from "./nav.js";
-import { focusInfo } from "./focusinfo.js";
+import { focusInfo, machineNamesOf } from "./focusinfo.js";
 import * as P from "./pcdb.js";
 import { diaryActions, diaryChange, initDiary, viewDiary, viewNutritionHistory } from "./diary.js";
 
@@ -490,7 +490,14 @@ function pickerResults() {
 function focusPanel(e, m) {
   return focusPanelHtml(
     focusInfo(
-      { exerciseId: e.id, exerciseName: e.name, muscleGroup: e.muscle_group, machineId: m?.id ?? e.machine_id, machineMuscleGroups: m ? C.machineMuscles(m) : [] },
+      {
+        exerciseId: e.id,
+        exerciseName: e.name,
+        muscleGroup: e.muscle_group,
+        machineId: m?.id ?? e.machine_id,
+        machineMuscleGroups: m ? C.machineMuscles(m) : [],
+        machineNames: machineNamesOf(m ?? S.catalog.machines.find((x) => x.id === e.machine_id)),
+      },
       S.catalog.focus,
     ),
   );
@@ -499,7 +506,7 @@ function focusPanel(e, m) {
 /** Muskelverteilung der Maschine selbst (1.5.1): eigener Fokus der Maschine, sonst Standardverteilung, sonst Muskelgruppen. */
 function machineFocusInfo(m) {
   return focusInfo(
-    { exerciseId: `machine:${m.id}`, exerciseName: m.name, muscleGroup: null, machineId: m.id, machineMuscleGroups: C.machineMuscles(m) },
+    { exerciseId: `machine:${m.id}`, exerciseName: m.name, muscleGroup: null, machineId: m.id, machineMuscleGroups: C.machineMuscles(m), machineNames: machineNamesOf(m) },
     S.catalog.focus,
   );
 }

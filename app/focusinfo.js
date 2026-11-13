@@ -19,8 +19,31 @@ function comboHint(exerciseName, machineName) {
   return machine ? name.split(machine).join(" ") : name;
 }
 
-/** Bewegungsmuster: Maschine (Kombigeräte nach Übungsname), sonst Übungsname; null = keins. */
-export function patternOf(machineId, exerciseName) {
+/** Übungsname ohne die Namen der Maschine (wie `nameHint` am PC, 1.5.4). */
+export function nameHint(exerciseName, machineNames = []) {
+  let name = (exerciseName ?? "").toLowerCase();
+  const names = machineNames
+    .map((n) => String(n ?? "").trim().toLowerCase())
+    .filter((n) => n.length > 0)
+    .sort((a, b) => b.length - a.length);
+  for (const n of names) name = name.split(n).join(" ");
+  return name.trim();
+}
+
+/** Namen einer Maschine aus der Exportdatei (wie `machineNamesOf` am PC). */
+export function machineNamesOf(m) {
+  if (!m) return [];
+  const out = [];
+  if (m.display_name) {
+    out.push(m.display_name);
+    if (m.manufacturer) out.push(`${m.manufacturer} ${m.display_name}`);
+  }
+  if (m.name) out.push(m.name);
+  return out;
+}
+
+/** Bewegungsmuster: Maschine (Kombigeräte nach Übungsname), sonst Übungsname ohne Maschinennamen; null = keins. */
+export function patternOf(machineId, exerciseName, machineNames = []) {
   if (machineId) {
     for (const c of COMBOS) {
       const machineName = c.machines.get(machineId);
@@ -31,7 +54,8 @@ export function patternOf(machineId, exerciseName) {
     }
     if (D.patternOf[machineId]) return D.patternOf[machineId];
   }
-  for (const [rule, p] of NAMES) if (rule.test(exerciseName ?? "")) return p;
+  const name = nameHint(exerciseName, machineId ? machineNames : []);
+  for (const [rule, p] of NAMES) if (rule.test(name)) return p;
   return null;
 }
 
@@ -57,8 +81,8 @@ const splitText = (t) =>
  * Verteilung für eine Übung. `focus`: { machines: {id: [[muskel, %]]}, exercises: {...} } aus der
  * Exportdatei. Rückgabe { source, title, note, groups, terms } – `terms` bei der Text-Variante.
  */
-export function focusInfo({ exerciseId, exerciseName, muscleGroup, machineId, machineMuscleGroups = [] }, focus) {
-  const pattern = patternOf(machineId, exerciseName);
+export function focusInfo({ exerciseId, exerciseName, muscleGroup, machineId, machineMuscleGroups = [], machineNames = [] }, focus) {
+  const pattern = patternOf(machineId, exerciseName, machineNames);
   const gripNote = pattern
     ? `Mit Griffbreite/Fußstellung „eng“ oder „weit“ gilt im Training das passende Profil „${D.labels[pattern]}“.`
     : null;

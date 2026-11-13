@@ -57,6 +57,7 @@ export const KEEP_TABLES = [
   "hrt_product",
   "grip_strength_measurement",
   "training_plan_slot",
+  "todo",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */

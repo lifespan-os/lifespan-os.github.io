@@ -58,8 +58,8 @@ function parseInteger(input) {
   const value = input.trim();
   return INTEGER.test(value) ? Number(value) : Number.NaN;
 }
-function addDaysIso(iso, days2) {
-  const date = parseIsoDate(iso);
+function addDaysIso(iso2, days2) {
+  const date = parseIsoDate(iso2);
   date.setDate(date.getDate() + days2);
   return toIsoDate(date);
 }
@@ -147,17 +147,17 @@ function waterSummary(day) {
 // src/domain/nutrition.ts
 var KCAL_PER_GRAM = { protein: 4, carbs: 4, fat: 9 };
 function macroEnergyShares(m) {
-  const parts = {
+  const parts2 = {
     protein: m.proteinG * KCAL_PER_GRAM.protein,
     carbs: m.carbsG * KCAL_PER_GRAM.carbs,
     fat: m.fatG * KCAL_PER_GRAM.fat
   };
-  const total = parts.protein + parts.carbs + parts.fat;
+  const total = parts2.protein + parts2.carbs + parts2.fat;
   if (total <= 0) {
     return { protein: 0, carbs: 0, fat: 0 };
   }
   const keys = ["protein", "carbs", "fat"];
-  const raw = keys.map((k) => parts[k] / total * 100);
+  const raw = keys.map((k) => parts2[k] / total * 100);
   const floors = raw.map(Math.floor);
   let rest = 100 - floors.reduce((a, b) => a + b, 0);
   const order = raw.map((value, index) => ({ index, frac: value - Math.floor(value) })).sort((a, b) => b.frac - a.frac);
@@ -179,15 +179,15 @@ function energyGoalView(totals, goalKcal) {
   };
   const macroSum = macroKcal.protein + macroKcal.carbs + macroKcal.fat;
   const scale = macroSum > consumed && macroSum > 0 ? consumed / macroSum : 1;
-  const parts = [
+  const parts2 = [
     { key: "protein", kcal: macroKcal.protein * scale },
     { key: "carbs", kcal: macroKcal.carbs * scale },
     { key: "fat", kcal: macroKcal.fat * scale }
   ];
-  const other = consumed - parts.reduce((s, p) => s + p.kcal, 0);
-  if (other > 0.5) parts.push({ key: "other", kcal: other });
+  const other = consumed - parts2.reduce((s, p) => s + p.kcal, 0);
+  if (other > 0.5) parts2.push({ key: "other", kcal: other });
   const base = Math.max(goalKcal, consumed);
-  const segments = parts.filter((p) => p.kcal > 0).map((p) => ({ ...p, percent: base > 0 ? p.kcal / base * 100 : 0 }));
+  const segments = parts2.filter((p) => p.kcal > 0).map((p) => ({ ...p, percent: base > 0 ? p.kcal / base * 100 : 0 }));
   const diff = Math.round(goalKcal - consumed);
   const balance = diff > 0 ? { kind: "deficit", kcal: diff } : diff < 0 ? { kind: "surplus", kcal: -diff } : { kind: "exact" };
   return {
@@ -336,21 +336,21 @@ function withDayMacros(goal, macros) {
 }
 var MACRO_SHORT = { protein: "Protein", carbs: "KH", fat: "Fett" };
 function describeMacroGoals(m) {
-  const parts = [];
+  const parts2 = [];
   const pct = m.rows.filter((r2) => r2.unit === "pct" && r2.grams !== null);
   if (pct.length > 0 && m.needKcal !== null) {
-    parts.push(
+    parts2.push(
       `${pct.map((r2) => `${MACRO_SHORT[r2.key]} ${formatNumber(r2.set, r2.set % 1 === 0 ? 0 : 1)} % = ${formatNumber(r2.grams, 0)} g`).join(" \xB7 ")} (vom Tagesbedarf ${kcal(m.needKcal)})`
     );
   }
   const grown = m.rows.filter((r2) => r2.unit === "g" && r2.grams !== null && r2.grams !== r2.set);
   if (grown.length > 0 && m.baseKcal !== null && m.needKcal !== null) {
     const plus = Math.round((m.factor - 1) * 100);
-    parts.push(
+    parts2.push(
       `${grown.map((r2) => `${MACRO_SHORT[r2.key]} ${formatNumber(r2.set, 0)} \u2192 ${formatNumber(r2.grams, 0)} g`).join(" \xB7 ")} (+${plus} % Mehrverbrauch: ${kcal(m.needKcal)} statt ${kcal(m.baseKcal)})`
     );
   }
-  return parts.length > 0 ? `Makroziele heute: ${parts.join(" \xB7 ")}` : null;
+  return parts2.length > 0 ? `Makroziele heute: ${parts2.join(" \xB7 ")}` : null;
 }
 
 // src/domain/nutritionDay.ts
@@ -809,24 +809,24 @@ function describeProfiles(set) {
   return usedProfiles(set).map((k) => `${PROFILE_SHORT[k]} ${formatKg(profileWeight(set, k) ?? 0)}`).join(" \xB7 ");
 }
 function describeSet(set) {
-  const parts = [];
+  const parts2 = [];
   if (set.weightKg !== null && set.reps !== null)
-    parts.push(`${formatKg(set.weightKg)} \xD7 ${set.reps}`);
-  else if (set.reps !== null) parts.push(`${set.reps} Wdh.`);
-  else if (set.weightKg !== null) parts.push(formatKg(set.weightKg));
-  if (set.distanceM !== null) parts.push(`${formatNumber(set.distanceM / 1e3, 2)} km`);
+    parts2.push(`${formatKg(set.weightKg)} \xD7 ${set.reps}`);
+  else if (set.reps !== null) parts2.push(`${set.reps} Wdh.`);
+  else if (set.weightKg !== null) parts2.push(formatKg(set.weightKg));
+  if (set.distanceM !== null) parts2.push(`${formatNumber(set.distanceM / 1e3, 2)} km`);
   if (set.durationSeconds !== null) {
     const min = set.durationSeconds / 60;
-    parts.push(`${formatNumber(min, Number.isInteger(min) ? 0 : 1)} min`);
+    parts2.push(`${formatNumber(min, Number.isInteger(min) ? 0 : 1)} min`);
   }
   if (set.inclinePct !== null && set.inclinePct !== void 0) {
-    parts.push(`${formatNumber(set.inclinePct, 1)} % Steigung`);
+    parts2.push(`${formatNumber(set.inclinePct, 1)} % Steigung`);
   }
   if (set.powerW !== null && set.powerW !== void 0)
-    parts.push(`${formatNumber(set.powerW, 0)} W`);
-  if (set.hrAvg !== null && set.hrAvg !== void 0) parts.push(`\xD8 Puls ${set.hrAvg}`);
+    parts2.push(`${formatNumber(set.powerW, 0)} W`);
+  if (set.hrAvg !== null && set.hrAvg !== void 0) parts2.push(`\xD8 Puls ${set.hrAvg}`);
   const profiles = describeProfiles(set);
-  let text = parts.join(" \xB7 ");
+  let text = parts2.join(" \xB7 ");
   if (profiles) text = text ? `${text} (${profiles})` : profiles;
   if (set.isUnilateral === true) text = `${text} \xB7 unilateral`;
   if (set.isFailure === true) text = `${text} \xB7 Fail`;
@@ -1558,42 +1558,42 @@ var MONTHS = [
   "Nov.",
   "Dez."
 ];
-function utcDay(iso) {
-  const m = ISO.exec(iso);
-  if (!m) throw new Error(`Ung\xFCltiges Datum: "${iso}" (erwartet JJJJ-MM-TT)`);
+function utcDay(iso2) {
+  const m = ISO.exec(iso2);
+  if (!m) throw new Error(`Ung\xFCltiges Datum: "${iso2}" (erwartet JJJJ-MM-TT)`);
   const d = /* @__PURE__ */ new Date(0);
   d.setUTCFullYear(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
   if (d.getUTCDate() !== Number(m[3]) || d.getUTCMonth() !== Number(m[2]) - 1) {
-    throw new Error(`Ung\xFCltiges Datum: "${iso}"`);
+    throw new Error(`Ung\xFCltiges Datum: "${iso2}"`);
   }
   return d.getTime();
 }
 function isoFromUtc(t) {
   return new Date(t).toISOString().slice(0, 10);
 }
-function shiftDays(iso, days2) {
-  return isoFromUtc(utcDay(iso) + days2 * DAY_MS);
+function shiftDays(iso2, days2) {
+  return isoFromUtc(utcDay(iso2) + days2 * DAY_MS);
 }
 function daysBetween(from, to) {
   return Math.round((utcDay(to) - utcDay(from)) / DAY_MS) + 1;
 }
-function weekStart(iso) {
-  const t = utcDay(iso);
+function weekStart(iso2) {
+  const t = utcDay(iso2);
   const weekday = (new Date(t).getUTCDay() + 6) % 7;
   return isoFromUtc(t - weekday * DAY_MS);
 }
-function isoWeek(iso) {
-  const monday = utcDay(weekStart(iso));
+function isoWeek(iso2) {
+  const monday = utcDay(weekStart(iso2));
   const thursday = new Date(monday + 3 * DAY_MS);
   const year = thursday.getUTCFullYear();
   const jan1 = Date.UTC(year, 0, 1);
   const week = Math.floor((thursday.getTime() - jan1) / DAY_MS / 7) + 1;
   return { year, week };
 }
-function periodOf(iso, period) {
+function periodOf(iso2, period) {
   if (period === "week") {
-    const start2 = weekStart(iso);
-    const { year, week } = isoWeek(iso);
+    const start2 = weekStart(iso2);
+    const { year, week } = isoWeek(iso2);
     return {
       key: `${year}-W${String(week).padStart(2, "0")}`,
       start: start2,
@@ -1601,7 +1601,7 @@ function periodOf(iso, period) {
       label: `KW ${week}`
     };
   }
-  const [y, m] = iso.split("-").map(Number);
+  const [y, m] = iso2.split("-").map(Number);
   const start = `${y}-${String(m).padStart(2, "0")}-01`;
   const end = isoFromUtc(Date.UTC(y, m, 0));
   return { key: start.slice(0, 7), start, end, label: `${MONTHS[m - 1]} ${y}` };
@@ -1785,18 +1785,18 @@ var WEEKDAY_LABELS = {
   6: "Samstag",
   7: "Sonntag"
 };
-function isoWeekday(iso) {
-  const [y, m, d] = iso.split("-").map(Number);
+function isoWeekday(iso2) {
+  const [y, m, d] = iso2.split("-").map(Number);
   const day = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1)).getUTCDay();
   return day === 0 ? 7 : day;
 }
-function germanDate(iso) {
-  const [y, m, d] = iso.split("-");
+function germanDate(iso2) {
+  const [y, m, d] = iso2.split("-");
   return `${d}.${m}.${y}`;
 }
 function daysBetween2(a, b) {
-  const ms = (iso) => {
-    const [y, m, d] = iso.split("-").map(Number);
+  const ms = (iso2) => {
+    const [y, m, d] = iso2.split("-").map(Number);
     return Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1);
   };
   return Math.round((ms(b) - ms(a)) / 864e5);
@@ -1809,7 +1809,7 @@ function describeScheduled(date, time, today) {
 
 // src/domain/backup.ts
 var EXPORT_REMINDER_DAYS = 7;
-var dayNumber = (iso) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 864e5;
+var dayNumber = (iso2) => Date.UTC(+iso2.slice(0, 4), +iso2.slice(5, 7) - 1, +iso2.slice(8, 10)) / 864e5;
 function exportReminderState(r2, today) {
   const daysSince = r2.lastExportAt ? Math.max(0, Math.round(dayNumber(today) - dayNumber(r2.lastExportAt))) : null;
   const old = daysSince === null || daysSince >= EXPORT_REMINDER_DAYS;
@@ -6176,9 +6176,9 @@ function parseMuscleMapSettings(json) {
     const mode = v.mode === "individual" || v.mode === "relative" || v.mode === "standard" ? v.mode : "standard";
     const targets = { ...DEFAULT_TARGETS };
     const legacy = /* @__PURE__ */ new Map();
-    for (const [old, parts] of Object.entries(LEGACY_MUSCLES)) {
+    for (const [old, parts2] of Object.entries(LEGACY_MUSCLES)) {
       const t = v.targets?.[old];
-      if (t) for (const p of parts) legacy.set(p, t);
+      if (t) for (const p of parts2) legacy.set(p, t);
     }
     for (const m of MUSCLE_IDS) {
       const t = v.targets?.[m] ?? legacy.get(m);
@@ -7494,6 +7494,297 @@ function groupInsights(items) {
   };
 }
 
+// src/domain/sleep.ts
+var sleep_exports = {};
+__export(sleep_exports, {
+  SLEEP_PHASES: () => SLEEP_PHASES,
+  napMinutesByDate: () => napMinutesByDate,
+  parseDurationInput: () => parseDurationInput,
+  phaseShares: () => phaseShares,
+  sleepEntryRows: () => sleepEntryRows,
+  sleepMinutes: () => sleepMinutes,
+  sleepWithNaps: () => sleepWithNaps,
+  totalSleepWithNaps: () => totalSleepWithNaps,
+  typicalShareText: () => typicalShareText
+});
+var TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
+function toMinutes(time) {
+  const m = TIME.exec(time);
+  if (!m) {
+    throw new Error(`Ung\xFCltige Uhrzeit: "${time}" (erwartet HH:MM)`);
+  }
+  return Number(m[1]) * 60 + Number(m[2]);
+}
+function sleepMinutes(bedTime, wakeTime) {
+  const start = toMinutes(bedTime);
+  const end = toMinutes(wakeTime);
+  return end > start ? end - start : end + 24 * 60 - start;
+}
+var SLEEP_PHASES = [
+  {
+    key: "light",
+    label: "Light",
+    title: "Light Sleep \u2013 Leichtschlaf",
+    typicalMin: 45,
+    typicalMax: 55,
+    text: "Der K\xF6rper entspannt sich, Herzschlag und Atmung werden langsamer. Das Gehirn verarbeitet Informationen und unterst\xFCtzt die Ged\xE4chtnisbildung. Man ist noch relativ leicht aufzuwecken."
+  },
+  {
+    key: "deep",
+    label: "Deep",
+    title: "Deep Sleep \u2013 Tiefschlaf",
+    typicalMin: 10,
+    typicalMax: 20,
+    text: "Die wichtigste Phase f\xFCr die k\xF6rperliche Regeneration. Wachstumshormone werden ausgesch\xFCttet, Gewebe wird repariert und das Immunsystem unterst\xFCtzt. Das Aufwachen f\xE4llt besonders schwer."
+  },
+  {
+    key: "rem",
+    label: "REM",
+    title: "REM Sleep \u2013 Traumschlaf",
+    typicalMin: 20,
+    typicalMax: 25,
+    text: "Das Gehirn ist besonders aktiv, lebhafte Tr\xE4ume treten h\xE4ufig auf. Diese Phase ist wichtig f\xFCr die Verarbeitung von Emotionen, das Lernen und die Ged\xE4chtnisfestigung. Ein Schlafzyklus dauert ungef\xE4hr 90 Minuten, wobei die Dauer variiert. In der ersten Nachth\xE4lfte \xFCberwiegt der Tiefschlaf, gegen Morgen werden die REM-Phasen l\xE4nger."
+  }
+];
+function typicalShareText(info) {
+  return `Ca. ${info.typicalMin}\u2013${info.typicalMax} % der Schlafzeit`;
+}
+function phaseShares(values) {
+  const minutes = {
+    light: values.lightMin,
+    deep: values.deepMin,
+    rem: values.remMin
+  };
+  if (SLEEP_PHASES.some((p) => minutes[p.key] == null || Number.isNaN(minutes[p.key]))) {
+    return null;
+  }
+  const totalMin = SLEEP_PHASES.reduce((s, p) => s + minutes[p.key], 0);
+  if (totalMin <= 0) return null;
+  return {
+    totalMin,
+    phases: SLEEP_PHASES.map((p) => {
+      const m = minutes[p.key];
+      const percent = m / totalMin * 100;
+      const rounded = Math.round(percent);
+      return {
+        key: p.key,
+        minutes: m,
+        percent,
+        typical: rounded >= p.typicalMin && rounded <= p.typicalMax
+      };
+    })
+  };
+}
+function totalSleepWithNaps(nightMin, napMinutes) {
+  return (nightMin ?? 0) + napMinutes.reduce((a, b) => a + b, 0);
+}
+function parseDurationInput(text) {
+  const t = text.trim().toLowerCase();
+  if (t === "") return null;
+  if (/^\d+$/.test(t)) return Number(t);
+  const colon = /^(\d+):([0-5]\d)$/.exec(t);
+  if (colon) return Number(colon[1]) * 60 + Number(colon[2]);
+  const hm = /^(\d+)\s*h(?:\s*(\d+)\s*(?:m|min)?)?$/.exec(t);
+  if (hm) return Number(hm[1]) * 60 + Number(hm[2] ?? 0);
+  return Number.NaN;
+}
+function napMinutesByDate(naps) {
+  const map = /* @__PURE__ */ new Map();
+  for (const n of naps) map.set(n.date, (map.get(n.date) ?? 0) + n.durationMin);
+  return map;
+}
+function sleepWithNaps(log, napsByDate) {
+  return log.sleepMin + (napsByDate.get(log.date) ?? 0);
+}
+function sleepEntryRows(logs, naps) {
+  const nights = /* @__PURE__ */ new Map();
+  for (const l of logs) if (!nights.has(l.date)) nights.set(l.date, l);
+  const napsByDate = /* @__PURE__ */ new Map();
+  for (const n of naps) napsByDate.set(n.date, [...napsByDate.get(n.date) ?? [], n]);
+  const dates = [.../* @__PURE__ */ new Set([...nights.keys(), ...napsByDate.keys()])].sort(
+    (a, b) => b.localeCompare(a)
+  );
+  const rows = [];
+  for (const date of dates) {
+    const log = nights.get(date);
+    if (log) rows.push({ kind: "night", date, log });
+    const dayNaps = [...napsByDate.get(date) ?? []].sort(
+      (a, b) => a.startTime.localeCompare(b.startTime)
+    );
+    for (const nap of dayNaps) rows.push({ kind: "nap", date, nap, alone: !log });
+  }
+  return rows;
+}
+
+// src/domain/dayStatus.ts
+function dayStatus(overview, supplementIntakes) {
+  const day = overview.date;
+  const vital = (id) => overview.vitalsLast7Days.find((m) => m.metricId === id && m.date === day) ?? null;
+  const weight = overview.weightLast30Days.find((m) => m.date === day) ?? null;
+  const hrv = vital(HRV_METRIC_ID);
+  const hr = vital(RESTING_HR_METRIC_ID);
+  const sleep = overview.sleepToday;
+  const phases = sleep ? phaseShares(sleep) : null;
+  const neat = overview.neatToday;
+  const food = overview.nutritionToday;
+  const ate = food !== null && (food.mealCount > 0 || food.fasttracking);
+  const workouts = overview.workoutsToday;
+  const rows = [
+    {
+      key: "weight",
+      label: "Gewicht",
+      done: weight !== null && weight.metricId === WEIGHT_METRIC_ID,
+      optional: false,
+      value: weight ? `${formatNumber(weight.value, 1)} kg` : null,
+      section: "body",
+      where: "Body & Longevity \u2192 Erfassen"
+    },
+    {
+      key: "sleep",
+      label: "Schlaf (letzte Nacht)",
+      done: sleep !== null,
+      optional: false,
+      value: sleep ? formatDuration(sleep.sleepMin) : null,
+      section: "sleep",
+      where: "Sleep \u2192 Nacht erfassen"
+    },
+    {
+      key: "sleepPhases",
+      label: "Schlafphasen (Light, Deep, REM)",
+      done: phases !== null,
+      optional: true,
+      value: phases ? formatDuration(phases.totalMin) : null,
+      section: "sleep",
+      where: "Sleep \u2192 Nacht bearbeiten"
+    },
+    {
+      key: "hrv",
+      label: "HRV",
+      done: hrv !== null,
+      optional: false,
+      value: hrv ? `${formatNumber(hrv.value, 0)} ms` : null,
+      section: "recovery",
+      where: "Recovery"
+    },
+    {
+      key: "restingHr",
+      label: "Ruhepuls",
+      done: hr !== null,
+      optional: false,
+      value: hr ? `${formatNumber(hr.value, 0)} bpm` : null,
+      section: "recovery",
+      where: "Recovery"
+    },
+    {
+      key: "recovery",
+      label: "Selbsteinsch\xE4tzung (Erholung)",
+      done: overview.recoveryToday !== null,
+      optional: false,
+      value: overview.recoveryToday?.readiness != null ? `${overview.recoveryToday.readiness} / 10` : null,
+      section: "recovery",
+      where: "Recovery"
+    },
+    {
+      key: "steps",
+      label: "Schritte",
+      done: neat?.steps != null,
+      optional: false,
+      value: neat?.steps != null ? formatNumber(neat.steps, 0) : null,
+      section: "training",
+      where: "Training \u2192 NEAT"
+    },
+    {
+      key: "nutrition",
+      label: "Ern\xE4hrung",
+      done: ate,
+      optional: false,
+      value: ate && food ? `${formatNumber(food.energyKcal, 0)} kcal` : null,
+      section: "nutrition",
+      where: "Nutrition \u2192 Tagebuch"
+    },
+    {
+      key: "supplements",
+      label: "Supplements",
+      done: supplementIntakes > 0,
+      optional: true,
+      value: supplementIntakes > 0 ? `${supplementIntakes}\xD7 eingenommen` : null,
+      section: "nutrition",
+      where: "Nutrition \u2192 Tagebuch"
+    },
+    {
+      key: "training",
+      label: "Training",
+      done: workouts.length > 0,
+      optional: true,
+      value: workouts.length > 0 ? workouts.map((w) => w.title).join(", ") : null,
+      section: "training",
+      where: "Training \u2192 Einheiten"
+    }
+  ];
+  const required = rows.filter((r2) => !r2.optional);
+  return {
+    rows,
+    done: required.filter((r2) => r2.done).length,
+    open: required.filter((r2) => !r2.done).length
+  };
+}
+
+// src/domain/calendar.ts
+var REPEAT_LABEL = {
+  daily: "T\xE4glich",
+  weekly: "W\xF6chentlich",
+  monthly: "Monatlich"
+};
+var MAX_DATES = 400;
+var iso = (y, m, d) => `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+function parts(date) {
+  return [Number(date.slice(0, 4)), Number(date.slice(5, 7)), Number(date.slice(8, 10))];
+}
+function daysInMonth(year, month) {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+function addDays(date, days2) {
+  const [y, m, d] = parts(date);
+  const t = new Date(Date.UTC(y, m - 1, d + days2));
+  return iso(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate());
+}
+function shiftMonth(month, n) {
+  const y = Number(month.slice(0, 4));
+  const m = Number(month.slice(5, 7)) - 1 + n;
+  const year = y + Math.floor(m / 12);
+  const mm = (m % 12 + 12) % 12;
+  return `${String(year).padStart(4, "0")}-${String(mm + 1).padStart(2, "0")}`;
+}
+function repeatDates(start, end, repeat) {
+  if (end < start) return [];
+  const out = [];
+  if (repeat === "monthly") {
+    const [y, m, d] = parts(start);
+    for (let i = 0; out.length < MAX_DATES + 1; i++) {
+      const month = shiftMonth(iso(y, m, 1).slice(0, 7), i);
+      const yy = Number(month.slice(0, 4));
+      const mm = Number(month.slice(5, 7));
+      const date = iso(yy, mm, Math.min(d, daysInMonth(yy, mm)));
+      if (date > end) break;
+      out.push(date);
+    }
+    return out;
+  }
+  const step = repeat === "daily" ? 1 : 7;
+  for (let date = start; date <= end && out.length < MAX_DATES + 1; date = addDays(date, step)) {
+    out.push(date);
+  }
+  return out;
+}
+function defaultRepeatEnd(start, repeat) {
+  const [y, m, d] = parts(start);
+  const months = repeat === "daily" ? 1 : repeat === "weekly" ? 3 : 12;
+  const month = shiftMonth(iso(y, m, 1).slice(0, 7), months);
+  const yy = Number(month.slice(0, 4));
+  const mm = Number(month.slice(5, 7));
+  return addDays(iso(yy, mm, Math.min(d, daysInMonth(yy, mm))), -1);
+}
+
 // src/domain/energy.ts
 var energy_exports = {};
 __export(energy_exports, {
@@ -7602,13 +7893,13 @@ function energyRows(e) {
   return rows;
 }
 function describeCardioEnergy(c) {
-  const parts = [c.exerciseName];
-  if (c.durationSeconds > 0) parts.push(formatDuration2(c.durationSeconds));
-  if (c.distanceM > 0) parts.push(`${formatNumber(c.distanceM / 1e3, 2)} km`);
+  const parts2 = [c.exerciseName];
+  if (c.durationSeconds > 0) parts2.push(formatDuration2(c.durationSeconds));
+  if (c.distanceM > 0) parts2.push(`${formatNumber(c.distanceM / 1e3, 2)} km`);
   const pace = cardioPace(c.kind, c.durationSeconds, c.distanceM);
-  if (pace) parts.push(pace);
-  parts.push(c.methods.map(cardioMethodLabel).join(" bzw. "));
-  let text = `${parts.join(" \xB7 ")}: ${formatNumber(c.kcal, 0)} kcal`;
+  if (pace) parts2.push(pace);
+  parts2.push(c.methods.map(cardioMethodLabel).join(" bzw. "));
+  let text = `${parts2.join(" \xB7 ")}: ${formatNumber(c.kcal, 0)} kcal`;
   if (c.deviceKcal !== null) text += ` (Ger\xE4t: ${formatNumber(c.deviceKcal, 0)} kcal brutto)`;
   return text;
 }
@@ -7619,14 +7910,14 @@ function describeTraining(t) {
   if (cardio.length === 0) {
     return `${formatNumber(t.durationMin ?? 0, 0)} min \xB7 ${effort} \xB7 MET ${formatNumber(t.met, 1)}${strength}`;
   }
-  const parts = cardio.map(describeCardioEnergy);
+  const parts2 = cardio.map(describeCardioEnergy);
   const otherMinutes = t.otherMinutes ?? 0;
   if (otherMinutes > 0) {
-    parts.push(
+    parts2.push(
       `\xFCbrige ${formatNumber(otherMinutes, 0)} min \xB7 ${effort} \xB7 MET ${formatNumber(t.met, 1)}${strength}: ${formatNumber(t.otherKcal ?? 0, 0)} kcal`
     );
   }
-  return parts.join(" | ");
+  return parts2.join(" | ");
 }
 function describeCalibration(e) {
   const c = e.calibration;
@@ -8205,128 +8496,6 @@ function proteinSuggestions(foods, openProteinG, openKcal, limit = 3) {
   return out;
 }
 
-// src/domain/sleep.ts
-var sleep_exports = {};
-__export(sleep_exports, {
-  SLEEP_PHASES: () => SLEEP_PHASES,
-  napMinutesByDate: () => napMinutesByDate,
-  parseDurationInput: () => parseDurationInput,
-  phaseShares: () => phaseShares,
-  sleepEntryRows: () => sleepEntryRows,
-  sleepMinutes: () => sleepMinutes,
-  sleepWithNaps: () => sleepWithNaps,
-  totalSleepWithNaps: () => totalSleepWithNaps,
-  typicalShareText: () => typicalShareText
-});
-var TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
-function toMinutes(time) {
-  const m = TIME.exec(time);
-  if (!m) {
-    throw new Error(`Ung\xFCltige Uhrzeit: "${time}" (erwartet HH:MM)`);
-  }
-  return Number(m[1]) * 60 + Number(m[2]);
-}
-function sleepMinutes(bedTime, wakeTime) {
-  const start = toMinutes(bedTime);
-  const end = toMinutes(wakeTime);
-  return end > start ? end - start : end + 24 * 60 - start;
-}
-var SLEEP_PHASES = [
-  {
-    key: "light",
-    label: "Light",
-    title: "Light Sleep \u2013 Leichtschlaf",
-    typicalMin: 45,
-    typicalMax: 55,
-    text: "Der K\xF6rper entspannt sich, Herzschlag und Atmung werden langsamer. Das Gehirn verarbeitet Informationen und unterst\xFCtzt die Ged\xE4chtnisbildung. Man ist noch relativ leicht aufzuwecken."
-  },
-  {
-    key: "deep",
-    label: "Deep",
-    title: "Deep Sleep \u2013 Tiefschlaf",
-    typicalMin: 10,
-    typicalMax: 20,
-    text: "Die wichtigste Phase f\xFCr die k\xF6rperliche Regeneration. Wachstumshormone werden ausgesch\xFCttet, Gewebe wird repariert und das Immunsystem unterst\xFCtzt. Das Aufwachen f\xE4llt besonders schwer."
-  },
-  {
-    key: "rem",
-    label: "REM",
-    title: "REM Sleep \u2013 Traumschlaf",
-    typicalMin: 20,
-    typicalMax: 25,
-    text: "Das Gehirn ist besonders aktiv, lebhafte Tr\xE4ume treten h\xE4ufig auf. Diese Phase ist wichtig f\xFCr die Verarbeitung von Emotionen, das Lernen und die Ged\xE4chtnisfestigung. Ein Schlafzyklus dauert ungef\xE4hr 90 Minuten, wobei die Dauer variiert. In der ersten Nachth\xE4lfte \xFCberwiegt der Tiefschlaf, gegen Morgen werden die REM-Phasen l\xE4nger."
-  }
-];
-function typicalShareText(info) {
-  return `Ca. ${info.typicalMin}\u2013${info.typicalMax} % der Schlafzeit`;
-}
-function phaseShares(values) {
-  const minutes = {
-    light: values.lightMin,
-    deep: values.deepMin,
-    rem: values.remMin
-  };
-  if (SLEEP_PHASES.some((p) => minutes[p.key] == null || Number.isNaN(minutes[p.key]))) {
-    return null;
-  }
-  const totalMin = SLEEP_PHASES.reduce((s, p) => s + minutes[p.key], 0);
-  if (totalMin <= 0) return null;
-  return {
-    totalMin,
-    phases: SLEEP_PHASES.map((p) => {
-      const m = minutes[p.key];
-      const percent = m / totalMin * 100;
-      const rounded = Math.round(percent);
-      return {
-        key: p.key,
-        minutes: m,
-        percent,
-        typical: rounded >= p.typicalMin && rounded <= p.typicalMax
-      };
-    })
-  };
-}
-function totalSleepWithNaps(nightMin, napMinutes) {
-  return (nightMin ?? 0) + napMinutes.reduce((a, b) => a + b, 0);
-}
-function parseDurationInput(text) {
-  const t = text.trim().toLowerCase();
-  if (t === "") return null;
-  if (/^\d+$/.test(t)) return Number(t);
-  const colon = /^(\d+):([0-5]\d)$/.exec(t);
-  if (colon) return Number(colon[1]) * 60 + Number(colon[2]);
-  const hm = /^(\d+)\s*h(?:\s*(\d+)\s*(?:m|min)?)?$/.exec(t);
-  if (hm) return Number(hm[1]) * 60 + Number(hm[2] ?? 0);
-  return Number.NaN;
-}
-function napMinutesByDate(naps) {
-  const map = /* @__PURE__ */ new Map();
-  for (const n of naps) map.set(n.date, (map.get(n.date) ?? 0) + n.durationMin);
-  return map;
-}
-function sleepWithNaps(log, napsByDate) {
-  return log.sleepMin + (napsByDate.get(log.date) ?? 0);
-}
-function sleepEntryRows(logs, naps) {
-  const nights = /* @__PURE__ */ new Map();
-  for (const l of logs) if (!nights.has(l.date)) nights.set(l.date, l);
-  const napsByDate = /* @__PURE__ */ new Map();
-  for (const n of naps) napsByDate.set(n.date, [...napsByDate.get(n.date) ?? [], n]);
-  const dates = [.../* @__PURE__ */ new Set([...nights.keys(), ...napsByDate.keys()])].sort(
-    (a, b) => b.localeCompare(a)
-  );
-  const rows = [];
-  for (const date of dates) {
-    const log = nights.get(date);
-    if (log) rows.push({ kind: "night", date, log });
-    const dayNaps = [...napsByDate.get(date) ?? []].sort(
-      (a, b) => a.startTime.localeCompare(b.startTime)
-    );
-    for (const nap of dayNaps) rows.push({ kind: "nap", date, nap, alone: !log });
-  }
-  return rows;
-}
-
 // src/domain/neat.ts
 var neat_exports = {};
 __export(neat_exports, {
@@ -8490,11 +8659,13 @@ export {
   KCAL_PER_GRAM,
   LEVEL_NAMES,
   MACRO_KEYS,
+  MAX_DATES,
   MUSCLE_LABELS,
   MUSCLE_MAP_SETTINGS_KEY,
   OPTIONAL_KEYS,
   OPTIONAL_LABELS,
   OVERVIEW_LAYOUT_KEY,
+  REPEAT_LABEL,
   SCALE_MODE_LABELS,
   ZERO,
   acwr,
@@ -8515,6 +8686,8 @@ export {
   dayChart,
   dayMacroGoals,
   daySlots,
+  dayStatus,
+  defaultRepeatEnd,
   describeAcwr,
   describeGoalProgress,
   describeMacroGoals,
@@ -8578,6 +8751,7 @@ export {
   previousMean,
   recovery_exports as recovery,
   referenceGroup,
+  repeatDates,
   roundAmount,
   roundGrams,
   roundKcal,

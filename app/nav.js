@@ -28,7 +28,7 @@ const ICONS = {
  */
 export const SECTIONS = [
   { id: "overview", label: "Overview", view: "home", views: ["home"] },
-  { id: "checklists", label: "Checklisten", pc: "Tagesplan, Checklisten, Erinnerungen und To-dos." },
+  { id: "checklists", label: "Checklisten", view: "todos", views: ["todos"] },
   {
     id: "training",
     label: "Training",

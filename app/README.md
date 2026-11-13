@@ -249,3 +249,14 @@ Fassung laden.
 - Die Karten stehen in der Anordnung vom PC (`ui.insights_layout`). Gerechnet wird mit `weeklyAnalysis`, `dataCheck`, `coverage`, `dailyAssociations`, `acwr` und `loadVsNextDay` aus `pcdomain.js`.
 - Noch nur am PC: Koffein und Schlaf, Hormongaben und Erholung sowie der Datenauszug (PDF).
 - Overview → „Diese Woche“ verlinkt jetzt auf den Wochenrückblick am Handy.
+
+## Version 1.9.0 (14.11.2026): Checklisten am Handy
+
+- **Checklisten** wie am PC:
+  - Tageswahl mit Wochenstreifen, der die offenen To-dos je Tag zeigt.
+  - To-dos des Tages abhaken, anlegen (an diesem Tag oder täglich/wöchentlich/monatlich bis zu einem Enddatum), Text ändern, sortieren und löschen.
+  - Erledigte entfernen und offene To-dos vom Vortag übernehmen.
+  - Karte „Heute noch einzutragen“ (`dayStatus`) mit Sprung in den jeweiligen Bereich.
+- Regeln wie `checklist.rs` (`todosdata.js`, mit Tests): Text 1–300 Zeichen, neue To-dos ans Ende, gleiche Texte am selben Tag werden beim Eintragen auf mehrere Tage übersprungen.
+- Änderungen gehen mit der Datei „LIFESPAN Körperwerte …“ an den PC (Tabelle `todo` und Löschvermerke).
+- Eigene Checklisten (Bibliothek, Import aus Excel/Notizen) und die Wochen-/Monatsübersicht mit Trainings und Ruhetagen gibt es bisher nur am PC.

@@ -248,8 +248,8 @@ function scaleCard() {
   const sc = S().scale ?? null;
   const rows = sc?.rows ?? null;
   return `<section class="card scale-scan"><h3>Aus Bild übernehmen</h3>
-    <p class="muted small">Screenshot der Waagen-Auswertung (Hume) wählen. Übernommen wird je Kachel der aktuelle (rechte) Wert für den oben gewählten Tag; Herzfrequenz bleibt außen vor. Gespeichert wird erst mit „Werte speichern“.</p>
-    <label class="btn block ${sc?.busy ? "is-busy" : ""}">${sc?.busy ? "Wird gelesen …" : "Screenshot wählen"}<input type="file" accept="image/*" data-scale="file" hidden ${sc?.busy ? "disabled" : ""}></label>
+    <p class="muted small">Screenshot der Waagen-Auswertung (Hume) wählen – als Bild oder als PDF („ganze Seite“). Übernommen wird je Kachel der aktuelle (rechte) Wert für den oben gewählten Tag; Herzfrequenz bleibt außen vor. Gespeichert wird erst mit „Werte speichern“.</p>
+    <label class="btn block ${sc?.busy ? "is-busy" : ""}">${sc?.busy ? "Wird gelesen …" : "Screenshot wählen"}<input type="file" accept="image/*,application/pdf,.pdf" data-scale="file" hidden ${sc?.busy ? "disabled" : ""}></label>
     <p class="muted small" id="scale-status" role="status">${esc(sc?.status ?? "")}</p>
     ${
       rows
@@ -273,6 +273,27 @@ const nowTime = () => {
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
+/**
+ * Bildquelle aus Bild oder PDF („ganze Seite“-Screenshot von iOS bzw. der Hume-App: das größte
+ * Bild der PDF-Datei wird ausgelesen).
+ */
+async function loadSource(file, loadImage) {
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
+  if (!isPdf) return loadImage(file);
+  const pdf = D.scaleScan.findPdfImage(new Uint8Array(await file.arrayBuffer()));
+  if (!pdf) throw new Error("In dieser PDF-Datei wurde kein Bild gefunden. Bitte einen Screenshot (Bild) wählen.");
+  if (pdf.filter === "DCTDecode") return loadImage(new Blob([pdf.data], { type: "image/jpeg" }));
+  if (typeof DecompressionStream === "undefined") throw new Error("Dieses Gerät kann PDF-Bilder nicht entpacken. Bitte einen Screenshot als Bild wählen.");
+  const raw = new Uint8Array(await new Response(new Blob([pdf.data]).stream().pipeThrough(new DecompressionStream("deflate"))).arrayBuffer());
+  const rgba = D.scaleScan.pixelsToRgba(raw, pdf.width, pdf.height, pdf.bitsPerComponent);
+  if (!rgba) throw new Error("Das Bild in der PDF-Datei hat ein unbekanntes Format. Bitte einen Screenshot als Bild wählen.");
+  const c = document.createElement("canvas");
+  c.width = pdf.width;
+  c.height = pdf.height;
+  c.getContext("2d").putImageData(new ImageData(rgba, pdf.width, pdf.height), 0, 0);
+  return c;
+}
+
 /** Screenshot lesen: Graustufen (dunkel umgekehrt), lange Bilder geteilt, Texterkennung. */
 async function readScale(file) {
   const st = S();
@@ -280,48 +301,77 @@ async function readScale(file) {
   X.rerender();
   try {
     const { loadImage, recognizeRows } = await import("./ocr.js");
-    const img = await loadImage(file);
+    const img = await loadSource(file, loadImage);
     const w0 = img.naturalWidth || img.width;
     const h0 = img.naturalHeight || img.height;
-    const f = w0 < 1000 ? Math.min(3, 1400 / w0) : Math.min(1, 1600 / w0);
-    const w = Math.round(w0 * f);
-    const h = Math.round(h0 * f);
-    const c = document.createElement("canvas");
-    c.width = w;
-    c.height = h;
-    const ctx = c.getContext("2d", { willReadFrequently: true });
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(img, 0, 0, w, h);
-    const gray = D.scaleScan.prepareGray(ctx.getImageData(0, 0, w, h).data);
-    const canvases = D.scaleScan.sliceRanges(gray, w, h, 2000).map(([y0, y1]) => {
-      const part = document.createElement("canvas");
-      part.width = w;
-      part.height = y1 - y0;
-      const pctx = part.getContext("2d");
-      const out = pctx.createImageData(w, y1 - y0);
-      for (let i = 0, j = y0 * w; j < y1 * w; i += 4, j++) {
-        out.data[i] = out.data[i + 1] = out.data[i + 2] = gray[j];
-        out.data[i + 3] = 255;
-      }
-      pctx.putImageData(out, 0, 0);
-      return part;
-    });
+    const base = w0 < 1000 ? Math.min(3, 1400 / w0) : Math.min(1, 1600 / w0);
+    /** Graustufen-Abschnitte des Bildes in einer Größe (Faktor `f`). */
+    const canvasesAt = (f) => {
+      const w = Math.round(w0 * f);
+      const h = Math.round(h0 * f);
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d", { willReadFrequently: true });
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, 0, 0, w, h);
+      const gray = D.scaleScan.prepareGray(ctx.getImageData(0, 0, w, h).data);
+      return D.scaleScan.sliceRanges(gray, w, h, 2000).map(([y0, y1]) => {
+        const part = document.createElement("canvas");
+        part.width = w;
+        part.height = y1 - y0;
+        const pctx = part.getContext("2d");
+        const out = pctx.createImageData(w, y1 - y0);
+        for (let i = 0, j = y0 * w; j < y1 * w; i += 4, j++) {
+          out.data[i] = out.data[i + 1] = out.data[i + 2] = gray[j];
+          out.data[i + 3] = 255;
+        }
+        pctx.putImageData(out, 0, 0);
+        return part;
+      });
+    };
     const bounds = metrics().map((m) => ({ id: m.id, name: m.name, unit: m.unit, minValue: m.min_value ?? null, maxValue: m.max_value ?? null, decimals: m.decimals ?? 1 }));
-    // Zwei Durchgänge (Textblock und Spalten); gleiche Lesarten zählen, Widersprüche werden markiert
-    const PASSES = ["6", "4"];
+    // Drei Durchgänge (Textblock, Spalten, kleinere Bildgröße): die Mehrheit zählt, Widersprüche
+    // werden markiert
+    const PASSES = [
+      { zoom: 1, psm: "6" },
+      { zoom: 1, psm: "4" },
+      { zoom: 0.7, psm: "6" },
+    ];
     const results = [];
-    for (const [i, psm] of PASSES.entries()) {
+    for (const [i, pass] of PASSES.entries()) {
       const rows = await recognizeRows(
-        canvases,
+        canvasesAt(base * pass.zoom),
         (text, p) => {
           const el = document.getElementById("scale-status");
           if (el) el.textContent = `Durchgang ${i + 1} von ${PASSES.length}: ${text} ${Math.round((p ?? 0) * 100)} %`;
         },
-        psm,
+        pass.psm,
       );
       results.push(D.scaleScan.scaleValues(D.scaleScan.readScaleRows(rows), bounds));
     }
-    const vals = D.scaleScan.combinePasses(results);
+    // Gesundheitspunktzahl (große Zahl im Tacho) zusätzlich aus dem Kopfbereich
+    const head = D.scaleScan.headerCrop(w0, h0);
+    const scorePasses = [];
+    for (const tw of D.scaleScan.SCORE_WIDTHS) {
+      const th = Math.round((head.h * tw) / head.w);
+      const hc = document.createElement("canvas");
+      hc.width = tw;
+      hc.height = th;
+      const hctx = hc.getContext("2d", { willReadFrequently: true });
+      hctx.imageSmoothingQuality = "high";
+      hctx.drawImage(img, head.x, head.y, head.w, head.h, 0, 0, tw, th);
+      const data = hctx.getImageData(0, 0, tw, th);
+      const g = D.scaleScan.prepareGray(data.data);
+      for (let i = 0, j = 0; j < g.length; i += 4, j++) data.data[i] = data.data[i + 1] = data.data[i + 2] = g[j];
+      hctx.putImageData(data, 0, 0);
+      const rows = await recognizeRows([hc], (text) => {
+        const el = document.getElementById("scale-status");
+        if (el) el.textContent = `Gesundheitspunktzahl: ${text}`;
+      }, "11");
+      scorePasses.push(D.scaleScan.scaleValues(D.scaleScan.readScaleRows(rows), bounds));
+    }
+    const vals = D.scaleScan.withScore(D.scaleScan.combinePasses(results), scorePasses);
     const found = vals.filter((v) => v.value !== null).length;
     st.scale = {
       busy: false,

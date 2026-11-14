@@ -10633,16 +10633,23 @@ __export(scaleScan_exports, {
   HEALTH_SCORE_METRIC_ID: () => HEALTH_SCORE_METRIC_ID,
   MAX_CHANGE: () => MAX_CHANGE,
   SCALE_FIELDS: () => SCALE_FIELDS,
+  SCORE_WIDTHS: () => SCORE_WIDTHS,
   combinePasses: () => combinePasses,
+  cutDecimals: () => cutDecimals,
   editDistance: () => editDistance,
   fieldOfRow: () => fieldOfRow,
+  findPdfImage: () => findPdfImage,
+  headerCrop: () => headerCrop,
+  nearReading: () => nearReading,
   normalizeLabel: () => normalizeLabel,
   numbersIn: () => numbersIn,
+  pixelsToRgba: () => pixelsToRgba,
   prepareGray: () => prepareGray,
   readScaleRows: () => readScaleRows,
   scaleValues: () => scaleValues,
   sliceRanges: () => sliceRanges,
-  valuesOfRow: () => valuesOfRow
+  valuesOfRow: () => valuesOfRow,
+  withScore: () => withScore
 });
 var GRUNDUMSATZ_METRIC_ID = builtinMetricId(42);
 var HEALTH_SCORE_METRIC_ID = builtinMetricId(43);
@@ -10707,25 +10714,47 @@ function numbersIn(row) {
 }
 var ARROW = /[>›»?’]+/;
 function valuesOfRow(row) {
-  const arrow = ARROW.exec(row);
+  const firstNum = /\d/.exec(row)?.index ?? -1;
+  const arrowRe = new RegExp(ARROW.source, "g");
+  let arrow = null;
+  for (let m = arrowRe.exec(row); m; m = arrowRe.exec(row)) {
+    if (firstNum >= 0 && m.index > firstNum) {
+      arrow = m;
+      break;
+    }
+  }
   if (arrow) {
     const left = numbersIn(row.slice(0, arrow.index))[0] ?? null;
-    const current = numbersIn(row.slice(arrow.index + arrow[0].length))[0] ?? null;
+    const rest = row.slice(arrow.index + arrow[0].length);
+    const current = numbersIn(rest)[0] ?? null;
     if (current) {
       return {
         previous: left?.value ?? null,
         current: current.value,
         previousText: left?.text ?? null,
-        currentText: current.text
+        currentText: current.text,
+        restText: rest
       };
     }
   }
-  const nums = numbersIn(row);
+  const nums = [...row.matchAll(NUMBER2)];
   const [a, b] = nums;
   if (a && b) {
-    return { previous: a.value, current: b.value, previousText: a.text, currentText: b.text };
+    return {
+      previous: Number(a[0].replace(",", ".")),
+      current: Number(b[0].replace(",", ".")),
+      previousText: a[0],
+      currentText: b[0],
+      restText: row.slice((a.index ?? 0) + a[0].length)
+    };
   }
-  return a ? { previous: null, current: a.value, previousText: null, currentText: a.text } : null;
+  return a ? {
+    previous: null,
+    current: Number(a[0].replace(",", ".")),
+    previousText: null,
+    currentText: a[0],
+    restText: row.slice((a.index ?? 0) + a[0].length)
+  } : null;
 }
 function readScaleRows(rows) {
   const found = /* @__PURE__ */ new Map();
@@ -10750,6 +10779,9 @@ function readScaleRows(rows) {
       previousValue: f?.v.previous ?? null,
       currentHasDecimal: f ? /[.,]/.test(f.v.currentText) : false,
       previousHasDecimal: f?.v.previousText ? /[.,]/.test(f.v.previousText) : false,
+      currentText: f?.v.currentText ?? null,
+      previousText: f?.v.previousText ?? null,
+      restText: f?.v.restText ?? null,
       raw: f?.raw ?? null
     };
   });
@@ -10759,6 +10791,28 @@ var round = (v, decimals) => {
   const f = 10 ** decimals;
   return Math.round(v * f) / f;
 };
+function cutDecimals(text, decimals) {
+  const m = /^(\d+)(?:[.,](\d+))?$/.exec(text.trim());
+  if (!m) return Number(text.replace(",", "."));
+  const frac = (m[2] ?? "").slice(0, decimals);
+  return Number(frac ? `${m[1]}.${frac}` : m[1]);
+}
+function nearReading(text, previous, withDecimal) {
+  const digits = text.replace(/\D/g, "");
+  let best = null;
+  for (let i = 0; i < digits.length; i++) {
+    for (let j = i + 1; j <= digits.length; j++) {
+      const part = digits.slice(i, j);
+      const options = [Number(part)];
+      if (withDecimal && part.length > 1) options.push(Number(`${part.slice(0, -1)}.${part.slice(-1)}`));
+      for (const v of options) {
+        if (Math.abs(v - previous) / previous > MAX_CHANGE) continue;
+        if (best === null || Math.abs(v - previous) < Math.abs(best - previous)) best = v;
+      }
+    }
+  }
+  return best;
+}
 var truncate = (v, decimals) => {
   const f = 10 ** decimals;
   return Math.floor(v * f + 1e-9) / f;
@@ -10767,7 +10821,8 @@ var de = (v) => v === null ? "\u2026" : String(round(v, 3)).replace(".", ",");
 function scaleValues(readings, metrics) {
   const byId = new Map(metrics.map((m) => [m.id, m]));
   const values = readings.map((reading) => {
-    const { field, imageValue, previousValue } = reading;
+    const { field } = reading;
+    let { imageValue, previousValue } = reading;
     if (!field.metricId) return { field, metric: null, value: null, note: field.skip ?? null, ok: false };
     const metric = byId.get(field.metricId) ?? null;
     if (imageValue === null) {
@@ -10778,9 +10833,15 @@ function scaleValues(readings, metrics) {
         field,
         metric: null,
         value: null,
-        note: "Messgr\xF6\xDFe fehlt bzw. ist ausgeblendet",
+        note: `gelesen ${de(imageValue)} \u2013 Messgr\xF6\xDFe fehlt bzw. ist ausgeblendet`,
         ok: false
       };
+    }
+    if (!field.factor && reading.currentText) {
+      imageValue = cutDecimals(reading.currentText, metric.decimals);
+    }
+    if (!field.factor && reading.previousText) {
+      previousValue = cutDecimals(reading.previousText, metric.decimals);
     }
     let v = imageValue * (field.factor ?? 1);
     let note = null;
@@ -10793,6 +10854,19 @@ function scaleValues(readings, metrics) {
     }
     v = field.truncate ? truncate(v, metric.decimals) : round(v, metric.decimals);
     const before = previousValue === null ? null : previousValue * (field.factor ?? 1);
+    if (before !== null && before > 0 && Math.abs(v - before) / before > MAX_CHANGE && reading.currentText) {
+      const near = field.factor ? null : nearReading(reading.restText ?? reading.currentText, before, Boolean(reading.previousHasDecimal));
+      if (near !== null && inRange3(near, metric)) {
+        return {
+          field,
+          metric,
+          value: round(near, metric.decimals),
+          note: `korrigiert (gelesen: ${reading.currentText})`,
+          ok: true,
+          corrected: true
+        };
+      }
+    }
     if (before !== null && before > 0 && Math.abs(v - before) / before > MAX_CHANGE) {
       return {
         field,
@@ -10908,22 +10982,85 @@ function combinePasses(passes) {
   return first.map((base, i) => {
     const all = passes.map((p) => p[i]).filter((x) => x !== void 0);
     const good = all.filter((x) => x.ok && x.value !== null);
-    const distinct = [...new Set(good.map((x) => x.value))];
-    if (distinct.length === 1) return good[0] ?? base;
-    if (distinct.length > 1) {
-      const counts = distinct.map((v) => ({ v, n: good.filter((x) => x.value === v).length }));
-      counts.sort((a, b) => b.n - a.n);
-      const top = counts[0];
-      const second = counts[1];
-      if (top && second && top.n > second.n) return good.find((x) => x.value === top.v) ?? base;
+    const counts = [...new Set(good.map((x) => x.value))].map((v) => ({ v, list: good.filter((x) => x.value === v) })).sort((a, b) => b.list.length - a.list.length);
+    const top = counts[0];
+    const second = counts[1];
+    if (top && (!second || top.list.length > second.list.length)) {
+      const direct = top.list.find((x) => !x.corrected);
+      if (top.list.length >= 2) return direct ?? { ...top.list[0] ?? base, corrected: false };
+      if (direct && !second) return direct;
+      const only = top.list[0] ?? base;
+      return { ...only, ok: false, note: `${only.note ?? "unsicher"} \u2013 bitte pr\xFCfen` };
+    }
+    if (top && second) {
       return {
-        ...good[0] ?? base,
+        ...top.list[0] ?? base,
         ok: false,
-        note: `unterschiedlich gelesen (${distinct.map((v) => de(v)).join(" / ")}) \u2013 bitte pr\xFCfen`
+        note: `unterschiedlich gelesen (${counts.map((c) => de(c.v)).join(" / ")}) \u2013 bitte pr\xFCfen`
       };
     }
-    return all.find((x) => x.value !== null) ?? base;
+    return all.find((x) => x.value !== null) ?? all.find((x) => x.note !== "im Bild nicht erkannt") ?? base;
   });
+}
+var SCORE_WIDTHS = [330, 440];
+function headerCrop(width, height) {
+  return { x: 0, y: 0, w: width, h: Math.min(height, Math.round(width * 0.6)) };
+}
+function withScore(values, scorePasses) {
+  if (scorePasses.length === 0) return values;
+  const combined = combinePasses(scorePasses).find((x) => x.field.key === "score");
+  return values.map(
+    (x) => x.field.key === "score" && x.value === null && combined && combined.note !== "im Bild nicht erkannt" ? combined : x
+  );
+}
+var latin1 = (bytes) => {
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 32768) {
+    s += String.fromCharCode(...bytes.subarray(i, i + 32768));
+  }
+  return s;
+};
+function findPdfImage(bytes) {
+  const text = latin1(bytes);
+  if (!text.startsWith("%PDF")) return null;
+  let best = null;
+  const re = /<<((?:(?!>>\s*stream)[\s\S])*?\/Subtype\s*\/Image[\s\S]*?)>>\s*stream\r?\n/g;
+  for (let m = re.exec(text); m; m = re.exec(text)) {
+    const dict = m[1] ?? "";
+    const num2 = (key) => Number(new RegExp(`/${key}\\s+(\\d+)`).exec(dict)?.[1] ?? NaN);
+    const width = num2("Width");
+    const height = num2("Height");
+    const bitsPerComponent = num2("BitsPerComponent");
+    const filter = /\/Filter\s*\/(\w+)/.exec(dict)?.[1];
+    if (!Number.isFinite(width) || !Number.isFinite(height)) continue;
+    if (filter !== "DCTDecode" && filter !== "FlateDecode") continue;
+    if (filter === "FlateDecode" && /\/DecodeParms|\/Predictor/.test(dict)) continue;
+    const start = m.index + m[0].length;
+    const end = text.indexOf("endstream", start);
+    if (end < 0) continue;
+    let stop = end;
+    while (stop > start && (text[stop - 1] === "\n" || text[stop - 1] === "\r")) stop--;
+    if (!best || width * height > best.width * best.height) {
+      best = { width, height, bitsPerComponent, filter, data: bytes.slice(start, stop) };
+    }
+  }
+  return best;
+}
+function pixelsToRgba(raw, width, height, bitsPerComponent) {
+  const bytesPer = bitsPerComponent === 16 ? 2 : bitsPerComponent === 8 ? 1 : 0;
+  if (!bytesPer) return null;
+  const n = width * height;
+  const channels = raw.length / (n * bytesPer);
+  if (channels !== 1 && channels !== 3) return null;
+  const out = new Uint8ClampedArray(n * 4);
+  for (let i = 0; i < n; i++) {
+    for (let c = 0; c < 3; c++) {
+      const src = (i * channels + (channels === 1 ? 0 : c)) * bytesPer;
+      out[i * 4 + c] = raw[src] ?? 0;
+    }
+    out[i * 4 + 3] = 255;
+  }
+  return out;
 }
 export {
   ANS_INFO,

@@ -293,3 +293,10 @@ Fassung laden.
 - Zwei Durchgänge der Texterkennung; gleiche Lesarten zählen, unterschiedliche werden markiert und abgewählt.
 - A/G-Verhältnis mit zwei Stellen abgeschnitten (113,6 % → 1,13).
 - Strengere Prüfung: über 20 % Abweichung zum vorherigen Wert im Bild, fehlendes Komma (51,7 › 52) und Körperfettmasse ≠ Gewicht × Körperfettanteil werden markiert und nicht vorausgewählt.
+
+## Version 1.12.2 (14.11.2026): Waagen-Auswertung auch als PDF
+
+- „Aus Bild übernehmen“ nimmt auch die PDF-Datei der Hume-App bzw. den „ganze Seite“-Screenshot von iOS (das Bild in der PDF wird ausgelesen).
+- Drei Durchgänge der Texterkennung, die Mehrheit zählt; die Gesundheitspunktzahl wird zusätzlich aus dem Kopfbereich gelesen.
+- Als Ziffer gelesene Einheiten werden abgeschnitten („86.0kg“ → „86.09“ → 86,0), als Ziffer gelesene Pfeile/Symbole korrigiert („5 › 5 ⇆“ → „256“ → 5); Korrekturen werden nur vorausgewählt, wenn ein zweiter Durchgang sie bestätigt.
+- Getestet mit der Original-PDF: alle 12 vorausgewählten Werte stimmen (Gewicht 86,0, Fett 10,3 %, Fettmasse 8,8, Magermasse 73,6, Subkutan 7,7, Viszeral 5, A/G 1,13, Skelettmuskel 51,9, Skelettmasse 11,1, Wasser 67,9 %, Zellmasse 52,8); BMR 1935 und Punktzahl 774 werden gelesen, sobald die Messgrößen vom PC (1.0.122) da sind.

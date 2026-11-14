@@ -523,6 +523,12 @@ function textOrNull(value) {
   const clean = value.trim();
   return clean === "" ? null : clean;
 }
+function numberToInput(value, maxDecimals = 2) {
+  if (value === null || value === void 0 || !Number.isFinite(value)) return "";
+  const factor = 10 ** maxDecimals;
+  const rounded = Math.round(value * factor) / factor;
+  return String(rounded).replace(".", ",");
+}
 var FormParser = class {
   constructor() {
     __publicField(this, "errors", {});
@@ -6380,6 +6386,17 @@ function duplicateHrtEntries(input, entries, windowMin = DUPLICATE_WINDOW_MIN) {
     (e) => e.id !== input.id && e.date === input.date && e.status === input.status && norm(e.hormone) === norm(input.hormone) && withinWindow(e.time, input.time, windowMin)
   );
 }
+function hrtDuplicateHint(dupes) {
+  const first = dupes[0];
+  if (!first) return null;
+  const digits = Number.isInteger(first.amount) ? 0 : Number.isInteger(first.amount * 10) ? 1 : 2;
+  const amount = `${formatNumber(first.amount, digits)} ${first.unit}`;
+  const when = first.time ? `${formatDate(first.date)}, ${first.time} Uhr` : formatDate(first.date);
+  return {
+    key: "duplicate",
+    text: dupes.length === 1 ? `Am ${when} ist bereits eine Gabe ${first.hormone} (${amount}) gespeichert \u2013 innerhalb von ${DUPLICATE_WINDOW_MIN} Minuten. Doppelt erfasst?` : `Am ${formatDate(first.date)} sind bereits ${dupes.length} Gaben ${first.hormone} innerhalb von ${DUPLICATE_WINDOW_MIN} Minuten gespeichert. Doppelt erfasst?`
+  };
+}
 
 // src/domain/weeklyAnalysis.ts
 var MIN_VALUES = 3;
@@ -7144,9 +7161,9 @@ function weeklySummary(data, weekFrom) {
     }
   }
   if (nights.diff !== null && readiness2.diff !== null && Math.abs(nights.diff) >= 20 && Math.abs(readiness2.diff) >= 1) {
-    const same = Math.sign(nights.diff) === Math.sign(readiness2.diff);
+    const same2 = Math.sign(nights.diff) === Math.sign(readiness2.diff);
     observations.push(
-      same ? "Schlafdauer und Erholungs-Einsch\xE4tzung haben sich gegen\xFCber der Vorwoche in dieselbe Richtung ver\xE4ndert. Eine einzelne Woche reicht nicht, um daraus einen Zusammenhang abzuleiten." : "Schlafdauer und Erholungs-Einsch\xE4tzung haben sich gegen\xFCber der Vorwoche in entgegengesetzte Richtungen ver\xE4ndert."
+      same2 ? "Schlafdauer und Erholungs-Einsch\xE4tzung haben sich gegen\xFCber der Vorwoche in dieselbe Richtung ver\xE4ndert. Eine einzelne Woche reicht nicht, um daraus einen Zusammenhang abzuleiten." : "Schlafdauer und Erholungs-Einsch\xE4tzung haben sich gegen\xFCber der Vorwoche in entgegengesetzte Richtungen ver\xE4ndert."
     );
   }
   if (hr.count === 1 || hrv.count === 1) {
@@ -8673,7 +8690,55 @@ __export(lab_exports, {
 });
 
 // src/domain/hormoneLevel.ts
+var hormoneLevel_exports = {};
+__export(hormoneLevel_exports, {
+  DEFAULT_TIME: () => DEFAULT_TIME,
+  IGNORE_LABELS: () => IGNORE_LABELS,
+  MEASURAND_LABELS: () => MEASURAND_LABELS,
+  MEASURAND_ORDER: () => MEASURAND_ORDER,
+  SUBSTANCES: () => SUBSTANCES,
+  contribution: () => contribution,
+  dosesFromHrt: () => dosesFromHrt,
+  findSubstance: () => findSubstance,
+  fitCalibration: () => fitCalibration,
+  forecastDaysFor: () => forecastDaysFor,
+  lastDose: () => lastDose,
+  levelAt: () => levelAt,
+  levelSeries: () => levelSeries,
+  measurandsOf: () => measurandsOf,
+  normalizeName: () => normalizeName,
+  nowWallClockMs: () => nowWallClockMs,
+  percentAt: () => percentAt,
+  ratesFor: () => ratesFor,
+  stepHoursFor: () => stepHoursFor,
+  substanceById: () => substanceById,
+  substancesIn: () => substancesIn,
+  tmaxOfRates: () => tmaxOfRates,
+  unitCurve: () => unitCurve,
+  unitCurveCumulative: () => unitCurveCumulative,
+  wallClockMs: () => wallClockMs
+});
 var MS_PER_DAY = 864e5;
+var MEASURAND_LABELS = {
+  testosterone: "Testosteron",
+  estradiol: "Estradiol",
+  progesterone: "Progesteron",
+  hcg: "hCG",
+  dheaS: "DHEA-S",
+  gh: "Wachstumshormon",
+  ft4: "fT4",
+  ft3: "fT3"
+};
+var MEASURAND_ORDER = [
+  "testosterone",
+  "estradiol",
+  "progesterone",
+  "hcg",
+  "dheaS",
+  "gh",
+  "ft4",
+  "ft3"
+];
 var SUBSTANCES = [
   {
     id: "t-enanthate",
@@ -8879,6 +8944,9 @@ var BY_NAME = /* @__PURE__ */ new Map();
 for (const s of SUBSTANCES) {
   for (const n of [s.name, ...s.aliases]) BY_NAME.set(normalizeName(n), s);
 }
+function findSubstance(hormone) {
+  return BY_NAME.get(normalizeName(hormone)) ?? null;
+}
 function substanceById(id2) {
   return SUBSTANCES.find((s) => s.id === id2) ?? null;
 }
@@ -8887,6 +8955,15 @@ function wallClockMs(date, time) {
   const [y, m, d] = date.split("-").map(Number);
   const [h, min] = (time ?? DEFAULT_TIME).split(":").map(Number);
   return Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1, h ?? 0, min ?? 0);
+}
+function nowWallClockMs(now = /* @__PURE__ */ new Date()) {
+  return Date.UTC(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    now.getHours(),
+    now.getMinutes()
+  );
 }
 function tmaxOfRates(k1, k2) {
   if (Math.abs(k2 - k1) < 1e-12) return 1 / k1;
@@ -8935,6 +9012,101 @@ function levelAt(events, atMs) {
   let sum = 0;
   for (const e of events) sum += contribution(e, (atMs - e.atMs) / MS_PER_DAY);
   return sum;
+}
+var IGNORE_LABELS = {
+  missed: "ausgelassen",
+  unknown: "Art ohne Modell",
+  hidden: "Gel/Pflaster (folgt)",
+  unit: "Einheit passt nicht"
+};
+function dosesFromHrt(entries, options = {}) {
+  const events = [];
+  const ignored = [];
+  for (const entry of entries) {
+    if (entry.status !== "taken") {
+      ignored.push({ entry, reason: "missed" });
+      continue;
+    }
+    const s = findSubstance(entry.hormone);
+    if (!s) {
+      ignored.push({ entry, reason: "unknown" });
+      continue;
+    }
+    if (!s.shown && !options.includeHidden) {
+      ignored.push({ entry, reason: "hidden" });
+      continue;
+    }
+    if (entry.unit !== s.unit || !(entry.amount > 0)) {
+      ignored.push({ entry, reason: "unit" });
+      continue;
+    }
+    const wearDays = s.delivery === "patch" ? options.wearDaysFor?.(entry) ?? null : null;
+    if (s.delivery === "patch" && !(wearDays !== null && wearDays > 0)) {
+      ignored.push({ entry, reason: "unit" });
+      continue;
+    }
+    events.push({
+      entryId: entry.id,
+      substanceId: s.id,
+      measurand: s.measurand,
+      atMs: wallClockMs(entry.date, entry.time),
+      effective: entry.amount * s.esterFraction * s.bioavailability,
+      wearDays
+    });
+  }
+  events.sort((a, b) => a.atMs - b.atMs);
+  return { events, ignored };
+}
+function measurandsOf(events) {
+  const present = new Set(events.map((e) => e.measurand));
+  return MEASURAND_ORDER.filter((m) => present.has(m));
+}
+function stepHoursFor(rangeDays) {
+  if (rangeDays <= 14) return 1;
+  if (rangeDays <= 90) return 3;
+  return 12;
+}
+function forecastDaysFor(rangeDays) {
+  return Math.max(3, Math.round(rangeDays * 0.2));
+}
+function levelSeries(events, measurand, nowMs, rangeDays) {
+  const own = events.filter((e) => e.measurand === measurand);
+  const forecast = forecastDaysFor(rangeDays);
+  const fromMs = nowMs - (rangeDays - forecast) * MS_PER_DAY;
+  const toMs = nowMs + forecast * MS_PER_DAY;
+  const stepMs = stepHoursFor(rangeDays) * 36e5;
+  const raw = [];
+  for (let t = fromMs; t <= toMs; t += stepMs) raw.push({ atMs: t, value: levelAt(own, t) });
+  const inRange3 = own.filter((e) => e.atMs >= fromMs && e.atMs <= toMs);
+  const peakCandidates = inRange3.map((e) => {
+    const s = substanceById(e.substanceId);
+    return s ? levelAt(own, e.atMs + s.tmaxDays * MS_PER_DAY) : 0;
+  });
+  const nowValue = levelAt(own, nowMs);
+  const peak = Math.max(0, ...raw.map((p) => p.value), ...peakCandidates, nowValue);
+  const pct = (v) => peak > 0 ? Math.min(100, v / peak * 100) : 0;
+  return {
+    measurand,
+    fromMs,
+    toMs,
+    nowMs,
+    points: raw.map((p) => ({ atMs: p.atMs, percent: pct(p.value) })),
+    doses: inRange3.map((event) => ({ event, percent: pct(levelAt(own, event.atMs)) })),
+    nowPercent: own.length > 0 && peak > 0 ? pct(nowValue) : null,
+    peak
+  };
+}
+function percentAt(events, series, atMs) {
+  if (series.peak <= 0) return 0;
+  const own = events.filter((e) => e.measurand === series.measurand);
+  return Math.min(100, levelAt(own, atMs) / series.peak * 100);
+}
+function lastDose(events, measurand, nowMs) {
+  return [...events].reverse().find((e) => e.measurand === measurand && e.atMs <= nowMs) ?? null;
+}
+function substancesIn(events, measurand) {
+  const ids = new Set(events.filter((e) => e.measurand === measurand).map((e) => e.substanceId));
+  return SUBSTANCES.filter((s) => ids.has(s.id));
 }
 function fitCalibration(pairs) {
   const p = pairs.filter((x) => x.model > 1e-9 && Number.isFinite(x.measured));
@@ -9102,10 +9274,10 @@ function commonRange(points) {
   const withRange = points.filter((p) => p.range.low !== null || p.range.high !== null);
   const first = withRange[0];
   if (!first) return null;
-  const same = withRange.every(
+  const same2 = withRange.every(
     (p) => p.range.low === first.range.low && p.range.high === first.range.high
   );
-  return same ? first.range : null;
+  return same2 ? first.range : null;
 }
 function mainUnit(points) {
   const counts = /* @__PURE__ */ new Map();
@@ -9839,6 +10011,617 @@ function latestLpa(draws) {
   }
   return best ? { date: best.date, value: best.value, comparator: best.comparator, unit: best.unit } : null;
 }
+
+// src/domain/hrt.ts
+var hrt_exports = {};
+__export(hrt_exports, {
+  HORMONE_SUGGESTIONS: () => HORMONE_SUGGESTIONS,
+  HRT_UNITS: () => HRT_UNITS,
+  SITE_SUGGESTIONS: () => SITE_SUGGESTIONS,
+  STATUS_LABELS: () => STATUS_LABELS,
+  applyProduct: () => applyProduct,
+  computedAmount: () => computedAmount,
+  doseFromVolume: () => doseFromVolume,
+  emptyHrtDraft: () => emptyHrtDraft,
+  expiryNote: () => expiryNote,
+  hrtDraftToInput: () => hrtDraftToInput,
+  hrtToDraft: () => hrtToDraft,
+  matchingProduct: () => matchingProduct,
+  needleOptions: () => needleOptions,
+  prefillFromLast: () => prefillFromLast,
+  productFromDraft: () => productFromDraft,
+  productLabel: () => productLabel,
+  recentSites: () => recentSites,
+  summarizeHrt: () => summarizeHrt
+});
+
+// src/domain/protocol.ts
+var ROUTE_LABELS = {
+  oral: "oral",
+  sc: "subkutan (s.c.)",
+  im: "intramuskul\xE4r (i.m.)",
+  iv: "intraven\xF6s (i.v.)",
+  topical: "auf die Haut (topisch)",
+  nasal: "nasal",
+  sublingual: "unter der Zunge (sublingual)",
+  other: "sonstige"
+};
+function daysBetween3(a, b) {
+  return Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 864e5);
+}
+
+// src/domain/hrt.ts
+var HRT_UNITS = [
+  "mg",
+  "\xB5g",
+  "IE",
+  "ml",
+  "Hub",
+  "Pflaster",
+  "Tablette(n)",
+  "Kapsel(n)",
+  "Einheit(en)"
+];
+var STATUS_LABELS = {
+  taken: "durchgef\xFChrt",
+  missed: "ausgelassen"
+};
+var HORMONE_SUGGESTIONS = [
+  "Testosteron Enantat",
+  "Testosteron Cypionat",
+  "Testosteron Propionat",
+  "Testosteron Undecanoat",
+  "Testosteron Gel",
+  "Estradiol Valerat",
+  "Estradiol Gel",
+  "Estradiol Pflaster",
+  "Progesteron",
+  "hCG",
+  "DHEA",
+  "Wachstumshormon (HGH)",
+  "Levothyroxin (T4)",
+  "Liothyronin (T3)"
+];
+var SITE_SUGGESTIONS = [
+  "Ges\xE4\xDF links (ventrogluteal)",
+  "Ges\xE4\xDF rechts (ventrogluteal)",
+  "Ges\xE4\xDF links (dorsogluteal)",
+  "Ges\xE4\xDF rechts (dorsogluteal)",
+  "Oberschenkel links (vastus lateralis)",
+  "Oberschenkel rechts (vastus lateralis)",
+  "Schulter links (deltoideus)",
+  "Schulter rechts (deltoideus)",
+  "Bauch links",
+  "Bauch rechts",
+  "Oberarm links",
+  "Oberarm rechts"
+];
+function emptyHrtDraft(date, time = "") {
+  return {
+    id: null,
+    date,
+    time,
+    status: "taken",
+    hormone: "",
+    amount: "",
+    unit: "mg",
+    route: "",
+    site: "",
+    manufacturer: "",
+    batch: "",
+    expiryDate: "",
+    vialVolumeMl: "",
+    concentrationMgMl: "",
+    volumeMl: "",
+    needle: "",
+    prescription: "",
+    reaction: "",
+    notes: ""
+  };
+}
+var num = (v, decimals = 3) => v === null ? "" : numberToInput(v, decimals);
+function hrtToDraft(e) {
+  return {
+    id: e.id,
+    date: e.date,
+    time: e.time ?? "",
+    status: e.status,
+    hormone: e.hormone,
+    amount: numberToInput(e.amount, 3),
+    unit: e.unit,
+    route: e.route ?? "",
+    site: e.site ?? "",
+    manufacturer: e.manufacturer ?? "",
+    batch: e.batch ?? "",
+    expiryDate: e.expiryDate ?? "",
+    vialVolumeMl: num(e.vialVolumeMl, 2),
+    concentrationMgMl: num(e.concentrationMgMl),
+    volumeMl: num(e.volumeMl, 2),
+    needle: e.needle ?? "",
+    prescription: e.prescription ?? "",
+    reaction: e.reaction ?? "",
+    notes: e.notes ?? ""
+  };
+}
+function optNumber2(text) {
+  if (text.trim() === "") return null;
+  const v = parseDecimal(text);
+  return Number.isFinite(v) ? v : null;
+}
+function computedAmount(d) {
+  if (d.unit !== "mg") return null;
+  return doseFromVolume(optNumber2(d.concentrationMgMl), optNumber2(d.volumeMl));
+}
+function prefillFromLast(draft, entries) {
+  const key = draft.hormone.trim().toLocaleLowerCase("de");
+  if (!key) return draft;
+  const last = [...entries].filter((e) => e.hormone.toLocaleLowerCase("de") === key && e.id !== draft.id).sort((a, b) => (b.date + (b.time ?? "")).localeCompare(a.date + (a.time ?? "")))[0];
+  if (!last) return draft;
+  const from = hrtToDraft(last);
+  return {
+    ...draft,
+    hormone: last.hormone,
+    amount: from.amount,
+    unit: from.unit,
+    route: from.route,
+    manufacturer: from.manufacturer,
+    batch: from.batch,
+    expiryDate: from.expiryDate,
+    vialVolumeMl: from.vialVolumeMl,
+    concentrationMgMl: from.concentrationMgMl,
+    volumeMl: from.volumeMl,
+    needle: from.needle,
+    prescription: from.prescription
+  };
+}
+function productLabel(p) {
+  return [p.hormone, p.manufacturer, p.batch ? `Ch.-B. ${p.batch}` : null].filter(Boolean).join(" \xB7 ");
+}
+var same = (a, b) => (a ?? "").trim().toLocaleLowerCase("de") === b.trim().toLocaleLowerCase("de");
+function matchingProduct(d, products) {
+  if (!d.hormone.trim()) return null;
+  return products.find(
+    (p) => same(p.hormone, d.hormone) && same(p.manufacturer, d.manufacturer) && same(p.batch, d.batch)
+  ) ?? null;
+}
+function applyProduct(d, p) {
+  return {
+    ...d,
+    hormone: p.hormone,
+    manufacturer: p.manufacturer ?? "",
+    batch: p.batch ?? "",
+    expiryDate: p.expiryDate ?? "",
+    vialVolumeMl: num(p.vialVolumeMl, 2),
+    concentrationMgMl: num(p.concentrationMgMl)
+  };
+}
+function productFromDraft(d, id2 = null) {
+  const p = new FormParser();
+  const hormone = p.required(
+    "hormone",
+    d.hormone,
+    "Bitte die Art (Hormon bzw. Pr\xE4parat) eingeben."
+  );
+  const vialVolumeMl = p.decimal("vialVolumeMl", d.vialVolumeMl);
+  const concentrationMgMl = p.decimal("concentrationMgMl", d.concentrationMgMl);
+  return p.ok ? {
+    ok: true,
+    input: {
+      id: id2,
+      hormone,
+      manufacturer: textOrNull(d.manufacturer),
+      batch: textOrNull(d.batch),
+      expiryDate: textOrNull(d.expiryDate),
+      vialVolumeMl,
+      concentrationMgMl
+    }
+  } : { ok: false, errors: p.errors };
+}
+function hrtDraftToInput(d) {
+  const p = new FormParser();
+  const date = p.required("date", d.date, "Bitte ein Datum angeben.");
+  const hormone = p.required(
+    "hormone",
+    d.hormone,
+    "Bitte die Art (Hormon bzw. Pr\xE4parat) eingeben."
+  );
+  const vialVolumeMl = p.decimal("vialVolumeMl", d.vialVolumeMl);
+  const concentrationMgMl = p.decimal("concentrationMgMl", d.concentrationMgMl);
+  const volumeMl = p.decimal("volumeMl", d.volumeMl);
+  const computed = computedAmount(d);
+  let amount = computed ?? 0;
+  if (computed === null) {
+    if (d.amount.trim() === "") {
+      p.error(
+        "amount",
+        "Bitte Injektionsvolumen und Wirkstoffkonzentration angeben oder die Wirkstoffmenge eintragen."
+      );
+    } else {
+      amount = p.decimal("amount", d.amount) ?? 0;
+      if (p.ok && amount <= 0) p.error("amount", "Die Wirkstoffmenge muss gr\xF6\xDFer als 0 sein.");
+    }
+  }
+  return p.ok ? {
+    ok: true,
+    input: {
+      id: d.id,
+      date,
+      time: textOrNull(d.time),
+      status: d.status,
+      hormone,
+      amount,
+      unit: d.unit,
+      route: textOrNull(d.route) ?? null,
+      site: textOrNull(d.site),
+      manufacturer: textOrNull(d.manufacturer),
+      batch: textOrNull(d.batch),
+      expiryDate: textOrNull(d.expiryDate),
+      vialVolumeMl,
+      concentrationMgMl,
+      volumeMl,
+      needle: textOrNull(d.needle),
+      prescription: textOrNull(d.prescription),
+      reaction: textOrNull(d.reaction),
+      notes: textOrNull(d.notes)
+    }
+  } : { ok: false, errors: p.errors };
+}
+function doseFromVolume(concentrationMgMl, volumeMl) {
+  if (concentrationMgMl === null || volumeMl === null) return null;
+  if (!(concentrationMgMl > 0) || !(volumeMl > 0)) return null;
+  return Math.round(concentrationMgMl * volumeMl * 1e3) / 1e3;
+}
+function expiryNote(date, expiryDate) {
+  if (!date || !expiryDate) return null;
+  return expiryDate < date ? "Das eingetragene Verfallsdatum liegt vor dem Datum der Gabe." : null;
+}
+function summarizeHrt(entries, today) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const e of entries) {
+    const key = e.hormone.toLocaleLowerCase("de");
+    groups.set(key, [...groups.get(key) ?? [], e]);
+  }
+  const out = [];
+  for (const list of groups.values()) {
+    const sorted = [...list].sort(
+      (a, b) => (a.date + (a.time ?? "")).localeCompare(b.date + (b.time ?? ""))
+    );
+    const taken = sorted.filter((e) => e.status === "taken");
+    const totals = /* @__PURE__ */ new Map();
+    for (const e of taken)
+      totals.set(e.unit, Math.round(((totals.get(e.unit) ?? 0) + e.amount) * 1e3) / 1e3);
+    const dates = [...new Set(taken.map((e) => e.date))];
+    const gaps = dates.slice(1).map((d, i) => daysBetween3(dates[i] ?? d, d));
+    const lastTaken = dates.at(-1) ?? null;
+    out.push({
+      hormone: sorted.at(-1)?.hormone ?? "",
+      taken: taken.length,
+      missed: sorted.length - taken.length,
+      totals: [...totals.entries()],
+      first: sorted[0]?.date ?? null,
+      last: sorted.at(-1)?.date ?? null,
+      daysSinceLast: lastTaken ? daysBetween3(lastTaken, today) : null,
+      meanIntervalDays: gaps.length > 0 ? Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length * 10) / 10 : null,
+      lastBatch: [...taken].reverse().find((e) => e.batch)?.batch ?? null
+    });
+  }
+  return out.sort((a, b) => a.hormone.localeCompare(b.hormone, "de"));
+}
+function needleOptions(entries) {
+  const sorted = [...entries].filter((e) => e.needle && e.needle.trim() !== "").sort((a, b) => (b.date + (b.time ?? "")).localeCompare(a.date + (a.time ?? "")));
+  const seen = /* @__PURE__ */ new Set();
+  const out = [];
+  for (const e of sorted) {
+    const value = (e.needle ?? "").trim().replace(/\s+/g, " ");
+    const key = value.toLocaleLowerCase("de-DE");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(value);
+  }
+  return out;
+}
+function recentSites(entries, limit = 6) {
+  const sorted = [...entries].filter((e) => e.status === "taken" && e.site).sort((a, b) => (b.date + (b.time ?? "")).localeCompare(a.date + (a.time ?? "")));
+  const seen = /* @__PURE__ */ new Set();
+  const out = [];
+  for (const e of sorted) {
+    const site = e.site ?? "";
+    if (seen.has(site)) continue;
+    seen.add(site);
+    out.push({ site, date: e.date });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+// src/domain/doseCalc.ts
+var doseCalc_exports = {};
+__export(doseCalc_exports, {
+  amountsForVolume: () => amountsForVolume,
+  concentrationFromPowder: () => concentrationFromPowder,
+  dosesPerVial: () => dosesPerVial,
+  injectionsPerWeek: () => injectionsPerWeek,
+  insulinUnits: () => insulinUnits,
+  intervalForWeeklyDose: () => intervalForWeeklyDose,
+  perInjectionForWeeklyDose: () => perInjectionForWeeklyDose,
+  positive: () => positive,
+  roundTo: () => roundTo2,
+  totalConcentration: () => totalConcentration,
+  volumeForAmount: () => volumeForAmount,
+  weeklyDose: () => weeklyDose
+});
+function roundTo2(value, decimals) {
+  const f = 10 ** decimals;
+  return Math.round(value * f) / f;
+}
+function positive(text) {
+  if (text.trim() === "") return null;
+  const v = parseDecimal(text);
+  return Number.isFinite(v) && v > 0 ? v : null;
+}
+function totalConcentration(ingredients) {
+  return roundTo2(
+    ingredients.reduce((sum, i) => sum + i.mgPerMl, 0),
+    6
+  );
+}
+function amountsForVolume(ingredients, volumeMl) {
+  const items = ingredients.map((i) => ({ name: i.name, mg: roundTo2(i.mgPerMl * volumeMl, 3) }));
+  return { items, totalMg: roundTo2(totalConcentration(ingredients) * volumeMl, 3) };
+}
+function volumeForAmount(ingredients, amountMg) {
+  const c = totalConcentration(ingredients);
+  if (!(c > 0) || !(amountMg > 0)) return null;
+  return roundTo2(amountMg / c, 3);
+}
+function dosesPerVial(vialMl, injectionMl) {
+  if (!(vialMl > 0) || !(injectionMl > 0)) return null;
+  const vial = Math.round(vialMl * 1e3);
+  const dose = Math.round(injectionMl * 1e3);
+  if (dose === 0) return null;
+  const doses = Math.floor(vial / dose);
+  return { doses, restMl: (vial - doses * dose) / 1e3 };
+}
+function concentrationFromPowder(powderMg, solventMl) {
+  if (!(powderMg > 0) || !(solventMl > 0)) return null;
+  return roundTo2(powderMg / solventMl, 3);
+}
+function insulinUnits(volumeMl) {
+  return roundTo2(volumeMl * 100, 1);
+}
+function weeklyDose(perInjectionMg, intervalDays) {
+  if (!(perInjectionMg > 0) || !(intervalDays > 0)) return null;
+  return roundTo2(perInjectionMg * 7 / intervalDays, 3);
+}
+function intervalForWeeklyDose(perInjectionMg, weeklyMg) {
+  if (!(perInjectionMg > 0) || !(weeklyMg > 0)) return null;
+  return roundTo2(perInjectionMg * 7 / weeklyMg, 2);
+}
+function perInjectionForWeeklyDose(weeklyMg, intervalDays) {
+  if (!(weeklyMg > 0) || !(intervalDays > 0)) return null;
+  return roundTo2(weeklyMg * intervalDays / 7, 3);
+}
+function injectionsPerWeek(intervalDays) {
+  return intervalDays > 0 ? roundTo2(7 / intervalDays, 2) : null;
+}
+
+// src/domain/hrtChecklist.ts
+var hrtChecklist_exports = {};
+__export(hrtChecklist_exports, {
+  CHECKLIST_SECTIONS: () => CHECKLIST_SECTIONS,
+  CHECKLIST_STORAGE_MAX: () => CHECKLIST_STORAGE_MAX,
+  HRT_CHECKLIST_KEY: () => HRT_CHECKLIST_KEY,
+  ITEM_MAX_LENGTH: () => ITEM_MAX_LENGTH,
+  addItem: () => addItem,
+  defaultChecklist: () => defaultChecklist,
+  editItem: () => editItem,
+  moveItem: () => moveItem,
+  parseChecklist: () => parseChecklist,
+  progress: () => progress,
+  removeItem: () => removeItem,
+  resetTicks: () => resetTicks,
+  restoreTemplate: () => restoreTemplate,
+  serializeChecklist: () => serializeChecklist,
+  templateItems: () => templateItems,
+  toggleItem: () => toggleItem
+});
+var HRT_CHECKLIST_KEY = "ui.hrt_checklist";
+var CHECKLIST_SECTIONS = [
+  {
+    id: "materials",
+    title: "Materialien",
+    intro: "Alles bereitlegen, bevor die Verpackungen ge\xF6ffnet werden."
+  },
+  {
+    id: "preparation",
+    title: "Vorbereitung des Wirkstoffs",
+    intro: "Pr\xE4parat pr\xFCfen und steril aufziehen."
+  },
+  { id: "injection", title: "Injektionsphase", intro: "Ruhig, sauber und Schritt f\xFCr Schritt." },
+  {
+    id: "aftercare",
+    title: "Nachbereitung",
+    intro: "Entsorgen, versorgen, dokumentieren, beobachten."
+  },
+  {
+    id: "bailout",
+    title: "Bail-out-Szenarien",
+    intro: "Wann abbrechen und was dann zu tun ist. Im Zweifel abbrechen und \xE4rztliche Hilfe holen."
+  }
+];
+var ITEM_MAX_LENGTH = 300;
+var TEMPLATE = {
+  materials: [
+    "Pr\xE4parat (Ampulle bzw. Durchstechflasche) \u2013 Wirkstoff, Konzentration, Charge und Verfallsdatum lesbar",
+    "Sterile Einmalspritze passend zum Injektionsvolumen",
+    "Sterile Aufziehkan\xFCle",
+    "Sterile Injektionskan\xFCle passend zu Anwendung und Injektionsort (laut Verordnung bzw. Packungsbeilage)",
+    "Alkoholtupfer f\xFCr Gummistopfen und Haut",
+    "Sterile Tupfer und Pflaster",
+    "Durchstichsicherer Abwurfbeh\xE4lter f\xFCr Kan\xFClen",
+    "Saubere, freie und gut beleuchtete Arbeitsfl\xE4che",
+    "Einmalhandschuhe (optional)",
+    "Wirkstoffrechner bzw. Werte der Gabe bereit (Injektionsvolumen in ml)"
+  ],
+  preparation: [
+    "H\xE4nde gr\xFCndlich mit Seife waschen und abtrocknen",
+    "Pr\xE4parat pr\xFCfen: richtiger Wirkstoff, Konzentration, Charge, Verfallsdatum nicht \xFCberschritten",
+    "L\xF6sung pr\xFCfen: klar, ohne Tr\xFCbung, Verf\xE4rbung oder Partikel \u2013 sonst nicht verwenden",
+    "Gummistopfen bzw. Ampullenhals desinfizieren und vollst\xE4ndig trocknen lassen",
+    "Spritze und Aufziehkan\xFCle erst jetzt \xF6ffnen, Kan\xFClenspitze nicht ber\xFChren",
+    "Injektionsvolumen laut Wirkstoffrechner aufziehen",
+    "Luftblasen entfernen und Volumen an der Skala in Augenh\xF6he kontrollieren",
+    "Auf die Injektionskan\xFCle wechseln, ohne Spitze oder Konus zu ber\xFChren",
+    "F\xFCr jede Injektion neues, steriles Material \u2013 nie wiederverwenden oder teilen"
+  ],
+  injection: [
+    "Injektionsort w\xE4hlen und gegen\xFCber der letzten Gabe wechseln (HRT \u2192 zuletzt verwendete Orte)",
+    "Haut am Injektionsort desinfizieren und trocknen lassen, danach nicht mehr ber\xFChren",
+    "Bequeme Position, Muskel bzw. Haut entspannen",
+    "Einstichwinkel passend zur Anwendung (i.m. senkrecht, s.c. laut Anleitung) \u2013 z\xFCgig einstechen",
+    "Falls laut Anleitung vorgesehen: aspirieren \u2013 bei Blut in der Spritze siehe Bail-out",
+    "Langsam und gleichm\xE4\xDFig injizieren",
+    "Kan\xFCle im selben Winkel z\xFCgig herausziehen",
+    "Tupfer leicht aufdr\xFCcken, nicht reiben"
+  ],
+  aftercare: [
+    "Kan\xFCle ohne Zur\xFCckstecken der Schutzkappe direkt in den Abwurfbeh\xE4lter",
+    "Einstichstelle mit Pflaster versorgen und kurz beobachten",
+    "Pr\xE4parat laut Packungsbeilage lagern (Temperatur, Licht), Anbruchdatum notieren",
+    "Gabe dokumentieren: HRT \u2192 Hormongabe erfassen (Datum, Uhrzeit, Ort, Charge, Menge)",
+    "Einstichstelle in den folgenden Tagen auf R\xF6tung, Schwellung, W\xE4rme und Schmerz beobachten \u2013 unter \u201EBeobachtungen\u201C festhalten",
+    "Vollen Abwurfbeh\xE4lter verschlossen entsorgen (\xF6rtliche Regeln bzw. Apotheke fragen)"
+  ],
+  bailout: [
+    "Atemnot, Schwellung von Gesicht, Lippen oder Zunge, Nesselsucht, Schwindel oder Kreislaufprobleme \u2192 sofort Notruf 112",
+    "Hustenreiz, Engegef\xFChl in der Brust oder Atemnot direkt nach einer \xF6ligen Injektion \u2192 nicht weiter injizieren, ruhig bleiben; bei starken oder anhaltenden Beschwerden Notruf 112",
+    "Blut in der Spritze beim Aspirieren \u2192 nicht injizieren, Kan\xFCle herausziehen, mit neuem sterilen Material an anderer Stelle neu beginnen",
+    "Stechender, elektrisierender oder ausstrahlender Schmerz bzw. Taubheit beim Einstechen \u2192 sofort abbrechen und Kan\xFCle herausziehen",
+    "Kan\xFCle bricht ab \u2192 Ruhe bewahren, nicht dr\xFCcken oder massieren; sichtbares Ende vorsichtig fassen, sonst sofort \xE4rztliche Hilfe",
+    "Material verunreinigt (Kan\xFCle ber\xFChrt, Stopfen nicht desinfiziert, Spritze heruntergefallen) \u2192 verwerfen, neues steriles Material nehmen",
+    "L\xF6sung tr\xFCb, verf\xE4rbt, mit Partikeln oder Verfallsdatum \xFCberschritten \u2192 nicht verwenden",
+    "In den Tagen danach zunehmende R\xF6tung, Schwellung, \xDCberw\xE4rmung, Eiter oder Fieber \u2192 \xE4rztlich abkl\xE4ren lassen",
+    "Nadelstichverletzung bei einer anderen Person \u2192 Wunde bluten lassen, desinfizieren, umgehend \xE4rztlich abkl\xE4ren"
+  ]
+};
+function templateItems(section) {
+  return TEMPLATE[section].map((text, i) => ({ id: `${section}-v${i + 1}`, text, done: false }));
+}
+function defaultChecklist() {
+  return {
+    materials: templateItems("materials"),
+    preparation: templateItems("preparation"),
+    injection: templateItems("injection"),
+    aftercare: templateItems("aftercare"),
+    bailout: templateItems("bailout")
+  };
+}
+var TEMPLATE_TEXT = new Map(
+  Object.keys(TEMPLATE).flatMap(
+    (section) => TEMPLATE[section].map((text, i) => [`${section}-v${i + 1}`, text])
+  )
+);
+function parseItems(value) {
+  if (!Array.isArray(value)) return null;
+  const out = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const v of value) {
+    if (!v || typeof v !== "object") continue;
+    const { id: id2, text, t, done, d } = v;
+    if (typeof id2 !== "string" || !id2 || seen.has(id2)) continue;
+    const raw = typeof text === "string" ? text : typeof t === "string" ? t : TEMPLATE_TEXT.get(id2);
+    if (typeof raw !== "string") continue;
+    const clean = raw.trim().slice(0, ITEM_MAX_LENGTH);
+    if (!clean) continue;
+    seen.add(id2);
+    out.push({ id: id2, text: clean, done: done === true || d === 1 });
+  }
+  return out;
+}
+function parseChecklist(raw) {
+  const base = defaultChecklist();
+  if (!raw) return base;
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    return base;
+  }
+  if (!data || typeof data !== "object") return base;
+  const obj = data;
+  for (const s of CHECKLIST_SECTIONS) {
+    const items = parseItems(obj[s.id]);
+    if (items) base[s.id] = items;
+  }
+  return base;
+}
+function serializeChecklist(list) {
+  const out = {};
+  for (const s of CHECKLIST_SECTIONS) {
+    out[s.id] = list[s.id].map((i) => ({
+      id: i.id,
+      ...TEMPLATE_TEXT.get(i.id) === i.text ? {} : { t: i.text },
+      ...i.done ? { d: 1 } : {}
+    }));
+  }
+  return JSON.stringify(out);
+}
+var CHECKLIST_STORAGE_MAX = 8e3;
+var update = (list, section, items) => ({
+  ...list,
+  [section]: items
+});
+function addItem(list, section, text, id2) {
+  const clean = text.trim().slice(0, ITEM_MAX_LENGTH);
+  if (!clean || list[section].some((i) => i.id === id2)) return list;
+  return update(list, section, [...list[section], { id: id2, text: clean, done: false }]);
+}
+function editItem(list, section, id2, text) {
+  const clean = text.trim().slice(0, ITEM_MAX_LENGTH);
+  if (!clean) return list;
+  return update(
+    list,
+    section,
+    list[section].map((i) => i.id === id2 ? { ...i, text: clean } : i)
+  );
+}
+function removeItem(list, section, id2) {
+  return update(
+    list,
+    section,
+    list[section].filter((i) => i.id !== id2)
+  );
+}
+function toggleItem(list, section, id2) {
+  return update(
+    list,
+    section,
+    list[section].map((i) => i.id === id2 ? { ...i, done: !i.done } : i)
+  );
+}
+function moveItem(list, section, id2, direction) {
+  const items = [...list[section]];
+  const index = items.findIndex((i) => i.id === id2);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= items.length) return list;
+  const [item2] = items.splice(index, 1);
+  if (item2) items.splice(target, 0, item2);
+  return update(list, section, items);
+}
+function resetTicks(list, section) {
+  const out = { ...list };
+  for (const s of CHECKLIST_SECTIONS) {
+    if (section && s.id !== section) continue;
+    out[s.id] = list[s.id].map((i) => i.done ? { ...i, done: false } : i);
+  }
+  return out;
+}
+function restoreTemplate(list, section) {
+  return update(list, section, templateItems(section));
+}
+function progress(items) {
+  return { done: items.filter((i) => i.done).length, total: items.length };
+}
 export {
   ANS_INFO,
   ANS_MAX,
@@ -9863,6 +10646,7 @@ export {
   OVERVIEW_LAYOUT_KEY,
   REFERENCE_SOURCE,
   REPEAT_LABEL,
+  ROUTE_LABELS,
   SCALE_MODE_LABELS,
   ZERO,
   acwr,
@@ -9895,8 +10679,10 @@ export {
   describeSupplements,
   describeTiming,
   dominantMethod,
+  doseCalc_exports as doseCalc,
   drinkText,
   drinksMl,
+  duplicateHrtEntries,
   energy_exports as energy,
   energyGoalView,
   exportReminderState,
@@ -9920,6 +10706,10 @@ export {
   groupInsights,
   groupIntakes,
   groupedValues,
+  hormoneLevel_exports as hormoneLevel,
+  hrt_exports as hrt,
+  hrtChecklist_exports as hrtChecklist,
+  hrtDuplicateHint,
   insights_exports as insights,
   lab_exports as lab,
   legendLabels,

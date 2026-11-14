@@ -270,3 +270,14 @@ Fassung laden.
 - Regeln wie `repo/lab.rs` und `repo/lifetime.rs` (`healthdata.js`, mit Tests); Formularlogik und Markierung kommen aus `src/domain/lab.ts`, `labReference.ts` und `lifetime.ts` (in `pcdomain.js`).
 - Änderungen gehen mit der Datei „LIFESPAN Körperwerte …“ an den PC (Tabellen `lab_draw`, `lab_result`, `lifetime_record` und Löschvermerke).
 - Weiterhin nur am PC: Arztbericht (PDF), Import aus CSV/Excel und die Pflege der Parameter.
+
+## Version 1.11.0 (14.11.2026): Superhuman am Handy
+
+- **Superhuman** wie am PC mit vier Reitern:
+  - **HRT:** Hormongabe erfassen und bearbeiten wie am PC (gespeichertes Präparat wählen, als Präparat speichern oder löschen, „Angaben der letzten Gabe übernehmen“, Wirkstoffmenge aus Injektionsvolumen × Konzentration, Injektionsort und Kanüle aus bisherigen Angaben, Hinweis auf abgelaufene Charge und auf doppelt erfasste Gaben). Dazu Übersicht je Art und das HRT-Protokoll mit Zeitraum, Bearbeiten und Löschen.
+  - **Wirkstoffspiegel:** Modellrechnung aus den Gaben (2 Wochen, 3 Monate, 1 Jahr) mit Fortsetzung ohne weitere Gaben, Abgleich mit Blutwerten aus Health und den Kennwerten der Wirkstoffe.
+  - **Wirkstoffrechner:** Lösung aus einem oder mehreren Wirkstoffen, Menge aus Volumen, Volumen für eine Menge, Wochendosis und Intervall, Inhalt einer Ampulle, Pulver auflösen.
+  - **Checkliste Injektion:** abhaken, Punkte ändern, ergänzen, sortieren, löschen, Häkchen zurücksetzen, Vorlage wiederherstellen.
+- Regeln wie `repo/hrt.rs` (`superdata.js`, mit Tests); Formular- und Rechenlogik aus `src/domain/hrt.ts`, `hormoneLevel.ts`, `doseCalc.ts`, `hrtChecklist.ts` (in `pcdomain.js`).
+- Änderungen gehen mit der Datei „LIFESPAN Körperwerte …“ an den PC (`hrt_entry`, `hrt_product`, Einstellung `ui.hrt_checklist` und Löschvermerke).
+- Weiterhin nur am PC: Protokoll, Auswertung und Substanzen (PEDs, Medikamente, Peptide).

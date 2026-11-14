@@ -624,3 +624,31 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .lifetime-list .row-actions { margin-top: 6px; }
 .lifetime-form { border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-top: 8px; }
 .lifetime-form h4 { margin: 0 0 6px; }
+
+/* Superhuman (1.11.0) */
+.hrt-summary, .hrt-log, .hrt-check__list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.hrt-summary > li { border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.hrt-summary dl { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin: 6px 0 0; font-size: .88rem; }
+.hrt-summary dt { color: var(--muted); font-size: .78rem; }
+.hrt-summary dd { margin: 0; font-variant-numeric: tabular-nums; }
+.hrt-log > li { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 3px; overflow-wrap: anywhere; }
+.hrt-log > li.is-missed { background: var(--surface-2); }
+.hrt-log__head { display: flex; justify-content: space-between; gap: 10px; font-variant-numeric: tabular-nums; }
+.hrt-log .row-actions { margin-top: 6px; }
+.level-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+.level-metrics > div { display: grid; gap: 2px; }
+.level-big { font-size: 1.8rem; line-height: 1.1; }
+.level-chart .level-now { stroke: var(--muted); stroke-dasharray: 2 3; }
+.level-chart .level-now__label { fill: var(--muted); font-size: 10px; }
+.level-key { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--blue); vertical-align: middle; }
+.level-key--forecast { border-top-style: dashed; opacity: .6; }
+.level-key--dot { width: 8px; height: 8px; border: 0; border-radius: 50%; background: var(--orange); }
+.segmented + .segmented { margin-top: 6px; }
+.calc-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; margin-top: 8px; }
+.data-table tr.calc-total td { font-weight: 700; }
+.hrt-check__list > li { border-bottom: 1px solid var(--line); padding: 6px 0; }
+.hrt-check__list > li.is-done .hrt-check__item span { color: var(--muted); text-decoration: line-through; }
+.hrt-check__item { display: flex; gap: 10px; align-items: flex-start; }
+.hrt-check__item input { width: 22px; height: 22px; flex: none; margin-top: 2px; }
+.hrt-check .row-actions input[type=text], .hrt-check__list input[type=text] { flex: 1 1 180px; min-height: 44px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+.linkbtn.danger { color: var(--danger); }

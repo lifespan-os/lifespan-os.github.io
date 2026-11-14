@@ -17,6 +17,8 @@ import { initTodos, todoActions, todoChange, todoInput, viewTodos } from "./todo
 import * as TD from "./todosdata.js";
 import { initHealth, healthActions, healthChange, healthInput, viewHealth, viewLabEdit } from "./health.js";
 import * as HD from "./healthdata.js";
+import { initSuper, superActions, superChange, superInput, viewSuper, viewHrtEdit } from "./super.js";
+import * as SD from "./superdata.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -88,7 +90,7 @@ const machineById = () => new Map(S.catalog.machines.map((m) => [m.id, m]));
 const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported);
 const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWater(S.water);
 // Körperwerte plus Schlaf und Regeneration (gehen zusammen in die Datei „Körperwerte“, 1.7.0)
-const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health);
+const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super);
 
 function go(view, arg = null) {
   if (view === "food-review" && S.view !== "food-review") S.reviewFrom = S.view === "send" ? "send" : S.view === "food" ? "food" : "home";
@@ -639,19 +641,19 @@ function viewSend() {
         <li>Als Art <b>„Abgleichen (zweites Gerät)“</b> wählen und bestätigen.</li>
       </ol>
       <p class="warn">Bitte nie „Ersetzen“ wählen: Dann würden am PC alle anderen Daten gelöscht. „Abgleichen“ ist sicher, vorher legt die App automatisch ein Backup an.</p>
-      <p class="muted small">Trainings, Ernährung und Körperwerte kommen in getrennte Dateien: „LIFESPAN Smartphone-Training …“, „LIFESPAN Lebensmittel …“ und „LIFESPAN Körperwerte …“ (mit Schlaf, Nickerchen, Regeneration, To-dos und Health). Am PC alle gleich importieren.</p>
+      <p class="muted small">Trainings, Ernährung und Körperwerte kommen in getrennte Dateien: „LIFESPAN Smartphone-Training …“, „LIFESPAN Lebensmittel …“ und „LIFESPAN Körperwerte …“ (mit Schlaf, Nickerchen, Regeneration, To-dos, Health und Superhuman). Am PC alle gleich importieren.</p>
       <button class="btn primary block" data-act="send" data-arg="training" ${open.length ? "" : "disabled"}>${open.length ? `Trainings senden (${open.length})` : "Keine offenen Trainings"}</button>
       <button class="btn primary block" data-act="send" data-arg="food" ${food ? "" : "disabled"}>${food ? `Lebensmittel senden (${food} Einträge)` : "Keine offenen Ernährungseinträge"}</button>
       ${food ? `<button class="btn block" data-go="food-review">Vorher Ernährungseinträge prüfen und bearbeiten</button>` : ""}
-      ${body ? `<button class="btn primary block" data-act="send" data-arg="body">Körperwerte, Schlaf, Regeneration, To-dos &amp; Health senden (${body})</button>` : ""}
+      ${body ? `<button class="btn primary block" data-act="send" data-arg="body">Körperwerte, Schlaf, Regeneration, To-dos, Health &amp; Superhuman senden (${body})</button>` : ""}
     </section>
     ${
-      all.length || Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length || Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length
+      all.length || Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length || Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length
         ? `<section class="card"><h3>Alles vom Handy</h3>
             <p class="muted small">Falls eine Datei verloren ging: Du kannst alle ${all.length} Trainings und die Ernährungseinträge noch einmal senden. Am PC entstehen dabei keine doppelten Einträge.</p>
             ${all.length ? `<button class="btn block" data-act="send" data-arg="training|all">Alle Trainings erneut senden</button>` : ""}
             ${Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length ? `<button class="btn block" data-act="send" data-arg="food|all">Alle Ernährungseinträge erneut senden</button>` : ""}
-            ${Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length ? `<button class="btn block" data-act="send" data-arg="body|all">Alle Körperwerte, Schlaf, Regeneration, To-dos &amp; Health erneut senden</button>` : ""}</section>`
+            ${Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length ? `<button class="btn block" data-act="send" data-arg="body|all">Alle Körperwerte, Schlaf, Regeneration, To-dos, Health &amp; Superhuman erneut senden</button>` : ""}</section>`
         : ""
     }
     <div id="send-result"></div>
@@ -711,6 +713,8 @@ const VIEWS = {
   todos: viewTodos,
   health: viewHealth,
   "lab-edit": viewLabEdit,
+  super: viewSuper,
+  "hrt-edit": viewHrtEdit,
   diary: viewDiary,
   "food-history": viewNutritionHistory,
   food: viewFood,
@@ -857,6 +861,7 @@ const actions = {
   ...insightsActions,
   ...todoActions,
   ...healthActions,
+  ...superActions,
   ...bodyActions,
   "start-free": () => startWorkout("Freies Training"),
   "start-plan": (el) => {
@@ -1036,6 +1041,8 @@ const actions = {
       await store.set("todos", S.todos);
       HD.markHealthSent(S.health);
       await store.set("health", S.health);
+      SD.markSuperSent(S.super);
+      await store.set("super", S.super);
     }
     if (kind === "food" && S.food) {
       N.markNutritionSent(S.food.local);
@@ -1109,10 +1116,10 @@ async function sendFile(kind, all) {
       kind === "food" && S.food
         ? mergeTables(N.nutritionTables(S.catalog, S.food.local, { all }), P.waterTables(S.water, { all }))
         : kind === "body" && S.body
-          ? mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), HD.healthTables(S.health, { all })))
+          ? mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), SD.superTables(S.super, { all }))))
           : {};
     if (kind === "food" && !Object.keys(food).length) return toast("Keine Ernährungseinträge zum Senden.", true);
-    if (kind === "body" && !Object.keys(food).length) return toast("Keine Körperwerte, Schlaf-, Regenerations-, To-do- oder Health-Einträge zum Senden.", true);
+    if (kind === "body" && !Object.keys(food).length) return toast("Keine Körperwerte, Schlaf-, Regenerations-, To-do-, Health- oder Superhuman-Einträge zum Senden.", true);
     if (kind === "training" && !list.length) return toast("Keine Trainings zum Senden.", true);
     doc = C.buildReturnFile(S.catalog, S.localExercises, list, new Date(), food);
   } catch (e) {
@@ -1170,6 +1177,7 @@ app.addEventListener("input", (ev) => {
   if (logsInput(el)) return;
   if (todoInput(el)) return;
   if (healthInput(el)) return;
+  if (superInput(el)) return;
   if (el.id === "q") {
     S.query = el.value;
     document.getElementById("results").innerHTML = pickerResults();
@@ -1240,6 +1248,7 @@ app.addEventListener("change", async (ev) => {
   if (logsChange(el)) return;
   if (todoChange(el)) return;
   if (healthChange(el)) return;
+  if (superChange(el)) return;
   if (el.id === "only-nr") {
     S.prefs.onlyNumbered = el.checked;
     saveSoon();
@@ -1280,6 +1289,8 @@ async function loadFile(file) {
     await store.set("todos", S.todos);
     S.health = HD.pruneHealth(catalog, S.health);
     await store.set("health", S.health);
+    S.super = SD.pruneSuper(catalog, S.super);
+    await store.set("super", S.super);
     await saveNow();
     toast(`Geladen: ${catalog.machines.length.toLocaleString("de-DE")} Maschinen, ${catalog.plans.length} Pläne, ${catalog.nutrition.foods.length.toLocaleString("de-DE")} Lebensmittel`);
     go("home");
@@ -1436,6 +1447,7 @@ initLogs(moduleCtx);
 initInsights(moduleCtx);
 initTodos(moduleCtx);
 initHealth(moduleCtx);
+initSuper(moduleCtx);
 
 initFood({
   get S() {
@@ -1465,6 +1477,7 @@ async function boot() {
     S.logs = LG.logsState(await store.get("logs"));
     S.todos = TD.todosState(await store.get("todos"));
     S.health = HD.healthState(await store.get("health"));
+    S.super = SD.superState(await store.get("super"));
     delete S.prefs.topOffset; // Einstellung aus 1.1.7 entfällt
   } catch (e) {
     app.innerHTML = `<p class="boot">Der Gerätespeicher ist nicht verfügbar (${esc(e.message)}). Im privaten Modus funktioniert LIFESPAN OS Mobil nicht.</p>`;

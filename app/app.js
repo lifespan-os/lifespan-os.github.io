@@ -13,6 +13,7 @@ import * as SP from "./supplements.js";
 import { initVendor, vendorActions, vendorChange, viewVendor } from "./vendorui.js";
 import { initGoals, goalActions, goalChange, viewGoals } from "./goalsui.js";
 import * as GL from "./goals.js";
+import * as AX from "./accountexport.js";
 import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewDayNav } from "./overview.js";
 import { initLogs, logsActions, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
@@ -1316,8 +1317,10 @@ const actions = {
   "mark-sent": async (el) => {
     const [kind, idList = ""] = el.dataset.arg.split("|");
     const ids = idList.split(",");
+    // „all“ (ganzes Konto, 1.29.0): alle Trainings und alle Bereiche
     if (kind === "training") for (const w of S.workouts) if (ids.includes(w.id)) w.exported = true;
-    if (kind === "body" && S.body) {
+    if (kind === "all") for (const w of S.workouts) if (w.status === "done") w.exported = true;
+    if ((kind === "body" || kind === "all") && S.body) {
       BD.markBodySent(S.body.local);
       await store.set("body", S.body.local);
       LG.markLogsSent(S.logs);
@@ -1337,7 +1340,7 @@ const actions = {
       GL.markGoalsSent(S.goals);
       await store.set("goals", S.goals);
     }
-    if (kind === "food" && S.food) {
+    if ((kind === "food" || kind === "all") && S.food) {
       N.markNutritionSent(S.food.local);
       await store.set("nutrition", S.food.local);
       P.markWaterSent(S.water);
@@ -1433,6 +1436,7 @@ const actions = {
     }
   },
   "account-switch": (el) => switchAccount(el.dataset.arg),
+  "account-export": (el) => exportAccount(el),
   "account-delete": async (el) => {
     const id = el.dataset.arg;
     const name = accountName(id);
@@ -1506,6 +1510,62 @@ function foodTables(all) {
   return out;
 }
 
+/** Tabellen für „Körperwerte … senden“: Körperwerte, Schlaf, To-dos, Health, Superhuman, Checklisten, Koffein, Training am Handy, Ziele. */
+function bodyPartTables(all) {
+  return mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), CF.caffeineTables(S.caffeine, { all })), mergeTables(TR.trainTables(S.train, { all }), GL.goalTables(S.goals, { all })))))));
+}
+
+/**
+ * Ganzes Konto am Handy als Exportdatei für den PC (1.29.0): Startpaket + Profil + alles Erfasste.
+ * Am PC: neuer Benutzer → „Ersetzen“, bestehender Benutzer → „Abgleichen (zweites Gerät)“.
+ */
+async function exportAccount(el) {
+  const result = document.getElementById("account-result");
+  if (!S.catalog?.startpaket) return toast("Nur für ein Konto am Handy – Daten vom PC gehen über „An den PC senden“.", true);
+  if (S.active) return toast("Erst das laufende Training beenden.", true);
+  el.disabled = true;
+  let doc;
+  try {
+    await saveNow();
+    const start = await loadStartPackage();
+    const now = new Date();
+    let training = {};
+    const done = S.workouts.filter((w) => w.status === "done");
+    if (done.length) training = C.buildReturnFile(S.catalog, S.localExercises, done, now, {}).tables;
+    const parts = [training, S.food ? foodTables(true) : {}, S.body ? bodyPartTables(true) : {}];
+    doc = AX.fullAccountDoc(start, S.catalog.pc.profile[0], parts, { now, appVersion: `mobil ${C.MOBILE_VERSION}` });
+  } catch (e) {
+    el.disabled = false;
+    return toast(e.message || "Die Kontodatei konnte nicht erstellt werden.", true);
+  }
+  el.disabled = false;
+  const name = AX.accountFileName(accountName());
+  const blob = new Blob([JSON.stringify(doc)], { type: "application/json" });
+  const file = new File([blob], name, { type: "application/json" });
+  result.innerHTML = "";
+  let shared = false;
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: name });
+      shared = true;
+    } catch (e) {
+      if (e.name === "AbortError") return toast("Abgebrochen");
+    }
+  }
+  const rows = Object.values(doc.tables).reduce((n, l) => n + l.length, 0);
+  result.innerHTML = `<section class="card">
+    ${shared ? `<p class="small">„${esc(name)}“ weitergegeben (${rows.toLocaleString("de-DE")} Einträge).</p>` : `<p class="small">Die Datei ist bereit (${rows.toLocaleString("de-DE")} Einträge). Tippe darauf und sichere sie in Google Drive:</p>
+      <a class="btn blue block" href="${URL.createObjectURL(blob)}" download="${esc(name)}">${esc(name)}</a>`}
+    <ol class="steps small">
+      <li><b>Neuer Benutzer am PC:</b> LIFESPAN OS → Settings → Benutzer → neuen Benutzer anlegen und zu ihm wechseln. Dann Settings → Daten importieren → die Datei wählen → <b>„Ersetzen“</b>.</li>
+      <li><b>Bestehender Benutzer:</b> Settings → Daten importieren → die Datei wählen → <b>„Abgleichen (zweites Gerät)“</b>.</li>
+    </ol>
+    <p class="small">Danach kannst du alles als übertragen markieren – die Daten bleiben am Handy, „An den PC senden“ zeigt dann nur noch Neues.</p>
+    <button class="btn primary block" data-act="mark-sent" data-arg="all">Alles als übertragen markieren</button>
+  </section>`;
+  result.scrollIntoView({ block: "start", behavior: "smooth" });
+}
+
 /**
  * Rückgabedatei erstellen (1.2.4): Trainings und Ernährung getrennt – `kind` „training“ oder „food“,
  * `all` = auch schon gesendete.
@@ -1518,7 +1578,7 @@ async function sendFile(kind, all) {
       kind === "food" && S.food
         ? foodTables(all)
         : kind === "body" && S.body
-          ? mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), CF.caffeineTables(S.caffeine, { all })), mergeTables(TR.trainTables(S.train, { all }), GL.goalTables(S.goals, { all })))))))
+          ? bodyPartTables(all)
           : {};
     if (kind === "food" && !Object.keys(food).length) return toast("Keine Ernährungseinträge zum Senden.", true);
     if (kind === "body" && !Object.keys(food).length) return toast("Keine Körperwerte, Schlaf-, Regenerations-, To-do-, Training-, Health- oder Superhuman-Einträge zum Senden.", true);
@@ -1833,6 +1893,13 @@ function accountsCard() {
                 }</span></li>`,
             )
             .join("")}</ul>`
+        : ""
+    }
+    ${
+      S.catalog?.startpaket
+        ? `<button class="btn primary block" data-act="account-export">Ganzes Konto an den PC</button>
+          <p class="muted small">Eine Datei mit allem, was in diesem Konto steht – am PC als neuer Benutzer („Ersetzen“) oder zum Abgleich mit einem bestehenden Benutzer.</p>
+          <div id="account-result"></div>`
         : ""
     }
     <button class="btn block" data-act="account-new">Neues Konto anlegen</button>

@@ -39,7 +39,7 @@ export const SECTIONS = [
   { id: "sleep", label: "Sleep", view: "sleep", views: ["sleep"] },
   { id: "recovery", label: "Recovery", view: "recovery", views: ["recovery"] },
   { id: "body", label: "Body & Longevity", view: "body", views: ["body", "body-metric", "body-entry"] },
-  { id: "health", label: "Health", pc: "Blutwerte, Laborimport, Verläufe, Arztbericht und Lebenszeit." },
+  { id: "health", label: "Health", view: "health", views: ["health", "lab-edit"] },
   { id: "superhuman", label: "Superhuman", pc: "HRT, Hormonspiegel, Dosisrechner und Checklisten." },
   { id: "insights", label: "Insights", view: "insights", views: ["insights"] },
   { id: "icoach", label: "iCoach.me", pc: "Fragen, Evolve, Magazin, Downloads und Widgets." },

@@ -260,3 +260,13 @@ Fassung laden.
 - Regeln wie `checklist.rs` (`todosdata.js`, mit Tests): Text 1–300 Zeichen, neue To-dos ans Ende, gleiche Texte am selben Tag werden beim Eintragen auf mehrere Tage übersprungen.
 - Änderungen gehen mit der Datei „LIFESPAN Körperwerte …“ an den PC (Tabelle `todo` und Löschvermerke).
 - Eigene Checklisten (Bibliothek, Import aus Excel/Notizen) und die Wochen-/Monatsübersicht mit Trainings und Ruhetagen gibt es bisher nur am PC.
+
+## Version 1.10.0 (14.11.2026): Health am Handy
+
+- **Health** wie am PC (HealthPage.tsx) mit drei Reitern:
+  - **Blutabnahmen:** Liste mit Anzahl der Werte und Werten außerhalb des Bereichs; je Abnahme die Werte nach Gruppe mit ↑/↓ und Referenzbereich (laut Befund, sonst eigener Bereich des Parameters, sonst Vorgabebereich AKH Wien nach Geschlecht und Alter laut Profil). Neue Blutabnahme erfassen, bearbeiten (auch „ganze Gruppe hinzufügen“) und löschen.
+  - **Verlauf** je Parameter: Diagramm mit grünem Referenzband und roten Punkten außerhalb, darunter alle Werte.
+  - **Once in a Lifetime:** Blutgruppe (AB0, Rhesus, Kell) per Auswahl, letzter Lp(a)-Wert aus den Blutabnahmen und Einträge je Bereich (Gentests, Pharmakogenetik, HLA, Allergietests …) anlegen, bearbeiten und löschen.
+- Regeln wie `repo/lab.rs` und `repo/lifetime.rs` (`healthdata.js`, mit Tests); Formularlogik und Markierung kommen aus `src/domain/lab.ts`, `labReference.ts` und `lifetime.ts` (in `pcdomain.js`).
+- Änderungen gehen mit der Datei „LIFESPAN Körperwerte …“ an den PC (Tabellen `lab_draw`, `lab_result`, `lifetime_record` und Löschvermerke).
+- Weiterhin nur am PC: Arztbericht (PDF), Import aus CSV/Excel und die Pflege der Parameter.

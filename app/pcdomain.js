@@ -1504,12 +1504,12 @@ function parseLayout(json) {
   }
 }
 function orderedIds(defaults, layout) {
-  const known = layout.order.filter((id) => defaults.includes(id));
+  const known = layout.order.filter((id2) => defaults.includes(id2));
   const result = [...known];
-  defaults.forEach((id, i) => {
-    if (result.includes(id)) return;
+  defaults.forEach((id2, i) => {
+    if (result.includes(id2)) return;
     const before = defaults.slice(0, i).reverse().find((x) => result.includes(x));
-    result.splice(before ? result.indexOf(before) + 1 : 0, 0, id);
+    result.splice(before ? result.indexOf(before) + 1 : 0, 0, id2);
   });
   return result;
 }
@@ -5631,7 +5631,7 @@ var FLY_PROFILE = FLY_PROFILES.wide.pronated;
 var REVERSE_FLY_PROFILE = REVERSE_FLY_PROFILES.wide.pronated;
 var PATTERN_OF = new Map(
   Object.entries(PATTERN_MACHINE_IDS).flatMap(
-    ([pattern, ids]) => [...ids].map((id) => [id, pattern])
+    ([pattern, ids]) => [...ids].map((id2) => [id2, pattern])
   )
 );
 function comboHint(exerciseName, machineName) {
@@ -5957,7 +5957,7 @@ function exerciseMuscles(muscleGroup, machineMuscleGroups = [], exerciseFocus, m
       return;
     }
     const factor = i === 0 ? 1 : SECONDARY_FACTOR;
-    for (const id of ids) factors[id] = Math.max(factors[id] ?? 0, factor);
+    for (const id2 of ids) factors[id2] = Math.max(factors[id2] ?? 0, factor);
   });
   return { factors, unmapped };
 }
@@ -6029,9 +6029,9 @@ function muscleMapData(log, exercises, machines, include, focus = NO_FOCUS) {
       continue;
     }
     const volume = setVolumeKg(s);
-    for (const [id, factor] of entries) {
-      sets[id] += factor;
-      volumeKg[id] += volume * factor;
+    for (const [id2, factor] of entries) {
+      sets[id2] += factor;
+      volumeKg[id2] += volume * factor;
     }
   }
   return {
@@ -7176,8 +7176,8 @@ function item(key, label, have, need, benefit, status = `an ${days(have)} von ${
 function coverage(data, today) {
   const from = shiftDays(today, -(COVERAGE_DAYS - 1));
   const weekly = MIN_WEEK_VALUES * WEEKS;
-  const metricDays = (id) => distinctDays(
-    data.measurements.filter((m) => m.metricId === id).map((m) => m.date),
+  const metricDays = (id2) => distinctDays(
+    data.measurements.filter((m) => m.metricId === id2).map((m) => m.date),
     from,
     today
   );
@@ -7619,7 +7619,7 @@ function sleepEntryRows(logs, naps) {
 // src/domain/dayStatus.ts
 function dayStatus(overview, supplementIntakes) {
   const day = overview.date;
-  const vital = (id) => overview.vitalsLast7Days.find((m) => m.metricId === id && m.date === day) ?? null;
+  const vital = (id2) => overview.vitalsLast7Days.find((m) => m.metricId === id2 && m.date === day) ?? null;
   const weight = overview.weightLast30Days.find((m) => m.date === day) ?? null;
   const hrv = vital(HRV_METRIC_ID);
   const hr = vital(RESTING_HR_METRIC_ID);
@@ -8643,6 +8643,1202 @@ function formatScale(key, value) {
   if (value === null) return "\u2013";
   return `${value} / ${recoveryScale(key).max}`;
 }
+
+// src/domain/lab.ts
+var lab_exports = {};
+__export(lab_exports, {
+  FLAG_LABELS: () => FLAG_LABELS,
+  FLAG_MARKS: () => FLAG_MARKS,
+  LAB_CATEGORIES: () => LAB_CATEGORIES,
+  LAB_CATEGORY_LABELS: () => LAB_CATEGORY_LABELS,
+  calibrateLevel: () => calibrateLevel,
+  commonRange: () => commonRange,
+  draftToInput: () => draftToInput,
+  drawToDraft: () => drawToDraft,
+  emptyDrawDraft: () => emptyDrawDraft,
+  emptyResultDraft: () => emptyResultDraft,
+  flagOf: () => flagOf,
+  formatLabNumber: () => formatLabNumber,
+  formatLabValue: () => formatLabValue,
+  formatRange: () => formatRange2,
+  latestResults: () => latestResults,
+  mainUnit: () => mainUnit,
+  measuredFor: () => measuredFor,
+  newDraftKey: () => newDraftKey,
+  parseLabValue: () => parseLabValue,
+  parseRange: () => parseRange,
+  rangeFor: () => rangeFor,
+  seriesFor: () => seriesFor,
+  summarizeDraw: () => summarizeDraw
+});
+
+// src/domain/hormoneLevel.ts
+var MS_PER_DAY = 864e5;
+var SUBSTANCES = [
+  {
+    id: "t-enanthate",
+    name: "Testosteron Enantat",
+    aliases: ["Testosteron Enanthat", "Testosteronenantat", "Testo E"],
+    measurand: "testosterone",
+    unit: "mg",
+    esterFraction: 0.72,
+    bioavailability: 1,
+    tmaxDays: 1.5,
+    halfLifeDays: 4.5,
+    delivery: "bolus",
+    shown: true,
+    note: null
+  },
+  {
+    id: "t-cypionate",
+    name: "Testosteron Cypionat",
+    aliases: ["Testosteroncypionat", "Testo C"],
+    measurand: "testosterone",
+    unit: "mg",
+    esterFraction: 0.7,
+    bioavailability: 1,
+    tmaxDays: 2,
+    halfLifeDays: 8,
+    delivery: "bolus",
+    shown: true,
+    note: null
+  },
+  {
+    id: "t-propionate",
+    name: "Testosteron Propionat",
+    aliases: ["Testosteronpropionat", "Testo P"],
+    measurand: "testosterone",
+    unit: "mg",
+    esterFraction: 0.83,
+    bioavailability: 1,
+    tmaxDays: 0.5,
+    halfLifeDays: 0.8,
+    delivery: "bolus",
+    shown: true,
+    note: null
+  },
+  {
+    id: "t-undecanoate",
+    name: "Testosteron Undecanoat",
+    aliases: ["Testosteronundecanoat", "Testo U"],
+    measurand: "testosterone",
+    unit: "mg",
+    esterFraction: 0.63,
+    bioavailability: 1,
+    tmaxDays: 7,
+    halfLifeDays: 34,
+    delivery: "bolus",
+    shown: true,
+    note: "Gerechnet als Depot-Injektion; orales Undecanoat verh\xE4lt sich anders."
+  },
+  {
+    id: "t-gel",
+    name: "Testosteron Gel",
+    aliases: ["Testosterongel"],
+    measurand: "testosterone",
+    unit: "mg",
+    esterFraction: 1,
+    bioavailability: 0.1,
+    tmaxDays: 0.2,
+    halfLifeDays: 0.6,
+    delivery: "bolus",
+    shown: false,
+    note: "Menge = mg Testosteron im aufgetragenen Gel."
+  },
+  {
+    id: "e2-valerate",
+    name: "Estradiol Valerat",
+    aliases: ["Estradiolvalerat"],
+    measurand: "estradiol",
+    unit: "mg",
+    esterFraction: 0.76,
+    bioavailability: 1,
+    tmaxDays: 2,
+    halfLifeDays: 4.5,
+    delivery: "bolus",
+    shown: true,
+    note: "Gerechnet als Injektion."
+  },
+  {
+    id: "e2-gel",
+    name: "Estradiol Gel",
+    aliases: ["Estradiolgel"],
+    measurand: "estradiol",
+    unit: "mg",
+    esterFraction: 1,
+    bioavailability: 0.1,
+    tmaxDays: 0.25,
+    halfLifeDays: 0.6,
+    delivery: "bolus",
+    shown: false,
+    note: "Menge = mg Estradiol im aufgetragenen Gel."
+  },
+  {
+    id: "e2-patch",
+    name: "Estradiol Pflaster",
+    aliases: ["Estradiolpflaster"],
+    measurand: "estradiol",
+    unit: "\xB5g",
+    esterFraction: 1,
+    bioavailability: 1,
+    tmaxDays: 0.05,
+    halfLifeDays: 0.15,
+    delivery: "patch",
+    shown: false,
+    note: "Menge = Abgaberate laut Packung (\xB5g/Tag), dazu die Tragedauer."
+  },
+  {
+    id: "progesterone",
+    name: "Progesteron",
+    aliases: [],
+    measurand: "progesterone",
+    unit: "mg",
+    esterFraction: 1,
+    bioavailability: 1,
+    tmaxDays: 0.12,
+    halfLifeDays: 0.7,
+    delivery: "bolus",
+    shown: true,
+    note: "Gerechnet als orales, mikronisiertes Progesteron."
+  },
+  {
+    id: "hcg",
+    name: "hCG",
+    aliases: ["Choriongonadotropin"],
+    measurand: "hcg",
+    unit: "IE",
+    esterFraction: 1,
+    bioavailability: 1,
+    tmaxDays: 0.5,
+    halfLifeDays: 1.4,
+    delivery: "bolus",
+    shown: true,
+    note: null
+  },
+  {
+    id: "dhea",
+    name: "DHEA",
+    aliases: [],
+    measurand: "dheaS",
+    unit: "mg",
+    esterFraction: 1,
+    bioavailability: 1,
+    tmaxDays: 0.25,
+    halfLifeDays: 0.6,
+    delivery: "bolus",
+    shown: true,
+    note: "Verlauf von DHEA-S, dem \xFCblicherweise gemessenen Wert."
+  },
+  {
+    id: "hgh",
+    name: "Wachstumshormon (HGH)",
+    aliases: ["Wachstumshormon", "HGH", "Somatropin"],
+    measurand: "gh",
+    unit: "IE",
+    esterFraction: 1,
+    bioavailability: 1,
+    tmaxDays: 0.2,
+    halfLifeDays: 0.15,
+    delivery: "bolus",
+    shown: true,
+    note: "Verlauf des Wachstumshormons selbst; IGF-1 reagiert verz\xF6gert und ist nicht abgebildet."
+  },
+  {
+    id: "levothyroxine",
+    name: "Levothyroxin (T4)",
+    aliases: ["Levothyroxin", "L-Thyroxin", "T4"],
+    measurand: "ft4",
+    unit: "\xB5g",
+    esterFraction: 1,
+    bioavailability: 0.75,
+    tmaxDays: 0.125,
+    halfLifeDays: 7,
+    delivery: "bolus",
+    shown: true,
+    note: "Die Umwandlung von T4 in T3 ist nicht abgebildet."
+  },
+  {
+    id: "liothyronine",
+    name: "Liothyronin (T3)",
+    aliases: ["Liothyronin", "T3"],
+    measurand: "ft3",
+    unit: "\xB5g",
+    esterFraction: 1,
+    bioavailability: 0.95,
+    tmaxDays: 0.1,
+    halfLifeDays: 1,
+    delivery: "bolus",
+    shown: true,
+    note: null
+  }
+];
+function normalizeName(text) {
+  return text.toLocaleLowerCase("de").replace(/[()[\]{}.,;:/\\_-]+/g, " ").replace(/\s+/g, " ").trim();
+}
+var BY_NAME = /* @__PURE__ */ new Map();
+for (const s of SUBSTANCES) {
+  for (const n of [s.name, ...s.aliases]) BY_NAME.set(normalizeName(n), s);
+}
+function substanceById(id2) {
+  return SUBSTANCES.find((s) => s.id === id2) ?? null;
+}
+var DEFAULT_TIME = "08:00";
+function wallClockMs(date, time) {
+  const [y, m, d] = date.split("-").map(Number);
+  const [h, min] = (time ?? DEFAULT_TIME).split(":").map(Number);
+  return Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1, h ?? 0, min ?? 0);
+}
+function tmaxOfRates(k1, k2) {
+  if (Math.abs(k2 - k1) < 1e-12) return 1 / k1;
+  return Math.log(k2 / k1) / (k2 - k1);
+}
+var ratesCache = /* @__PURE__ */ new Map();
+function ratesFor(halfLifeDays, tmaxDays) {
+  const key = `${halfLifeDays}|${tmaxDays}`;
+  const cached = ratesCache.get(key);
+  if (cached) return cached;
+  const k1 = Math.LN2 / halfLifeDays;
+  const tmax = Math.min(tmaxDays, 0.999 / k1);
+  let lo = k1 * (1 + 1e-9);
+  let hi = k1 * 2;
+  while (tmaxOfRates(k1, hi) > tmax) hi *= 2;
+  for (let i = 0; i < 100; i++) {
+    const mid = (lo + hi) / 2;
+    if (tmaxOfRates(k1, mid) > tmax) lo = mid;
+    else hi = mid;
+  }
+  const rates = { k1, k2: (lo + hi) / 2 };
+  ratesCache.set(key, rates);
+  return rates;
+}
+function unitCurve(t, { k1, k2 }) {
+  if (t <= 0) return 0;
+  return k1 * k2 / (k2 - k1) * (Math.exp(-k1 * t) - Math.exp(-k2 * t));
+}
+function unitCurveCumulative(t, { k1, k2 }) {
+  if (t <= 0) return 0;
+  return 1 - (k2 * Math.exp(-k1 * t) - k1 * Math.exp(-k2 * t)) / (k2 - k1);
+}
+function contribution(event, days2) {
+  if (days2 <= 0) return 0;
+  const s = substanceById(event.substanceId);
+  if (!s) return 0;
+  const rates = ratesFor(s.halfLifeDays, s.tmaxDays);
+  if (s.delivery === "patch") {
+    const wear = event.wearDays ?? 0;
+    if (wear <= 0) return 0;
+    return event.effective * (unitCurveCumulative(days2, rates) - unitCurveCumulative(days2 - wear, rates));
+  }
+  return event.effective * unitCurve(days2, rates);
+}
+function levelAt(events, atMs) {
+  let sum = 0;
+  for (const e of events) sum += contribution(e, (atMs - e.atMs) / MS_PER_DAY);
+  return sum;
+}
+function fitCalibration(pairs) {
+  const p = pairs.filter((x) => x.model > 1e-9 && Number.isFinite(x.measured));
+  if (p.length === 0) return null;
+  const only = p[0];
+  if (p.length === 1 && only) return { factor: only.measured / only.model, basal: 0, count: 1 };
+  const n = p.length;
+  const mx = p.reduce((s, x) => s + x.model, 0) / n;
+  const my = p.reduce((s, x) => s + x.measured, 0) / n;
+  const sxx = p.reduce((s, x) => s + (x.model - mx) ** 2, 0);
+  const sxy = p.reduce((s, x) => s + (x.model - mx) * (x.measured - my), 0);
+  let factor = sxx > 0 ? sxy / sxx : my / mx;
+  let basal = my - factor * mx;
+  if (basal < 0 || factor <= 0) {
+    basal = 0;
+    factor = p.reduce((s, x) => s + x.model * x.measured, 0) / p.reduce((s, x) => s + x.model * x.model, 0);
+  }
+  return { factor, basal, count: n };
+}
+
+// src/domain/lab.ts
+var LAB_CATEGORIES = [
+  "hormone",
+  "blood",
+  "lipid",
+  "glucose",
+  "liver",
+  "kidney",
+  "thyroid",
+  "inflammation",
+  "vitamin",
+  "electrolyte",
+  "other"
+];
+var LAB_CATEGORY_LABELS = {
+  hormone: "Hormone",
+  blood: "Blutbild",
+  lipid: "Fettstoffwechsel",
+  glucose: "Zuckerstoffwechsel",
+  liver: "Leber",
+  kidney: "Niere",
+  thyroid: "Schilddr\xFCse",
+  inflammation: "Entz\xFCndung",
+  vitamin: "Vitamine, Eisen & Spurenelemente",
+  electrolyte: "Elektrolyte & Mineralstoffe",
+  other: "Sonstige"
+};
+var FLAG_LABELS = {
+  low: "unter dem Referenzbereich",
+  high: "\xFCber dem Referenzbereich",
+  normal: "im Referenzbereich",
+  none: "ohne Referenzbereich"
+};
+var FLAG_MARKS = { low: "\u2193", high: "\u2191", normal: "", none: "" };
+function rangeFor(result, analyte) {
+  if (result.refLow !== null || result.refHigh !== null) {
+    return { low: result.refLow, high: result.refHigh };
+  }
+  if (analyte && (analyte.refLow !== null || analyte.refHigh !== null)) {
+    return { low: analyte.refLow, high: analyte.refHigh };
+  }
+  const d = analyte?.defaultRange;
+  if (!d || result.unit && analyte?.unit && result.unit !== analyte.unit) {
+    return { low: null, high: null };
+  }
+  return { low: d.low, high: d.high };
+}
+function flagOf(value, comparator, range) {
+  const { low, high } = range;
+  if (low === null && high === null) return "none";
+  if (comparator === "<") {
+    if (low !== null && value <= low) return "low";
+    if (high !== null && value <= high && low === null) return "normal";
+    return "none";
+  }
+  if (comparator === ">") {
+    if (high !== null && value >= high) return "high";
+    if (low !== null && value >= low && high === null) return "normal";
+    return "none";
+  }
+  if (low !== null && value < low) return "low";
+  if (high !== null && value > high) return "high";
+  return "normal";
+}
+function decimalsOf(value) {
+  for (let d = 0; d <= 3; d++) {
+    if (Math.abs(Math.round(value * 10 ** d) - value * 10 ** d) < 1e-6) return d;
+  }
+  return 3;
+}
+function formatLabNumber(value) {
+  return formatNumber(value, decimalsOf(value));
+}
+function formatLabValue(value, comparator) {
+  return `${comparator ? `${comparator} ` : ""}${formatLabNumber(value)}`;
+}
+function formatRange2(range) {
+  const { low, high } = range;
+  if (low !== null && high !== null) return `${formatLabNumber(low)}\u2013${formatLabNumber(high)}`;
+  if (high !== null) return `< ${formatLabNumber(high)}`;
+  if (low !== null) return `> ${formatLabNumber(low)}`;
+  return "";
+}
+var NUMBER = String.raw`-?\d+(?:[.,]\d+)?`;
+function toNumber(text) {
+  const t = text.trim().replace(/\s+/g, "");
+  if (!new RegExp(`^${NUMBER}$`).test(t)) {
+    if (/^-?\d{1,3}(?:\.\d{3})+,\d+$/.test(t))
+      return Number(t.replace(/\./g, "").replace(",", "."));
+    return null;
+  }
+  const n = Number(t.replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+function parseLabValue(text) {
+  const t = text.trim().replace(/≤/g, "<").replace(/≥/g, ">");
+  const m = /^([<>])\s*=?\s*(.+)$/.exec(t);
+  const comparator = m ? m[1] : null;
+  const value = toNumber(m ? m[2] ?? "" : t);
+  return value === null ? null : { value, comparator };
+}
+function parseRange(text) {
+  const t = text.trim().replace(/[–—]/g, "-").replace(/≤|<=/g, "<").replace(/≥|>=/g, ">");
+  if (t === "") return { low: null, high: null };
+  const both = new RegExp(`^(${NUMBER})\\s*(?:-|bis)\\s*(${NUMBER})$`, "i").exec(t);
+  if (both) {
+    const low = toNumber(both[1] ?? "");
+    const high = toNumber(both[2] ?? "");
+    if (low !== null && high !== null && low < high) return { low, high };
+    return null;
+  }
+  const upper = new RegExp(`^(?:<|bis|unter)\\s*(${NUMBER})$`, "i").exec(t);
+  if (upper) {
+    const high = toNumber(upper[1] ?? "");
+    return high === null ? null : { low: null, high };
+  }
+  const lower = new RegExp(`^(?:>|ab|\xFCber)\\s*(${NUMBER})$`, "i").exec(t);
+  if (lower) {
+    const low = toNumber(lower[1] ?? "");
+    return low === null ? null : { low, high: null };
+  }
+  return null;
+}
+function seriesFor(draws, analyte) {
+  const points = [];
+  for (const d of draws) {
+    for (const r2 of d.results) {
+      if (r2.analyteId !== analyte.id) continue;
+      const range = rangeFor(r2, analyte);
+      points.push({
+        drawId: d.id,
+        date: d.date,
+        time: d.time,
+        value: r2.value,
+        comparator: r2.comparator,
+        unit: r2.unit,
+        range,
+        flag: flagOf(r2.value, r2.comparator, range)
+      });
+    }
+  }
+  return points.sort((a, b) => (a.date + (a.time ?? "")).localeCompare(b.date + (b.time ?? "")));
+}
+function commonRange(points) {
+  const withRange = points.filter((p) => p.range.low !== null || p.range.high !== null);
+  const first = withRange[0];
+  if (!first) return null;
+  const same = withRange.every(
+    (p) => p.range.low === first.range.low && p.range.high === first.range.high
+  );
+  return same ? first.range : null;
+}
+function mainUnit(points) {
+  const counts = /* @__PURE__ */ new Map();
+  for (const p of points) counts.set(p.unit, (counts.get(p.unit) ?? 0) + 1);
+  let best = "";
+  let n = -1;
+  for (const [unit, c] of counts) {
+    if (c > n) {
+      best = unit;
+      n = c;
+    }
+  }
+  return best;
+}
+function summarizeDraw(draw, analytes) {
+  const s = { total: 0, low: 0, high: 0, withoutRange: 0 };
+  for (const r2 of draw.results) {
+    s.total += 1;
+    const flag = flagOf(r2.value, r2.comparator, rangeFor(r2, analytes.get(r2.analyteId)));
+    if (flag === "low") s.low += 1;
+    else if (flag === "high") s.high += 1;
+    else if (flag === "none") s.withoutRange += 1;
+  }
+  return s;
+}
+function latestResults(draws) {
+  const out = /* @__PURE__ */ new Map();
+  const sorted = [...draws].sort(
+    (a, b) => (b.date + (b.time ?? "")).localeCompare(a.date + (a.time ?? ""))
+  );
+  for (const draw of sorted) {
+    for (const result of draw.results) {
+      if (!out.has(result.analyteId)) out.set(result.analyteId, { draw, result });
+    }
+  }
+  return out;
+}
+function measuredFor(draws, measurand) {
+  const out = [];
+  for (const d of draws) {
+    for (const r2 of d.results) {
+      if (r2.measurand === measurand && r2.comparator === null) {
+        out.push({ date: d.date, time: d.time, value: r2.value, unit: r2.unit });
+      }
+    }
+  }
+  return out.sort((a, b) => (a.date + (a.time ?? "")).localeCompare(b.date + (b.time ?? "")));
+}
+function calibrateLevel(events, measurand, draws, nowMs) {
+  const measured = measuredFor(draws, measurand);
+  if (measured.length === 0) return null;
+  const counts = /* @__PURE__ */ new Map();
+  for (const m of measured) counts.set(m.unit, (counts.get(m.unit) ?? 0) + 1);
+  const unit = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
+  const own = events.filter((e) => e.measurand === measurand);
+  const use = measured.filter((m) => m.unit === unit);
+  const models = use.map((m) => levelAt(own, wallClockMs(m.date, m.time)));
+  const calibration = fitCalibration(
+    use.map((m, i) => ({ model: models[i] ?? 0, measured: m.value }))
+  );
+  if (!calibration) return null;
+  const est = (model) => calibration.basal + calibration.factor * model;
+  return {
+    unit,
+    calibration,
+    rows: use.map((m, i) => ({
+      date: m.date,
+      time: m.time,
+      measured: m.value,
+      estimated: est(models[i] ?? 0)
+    })),
+    nowEstimate: est(levelAt(own, nowMs))
+  };
+}
+var draftCounter = 0;
+var newDraftKey = () => `r${Date.now().toString(36)}-${(draftCounter++).toString(36)}`;
+var rangeText = (n) => n === null ? "" : formatLabNumber(n).replace(/\./g, "");
+function emptyResultDraft(analyte) {
+  return {
+    key: newDraftKey(),
+    id: null,
+    analyteId: analyte?.id ?? "",
+    value: "",
+    unit: analyte?.unit ?? "",
+    refLow: rangeText(analyte?.refLow ?? null),
+    refHigh: rangeText(analyte?.refHigh ?? null),
+    notes: ""
+  };
+}
+function emptyDrawDraft(date) {
+  return { id: null, date, time: "", lab: "", fasting: "", notes: "", results: [] };
+}
+function drawToDraft(draw) {
+  return {
+    id: draw.id,
+    date: draw.date,
+    time: draw.time ?? "",
+    lab: draw.lab ?? "",
+    fasting: draw.fasting === null ? "" : draw.fasting ? "yes" : "no",
+    notes: draw.notes ?? "",
+    results: draw.results.map((r2) => ({
+      key: newDraftKey(),
+      id: r2.id,
+      analyteId: r2.analyteId,
+      value: formatLabValue(r2.value, r2.comparator).replace(/\./g, ""),
+      unit: r2.unit,
+      refLow: rangeText(r2.refLow),
+      refHigh: rangeText(r2.refHigh),
+      notes: r2.notes ?? ""
+    }))
+  };
+}
+var optNumber = (text) => {
+  if (text.trim() === "") return null;
+  const n = parseDecimal(text);
+  return Number.isFinite(n) ? n : "invalid";
+};
+function draftToInput(draft) {
+  const errors = {};
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.date)) errors.date = "Bitte ein Datum w\xE4hlen.";
+  const results = [];
+  for (const r2 of draft.results) {
+    const empty = r2.analyteId === "" && r2.value.trim() === "";
+    if (empty) continue;
+    const k = `results.${r2.key}`;
+    if (r2.analyteId === "") errors[`${k}.analyteId`] = "Bitte einen Parameter w\xE4hlen.";
+    const parsed = parseLabValue(r2.value);
+    if (!parsed) errors[`${k}.value`] = "Bitte eine Zahl eintragen (z. B. 6,2 oder < 0,5).";
+    const low = optNumber(r2.refLow);
+    const high = optNumber(r2.refHigh);
+    if (low === "invalid") errors[`${k}.refLow`] = "Bitte eine Zahl eintragen.";
+    if (high === "invalid") errors[`${k}.refHigh`] = "Bitte eine Zahl eintragen.";
+    if (typeof low === "number" && typeof high === "number" && low >= high) {
+      errors[`${k}.refHigh`] = "Muss gr\xF6\xDFer als der untere Wert sein.";
+    }
+    if (parsed && r2.analyteId !== "" && low !== "invalid" && high !== "invalid") {
+      results.push({
+        id: r2.id,
+        analyteId: r2.analyteId,
+        value: parsed.value,
+        comparator: parsed.comparator,
+        unit: r2.unit.trim(),
+        refLow: low,
+        refHigh: high,
+        notes: r2.notes.trim() || null
+      });
+    }
+  }
+  if (results.length === 0 && Object.keys(errors).length === 0) {
+    errors.results = "Bitte mindestens einen Wert eintragen.";
+  }
+  if (Object.keys(errors).length > 0) return { input: null, errors };
+  return {
+    input: {
+      id: draft.id,
+      date: draft.date,
+      time: draft.time.trim() || null,
+      lab: draft.lab.trim() || null,
+      fasting: draft.fasting === "" ? null : draft.fasting === "yes",
+      notes: draft.notes.trim() || null,
+      results
+    },
+    errors
+  };
+}
+
+// src/domain/labReference.ts
+var REFERENCE_SOURCE = "AKH Wien";
+var id = (n) => `00000000-0000-7000-8000-000000000${n}`;
+var ADULT = { ageMin: 20 };
+var AKH_REFERENCES = {
+  // Testosteron (gesamt)
+  [id(101)]: {
+    unit: "ng/ml",
+    rows: [
+      { sex: "male", ageMin: 20, ageMax: 50, low: 2.5, high: 8.4 },
+      { sex: "male", ageMin: 50, low: 1.9, high: 7.4 },
+      { sex: "female", ageMin: 20, ageMax: 50, low: 0.08, high: 0.48 },
+      { sex: "female", ageMin: 50, low: 0.03, high: 0.41 }
+    ]
+  },
+  // Estradiol (E2) – Frauen zyklusabhängig, daher nur Männer
+  [id(103)]: {
+    unit: "pg/ml",
+    rows: [{ sex: "male", low: 27.1, high: 52.2 }],
+    note: "Frauen: abh\xE4ngig von der Zyklusphase"
+  },
+  // SHBG
+  [id(104)]: {
+    unit: "nmol/l",
+    rows: [
+      { sex: "male", ageMin: 17, ageMax: 66, low: 14.5, high: 48.4 },
+      { sex: "female", ageMin: 17, ageMax: 51, low: 26.1, high: 110 }
+    ]
+  },
+  // LH (U/l = mIU/ml)
+  [id(105)]: {
+    unit: "U/l",
+    rows: [{ sex: "male", ...ADULT, low: 1.7, high: 8.6 }],
+    note: "Frauen: abh\xE4ngig von der Zyklusphase"
+  },
+  // FSH
+  [id(106)]: {
+    unit: "U/l",
+    rows: [{ sex: "male", ageMin: 18, ageMax: 56, low: 1.5, high: 12.4 }],
+    note: "Frauen: abh\xE4ngig von der Zyklusphase"
+  },
+  // Prolaktin
+  [id(107)]: {
+    unit: "ng/ml",
+    rows: [
+      { sex: "male", low: 4, high: 15.2 },
+      { sex: "female", low: 4.8, high: 23.3 }
+    ]
+  },
+  // Progesteron
+  [id(108)]: {
+    unit: "ng/ml",
+    rows: [{ sex: "male", low: null, high: 0.149 }],
+    note: "Frauen: abh\xE4ngig von der Zyklusphase"
+  },
+  // DHEA-S – AKH in µg/ml, umgerechnet × 100
+  [id(109)]: {
+    unit: "\xB5g/dl",
+    rows: [
+      { sex: "female", ageMin: 20, ageMax: 25, low: 148, high: 407 },
+      { sex: "female", ageMin: 25, ageMax: 35, low: 99, high: 340 },
+      { sex: "female", ageMin: 35, ageMax: 45, low: 61, high: 337 },
+      { sex: "female", ageMin: 45, ageMax: 55, low: 35, high: 256 },
+      { sex: "female", ageMin: 55, ageMax: 65, low: 19, high: 205 },
+      { sex: "female", ageMin: 65, ageMax: 75, low: 9, high: 246 },
+      { sex: "female", ageMin: 75, low: 12, high: 154 },
+      { sex: "male", ageMin: 20, ageMax: 25, low: 211, high: 492 },
+      { sex: "male", ageMin: 25, ageMax: 35, low: 160, high: 449 },
+      { sex: "male", ageMin: 35, ageMax: 45, low: 89, high: 427 },
+      { sex: "male", ageMin: 45, ageMax: 55, low: 44, high: 331 },
+      { sex: "male", ageMin: 55, ageMax: 65, low: 52, high: 295 },
+      { sex: "male", ageMin: 65, ageMax: 75, low: 34, high: 249 },
+      { sex: "male", ageMin: 75, low: 16, high: 123 }
+    ],
+    note: "umgerechnet aus \xB5g/ml (\xD7 100)"
+  },
+  // IGF-1 – je Lebensjahr
+  [id(110)]: {
+    unit: "ng/ml",
+    rows: [
+      { sex: "female", ageMin: 18, ageMax: 19, low: 117, high: 436 },
+      { sex: "male", ageMin: 18, ageMax: 19, low: 137, high: 461 },
+      { sex: "female", ageMin: 19, ageMax: 20, low: 113, high: 399 },
+      { sex: "male", ageMin: 19, ageMax: 20, low: 137, high: 428 },
+      { sex: "female", ageMin: 20, ageMax: 21, low: 109, high: 372 },
+      { sex: "male", ageMin: 20, ageMax: 21, low: 133, high: 395 },
+      { sex: "female", ageMin: 21, ageMax: 22, low: 107, high: 351 },
+      { sex: "male", ageMin: 21, ageMax: 22, low: 127, high: 364 },
+      { sex: "female", ageMin: 22, ageMax: 23, low: 105, high: 337 },
+      { sex: "male", ageMin: 22, ageMax: 23, low: 120, high: 338 },
+      { sex: "female", ageMin: 23, ageMax: 24, low: 103, high: 326 },
+      { sex: "male", ageMin: 23, ageMax: 24, low: 112, high: 316 },
+      { sex: "female", ageMin: 24, ageMax: 25, low: 102, high: 317 },
+      { sex: "male", ageMin: 24, ageMax: 25, low: 105, high: 298 },
+      { sex: "female", ageMin: 25, ageMax: 26, low: 100, high: 311 },
+      { sex: "male", ageMin: 25, ageMax: 26, low: 99, high: 283 },
+      { sex: "female", ageMin: 26, ageMax: 27, low: 98, high: 305 },
+      { sex: "male", ageMin: 26, ageMax: 27, low: 94, high: 271 },
+      { sex: "female", ageMin: 27, ageMax: 28, low: 96, high: 301 },
+      { sex: "male", ageMin: 27, ageMax: 28, low: 90, high: 262 },
+      { sex: "female", ageMin: 28, ageMax: 29, low: 93, high: 297 },
+      { sex: "male", ageMin: 28, ageMax: 29, low: 87, high: 255 },
+      { sex: "female", ageMin: 29, ageMax: 30, low: 91, high: 293 },
+      { sex: "male", ageMin: 29, ageMax: 30, low: 84, high: 250 },
+      { sex: "female", ageMin: 30, ageMax: 31, low: 89, high: 290 },
+      { sex: "male", ageMin: 30, ageMax: 31, low: 83, high: 246 },
+      { sex: "female", ageMin: 31, ageMax: 32, low: 87, high: 286 },
+      { sex: "male", ageMin: 31, ageMax: 32, low: 82, high: 244 },
+      { sex: "female", ageMin: 32, ageMax: 33, low: 85, high: 283 },
+      { sex: "male", ageMin: 32, ageMax: 33, low: 82, high: 243 },
+      { sex: "female", ageMin: 33, ageMax: 34, low: 83, high: 280 },
+      { sex: "male", ageMin: 33, ageMax: 34, low: 82, high: 242 },
+      { sex: "female", ageMin: 34, ageMax: 35, low: 82, high: 279 },
+      { sex: "male", ageMin: 34, ageMax: 35, low: 28, high: 242 },
+      { sex: "female", ageMin: 35, ageMax: 36, low: 81, high: 278 },
+      { sex: "male", ageMin: 35, ageMax: 36, low: 83, high: 241 },
+      { sex: "female", ageMin: 36, ageMax: 37, low: 80, high: 277 },
+      { sex: "male", ageMin: 36, ageMax: 37, low: 83, high: 240 },
+      { sex: "female", ageMin: 37, ageMax: 38, low: 80, high: 277 },
+      { sex: "male", ageMin: 37, ageMax: 38, low: 83, high: 239 },
+      { sex: "female", ageMin: 38, ageMax: 39, low: 79, high: 279 },
+      { sex: "male", ageMin: 38, ageMax: 39, low: 83, high: 238 },
+      { sex: "female", ageMin: 39, ageMax: 40, low: 78, high: 274 },
+      { sex: "male", ageMin: 39, ageMax: 40, low: 83, high: 238 },
+      { sex: "female", ageMin: 40, ageMax: 41, low: 76, high: 271 },
+      { sex: "male", ageMin: 40, ageMax: 41, low: 82, high: 237 },
+      { sex: "female", ageMin: 41, ageMax: 42, low: 75, high: 267 },
+      { sex: "male", ageMin: 41, ageMax: 42, low: 81, high: 236 },
+      { sex: "female", ageMin: 42, ageMax: 43, low: 73, high: 263 },
+      { sex: "male", ageMin: 42, ageMax: 43, low: 80, high: 235 },
+      { sex: "female", ageMin: 43, ageMax: 44, low: 71, high: 258 },
+      { sex: "male", ageMin: 43, ageMax: 44, low: 78, high: 233 },
+      { sex: "female", ageMin: 44, ageMax: 45, low: 69, high: 253 },
+      { sex: "male", ageMin: 44, ageMax: 45, low: 76, high: 230 },
+      { sex: "female", ageMin: 45, ageMax: 46, low: 66, high: 249 },
+      { sex: "male", ageMin: 45, ageMax: 46, low: 74, high: 227 },
+      { sex: "female", ageMin: 46, ageMax: 47, low: 64, high: 246 },
+      { sex: "male", ageMin: 46, ageMax: 47, low: 72, high: 225 },
+      { sex: "female", ageMin: 47, ageMax: 48, low: 62, high: 243 },
+      { sex: "male", ageMin: 47, ageMax: 48, low: 71, high: 224 },
+      { sex: "female", ageMin: 48, ageMax: 49, low: 60, high: 240 },
+      { sex: "male", ageMin: 48, ageMax: 49, low: 69, high: 224 },
+      { sex: "female", ageMin: 49, ageMax: 50, low: 59, high: 238 },
+      { sex: "male", ageMin: 49, ageMax: 50, low: 59, high: 238 },
+      { sex: "female", ageMin: 50, ageMax: 51, low: 57, high: 236 },
+      { sex: "male", ageMin: 50, ageMax: 51, low: 67, high: 225 },
+      { sex: "female", ageMin: 51, ageMax: 52, low: 55, high: 235 },
+      { sex: "male", ageMin: 51, ageMax: 52, low: 66, high: 225 },
+      { sex: "female", ageMin: 52, ageMax: 53, low: 53, high: 234 },
+      { sex: "male", ageMin: 52, ageMax: 53, low: 65, high: 222 },
+      { sex: "female", ageMin: 53, ageMax: 54, low: 52, high: 233 },
+      { sex: "male", ageMin: 53, ageMax: 54, low: 64, high: 218 },
+      { sex: "female", ageMin: 54, ageMax: 55, low: 51, high: 233 },
+      { sex: "male", ageMin: 54, ageMax: 55, low: 62, high: 214 },
+      { sex: "female", ageMin: 55, ageMax: 56, low: 49, high: 234 },
+      { sex: "male", ageMin: 55, ageMax: 56, low: 61, high: 210 },
+      { sex: "female", ageMin: 56, ageMax: 57, low: 48, high: 235 },
+      { sex: "male", ageMin: 56, ageMax: 57, low: 59, high: 206 },
+      { sex: "female", ageMin: 57, ageMax: 58, low: 47, high: 236 },
+      { sex: "male", ageMin: 57, ageMax: 58, low: 58, high: 204 },
+      { sex: "female", ageMin: 58, ageMax: 59, low: 46, high: 238 },
+      { sex: "male", ageMin: 58, ageMax: 59, low: 56, high: 203 },
+      { sex: "female", ageMin: 59, ageMax: 60, low: 44, high: 240 },
+      { sex: "male", ageMin: 59, ageMax: 60, low: 55, high: 203 },
+      { sex: "female", ageMin: 60, ageMax: 61, low: 43, high: 241 },
+      { sex: "male", ageMin: 60, ageMax: 61, low: 53, high: 206 },
+      { sex: "female", ageMin: 61, ageMax: 62, low: 41, high: 243 },
+      { sex: "male", ageMin: 61, ageMax: 62, low: 51, high: 209 },
+      { sex: "female", ageMin: 62, ageMax: 63, low: 40, high: 244 },
+      { sex: "male", ageMin: 62, ageMax: 63, low: 49, high: 214 },
+      { sex: "female", ageMin: 63, ageMax: 64, low: 38, high: 244 },
+      { sex: "male", ageMin: 63, ageMax: 64, low: 46, high: 219 },
+      { sex: "female", ageMin: 64, ageMax: 65, low: 36, high: 244 },
+      { sex: "male", ageMin: 64, ageMax: 65, low: 43, high: 225 },
+      { sex: "female", ageMin: 65, ageMax: 66, low: 34, high: 241 },
+      { sex: "male", ageMin: 65, ageMax: 66, low: 40, high: 231 },
+      { sex: "female", ageMin: 66, ageMax: 67, low: 32, high: 238 },
+      { sex: "male", ageMin: 66, ageMax: 67, low: 37, high: 236 },
+      { sex: "female", ageMin: 67, ageMax: 68, low: 30, high: 235 },
+      { sex: "male", ageMin: 67, ageMax: 68, low: 34, high: 240 },
+      { sex: "female", ageMin: 68, ageMax: 69, low: 28, high: 231 },
+      { sex: "male", ageMin: 68, ageMax: 69, low: 31, high: 243 },
+      { sex: "female", ageMin: 69, ageMax: 70, low: 27, high: 228 },
+      { sex: "male", ageMin: 69, ageMax: 70, low: 29, high: 245 },
+      { sex: "female", ageMin: 70, ageMax: 71, low: 26, high: 226 },
+      { sex: "male", ageMin: 70, ageMax: 71, low: 27, high: 246 },
+      { sex: "female", ageMin: 71, ageMax: 72, low: 24, high: 224 },
+      { sex: "male", ageMin: 71, ageMax: 72, low: 26, high: 245 },
+      { sex: "female", ageMin: 72, ageMax: 73, low: 24, high: 222 },
+      { sex: "male", ageMin: 72, ageMax: 73, low: 25, high: 242 },
+      { sex: "female", ageMin: 73, ageMax: 74, low: 23, high: 221 },
+      { sex: "male", ageMin: 73, ageMax: 74, low: 24, high: 236 },
+      { sex: "female", ageMin: 74, ageMax: 75, low: 22, high: 220 },
+      { sex: "male", ageMin: 74, ageMax: 75, low: 23, high: 229 },
+      { sex: "female", ageMin: 75, ageMax: 76, low: 21, high: 218 },
+      { sex: "male", ageMin: 75, ageMax: 76, low: 22, high: 221 },
+      { sex: "female", ageMin: 76, ageMax: 77, low: 20, high: 216 },
+      { sex: "male", ageMin: 76, ageMax: 77, low: 22, high: 212 },
+      { sex: "female", ageMin: 77, ageMax: 78, low: 20, high: 214 },
+      { sex: "male", ageMin: 77, ageMax: 78, low: 21, high: 204 },
+      { sex: "female", ageMin: 78, ageMax: 79, low: 19, high: 210 },
+      { sex: "male", ageMin: 78, ageMax: 79, low: 20, high: 196 },
+      { sex: "female", ageMin: 79, ageMax: 80, low: 18, high: 206 },
+      { sex: "male", ageMin: 79, ageMax: 80, low: 19, high: 189 },
+      { sex: "female", ageMin: 80, ageMax: 81, low: 18, high: 200 },
+      { sex: "male", ageMin: 80, ageMax: 81, low: 18, high: 184 },
+      { sex: "female", ageMin: 81, ageMax: 82, low: 18, high: 193 },
+      { sex: "male", ageMin: 81, ageMax: 82, low: 17, high: 180 },
+      { sex: "female", ageMin: 82, ageMax: 83, low: 17, high: 186 },
+      { sex: "male", ageMin: 82, ageMax: 83, low: 16, high: 177 },
+      { sex: "female", ageMin: 83, ageMax: 84, low: 17, high: 179 },
+      { sex: "male", ageMin: 83, ageMax: 84, low: 16, high: 176 },
+      { sex: "female", ageMin: 84, ageMax: 85, low: 17, high: 173 },
+      { sex: "male", ageMin: 84, ageMax: 85, low: 16, high: 176 },
+      { sex: "female", ageMin: 85, ageMax: null, low: 17, high: 167 },
+      { sex: "male", ageMin: 85, ageMax: null, low: 15, high: 177 }
+    ]
+  },
+  // Cortisol im Serum, morgens
+  [id(111)]: {
+    unit: "\xB5g/dl",
+    rows: [{ low: 6.24, high: 18 }],
+    note: "Blutabnahme 6:00\u201310:00 Uhr (abends 2,69\u201310,4)"
+  },
+  // Gesamtcholesterin
+  [id(117)]: { unit: "mg/dl", rows: [{ ...ADULT, low: null, high: 200 }] },
+  // LDL-Cholesterin – Zielwert bei niedrigem Risiko
+  [id(118)]: {
+    unit: "mg/dl",
+    rows: [{ low: null, high: 116 }],
+    note: "Zielwert bei niedrigem Risiko; m\xE4\xDFig < 100, hoch < 70, sehr hoch < 55"
+  },
+  // HDL-Cholesterin
+  [id(119)]: {
+    unit: "mg/dl",
+    rows: [
+      { sex: "male", low: 55, high: null },
+      { sex: "female", low: 65, high: null }
+    ]
+  },
+  // Lipoprotein(a)
+  [id(121)]: { unit: "nmol/l", rows: [{ low: null, high: 75 }] },
+  // Apolipoprotein B
+  [id(122)]: {
+    unit: "mg/dl",
+    rows: [
+      { sex: "male", low: 66, high: 133 },
+      { sex: "female", low: 60, high: 117 }
+    ]
+  },
+  // Glukose (nüchtern)
+  [id(123)]: { unit: "mg/dl", rows: [{ ...ADULT, low: 74, high: 109 }] },
+  // HbA1c
+  [id(124)]: { unit: "%", rows: [{ low: 4, high: 6 }] },
+  // Insulin (nüchtern)
+  [id(125)]: { unit: "\xB5U/ml", rows: [{ low: 2.6, high: 24.9 }] },
+  // GOT (AST)
+  [id(126)]: {
+    unit: "U/l",
+    rows: [
+      { sex: "male", ...ADULT, low: null, high: 50 },
+      { sex: "female", ...ADULT, low: null, high: 35 }
+    ]
+  },
+  // GPT (ALT)
+  [id(127)]: {
+    unit: "U/l",
+    rows: [
+      { sex: "male", ...ADULT, low: null, high: 50 },
+      { sex: "female", ...ADULT, low: null, high: 35 }
+    ]
+  },
+  // Gamma-GT
+  [id(128)]: {
+    unit: "U/l",
+    rows: [
+      { sex: "male", ...ADULT, low: null, high: 60 },
+      { sex: "female", ...ADULT, low: null, high: 40 }
+    ]
+  },
+  // Bilirubin (gesamt)
+  [id(129)]: { unit: "mg/dl", rows: [{ ...ADULT, low: null, high: 1.2 }] },
+  // Kreatinin
+  [id(130)]: {
+    unit: "mg/dl",
+    rows: [
+      { sex: "male", ...ADULT, low: 0.7, high: 1.2 },
+      { sex: "female", ...ADULT, low: 0.5, high: 0.9 }
+    ]
+  },
+  // eGFR (MDRD)
+  [id(131)]: {
+    unit: "ml/min/1,73 m\xB2",
+    rows: [{ ageMin: 17, low: 55, high: null }],
+    note: "errechnete GFR nach MDRD"
+  },
+  // Harnstoff – AKH gibt Harnstoff-N an, umgerechnet × 2,14
+  [id(133)]: {
+    unit: "mg/dl",
+    rows: [
+      { ageMin: 19, ageMax: 60, low: 12.8, high: 42.8 },
+      { ageMin: 60, ageMax: 91, low: 17.1, high: 49.2 }
+    ],
+    note: "umgerechnet aus Harnstoff-N (\xD7 2,14)"
+  },
+  // Harnsäure
+  [id(134)]: {
+    unit: "mg/dl",
+    rows: [
+      { sex: "male", ...ADULT, low: 3.4, high: 7 },
+      { sex: "female", ...ADULT, low: 2.4, high: 5.7 }
+    ]
+  },
+  // TSH (mU/l = µIU/ml)
+  [id(135)]: { unit: "mU/l", rows: [{ ageMin: 21, low: 0.27, high: 4.2 }] },
+  // fT3
+  [id(136)]: { unit: "pg/ml", rows: [{ ...ADULT, low: 2.15, high: 4.12 }] },
+  // fT4
+  [id(137)]: { unit: "ng/dl", rows: [{ ...ADULT, low: 0.76, high: 1.66 }] },
+  // CRP – AKH < 0,5 mg/dl
+  [id(138)]: {
+    unit: "mg/l",
+    rows: [{ low: null, high: 5 }],
+    note: "umgerechnet aus mg/dl (\xD7 10)"
+  },
+  // 25-OH-Vitamin D – AKH 75–250 nmol/l
+  [id(140)]: {
+    unit: "ng/ml",
+    rows: [{ low: 30, high: 100 }],
+    note: "umgerechnet aus nmol/l (\xF7 2,496)"
+  },
+  // Vitamin B12 – AKH 145–569 pmol/l
+  [id(141)]: {
+    unit: "pg/ml",
+    rows: [{ low: 196, high: 771 }],
+    note: "umgerechnet aus pmol/l (\xD7 1,355)"
+  },
+  // Folsäure – AKH 9,53–44,9 nmol/l
+  [id(142)]: {
+    unit: "ng/ml",
+    rows: [{ low: 4.2, high: 19.8 }],
+    note: "umgerechnet aus nmol/l (\xF7 2,266)"
+  },
+  // Ferritin (ng/ml = µg/l)
+  [id(143)]: {
+    unit: "ng/ml",
+    rows: [
+      { sex: "male", ageMin: 19, low: 30, high: 400 },
+      { sex: "female", ageMin: 19, ageMax: 51, low: 15, high: 150 },
+      { sex: "female", ageMin: 51, low: 30, high: 400 }
+    ]
+  },
+  // Eisen
+  [id(144)]: { unit: "\xB5g/dl", rows: [{ ...ADULT, low: 33, high: 193 }] },
+  // Magnesium
+  [id(146)]: { unit: "mmol/l", rows: [{ ageMin: 13, low: 0.66, high: 1.07 }] },
+  // Natrium
+  [id(147)]: { unit: "mmol/l", rows: [{ ...ADULT, low: 136, high: 145 }] },
+  // Kalium
+  [id(148)]: { unit: "mmol/l", rows: [{ ...ADULT, low: 3.5, high: 5.1 }] },
+  // Calcium (gesamt)
+  [id(149)]: {
+    unit: "mmol/l",
+    rows: [
+      { ageMin: 19, ageMax: 60, low: 2.15, high: 2.5 },
+      { ageMin: 60, ageMax: 91, low: 2.2, high: 2.55 },
+      { ageMin: 91, low: 2.05, high: 2.4 }
+    ]
+  },
+  // CK (Kreatinkinase)
+  [id(150)]: {
+    unit: "U/l",
+    rows: [
+      { sex: "male", ...ADULT, low: null, high: 190 },
+      { sex: "female", ...ADULT, low: null, high: 170 }
+    ]
+  },
+  // PSA (gesamt) (ng/ml = µg/l)
+  [id(151)]: {
+    unit: "ng/ml",
+    rows: [
+      { sex: "male", ageMax: 40, low: null, high: 1.4 },
+      { sex: "male", ageMin: 40, ageMax: 50, low: null, high: 2 },
+      { sex: "male", ageMin: 50, ageMax: 60, low: null, high: 3.1 },
+      { sex: "male", ageMin: 60, ageMax: 70, low: null, high: 4.1 },
+      { sex: "male", ageMin: 70, low: null, high: 4.4 }
+    ]
+  }
+};
+function akhRange(analyte, person) {
+  return entryRange(AKH_REFERENCES[analyte.id], analyte, person);
+}
+function entryRange(entry, analyte, person) {
+  if (!entry || entry.unit !== analyte.unit) return null;
+  const row = entry.rows.find((r2) => {
+    if (r2.sex && r2.sex !== person.sex) return false;
+    const needsAge = r2.ageMin !== void 0 || r2.ageMax !== void 0 && r2.ageMax !== null;
+    if (needsAge && person.age === null) return false;
+    if (person.age !== null) {
+      if (r2.ageMin !== void 0 && person.age < r2.ageMin) return false;
+      if (r2.ageMax !== void 0 && r2.ageMax !== null && person.age >= r2.ageMax) return false;
+    }
+    return true;
+  });
+  return row ? { low: row.low, high: row.high, note: entry.note ?? null } : null;
+}
+function withDefaultRanges(analytes, person) {
+  return analytes.map((a) => {
+    if (a.refLow !== null || a.refHigh !== null) return a;
+    const r2 = akhRange(a, person);
+    return r2 ? { ...a, defaultRange: { low: r2.low, high: r2.high, note: r2.note } } : a;
+  });
+}
+
+// src/domain/lifetime.ts
+var lifetime_exports = {};
+__export(lifetime_exports, {
+  AB0_NAME: () => AB0_NAME,
+  AB0_OPTIONS: () => AB0_OPTIONS,
+  BLOOD_GROUP_FIXED: () => BLOOD_GROUP_FIXED,
+  KELL_HINT: () => KELL_HINT,
+  KELL_NAME: () => KELL_NAME,
+  KELL_OPTIONS: () => KELL_OPTIONS,
+  KELL_QUESTION: () => KELL_QUESTION,
+  LIFETIME_CATEGORIES: () => LIFETIME_CATEGORIES,
+  LIFETIME_CATEGORY_HINTS: () => LIFETIME_CATEGORY_HINTS,
+  LIFETIME_CATEGORY_LABELS: () => LIFETIME_CATEGORY_LABELS,
+  LIFETIME_SUGGESTIONS: () => LIFETIME_SUGGESTIONS,
+  LPA_ANALYTE_ID: () => LPA_ANALYTE_ID,
+  RHESUS_NAME: () => RHESUS_NAME,
+  RHESUS_OPTIONS: () => RHESUS_OPTIONS,
+  bloodGroupSummary: () => bloodGroupSummary,
+  emptyLifetimeDraft: () => emptyLifetimeDraft,
+  findRecord: () => findRecord,
+  kellShort: () => kellShort,
+  latestLpa: () => latestLpa,
+  lifetimeDraftToInput: () => lifetimeDraftToInput,
+  lifetimeToDraft: () => lifetimeToDraft
+});
+var LIFETIME_CATEGORIES = [
+  "blood_group",
+  "lipoprotein",
+  "genetic",
+  "pharmacogenetic",
+  "hla",
+  "allergy",
+  "other"
+];
+var LIFETIME_CATEGORY_LABELS = {
+  blood_group: "Blutgruppe und Rhesusfaktor",
+  lipoprotein: "Lipoprotein(a)",
+  genetic: "Genetische Risiko-Screenings",
+  pharmacogenetic: "Pharmakogenetische Profile",
+  hla: "HLA-Typisierung",
+  allergy: "Allergietests",
+  other: "Weitere Angaben"
+};
+var LIFETIME_CATEGORY_HINTS = {
+  blood_group: "Weitere Blutgruppenmerkmale neben AB0, Rhesus und Kell, z. B. irregul\xE4re Antik\xF6rper oder die Rhesus-Formel.",
+  lipoprotein: "Lp(a) ist weitgehend erblich festgelegt und wird oft nur einmal bestimmt \u2013 Wert mit Einheit.",
+  genetic: "z. B. BRCA1/2, Faktor-V-Leiden, Prothrombin-Mutation, HFE (H\xE4mochromatose), APOE.",
+  pharmacogenetic: "z. B. CYP2D6, CYP2C19, CYP2C9, DPYD, TPMT, SLCO1B1, VKORC1 \u2013 Genotyp und Typ.",
+  hla: "z. B. HLA-A, -B, -C, -DRB1, -DQB1 oder einzelne Merkmale wie HLA-B27.",
+  allergy: "Pricktest, spezifisches IgE, Epikutantest \u2013 Allergen und Ergebnis.",
+  other: "Alles, was sonst nur einmal bestimmt wird."
+};
+var LIFETIME_SUGGESTIONS = {
+  blood_group: ["Irregul\xE4re Antik\xF6rper", "Rhesus-Formel (CcDEe)", "Duffy", "Kidd"],
+  lipoprotein: ["Lipoprotein(a)"],
+  genetic: [
+    "BRCA1",
+    "BRCA2",
+    "Faktor-V-Leiden",
+    "Prothrombin G20210A",
+    "HFE (H\xE4mochromatose)",
+    "APOE",
+    "MTHFR",
+    "Famili\xE4re Hypercholesterin\xE4mie"
+  ],
+  pharmacogenetic: ["CYP2D6", "CYP2C19", "CYP2C9", "CYP3A5", "DPYD", "TPMT", "SLCO1B1", "VKORC1"],
+  hla: ["HLA-A", "HLA-B", "HLA-C", "HLA-DRB1", "HLA-DQB1", "HLA-B27", "HLA-DQ2/DQ8"],
+  allergy: ["Pricktest", "Spezifisches IgE", "Epikutantest"],
+  other: []
+};
+var AB0_NAME = "Blutgruppe (AB0)";
+var RHESUS_NAME = "Rhesusfaktor";
+var AB0_OPTIONS = ["A", "B", "AB", "0"];
+var RHESUS_OPTIONS = ["positiv", "negativ"];
+var KELL_NAME = "Kell-System";
+var KELL_OPTIONS = ["K (Kell-positiv)", "k (Kell-negativ)"];
+var KELL_HINT = "Der dritth\xE4ufigste Marker, der schwere Immunreaktionen ausl\xF6sen kann.";
+var KELL_QUESTION = "G02-041";
+var BLOOD_GROUP_FIXED = [AB0_NAME, RHESUS_NAME, KELL_NAME];
+function emptyLifetimeDraft(category, name = "") {
+  return { id: null, category, name, value: "", date: "", source: "", notes: "" };
+}
+function lifetimeToDraft(r2) {
+  return {
+    id: r2.id,
+    category: r2.category,
+    name: r2.name,
+    value: r2.value,
+    date: r2.date ?? "",
+    source: r2.source ?? "",
+    notes: r2.notes ?? ""
+  };
+}
+var ISO2 = /^\d{4}-\d{2}-\d{2}$/;
+var opt = (s) => s.trim() === "" ? null : s.trim();
+function lifetimeDraftToInput(d, existing) {
+  const errors = {};
+  const name = d.name.trim();
+  if (name === "") errors.name = "Bitte eine Bezeichnung eingeben.";
+  else if (name.length > 80) errors.name = "H\xF6chstens 80 Zeichen.";
+  else if (existing.some(
+    (r2) => r2.id !== d.id && r2.category === d.category && r2.name.toLowerCase() === name.toLowerCase()
+  )) {
+    errors.name = "Diesen Eintrag gibt es in diesem Bereich schon \u2013 bitte dort bearbeiten.";
+  }
+  if (d.value.trim() === "") errors.value = "Bitte den Befund eingeben.";
+  else if (d.value.trim().length > 500) errors.value = "H\xF6chstens 500 Zeichen.";
+  if (d.date.trim() !== "" && !ISO2.test(d.date.trim())) errors.date = "Bitte ein Datum w\xE4hlen.";
+  if (d.source.trim().length > 120) errors.source = "H\xF6chstens 120 Zeichen.";
+  if (d.notes.trim().length > 2e3) errors.notes = "H\xF6chstens 2000 Zeichen.";
+  if (Object.keys(errors).length > 0) return { ok: false, errors };
+  return {
+    ok: true,
+    input: {
+      id: d.id,
+      category: d.category,
+      name,
+      value: d.value.trim(),
+      date: opt(d.date),
+      source: opt(d.source),
+      notes: opt(d.notes)
+    }
+  };
+}
+function findRecord(records, category, name) {
+  const n = name.toLowerCase();
+  return records.find((r2) => r2.category === category && r2.name.toLowerCase() === n);
+}
+function kellShort(value) {
+  const m = /\((Kell-(?:positiv|negativ))\)/.exec(value);
+  return m?.[1] ?? value;
+}
+function bloodGroupSummary(records) {
+  const ab0 = findRecord(records, "blood_group", AB0_NAME)?.value;
+  const rh = findRecord(records, "blood_group", RHESUS_NAME)?.value;
+  const kell = findRecord(records, "blood_group", KELL_NAME)?.value;
+  if (!ab0 && !rh && !kell) return null;
+  const main = [ab0, rh ? `Rh ${rh}` : null].filter(Boolean).join(" ");
+  return [main, kell ? kellShort(kell) : null].filter(Boolean).join(" \xB7 ");
+}
+var LPA_ANALYTE_ID = "00000000-0000-7000-8000-000000000121";
+function latestLpa(draws) {
+  let best = null;
+  for (const d of draws) {
+    const r2 = d.results.find((x) => x.analyteId === LPA_ANALYTE_ID);
+    if (!r2) continue;
+    const time = d.time ?? "";
+    if (!best || d.date > best.date || d.date === best.date && time > best.time) {
+      best = { date: d.date, time, value: r2.value, comparator: r2.comparator, unit: r2.unit };
+    }
+  }
+  return best ? { date: best.date, value: best.value, comparator: best.comparator, unit: best.unit } : null;
+}
 export {
   ANS_INFO,
   ANS_MAX,
@@ -8665,6 +9861,7 @@ export {
   OPTIONAL_KEYS,
   OPTIONAL_LABELS,
   OVERVIEW_LAYOUT_KEY,
+  REFERENCE_SOURCE,
   REPEAT_LABEL,
   SCALE_MODE_LABELS,
   ZERO,
@@ -8724,8 +9921,10 @@ export {
   groupIntakes,
   groupedValues,
   insights_exports as insights,
+  lab_exports as lab,
   legendLabels,
   lifestyleCategoryLabel,
+  lifetime_exports as lifetime,
   loadVsNextDay,
   macroBaseKcal,
   macroEnergyShares,
@@ -8771,5 +9970,6 @@ export {
   weeklyAnalysis,
   weeklyMuscleSets,
   withDayMacros,
+  withDefaultRanges,
   withProteinFromWeight
 };

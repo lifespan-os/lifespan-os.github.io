@@ -58,6 +58,10 @@ export const KEEP_TABLES = [
   "grip_strength_measurement",
   "training_plan_slot",
   "todo",
+  "lab_analyte",
+  "lab_draw",
+  "lab_result",
+  "lifetime_record",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */

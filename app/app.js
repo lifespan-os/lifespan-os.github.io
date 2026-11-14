@@ -17,7 +17,7 @@ import { initTodos, todoActions, todoChange, todoInput, viewTodos } from "./todo
 import * as TD from "./todosdata.js";
 import { initHealth, healthActions, healthChange, healthInput, viewHealth, viewLabEdit } from "./health.js";
 import * as HD from "./healthdata.js";
-import { initSuper, superActions, superChange, superInput, viewSuper, viewHrtEdit } from "./super.js";
+import { initSuper, superActions, superChange, superInput, viewSuper, viewHrtEdit, viewProtocolEdit, viewSubstanceEdit } from "./super.js";
 import * as SD from "./superdata.js";
 
 const app = document.getElementById("app");
@@ -715,6 +715,8 @@ const VIEWS = {
   "lab-edit": viewLabEdit,
   super: viewSuper,
   "hrt-edit": viewHrtEdit,
+  "protocol-edit": viewProtocolEdit,
+  "substance-edit": viewSubstanceEdit,
   diary: viewDiary,
   "food-history": viewNutritionHistory,
   food: viewFood,

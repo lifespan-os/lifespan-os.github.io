@@ -62,6 +62,8 @@ export const KEEP_TABLES = [
   "lab_draw",
   "lab_result",
   "lifetime_record",
+  "protocol_substance",
+  "protocol_entry",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */

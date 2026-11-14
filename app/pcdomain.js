@@ -10039,6 +10039,45 @@ __export(hrt_exports, {
 });
 
 // src/domain/protocol.ts
+var protocol_exports = {};
+__export(protocol_exports, {
+  CATEGORY_LABELS: () => CATEGORY_LABELS,
+  CATEGORY_SHORT: () => CATEGORY_SHORT,
+  ROUTE_LABELS: () => ROUTE_LABELS,
+  UNITS: () => UNITS,
+  daysBetween: () => daysBetween3,
+  emptyEntryDraft: () => emptyEntryDraft,
+  emptySubstanceDraft: () => emptySubstanceDraft,
+  entryDraftToInput: () => entryDraftToInput,
+  entryToDraft: () => entryToDraft,
+  routeOptions: () => routeOptions,
+  substanceDraftToInput: () => substanceDraftToInput,
+  substanceToDraft: () => substanceToDraft,
+  summarize: () => summarize,
+  weekStart: () => weekStart2,
+  weeklyTotals: () => weeklyTotals
+});
+var CATEGORY_LABELS = {
+  ped: "PED (Performance Enhancing Drug)",
+  medication: "Medikament",
+  peptide: "Peptid"
+};
+var CATEGORY_SHORT = {
+  ped: "PED",
+  medication: "Medikament",
+  peptide: "Peptid"
+};
+var UNITS = [
+  "mg",
+  "\xB5g",
+  "IE",
+  "ml",
+  "Tablette(n)",
+  "Kapsel(n)",
+  "Tropfen",
+  "Hub",
+  "Einheit(en)"
+];
 var ROUTE_LABELS = {
   oral: "oral",
   sc: "subkutan (s.c.)",
@@ -10049,6 +10088,133 @@ var ROUTE_LABELS = {
   sublingual: "unter der Zunge (sublingual)",
   other: "sonstige"
 };
+var routeOptions = () => Object.keys(ROUTE_LABELS).map((r2) => ({ value: r2, label: ROUTE_LABELS[r2] }));
+function emptySubstanceDraft() {
+  return {
+    id: null,
+    name: "",
+    category: "peptide",
+    unit: "mg",
+    defaultRoute: "",
+    notes: "",
+    archived: false
+  };
+}
+function substanceToDraft(s) {
+  return {
+    id: s.id,
+    name: s.name,
+    category: s.category,
+    unit: s.unit,
+    defaultRoute: s.defaultRoute ?? "",
+    notes: s.notes ?? "",
+    archived: s.archived
+  };
+}
+function substanceDraftToInput(d) {
+  const p = new FormParser();
+  const name = p.required("name", d.name, "Bitte einen Namen eingeben.");
+  return p.ok ? {
+    ok: true,
+    input: {
+      id: d.id,
+      name,
+      category: d.category,
+      unit: d.unit,
+      defaultRoute: textOrNull(d.defaultRoute) ?? null,
+      notes: textOrNull(d.notes),
+      archived: d.archived
+    }
+  } : { ok: false, errors: p.errors };
+}
+function emptyEntryDraft(date, time = "") {
+  return { id: null, substanceId: "", date, time, amount: "", route: "", site: "", notes: "" };
+}
+function entryToDraft(e) {
+  return {
+    id: e.id,
+    substanceId: e.substanceId,
+    date: e.date,
+    time: e.time ?? "",
+    amount: numberToInput(e.amount, 3),
+    route: e.route ?? "",
+    site: e.site ?? "",
+    notes: e.notes ?? ""
+  };
+}
+function entryDraftToInput(d) {
+  const p = new FormParser();
+  const substanceId = p.required("substanceId", d.substanceId, "Bitte eine Substanz w\xE4hlen.");
+  const date = p.required("date", d.date, "Bitte ein Datum angeben.");
+  const amount = p.requiredDecimal("amount", d.amount, "die Menge");
+  if (p.ok && amount <= 0) p.error("amount", "Die Menge muss gr\xF6\xDFer als 0 sein.");
+  return p.ok ? {
+    ok: true,
+    input: {
+      id: d.id,
+      substanceId,
+      date,
+      time: textOrNull(d.time),
+      amount,
+      route: textOrNull(d.route) ?? null,
+      site: textOrNull(d.site),
+      notes: textOrNull(d.notes)
+    }
+  } : { ok: false, errors: p.errors };
+}
+function summarize(entries) {
+  const by = /* @__PURE__ */ new Map();
+  for (const e of entries) {
+    const s = by.get(e.substanceId) ?? {
+      substanceId: e.substanceId,
+      name: e.substanceName,
+      category: e.category,
+      unit: e.unit,
+      count: 0,
+      total: 0,
+      days: 0,
+      first: null,
+      last: null,
+      dates: /* @__PURE__ */ new Set()
+    };
+    s.count += 1;
+    s.total += e.amount;
+    s.dates.add(e.date);
+    if (s.first === null || e.date < s.first) s.first = e.date;
+    if (s.last === null || e.date > s.last) s.last = e.date;
+    by.set(e.substanceId, s);
+  }
+  return [...by.values()].map(({ dates, ...s }) => ({
+    ...s,
+    days: dates.size,
+    total: Math.round(s.total * 1e3) / 1e3
+  })).sort((a, b) => a.name.localeCompare(b.name, "de"));
+}
+function weekStart2(iso2) {
+  const [y, m, d] = iso2.split("-").map(Number);
+  const date = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1));
+  const day = (date.getUTCDay() + 6) % 7;
+  date.setUTCDate(date.getUTCDate() - day);
+  return date.toISOString().slice(0, 10);
+}
+function weeklyTotals(entries, substanceId, today, weeks) {
+  const last = weekStart2(today);
+  const out = [];
+  const base = /* @__PURE__ */ new Date(`${last}T00:00:00Z`);
+  for (let i = weeks - 1; i >= 0; i--) {
+    const d = new Date(base.getTime() - i * 7 * 864e5);
+    out.push({ week: d.toISOString().slice(0, 10), total: 0, count: 0 });
+  }
+  for (const e of entries) {
+    if (e.substanceId !== substanceId) continue;
+    const w = out.find((x) => x.week === weekStart2(e.date));
+    if (w) {
+      w.total = Math.round((w.total + e.amount) * 1e3) / 1e3;
+      w.count += 1;
+    }
+  }
+  return out;
+}
 function daysBetween3(a, b) {
   return Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 864e5);
 }
@@ -11251,6 +11417,7 @@ export {
   percentText,
   portionsFromAmount,
   previousMean,
+  protocol_exports as protocol,
   recovery_exports as recovery,
   referenceGroup,
   repeatDates,

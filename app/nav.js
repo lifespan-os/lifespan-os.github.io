@@ -40,7 +40,7 @@ export const SECTIONS = [
   { id: "recovery", label: "Recovery", view: "recovery", views: ["recovery"] },
   { id: "body", label: "Body & Longevity", view: "body", views: ["body", "body-metric", "body-entry"] },
   { id: "health", label: "Health", view: "health", views: ["health", "lab-edit"] },
-  { id: "superhuman", label: "Superhuman", view: "super", views: ["super", "hrt-edit"] },
+  { id: "superhuman", label: "Superhuman", view: "super", views: ["super", "hrt-edit", "protocol-edit", "substance-edit"] },
   { id: "insights", label: "Insights", view: "insights", views: ["insights"] },
   { id: "icoach", label: "iCoach.me", pc: "Fragen, Evolve, Magazin, Downloads und Widgets." },
   { id: "settings", label: "Settings", view: "settings", views: ["settings", "send", "help"] },

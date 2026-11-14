@@ -90,3 +90,77 @@ test("Checkliste: Vorlage, abhaken, senden", () => {
   assert.equal(l2.checklist, null);
   assert.equal(SD.checklistOf(c, l2).materials[0].done, true);
 });
+
+const SUB_PC = "11111111-1111-4111-8111-111111111111";
+function protoCatalog() {
+  return {
+    pc: {
+      protocol_substance: [{ id: SUB_PC, name: "BPC-157", category: "peptide", unit: "µg", default_route: "sc", notes: null, archived: 0, created_at: "2026-10-01T10:00:00.000Z", updated_at: "2026-10-01T10:00:00.000Z" }],
+      protocol_entry: [{ id: "pe-pc", substance_id: SUB_PC, date: "2026-11-10", time: "08:00", amount: 250, route: "sc", site: "Bauch links", notes: null, created_at: "2026-11-10T08:00:00.000Z", updated_at: "2026-11-10T08:00:00.000Z" }],
+      settings: [],
+    },
+  };
+}
+
+test("Protokoll: Substanz anlegen, Einnahme erfassen, Auswertung", () => {
+  const c = protoCatalog();
+  const l = SD.emptySuperLocal();
+  const subs = SD.substancesOf(c, l);
+  assert.equal(subs[0].entryCount, 1);
+  assert.equal(subs[0].lastDate, "2026-11-10");
+  const sd = D.protocol.emptySubstanceDraft();
+  sd.name = "Metformin";
+  sd.category = "medication";
+  sd.unit = "Tablette(n)";
+  const s = SD.saveSubstance(c, l, D.protocol.substanceDraftToInput(sd).input, { uuid, now });
+  assert.equal(s.name, "Metformin");
+  assert.throws(() => SD.saveSubstance(c, l, { ...D.protocol.substanceDraftToInput(sd).input, name: "bpc-157" }, { uuid, now }), /gibt es bereits/);
+  const ed = D.protocol.emptyEntryDraft("2026-11-14", "07:30");
+  ed.substanceId = SUB_PC;
+  ed.amount = "250";
+  const e = SD.saveProtocolEntry(c, l, D.protocol.entryDraftToInput(ed).input, { uuid, now });
+  assert.equal(e.substanceName, "BPC-157");
+  assert.equal(e.unit, "µg");
+  const all = SD.protocolEntriesOf(c, l);
+  assert.deepEqual(all.map((x) => x.date), ["2026-11-14", "2026-11-10"]);
+  assert.equal(SD.protocolEntriesOf(c, l, "2026-11-12").length, 1);
+  const sum = D.protocol.summarize(all);
+  assert.equal(sum[0].total, 500);
+  assert.equal(sum[0].days, 2);
+  const weeks = D.protocol.weeklyTotals(all, SUB_PC, "2026-11-14", 12);
+  assert.equal(weeks.length, 12);
+  assert.equal(weeks[11].total, 500);
+  const t = SD.superTables(l);
+  assert.equal(t.protocol_substance.length, 1);
+  assert.equal(t.protocol_entry.length, 1);
+  assert.deepEqual(Object.keys(t.protocol_entry[0]), SD.PROTOCOL_COLUMNS);
+  assert.equal(SD.unsentSuper(l), 2);
+});
+
+test("Protokoll: Prüfungen und Löschen wie protocol.rs", () => {
+  const c = protoCatalog();
+  const l = SD.emptySuperLocal();
+  assert.throws(() => SD.saveProtocolEntry(c, l, { substanceId: "x", date: "2026-11-14", amount: 1 }, { uuid, now }), /Substanz wählen/);
+  assert.throws(() => SD.saveProtocolEntry(c, l, { substanceId: SUB_PC, date: "2026-11-14", amount: 0 }, { uuid, now }), /Menge/);
+  assert.throws(() => SD.saveProtocolEntry(c, l, { substanceId: SUB_PC, date: "2026-11-14", amount: 1, route: "xyz" }, { uuid, now }), /Anwendung/);
+  assert.throws(() => SD.deleteSubstance(c, l, SUB_PC), /1 Protokolleinträge/);
+  SD.deleteProtocolEntry(c, l, "pe-pc", now);
+  assert.equal(SD.protocolEntriesOf(c, l).length, 0);
+  SD.deleteSubstance(c, l, SUB_PC, now);
+  assert.equal(SD.substancesOf(c, l).length, 0);
+  const del = SD.superTables(l).deleted_record.map((d) => d.id).sort();
+  assert.deepEqual(del, [`protocol_entry:pe-pc`, `protocol_substance:${SUB_PC}`]);
+  // Archiviert: nicht mehr zur Auswahl
+  const c2 = protoCatalog();
+  const l2 = SD.emptySuperLocal();
+  const s = SD.substancesOf(c2, l2)[0];
+  SD.saveSubstance(c2, l2, { ...D.protocol.substanceDraftToInput({ ...D.protocol.substanceToDraft(s), archived: true }).input }, { uuid, now });
+  assert.equal(SD.substancesOf(c2, l2, false).length, 0);
+  assert.equal(SD.substancesOf(c2, l2, true)[0].archived, true);
+  // Älterer gespeicherter Stand ohne die neuen Bereiche
+  const old = SD.superState({ entries: {}, products: {}, deleted: {}, checklist: null });
+  delete old.substances;
+  delete old.protocol;
+  assert.equal(SD.unsentSuper(old), 0);
+  assert.deepEqual(SD.superTables(old), {});
+});

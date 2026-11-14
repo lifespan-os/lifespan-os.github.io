@@ -306,3 +306,16 @@ Fassung laden.
 - Der Knopf heißt „PDF einfügen“ (Bilder gehen weiterhin).
 - Gesundheitspunktzahl, BMR und Herzfrequenz erscheinen in der Vorschau nicht und werden nicht übernommen.
 - „Werte erfassen“ rechnet wie am PC selbst: Magermasse in Prozent (Magermasse ÷ Gewicht), Unterhautfettanteil (subkutane Fettmasse ÷ Gewicht), BMI (Gewicht ÷ Körpergröße² laut Profil) sowie Anteil Skelettmuskulatur und A/G-Verhältnis (aus Android/Gynoid). Berechnete Felder sind gesperrt, zeigen die Rechnung und werden mit gespeichert.
+
+## Version 1.13.0 (14.11.2026): Superhuman – Protokoll, Auswertung, Substanzen
+
+- Superhuman hat jetzt alle Reiter wie am PC (`SuperhumanPage.tsx`): **Protokoll** (Einnahme
+  erfassen, bearbeiten, löschen; Zeitraum 7/30/90/365 Tage oder alle), **Auswertung** (je Substanz
+  Einträge, Tage, Summe, Ø je Eintrag, erster/letzter Eintrag; Wochensummen der letzten
+  12 Kalenderwochen als Balken) und **Substanzen** (PEDs, Medikamente, Peptide anlegen, ändern,
+  archivieren, löschen).
+- Prüfregeln wie `repo/protocol.rs`: Name eindeutig (ohne Groß-/Kleinschreibung), Einheit und
+  Anwendung aus den festen Listen, Menge 0,001–100 000, Löschen einer Substanz nur ohne Einträge.
+  Rechnung aus `src/domain/protocol.ts` (in `pcdomain.js`).
+- Daten: `protocol_substance` und `protocol_entry` kommen mit der Exportdatei und gehen mit
+  „Körperwerte … senden“ an den PC (Löschungen als Löschvermerk); der PC-Import kennt beide Tabellen.

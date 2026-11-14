@@ -22,6 +22,10 @@ import * as SD from "./superdata.js";
 import * as CD from "./checklistdata.js";
 import * as CF from "./caffeinedata.js";
 import { icoachActions, icoachChange, icoachInput, initICoach, viewICoach } from "./icoach.js";
+import { initTraining, trainingActions, trainingChange, trainingInput, viewTrainingSection, persistTrain, setNotice as trainSetNotice, failed as trainFailed } from "./training.js";
+import { initTrainingStats } from "./trainingstats.js";
+import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
+import * as TR from "./trainingdata.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -88,15 +92,21 @@ async function saveNow() {
   }
 }
 
+/** Katalog vom PC plus Änderungen im Training am Handy (Pläne, Übungen, Sportarten, NEAT, Check-Ins). */
+function refreshCatalog() {
+  S.catalog = S.catalogRaw ? TR.overlayCatalog(S.catalogRaw, S.train, C.plansFromRows) : null;
+}
+
 const exById = () => new Map(C.allExercises(S.catalog, S.localExercises).map((e) => [e.id, e]));
 const machineById = () => new Map(S.catalog.machines.map((m) => [m.id, m]));
 const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported);
 const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWater(S.water);
 // Körperwerte plus Schlaf und Regeneration (gehen zusammen in die Datei „Körperwerte“, 1.7.0)
-const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine);
+const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + TR.unsentTrain(S.train);
 
 function go(view, arg = null) {
   if (view === "food-review" && S.view !== "food-review") S.reviewFrom = S.view === "send" ? "send" : S.view === "food" ? "food" : "home";
+  if (view !== S.view && view !== "detail") S.trainNotice = null;
   S.view = view;
   S.arg = arg;
   render();
@@ -190,7 +200,7 @@ function viewHome() {
             <p class="muted small">${[
               open.length ? (open.length === 1 ? "1 Training" : `${open.length} Trainings`) : "",
               unsentFood() ? `${unsentFood()} Ernährungseinträge` : "",
-              unsentBodyCount() ? `${unsentBodyCount()} Körperwerte, Schlaf-, Regenerations- und To-do-Einträge` : "",
+              unsentBodyCount() ? `${unsentBodyCount()} Körperwerte, Schlaf-, Regenerations-, To-do- und Trainingseinträge` : "",
             ]
               .filter(Boolean)
               .join(" und ")} noch nicht am PC.</p>
@@ -199,42 +209,6 @@ function viewHome() {
     }
     ${cards}
     <p class="muted small ov-source">Stand der Daten vom PC: ${fmtDateTime(c.exportedAt)} – plus alles, was du seitdem am Handy erfasst hast. Anordnung der Karten wie am PC (Overview → Übersicht anpassen).</p>
-  </main>`;
-}
-
-/** Training (wie der Bereich am PC): starten, laufendes Training, letzte Trainings. */
-function viewTraining() {
-  const c = S.catalog;
-  const a = S.active;
-  return `${header("Training")}<main class="wrap">
-    ${
-      a
-        ? `<section class="card hl"><div class="wo-head"><h3>${a.editOf ? "Bearbeitung" : "Training läuft"}: ${esc(a.title)}</h3>${
-            a.editOf ? `<span class="tag">${fmtDate(a.date)}</span>` : `<span class="clock" data-clock>${fmtSec((Date.now() - new Date(a.startedAt)) / 1000)}</span>`
-          }</div>
-          <p class="muted small">${a.exercises.length} Übungen</p>
-          <button class="btn primary block" data-go="workout">${a.editOf ? "Weiter bearbeiten" : "Weiter trainieren"}</button></section>`
-        : `<div class="big-actions">
-            <button class="btn primary" data-go="plans">Plan starten<small>${c.plans.length ? `${c.plans.length} Trainingspläne` : "Noch keine Pläne am PC angelegt"}</small></button>
-            <button class="btn blue" data-act="start-free">Freies Training<small>Maschinen spontan auswählen</small></button>
-          </div>`
-    }
-    ${
-      S.workouts.length
-        ? `<section class="card"><h3>Letzte Trainings auf dem Handy</h3><div class="list">
-            ${S.workouts
-              .slice()
-              .sort((x, y) => y.createdAt.localeCompare(x.createdAt))
-              .slice(0, 20)
-              .map(
-                (w) => `<button class="item" data-go="detail" data-arg="${w.id}"><span class="main"><b>${esc(w.title)}</b>
-                  <span class="muted small">${fmtDate(w.date)} · ${w.exercises.length} Übungen · ${C.fmtNum(C.volumeKg(w), 0)} kg</span></span>
-                  <span class="tag">${w.exported ? "am PC" : "offen"}</span></button>`,
-              )
-              .join("")}</div></section>`
-        : ""
-    }
-    ${S.workouts.length ? "" : `<section class="card"><p class="empty">Noch keine Trainings auf dem Handy.</p></section>`}
   </main>`;
 }
 
@@ -312,18 +286,20 @@ function viewWorkout() {
   const exs = exById();
   const machines = machineById();
   const edit = !!w.editOf;
-  const sub = edit
+  const sub = w.backfill
+    ? `${fmtDate(w.date)} · nachtragen`
+    : edit
     ? `${fmtDate(w.date)} · bearbeiten`
     : `${fmtDate(w.date)} · seit ${C.localTime(new Date(w.startedAt))} Uhr`;
   return `${header(w.title, { back: "home", sub })}<main class="wrap">
     <div class="wo-head"><span class="muted small">${w.exercises.length} Übungen · ${C.fmtNum(C.volumeKg(w), 0)} kg Volumen</span>${
-      edit ? `<span class="tag">Bearbeitung</span>` : `<span class="clock" data-clock>${fmtSec((Date.now() - new Date(w.startedAt)) / 1000)}</span>`
+      edit ? `<span class="tag">${w.backfill ? "Nachtragen" : "Bearbeitung"}</span>` : `<span class="clock" data-clock>${fmtSec((Date.now() - new Date(w.startedAt)) / 1000)}</span>`
     }</div>
     ${w.exercises.map((we, i) => exerciseCard(we, i, exs, machines)).join("")}
     <button class="btn block" data-go="picker">+ Übung oder Maschine hinzufügen</button>
-    <button class="btn danger block" data-act="discard">${edit ? "Änderungen verwerfen" : "Training verwerfen"}</button>
+    <button class="btn danger block" data-act="discard">${w.backfill ? "Verwerfen" : edit ? "Änderungen verwerfen" : "Training verwerfen"}</button>
   </main>
-  <div class="bottom"><div class="inner"><button class="btn primary" data-go="finish">${edit ? "Änderungen speichern" : "Training beenden"}</button></div></div>`;
+  <div class="bottom"><div class="inner"><button class="btn primary" data-go="finish">${w.backfill ? "Weiter zum Speichern" : edit ? "Änderungen speichern" : "Training beenden"}</button></div></div>`;
 }
 
 /**
@@ -592,11 +568,17 @@ function viewFinish() {
   if (edit && w.durationMin !== null && (!Number.isFinite(w.durationMin) || w.durationMin < 1 || w.durationMin > 1440)) {
     errors.push("Dauer: bitte 1 bis 1440 Minuten eintragen.");
   }
-  return `${header(edit ? "Änderungen speichern" : "Training beenden", { back: "workout" })}<main class="wrap">
+  return `${header(w.backfill ? "Einheit nachtragen" : edit ? "Änderungen speichern" : "Training beenden", { back: "workout" })}<main class="wrap">
     ${
       edit
-        ? `<section class="card"><div class="field"><label for="wo-duration">Dauer in Minuten</label><input id="wo-duration" type="text" inputmode="numeric" value="${w.durationMin ?? ""}" data-wfield="durationMin"></div>
-           <p class="muted small">${w.exercises.length} Übungen · ${C.fmtNum(C.volumeKg(w), 0)} kg Volumen. Nach dem Speichern zählt das Training wieder als „offen“ – mit „An den PC senden“ und „Abgleichen (zweites Gerät)“ übernimmt der PC die Änderungen, auch entfernte Sätze und Übungen.</p></section>`
+        ? `<section class="card"><div class="field"><label for="wo-date">Datum</label><input id="wo-date" type="date" value="${esc(w.date ?? "")}" max="${esc(todayIso())}" data-wfield="date"></div>
+           <div class="field"><label for="wo-start">Uhrzeit (optional)</label><input id="wo-start" type="time" value="${esc(w.startTime ?? "")}" data-wfield="startTime"></div>
+           <div class="field"><label for="wo-duration">Dauer in Minuten${w.backfill ? " (optional)" : ""}</label><input id="wo-duration" type="text" inputmode="numeric" value="${w.durationMin ?? ""}" data-wfield="durationMin"></div>
+           <p class="muted small">${w.exercises.length} ${w.exercises.length === 1 ? "Übung" : "Übungen"} · ${C.fmtNum(C.volumeKg(w), 0)} kg Volumen. ${
+             w.backfill
+               ? "Nach dem Speichern steht die Einheit unter Training → Einheiten; mit „An den PC senden“ und „Abgleichen (zweites Gerät)“ kommt sie an den PC."
+               : "Nach dem Speichern zählt das Training wieder als „offen“ – mit „An den PC senden“ und „Abgleichen (zweites Gerät)“ übernimmt der PC die Änderungen, auch entfernte Sätze und Übungen."
+           }</p></section>`
         : ""
     }
     <section class="card"${edit ? " hidden" : ""}>
@@ -633,7 +615,7 @@ function viewSend() {
   const ready = [
     open.length ? `${open.length} ${open.length === 1 ? "Training" : "Trainings"}` : "",
     food ? `${food} Ernährungseinträge` : "",
-    body ? `${body} Körperwerte, Schlaf-, Regenerations- und To-do-Einträge` : "",
+    body ? `${body} Körperwerte, Schlaf-, Regenerations-, To-do- und Trainingseinträge` : "",
   ].filter(Boolean);
   return `${header("An den PC senden", { back: "home" })}<main class="wrap">
     <section class="card">
@@ -644,19 +626,19 @@ function viewSend() {
         <li>Als Art <b>„Abgleichen (zweites Gerät)“</b> wählen und bestätigen.</li>
       </ol>
       <p class="warn">Bitte nie „Ersetzen“ wählen: Dann würden am PC alle anderen Daten gelöscht. „Abgleichen“ ist sicher, vorher legt die App automatisch ein Backup an.</p>
-      <p class="muted small">Trainings, Ernährung und Körperwerte kommen in getrennte Dateien: „LIFESPAN Smartphone-Training …“, „LIFESPAN Lebensmittel …“ und „LIFESPAN Körperwerte …“ (mit Schlaf, Nickerchen, Regeneration, To-dos, Health und Superhuman). Am PC alle gleich importieren.</p>
+      <p class="muted small">Trainings, Ernährung und Körperwerte kommen in getrennte Dateien: „LIFESPAN Smartphone-Training …“, „LIFESPAN Lebensmittel …“ und „LIFESPAN Körperwerte …“ (mit Schlaf, Nickerchen, Regeneration, To-dos, Health, Superhuman und den Änderungen im Training wie Plänen, NEAT, Übungen und Check-Ins). Am PC alle gleich importieren.</p>
       <button class="btn primary block" data-act="send" data-arg="training" ${open.length ? "" : "disabled"}>${open.length ? `Trainings senden (${open.length})` : "Keine offenen Trainings"}</button>
       <button class="btn primary block" data-act="send" data-arg="food" ${food ? "" : "disabled"}>${food ? `Lebensmittel senden (${food} Einträge)` : "Keine offenen Ernährungseinträge"}</button>
       ${food ? `<button class="btn block" data-go="food-review">Vorher Ernährungseinträge prüfen und bearbeiten</button>` : ""}
-      ${body ? `<button class="btn primary block" data-act="send" data-arg="body">Körperwerte, Schlaf, Regeneration, To-dos, Health &amp; Superhuman senden (${body})</button>` : ""}
+      ${body ? `<button class="btn primary block" data-act="send" data-arg="body">Körperwerte, Schlaf, Regeneration, To-dos, Training, Health &amp; Superhuman senden (${body})</button>` : ""}
     </section>
     ${
-      all.length || Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length || Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length
+      all.length || Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length || Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || (Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length || Object.keys(TR.trainTables(S.train, { all: true })).length)
         ? `<section class="card"><h3>Alles vom Handy</h3>
             <p class="muted small">Falls eine Datei verloren ging: Du kannst alle ${all.length} Trainings und die Ernährungseinträge noch einmal senden. Am PC entstehen dabei keine doppelten Einträge.</p>
             ${all.length ? `<button class="btn block" data-act="send" data-arg="training|all">Alle Trainings erneut senden</button>` : ""}
             ${Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length ? `<button class="btn block" data-act="send" data-arg="food|all">Alle Ernährungseinträge erneut senden</button>` : ""}
-            ${Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length ? `<button class="btn block" data-act="send" data-arg="body|all">Alle Körperwerte, Schlaf, Regeneration, To-dos, Checklisten, Health, Superhuman &amp; Koffein erneut senden</button>` : ""}</section>`
+            ${Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || (Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length || Object.keys(TR.trainTables(S.train, { all: true })).length) ? `<button class="btn block" data-act="send" data-arg="body|all">Alle Körperwerte, Schlaf, Regeneration, To-dos, Checklisten, Health, Superhuman &amp; Koffein erneut senden</button>` : ""}</section>`
         : ""
     }
     <div id="send-result"></div>
@@ -664,29 +646,42 @@ function viewSend() {
 }
 
 function viewDetail() {
-  const w = S.workouts.find((x) => x.id === S.arg);
+  const own = S.workouts.find((x) => x.id === S.arg);
+  const w = own ?? pcWorkout(S.arg);
   if (!w) return viewHome();
   const exs = exById();
   const machines = machineById();
-  return `${header(w.title, { back: "home", sub: `${fmtDate(w.date)} · ${w.startTime} Uhr` })}<main class="wrap">
+  const adopt = S.trainAdopt?.id === w.id;
+  return `${header(w.title, { back: "training", sub: `${fmtDate(w.date)}${w.startTime ? ` · ${w.startTime} Uhr` : ""}` })}<main class="wrap">
+    ${S.trainNotice ? `<p class="${S.trainNotice.tone === "error" ? "warn" : "ok-note"}" role="status">${esc(S.trainNotice.text)}</p>` : ""}
+    ${
+      adopt
+        ? `<div class="adopt-offer" role="group" aria-label="Richtwerte übernehmen"><span class="small">Sätze, Gewichte und Einstellungen von „${esc(w.title)}“ als neue Richtwerte in den Trainingstag übernehmen? Beim nächsten Start sind die Sätze damit vorbelegt.</span>
+          <div class="row-actions"><button class="btn sm primary" data-act="train-adopt">In den Plan übernehmen</button><button class="btn sm" data-act="train-adopt-no">Nein danke</button></div></div>`
+        : ""
+    }
     <section class="card"><div class="stat">
       <div><b>${w.durationMin ?? "–"}</b><span>Minuten</span></div>
       <div><b>${w.perceivedExertion ?? "–"}</b><span>Anstrengung</span></div>
       <div><b>${C.fmtNum(C.volumeKg(w), 0)}</b><span>kg Volumen</span></div>
     </div>${w.notes ? `<p class="small">${esc(w.notes)}</p>` : ""}
-    <p class="muted small">${w.exported ? "An den PC gesendet." : "Noch nicht an den PC gesendet."}</p></section>
+    <p class="muted small">${!own ? "Einheit vom PC." : w.exported ? "An den PC gesendet." : "Noch nicht an den PC gesendet."}</p></section>
     ${w.exercises
       .map((we) => {
         const { name, nr } = exLabel(exs.get(we.exerciseId), machines);
         return `<section class="card"><div class="row"><span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span><h3 style="flex:1">${esc(name)}</h3></div>
           <p class="small">${we.sets
-            .map((s) => `${s.isWarmup ? "W " : ""}${s.reps ?? "–"} × ${s.weightKg !== null ? C.fmtNum(s.weightKg) + " kg" : "–"}${s.rpe ? ` @${C.fmtNum(s.rpe, 1)}` : ""}${s.isFailure ? " (Fail)" : ""}`)
+            .map((s) =>
+              s.durationSeconds !== null || s.distanceM !== null
+                ? `${s.isWarmup ? "W " : ""}${s.durationSeconds !== null ? `${Math.round(s.durationSeconds / 60)} min` : "–"}${s.distanceM !== null ? ` · ${C.fmtNum(s.distanceM / 1000)} km` : ""}${s.rpe ? ` @${C.fmtNum(s.rpe, 1)}` : ""}`
+                : `${s.isWarmup ? "W " : ""}${s.reps ?? "–"} × ${s.weightKg !== null ? C.fmtNum(s.weightKg) + " kg" : "–"}${s.rpe ? ` @${C.fmtNum(s.rpe, 1)}` : ""}${s.isFailure ? " (Fail)" : ""}`,
+            )
             .map(esc)
             .join("<br>")}</p></section>`;
       })
       .join("")}
     <button class="btn block" data-act="edit-workout" data-arg="${w.id}">Training bearbeiten</button>
-    ${w.exported ? "" : `<button class="btn danger block" data-act="delete-workout" data-arg="${w.id}">Training löschen</button>`}
+    ${!own || w.exported || w.fromPc ? "" : `<button class="btn danger block" data-act="delete-workout" data-arg="${w.id}">Training löschen</button>`}
   </main>`;
 }
 
@@ -732,7 +727,7 @@ const VIEWS = {
   dish: viewDish,
   setup: viewSetup,
   home: viewHome,
-  training: viewTraining,
+  training: viewTrainingSection,
   settings: viewSettings,
   "pc-only": viewPcOnly,
   plans: viewPlans,
@@ -835,6 +830,45 @@ function rerenderKeepScroll() {
   window.scrollTo(0, y);
 }
 
+/** Trainingstag (ID) aus einem Plan starten (wie „Tag starten“ am PC). */
+function startPlanDay(dayId) {
+  for (const p of S.catalog.plans) {
+    const d = p.days.find((x) => x.row.id === dayId);
+    if (d) return startWorkout(d.row.name, d);
+  }
+  toast("Den Trainingstag gibt es nicht mehr.", true);
+}
+
+/**
+ * Einheit nachtragen bzw. Cardio erfassen (wie „Nachtragen“ und „Cardio erfassen“ am PC): ein
+ * Eintrag mit Datum, Uhrzeit und Dauer, kein laufendes Training. Intern eine Bearbeitung ohne
+ * Vorlage (`pcOriginal` leer), gespeichert wird mit „Speichern“.
+ */
+async function startBackfill(date, exerciseId = null) {
+  if (S.active) return go("workout");
+  const ex = exerciseId ? C.allExercises(S.catalog, S.localExercises).find((e) => e.id === exerciseId) : null;
+  const w = C.newWorkout({ title: ex ? ex.name : "Training" });
+  w.date = date;
+  w.startTime = null;
+  w.status = "done";
+  w.durationMin = null;
+  w.exported = false;
+  const original = { ...w, exercises: [] };
+  if (ex) w.exercises.push(C.workoutExercise({ exerciseId: ex.id, last: C.lastSessionFor(S.catalog, S.workouts, ex.id) }));
+  S.active = { ...C.startEdit(w), pcOriginal: original, backfill: true };
+  await saveNow();
+  go(ex ? "workout" : "picker");
+}
+
+/** Einheit vom PC (Zeilen der Exportdatei) als Handy-Training. */
+function pcWorkout(id) {
+  const db = buildDb();
+  const w = db.workouts.find((x) => x.id === id);
+  if (!w) return null;
+  const wex = db.wexByWorkout.get(id) ?? [];
+  return C.workoutFromPc(w, wex, db.setsByWex);
+}
+
 async function startWorkout(title, planDay = null) {
   if (S.active) return go("workout");
   const w = C.newWorkout({ title, planDayId: planDay?.row.id ?? null });
@@ -871,6 +905,7 @@ const actions = {
   ...healthActions,
   ...superActions,
   ...bodyActions,
+  ...trainingActions,
   "start-free": () => startWorkout("Freies Training"),
   "start-plan": (el) => {
     for (const p of S.catalog.plans) {
@@ -993,8 +1028,8 @@ const actions = {
     wakeLock(false);
     await saveNow();
     toast(editOf ? "Änderungen verworfen" : "Training verworfen");
-    if (editOf) go("detail", editOf);
-    else go("home");
+    if (editOf && (S.workouts.some((w) => w.id === editOf) || pcWorkout(editOf))) go("detail", editOf);
+    else go("training");
   },
   exertion: (el) => {
     const n = Number(el.dataset.arg);
@@ -1008,23 +1043,32 @@ const actions = {
     if (S.active.editOf) {
       const d = S.active.durationMin;
       if (d !== null && (!Number.isFinite(d) || d < 1 || d > 1440)) return render();
+      if (!S.active.date || !/^\d{4}-\d{2}-\d{2}$/.test(S.active.date)) return toast("Bitte ein gültiges Datum angeben.", true);
+      if (S.active.startTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(S.active.startTime)) return toast("Uhrzeit als HH:MM eingeben.", true);
       const i = S.workouts.findIndex((x) => x.id === S.active.editOf);
-      if (i < 0) {
+      const original = i >= 0 ? S.workouts[i] : S.active.pcOriginal;
+      if (!original) {
         toast("Das ursprüngliche Training gibt es nicht mehr.", true);
         return;
       }
-      const saved = C.saveEdit(S.workouts[i], S.active, new Date(), opts);
-      S.workouts[i] = saved;
+      const { pcOriginal, backfill, ...edited } = S.active;
+      void pcOriginal;
+      if (backfill && !edited.exercises.some((e) => e.sets.length)) return toast("Bitte mindestens eine Übung mit Satz eintragen.", true);
+      const saved = C.saveEdit(original, edited, new Date(), opts);
+      if (i >= 0) S.workouts[i] = saved;
+      else S.workouts.push(saved);
       S.active = null;
       stopRest();
       wakeLock(false);
       await saveNow();
-      toast("Änderungen gespeichert");
+      toast(backfill ? "Einheit gespeichert" : "Änderungen gespeichert");
       go("detail", saved.id);
       return;
     }
     const done = C.finishWorkout(S.active, new Date(), opts);
     S.workouts.push(done);
+    // Aus einem Plan: Angebot, die Werte als Richtwerte in den Trainingstag zu übernehmen (wie am PC)
+    S.trainAdopt = done.planDayId && TR.hasTable(S.catalogRaw, "training_plan") ? { id: done.id, title: done.title } : null;
     S.active = null;
     stopRest();
     wakeLock(false);
@@ -1055,6 +1099,8 @@ const actions = {
       await store.set("health", S.health);
       SD.markSuperSent(S.super);
       await store.set("super", S.super);
+      TR.markTrainSent(S.train);
+      await store.set("train", S.train);
     }
     if (kind === "food" && S.food) {
       N.markNutritionSent(S.food.local);
@@ -1071,9 +1117,10 @@ const actions = {
       toast(S.active.editOf ? "Erst die laufende Bearbeitung speichern oder verwerfen." : "Erst das laufende Training beenden.", true);
       return;
     }
-    const w = S.workouts.find((x) => x.id === el.dataset.arg);
+    const own = S.workouts.find((x) => x.id === el.dataset.arg);
+    const w = own ?? pcWorkout(el.dataset.arg);
     if (!w) return;
-    S.active = C.startEdit(w);
+    S.active = own ? C.startEdit(w) : { ...C.startEdit(w), pcOriginal: w };
     await saveNow();
     go("workout");
   },
@@ -1086,6 +1133,8 @@ const actions = {
   "menu-open": () => setMenu(true),
   "menu-go": (el) => {
     S.menuOpen = false;
+    // Links auf einen Reiter (wie #/training?tab=neat am PC); aus dem Menü immer der erste Reiter
+    if (el.dataset.arg === "training") S.trainTab = el.dataset.tab ?? (el.closest(".drawer") ? "workouts" : S.trainTab ?? "workouts");
     const sec = SECTIONS.find((x) => x.id === el.dataset.arg);
     return sec?.view ? go(sec.view) : go("pc-only", el.dataset.arg);
   },
@@ -1128,10 +1177,10 @@ async function sendFile(kind, all) {
       kind === "food" && S.food
         ? mergeTables(N.nutritionTables(S.catalog, S.food.local, { all }), P.waterTables(S.water, { all }))
         : kind === "body" && S.body
-          ? mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(CD.checklistTables(S.checklists, { all }), CF.caffeineTables(S.caffeine, { all }))))))
+          ? mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), CF.caffeineTables(S.caffeine, { all })), TR.trainTables(S.train, { all }))))))
           : {};
     if (kind === "food" && !Object.keys(food).length) return toast("Keine Ernährungseinträge zum Senden.", true);
-    if (kind === "body" && !Object.keys(food).length) return toast("Keine Körperwerte, Schlaf-, Regenerations-, To-do-, Health- oder Superhuman-Einträge zum Senden.", true);
+    if (kind === "body" && !Object.keys(food).length) return toast("Keine Körperwerte, Schlaf-, Regenerations-, To-do-, Training-, Health- oder Superhuman-Einträge zum Senden.", true);
     if (kind === "training" && !list.length) return toast("Keine Trainings zum Senden.", true);
     doc = C.buildReturnFile(S.catalog, S.localExercises, list, new Date(), food);
   } catch (e) {
@@ -1191,6 +1240,7 @@ app.addEventListener("input", (ev) => {
   if (icoachInput(el)) return;
   if (healthInput(el)) return;
   if (superInput(el)) return;
+  if (trainingInput(el)) return;
   if (el.id === "q") {
     S.query = el.value;
     document.getElementById("results").innerHTML = pickerResults();
@@ -1263,6 +1313,7 @@ app.addEventListener("change", async (ev) => {
   if (icoachChange(el)) return;
   if (healthChange(el)) return;
   if (superChange(el)) return;
+  if (trainingChange(el)) return;
   if (el.id === "only-nr") {
     S.prefs.onlyNumbered = el.checked;
     saveSoon();
@@ -1289,8 +1340,11 @@ async function loadFile(file) {
     const text = await file.text();
     const catalog = C.parseExport(text);
     S.localExercises = C.keepLocalExercises(catalog, S.localExercises, [...S.workouts, ...(S.active ? [S.active] : [])]);
-    S.catalog = catalog;
+    S.catalogRaw = catalog;
     await store.set("catalog", catalog);
+    S.train = TR.pruneTrain(catalog, S.train);
+    await store.set("train", S.train);
+    refreshCatalog();
     N.pruneLocal(catalog, S.food.local);
     await store.set("nutrition", S.food.local);
     BD.pruneBody(catalog, S.body.local);
@@ -1467,6 +1521,34 @@ initTodos(moduleCtx);
 initICoach(moduleCtx);
 initHealth(moduleCtx);
 initSuper(moduleCtx);
+const trainingCtx = {
+  get S() {
+    return S;
+  },
+  esc,
+  header,
+  toast,
+  store,
+  C,
+  uuid: () => C.uuidv7(),
+  rerender: () => rerenderKeepScroll(),
+  go: (view, arg) => go(view, arg),
+  confirmTwice: (el, text) => confirmTwice(el, text),
+  refreshCatalog: () => refreshCatalog(),
+  persistTrain: () => persistTrain(),
+  saveNow: () => saveNow(),
+  setNotice: (tone, text) => trainSetNotice(tone, text),
+  failed: (e) => trainFailed(e),
+  saveExerciseRow: (row, patch) => saveExerciseRow(row, patch),
+  startPlanDay: (id) => startPlanDay(id),
+  startFree: () => startWorkout("Freies Training"),
+  startBackfill: (date) => startBackfill(date),
+  startCardio: (id) => startBackfill(todayIso(), id),
+  openWorkout: (id) => go("detail", id),
+};
+initTraining(trainingCtx);
+initTrainingStats(trainingCtx);
+initTrainingDb(trainingCtx);
 
 initFood({
   get S() {
@@ -1485,7 +1567,8 @@ initFood({
 async function boot() {
   fixSafeTop();
   try {
-    S.catalog = await store.get("catalog");
+    S.catalogRaw = await store.get("catalog");
+    S.train = TR.trainState(await store.get("train"));
     S.localExercises = (await store.get("localExercises")) || [];
     S.workouts = (await store.get("workouts")) || [];
     S.active = await store.get("active");
@@ -1500,6 +1583,7 @@ async function boot() {
     S.health = HD.healthState(await store.get("health"));
     S.super = SD.superState(await store.get("super"));
     delete S.prefs.topOffset; // Einstellung aus 1.1.7 entfällt
+    refreshCatalog();
   } catch (e) {
     app.innerHTML = `<p class="boot">Der Gerätespeicher ist nicht verfügbar (${esc(e.message)}). Im privaten Modus funktioniert LIFESPAN OS Mobil nicht.</p>`;
     return;

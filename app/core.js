@@ -9,7 +9,7 @@ import { pcFromRows } from "./pcdb.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.16.2";
+export const MOBILE_VERSION = "1.17.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -102,6 +102,12 @@ export const PROFILES = [
 export const PROFILE_KEYS = PROFILES.map((p) => p.key);
 export const CONC_ECC_RULE =
   "Sind Konzentrisch und Exzentrisch beide eingetragen, zählt für das Gewicht nur der konzentrische Wert.";
+
+/** Profilgewichte eines Satzes in der Form der Desktop-App (`rpMidKg` …). */
+export function profileWeights(rp) {
+  const camel = (col) => col.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+  return Object.fromEntries(PROFILES.map((p) => [camel(p.col), rp?.[p.key] ?? null]));
+}
 
 export function emptyProfiles() {
   return Object.fromEntries(PROFILE_KEYS.map((k) => [k, null]));
@@ -205,12 +211,38 @@ export function parseExport(text) {
   const exercises = rows("exercise");
   const sports = rows("sport");
 
-  // Trainingspläne (nicht archiviert) mit Tagen, Übungen und Sätzen
+  const plans = plansFromRows(rows);
+
+  const last = lastSessionsFromRows(rows("workout"), rows("workout_exercise"), rows("workout_set"));
+  const usage = usageFromRows(rows("workout"), rows("workout_exercise"));
+
+  return {
+    schemaVersion: doc.schemaVersion,
+    appVersion: doc.appVersion ?? null,
+    exportedAt: doc.exportedAt ?? null,
+    loadedAt: isoNow(),
+    columns,
+    machines,
+    exercises,
+    sports,
+    plans,
+    last,
+    usage,
+    nutrition: nutritionFromRows(rows, doc.exportedAt ?? null),
+    body: bodyFromRows(rows),
+    focus: focusFromRows(rows),
+    /** Tabellen für die Ansichten wie am PC (Overview, Nutrition; seit 1.5.0) */
+    pc: pcFromRows(rows),
+  };
+}
+
+/** Trainingspläne (nicht archiviert) mit Tagen, Übungen und Sätzen zum Starten am Handy. */
+export function plansFromRows(rows) {
   const planRows = rows("training_plan").filter((p) => !p.archived);
   const dayRows = rows("training_plan_day");
   const pexRows = rows("training_plan_exercise");
   const psetRows = rows("training_plan_set");
-  const plans = planRows
+  return planRows
     .map((p) => ({
       row: p,
       days: dayRows
@@ -250,27 +282,6 @@ export function parseExport(text) {
     .filter((p) => p.days.length)
     .sort((a, b) => String(a.row.name).localeCompare(String(b.row.name), "de"));
 
-  const last = lastSessionsFromRows(rows("workout"), rows("workout_exercise"), rows("workout_set"));
-  const usage = usageFromRows(rows("workout"), rows("workout_exercise"));
-
-  return {
-    schemaVersion: doc.schemaVersion,
-    appVersion: doc.appVersion ?? null,
-    exportedAt: doc.exportedAt ?? null,
-    loadedAt: isoNow(),
-    columns,
-    machines,
-    exercises,
-    sports,
-    plans,
-    last,
-    usage,
-    nutrition: nutritionFromRows(rows, doc.exportedAt ?? null),
-    body: bodyFromRows(rows),
-    focus: focusFromRows(rows),
-    /** Tabellen für die Ansichten wie am PC (Overview, Nutrition; seit 1.5.0) */
-    pc: pcFromRows(rows),
-  };
 }
 
 /** Je Übung die zuletzt abgeschlossene Einheit (Datum, Sätze, Einstellungen). */
@@ -661,9 +672,61 @@ export function saveEdit(original, edited, now = new Date(), { keepUnticked = fa
     startedAt: original.startedAt,
     finishedAt: original.finishedAt,
     updatedAt: ts,
-    durationMin: Math.min(1440, Math.max(1, minutes ?? 1)),
+    durationMin: minutes === null || minutes === undefined ? null : Math.min(1440, Math.max(1, minutes)),
     tombstones,
     exported: false,
+  };
+}
+
+/**
+ * Einheit vom PC (Zeilen der Exportdatei) als Handy-Training zum Bearbeiten (1.17.0). IDs bleiben,
+ * damit der PC beim Abgleich die Einheit ersetzt; alle übrigen Spalten (z. B. Cardio-Messwerte)
+ * stehen in `extra` und gehen unverändert mit zurück.
+ */
+export function workoutFromPc(w, wexRows, setsByWex) {
+  return {
+    id: w.id,
+    date: w.date,
+    startTime: w.start_time ?? null,
+    title: w.title,
+    planDayId: w.plan_day_id ?? null,
+    perceivedExertion: w.perceived_exertion ?? null,
+    notes: w.notes ?? null,
+    status: "done",
+    startedAt: w.started_at ?? w.created_at,
+    finishedAt: w.finished_at ?? w.updated_at,
+    durationMin: w.duration_min ?? null,
+    createdAt: w.created_at,
+    updatedAt: w.updated_at,
+    exported: true,
+    fromPc: true,
+    extra: { ...w },
+    exercises: [...wexRows]
+      .sort(byPosition)
+      .map((we) => ({
+        id: we.id,
+        exerciseId: we.exercise_id,
+        notes: we.notes ?? null,
+        settings: settingsFromRow(we),
+        restSeconds: we.rest_seconds ?? null,
+        profiles: null,
+        extra: { ...we },
+        sets: [...(setsByWex.get(we.id) ?? [])].sort(byPosition).map((s) => ({
+          id: s.id,
+          reps: s.reps ?? null,
+          weightKg: s.weight_kg ?? null,
+          durationSeconds: s.duration_seconds ?? null,
+          distanceM: s.distance_m ?? null,
+          rpe: s.rpe ?? null,
+          isWarmup: !!s.is_warmup,
+          isUnilateral: !!s.is_unilateral,
+          isDone: true,
+          isFailure: !!s.is_failure,
+          notes: s.notes ?? null,
+          rp: profilesFromRow(s),
+          extra: { ...s },
+        })),
+      })),
   };
 }
 
@@ -729,6 +792,7 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
     } else planDayId = null;
 
     out.workout.push({
+      ...(w.extra ?? {}),
       id: w.id,
       date: w.date,
       start_time: w.startTime,
@@ -752,6 +816,7 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
       if (ex.sport_id && sportById.has(ex.sport_id)) out.sport.set(ex.sport_id, sportById.get(ex.sport_id));
       const st = we.settings || {};
       out.workout_exercise.push({
+        ...(we.extra ?? {}),
         id: we.id,
         workout_id: w.id,
         exercise_id: ex.id,
@@ -773,6 +838,7 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
         const total = profileTotal(s.rp);
         const rpCols = Object.fromEntries(PROFILES.map((p) => [p.col, filled(s.rp?.[p.key]) ? s.rp[p.key] : null]));
         out.workout_set.push({
+          ...(s.extra ?? {}),
           id: s.id,
           workout_exercise_id: we.id,
           position: si,

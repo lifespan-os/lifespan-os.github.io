@@ -386,3 +386,35 @@ Fassung laden.
 - **iCoach.me → Magazin:** neues Heft „Brutto vs. Netto: Welche Kalorie zählt?“ (iCoach.Me Magazin ·
   Ernährung, 3 Seiten) in der neuen Kategorie **Ernährung**; PDF unter `media/icoach/magazin/brutto-netto.pdf`,
   Titelbild unter `icoach/magazin/brutto-netto.jpg`. Daten aus `src/domain/magazines.ts` (pcdomain.js neu gebaut).
+
+## Version 1.17.0 (14.11.2026): Training wie am PC
+
+- **Training** hat jetzt alle Reiter der Desktop-App (TrainingPage.tsx), auf Handybreite:
+  - **Einheiten:** alle Einheiten vom PC und vom Handy mit Übungen, Arbeitssätzen, Volumen und
+    Dauer, Restdays und Krankheitstage in der Liste; „Tag starten“ (Trainingstag aus Plan),
+    „Training starten“, **Nachtragen** (Datum, Uhrzeit, Dauer), **Restday**/**Krankheit** mit den
+    Meldungen wie am PC, **Cardio erfassen**; Volumen je Woche (8 Wochen). Einheiten vom PC lassen
+    sich öffnen und bearbeiten (`core.workoutFromPc`, alle übrigen Spalten bleiben erhalten).
+    Nach einer Einheit aus einem Plan: „In den Plan übernehmen“ (wie `plan::adopt_workout`).
+  - **Auswertung:** letzte 7 Einheiten, Muskel-Körperkarte (Volumen/Arbeitssätze), Muskeln unter
+    dem Zielvolumen, Volumen je Muskelgruppe mit Veränderung und Matrix je Einheit, Zuweisen
+    fehlender Muskelgruppen, Hinweise zur Datenlage.
+  - **Cardio:** Zeitraum und Art, Kennzahlen, Minuten je Woche (WHO-Linien), Zeit in den
+    Herzfrequenzzonen (wie `heart::get`), Fitness-Trend, Bestwerte, alle Cardio-Einheiten
+    (wie `cardio_report::sessions`).
+  - **NEAT:** Alltagsbewegung je Tag erfassen, ändern, löschen (Regeln wie `neat::save`),
+    Kalorien durch Schritte, Schrittziel, Energieverbrauch des Tages, letzte 14 Tage.
+  - **Pläne:** anlegen, bearbeiten (Tage, Übungen mit Sätzen, Pause, Notiz, Termine), kopieren,
+    löschen, Tag starten – Logik `planDraft` der Desktop-App, Speichern wie `plan::save`.
+  - **Datenbank:** Übungsdatenbank (anlegen, bearbeiten, löschen, Filter), Maschinendatenbank
+    (Suche, Hersteller, Kategorie, Muskelgruppe, „nur im Training verwendete“, Details),
+    Sportarten-Datenbank (anlegen mit Bild, bearbeiten, löschen). Import und Master-Editor nur am PC.
+  - **Check-Ins:** Foto aufnehmen oder wählen (verkleinert wie am PC), Pose, Datum, Uhrzeit,
+    Vergleich vorher/nachher, Fotoanleitung, alle Check-Ins mit Filter.
+  - **Verlauf:** Verlauf je Übung (Gewicht, 1RM, Volumen, Wiederholungen, Strecke), Bestleistungen,
+    Arbeitssätze je Muskelgruppe (4 Wochen), Bestleistungen aller Übungen.
+- Neue Dateien: `training.js` (Rahmen, Einheiten, Pläne, NEAT), `trainingstats.js` (Auswertung,
+  Verlauf, Cardio), `trainingdb.js` (Datenbank, Check-Ins), `trainingdata.js` (Änderungen am Handy,
+  mit Tests). Änderungen gehen mit „Körperwerte … senden“ an den PC.
+- Für Pläne und Check-Ins braucht es eine neue Exportdatei vom PC (Tabellen `training_plan*`,
+  `checkin_photo`); pcdomain.js enthält jetzt die Trainingslogik der Desktop-App.

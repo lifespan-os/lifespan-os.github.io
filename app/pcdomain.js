@@ -170,12 +170,12 @@ function macroEnergyShares(m) {
 }
 
 // src/domain/dayGoal.ts
-function energyGoalView(totals, goalKcal) {
-  const consumed = Math.max(0, totals.energyKcal);
+function energyGoalView(totals2, goalKcal) {
+  const consumed = Math.max(0, totals2.energyKcal);
   const macroKcal = {
-    protein: totals.proteinG * KCAL_PER_GRAM.protein,
-    carbs: totals.carbsG * KCAL_PER_GRAM.carbs,
-    fat: totals.fatG * KCAL_PER_GRAM.fat
+    protein: totals2.proteinG * KCAL_PER_GRAM.protein,
+    carbs: totals2.carbsG * KCAL_PER_GRAM.carbs,
+    fat: totals2.fatG * KCAL_PER_GRAM.fat
   };
   const macroSum = macroKcal.protein + macroKcal.carbs + macroKcal.fat;
   const scale = macroSum > consumed && macroSum > 0 ? consumed / macroSum : 1;
@@ -204,7 +204,7 @@ var MACROS = [
   { key: "carbs", label: "Kohlenhydrate", actual: (n2) => n2.carbsG },
   { key: "fat", label: "Fett", actual: (n2) => n2.fatG }
 ];
-function macroGoalRows(totals, goals) {
+function macroGoalRows(totals2, goals) {
   const goalOf = {
     protein: goals.proteinG,
     carbs: goals.carbsG,
@@ -213,7 +213,7 @@ function macroGoalRows(totals, goals) {
   return MACROS.flatMap((m) => {
     const goal = goalOf[m.key];
     if (goal === null || goal <= 0) return [];
-    const actual = m.actual(totals);
+    const actual = m.actual(totals2);
     const remaining = Math.round((goal - actual) * 10) / 10;
     return [
       {
@@ -356,8 +356,8 @@ function describeMacroGoals(m) {
 // src/domain/nutritionDay.ts
 var LABELS = { protein: "Protein", carbs: "Kohlenhydrate", fat: "Fett" };
 var validGoal = (g) => g !== null && g !== void 0 && Number.isFinite(g) && g > 0 ? g : null;
-function dayChart(totals, targets) {
-  const t = totals ?? { energyKcal: 0, proteinG: 0, carbsG: 0, fatG: 0 };
+function dayChart(totals2, targets) {
+  const t = totals2 ?? { energyKcal: 0, proteinG: 0, carbsG: 0, fatG: 0 };
   const shares = macroEnergyShares(t);
   const energyGoal = validGoal(targets.energyKcal);
   const energyPercent = energyGoal === null ? null : t.energyKcal / energyGoal * 100;
@@ -594,6 +594,12 @@ var FormParser = class {
     return km === null ? null : Math.round(km * 1e3 * 10) / 10;
   }
 };
+function secondsToMinutesInput(seconds) {
+  return seconds === null ? "" : numberToInput(seconds / 60, 2);
+}
+function metersToKmInput(meters) {
+  return meters === null ? "" : numberToInput(meters / 1e3, 3);
+}
 
 // src/domain/bls.ts
 function neededDecimals(value) {
@@ -637,6 +643,9 @@ function groupedValues(catalog, entry) {
     items: catalog.nutrients.filter((n2) => n2.group === g.key && entry.values[n2.key] !== void 0).map((def) => ({ def, value: entry.values[def.key] }))
   })).filter((g) => g.items.length > 0);
 }
+function normalizeSearch(text) {
+  return text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss").replace(/[-–/()]/g, " ").replace(/\s+/g, " ").trim();
+}
 function microValues(catalog, sources) {
   const macros = new Set(
     catalog.nutrients.filter((n2) => n2.group === MACRO_GROUP).map((n2) => n2.key)
@@ -653,12 +662,42 @@ function microValues(catalog, sources) {
 }
 
 // src/domain/labels.ts
+var labels_exports = {};
+__export(labels_exports, {
+  EXERCISE_CATEGORIES: () => EXERCISE_CATEGORIES,
+  LIFESTYLE_CATEGORIES: () => LIFESTYLE_CATEGORIES,
+  MEAL_TYPES: () => MEAL_TYPES,
+  METRIC_CATEGORIES: () => METRIC_CATEGORIES,
+  defaultMealTypeLabel: () => defaultMealTypeLabel,
+  exerciseCategoryLabel: () => exerciseCategoryLabel,
+  getMealNames: () => getMealNames,
+  lifestyleCategoryLabel: () => lifestyleCategoryLabel,
+  mealTypeLabel: () => mealTypeLabel,
+  mealTypeOptions: () => mealTypeOptions,
+  metricCategoryLabel: () => metricCategoryLabel,
+  setMealNames: () => setMealNames,
+  subscribeMealNames: () => subscribeMealNames
+});
+var EXERCISE_CATEGORIES = [
+  { value: "strength", label: "Kraft" },
+  { value: "cardio", label: "Ausdauer" },
+  { value: "mobility", label: "Mobilit\xE4t" },
+  { value: "other", label: "Sonstiges" }
+];
 var MEAL_TYPES = [
   { value: "breakfast", label: "Fr\xFChst\xFCck" },
   { value: "lunch", label: "Mittagessen" },
   { value: "dinner", label: "Abendessen" },
   { value: "snack", label: "Snacks" },
   { value: "other", label: "Sonstiges" }
+];
+var METRIC_CATEGORIES = [
+  { value: "weight", label: "Gewicht" },
+  { value: "composition", label: "K\xF6rperzusammensetzung" },
+  { value: "circumference", label: "Umf\xE4nge" },
+  { value: "vital", label: "Vitalwerte" },
+  { value: "fitness", label: "Fitness & Longevity" },
+  { value: "other", label: "Gesundheitsmarker & Sonstiges" }
 ];
 var LIFESTYLE_CATEGORIES = [
   { value: "habit", label: "Gewohnheit" },
@@ -671,16 +710,87 @@ var LIFESTYLE_CATEGORIES = [
 function labelOf(list, value) {
   return list.find((item2) => item2.value === value)?.label ?? value;
 }
+var exerciseCategoryLabel = (v) => labelOf(EXERCISE_CATEGORIES, v);
 var customMealNames = {};
 var listeners = /* @__PURE__ */ new Set();
 function setMealNames(names) {
   customMealNames = { ...names };
   listeners.forEach((l) => l());
 }
+function subscribeMealNames(listener) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+function getMealNames() {
+  return customMealNames;
+}
+var defaultMealTypeLabel = (v) => labelOf(MEAL_TYPES, v);
 var mealTypeLabel = (v) => customMealNames[v] ?? labelOf(MEAL_TYPES, v);
+var mealTypeOptions = () => MEAL_TYPES.map((t) => ({ value: t.value, label: mealTypeLabel(t.value) }));
+var metricCategoryLabel = (v) => labelOf(METRIC_CATEGORIES, v);
 var lifestyleCategoryLabel = (v) => labelOf(LIFESTYLE_CATEGORIES, v);
 
+// src/domain/workoutDraft.ts
+var workoutDraft_exports = {};
+__export(workoutDraft_exports, {
+  DEFAULT_REST_SECONDS: () => DEFAULT_REST_SECONDS,
+  activeProfiles: () => activeProfiles,
+  adoptIds: () => adoptIds,
+  cardioChoices: () => cardioChoices,
+  cardioDraft: () => cardioDraft,
+  cardioToDraft: () => cardioToDraft,
+  copySet: () => copySet,
+  defaultRest: () => defaultRest,
+  describeTarget: () => describeTarget,
+  draftFromPlanDay: () => draftFromPlanDay,
+  draftToInput: () => draftToInput,
+  emptyCardioDraft: () => emptyCardioDraft,
+  emptyExercise: () => emptyExercise,
+  emptySet: () => emptySet,
+  emptyWorkoutDraft: () => emptyWorkoutDraft,
+  finishDraft: () => finishDraft,
+  formatClock: () => formatClock,
+  localTime: () => localTime,
+  minutesSince: () => minutesSince,
+  newKey: () => newKey,
+  parseCardio: () => parseCardio,
+  parseDurationField: () => parseDurationField,
+  parseProfile: () => parseProfile,
+  planExerciseToDraft: () => planExerciseToDraft,
+  planSetToDraft: () => planSetToDraft,
+  profileToDraft: () => profileToDraft,
+  setColumns: () => setColumns,
+  startDraft: () => startDraft,
+  weekStart: () => weekStart,
+  weeklyTotals: () => weeklyTotals,
+  workoutToDraft: () => workoutToDraft
+});
+
 // src/domain/resistance.ts
+var resistance_exports = {};
+__export(resistance_exports, {
+  CONC_ECC_RULE: () => CONC_ECC_RULE,
+  PROFILE_FIELDS: () => PROFILE_FIELDS,
+  PROFILE_KEYS: () => PROFILE_KEYS,
+  PROFILE_LABELS: () => PROFILE_LABELS,
+  PROFILE_SHORT: () => PROFILE_SHORT,
+  SUM_MESSAGE: () => SUM_MESSAGE,
+  concentricOnly: () => concentricOnly,
+  countedProfiles: () => countedProfiles,
+  emptyProfileDraft: () => emptyProfileDraft,
+  emptyProfileWeights: () => emptyProfileWeights,
+  isProfileKey: () => isProfileKey,
+  normalizeProfiles: () => normalizeProfiles,
+  profileSum: () => profileSum,
+  profileSumMatches: () => profileSumMatches,
+  profileTotal: () => profileTotal,
+  profileTotalText: () => profileTotalText,
+  profileWeight: () => profileWeight,
+  profilesWithValues: () => profilesWithValues,
+  toggleProfile: () => toggleProfile,
+  usedProfiles: () => usedProfiles,
+  visibleProfiles: () => visibleProfiles
+});
 var PROFILE_KEYS = [
   "mid",
   "end",
@@ -725,11 +835,102 @@ var PROFILE_FIELDS = {
   conc: "rpConcentricKg",
   isom: "rpIsometricKg"
 };
+function emptyProfileDraft() {
+  return Object.fromEntries(PROFILE_KEYS.map((k) => [k, ""]));
+}
+function emptyProfileWeights() {
+  return Object.fromEntries(PROFILE_KEYS.map((k) => [PROFILE_FIELDS[k], null]));
+}
+var SUM_MESSAGE = "Wer rechnen kann ist klar im Vorteil - Gewicht pr\xFCfen!";
+function countedProfiles(entered) {
+  return entered.includes("conc") && entered.includes("ecc") ? entered.filter((k) => k !== "ecc") : [...entered];
+}
+function concentricOnly(entered) {
+  return entered.includes("conc") && entered.includes("ecc");
+}
+var CONC_ECC_RULE = "Sind Konzentrisch und Exzentrisch beide eingetragen, z\xE4hlt f\xFCr das Gewicht nur der konzentrische Wert.";
+function profileSum(weights) {
+  const entered = PROFILE_KEYS.filter((k) => profileWeight(weights, k) !== null);
+  if (entered.length === 0) return null;
+  return countedProfiles(entered).reduce((a, k) => a + (profileWeight(weights, k) ?? 0), 0);
+}
+function profileSumMatches(total, weights) {
+  const sum = profileSum(weights);
+  if (sum === null) return true;
+  if (total === null) return false;
+  const plain = PROFILE_KEYS.reduce((a, k) => a + (profileWeight(weights, k) ?? 0), 0);
+  const cents = (v) => Math.round(v * 100);
+  return cents(total) === cents(sum) || cents(total) === cents(plain);
+}
+function profileTotal(weights) {
+  const sum = profileSum(weights);
+  return sum === null ? null : Math.round(sum * 100) / 100;
+}
+function profileTotalText(rp) {
+  const value = (k) => rp[k].trim() === "" ? NaN : parseDecimal(rp[k]);
+  const entered = PROFILE_KEYS.filter((k) => !Number.isNaN(value(k)));
+  if (entered.length === 0) return "";
+  const sum = countedProfiles(entered).reduce((a, k) => a + value(k), 0);
+  return numberToInput(Math.round(sum * 100) / 100);
+}
+function isProfileKey(value) {
+  return PROFILE_KEYS.includes(value);
+}
 function profileWeight(set, key) {
   return set[PROFILE_FIELDS[key]] ?? null;
 }
 function usedProfiles(set) {
   return PROFILE_KEYS.filter((k) => profileWeight(set, k) !== null);
+}
+function normalizeProfiles(keys) {
+  return PROFILE_KEYS.filter((k) => keys.includes(k));
+}
+function visibleProfiles(chosen, defaults, sets2) {
+  const base = chosen ?? normalizeProfiles(defaults);
+  return PROFILE_KEYS.filter((k) => base.includes(k) || sets2.some((s) => s.rp[k].trim() !== ""));
+}
+function profilesWithValues(sets2) {
+  return PROFILE_KEYS.filter((k) => sets2.some((s) => s.rp[k].trim() !== ""));
+}
+function toggleProfile(visible, key) {
+  return visible.includes(key) ? visible.filter((k) => k !== key) : PROFILE_KEYS.filter((k) => k === key || visible.includes(k));
+}
+
+// src/domain/machineSettings.ts
+var SETTING_KEYS = [
+  "seatHeight",
+  "seatDepth",
+  "chestPadHeight",
+  "chestPadAngle",
+  "gripWidth",
+  "gripPosition",
+  "backrest",
+  "footrest"
+];
+function emptySettingsDraft() {
+  return {
+    seatHeight: "",
+    seatDepth: "",
+    chestPadHeight: "",
+    chestPadAngle: "",
+    gripWidth: "",
+    gripPosition: "",
+    backrest: "",
+    footrest: ""
+  };
+}
+function settingsToDraft(s) {
+  const d = emptySettingsDraft();
+  for (const k of SETTING_KEYS) d[k] = s?.[k] ?? "";
+  return d;
+}
+function settingsToInput(d) {
+  const out = {};
+  for (const k of SETTING_KEYS) {
+    const v = d[k].trim();
+    out[k] = v === "" ? null : v;
+  }
+  return out;
 }
 
 // src/domain/trainingCalc.ts
@@ -760,7 +961,7 @@ function setVolumeKg(set) {
   if (set.isWarmup || set.reps === null || set.weightKg === null) return 0;
   return volumeReps(set) * set.weightKg;
 }
-function volumeBreakdown(sets) {
+function volumeBreakdown(sets2) {
   const result = {
     volumeKg: 0,
     countedSets: 0,
@@ -768,7 +969,7 @@ function volumeBreakdown(sets) {
     warmupSets: 0,
     totalReps: 0
   };
-  for (const s of sets) {
+  for (const s of sets2) {
     if (s.isWarmup) {
       result.warmupSets += 1;
       continue;
@@ -792,9 +993,9 @@ function formatKg(kg2) {
 function formatVolume(kg2) {
   return `${formatNumber(kg2, Number.isInteger(kg2) || kg2 >= 1e3 ? 0 : 1)} kg`;
 }
-function volumeFormula(sets) {
-  const b = volumeBreakdown(sets);
-  const terms = sets.filter((s) => !s.isWarmup && s.reps !== null && s.weightKg !== null).map(
+function volumeFormula(sets2) {
+  const b = volumeBreakdown(sets2);
+  const terms = sets2.filter((s) => !s.isWarmup && s.reps !== null && s.weightKg !== null).map(
     (s) => s.isFailure === true ? `${formatNumber(volumeReps(s), 1)} \xD7 ${formatKg(s.weightKg ?? 0)} (Fail)` : `${s.reps} \xD7 ${formatKg(s.weightKg ?? 0)}`
   );
   const notes = [];
@@ -838,8 +1039,8 @@ function describeSet(set) {
   if (set.isFailure === true) text = `${text} \xB7 Fail`;
   return set.isWarmup ? `Aufw. ${text}` : text;
 }
-function describeSets(sets) {
-  return sets.map(describeSet).join("  |  ");
+function describeSets(sets2) {
+  return sets2.map(describeSet).join("  |  ");
 }
 function summarizeSessions(log) {
   const byWorkout = /* @__PURE__ */ new Map();
@@ -1034,6 +1235,80 @@ function describeNewRecord(r2) {
 }
 
 // src/domain/cardio.ts
+var cardio_exports = {};
+__export(cardio_exports, {
+  CARDIO_FIELD_INFO: () => CARDIO_FIELD_INFO,
+  CARDIO_KCAL_INFO: () => CARDIO_KCAL_INFO,
+  CARDIO_KINDS: () => CARDIO_KINDS,
+  cardioFieldLabel: () => cardioFieldLabel,
+  cardioFields: () => cardioFields,
+  cardioKindLabel: () => cardioKindLabel,
+  cardioMethodLabel: () => cardioMethodLabel,
+  cardioPace: () => cardioPace,
+  formatDuration: () => formatDuration2,
+  parseDuration: () => parseDuration
+});
+var CARDIO_KINDS = [
+  { value: "run", label: "Laufen" },
+  { value: "walk", label: "Gehen / Walking" },
+  { value: "cycle", label: "Rad / Ergometer" },
+  { value: "row", label: "Rudern" },
+  { value: "ski", label: "SkiErg / Langlauf" },
+  { value: "swim", label: "Schwimmen" },
+  { value: "elliptical", label: "Crosstrainer" },
+  { value: "stairs", label: "Stepper / Treppe" },
+  { value: "other", label: "Sonstiges" }
+];
+function cardioKindLabel(kind) {
+  return CARDIO_KINDS.find((k) => k.value === kind)?.label ?? "Sonstiges";
+}
+var FIELDS = {
+  run: ["distance", "inclinePct", "elevationM"],
+  walk: ["distance", "inclinePct", "elevationM"],
+  cycle: ["distance", "powerW", "powerMaxW", "cadence", "cadenceMax", "level"],
+  row: ["distance", "powerW", "powerMaxW", "cadence", "cadenceMax"],
+  ski: ["distance", "powerW", "powerMaxW", "cadence", "cadenceMax"],
+  swim: ["distance"],
+  elliptical: ["distance", "powerW", "powerMaxW", "level"],
+  stairs: ["level", "elevationM"],
+  other: ["distance"]
+};
+function cardioFields(kind) {
+  return FIELDS[kind];
+}
+function cardioFieldLabel(field, kind) {
+  switch (field) {
+    case "distance":
+      return "Strecke (km)";
+    case "inclinePct":
+      return "Steigung (%)";
+    case "elevationM":
+      return kind === "stairs" ? "H\xF6henmeter" : "H\xF6henmeter \u2191";
+    case "powerW":
+      return "\xD8 Watt";
+    case "powerMaxW":
+      return "max. Watt";
+    case "cadence":
+      return "\xD8 Frequenz";
+    case "cadenceMax":
+      return "max. Frequenz";
+    case "level":
+      return "Stufe";
+  }
+}
+var CARDIO_FIELD_INFO = {
+  distance: "Zur\xFCckgelegte Strecke in km (z. B. 7,5).",
+  inclinePct: "Steigung am Laufband in Prozent. Erh\xF6ht den berechneten Verbrauch.",
+  elevationM: "H\xF6henmeter bergauf (drau\xDFen). Ohne Steigungsangabe wird daraus die mittlere Steigung berechnet.",
+  powerW: "\xD8 Leistung in Watt laut Ger\xE4t \u2013 die genaueste Grundlage f\xFCr die Kalorien.",
+  powerMaxW: "H\xF6chste Leistung in Watt im Block. Nur zur Auswertung.",
+  cadence: "\xD8 Trittfrequenz (Rad) bzw. Schl\xE4ge je Minute (Rudern, SkiErg). Nur zur Auswertung.",
+  cadenceMax: "H\xF6chste Trittfrequenz bzw. Schlagzahl im Block. Nur zur Auswertung.",
+  level: "Stufe bzw. Widerstand am Ger\xE4t. Nur zur Auswertung.",
+  hrAvg: "\xD8 Puls in Schl\xE4gen je Minute (z. B. von der Uhr). Ab 90/min f\xFCr die Kalorien nutzbar.",
+  hrMax: "H\xF6chster Puls im Block.",
+  deviceKcal: "kcal laut Ger\xE4t oder Uhr \u2013 nur zum Vergleich. Ger\xE4te z\xE4hlen meist brutto (mit Grundumsatz), die App z\xE4hlt nur den Mehrverbrauch."
+};
 function formatDuration2(seconds) {
   if (seconds === null || seconds === void 0 || !Number.isFinite(seconds)) return "";
   const s = Math.max(0, Math.round(seconds));
@@ -1041,6 +1316,20 @@ function formatDuration2(seconds) {
   const m = Math.floor(s % 3600 / 60);
   const rest = String(s % 60).padStart(2, "0");
   return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${rest}` : `${m}:${rest}`;
+}
+function parseDuration(text) {
+  const t = text.trim();
+  if (t === "") return null;
+  if (t.includes(":")) {
+    const parts2 = t.split(":");
+    if (parts2.length > 3 || parts2.some((p) => !/^\d+$/.test(p.trim()))) return NaN;
+    const nums = parts2.map((p) => Number(p.trim()));
+    if (nums.slice(1).some((n2) => n2 >= 60)) return NaN;
+    const [a = 0, b = 0, c = 0] = nums;
+    return parts2.length === 3 ? a * 3600 + b * 60 + c : a * 60 + b;
+  }
+  const minutes = Number(t.replace(",", "."));
+  return Number.isFinite(minutes) && /^\d+([.,]\d+)?$/.test(t) ? Math.round(minutes * 60) : NaN;
 }
 function cardioPace(kind, durationSeconds, distanceM) {
   if (!durationSeconds || !distanceM || durationSeconds <= 0 || distanceM <= 0) return null;
@@ -1075,6 +1364,410 @@ function cardioMethodLabel(method) {
       return "aus Art und Anstrengung";
   }
 }
+var CARDIO_KCAL_INFO = "Kalorien je Block mit der genauesten Methode, f\xFCr die Werte da sind: 1. Leistung in Watt (Rudern/SkiErg auch aus Strecke und Dauer), 2. bei Laufen/Gehen Tempo und Steigung, 3. \xD8 Puls (mit Geschlecht und Alter aus dem Profil), 4. Geschwindigkeit (Rad, Schwimmen), 5. Art und Anstrengung (RPE). Gez\xE4hlt wird nur der Mehrverbrauch \xFCber Ruhe \u2013 der Grundbedarf steckt schon im Tagesbedarf.";
+
+// src/domain/workoutDraft.ts
+var counter = 0;
+function newKey() {
+  counter += 1;
+  return `k${counter}`;
+}
+function emptyCardioDraft() {
+  return {
+    hrAvg: "",
+    hrMax: "",
+    powerW: "",
+    inclinePct: "",
+    elevationM: "",
+    cadence: "",
+    level: "",
+    deviceKcal: "",
+    powerMaxW: "",
+    cadenceMax: ""
+  };
+}
+function cardioToDraft(s) {
+  return {
+    hrAvg: numberToInput(s.hrAvg ?? null, 0),
+    hrMax: numberToInput(s.hrMax ?? null, 0),
+    powerW: numberToInput(s.powerW ?? null, 1),
+    inclinePct: numberToInput(s.inclinePct ?? null, 1),
+    elevationM: numberToInput(s.elevationM ?? null, 0),
+    cadence: numberToInput(s.cadence ?? null, 0),
+    level: numberToInput(s.level ?? null, 1),
+    deviceKcal: numberToInput(s.deviceKcal ?? null, 0),
+    powerMaxW: numberToInput(s.powerMaxW ?? null, 1),
+    cadenceMax: numberToInput(s.cadenceMax ?? null, 0)
+  };
+}
+function emptySet() {
+  return {
+    key: newKey(),
+    id: null,
+    reps: "",
+    weightKg: "",
+    duration: "",
+    distance: "",
+    rpe: "",
+    isWarmup: false,
+    isUnilateral: false,
+    notes: "",
+    isDone: false,
+    isFailure: false,
+    rp: emptyProfileDraft(),
+    cardio: emptyCardioDraft()
+  };
+}
+var DEFAULT_REST_SECONDS = 180;
+function defaultRest(category) {
+  return category === "strength" ? String(DEFAULT_REST_SECONDS) : "";
+}
+function formatClock(seconds) {
+  const s = Math.max(0, Math.ceil(seconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+function profileToDraft(w) {
+  const d = emptyProfileDraft();
+  for (const k of PROFILE_KEYS) d[k] = numberToInput(w[PROFILE_FIELDS[k]]);
+  return d;
+}
+function copySet(previous) {
+  if (!previous) return emptySet();
+  return {
+    ...previous,
+    key: newKey(),
+    id: null,
+    isWarmup: false,
+    notes: "",
+    isDone: false,
+    isFailure: false,
+    rp: { ...previous.rp },
+    // Messwerte des Geräts bzw. der Uhr gehören zum Block, nicht zum nächsten
+    cardio: {
+      ...previous.cardio,
+      hrAvg: "",
+      hrMax: "",
+      deviceKcal: "",
+      powerMaxW: "",
+      cadenceMax: ""
+    }
+  };
+}
+function emptyExercise(exerciseId = "") {
+  return {
+    key: newKey(),
+    id: null,
+    exerciseId,
+    notes: "",
+    target: null,
+    profiles: null,
+    settings: emptySettingsDraft(),
+    restSeconds: "",
+    sets: [emptySet()]
+  };
+}
+function emptyWorkoutDraft(date) {
+  return {
+    id: null,
+    date,
+    startTime: "",
+    durationMin: "",
+    title: "",
+    planDayId: null,
+    planDayLabel: null,
+    perceivedExertion: "",
+    notes: "",
+    status: "done",
+    startedAt: null,
+    exercises: []
+  };
+}
+function cardioDraft(exercise, date) {
+  return {
+    ...emptyWorkoutDraft(date),
+    title: exercise.name.slice(0, 80),
+    exercises: [emptyExercise(exercise.id)]
+  };
+}
+function cardioChoices(exercises) {
+  return exercises.filter((e) => e.category === "cardio" && !e.archived).sort((a, b) => b.usageCount - a.usageCount || a.name.localeCompare(b.name, "de"));
+}
+function describeTarget(e) {
+  const parts2 = [];
+  const reps = e.targetRepsMin !== null && e.targetRepsMax !== null && e.targetRepsMin !== e.targetRepsMax ? `${e.targetRepsMin}\u2013${e.targetRepsMax}` : e.targetRepsMin ?? e.targetRepsMax;
+  if (e.targetSets !== null && reps !== null) parts2.push(`${e.targetSets} \xD7 ${reps} Wdh.`);
+  else if (e.targetSets !== null) parts2.push(`${e.targetSets} S\xE4tze`);
+  else if (reps !== null) parts2.push(`${reps} Wdh.`);
+  const profiles = describeProfiles(e);
+  if (e.targetWeightKg !== null) {
+    parts2.push(`${numberToInput(e.targetWeightKg)} kg${profiles ? ` (${profiles})` : ""}`);
+  } else if (profiles) {
+    parts2.push(profiles);
+  }
+  if (e.restSeconds !== null) parts2.push(`Pause ${e.restSeconds} s`);
+  return parts2.length > 0 ? parts2.join(" \xB7 ") : null;
+}
+function planSetToDraft(s, cardio = false) {
+  return {
+    ...emptySet(),
+    reps: s.reps === null ? "" : String(s.reps),
+    weightKg: numberToInput(s.weightKg),
+    duration: cardio ? formatDuration2(s.durationSeconds) : secondsToMinutesInput(s.durationSeconds),
+    distance: metersToKmInput(s.distanceM),
+    rpe: numberToInput(s.rpe, 1),
+    isWarmup: s.isWarmup,
+    isUnilateral: s.isUnilateral === true,
+    rp: profileToDraft(s),
+    cardio: cardioToDraft(s)
+  };
+}
+function planExerciseToDraft(pe, cardio = false) {
+  const planned = pe.sets ?? [];
+  let sets2;
+  if (planned.length > 0) {
+    sets2 = planned.map((s) => planSetToDraft(s, cardio));
+  } else {
+    const reps = pe.targetRepsMax ?? pe.targetRepsMin;
+    sets2 = Array.from({ length: Math.max(1, pe.targetSets ?? 1) }, () => ({
+      ...emptySet(),
+      reps: reps === null ? "" : String(reps),
+      weightKg: numberToInput(pe.targetWeightKg),
+      rp: profileToDraft(pe)
+    }));
+  }
+  return {
+    key: newKey(),
+    id: pe.id,
+    exerciseId: pe.exerciseId,
+    notes: pe.notes ?? "",
+    target: planned.length > 0 ? null : describeTarget(pe),
+    repRange: pe.targetRepsMin !== null || pe.targetRepsMax !== null ? { min: pe.targetRepsMin, max: pe.targetRepsMax } : null,
+    profiles: null,
+    settings: pe.settings ? settingsToDraft(pe.settings) : emptySettingsDraft(),
+    restSeconds: pe.restSeconds === null ? "" : String(pe.restSeconds),
+    sets: sets2
+  };
+}
+function draftFromPlanDay(day, planName, date, isCardio = () => false) {
+  return {
+    ...emptyWorkoutDraft(date),
+    title: day.name,
+    planDayId: day.id,
+    planDayLabel: `${planName} \u2013 ${day.name}`,
+    // Plan-IDs gehören nicht in die Einheit
+    exercises: day.exercises.map((pe) => ({
+      ...planExerciseToDraft(pe, isCardio(pe.exerciseId)),
+      id: null
+    }))
+  };
+}
+function workoutToDraft(w) {
+  return {
+    id: w.id,
+    date: w.date,
+    startTime: w.startTime ?? "",
+    durationMin: w.durationMin === null ? "" : String(w.durationMin),
+    title: w.title,
+    planDayId: w.planDayId,
+    planDayLabel: w.planDayLabel,
+    perceivedExertion: w.perceivedExertion === null ? "" : String(w.perceivedExertion),
+    notes: w.notes ?? "",
+    status: w.status,
+    startedAt: w.startedAt,
+    exercises: w.exercises.map((e) => ({
+      key: newKey(),
+      id: e.id,
+      exerciseId: e.exerciseId,
+      notes: e.notes ?? "",
+      target: null,
+      profiles: null,
+      settings: settingsToDraft(e.settings),
+      restSeconds: e.restSeconds === null || e.restSeconds === void 0 ? "" : String(e.restSeconds),
+      sets: e.sets.map((s) => ({
+        key: newKey(),
+        id: s.id,
+        reps: s.reps === null ? "" : String(s.reps),
+        weightKg: numberToInput(s.weightKg),
+        // Cardio: Dauer als m:ss bzw. h:mm:ss, sonst Minuten
+        duration: e.cardioKind ? formatDuration2(s.durationSeconds) : secondsToMinutesInput(s.durationSeconds),
+        distance: metersToKmInput(s.distanceM),
+        rpe: numberToInput(s.rpe, 1),
+        isWarmup: s.isWarmup,
+        isUnilateral: s.isUnilateral === true,
+        notes: s.notes ?? "",
+        isDone: s.isDone === true,
+        isFailure: s.isFailure === true,
+        rp: profileToDraft(s),
+        cardio: cardioToDraft(s)
+      }))
+    }))
+  };
+}
+function parseProfile(p, f, rp) {
+  const weights = {};
+  for (const k of PROFILE_KEYS) {
+    weights[PROFILE_FIELDS[k]] = p.decimal(f(PROFILE_FIELDS[k]), rp[k]);
+  }
+  return weights;
+}
+function parseDurationField(p, field, text) {
+  const seconds = parseDuration(text);
+  if (seconds !== null && Number.isNaN(seconds)) {
+    p.error(field, "Bitte Minuten (z. B. 32,5) oder m:ss bzw. h:mm:ss (z. B. 32:30) eingeben.");
+    return null;
+  }
+  return seconds;
+}
+function parseCardio(p, f, c) {
+  return {
+    hrAvg: p.integer(f("hrAvg"), c.hrAvg),
+    hrMax: p.integer(f("hrMax"), c.hrMax),
+    powerW: p.decimal(f("powerW"), c.powerW),
+    inclinePct: p.decimal(f("inclinePct"), c.inclinePct),
+    elevationM: p.decimal(f("elevationM"), c.elevationM),
+    cadence: p.integer(f("cadence"), c.cadence),
+    level: p.decimal(f("level"), c.level),
+    deviceKcal: p.integer(f("deviceKcal"), c.deviceKcal),
+    powerMaxW: p.decimal(f("powerMaxW"), c.powerMaxW),
+    cadenceMax: p.integer(f("cadenceMax"), c.cadenceMax)
+  };
+}
+var noDefaults = () => [];
+function activeProfiles(e, defaults = noDefaults) {
+  return visibleProfiles(e.profiles, defaults(e.exerciseId), e.sets);
+}
+function draftToInput(d, defaults = noDefaults) {
+  const p = new FormParser();
+  const input = {
+    id: d.id,
+    date: p.required("date", d.date, "Bitte ein Datum angeben."),
+    startTime: textOrNull(d.startTime),
+    durationMin: p.integer("durationMin", d.durationMin),
+    title: d.title,
+    planDayId: d.planDayId,
+    perceivedExertion: p.integer("perceivedExertion", d.perceivedExertion),
+    notes: textOrNull(d.notes),
+    status: d.status,
+    exercises: d.exercises.map((e, i) => ({
+      id: e.id,
+      exerciseId: p.required(`exercises.${i}.exerciseId`, e.exerciseId, "Bitte eine \xDCbung w\xE4hlen."),
+      notes: textOrNull(e.notes),
+      settings: settingsToInput(e.settings),
+      restSeconds: p.integer(`exercises.${i}.restSeconds`, e.restSeconds),
+      sets: e.sets.map((s, j) => {
+        const f = (name) => `exercises.${i}.sets.${j}.${name}`;
+        const profile = parseProfile(p, f, s.rp);
+        const computed = activeProfiles(e, defaults).length > 0;
+        const weightKg = computed ? profileTotal(profile) : p.decimal(f("weightKg"), s.weightKg);
+        if (!profileSumMatches(weightKg, profile)) p.error(f("weightKg"), SUM_MESSAGE);
+        return {
+          id: s.id,
+          reps: p.integer(f("reps"), s.reps),
+          weightKg,
+          durationSeconds: parseDurationField(p, f("durationSeconds"), s.duration),
+          distanceM: p.kmToMeters(f("distanceM"), s.distance),
+          rpe: p.decimal(f("rpe"), s.rpe),
+          isWarmup: s.isWarmup,
+          isUnilateral: s.isUnilateral,
+          notes: textOrNull(s.notes),
+          isDone: s.isDone,
+          isFailure: s.isFailure,
+          ...profile,
+          ...parseCardio(p, f, s.cardio)
+        };
+      })
+    }))
+  };
+  return p.ok ? { ok: true, input } : { ok: false, errors: p.errors };
+}
+function localTime(date) {
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+function minutesSince(startedAt, now) {
+  const start = Date.parse(startedAt);
+  if (Number.isNaN(start)) return null;
+  const minutes = Math.round((now.getTime() - start) / 6e4);
+  return Math.min(1440, Math.max(1, minutes));
+}
+function startDraft(base, now, today) {
+  return {
+    ...base,
+    id: null,
+    date: today,
+    startTime: localTime(now),
+    status: "active",
+    startedAt: null,
+    title: base.title.trim() === "" ? "Training" : base.title
+  };
+}
+function finishDraft(d, now) {
+  const minutes = d.startedAt ? minutesSince(d.startedAt, now) : null;
+  return {
+    ...d,
+    status: "done",
+    durationMin: d.durationMin.trim() === "" && minutes !== null ? String(minutes) : d.durationMin
+  };
+}
+function setColumns(category) {
+  switch (category) {
+    case "cardio":
+      return { reps: false, weight: false, duration: true, distance: true, rpe: true };
+    case "mobility":
+    case "other":
+      return { reps: true, weight: false, duration: true, distance: false, rpe: false };
+    default:
+      return { reps: true, weight: true, duration: false, distance: false, rpe: true };
+  }
+}
+function weekStart(isoDate) {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  const date = new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
+  const weekday = (date.getDay() + 6) % 7;
+  date.setDate(date.getDate() - weekday);
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${mm}-${dd}`;
+}
+function weeklyTotals(workouts, today, weeks) {
+  const current = weekStart(today);
+  const result = [];
+  for (let i = weeks - 1; i >= 0; i -= 1) {
+    const [y, m, d] = current.split("-").map(Number);
+    const start = new Date(y ?? 1970, (m ?? 1) - 1, (d ?? 1) - i * 7);
+    const iso2 = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
+    result.push({ date: iso2, value: 0, workouts: 0 });
+  }
+  for (const w of workouts) {
+    const bucket = result.find((r2) => r2.date === weekStart(w.date));
+    if (bucket) {
+      bucket.value += w.volumeKg;
+      bucket.workouts += 1;
+    }
+  }
+  return result;
+}
+function adoptIds(current, sent, saved) {
+  const exIds = /* @__PURE__ */ new Map();
+  const setIds = /* @__PURE__ */ new Map();
+  sent.exercises.forEach((e, i) => {
+    const se = saved.exercises[i];
+    if (!se) return;
+    exIds.set(e.key, se.id);
+    e.sets.forEach((s, j) => {
+      const ss = se.sets[j];
+      if (ss) setIds.set(s.key, ss.id);
+    });
+  });
+  return {
+    ...current,
+    id: current.id ?? saved.id,
+    exercises: current.exercises.map((e) => ({
+      ...e,
+      id: e.id ?? exIds.get(e.key) ?? null,
+      sets: e.sets.map((s) => ({ ...s, id: s.id ?? setIds.get(s.key) ?? null }))
+    }))
+  };
+}
 
 // src/domain/supplements.ts
 var FASTED_LABEL = "N\xFCchtern";
@@ -1095,9 +1788,9 @@ function groupIntakes(intakes) {
   }
   return [...groups.values()];
 }
-function addNutrientValues(sets) {
+function addNutrientValues(sets2) {
   const out = {};
-  for (const set of sets) {
+  for (const set of sets2) {
     for (const [k, v] of Object.entries(set)) out[k] = (out[k] ?? 0) + v;
   }
   return out;
@@ -1533,6 +2226,17 @@ function arrange(cards, layout) {
 }
 var INSIGHTS_LAYOUT_KEY = "ui.insights_layout";
 
+// src/domain/trainingVolume.ts
+var trainingVolume_exports = {};
+__export(trainingVolume_exports, {
+  E1RM_MAX_REPS: () => E1RM_MAX_REPS,
+  NO_MUSCLE_GROUP: () => NO_MUSCLE_GROUP,
+  bestE1RM: () => bestE1RM,
+  e1rmBySession: () => e1rmBySession,
+  epley1RM: () => epley1RM,
+  weeklyMuscleSets: () => weeklyMuscleSets
+});
+
 // src/domain/trends.ts
 var trends_exports = {};
 __export(trends_exports, {
@@ -1549,7 +2253,7 @@ __export(trends_exports, {
   rangeStats: () => rangeStats,
   shiftDays: () => shiftDays,
   utcDay: () => utcDay,
-  weekStart: () => weekStart
+  weekStart: () => weekStart2
 });
 var DAY_MS = 864e5;
 var ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -1586,13 +2290,13 @@ function shiftDays(iso2, days2) {
 function daysBetween(from, to) {
   return Math.round((utcDay(to) - utcDay(from)) / DAY_MS) + 1;
 }
-function weekStart(iso2) {
+function weekStart2(iso2) {
   const t = utcDay(iso2);
   const weekday = (new Date(t).getUTCDay() + 6) % 7;
   return isoFromUtc(t - weekday * DAY_MS);
 }
 function isoWeek(iso2) {
-  const monday = utcDay(weekStart(iso2));
+  const monday = utcDay(weekStart2(iso2));
   const thursday = new Date(monday + 3 * DAY_MS);
   const year = thursday.getUTCFullYear();
   const jan1 = Date.UTC(year, 0, 1);
@@ -1601,7 +2305,7 @@ function isoWeek(iso2) {
 }
 function periodOf(iso2, period) {
   if (period === "week") {
-    const start2 = weekStart(iso2);
+    const start2 = weekStart2(iso2);
     const { year, week } = isoWeek(iso2);
     return {
       key: `${year}-W${String(week).padStart(2, "0")}`,
@@ -1709,7 +2413,7 @@ function formatRange(from, to) {
   return fy === ty ? `${fd}.${fm}.\u2013${end}` : `${fd}.${fm}.${fy}\u2013${end}`;
 }
 function periodStartBack(today, period, count) {
-  if (period === "week") return shiftDays(weekStart(today), -7 * (count - 1));
+  if (period === "week") return shiftDays(weekStart2(today), -7 * (count - 1));
   const [y, m] = today.split("-").map(Number);
   const index = y * 12 + (m - 1) - (count - 1);
   return `${Math.floor(index / 12)}-${String(index % 12 + 1).padStart(2, "0")}-01`;
@@ -1751,13 +2455,13 @@ function bestE1RM(log) {
   );
 }
 function weeklyMuscleSets(log, exercises, today, count = 4) {
-  const lastMonday = weekStart(today);
+  const lastMonday = weekStart2(today);
   const weeks = [];
   for (let i = count - 1; i >= 0; i--) {
     const start = shiftDays(lastMonday, -7 * i);
     weeks.push({ start, end: shiftDays(start, 6), label: `KW ${isoWeek(start).week}` });
   }
-  const groupOf = new Map(
+  const groupOf2 = new Map(
     exercises.map((e) => [e.id, e.muscleGroup?.trim() ? e.muscleGroup.trim() : NO_MUSCLE_GROUP])
   );
   const rows = /* @__PURE__ */ new Map();
@@ -1765,7 +2469,7 @@ function weeklyMuscleSets(log, exercises, today, count = 4) {
     if (s.isWarmup || s.exerciseCategory !== "strength") continue;
     const index = weeks.findIndex((w) => s.date >= w.start && s.date <= w.end);
     if (index < 0) continue;
-    const group = groupOf.get(s.exerciseId) ?? NO_MUSCLE_GROUP;
+    const group = groupOf2.get(s.exerciseId) ?? NO_MUSCLE_GROUP;
     let row = rows.get(group);
     if (!row) {
       row = { group, sets: weeks.map(() => 0), volumeKg: weeks.map(() => 0) };
@@ -1785,6 +2489,15 @@ function weeklyMuscleSets(log, exercises, today, count = 4) {
 }
 
 // src/domain/planSchedule.ts
+var planSchedule_exports = {};
+__export(planSchedule_exports, {
+  WEEKDAY_LABELS: () => WEEKDAY_LABELS,
+  WEEKDAY_SHORT: () => WEEKDAY_SHORT,
+  describeScheduled: () => describeScheduled,
+  describeSlot: () => describeSlot,
+  isoWeekday: () => isoWeekday,
+  nextOccurrence: () => nextOccurrence
+});
 var WEEKDAY_LABELS = {
   1: "Montag",
   2: "Dienstag",
@@ -1803,6 +2516,7 @@ var WEEKDAY_SHORT = {
   6: "Sa",
   7: "So"
 };
+var pad = (n2) => String(n2).padStart(2, "0");
 function isoWeekday(iso2) {
   const [y, m, d] = iso2.split("-").map(Number);
   const day = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1)).getUTCDay();
@@ -1819,10 +2533,27 @@ function daysBetween2(a, b) {
   };
   return Math.round((ms(b) - ms(a)) / 864e5);
 }
+function describeSlot(slot) {
+  const time = slot.time ? ` um ${slot.time} Uhr` : "";
+  if (slot.weekday !== null) return `jeden ${WEEKDAY_LABELS[slot.weekday] ?? "?"}${time}`;
+  if (slot.date)
+    return `am ${WEEKDAY_SHORT[isoWeekday(slot.date)]}, ${germanDate(slot.date)}${time}`;
+  return "";
+}
 function describeScheduled(date, time, today) {
   const diff = daysBetween2(today, date);
   const day = diff === 0 ? "heute" : diff === 1 ? "morgen" : `${WEEKDAY_LABELS[isoWeekday(date)]}, ${germanDate(date)}`;
   return `${day}${time ? ` um ${time} Uhr` : ""}`;
+}
+function nextOccurrence(slot, today) {
+  if (slot.weekday !== null) {
+    const add = (slot.weekday - isoWeekday(today) + 7) % 7;
+    const [y, m, d] = today.split("-").map(Number);
+    const t = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + add));
+    return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`;
+  }
+  if (slot.date && slot.date >= today) return slot.date;
+  return null;
 }
 
 // src/domain/backup.ts
@@ -1835,6 +2566,46 @@ function exportReminderState(r2, today) {
   const text = daysSince === null ? "Du hast deine Daten noch nie exportiert." : daysSince === 0 ? "Letzter Export: heute." : `Letzter Export vor ${daysSince} ${daysSince === 1 ? "Tag" : "Tagen"}.`;
   return { due: old && !snoozed, daysSince, text };
 }
+
+// src/domain/muscleMap.ts
+var muscleMap_exports = {};
+__export(muscleMap_exports, {
+  DEFAULT_MUSCLE_MAP_SETTINGS: () => DEFAULT_MUSCLE_MAP_SETTINGS,
+  DEFAULT_TARGETS: () => DEFAULT_TARGETS,
+  LEGACY_MUSCLES: () => LEGACY_MUSCLES,
+  LEVEL_NAMES: () => LEVEL_NAMES,
+  MUSCLE_GROUPS: () => MUSCLE_GROUPS,
+  MUSCLE_IDS: () => MUSCLE_IDS,
+  MUSCLE_LABELS: () => MUSCLE_LABELS,
+  MUSCLE_MAP_SETTINGS_KEY: () => MUSCLE_MAP_SETTINGS_KEY,
+  NO_FOCUS: () => NO_FOCUS,
+  RELATIVE_TARGET: () => RELATIVE_TARGET,
+  SCALE_MODE_LABELS: () => SCALE_MODE_LABELS,
+  SECONDARY_FACTOR: () => SECONDARY_FACTOR,
+  STANDARD_TARGET: () => STANDARD_TARGET,
+  buildFocusIndex: () => buildFocusIndex,
+  emptyMuscleValues: () => emptyMuscleValues,
+  exerciseMuscles: () => exerciseMuscles,
+  focusFactors: () => focusFactors,
+  focusFromInputs: () => focusFromInputs,
+  focusSummary: () => focusSummary,
+  focusToInputs: () => focusToInputs,
+  groupOf: () => groupOf,
+  isMuscleId: () => isMuscleId,
+  legendLabels: () => legendLabels,
+  levelFor: () => levelFor,
+  muscleIdsForTerm: () => muscleIdsForTerm,
+  muscleLevels: () => muscleLevels,
+  muscleMapData: () => muscleMapData,
+  muscleMapForRange: () => muscleMapForRange,
+  muscleMapForWorkouts: () => muscleMapForWorkouts,
+  parseMuscleMapSettings: () => parseMuscleMapSettings,
+  relativeValues: () => relativeValues,
+  serializeMuscleMapSettings: () => serializeMuscleMapSettings,
+  splitMuscleText: () => splitMuscleText,
+  targetFor: () => targetFor,
+  validateTarget: () => validateTarget
+});
 
 // src/domain/gripFocus.ts
 var DEFAULT_GRIP_POSITION = {
@@ -5531,7 +6302,10 @@ var COMBO_MACHINES = [
       // gym80
       ["technogym-mb91", "Kneeling Easy Chin Dip"],
       // Technogym
-      ["lifefitness-hammer-strength-select-assist-dip-chin", "Hammer Strength Select Assist Dip Chin"],
+      [
+        "lifefitness-hammer-strength-select-assist-dip-chin",
+        "Hammer Strength Select Assist Dip Chin"
+      ],
       // Life Fitness
       ["lifefitness-insignia-series-assist-dip-chin", "Insignia Series Assist Dip Chin"],
       // Life Fitness
@@ -5601,11 +6375,17 @@ var NAME_PATTERNS = [
   // Reihenfolge: genauere Begriffe zuerst (z. B. „Aufrechtes Rudern“ vor „Rudern“, „Beincurl“ vor „Curl“).
   [/sissy/i, "sissy_squat"],
   [/aufrecht\w* rudern|upright[- ]?row/i, "upright_row"],
-  [/rotator|außenrotation|aussenrotation|external[- ]?rotation|rotatorenmanschette/i, "rotator_cuff"],
+  [
+    /rotator|außenrotation|aussenrotation|external[- ]?rotation|rotatorenmanschette/i,
+    "rotator_cuff"
+  ],
   [/nackendrücken/i, "shoulder_press"],
   [/nacken|\bneck\b/i, "neck"],
   [/nordic|glute[- ]?ham/i, "leg_curl_lying"],
-  [/(beincurl|leg[- ]?curl|beinbeuger).*(sitzend|seated)|(sitzend|seated).*(beincurl|leg[- ]?curl|beinbeuger)/i, "leg_curl_seated"],
+  [
+    /(beincurl|leg[- ]?curl|beinbeuger).*(sitzend|seated)|(sitzend|seated).*(beincurl|leg[- ]?curl|beinbeuger)/i,
+    "leg_curl_seated"
+  ],
   [/beincurl|leg[- ]?curl|beinbeuger/i, "leg_curl_lying"],
   [/beinstreck|leg[- ]?extension/i, "leg_extension"],
   [/wadenheben sitzend|seated calf/i, "calf_seated"],
@@ -5619,18 +6399,30 @@ var NAME_PATTERNS = [
   [/australian|ring[- ]?rudern|inverted row|rudern|\brow\b/i, "row"],
   [/klimmzug|chin[- ]?up|pull[- ]?up|latzug|lat[- ]?pull/i, "pulldown"],
   [/pull[- ]?over|überzug/i, "pullover"],
-  [/reverse[- ]?(fly|butterfly)|rear[- ]?delt|vorgebeugt\w* seitheben|reverse[- ]?flye/i, "reverse_fly"],
+  [
+    /reverse[- ]?(fly|butterfly)|rear[- ]?delt|vorgebeugt\w* seitheben|reverse[- ]?flye/i,
+    "reverse_fly"
+  ],
   [/seitheben|lateral[- ]?raise|side[- ]?raise/i, "lateral_raise"],
   [/butterfly|\bfly\b|flye|fliegende|cable[- ]?cross|crossover/i, "fly"],
   [/shrug|schulterheben/i, "shrug"],
   [/\bdips?\b|barren/i, "dip"],
-  [/überkopf\w*.*trizeps|trizeps.*überkopf|overhead[- ]?(triceps|extension)|french[- ]?press/i, "triceps_overhead"],
+  [
+    /überkopf\w*.*trizeps|trizeps.*überkopf|overhead[- ]?(triceps|extension)|french[- ]?press/i,
+    "triceps_overhead"
+  ],
   [/trizeps|triceps|pushdown|skull ?crusher|kickback/i, "triceps"],
   [/handgelenk|wrist|unterarm|forearm|reverse[- ]?curl/i, "forearm"],
   [/curl|bizeps|biceps/i, "biceps_curl"],
-  [/pike|handstand|schulterdrücken|shoulder[- ]?press|military|overhead[- ]?press|arnold/i, "shoulder_press"],
+  [
+    /pike|handstand|schulterdrücken|shoulder[- ]?press|military|overhead[- ]?press|arnold/i,
+    "shoulder_press"
+  ],
   [/schrägbank|incline[- ]?(bench|press)|decline[- ]?liegest|decline[- ]?push/i, "press_incline"],
-  [/negativ\w* bank|decline[- ]?(bench|press)|liegestütz erhöht|incline[- ]?push/i, "press_decline"],
+  [
+    /negativ\w* bank|decline[- ]?(bench|press)|liegestütz erhöht|incline[- ]?push/i,
+    "press_decline"
+  ],
   [/bankdrücken|bench[- ]?press|brustpresse|chest[- ]?press|liegestütz|push[- ]?up/i, "press_flat"],
   [/russian twist|holzhacker|woodchop|rotation|pallof/i, "rotation"],
   [/rückenstreck|hyperextension|back[- ]?extension|superman/i, "back_extension"],
@@ -5795,6 +6587,55 @@ var MUSCLE_LABELS = {
   soleus: "Schollenmuskel (Soleus)",
   tibialis: "Schienbeinmuskel"
 };
+var MUSCLE_GROUPS = [
+  { id: "chest", label: "Brust", parts: ["chest_upper", "chest_lower"] },
+  { id: "shoulders", label: "Schulter", parts: ["front_delts", "side_delts", "rear_delts"] },
+  {
+    id: "arms",
+    label: "Oberarme",
+    parts: ["biceps", "brachialis", "triceps_long", "triceps_lateral", "triceps_medial"]
+  },
+  {
+    id: "forearms",
+    label: "Unterarme",
+    parts: ["brachioradialis", "forearm_flexors", "forearm_extensors"]
+  },
+  {
+    id: "core",
+    label: "Bauch und Rumpf",
+    parts: ["abs_upper", "abs_lower", "obliques", "serratus"]
+  },
+  {
+    id: "back",
+    label: "Nacken und R\xFCcken",
+    parts: [
+      "neck",
+      "traps_upper",
+      "traps_middle",
+      "traps_lower",
+      "infraspinatus",
+      "teres",
+      "lats",
+      "lower_back"
+    ]
+  },
+  {
+    id: "hips",
+    label: "H\xFCfte und Ges\xE4\xDF",
+    parts: ["glutes", "glute_medius", "tfl", "adductors", "sartorius"]
+  },
+  {
+    id: "quads",
+    label: "Quadrizeps",
+    parts: ["rectus_femoris", "vastus_lateralis", "vastus_medialis"]
+  },
+  { id: "hamstrings", label: "Beinbeuger", parts: ["hamstrings_lateral", "hamstrings_medial"] },
+  { id: "lower_leg", label: "Unterschenkel", parts: ["gastrocnemius", "soleus", "tibialis"] }
+];
+function groupOf(m) {
+  const g = MUSCLE_GROUPS.find((x) => x.parts.includes(m));
+  return g ? { id: g.id, label: g.label } : { id: m, label: MUSCLE_LABELS[m] };
+}
 var CHEST = ["chest_upper", "chest_lower"];
 var DELTS = ["front_delts", "side_delts", "rear_delts"];
 var ABS = ["abs_upper", "abs_lower"];
@@ -5982,6 +6823,29 @@ function exerciseMuscles(muscleGroup, machineMuscleGroups = [], exerciseFocus, m
 function emptyMuscleValues() {
   return Object.fromEntries(MUSCLE_IDS.map((m) => [m, 0]));
 }
+function focusFromInputs(inputs) {
+  const entries = [];
+  const errors = {};
+  for (const m of MUSCLE_IDS) {
+    const text = (inputs[m] ?? "").trim();
+    if (text === "") continue;
+    if (!/^\d{1,3}$/.test(text) || Number(text) > 100) {
+      errors[m] = "Ganze Zahl von 0 bis 100";
+      continue;
+    }
+    const percent = Number(text);
+    if (percent > 0) entries.push({ muscle: m, percent });
+  }
+  return Object.keys(errors).length > 0 ? { ok: false, errors } : { ok: true, entries };
+}
+function focusToInputs(entries) {
+  return Object.fromEntries((entries ?? []).map((e) => [e.muscle, String(e.percent)]));
+}
+function focusSummary(entries) {
+  return [...entries ?? []].sort(
+    (a, b) => b.percent - a.percent || MUSCLE_IDS.indexOf(a.muscle) - MUSCLE_IDS.indexOf(b.muscle)
+  ).map((e) => `${MUSCLE_LABELS[e.muscle]} ${e.percent} %`).join(", ");
+}
 var NO_FOCUS = { machines: /* @__PURE__ */ new Map(), exercises: /* @__PURE__ */ new Map() };
 function buildFocusIndex(rows) {
   const machines = /* @__PURE__ */ new Map();
@@ -6022,7 +6886,7 @@ function muscleMapData(log, exercises, machines, include, focus = NO_FOCUS) {
       )
     ])
   );
-  const sets = emptyMuscleValues();
+  const sets2 = emptyMuscleValues();
   const volumeKg = emptyMuscleValues();
   const unmapped = /* @__PURE__ */ new Map();
   let totalSets = 0;
@@ -6048,12 +6912,12 @@ function muscleMapData(log, exercises, machines, include, focus = NO_FOCUS) {
     }
     const volume = setVolumeKg(s);
     for (const [id3, factor] of entries) {
-      sets[id3] += factor;
+      sets2[id3] += factor;
       volumeKg[id3] += volume * factor;
     }
   }
   return {
-    sets,
+    sets: sets2,
     volumeKg,
     totalSets,
     setsWithoutMuscle,
@@ -6062,6 +6926,10 @@ function muscleMapData(log, exercises, machines, include, focus = NO_FOCUS) {
 }
 function muscleMapForRange(log, exercises, machines, from, to, focus = NO_FOCUS) {
   return muscleMapData(log, exercises, machines, (s) => s.date >= from && s.date <= to, focus);
+}
+function muscleMapForWorkouts(log, exercises, machines, workoutIds, focus = NO_FOCUS) {
+  const ids = new Set(workoutIds);
+  return muscleMapData(log, exercises, machines, (s) => ids.has(s.workoutId), focus);
 }
 var SCALE_MODE_LABELS = {
   standard: "Standard",
@@ -6214,6 +7082,17 @@ function parseMuscleMapSettings(json) {
     return DEFAULT_MUSCLE_MAP_SETTINGS;
   }
 }
+function serializeMuscleMapSettings(s) {
+  const changed = {};
+  for (const m of MUSCLE_IDS) {
+    const t = s.targets[m];
+    const d = DEFAULT_TARGETS[m];
+    if (t.moderate !== d.moderate || t.build !== d.build || t.high !== d.high || t.veryHigh !== d.veryHigh) {
+      changed[m] = t;
+    }
+  }
+  return JSON.stringify({ mode: s.mode, targets: changed });
+}
 
 // src/domain/models.ts
 var WEIGHT_METRIC_ID = "00000000-0000-7000-8000-000000000001";
@@ -6338,9 +7217,9 @@ var DUPLICATE_WINDOW_MIN = 60;
 function looksSwapped(s) {
   return s.reps !== null && s.reps > MAX_PLAUSIBLE_REPS && s.weightKg !== null && s.weightKg > 0 && s.weightKg < s.reps;
 }
-function topWorkWeight(sets) {
+function topWorkWeight(sets2) {
   let top = null;
-  for (const s of sets) {
+  for (const s of sets2) {
     if (s.isWarmup || s.weightKg === null || s.weightKg <= 0 || looksSwapped(s)) continue;
     if (top === null || s.weightKg > top) top = s.weightKg;
   }
@@ -6351,9 +7230,9 @@ function relativeChange(now, before) {
   return (now - before) / before;
 }
 var kg = (v) => `${formatNumber(v, Number.isInteger(v) ? 0 : 1)} kg`;
-function setHints(sets, exerciseName, keyPrefix) {
+function setHints(sets2, exerciseName, keyPrefix) {
   const hints = [];
-  sets.forEach((s, i) => {
+  sets2.forEach((s, i) => {
     if (s.reps === null || s.reps <= MAX_PLAUSIBLE_REPS) return;
     const where = `${exerciseName}, Satz ${i + 1}`;
     if (looksSwapped(s)) {
@@ -7357,7 +8236,7 @@ __export(caffeine_exports, {
   chartPoints: () => chartPoints,
   clearedAt: () => clearedAt,
   findDrink: () => findDrink,
-  formatClock: () => formatClock,
+  formatClock: () => formatClock2,
   formatDayTime: () => formatDayTime,
   formatMg: () => formatMg,
   halfLifeError: () => halfLifeError,
@@ -7440,7 +8319,7 @@ function parseClock(time) {
   const m = TIME.exec(time.trim());
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 }
-function formatClock(minutes) {
+function formatClock2(minutes) {
   const m = (Math.round(minutes) % DAY_MIN + DAY_MIN) % DAY_MIN;
   return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }
@@ -7514,7 +8393,7 @@ function clearedAt(intakes, halfLifeH, belowMg = CLEARED_BELOW_MG) {
 }
 function formatDayTime(offset) {
   const day = Math.floor(offset / DAY_MIN);
-  const clock2 = `um ${formatClock(offset)} Uhr`;
+  const clock2 = `um ${formatClock2(offset)} Uhr`;
   if (day <= 0) return clock2;
   if (day === 1) return `am Folgetag ${clock2}`;
   if (day === 2) return `\xFCbermorgen ${clock2}`;
@@ -8346,7 +9225,7 @@ function proteinTarget(goal, weightKg) {
 function weeklyGoals(input) {
   const own = input.settings ?? NO_WEEK_GOALS;
   const { today, data } = input;
-  const monday = weekStart(today);
+  const monday = weekStart2(today);
   const elapsed = daysBetween(monday, today);
   const inWeek2 = (d) => inRange2(d, monday, today);
   const out = [];
@@ -8541,7 +9420,7 @@ function clockMinutes(hhmm) {
   if (!m) return null;
   return Number(m[1]) * 60 + Number(m[2]);
 }
-function formatClock2(minutes) {
+function formatClock3(minutes) {
   const t = (Math.round(minutes) % 1440 + 1440) % 1440;
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
@@ -8569,8 +9448,8 @@ function sleepRegularity(sleep, today, days2 = 14) {
   const text = level === "good" ? "Regelm\xE4\xDFig \u2013 dein Schlafrhythmus ist stabil." : level === "caution" ? "Mittel \u2013 die Zeiten schwanken sp\xFCrbar." : "Unregelm\xE4\xDFig \u2013 feste Zeiten (auch am Wochenende) helfen oft mehr als l\xE4ngerer Schlaf.";
   return {
     nights: beds.length,
-    bedMean: formatClock2(mean2(beds)),
-    wakeMean: formatClock2(mean2(wakes)),
+    bedMean: formatClock3(mean2(beds)),
+    wakeMean: formatClock3(mean2(wakes)),
     bedSd,
     wakeSd,
     level,
@@ -8865,7 +9744,7 @@ __export(lab_exports, {
   LAB_CATEGORY_LABELS: () => LAB_CATEGORY_LABELS,
   calibrateLevel: () => calibrateLevel,
   commonRange: () => commonRange,
-  draftToInput: () => draftToInput,
+  draftToInput: () => draftToInput2,
   drawToDraft: () => drawToDraft,
   emptyDrawDraft: () => emptyDrawDraft,
   emptyResultDraft: () => emptyResultDraft,
@@ -9590,7 +10469,7 @@ var optNumber = (text) => {
   const n2 = parseDecimal(text);
   return Number.isFinite(n2) ? n2 : "invalid";
 };
-function draftToInput(draft) {
+function draftToInput2(draft) {
   const errors = {};
   if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.date)) errors.date = "Bitte ein Datum w\xE4hlen.";
   const results = [];
@@ -10247,8 +11126,8 @@ __export(protocol_exports, {
   substanceDraftToInput: () => substanceDraftToInput,
   substanceToDraft: () => substanceToDraft,
   summarize: () => summarize,
-  weekStart: () => weekStart2,
-  weeklyTotals: () => weeklyTotals
+  weekStart: () => weekStart3,
+  weeklyTotals: () => weeklyTotals2
 });
 var CATEGORY_LABELS = {
   ped: "PED (Performance Enhancing Drug)",
@@ -10383,15 +11262,15 @@ function summarize(entries) {
     total: Math.round(s.total * 1e3) / 1e3
   })).sort((a, b) => a.name.localeCompare(b.name, "de"));
 }
-function weekStart2(iso2) {
+function weekStart3(iso2) {
   const [y, m, d] = iso2.split("-").map(Number);
   const date = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1));
   const day = (date.getUTCDay() + 6) % 7;
   date.setUTCDate(date.getUTCDate() - day);
   return date.toISOString().slice(0, 10);
 }
-function weeklyTotals(entries, substanceId, today, weeks) {
-  const last = weekStart2(today);
+function weeklyTotals2(entries, substanceId, today, weeks) {
+  const last = weekStart3(today);
   const out = [];
   const base = /* @__PURE__ */ new Date(`${last}T00:00:00Z`);
   for (let i = weeks - 1; i >= 0; i--) {
@@ -10400,7 +11279,7 @@ function weeklyTotals(entries, substanceId, today, weeks) {
   }
   for (const e of entries) {
     if (e.substanceId !== substanceId) continue;
-    const w = out.find((x) => x.week === weekStart2(e.date));
+    const w = out.find((x) => x.week === weekStart3(e.date));
     if (w) {
       w.total = Math.round((w.total + e.amount) * 1e3) / 1e3;
       w.count += 1;
@@ -10649,9 +11528,9 @@ function summarizeHrt(entries, today) {
       (a, b) => (a.date + (a.time ?? "")).localeCompare(b.date + (b.time ?? ""))
     );
     const taken = sorted.filter((e) => e.status === "taken");
-    const totals = /* @__PURE__ */ new Map();
+    const totals2 = /* @__PURE__ */ new Map();
     for (const e of taken)
-      totals.set(e.unit, Math.round(((totals.get(e.unit) ?? 0) + e.amount) * 1e3) / 1e3);
+      totals2.set(e.unit, Math.round(((totals2.get(e.unit) ?? 0) + e.amount) * 1e3) / 1e3);
     const dates = [...new Set(taken.map((e) => e.date))];
     const gaps = dates.slice(1).map((d, i) => daysBetween3(dates[i] ?? d, d));
     const lastTaken = dates.at(-1) ?? null;
@@ -10659,7 +11538,7 @@ function summarizeHrt(entries, today) {
       hormone: sorted.at(-1)?.hormone ?? "",
       taken: taken.length,
       missed: sorted.length - taken.length,
-      totals: [...totals.entries()],
+      totals: [...totals2.entries()],
       first: sorted[0]?.date ?? null,
       last: sorted.at(-1)?.date ?? null,
       daysSinceLast: lastTaken ? daysBetween3(lastTaken, today) : null,
@@ -11059,9 +11938,9 @@ function fieldOfRow(row) {
   const text = normalizeLabel(row);
   if (text.length < 3) return null;
   let best = null;
-  for (const { field, norm: norm2 } of NORMALIZED) {
-    if (text.length > norm2.length + 4) continue;
-    const score = 1 - editDistance(text, norm2) / Math.max(text.length, norm2.length);
+  for (const { field, norm: norm3 } of NORMALIZED) {
+    if (text.length > norm3.length + 4) continue;
+    const score = 1 - editDistance(text, norm3) / Math.max(text.length, norm3.length);
     if (!best || score > best.score) best = { field, score };
   }
   return best && best.score >= 0.7 ? best.field : null;
@@ -12847,19 +13726,19 @@ var clean = (s) => s.replace(/\s+/g, " ").trim().replace(/:$/, "");
 function parseDateCell(text) {
   const t = clean(text);
   if (t === "") return null;
-  const pad2 = (n2) => String(n2).padStart(2, "0");
+  const pad3 = (n2) => String(n2).padStart(2, "0");
   const make = (y, m2, d) => {
     const dt = new Date(Date.UTC(y, m2 - 1, d));
     if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m2 - 1 || dt.getUTCDate() !== d)
       return null;
-    return `${y}-${pad2(m2)}-${pad2(d)}`;
+    return `${y}-${pad3(m2)}-${pad3(d)}`;
   };
   const timeOf = (rest) => {
     const m2 = /^(\d{1,2}):(\d{2})/.exec((rest ?? "").trim());
     if (!m2) return null;
     const h = Number(m2[1]);
     const min = Number(m2[2]);
-    return h < 24 && min < 60 ? `${pad2(h)}:${pad2(min)}` : null;
+    return h < 24 && min < 60 ? `${pad3(h)}:${pad3(min)}` : null;
   };
   let m = /^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](.*))?$/.exec(t);
   if (m) {
@@ -12877,11 +13756,11 @@ function parseDateCell(text) {
     if (serial < 2e4 || serial > 8e4) return null;
     const ms = Math.round((serial - 25569) * 864e5);
     const dt = new Date(ms);
-    const date = `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`;
+    const date = `${dt.getUTCFullYear()}-${pad3(dt.getUTCMonth() + 1)}-${pad3(dt.getUTCDate())}`;
     const minutes = dt.getUTCHours() * 60 + dt.getUTCMinutes();
     return {
       date,
-      time: minutes > 0 ? `${pad2(dt.getUTCHours())}:${pad2(dt.getUTCMinutes())}` : null
+      time: minutes > 0 ? `${pad3(dt.getUTCHours())}:${pad3(dt.getUTCMinutes())}` : null
     };
   }
   return null;
@@ -12889,15 +13768,15 @@ function parseDateCell(text) {
 function parseTimeCell(text) {
   const t = clean(text);
   const m = /^(\d{1,2}):(\d{2})/.exec(t);
-  const pad2 = (n2) => String(n2).padStart(2, "0");
+  const pad3 = (n2) => String(n2).padStart(2, "0");
   if (m) {
     const h = Number(m[1]);
     const min = Number(m[2]);
-    return h < 24 && min < 60 ? `${pad2(h)}:${pad2(min)}` : null;
+    return h < 24 && min < 60 ? `${pad3(h)}:${pad3(min)}` : null;
   }
   if (/^0?\.\d+$/.test(t)) {
     const minutes = Math.round(Number(t) * 1440);
-    return minutes > 0 && minutes < 1440 ? `${pad2(Math.floor(minutes / 60))}:${pad2(minutes % 60)}` : null;
+    return minutes > 0 && minutes < 1440 ? `${pad3(Math.floor(minutes / 60))}:${pad3(minutes % 60)}` : null;
   }
   return null;
 }
@@ -13788,11 +14667,11 @@ var SCHEDULE_KIND_LABELS = {
   alarm: "Alarm",
   todo: "To-do"
 };
-var pad = (n2) => String(n2).padStart(2, "0");
+var pad2 = (n2) => String(n2).padStart(2, "0");
 function addDays2(date, days2) {
   const [y, m, d] = date.split("-").map(Number);
   const t = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + days2));
-  return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`;
+  return `${t.getUTCFullYear()}-${pad2(t.getUTCMonth() + 1)}-${pad2(t.getUTCDate())}`;
 }
 function periodRange(date, mode) {
   if (mode === "week") {
@@ -13801,7 +14680,7 @@ function periodRange(date, mode) {
   }
   const y = Number(date.slice(0, 4));
   const m = Number(date.slice(5, 7));
-  return { from: `${date.slice(0, 7)}-01`, to: `${date.slice(0, 7)}-${pad(daysInMonth(y, m))}` };
+  return { from: `${date.slice(0, 7)}-01`, to: `${date.slice(0, 7)}-${pad2(daysInMonth(y, m))}` };
 }
 function periodDays(date, mode) {
   const { from, to } = periodRange(date, mode);
@@ -13815,7 +14694,7 @@ function shiftPeriod(date, mode, step) {
   const m = Number(date.slice(5, 7)) - 1 + step;
   const year = y + Math.floor(m / 12);
   const month = (m % 12 + 12) % 12;
-  return `${year}-${pad(month + 1)}-01`;
+  return `${year}-${pad2(month + 1)}-01`;
 }
 function periodLabel(date, mode) {
   if (mode === "month") return monthLabel(date.slice(0, 7));
@@ -13986,8 +14865,8 @@ function checklistToPdf(title, items, subtitle) {
 function withBook(data, book) {
   return { ...data, fragen: data.fragen.map((f) => ({ ...f, buch: book })) };
 }
-function buildLibrary(sets) {
-  const collections = sets.map(({ book, data }) => {
+function buildLibrary(sets2) {
+  const collections = sets2.map(({ book, data }) => {
     const tagged = withBook(data, book);
     return { book, label: BOOKS[book].collection, data: tagged, parts: groupFaq(tagged) };
   });
@@ -14549,6 +15428,1387 @@ function magazineMeta(m) {
 function magazineCover(m) {
   return `/magazin/${m.id}.jpg`;
 }
+
+// src/domain/trainingReview.ts
+var trainingReview_exports = {};
+__export(trainingReview_exports, {
+  REVIEW_SESSIONS: () => REVIEW_SESSIONS,
+  trainingReview: () => trainingReview
+});
+var REVIEW_SESSIONS = 7;
+function workoutOrder(log) {
+  const seen = /* @__PURE__ */ new Set();
+  const order = [];
+  for (const s of log) {
+    if (!seen.has(s.workoutId)) {
+      seen.add(s.workoutId);
+      order.push(s.workoutId);
+    }
+  }
+  return order;
+}
+function trainingReview(log, exercises, count = REVIEW_SESSIONS) {
+  const order = workoutOrder(log);
+  const recent = order.slice(-count);
+  const before = order.slice(-2 * count, -count);
+  const recentIndex = new Map(recent.map((id3, i) => [id3, i]));
+  const beforeSet = new Set(before);
+  const groupOf2 = new Map(
+    exercises.map((e) => [e.id, e.muscleGroup?.trim() ? e.muscleGroup.trim() : NO_MUSCLE_GROUP])
+  );
+  const sessions2 = recent.map((id3) => {
+    const sets2 = log.filter((s) => s.workoutId === id3);
+    const working = sets2.filter((s) => !s.isWarmup);
+    return {
+      workoutId: id3,
+      date: sets2[0]?.date ?? "",
+      title: sets2[0]?.workoutTitle ?? "",
+      exercises: new Set(sets2.map((s) => s.exerciseId)).size,
+      workingSets: working.length,
+      reps: working.reduce((sum, s) => sum + (s.reps ?? 0), 0),
+      volumeKg: working.reduce((sum, s) => sum + setVolumeKg(s), 0)
+    };
+  });
+  const groups = /* @__PURE__ */ new Map();
+  const previous = /* @__PURE__ */ new Map();
+  for (const s of log) {
+    if (s.isWarmup || s.exerciseCategory !== "strength") continue;
+    const group = groupOf2.get(s.exerciseId) ?? NO_MUSCLE_GROUP;
+    if (beforeSet.has(s.workoutId)) {
+      previous.set(group, (previous.get(group) ?? 0) + setVolumeKg(s));
+      continue;
+    }
+    const index = recentIndex.get(s.workoutId);
+    if (index === void 0) continue;
+    let row = groups.get(group);
+    if (!row) {
+      row = {
+        group,
+        workingSets: 0,
+        reps: 0,
+        volumeKg: 0,
+        sharePercent: 0,
+        sessions: 0,
+        perSession: recent.map(() => 0),
+        previousVolumeKg: null,
+        changePercent: null,
+        hit: /* @__PURE__ */ new Set()
+      };
+      groups.set(group, row);
+    }
+    const volume = setVolumeKg(s);
+    row.workingSets += 1;
+    row.reps += s.reps ?? 0;
+    row.volumeKg += volume;
+    row.perSession[index] = (row.perSession[index] ?? 0) + volume;
+    row.hit.add(s.workoutId);
+  }
+  const groupVolume = [...groups.values()].reduce((sum, g) => sum + g.volumeKg, 0);
+  const hasBefore = before.length > 0;
+  const rows = [...groups.values()].map(({ hit, ...g }) => {
+    const prev = hasBefore ? previous.get(g.group) ?? 0 : null;
+    return {
+      ...g,
+      sessions: hit.size,
+      sharePercent: groupVolume > 0 ? Math.round(g.volumeKg / groupVolume * 100) : 0,
+      previousVolumeKg: prev,
+      changePercent: prev !== null && prev > 0 ? Math.round((g.volumeKg - prev) / prev * 100) : null
+    };
+  }).sort(
+    (a, b) => b.volumeKg - a.volumeKg || b.workingSets - a.workingSets || a.group.localeCompare(b.group, "de")
+  );
+  const previousVolume = hasBefore ? log.filter((s) => beforeSet.has(s.workoutId) && !s.isWarmup).reduce((sum, s) => sum + setVolumeKg(s), 0) : null;
+  return {
+    sessions: sessions2,
+    groups: rows,
+    totalVolumeKg: sessions2.reduce((sum, s) => sum + s.volumeKg, 0),
+    totalSets: sessions2.reduce((sum, s) => sum + s.workingSets, 0),
+    previousVolumeKg: previousVolume,
+    previousCount: before.length
+  };
+}
+
+// src/domain/trainingCoverage.ts
+var trainingCoverage_exports = {};
+__export(trainingCoverage_exports, {
+  MAX_NAMED_EXERCISES: () => MAX_NAMED_EXERCISES,
+  exercisesWithoutGroup: () => exercisesWithoutGroup,
+  namedExercises: () => namedExercises,
+  trainingCoverage: () => trainingCoverage
+});
+var MAX_NAMED_EXERCISES = 5;
+function exercisesWithoutGroup(log, exercises, workoutIds) {
+  const grouped = new Set(exercises.filter((e) => e.muscleGroup?.trim()).map((e) => e.id));
+  const ids = new Set(workoutIds);
+  const byId = /* @__PURE__ */ new Map();
+  for (const s of log) {
+    if (s.isWarmup || s.exerciseCategory !== "strength" || !ids.has(s.workoutId)) continue;
+    if (grouped.has(s.exerciseId)) continue;
+    const row = byId.get(s.exerciseId) ?? {
+      id: s.exerciseId,
+      name: s.exerciseName.trim() || "Unbenannte \xDCbung",
+      sets: 0
+    };
+    row.sets += 1;
+    byId.set(s.exerciseId, row);
+  }
+  return [...byId.values()].sort((a, b) => b.sets - a.sets || a.name.localeCompare(b.name, "de"));
+}
+function namedExercises(list) {
+  const shown = list.slice(0, MAX_NAMED_EXERCISES).map((e) => `${e.name} (${e.sets} ${e.sets === 1 ? "Satz" : "S\xE4tze"})`);
+  const rest = list.length - shown.length;
+  return rest > 0 ? `${shown.join(", ")} und ${rest} weitere` : shown.join(", ");
+}
+var sets = (n2) => `${formatNumber(n2, 0)} ${n2 === 1 ? "Arbeitssatz" : "Arbeitss\xE4tzen"}`;
+function trainingCoverage(review, map, ungrouped = []) {
+  const items = [];
+  const total = review.sessions.length + review.previousCount;
+  const needSessions = 2 * REVIEW_SESSIONS;
+  items.push({
+    key: "sessions",
+    label: "Abgeschlossene Einheiten",
+    have: total,
+    need: needSessions,
+    ok: total >= needSessions,
+    status: `${formatNumber(Math.min(total, needSessions), 0)} von ${needSessions}`,
+    benefit: `Ab ${needSessions} abgeschlossenen Einheiten: vollst\xE4ndiger Vergleich der letzten ${REVIEW_SESSIONS} mit den ${REVIEW_SESSIONS} davor \u2013 gesamt und je Muskelgruppe.`
+  });
+  const groupSets = review.groups.reduce((sum, g) => sum + g.workingSets, 0);
+  if (groupSets > 0) {
+    const without = review.groups.find((g) => g.group === NO_MUSCLE_GROUP)?.workingSets ?? 0;
+    items.push({
+      key: "muscle-group",
+      label: "Kraft\xFCbungen mit Muskelgruppe",
+      have: groupSets - without,
+      need: groupSets,
+      ok: without === 0,
+      status: `${formatNumber(groupSets - without, 0)} von ${sets(groupSets)}`,
+      benefit: `${without === 1 ? "1 Arbeitssatz steht" : `${formatNumber(without, 0)} Arbeitss\xE4tze stehen`} unter \u201E${NO_MUSCLE_GROUP}\u201C${ungrouped.length > 0 ? `: ${namedExercises(ungrouped)}` : ""}. In der \xDCbungsdatenbank ${ungrouped.length === 1 ? "bei dieser \xDCbung" : "bei diesen \xDCbungen"} eine Muskelgruppe erg\xE4nzen \u2013 dann z\xE4hlt das Volumen in der Tabelle je Muskelgruppe und im Vergleich.`
+    });
+  }
+  if (map.totalSets > 0) {
+    const mapped = map.totalSets - map.setsWithoutMuscle;
+    const terms = map.unmapped.slice(0, 3).map((u) => `\u201E${u.term}\u201C`);
+    items.push({
+      key: "body-map",
+      label: "Zuordnung f\xFCr die Muskel-K\xF6rperkarte",
+      have: mapped,
+      need: map.totalSets,
+      ok: map.setsWithoutMuscle === 0,
+      status: `${formatNumber(mapped, 0)} von ${sets(map.totalSets)}`,
+      benefit: `Bei ${sets(map.setsWithoutMuscle)} ist kein Muskel zugeordnet${terms.length > 0 ? ` (z. B. ${terms.join(", ")})` : ""}. Muskelgruppe oder Muskelfokus in der \xDCbungs- bzw. Maschinendatenbank hinterlegen \u2013 dann erscheint das Volumen auf der K\xF6rperkarte.`
+    });
+  }
+  return items.sort((a, b) => Number(a.ok) - Number(b.ok));
+}
+
+// src/domain/trainingProgress.ts
+var trainingProgress_exports = {};
+__export(trainingProgress_exports, {
+  DEFAULT_REP_RANGE: () => DEFAULT_REP_RANGE,
+  PROGRESSION_RULE: () => PROGRESSION_RULE,
+  UNDER_TARGET_WEEKS: () => UNDER_TARGET_WEEKS,
+  describeUnderTarget: () => describeUnderTarget,
+  lastCompletedWeeks: () => lastCompletedWeeks,
+  progressionSuggestion: () => progressionSuggestion,
+  repRangeFrom: () => repRangeFrom,
+  underTargetMuscles: () => underTargetMuscles,
+  weightStep: () => weightStep
+});
+var DEFAULT_REP_RANGE = { min: 8, max: 12 };
+var PROGRESSION_RULE = "Regel: Erreichen alle S\xE4tze mit dem h\xF6chsten Gewicht das obere Ende der Wiederholungsspanne (laut Plan, sonst 8\u201312) ohne \u201EFail\u201C, steigt das Gewicht um 2,5 kg (unter 20 kg um 1 kg). Sonst bleibt das Gewicht und die Wiederholungen steigen. Richtwert \u2013 Ger\xE4te haben eigene Gewichtsstufen.";
+function weightStep(weightKg) {
+  return weightKg >= 20 ? 2.5 : 1;
+}
+function repRangeFrom(min, max) {
+  const lo = min ?? max ?? null;
+  const hi = max ?? min ?? null;
+  if (lo === null || hi === null || lo < 1 || hi < lo) return DEFAULT_REP_RANGE;
+  return { min: lo, max: hi };
+}
+var repsText = (values) => {
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  return lo === hi ? `${lo}` : `${lo}\u2013${hi}`;
+};
+function progressionSuggestion(lastSets, range = DEFAULT_REP_RANGE) {
+  const working = lastSets.filter(
+    (s) => !s.isWarmup && s.reps !== null && s.reps > 0 && s.weightKg !== null && s.weightKg > 0
+  );
+  if (working.length === 0) return null;
+  const top = Math.max(...working.map((s) => s.weightKg));
+  const topSets = working.filter((s) => s.weightKg === top);
+  const reps = topSets.map((s) => s.reps);
+  const spanText = range.min === range.max ? `${range.min}` : `${range.min}\u2013${range.max}`;
+  const last = `zuletzt ${topSets.length} ${topSets.length === 1 ? "Satz" : "S\xE4tze"} mit ${formatKg(top)} \xD7 ${repsText(reps)} Wdh.`;
+  if (reps.every((r2) => r2 >= range.max) && !topSets.some((s) => s.isFailure)) {
+    const next = Math.round((top + weightStep(top)) * 100) / 100;
+    return {
+      kind: "increase",
+      weightKg: next,
+      reps: range.min,
+      text: `${formatKg(next)} \xD7 ${range.min} Wdh. \u2013 ${last}, alle am oberen Ende der Spanne ${spanText}.`
+    };
+  }
+  if (reps.some((r2) => r2 < range.min)) {
+    return {
+      kind: "reach",
+      weightKg: top,
+      reps: range.min,
+      text: `${formatKg(top)} halten und zuerst ${range.min} Wdh. je Satz erreichen \u2013 ${last} (Spanne ${spanText}).`
+    };
+  }
+  const target = Math.min(range.max, Math.min(...reps) + 1);
+  return {
+    kind: "hold",
+    weightKg: top,
+    reps: target,
+    text: `${formatKg(top)} halten, je Satz eine Wdh. mehr (Ziel ${range.max}) \u2013 ${last}.`
+  };
+}
+var UNDER_TARGET_WEEKS = 3;
+function lastCompletedWeeks(today, count) {
+  const thisMonday = weekStart2(today);
+  return Array.from({ length: count }, (_, i) => {
+    const from = shiftDays(thisMonday, -7 * (count - i));
+    return { from, to: shiftDays(from, 6) };
+  });
+}
+function underTargetMuscles(log, exercises, machines, targets, today, focus = NO_FOCUS, weeksCount = UNDER_TARGET_WEEKS) {
+  const weeks = lastCompletedWeeks(today, weeksCount);
+  const maps = weeks.map((w) => muscleMapForRange(log, exercises, machines, w.from, w.to, focus));
+  const weeksWithTraining = maps.filter((m) => m.totalSets > 0).length;
+  if (weeksWithTraining < weeksCount) return { kind: "insufficient", weeksWithTraining, weeks };
+  const groupLabel = /* @__PURE__ */ new Map();
+  for (const g of MUSCLE_GROUPS) for (const p of g.parts) groupLabel.set(p, g.label);
+  const below = [];
+  const untrained = [];
+  for (const id3 of MUSCLE_IDS) {
+    const target = targets[id3]?.build ?? 0;
+    if (!(target > 0)) continue;
+    const weekly = maps.map((m) => Math.round(m.sets[id3] * 10) / 10);
+    if (!weekly.every((v) => v < target)) continue;
+    const average = weekly.reduce((a, b) => a + b, 0) / weekly.length;
+    const entry = {
+      id: id3,
+      label: MUSCLE_LABELS[id3],
+      group: groupLabel.get(id3) ?? MUSCLE_LABELS[id3],
+      weekly,
+      average,
+      target
+    };
+    (weekly.every((v) => v === 0) ? untrained : below).push(entry);
+  }
+  below.sort(
+    (a, b) => b.target - b.average - (a.target - a.average) || a.label.localeCompare(b.label, "de")
+  );
+  untrained.sort(
+    (a, b) => a.group.localeCompare(b.group, "de") || a.label.localeCompare(b.label, "de")
+  );
+  return { kind: "ok", weeks, below, untrained };
+}
+function describeUnderTarget(m) {
+  return `\xD8 ${formatNumber(m.average, 1)} von ${formatNumber(m.target, 0)} S\xE4tzen je Woche (${m.weekly.map((v) => formatNumber(v, v % 1 === 0 ? 0 : 1)).join(" \xB7 ")})`;
+}
+
+// src/domain/trainingGroupLabels.ts
+var trainingGroupLabels_exports = {};
+__export(trainingGroupLabels_exports, {
+  FOCUS_SHARE: () => FOCUS_SHARE,
+  regionsOf: () => regionsOf,
+  reviewGroupLabels: () => reviewGroupLabels
+});
+var FOCUS_SHARE = 0.5;
+function regionsOf(group) {
+  const out = /* @__PURE__ */ new Set();
+  for (const term of splitMuscleText(group)) {
+    for (const id3 of muscleIdsForTerm(term) ?? []) out.add(groupOf(id3).id);
+  }
+  return out;
+}
+function reviewGroupLabels(groups, log, exercises, machines, workoutIds, focus = NO_FOCUS) {
+  const out = new Map(groups.map((g) => [g, { label: g, detail: null }]));
+  const regions = new Map(groups.map((g) => [g, regionsOf(g)]));
+  const shared = groups.filter(
+    (g) => g !== NO_MUSCLE_GROUP && groups.some(
+      (o) => o !== g && o !== NO_MUSCLE_GROUP && [...regions.get(g)].some((r2) => regions.get(o).has(r2))
+    )
+  );
+  if (shared.length === 0) return out;
+  const ids = new Set(workoutIds);
+  const groupOfExercise = new Map(
+    exercises.map((e) => [e.id, e.muscleGroup?.trim() ? e.muscleGroup.trim() : NO_MUSCLE_GROUP])
+  );
+  for (const g of shared) {
+    const data = muscleMapData(
+      log,
+      exercises,
+      machines,
+      (s) => ids.has(s.workoutId) && groupOfExercise.get(s.exerciseId) === g,
+      focus
+    );
+    const entries = Object.entries(data.volumeKg).filter(
+      ([, v]) => v > 0
+    );
+    const total = entries.reduce((sum, [, v]) => sum + v, 0);
+    const top = entries.sort((a, b) => b[1] - a[1])[0];
+    if (!top || total <= 0 || top[1] / total < FOCUS_SHARE) continue;
+    const share = Math.round(top[1] / total * 100);
+    out.set(g, {
+      label: MUSCLE_LABELS[top[0]],
+      detail: `Muskelgruppe \u201E${g}\u201C \xB7 Schwerpunkt ${share} %`
+    });
+  }
+  const count = /* @__PURE__ */ new Map();
+  for (const l of out.values()) count.set(l.label, (count.get(l.label) ?? 0) + 1);
+  for (const [g, l] of out) {
+    if ((count.get(l.label) ?? 0) > 1 && l.label !== g)
+      out.set(g, { ...l, label: `${l.label} (\u201E${g}\u201C)` });
+  }
+  return out;
+}
+
+// src/domain/cardioReport.ts
+var cardioReport_exports = {};
+__export(cardioReport_exports, {
+  WHO_MAX_MINUTES: () => WHO_MAX_MINUTES,
+  WHO_MIN_MINUTES: () => WHO_MIN_MINUTES,
+  bestTrendKind: () => bestTrendKind,
+  bests: () => bests,
+  efficiencyTrend: () => efficiencyTrend,
+  filterSessions: () => filterSessions,
+  kindsIn: () => kindsIn,
+  periodStart: () => periodStart,
+  totals: () => totals,
+  weeklyMinutes: () => weeklyMinutes,
+  zoneTotals: () => zoneTotals
+});
+var WHO_MIN_MINUTES = 150;
+var WHO_MAX_MINUTES = 300;
+function filterSessions(list, from, kind) {
+  return list.filter(
+    (s) => (from === null || s.date >= from) && (kind === null || s.kind === kind)
+  );
+}
+function periodStart(today, weeks) {
+  return weeks === null ? null : addDaysIso(today, -(weeks * 7 - 1));
+}
+function totals(list) {
+  const workouts = new Set(list.map((s) => s.workoutId));
+  return {
+    sessions: workouts.size,
+    seconds: list.reduce((a, s) => a + s.durationSeconds, 0),
+    meters: list.reduce((a, s) => a + s.distanceM, 0),
+    kcal: list.reduce((a, s) => a + (s.kcal ?? 0), 0),
+    withoutKcal: list.filter((s) => s.kcal === null).length
+  };
+}
+function weeklyMinutes(list, today, weeks) {
+  const last = weekStart(today);
+  const starts = Array.from({ length: weeks }, (_, i) => addDaysIso(last, -7 * (weeks - 1 - i)));
+  const sums = new Map(starts.map((d) => [d, 0]));
+  for (const s of list) {
+    const w = weekStart(s.date);
+    if (sums.has(w)) sums.set(w, (sums.get(w) ?? 0) + s.durationSeconds / 60);
+  }
+  return starts.map((d) => ({ date: d, value: Math.round(sums.get(d) ?? 0) }));
+}
+function zoneTotals(list) {
+  const zones = [0, 0, 0, 0, 0];
+  let below = 0;
+  let without = 0;
+  for (const s of list) {
+    s.zoneSeconds.forEach((v, i) => {
+      zones[i] = (zones[i] ?? 0) + v;
+    });
+    below += s.belowZoneSeconds;
+    without += s.withoutZoneSeconds;
+  }
+  const withHr = below + zones.reduce((a, v) => a + v, 0);
+  const easy = below + (zones[0] ?? 0) + (zones[1] ?? 0);
+  return {
+    zones,
+    below,
+    without,
+    withHr,
+    easyShare: withHr > 0 ? easy / withHr : null,
+    hardShare: withHr > 0 ? (withHr - easy) / withHr : null
+  };
+}
+var POWER_KINDS = /* @__PURE__ */ new Set([
+  "cycle",
+  "row",
+  "ski",
+  "elliptical",
+  "stairs"
+]);
+function efficiencyTrend(list, kind) {
+  const power = POWER_KINDS.has(kind);
+  const points = [];
+  for (const s of list) {
+    if (s.kind !== kind || s.hrAvg === null || s.hrAvg <= 0 || s.durationSeconds <= 0) continue;
+    if (power) {
+      if (s.powerAvg === null) continue;
+      points.push({ date: s.date, value: s.powerAvg / s.hrAvg * 100 });
+    } else {
+      if (s.distanceM <= 0) continue;
+      const perMin = s.distanceM / (s.durationSeconds / 60);
+      points.push({ date: s.date, value: perMin / s.hrAvg });
+    }
+  }
+  return { unit: power ? "Watt je 100 Herzschl\xE4ge" : "Meter je Herzschlag", points };
+}
+function bestTrendKind(list) {
+  const kinds = [...new Set(list.map((s) => s.kind))];
+  let best = null;
+  let count = 0;
+  for (const k of kinds) {
+    const n2 = efficiencyTrend(list, k).points.length;
+    if (n2 > count) {
+      best = k;
+      count = n2;
+    }
+  }
+  return best;
+}
+function bests(list) {
+  const rows = [];
+  const kinds = [...new Set(list.map((s) => s.kind))];
+  const pick = (items, score) => items.reduce((b, s) => b === null || score(s) > score(b) ? s : b, null);
+  for (const kind of kinds) {
+    const items = list.filter((s) => s.kind === kind);
+    const name = cardioKindLabel(kind);
+    const far = pick(
+      items.filter((s) => s.distanceM > 0),
+      (s) => s.distanceM
+    );
+    if (far) {
+      rows.push({
+        kind,
+        label: `${name}: l\xE4ngste Strecke`,
+        value: `${formatNumber(far.distanceM / 1e3, 2)} km`,
+        date: far.date,
+        exerciseName: far.exerciseName
+      });
+    }
+    const long = pick(
+      items.filter((s) => s.durationSeconds > 0),
+      (s) => s.durationSeconds
+    );
+    if (long) {
+      rows.push({
+        kind,
+        label: `${name}: l\xE4ngste Dauer`,
+        value: formatDuration2(long.durationSeconds),
+        date: long.date,
+        exerciseName: long.exerciseName
+      });
+    }
+    if (kind === "run" || kind === "walk" || kind === "swim") {
+      const per = kind === "swim" ? 100 : 1e3;
+      const fast = pick(
+        items.filter((s) => s.distanceM >= per && s.durationSeconds > 0),
+        (s) => s.distanceM / s.durationSeconds
+      );
+      if (fast) {
+        rows.push({
+          kind,
+          label: `${name}: schnellste \xD8 Pace`,
+          value: `${formatDuration2(fast.durationSeconds * per / fast.distanceM)} /${kind === "swim" ? "100 m" : "km"}`,
+          date: fast.date,
+          exerciseName: fast.exerciseName
+        });
+      }
+    }
+    const strong = pick(
+      items.filter((s) => s.powerAvg !== null),
+      (s) => s.powerAvg ?? 0
+    );
+    if (strong && strong.powerAvg !== null) {
+      rows.push({
+        kind,
+        label: `${name}: h\xF6chste \xD8 Leistung`,
+        value: `${formatNumber(strong.powerAvg, 0)} W`,
+        date: strong.date,
+        exerciseName: strong.exerciseName
+      });
+    }
+  }
+  return rows;
+}
+function kindsIn(list) {
+  return [...new Set(list.map((s) => s.kind))];
+}
+
+// src/domain/heart.ts
+var heart_exports = {};
+__export(heart_exports, {
+  ZONE_SHARES: () => ZONE_SHARES,
+  ZONE_TITLES: () => ZONE_TITLES,
+  describeMaxFormula: () => describeMaxFormula,
+  formatZone: () => formatZone,
+  heartInput: () => heartInput,
+  heartPreview: () => heartPreview,
+  heartToDraft: () => heartToDraft,
+  karvonen: () => karvonen,
+  parseZone: () => parseZone
+});
+var ZONE_SHARES = [
+  [0.5, 0.6],
+  [0.6, 0.7],
+  [0.7, 0.8],
+  [0.8, 0.9],
+  [0.9, 1]
+];
+var ZONE_TITLES = [
+  "Zone 1 \u2013 Erholung / Regeneration",
+  "Zone 2 \u2013 Grundlagenausdauer 1 / Fettstoffwechsel",
+  "Zone 3 \u2013 Grundlagenausdauer 1\u20132 / Aerob",
+  "Zone 4 \u2013 Grundlagenausdauer 2 / Anaerob",
+  "Zone 5 \u2013 Wettkampf- / Rote Zone"
+];
+function karvonen(max, resting) {
+  if (!(max > resting)) return null;
+  const reserve = max - resting;
+  return ZONE_SHARES.map(([lo, hi]) => ({
+    from: Math.round(resting + lo * reserve),
+    to: Math.round(resting + hi * reserve)
+  }));
+}
+function formatZone(z) {
+  return z ? `${z.from}\u2013${z.to}` : "";
+}
+function parseZone(text) {
+  const t = text.trim();
+  if (t === "") return null;
+  const m = /^(\d{2,3})\s*(?:-|–|—|bis)\s*(\d{2,3})$/.exec(t);
+  if (!m) return "invalid";
+  return { from: Number(m[1]), to: Number(m[2]) };
+}
+function heartToDraft(p) {
+  return {
+    max: p?.maxCustom != null ? String(p.maxCustom) : "",
+    zones: Array.from({ length: 5 }, (_, i) => formatZone(p?.zones[i]?.custom))
+  };
+}
+function heartPreview(p, draft) {
+  const typed = Number(draft.max.trim());
+  const ownMax = draft.max.trim() !== "" && Number.isInteger(typed) && typed > 0 ? typed : null;
+  const max = ownMax ?? p?.maxCalculated ?? null;
+  const resting = p?.resting ?? null;
+  const zones = max !== null && resting !== null ? karvonen(max, resting) : null;
+  return {
+    max,
+    maxIsCalculated: ownMax === null && max !== null,
+    zones: Array.from({ length: 5 }, (_, i) => zones?.[i] ?? null)
+  };
+}
+function heartInput(draft) {
+  const p = new FormParser();
+  const max = p.integer("heartMax", draft.max);
+  const zones = draft.zones.map((text, i) => {
+    const z = parseZone(text);
+    if (z === "invalid") {
+      p.error(`heartZone${i + 1}`, "Bitte als \u201Evon-bis\u201C eingeben, z. B. 120-135.");
+      return null;
+    }
+    if (z && z.from >= z.to) {
+      p.error(`heartZone${i + 1}`, "Der erste Wert muss kleiner als der zweite sein.");
+      return null;
+    }
+    return z;
+  });
+  if (!p.ok) return { ok: false, errors: p.errors };
+  return { ok: true, input: { max, zones: zones.some((z) => z !== null) ? zones : [] } };
+}
+function describeMaxFormula(p) {
+  if (!p || p.age === null || p.formula === null) return null;
+  return p.formula === "gulati" ? `Gulati (Frauen): 206 \u2212 0,88 \xD7 ${p.age} Jahre` : `Tanaka (M\xE4nner): 208 \u2212 0,7 \xD7 ${p.age} Jahre`;
+}
+
+// src/domain/planDraft.ts
+var planDraft_exports = {};
+__export(planDraft_exports, {
+  MAX_SLOTS: () => MAX_SLOTS,
+  applyDateSelection: () => applyDateSelection,
+  applyWorkoutDraft: () => applyWorkoutDraft,
+  checkPlanDay: () => checkPlanDay,
+  describePlanSets: () => describePlanSets,
+  emptyPlanDay: () => emptyPlanDay,
+  emptyPlanDraft: () => emptyPlanDraft,
+  emptySlot: () => emptySlot,
+  move: () => move,
+  planDayToWorkoutDraft: () => planDayToWorkoutDraft,
+  planDraftToInput: () => planDraftToInput,
+  planToDraft: () => planToDraft,
+  slotDates: () => slotDates
+});
+var MAX_SLOTS = 100;
+function emptySlot() {
+  return { key: newKey(), kind: "weekday", weekday: "1", date: "", time: "" };
+}
+function slotDates(slots) {
+  return [...new Set(slots.filter((s) => s.kind === "date" && s.date).map((s) => s.date))].sort();
+}
+function applyDateSelection(slots, dates, template = { time: "" }) {
+  const wanted = new Set(dates);
+  const existing = new Set(slotDates(slots));
+  const added = [...wanted].filter((d) => !existing.has(d)).sort();
+  const result = [];
+  for (const s of slots) {
+    if (s.kind !== "date") result.push(s);
+    else if (!s.date) result.push(added.length > 0 ? { ...s, date: added.shift() ?? "" } : s);
+    else if (wanted.has(s.date)) result.push(s);
+  }
+  for (const date of added) {
+    if (result.length >= MAX_SLOTS) break;
+    result.push({ ...emptySlot(), kind: "date", date, time: template.time });
+  }
+  return result;
+}
+function emptyPlanDay(name = "") {
+  return { key: newKey(), id: null, name, notes: "", exercises: [], slots: [] };
+}
+function emptyPlanDraft() {
+  return { id: null, name: "", description: "", archived: false, days: [emptyPlanDay("Tag A")] };
+}
+function slotToDraft(s) {
+  return {
+    key: newKey(),
+    kind: s.weekday !== null ? "weekday" : "date",
+    weekday: s.weekday !== null ? String(s.weekday) : "1",
+    date: s.date ?? "",
+    time: s.time ?? ""
+  };
+}
+function planToDraft(plan, isCardio = () => false) {
+  return {
+    id: plan.id,
+    name: plan.name,
+    description: plan.description ?? "",
+    archived: plan.archived,
+    days: plan.days.map((d) => ({
+      key: newKey(),
+      id: d.id,
+      name: d.name,
+      notes: d.notes ?? "",
+      exercises: d.exercises.map((e) => planExerciseToDraft(e, isCardio(e.exerciseId))),
+      slots: (d.slots ?? []).map(slotToDraft)
+    }))
+  };
+}
+function planDayToWorkoutDraft(day) {
+  return {
+    ...emptyWorkoutDraft(""),
+    title: day.name,
+    notes: day.notes,
+    exercises: day.exercises
+  };
+}
+function applyWorkoutDraft(day, w) {
+  return { ...day, name: w.title, notes: w.notes, exercises: w.exercises };
+}
+var CHECK_DATE = "2000-01-01";
+function checkPlanDay(day, defaults = () => []) {
+  const result = draftToInput({ ...planDayToWorkoutDraft(day), date: CHECK_DATE }, defaults);
+  if (!result.ok) return result;
+  return {
+    ok: true,
+    exercises: result.input.exercises.map((e, i) => {
+      const draft = day.exercises[i];
+      const sets2 = e.sets.map((s) => ({
+        reps: s.reps,
+        weightKg: s.weightKg,
+        durationSeconds: s.durationSeconds,
+        distanceM: s.distanceM,
+        rpe: s.rpe,
+        isWarmup: s.isWarmup,
+        isUnilateral: s.isUnilateral,
+        rpMidKg: s.rpMidKg,
+        rpEndKg: s.rpEndKg,
+        rpBeginKg: s.rpBeginKg,
+        rpMidEndKg: s.rpMidEndKg,
+        rpMidBeginKg: s.rpMidBeginKg,
+        rpIsokineticKg: s.rpIsokineticKg,
+        rpEccentricKg: s.rpEccentricKg,
+        rpConcentricKg: s.rpConcentricKg,
+        rpIsometricKg: s.rpIsometricKg,
+        hrAvg: s.hrAvg ?? null,
+        hrMax: s.hrMax ?? null,
+        powerW: s.powerW ?? null,
+        inclinePct: s.inclinePct ?? null,
+        elevationM: s.elevationM ?? null,
+        cadence: s.cadence ?? null,
+        level: s.level ?? null,
+        deviceKcal: s.deviceKcal ?? null,
+        powerMaxW: s.powerMaxW ?? null,
+        cadenceMax: s.cadenceMax ?? null
+      }));
+      return {
+        id: draft?.id ?? null,
+        exerciseId: e.exerciseId,
+        // Ältere Zielfelder: nur noch die Satzzahl (zur Information); Werte stehen in den Sätzen
+        targetSets: sets2.length > 0 ? sets2.length : null,
+        targetRepsMin: null,
+        targetRepsMax: null,
+        targetWeightKg: null,
+        restSeconds: e.restSeconds,
+        notes: e.notes,
+        ...emptyProfileWeights(),
+        settings: e.settings,
+        sets: sets2
+      };
+    })
+  };
+}
+function planDraftToInput(d, defaults = () => []) {
+  const p = new FormParser();
+  const errors = {};
+  const input = {
+    id: d.id,
+    name: d.name,
+    description: textOrNull(d.description),
+    archived: d.archived,
+    days: d.days.map((day, i) => {
+      const checked = checkPlanDay(day, defaults);
+      if (!checked.ok) {
+        for (const [k, v] of Object.entries(checked.errors)) errors[`days.${i}.${k}`] = v;
+      }
+      return {
+        id: day.id,
+        name: day.name,
+        notes: textOrNull(day.notes),
+        exercises: checked.ok ? checked.exercises : [],
+        slots: day.slots.map((s, j) => {
+          const f = (name) => `days.${i}.slots.${j}.${name}`;
+          const time = textOrNull(s.time);
+          if (time !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+            p.error(f("time"), "Bitte eine Uhrzeit wie 18:30 angeben.");
+          }
+          if (s.kind === "weekday") {
+            const weekday = p.integer(f("weekday"), s.weekday);
+            return { weekday, date: null, time };
+          }
+          const date = p.required(f("date"), s.date, "Bitte ein Datum w\xE4hlen.");
+          return { weekday: null, date, time };
+        })
+      };
+    })
+  };
+  const all = { ...p.errors, ...errors };
+  return Object.keys(all).length === 0 ? { ok: true, input } : { ok: false, errors: all };
+}
+function move(list, index, direction) {
+  const target = index + direction;
+  if (target < 0 || target >= list.length) return [...list];
+  const copy = [...list];
+  const [item2] = copy.splice(index, 1);
+  if (item2 !== void 0) copy.splice(target, 0, item2);
+  return copy;
+}
+function describeSetDraft(s) {
+  const parts2 = [];
+  if (s.reps.trim()) parts2.push(`${s.reps.trim()} Wdh.`);
+  if (s.weightKg.trim()) parts2.push(`${s.weightKg.trim()} kg`);
+  if (s.duration.trim())
+    parts2.push(`${s.duration.trim()}${s.duration.includes(":") ? "" : " min"}`);
+  if (s.distance.trim()) parts2.push(`${s.distance.trim()} km`);
+  const text = parts2.join(" \xB7 ") || "Werte offen";
+  return s.isWarmup ? `${text} (Warm up)` : text;
+}
+function describePlanSets(sets2) {
+  if (sets2.length === 0) return "keine S\xE4tze";
+  const groups = [];
+  for (const s of sets2) {
+    const text = describeSetDraft(s);
+    const lastGroup = groups.at(-1);
+    if (lastGroup && lastGroup.text === text) lastGroup.count += 1;
+    else groups.push({ text, count: 1 });
+  }
+  return groups.map(
+    (g) => g.count === 1 ? g.text : g.text === "Werte offen" ? `${g.count} S\xE4tze, Werte offen` : `${g.count} \xD7 ${g.text}`
+  ).join(", ");
+}
+
+// src/domain/checkin.ts
+var checkin_exports = {};
+__export(checkin_exports, {
+  CHECKIN_INFO: () => CHECKIN_INFO,
+  EXTRA_POSES_TITLE: () => EXTRA_POSES_TITLE,
+  PHOTO_GUIDE: () => PHOTO_GUIDE,
+  POSES: () => POSES,
+  POSE_LABELS: () => POSE_LABELS,
+  REST_LIMIT: () => REST_LIMIT,
+  REST_MESSAGE: () => REST_MESSAGE,
+  SICK_MESSAGE: () => SICK_MESSAGE,
+  chronological: () => chronological,
+  dataUrl: () => dataUrl,
+  daysApart: () => daysApart,
+  defaultPair: () => defaultPair,
+  fitSize: () => fitSize,
+  isLegacyPose: () => isLegacyPose,
+  poseInfo: () => poseInfo,
+  poseOptions: () => poseOptions,
+  restAlarm: () => restAlarm,
+  trainingRows: () => trainingRows
+});
+var REST_LIMIT = 3;
+var REST_MESSAGE = "Ey, Gymbro oder Brolina! Es wird wieder Zeit ab ins Training mit dir du Rakete.";
+var SICK_MESSAGE = "Gute Besserung - Nehm dir die Zeit, die du brauchst und schau doch mal im Back-on-track-Protokoll nach ob es dir eine Hilfe sein kann. Ich will das du schnell wieder loslegen kannst!";
+function trainingRows(workouts, statuses, limited = false) {
+  const oldest = workouts.reduce(
+    (m, w) => m === null || w.date < m ? w.date : m,
+    null
+  );
+  const days2 = statuses.filter((s) => !limited || oldest === null || s.date >= oldest);
+  const rows = [
+    ...days2.map((status) => ({ kind: "day", date: status.date, status })),
+    ...workouts.map((workout) => ({ kind: "workout", date: workout.date, workout }))
+  ];
+  return rows.map((row, index) => ({ row, index })).sort((a, b) => b.row.date.localeCompare(a.row.date) || a.index - b.index).map((x) => x.row);
+}
+function restAlarm(info) {
+  return info.status?.kind === "rest" && info.restStreak > REST_LIMIT;
+}
+var FRONT_RELAXED = `1. Front Relaxed \u2013 Vorderseite entspannt:
+* Schulterbreite, Brustf\xFClle und Armproportionen
+* Taille, Bauchkontrolle und V-Taper
+* Quadrizepsbreite und Beinentwicklung
+* Symmetrie zwischen linker und rechter K\xF6rperh\xE4lfte`;
+var FRONT_DOUBLE_BICEPS = `2. Front Double Biceps:
+* Bizeps, Trizeps und Unterarme
+* Seitliche und vordere Schultern
+* Latissimusbreite von vorne
+* Bauchmuskeln, Quadrizeps und Muskeltrennung`;
+var SIDE_CHEST = `3. Side Chest \u2013 beide Seiten: Fotografiere die linke und rechte Seite separat.
+* Brustdicke und Brustentwicklung
+* Armmasse und Schulter-Rundung
+* Beinbeuger, Quadrizeps und Waden
+* Unterschiede zwischen beiden K\xF6rperseiten`;
+var SIDE_TRICEPS = `4. Side Triceps \u2013 beide Seiten:
+* Trizepsmasse und Hufeisenform
+* Brust- und Schulterprofil
+* Bauchkontrolle und Taille
+* Beinproportionen und seitliche Muskelkonturen`;
+var BACK_RELAXED = `5. Back Relaxed \u2013 R\xFCckseite entspannt:
+* R\xFCckenbreite und Gesamtproportionen
+* Schulter- und Trapezmuskelentwicklung
+* Symmetrie der R\xFCckenmuskulatur
+* Ges\xE4\xDF, Beinbeuger und Waden`;
+var REAR_DOUBLE_BICEPS = `6. Rear Double Biceps:
+* R\xFCckenbreite und R\xFCckendichte
+* Hintere Schultern, Bizeps und Unterarme
+* Beinbeuger, Ges\xE4\xDF und Waden
+* Muskeltrennung und Links-rechts-Symmetrie`;
+var ABS_THIGHS = `7. Abdominals & Thighs:
+* Sichtbarkeit und Entwicklung der Bauchmuskeln
+* Taille und Bauchkontrolle
+* Quadrizeps, insbesondere der \xE4u\xDFere Sweep
+* Muskeltrennung und sichtbarer K\xF6rperfettstatus`;
+var MOST_MUSCULAR = `8. Most Muscular:
+* Gesamteindruck der Oberk\xF6rperdichte
+* Brust, Schultern, Arme und Trapezmuskeln
+* Muskelreife und sichtbare Trennung
+* Wirkung der Muskulatur unter maximaler Anspannung`;
+var SIDE_RELAXED = `9. Side Relaxed: Hilft, Brusttiefe, Bauchprofil, Ges\xE4\xDF, Beinproportionen und Haltung ohne maximale Anspannung zu bewerten.`;
+var BACK_LAT_SPREAD = `10. Back Lat Spread: Zeigt Latissimusbreite, R\xFCcken-Symmetrie, Taille und die optische V-Form besonders gut.`;
+var POSES = [
+  {
+    pose: "front_relaxed",
+    label: "1. Front Relaxed \u2013 Vorderseite entspannt",
+    info: FRONT_RELAXED,
+    extra: false
+  },
+  {
+    pose: "front_double_biceps",
+    label: "2. Front Double Biceps",
+    info: FRONT_DOUBLE_BICEPS,
+    extra: false
+  },
+  { pose: "side_chest_left", label: "3. Side Chest \u2013 links", info: SIDE_CHEST, extra: false },
+  { pose: "side_chest_right", label: "3. Side Chest \u2013 rechts", info: SIDE_CHEST, extra: false },
+  { pose: "side_triceps_left", label: "4. Side Triceps \u2013 links", info: SIDE_TRICEPS, extra: false },
+  {
+    pose: "side_triceps_right",
+    label: "4. Side Triceps \u2013 rechts",
+    info: SIDE_TRICEPS,
+    extra: false
+  },
+  {
+    pose: "back_relaxed",
+    label: "5. Back Relaxed \u2013 R\xFCckseite entspannt",
+    info: BACK_RELAXED,
+    extra: false
+  },
+  {
+    pose: "rear_double_biceps",
+    label: "6. Rear Double Biceps",
+    info: REAR_DOUBLE_BICEPS,
+    extra: false
+  },
+  { pose: "abs_thighs", label: "7. Abdominals & Thighs", info: ABS_THIGHS, extra: false },
+  { pose: "most_muscular", label: "8. Most Muscular", info: MOST_MUSCULAR, extra: false },
+  { pose: "side_relaxed", label: "9. Side Relaxed", info: SIDE_RELAXED, extra: true },
+  { pose: "back_lat_spread", label: "10. Back Lat Spread", info: BACK_LAT_SPREAD, extra: true }
+];
+var EXTRA_POSES_TITLE = "2 zus\xE4tzliche Bilder f\xFCr eine noch genauere Beurteilung";
+var LEGACY_LABELS = {
+  front: "Vorne (fr\xFChere Ansicht)",
+  side: "Seite (fr\xFChere Ansicht)",
+  back: "Hinten (fr\xFChere Ansicht)",
+  other: "Sonstige (fr\xFChere Ansicht)"
+};
+var isLegacyPose = (p) => p in LEGACY_LABELS;
+var POSE_LABELS = {
+  ...Object.fromEntries(POSES.map((p) => [p.pose, p.label])),
+  ...LEGACY_LABELS
+};
+var poseInfo = (p) => POSES.find((x) => x.pose === p)?.info ?? null;
+var poseOptions = (used = []) => [
+  ...POSES.map((p) => ({ value: p.pose, label: p.label })),
+  ...Object.keys(LEGACY_LABELS).filter((p) => used.includes(p)).map((p) => ({ value: p, label: LEGACY_LABELS[p] }))
+];
+var CHECKIN_INFO = "F\xFCr eine vollst\xE4ndige Bodybuilding-Formanalyse ben\xF6tigt ein Coach standardisierte Check-in-Bilder, mit denen er Muskelmasse, Symmetrie, Proportionen, Schwachstellen, K\xF6rperfettverteilung und die Gesamt\xE4sthetik beurteilen kann.";
+var PHOTO_GUIDE = {
+  title: "So nimmst du die Bilder auf",
+  subtitle: "Die Bildqualit\xE4t und Standardisierung sind entscheidend. Sonst kann ein Coach Ver\xE4nderungen nur schwer von Licht-, Winkel- oder Posingeffekten unterscheiden.",
+  rows: [
+    ["Kamera", "Smartphone auf Stativ, R\xFCckkamera"],
+    ["H\xF6he", "Etwa auf H\xF6he der K\xF6rpermitte"],
+    ["Abstand", "Ca. 3\u20135 m, sodass der gesamte K\xF6rper sichtbar ist"],
+    ["Objektiv", "M\xF6glichst normale 1\xD7-Brennweite, kein Ultraweitwinkel"],
+    ["Beleuchtung", "Gleichm\xE4\xDFig, frontal und seitlich; keine extremen Schatten"],
+    ["Hintergrund", "Ruhig, neutral und kontrastreich"],
+    ["Kleidung", "Einheitliche, eng anliegende Bodybuilding-Posinghose"],
+    ["Zeitpunkt", "Morgens nach Toilette, vor Essen und Training"],
+    ["Zustand", "Ohne Pump, ohne Filter und ohne nachtr\xE4gliche Bildbearbeitung"],
+    ["Vergleich", "Gleiche Kamera, Entfernung, Beleuchtung und Posen bei jedem Check-in"]
+  ]
+};
+function fitSize(width, height, max) {
+  if (width <= 0 || height <= 0) return { width: 0, height: 0 };
+  const scale = Math.min(1, max / Math.max(width, height));
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale))
+  };
+}
+var stamp = (c) => `${c.date}T${c.time ?? "00:00"}`;
+function chronological(list) {
+  return [...list].sort((a, b) => stamp(a).localeCompare(stamp(b)));
+}
+function defaultPair(list) {
+  if (list.length < 2) return null;
+  const sorted = chronological(list);
+  const after = sorted[sorted.length - 1];
+  const same2 = sorted.filter((c) => c.pose === after.pose && c.id !== after.id);
+  const before = same2[0] ?? sorted.find((c) => c.id !== after.id);
+  return { before, after };
+}
+function daysApart(a, b) {
+  return Math.abs(
+    Math.round(
+      (Date.parse(`${b.date}T00:00:00Z`) - Date.parse(`${a.date}T00:00:00Z`)) / 864e5
+    )
+  );
+}
+var dataUrl = (mime, base64) => `data:${mime};base64,${base64}`;
+
+// src/domain/sports.ts
+var sports_exports = {};
+__export(sports_exports, {
+  EMPTY_SPORT_FILTER: () => EMPTY_SPORT_FILTER,
+  EXERCISE_DISCIPLINES: () => EXERCISE_DISCIPLINES,
+  filterSports: () => filterSports,
+  sportCategories: () => sportCategories,
+  sportImageSource: () => sportImageSource,
+  sportPickerOptions: () => sportPickerOptions
+});
+function sportPickerOptions(sports, exercises) {
+  const bySport = /* @__PURE__ */ new Map();
+  for (const e of exercises) {
+    if (!e.sportId || e.archived) continue;
+    bySport.set(e.sportId, [...bySport.get(e.sportId) ?? [], e]);
+  }
+  const out = [];
+  for (const s of sports) {
+    if (s.archived) continue;
+    const linked = bySport.get(s.id) ?? [];
+    if (linked.length === 0) {
+      out.push({
+        id: `s:${s.id}`,
+        label: s.name,
+        detail: s.category,
+        priority: 1,
+        sportId: s.id,
+        exerciseId: null
+      });
+    } else {
+      for (const e of linked) {
+        out.push({
+          id: `e:${e.id}`,
+          label: e.name,
+          detail: e.name === s.name ? s.category : `${s.name} \xB7 ${s.category}`,
+          priority: 0,
+          sportId: s.id,
+          exerciseId: e.id
+        });
+      }
+    }
+  }
+  return out;
+}
+var EMPTY_SPORT_FILTER = { query: "", category: "" };
+function filterSports(list, filter) {
+  const words = normalizeSearch(filter.query).split(" ").filter(Boolean);
+  return list.filter((s) => {
+    if (filter.category && s.category !== filter.category) return false;
+    if (words.length === 0) return true;
+    const hay = normalizeSearch(`${s.name} ${s.category} ${s.description ?? ""}`);
+    return words.every((w) => hay.includes(w));
+  });
+}
+function sportCategories(list) {
+  return [...new Set(list.map((s) => s.category))].sort((a, b) => a.localeCompare(b, "de"));
+}
+function sportImageSource(sport, builtIn) {
+  if (sport.image) return sport.image;
+  if (sport.imageKey) return builtIn(sport.imageKey) ?? null;
+  return null;
+}
+var EXERCISE_DISCIPLINES = [
+  "Bodyweight",
+  "Calisthenics",
+  "Cardio",
+  "Hyrox"
+];
+
+// src/domain/machines.ts
+var machines_exports = {};
+__export(machines_exports, {
+  DEFAULT_MACHINE_SORT: () => DEFAULT_MACHINE_SORT,
+  EMPTY_FILTER: () => EMPTY_FILTER,
+  MACHINE_SORT_LABELS: () => MACHINE_SORT_LABELS,
+  NO_MUSCLE: () => NO_MUSCLE,
+  describeEdit: () => describeEdit,
+  describeExerciseMerge: () => describeExerciseMerge,
+  describeImport: () => describeImport,
+  describeMerge: () => describeMerge,
+  distinct: () => distinct,
+  filterMachines: () => filterMachines,
+  machineEdit: () => machineEdit,
+  machineForm: () => machineForm,
+  machineFormErrors: () => machineFormErrors,
+  machinePickerOptions: () => machinePickerOptions,
+  mergeTargets: () => mergeTargets,
+  numberLabel: () => numberLabel,
+  sortMachines: () => sortMachines,
+  splitList: () => splitList
+});
+
+// src/domain/sorting.ts
+var sorting_exports = {};
+__export(sorting_exports, {
+  EXERCISE_SORT_LABELS: () => EXERCISE_SORT_LABELS,
+  compareValues: () => compareValues,
+  nextSort: () => nextSort,
+  sortExercises: () => sortExercises
+});
+var collator = new Intl.Collator("de-DE", { numeric: true, sensitivity: "base" });
+function compareValues(a, b, direction) {
+  const emptyA = a === null || a === void 0 || a === "";
+  const emptyB = b === null || b === void 0 || b === "";
+  if (emptyA || emptyB) return emptyA === emptyB ? 0 : emptyA ? 1 : -1;
+  const result = typeof a === "number" && typeof b === "number" ? a - b : collator.compare(String(a), String(b));
+  return direction === "asc" ? result : -result;
+}
+var EXERCISE_SORT_LABELS = {
+  name: "\xDCbung",
+  muscleGroup: "Muskelgruppe",
+  discipline: "Bereich",
+  category: "Typ",
+  equipment: "Ger\xE4t-Nr.",
+  usageCount: "Einheiten"
+};
+function exerciseValue(e, key) {
+  switch (key) {
+    case "name":
+      return e.name;
+    case "muscleGroup":
+      return e.muscleGroup;
+    case "discipline":
+      return e.discipline ?? null;
+    case "category":
+      return exerciseCategoryLabel(e.category);
+    case "equipment":
+      return e.equipment;
+    case "usageCount":
+      return e.usageCount;
+  }
+}
+function sortExercises(list, key, direction) {
+  return [...list].sort(
+    (a, b) => compareValues(exerciseValue(a, key), exerciseValue(b, key), direction) || compareValues(a.name, b.name, "asc")
+  );
+}
+function nextSort(current, clicked) {
+  if (current.key !== clicked) return { key: clicked, direction: "asc" };
+  return { key: clicked, direction: current.direction === "asc" ? "desc" : "asc" };
+}
+
+// src/domain/machines.ts
+function machineForm(m) {
+  return {
+    manufacturer: m.manufacturer,
+    series: m.series,
+    name: m.name,
+    category: m.category,
+    machineType: m.machineType,
+    muscleGroups: m.muscleGroups.join(", "),
+    ownNumber: m.ownNumber ?? "",
+    gymNumber: m.gymNumber ?? "",
+    notes: m.notes ?? "",
+    images: m.images.join("\n"),
+    archived: m.archived
+  };
+}
+function splitList(text, separators = /[,;\n]/) {
+  const out = [];
+  for (const part of text.split(separators)) {
+    const v = part.trim();
+    if (v && !out.includes(v)) out.push(v);
+  }
+  return out;
+}
+var orNull = (v) => v.trim() ? v.trim() : null;
+function machineEdit(f) {
+  return {
+    manufacturer: f.manufacturer.trim(),
+    series: f.series.trim(),
+    name: f.name.trim(),
+    category: f.category.trim(),
+    machineType: f.machineType.trim(),
+    muscleGroups: splitList(f.muscleGroups),
+    ownNumber: orNull(f.ownNumber),
+    gymNumber: orNull(f.gymNumber),
+    notes: orNull(f.notes),
+    // Bildpfade können Kommas enthalten → nur Zeilen trennen
+    images: splitList(f.images, /\n/),
+    archived: f.archived
+  };
+}
+function machineFormErrors(f) {
+  const e = {};
+  if (!f.name.trim()) e.name = "Bitte einen Namen angeben.";
+  if (!f.manufacturer.trim()) e.manufacturer = "Bitte einen Hersteller angeben.";
+  if (!f.category.trim()) e.category = "Bitte eine Kategorie angeben.";
+  return e;
+}
+function describeEdit(r2) {
+  if (r2.movedTo) {
+    const n2 = r2.movedExercises;
+    return `Gespeichert. ${n2} ${n2 === 1 ? "\xDCbung wurde" : "\xDCbungen wurden"} samt Trainingsverlauf zu \u201E${r2.movedTo.displayName}\u201C verschoben; \u201E${r2.machine.displayName}\u201C ist jetzt archiviert. Vorher wurde ein Backup angelegt.`;
+  }
+  if (r2.machine.archived)
+    return `\u201E${r2.machine.displayName}\u201C ist archiviert (unter \u201EArchivierte anzeigen\u201C).`;
+  return `\u201E${r2.machine.displayName}\u201C gespeichert.`;
+}
+function describeMerge(r2) {
+  if (r2.items.length === 0) return "Alle Kraft\xFCbungen geh\xF6ren bereits zu einer Maschine.";
+  const n2 = (a) => r2.items.filter((i) => i.action === a).length;
+  const sessions2 = r2.items.reduce((s, i) => s + i.sessions, 0);
+  const will = (k) => r2.applied ? "" : k === 1 ? "wird " : "werden ";
+  const parts2 = [
+    `${n2("link")} ${will(n2("link"))}mit einer vorhandenen Maschine verbunden`,
+    `${n2("create")} ${will(n2("create"))}als neue Maschine angelegt`
+  ];
+  if (n2("join"))
+    parts2.push(`${n2("join")} ${will(n2("join"))}an eine neue Maschine mit derselben Nummer geh\xE4ngt`);
+  const head = r2.applied ? "Zusammengef\xFChrt" : "Vorschau";
+  return `${head}: ${r2.items.length} Kraft\xFCbungen \u2013 ${parts2.join(", ")}. Der Trainingsverlauf aus ${sessions2} Einheiten ${r2.applied ? "geh\xF6rt jetzt" : "geh\xF6rt danach"} zur jeweiligen Maschine.`;
+}
+function machinePickerOptions(machines, exercises) {
+  const byMachine = /* @__PURE__ */ new Map();
+  for (const e of exercises) {
+    if (!e.machineId || e.archived) continue;
+    const list = byMachine.get(e.machineId) ?? [];
+    list.push(e);
+    byMachine.set(e.machineId, list);
+  }
+  const out = [];
+  for (const m of machines) {
+    if (m.archived) continue;
+    const info = [m.manufacturer, m.series, numberLabel(m), m.muscleGroups.join(", ")].filter(Boolean).join(" \xB7 ");
+    const linked = byMachine.get(m.id) ?? [];
+    const exact = [m.ownNumber, m.gymNumber].filter((n2) => !!n2 && n2.trim() !== "");
+    if (linked.length === 0) {
+      out.push({
+        id: `m:${m.id}`,
+        label: m.displayName,
+        detail: info,
+        priority: 1,
+        machineId: m.id,
+        exerciseId: null,
+        exact
+      });
+    } else {
+      for (const e of linked) {
+        out.push({
+          id: `e:${e.id}`,
+          label: e.name,
+          detail: e.name === m.displayName ? info : `${m.displayName} \xB7 ${info}`,
+          priority: 0,
+          machineId: m.id,
+          exerciseId: e.id,
+          exact
+        });
+      }
+    }
+  }
+  return out;
+}
+var NO_MUSCLE = "__ohne__";
+var EMPTY_FILTER = {
+  query: "",
+  manufacturer: "",
+  category: "",
+  muscle: ""
+};
+var norm2 = (s) => s.toLocaleLowerCase("de").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss");
+function haystack(m) {
+  return norm2(
+    [
+      m.displayName,
+      m.name,
+      m.series,
+      m.manufacturer,
+      m.category,
+      m.machineType,
+      m.articleNumber ?? "",
+      m.ownNumber ?? "",
+      m.gymNumber ?? "",
+      m.notes ?? "",
+      ...m.muscleGroups,
+      ...m.features
+    ].join(" ")
+  );
+}
+function filterMachines(list, f) {
+  const words = norm2(f.query).split(/\s+/).filter(Boolean);
+  return list.filter((m) => {
+    if (f.manufacturer && m.manufacturer !== f.manufacturer) return false;
+    if (f.category && m.category !== f.category) return false;
+    if (f.muscle === NO_MUSCLE && m.muscleGroups.length > 0) return false;
+    if (f.muscle && f.muscle !== NO_MUSCLE && !m.muscleGroups.includes(f.muscle)) return false;
+    if (words.length === 0) return true;
+    const text = haystack(m);
+    return words.every((w) => text.includes(w));
+  });
+}
+function distinct(list, pick) {
+  const set = /* @__PURE__ */ new Set();
+  for (const m of list) {
+    const v = pick(m);
+    for (const x of Array.isArray(v) ? v : [v]) if (x) set.add(x);
+  }
+  return [...set].sort((a, b) => a.localeCompare(b, "de", { sensitivity: "base" }));
+}
+function numberLabel(m) {
+  const parts2 = [];
+  if (m.ownNumber) parts2.push(`Nr. ${m.ownNumber}`);
+  if (m.gymNumber) parts2.push(`dasGym ${m.gymNumber}`);
+  return parts2.join(" \xB7 ");
+}
+function describeImport(r2) {
+  const parts2 = [`${r2.total} Maschinen in der Datei`];
+  if (r2.added) parts2.push(`${r2.added} neu`);
+  if (r2.updated) parts2.push(`${r2.updated} aktualisiert`);
+  if (r2.unchanged) parts2.push(`${r2.unchanged} unver\xE4ndert`);
+  if (r2.archived) parts2.push(`${r2.archived} nicht mehr enthalten (archiviert)`);
+  let text = `Import abgeschlossen: ${parts2.join(", ")}; ${r2.images} Bilder verkn\xFCpft.`;
+  if (r2.missingImages.length) {
+    const shown = r2.missingImages.slice(0, 3).join("; ");
+    text += ` ${r2.missingImages.length} Bilder fehlen im Ordner (z. B. ${shown}${r2.missingImages.length > 3 ? " \u2026" : ""}).`;
+  }
+  if (r2.skipped.length) {
+    const shown = r2.skipped.slice(0, 3).join("; ");
+    text += ` Nicht \xFCbernommen (${r2.skipped.length}): ${shown}${r2.skipped.length > 3 ? " \u2026" : ""}`;
+  }
+  return text;
+}
+var MACHINE_SORT_LABELS = {
+  name: "Maschine",
+  manufacturer: "Hersteller",
+  category: "Kategorie \xB7 Typ",
+  muscles: "Muskelgruppen",
+  number: "Nummer",
+  usage: "Einheiten"
+};
+var DEFAULT_MACHINE_SORT = {
+  key: "manufacturer",
+  direction: "asc"
+};
+function machineValue(m, key, usage) {
+  switch (key) {
+    case "name":
+      return m.displayName;
+    case "manufacturer":
+      return m.manufacturer;
+    case "category":
+      return [m.category, m.machineType].filter(Boolean).join(" ");
+    case "muscles":
+      return m.muscleGroups.join(", ") || null;
+    case "number":
+      return m.gymNumber ?? m.ownNumber ?? null;
+    case "usage":
+      return usage.get(m.id) ?? 0;
+  }
+}
+function sortMachines(list, key, direction, usage = /* @__PURE__ */ new Map()) {
+  return [...list].sort(
+    (a, b) => compareValues(machineValue(a, key, usage), machineValue(b, key, usage), direction) || compareValues(a.manufacturer, b.manufacturer, "asc") || compareValues(a.displayName, b.displayName, "asc")
+  );
+}
+function mergeTargets(exercises, from) {
+  return exercises.filter((e) => e.id !== from.id && e.category === from.category);
+}
+function describeExerciseMerge(r2) {
+  const n2 = r2.sessions;
+  const units = n2 === 1 ? "1 Einheit" : `${n2} Einheiten`;
+  return `\u201E${r2.removed}\u201C wurde mit \u201E${r2.kept.name}\u201C zusammengef\xFChrt: ${units} \xFCbernommen, \u201E${r2.removed}\u201C entfernt. Vorher wurde ein Backup angelegt.`;
+}
+
+// src/domain/exerciseUsage.ts
+var exerciseUsage_exports = {};
+__export(exerciseUsage_exports, {
+  usageFromLog: () => usageFromLog,
+  usageOf: () => usageOf,
+  usageText: () => usageText
+});
+function usageFromLog(log) {
+  const map = /* @__PURE__ */ new Map();
+  for (const s of log) {
+    const u = map.get(s.exerciseId) ?? { workouts: /* @__PURE__ */ new Set(), last: s.date };
+    u.workouts.add(s.workoutId);
+    if (s.date > u.last) u.last = s.date;
+    map.set(s.exerciseId, u);
+  }
+  return map;
+}
+function usageOf(index, exerciseIds) {
+  const workouts = /* @__PURE__ */ new Set();
+  let last = null;
+  for (const id3 of exerciseIds) {
+    const u = index.get(id3);
+    if (!u) continue;
+    for (const w of u.workouts) workouts.add(w);
+    if (last === null || u.last > last) last = u.last;
+  }
+  return { count: workouts.size, last };
+}
+function usageText(u) {
+  return u.count > 0 && u.last ? `${u.count}\xD7 benutzt \xB7 zuletzt ${formatDate(u.last)}` : "noch nicht benutzt";
+}
 export {
   AKH_REFERENCES,
   ANS_INFO,
@@ -14595,6 +16855,9 @@ export {
   buildFocusIndex,
   buildLibrary,
   caffeine_exports as caffeine,
+  cardio_exports as cardio,
+  cardioReport_exports as cardioReport,
+  checkin_exports as checkin,
   checklistToPdf,
   checklistToXlsx,
   countAfterClick,
@@ -14629,6 +16892,7 @@ export {
   duplicateHrtEntries,
   energy_exports as energy,
   energyGoalView,
+  exerciseUsage_exports as exerciseUsage,
   exportReminderState,
   fastNutrients,
   fileStem,
@@ -14652,6 +16916,7 @@ export {
   groupInsights,
   groupIntakes,
   groupedValues,
+  heart_exports as heart,
   highlight,
   hormoneLevel_exports as hormoneLevel,
   hrt_exports as hrt,
@@ -14661,10 +16926,12 @@ export {
   lab_exports as lab,
   labImport_exports as labImport,
   labReferenceIntl_exports as labIntl,
+  labels_exports as labelsAll,
   legendLabels,
   lifestyleCategoryLabel,
   lifetime_exports as lifetime,
   loadVsNextDay,
+  machines_exports as machinesDomain,
   macroBaseKcal,
   macroEnergyShares,
   macroGoalRows,
@@ -14676,6 +16943,7 @@ export {
   methodChoices,
   microValues,
   muscleLevels,
+  muscleMap_exports as muscleMapAll,
   muscleMapForRange,
   neat_exports as neat,
   nextHrtDoses,
@@ -14691,6 +16959,8 @@ export {
   parseMuscleMapSettings,
   perServing,
   percentText,
+  planDraft_exports as planDraft,
+  planSchedule_exports as planSchedule,
   portionsFromAmount,
   previousMean,
   progressText,
@@ -14699,6 +16969,7 @@ export {
   recovery_exports as recovery,
   referenceGroup,
   repeatDates,
+  resistance_exports as resistance,
   roman,
   roundAmount,
   roundGrams,
@@ -14712,11 +16983,18 @@ export {
   searchTerms,
   setMealNames,
   sleep_exports as sleep,
+  sorting_exports as sorting,
+  sports_exports as sports,
   stats_exports as stats,
   sumNutrients,
   sumOptional,
   targetFor,
   trainingCalc_exports as trainingCalc,
+  trainingCoverage_exports as trainingCoverage,
+  trainingGroupLabels_exports as trainingGroupLabels,
+  trainingProgress_exports as trainingProgress,
+  trainingReview_exports as trainingReview,
+  trainingVolume_exports as trainingVolume,
   trends_exports as trends,
   waterGlasses,
   waterPercent,
@@ -14725,5 +17003,6 @@ export {
   weeklyMuscleSets,
   withDayMacros,
   withDefaultRanges,
-  withProteinFromWeight
+  withProteinFromWeight,
+  workoutDraft_exports as workoutDraft
 };

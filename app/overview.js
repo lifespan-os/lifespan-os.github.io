@@ -32,8 +32,8 @@ const metric = (label, value, unit = "", display = false) =>
 
 const row = (...items) => `<div class="metric-row">${items.filter(Boolean).join("")}</div>`;
 const note = (text) => (text ? `<p class="card__note">${text}</p>` : "");
-const link = (section, label) => `<button class="linkbtn" data-act="menu-go" data-arg="${section}">${esc(label)}</button>`;
-const missing = (text, section, action) => `<p class="muted">${esc(text)} ${link(section, action)}</p>`;
+const link = (section, label, tab = null) => `<button class="linkbtn" data-act="menu-go" data-arg="${section}"${tab ? ` data-tab="${tab}"` : ""}>${esc(label)}</button>`;
+const missing = (text, section, action, tab = null) => `<p class="muted">${esc(text)} ${link(section, action, tab)}</p>`;
 
 function ring(share, label) {
   const r = 26;
@@ -360,7 +360,7 @@ const groupsOf = (v) => {
 };
 
 /** Maschinen für die Zuordnung wie `listMachines` (Muskelgruppen und Namen). */
-function machinesOf(catalog) {
+export function machinesOf(catalog) {
   return (catalog?.machines ?? []).map((m) => ({
     id: m.id,
     muscleGroups: groupsOf(m.muscle_groups),
@@ -371,7 +371,7 @@ function machinesOf(catalog) {
 }
 
 /** Eigener Muskelfokus von Maschinen und Übungen (Exportdatei) wie `muscle_focus_list`. */
-function focusIndex(catalog) {
+export function focusIndex(catalog) {
   const f = catalog?.focus ?? { machines: {}, exercises: {} };
   return D.buildFocusIndex({
     machines: Object.entries(f.machines).flatMap(([machineId, list]) => list.map(([muscle, percent]) => ({ machineId, muscle, percent }))),
@@ -393,6 +393,30 @@ function storedMode(fallback) {
 }
 
 const setsText = (n) => `${F(n, 1)} ${n === 1 ? "Satz" : "Sätze"}`;
+
+/** Muskel-Körperkarte (Vorder- und Rückansicht, Legende) wie `MuscleHeatmap.tsx`. */
+export function heatmapHtml({ levels, describe, sex, active = null, act, legend }) {
+  const model = REGIONS[sex] ?? REGIONS.male;
+  const views = ["front", "back"]
+    .map((v) => {
+      const vd = model.views[v];
+      return `<svg class="muscle-map__svg" viewBox="0 0 ${vd.width} ${vd.height}" role="img" aria-label="${VIEW_LABELS[v]}">
+        <rect class="muscle-map__backdrop" x="0" y="0" width="${vd.width}" height="${vd.height}"/>
+        <image class="muscle-map__image" href="musclemap/${sex}.webp" x="${-vd.x0}" y="0" width="${model.width}" height="${model.height}"/>
+        <g class="muscle-map__regions">${vd.regions
+          .map((r) => {
+            const level = levels[r.muscle] ?? 0;
+            const on = active === r.muscle;
+            const fill = level > 0 ? HEAT[level - 1] : COLOR.training;
+            return `<path d="${r.d}" fill="${fill}" fill-opacity="${level > 0 ? (on ? 1 : 0.85) : on ? 0.2 : 0}" stroke="${on ? COLOR.training : "none"}" stroke-width="3" data-act="${act}" data-arg="${esc(r.muscle)}"><title>${esc(describe(r.muscle))}</title></path>`;
+          })
+          .join("")}</g></svg>`;
+    })
+    .join("");
+  return `<div class="muscle-map"><div class="muscle-map__views">${views}</div>
+      <p class="muscle-map__hover" aria-live="polite">${esc(active ? describe(active) : "Muskel antippen")}</p>
+      <ul class="muscle-map__legend" aria-label="Legende">${legend.map((l, i) => `<li><span class="muscle-map__swatch" style="background:${HEAT[i]}"></span>${esc(l)}</li>`).join("")}</ul></div>`;
+}
 
 function bodyMapCard(w, today) {
   const S = X.S;
@@ -417,22 +441,7 @@ function bodyMapCard(w, today) {
     `<div class="segmented" role="radiogroup">${items
       .map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === current}" class="${v === current ? "is-active" : ""}" data-act="${act}" data-arg="${v}">${esc(l)}</button>`)
       .join("")}</div>`;
-  const views = ["front", "back"]
-    .map((v) => {
-      const vd = model.views[v];
-      return `<svg class="muscle-map__svg" viewBox="0 0 ${vd.width} ${vd.height}" role="img" aria-label="${VIEW_LABELS[v]}">
-        <rect class="muscle-map__backdrop" x="0" y="0" width="${vd.width}" height="${vd.height}"/>
-        <image class="muscle-map__image" href="musclemap/${sex}.webp" x="${-vd.x0}" y="0" width="${model.width}" height="${model.height}"/>
-        <g class="muscle-map__regions">${vd.regions
-          .map((r) => {
-            const level = levels[r.muscle] ?? 0;
-            const on = active === r.muscle;
-            const fill = level > 0 ? HEAT[level - 1] : COLOR.training;
-            return `<path d="${r.d}" fill="${fill}" fill-opacity="${level > 0 ? (on ? 1 : 0.85) : on ? 0.2 : 0}" stroke="${on ? COLOR.training : "none"}" stroke-width="3" data-act="ov-muscle" data-arg="${esc(r.muscle)}"><title>${esc(describe(r.muscle))}</title></path>`;
-          })
-          .join("")}</g></svg>`;
-    })
-    .join("");
+  void model;
   const legend = D.legendLabels(mode);
   return card(
     "bodymap",
@@ -451,9 +460,7 @@ function bodyMapCard(w, today) {
       "ov-body-mode",
     )}</div>
     ${data.totalSets === 0 ? `<p class="muted small">Im Zeitraum keine Arbeitssätze von Kraftübungen.</p>` : ""}
-    <div class="muscle-map"><div class="muscle-map__views">${views}</div>
-      <p class="muscle-map__hover" aria-live="polite">${esc(active ? describe(active) : "Muskel antippen")}</p>
-      <ul class="muscle-map__legend" aria-label="Legende">${legend.map((l, i) => `<li><span class="muscle-map__swatch" style="background:${HEAT[i]}"></span>${esc(l)}</li>`).join("")}</ul></div>
+    ${heatmapHtml({ levels, describe, sex, active, act: "ov-muscle", legend })}
     ${note(
       esc(
         `Arbeitssätze von Kraftübungen (Montag–Sonntag). Mit Muskelfokus (bei Maschine bzw. Übung in Prozent eingetragen) zählt jeder Muskelteil mit seinem Anteil; sonst Hauptmuskel = erste Muskelgruppe der Übung (bzw. der Maschine), weitere Muskelgruppen zählen als halber Satz.${
@@ -469,7 +476,7 @@ function bodyMapCard(w, today) {
 
 // ------------------------------------------------------------------ Karten wie LiveOverview.tsx
 
-function energyHtml(energy) {
+export function energyHtml(energy) {
   const rows = D.energy.energyRows(energy);
   const total = energy.calibratedTotalKcal ?? energy.totalKcal;
   const pal = energy.calibratedPal ?? energy.pal;
@@ -495,7 +502,7 @@ function energyHtml(energy) {
     ${note("Schätzung aus Formeln, keine Messung. PAL = Gesamtverbrauch ÷ Grundumsatz.")}`;
 }
 
-function stepGoalBar(steps, goal) {
+export function stepGoalBar(steps, goal) {
   const p = D.neat.stepProgress(steps, goal);
   if (p.goal === null || p.percent === null) {
     return `<p class="muted small">${steps !== null ? `${F(steps)} Schritte. ` : ""}Kein Tagesschrittziel festgelegt – am PC in den Tageszielen eintragen.</p>`;
@@ -538,7 +545,7 @@ function liveCards(data, week, widgets, isToday) {
             }),
           )
           .join("")}</tbody></table>`
-      : `${missing(`${onDay} noch keine Einheit erfasst.`, "training", "Zum Training")}
+      : `${missing(`${onDay} noch keine Einheit erfasst.`, "training", "Zum Training", "workouts")}
         ${data.lastWorkout ? note(esc(`Letzte Einheit: ${data.lastWorkout.title} am ${D.formatDate(data.lastWorkout.date)} · ${data.lastWorkout.setCount} Arbeitssätze`)) : ""}`,
     { area: "training" },
   );
@@ -687,7 +694,7 @@ function liveCards(data, week, widgets, isToday) {
                 )
               : ""
           }</div>`
-      : `${missing(`${onDay} noch keine Alltagsbewegung erfasst.`, "training", "Zum Training (NEAT)")}${stepGoal !== null ? note(`Dein Tagesschrittziel: ${F(stepGoal)} Schritte`) : ""}`,
+      : `${missing(`${onDay} noch keine Alltagsbewegung erfasst.`, "training", "Zum Training (NEAT)", "neat")}${stepGoal !== null ? note(`Dein Tagesschrittziel: ${F(stepGoal)} Schritte`) : ""}`,
     { area: "training" },
   );
 

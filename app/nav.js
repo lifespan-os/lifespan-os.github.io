@@ -64,7 +64,8 @@ export function drawerHtml({ view, arg, open, esc, back = null }) {
   const current = sectionOf(view, arg, back);
   return `<div class="drawer-backdrop ${open ? "open" : ""}" data-act="menu-close"></div>
   <nav class="drawer ${open ? "open" : ""}" aria-label="Hauptmenü" ${open ? "" : 'aria-hidden="true" inert'}>
-    <div class="drawer__brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b><small>Mobil</small></div></div>
+    <div class="drawer__brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b><small>Alle Bereiche</small></div>
+      <button class="drawer__close" data-act="menu-close" aria-label="Menü schließen">${svg('<path d="M6 6l12 12"/><path d="M18 6L6 18"/>')}</button></div>
     <ul>
       ${SECTIONS.map(
         (s) => `<li><button class="drawer__item ${s.id === current ? "active" : ""} ${s.view ? "" : "pc-only"}" data-act="menu-go" data-arg="${s.id}" ${s.id === current ? 'aria-current="page"' : ""}>

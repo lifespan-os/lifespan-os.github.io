@@ -1023,3 +1023,22 @@ body:not(.has-tabbar) .rest { bottom: calc(76px + env(safe-area-inset-bottom)); 
 @media (max-width: 360px) { .quick-sheet__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .brand > div { display: grid; line-height: 1.1; }
 .brand__date { font-size: .78rem; }
+
+/* Menü als Fach von unten (1.22.0): Bereiche als Kacheln in mehreren Reihen – gut mit dem Daumen erreichbar */
+.drawer { top: auto; right: 0; bottom: 0; left: 0; width: auto; max-width: 640px; margin: 0 auto; max-height: 86vh;
+  border-radius: 24px 24px 0 0; transform: translateY(105%); transition: transform .22s ease-out;
+  padding: 14px max(14px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left)); }
+.drawer.open { transform: none; box-shadow: 0 -8px 28px rgba(11, 42, 74, .35); }
+.drawer::before { content: ""; display: block; width: 44px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .3); margin: 0 auto 10px; }
+.drawer__brand { display: flex; align-items: center; gap: 10px; padding: 0 2px 12px; margin-bottom: 12px; }
+.drawer__brand > div { flex: 1; display: grid; line-height: 1.1; }
+.drawer__brand img { width: 30px; height: 30px; border-radius: 8px; background: #fff; }
+.drawer__close { flex: none; width: 44px; height: 44px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, .12); color: #fff; display: grid; place-items: center; }
+.drawer ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.drawer__item { flex-direction: column; justify-content: center; gap: 6px; min-height: 78px; padding: 10px 4px; text-align: center;
+  border-radius: 14px; background: rgba(255, 255, 255, .06); font-size: .72rem; line-height: 1.15; }
+.drawer__item span { flex: none; overflow-wrap: normal; hyphens: manual; }
+.drawer__item small { position: absolute; top: 6px; right: 6px; font-size: .6rem; }
+.drawer__item { position: relative; }
+.drawer__item.active { box-shadow: inset 0 0 0 2px var(--orange); }
+@media (max-width: 350px) { .drawer ul { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

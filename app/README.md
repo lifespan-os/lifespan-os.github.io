@@ -461,3 +461,8 @@ Fassung laden.
 - „Schnell erfassen“: Mahlzeit, Wasser, Gewicht & Körperwerte, Training, Schlaf, Recovery, To-do,
   Koffein mit einem Tipp.
 - nav.js: `tabbarHtml`, `quickSheetHtml`; app.js: `renderNav` mit Leiste, `quickGo`.
+
+### Version 1.22.0 (14.11.2026): Menü von unten
+
+- Das Menü (☰ oben oder „Mehr“ unten) fährt jetzt als Fach von unten hoch: alle Bereiche als Kacheln in
+  drei Reihen (vier je Reihe, auf kleinen Handys drei) – mit dem Daumen gut erreichbar; ✕ zum Schließen.

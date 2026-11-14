@@ -5,7 +5,7 @@ import * as N from "./nutrition.js";
 import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, viewFood, viewFoodReview } from "./food.js";
 import { bodyActions, bodyChange, bodyInput, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
 import * as BD from "./bodydata.js";
-import { SECTIONS, drawerHtml, icon, pcOnlyHtml, quickSheetHtml, tabbarHtml } from "./nav.js";
+import { SECTIONS, barChoices, barSlots, drawerHtml, icon, pcOnlyHtml, quickSheetHtml, tabbarHtml } from "./nav.js";
 import { focusInfo, machineNamesOf } from "./focusinfo.js";
 import * as P from "./pcdb.js";
 import { buildDb, diaryActions, diaryChange, initDiary, today as todayIso, viewDiary, viewNutritionHistory } from "./diary.js";
@@ -225,6 +225,19 @@ function viewSettings() {
       <p class="muted small">Trainings, Lebensmittel und Körperwerte als Dateien für den Import am PC (Settings → Daten importieren → „Abgleichen“).</p>
       <button class="btn block" data-go="pending" ${total ? "" : "disabled"}>${total ? "Offene Daten ansehen und bearbeiten" : "Keine offenen Daten"}</button>
       <button class="btn block" data-go="send">An den PC senden</button>
+    </section>
+    <section class="card">
+      <h3>Untere Leiste</h3>
+      <p class="muted small">Welche zwei Bereiche neben dem „+“ stehen. Overview und „Mehr“ bleiben immer an ihrem Platz.</p>
+      ${(() => {
+        const slots = barSlots(S.prefs.barSlots);
+        const opts = (sel) => barChoices().map((c) => `<option value="${c.id}" ${c.id === sel ? "selected" : ""}>${esc(c.label)}</option>`).join("");
+        return `<div class="grid2">
+          <div class="field"><label for="bar-left">Links vom „+“</label><select id="bar-left" data-bar="0">${opts(slots[0])}</select></div>
+          <div class="field"><label for="bar-right">Rechts vom „+“</label><select id="bar-right" data-bar="1">${opts(slots[1])}</select></div>
+        </div>`;
+      })()}
+      <button class="btn sm ghost" data-act="bar-reset">Standard (Training, Nutrition)</button>
     </section>
     <section class="card">
       <h3>Hilfe</h3>
@@ -908,7 +921,7 @@ function renderNav() {
   const bar = !NO_TABBAR.has(S.view) && !app.querySelector(".bottom");
   navRoot.innerHTML =
     drawerHtml({ view: S.view, arg: S.arg, open: S.menuOpen, esc, back: S.logEdit?.back ?? null }) +
-    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen) }) + quickSheetHtml(Boolean(S.quickOpen)) : "");
+    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen), slots: S.prefs.barSlots }) + quickSheetHtml(Boolean(S.quickOpen)) : "");
   document.body.classList.toggle("has-tabbar", bar);
   document.body.classList.toggle("menu-open", Boolean(S.menuOpen || (bar && S.quickOpen)));
 }
@@ -1361,6 +1374,12 @@ const actions = {
     toast("Training verworfen");
     render();
   },
+  "bar-reset": async () => {
+    delete S.prefs.barSlots;
+    await saveNow();
+    toast("Untere Leiste: Training und Nutrition");
+    render();
+  },
   "tabs-fold": (el) => {
     const key = el.dataset.arg;
     S.tabsOpen = { ...(S.tabsOpen ?? {}), [key]: !S.tabsOpen?.[key] };
@@ -1553,6 +1572,14 @@ app.addEventListener("change", async (ev) => {
   if (healthChange(el)) return;
   if (superChange(el)) return;
   if (trainingChange(el)) return;
+  if (el.dataset?.bar !== undefined && el.dataset?.bar !== null && el.matches?.("[data-bar]")) {
+    const slots = [...barSlots(S.prefs.barSlots)];
+    slots[Number(el.dataset.bar)] = el.value;
+    S.prefs.barSlots = slots;
+    await saveNow();
+    renderNav();
+    return toast("Untere Leiste angepasst");
+  }
   if (el.id === "only-nr") {
     S.prefs.onlyNumbered = el.checked;
     saveSoon();

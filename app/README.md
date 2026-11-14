@@ -473,3 +473,9 @@ Fassung laden.
   ebenfalls als Fach von unten: Bereichsname mit ✕, Reiter als große Kacheln in zwei Spalten, der aktive
   orange umrandet; Schließen auch per Tipp auf den abgedunkelten Hintergrund. Damit bauen sich Hauptmenü,
   „Schnell erfassen“ und Reiter-Auswahl einheitlich von unten auf.
+
+### Version 1.24.0 (14.11.2026): Untere Leiste frei belegen
+
+- Settings → „Untere Leiste“: Die beiden Plätze links und rechts vom „+“ sind frei wählbar (alle Bereiche
+  mit Handy-Ansicht, jede Kombination, auch zweimal derselbe). Overview und „Mehr“ bleiben fest.
+  „Standard“ setzt Training und Nutrition zurück. Gespeichert in den Einstellungen am Gerät (`prefs.barSlots`).

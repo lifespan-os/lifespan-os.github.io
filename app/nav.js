@@ -89,24 +89,44 @@ export function pcOnlyHtml(id, esc) {
 }
 
 /** Untere Leiste (Design C, 1.21.0): Hauptbereiche mit einem Tipp, in der Mitte „+“ zum schnellen Erfassen. */
-const BAR = [
-  { id: "overview", label: "Overview", icon: "overview" },
-  { id: "training", label: "Training", icon: "training" },
-  { id: "quick" },
-  { id: "nutrition", label: "Nutrition", icon: "nutrition" },
-  { id: "more", label: "Mehr", icon: "more" },
-];
+/** Plätze links und rechts vom „+“ (1.24.0): unter Settings frei wählbar, Standard Training und Nutrition. */
+export const DEFAULT_BAR_SLOTS = ["training", "nutrition"];
 
-export function tabbarHtml({ view, arg, back = null, quickOpen = false }) {
+/** Bereiche, die auf einen Platz der Leiste passen (alle mit Handy-Ansicht). */
+export const barChoices = () => SECTIONS.filter((s) => s.view).map((s) => ({ id: s.id, label: s.label }));
+
+/** Gespeicherte Wahl prüfen: unbekannte Bereiche fallen auf den Standard zurück. */
+export function barSlots(pref) {
+  const ok = new Set(barChoices().map((c) => c.id));
+  return DEFAULT_BAR_SLOTS.map((d, i) => (Array.isArray(pref) && ok.has(pref[i]) ? pref[i] : d));
+}
+
+const SHORT = { "Body & Longevity": "Body", "iCoach.me": "iCoach", Checklisten: "Checklisten" };
+
+export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = DEFAULT_BAR_SLOTS }) {
   const current = sectionOf(view, arg, back);
-  const main = ["overview", "training", "nutrition"];
-  return `<nav class="tabbar" aria-label="Hauptbereiche">${BAR.map((b) => {
-    if (b.id === "quick")
-      return `<button class="tabbar__quick" data-act="quick-open" aria-label="Schnell erfassen" aria-expanded="${quickOpen}">${ICONS.plus}</button>`;
-    const active = b.id === "more" ? !main.includes(current) : b.id === current;
-    const act = b.id === "more" ? `data-act="menu-open-bar"` : `data-act="tabbar-go" data-arg="${b.id}"`;
-    return `<button class="tabbar__item ${active ? "active" : ""}" ${act} ${active ? 'aria-current="page"' : ""}>${ICONS[b.icon]}<span>${b.label}</span></button>`;
-  }).join("")}</nav>`;
+  const [left, right] = barSlots(slots);
+  const sec = (id) => SECTIONS.find((s) => s.id === id);
+  const items = [
+    { id: "overview", label: "Overview", icon: "overview" },
+    { id: left, label: SHORT[sec(left).label] ?? sec(left).label, icon: left },
+    { id: "quick" },
+    { id: right, label: SHORT[sec(right).label] ?? sec(right).label, icon: right },
+    { id: "more", label: "Mehr", icon: "more" },
+  ];
+  const main = ["overview", left, right];
+  let marked = false;
+  return `<nav class="tabbar" aria-label="Hauptbereiche">${items
+    .map((b) => {
+      if (b.id === "quick")
+        return `<button class="tabbar__quick" data-act="quick-open" aria-label="Schnell erfassen" aria-expanded="${quickOpen}">${ICONS.plus}</button>`;
+      // Gleicher Bereich auf zwei Plätzen: nur der erste wird markiert
+      const active = !marked && (b.id === "more" ? !main.includes(current) : b.id === current);
+      if (active) marked = true;
+      const act = b.id === "more" ? `data-act="menu-open-bar"` : `data-act="tabbar-go" data-arg="${b.id}"`;
+      return `<button class="tabbar__item ${active ? "active" : ""}" ${act} ${active ? 'aria-current="page"' : ""}>${ICONS[b.icon] ?? ""}<span>${b.label}</span></button>`;
+    })
+    .join("")}</nav>`;
 }
 
 /** Schnell erfassen: die häufigsten Einträge mit einem Tipp. */

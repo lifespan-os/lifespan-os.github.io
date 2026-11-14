@@ -260,6 +260,52 @@ function waterCard(db, date, goal) {
 
 // ---------------- Mahlzeiten
 
+/** Schlüssel einer Mahlzeit für Auswahl und Aktionen: gespeicherte Mahlzeit oder leerer Platz. */
+const pickKey = (slot) => slot.meal?.id ?? `slot-${slot.ref.mealType}`;
+
+/**
+ * Leiste unter den Lebensmitteln (1.19.0): „Eintragen zu Datum“ (ganze Mahlzeit oder Auswahl),
+ * bei Auswahl zusätzlich „Als Gericht speichern“ und „In andere Mahlzeit kopieren“.
+ */
+function pickBarHtml(pk, count, act) {
+  if (act) return actFormHtml(act, count);
+  return `<div class="meal-pick-bar">
+    ${count ? `<span class="muted small"><b>${count}</b> ausgewählt</span>` : ""}
+    ${count ? `<button class="linkbtn" data-act="meal-act-open" data-arg="${esc(pk)}|dish">Als Gericht speichern</button>` : ""}
+    ${count ? `<button class="linkbtn" data-act="meal-act-open" data-arg="${esc(pk)}|copy">In andere Mahlzeit kopieren</button>` : ""}
+    <button class="linkbtn" data-act="meal-act-open" data-arg="${esc(pk)}|date">Eintragen zu Datum</button>
+    ${count ? `<button class="linkbtn muted" data-act="meal-pick-clear" data-arg="${esc(pk)}">Auswahl aufheben</button>` : ""}
+  </div>`;
+}
+
+function actFormHtml(a, count) {
+  const what = a.ids ? `${a.ids.length} ${a.ids.length === 1 ? "Lebensmittel" : "Lebensmittel"}` : "alle Lebensmittel";
+  const title = a.kind === "dish" ? `Gericht aus ${what}` : a.kind === "copy" ? `${what} kopieren` : `Mahlzeit eintragen zu Datum (${what})`;
+  return `<div class="meal-act" role="group" aria-label="${esc(title)}">
+    <p class="small"><b>${esc(title)}</b></p>
+    ${
+      a.kind === "dish"
+        ? `<div class="field"><label for="meal-act-name">Name des Gerichts</label><input id="meal-act-name" type="text" data-diary="act-name" value="${esc(a.name)}" maxlength="80" placeholder="z. B. Skyr-Bowl" autocomplete="off"></div>
+           <p class="muted small">Wird als Vorlage gespeichert (Mengen wie eingetragen) und geht mit „Lebensmittel senden“ an den PC – dort unter „Aus Vorlage einfügen“.</p>`
+        : `<div class="meal-act__row"><div class="field"><label for="meal-act-date">Tag</label><input id="meal-act-date" type="date" data-diary="act-date" value="${esc(a.date)}"></div>
+           <div class="field"><label for="meal-act-meal">Mahlzeit</label><select id="meal-act-meal" data-diary="act-meal">${N.MEAL_TYPES.map(
+             (t) => `<option value="${t.value}" ${t.value === a.mealType ? "selected" : ""}>${esc(D.mealTypeLabel(t.value))}</option>`,
+           ).join("")}</select></div></div>`
+    }
+    ${a.error ? `<p class="field-error">${esc(a.error)}</p>` : ""}
+    <div class="row-actions"><button class="btn sm primary" data-act="meal-act-save">${a.kind === "dish" ? "Gericht speichern" : "Eintragen"}</button>
+      <button class="btn sm" data-act="meal-act-cancel">Abbrechen</button></div>
+  </div>`;
+}
+
+/** Lebensmittel der Mahlzeit `pk` am Tag des Tagebuchs (nur die ausgewählten, falls `ids`). */
+function itemsOf(pk, ids) {
+  const db = buildDb();
+  const slot = D.daySlots(P.mealDay(db, X.S.diaryDate ?? today())).find((s) => pickKey(s) === pk);
+  const items = slot?.meal?.items ?? [];
+  return { slot, items: ids ? items.filter((i) => ids.includes(i.id)) : items };
+}
+
 function mealsCard(slots, fast, date) {
   const local = X.S.food?.local;
   const unsentItems = new Set(Object.values(local?.meals ?? {}).flatMap((m) => m.items.filter((i) => !i.sent).map((i) => i.id)));
@@ -268,6 +314,10 @@ function mealsCard(slots, fast, date) {
   const slotHtml = (slot) => {
     const m = slot.meal;
     const has = m && D.mealHasContent(m);
+    // Auswahl der Lebensmittel (1.19.0): Schlüssel der Mahlzeit, angehakte Einträge, offene Aktion
+    const pk = pickKey(slot);
+    const picked = new Set(X.S.mealPick?.[pk] ?? []);
+    const act = X.S.mealAct?.pk === pk ? X.S.mealAct : null;
     // Wie am PC: gefüllte Mahlzeiten anfangs zugeklappt, leere aufgeklappt; Wahl bleibt je Mahlzeit
     const key = slot.ref.mealType;
     const expanded = X.S.mealOpen?.[key] ?? !has;
@@ -280,10 +330,11 @@ function mealsCard(slots, fast, date) {
           ? ""
           : `${
         m && m.items.length
-          ? `<ul class="meal-items">${m.items
+          ? `${m.items.length > 1 ? `<label class="meal-pick-all"><input type="checkbox" data-diary="pickall" data-arg="${esc(pk)}" ${picked.size === m.items.length ? "checked" : ""}> Alle auswählen</label>` : ""}
+            <ul class="meal-items">${m.items
               .map((i) => {
                 const phone = unsentItems.has(i.id);
-                return `<li><span class="meal-items__name">${esc(i.foodName)}${i.foodBrand ? ` <span class="muted">(${esc(i.foodBrand)})</span>` : ""}
+                return `<li class="${picked.has(i.id) ? "is-picked" : ""}"><input type="checkbox" class="meal-pick" data-diary="pick" data-arg="${esc(pk)}|${esc(i.id)}" ${picked.has(i.id) ? "checked" : ""} aria-label="${esc(i.foodName)} auswählen"><span class="meal-items__name">${esc(i.foodName)}${i.foodBrand ? ` <span class="muted">(${esc(i.foodBrand)})</span>` : ""}
                   <span class="muted small">${esc(D.formatAmount(i.amount, i.basisUnit))}${phone ? " · am Handy" : sentItems.has(i.id) ? " · gesendet" : ""}</span></span>
                   <span class="meal-items__kcal">${esc(D.formatKcal(i.energyKcal))}${
                     phone ? ` <button class="btn sm ghost" data-act="diary-remove" data-arg="${esc(itemMeal.get(i.id))}|${esc(i.id)}" aria-label="Eintrag entfernen">✕</button>` : ""
@@ -293,6 +344,7 @@ function mealsCard(slots, fast, date) {
           : ""
       }
       ${m && Object.keys(m.values ?? {}).length ? `<p class="muted small">Mit Fasttracking-Werten an dieser Mahlzeit.</p>` : ""}
+      ${m && m.items.length ? pickBarHtml(pk, picked.size, act) : ""}
       <button class="btn sm" data-act="diary-add" data-arg="${esc(slot.ref.mealType)}">+ Lebensmittel eintragen</button>`
       }
     </div>`;
@@ -437,6 +489,67 @@ const shift = (iso, n) => {
 };
 
 export const diaryActions = {
+  "meal-act-open": (el) => {
+    const [pk, kind] = el.dataset.arg.split("|");
+    const ids = X.S.mealPick?.[pk] ?? [];
+    const { slot } = itemsOf(pk, null);
+    const day = X.S.diaryDate ?? today();
+    const type = N.MEAL_TYPES.some((t) => t.value === slot?.ref.mealType) ? slot.ref.mealType : "snack";
+    X.S.mealAct = {
+      pk,
+      kind,
+      // „Eintragen zu Datum“ nimmt die Auswahl, sonst die ganze Mahlzeit
+      ids: kind === "date" && !ids.length ? null : [...ids],
+      date: kind === "copy" ? day : day === today() ? shift(day, 1) : today(),
+      mealType: type,
+      name: "",
+      error: null,
+    };
+    X.rerender();
+    requestAnimationFrame(() => document.getElementById(kind === "dish" ? "meal-act-name" : "meal-act-date")?.focus());
+  },
+  "meal-act-cancel": () => {
+    X.S.mealAct = null;
+    X.rerender();
+  },
+  "meal-pick-clear": (el) => {
+    X.S.mealPick = { ...(X.S.mealPick ?? {}), [el.dataset.arg]: [] };
+    X.rerender();
+  },
+  "meal-act-save": async () => {
+    const a = X.S.mealAct;
+    if (!a) return;
+    // Eingaben direkt lesen (der letzte Wert kommt sonst erst mit dem Verlassen des Feldes)
+    a.name = document.getElementById("meal-act-name")?.value ?? a.name;
+    a.date = document.getElementById("meal-act-date")?.value ?? a.date;
+    a.mealType = document.getElementById("meal-act-meal")?.value ?? a.mealType;
+    const { items } = itemsOf(a.pk, a.ids);
+    const list = items.map((i) => ({ foodId: i.foodId, amount: i.amount }));
+    const opts = { uuid: X.uuid, now: new Date() };
+    let message;
+    try {
+      if (a.kind === "dish") {
+        const row = N.saveItemsAsDish(X.S.catalog, X.S.food.local, a.name, list, opts);
+        message = `Gericht „${row.name}“ gespeichert (${list.length} Lebensmittel).`;
+      } else {
+        N.copyItemsTo(X.S.catalog, X.S.food.local, { date: a.date, mealType: a.mealType, items: list }, opts);
+        message = `${list.length} ${list.length === 1 ? "Lebensmittel" : "Lebensmittel"} in „${D.mealTypeLabel(a.mealType)}“ am ${D.formatDate(a.date)} eingetragen.`;
+      }
+    } catch (e) {
+      a.error = e.message;
+      X.rerender();
+      return;
+    }
+    try {
+      await X.store.set("nutrition", X.S.food.local);
+    } catch (e) {
+      X.toast("Speichern auf dem Gerät fehlgeschlagen: " + e.message, true);
+    }
+    X.S.mealAct = null;
+    X.S.mealPick = { ...(X.S.mealPick ?? {}), [a.pk]: [] };
+    X.toast(message);
+    X.rerender();
+  },
   "meal-toggle": (el) => {
     const [key, open] = el.dataset.arg.split("|");
     X.S.mealOpen = { ...(X.S.mealOpen ?? {}), [key]: open === "1" };
@@ -484,6 +597,25 @@ export const diaryActions = {
 export function diaryChange(el) {
   const k = el.dataset?.diary;
   if (!k) return false;
+  if (k === "pick" || k === "pickall") {
+    const [pk, id] = el.dataset.arg.split("|");
+    const cur = new Set(X.S.mealPick?.[pk] ?? []);
+    if (k === "pickall") {
+      cur.clear();
+      if (el.checked) for (const i of itemsOf(pk, null).items) cur.add(i.id);
+    } else if (el.checked) cur.add(id);
+    else cur.delete(id);
+    X.S.mealPick = { ...(X.S.mealPick ?? {}), [pk]: [...cur] };
+    if (X.S.mealAct?.pk === pk && X.S.mealAct.kind !== "date") X.S.mealAct.ids = [...cur];
+    X.rerender();
+    return true;
+  }
+  if (k === "act-name" || k === "act-date" || k === "act-meal") {
+    // Nur merken, nicht neu zeichnen – sonst ginge ein Tipp auf „Eintragen“ verloren
+    const a = X.S.mealAct;
+    if (a) a[k === "act-name" ? "name" : k === "act-date" ? "date" : "mealType"] = el.value;
+    return true;
+  }
   if (k === "date") {
     const v = el.value;
     if (/^\d{4}-\d{2}-\d{2}$/.test(v)) X.S.diaryDate = v > today() ? today() : v;

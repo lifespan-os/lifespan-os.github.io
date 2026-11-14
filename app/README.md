@@ -432,3 +432,12 @@ Fassung laden.
   Übung in einem offenen Plan), lassen sich erst verwerfen, wenn das verwendende verworfen ist.
 - Ernährung: Verweis auf „Vor dem Senden prüfen“ (Menge, Tag, Mahlzeit direkt ändern).
 - Neue Datei `pending.js` mit Tests (`pending.test.mjs`).
+
+### Version 1.19.0 (14.11.2026): Lebensmittel in Mahlzeiten auswählen
+
+- Nutrition → Tagebuch: Kästchen vor jedem Lebensmittel (bei mehreren auch „Alle auswählen“).
+- Mit Auswahl: **Als Gericht speichern** (Vorlage mit genau diesen Mengen, geht mit „Lebensmittel
+  senden“ an den PC) und **In andere Mahlzeit kopieren** (Tag und Mahlzeit frei wählbar).
+- **Eintragen zu Datum**: ganze Mahlzeit (oder die Auswahl) in einen frei wählbaren Tag eintragen –
+  wie am PC (dort ersetzt es „Heute erneut eintragen“, Desktop 1.0.125).
+- nutrition.js: `saveItemsAsDish`, `copyItemsTo` (mit Test).

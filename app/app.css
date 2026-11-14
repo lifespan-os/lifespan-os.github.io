@@ -878,3 +878,17 @@ input[type="date"], input[type="time"] { min-width: 0; max-width: 100%; }
 .pending-parts li { margin: 3px 0; overflow-wrap: anywhere; }
 .tag.tag--new { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
 .tag.tag--del { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
+
+/* ---------------------------------------------------------------- Auswahl in Mahlzeiten (1.19.0) */
+.meal-items li .meal-pick { flex: 0 0 auto; width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
+.meal-items li .meal-items__name { flex: 1 1 auto; min-width: 0; }
+.meal-items li.is-picked { background: color-mix(in srgb, var(--blue) 8%, transparent); border-radius: 6px; }
+.meal-pick-all { display: inline-flex; align-items: center; gap: 6px; margin: 2px 0 6px; font-size: .85rem; color: var(--muted); }
+.meal-pick-all input { width: 18px; height: 18px; margin: 0; accent-color: var(--blue); }
+.meal-pick-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 8px 0; font-size: .9rem; }
+.meal-pick-bar .linkbtn.muted { color: var(--muted); }
+.meal-act { margin: 8px 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); display: grid; gap: 8px; }
+.meal-act .field { margin: 0; }
+.meal-act__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.meal-act .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.meal-act input, .meal-act select { width: 100%; box-sizing: border-box; }

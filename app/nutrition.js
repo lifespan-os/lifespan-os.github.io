@@ -518,6 +518,27 @@ export function saveDishAsRecipe(catalog, local, dish, { uuid, now = new Date() 
   return row;
 }
 
+/**
+ * Ausgewählte Lebensmittel einer Mahlzeit als Gericht speichern (1.19.0): Vorlage mit genau diesen
+ * Mengen (1 Portion), wie „Als Vorlage speichern“ am PC. `items` = [{ foodId, amount }] in g/ml.
+ */
+export function saveItemsAsDish(catalog, local, name, items, opts) {
+  if (!items.length) throw new Error("Bitte mindestens ein Lebensmittel auswählen.");
+  const dish = { name: String(name ?? ""), servings: "1", items: items.map((i) => ({ foodId: i.foodId, amount: String(Math.round(i.amount * 10) / 10), unit: "base" })) };
+  return saveDishAsRecipe(catalog, local, dish, opts);
+}
+
+/**
+ * Ausgewählte Lebensmittel in eine Mahlzeit eines frei wählbaren Tages kopieren (1.19.0) – neue
+ * Einträge mit denselben Mengen; vorhandene Einträge der Zielmahlzeit bleiben.
+ */
+export function copyItemsTo(catalog, local, { date, mealType, items }, opts) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date ?? "")) || Number.isNaN(new Date(`${date}T12:00:00`).getTime())) throw new Error("Bitte ein gültiges Datum wählen.");
+  if (!MEAL_TYPES.some((m) => m.value === mealType)) throw new Error("Bitte eine Mahlzeit wählen.");
+  if (!items.length) throw new Error("Bitte mindestens ein Lebensmittel auswählen.");
+  return addToMeal(catalog, local, { date, mealType, items: items.map((i) => ({ foodId: i.foodId, amount: i.amount })) }, opts);
+}
+
 /** Gegessene Portionen eines Gerichts als Einträge (Mengen anteilig). */
 export function dishPortionItems(catalog, local, dish, eatenText) {
   const servings = parseNum(dish.servings);

@@ -892,3 +892,17 @@ input[type="date"], input[type="time"] { min-width: 0; max-width: 100%; }
 .meal-act__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
 .meal-act .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .meal-act input, .meal-act select { width: 100%; box-sizing: border-box; }
+
+/* ---------------------------------------------------------------- Reiter als Auswahl am linken Rand (1.20.0) */
+.tabs.tabs--fold { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; overflow: visible; padding: 2px 0; }
+.tabs__toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 16px 8px 12px; border: 0; border-radius: 999px;
+  background: var(--orange); color: var(--orange-ink); font-weight: 700; font-size: .95rem; text-align: left; max-width: 100%; }
+.tabs__chevron { display: inline-block; width: 1em; text-align: center; }
+.tabs__current { overflow-wrap: anywhere; }
+.tabs__list { display: none; flex-direction: column; align-items: stretch; gap: 2px; width: 100%; max-width: 360px;
+  margin-left: 6px; padding-left: 10px; border-left: 3px solid var(--orange); }
+.tabs--fold.is-open .tabs__list { display: flex; }
+.tabs--fold .tab { flex: none; width: 100%; min-height: 40px; padding: 8px 12px; border: 0; border-radius: 10px; background: transparent;
+  color: var(--fg); text-align: left; white-space: normal; font-weight: 600; }
+.tabs--fold .tab.active { background: color-mix(in srgb, var(--orange) 16%, transparent); color: var(--orange-text); }
+.tabs--fold .tab:not(.active):hover { background: var(--surface-2); }

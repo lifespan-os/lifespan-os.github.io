@@ -441,3 +441,11 @@ Fassung laden.
 - **Eintragen zu Datum**: ganze Mahlzeit (oder die Auswahl) in einen frei wählbaren Tag eintragen –
   wie am PC (dort ersetzt es „Heute erneut eintragen“, Desktop 1.0.125).
 - nutrition.js: `saveItemsAsDish`, `copyItemsTo` (mit Test).
+
+### Version 1.20.0 (14.11.2026): Reiter als Auswahl am linken Rand, Overview ohne Startknöpfe
+
+- Die Reiter jedes Bereichs (Training, Nutrition, Health, Superhuman, iCoach.me) stehen nicht mehr als
+  Knopfreihe da, sondern als auf- und zuklappbare Auswahl am linken Rand: zu nur der gewählte Reiter
+  (orange, mit ▸), aufgeklappt alle Reiter untereinander mit oranger Linie. Nach der Wahl klappt sie zu.
+  Umgesetzt zentral in `foldTabs()` (app.js) für alle `nav.tabs`.
+- Overview: „Plan starten“ und „Freies Training“ entfernt (Training starten unter Training → Einheiten).

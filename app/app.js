@@ -190,10 +190,7 @@ function viewHome() {
           : `<section class="card hl"><div class="wo-head"><h3>Training läuft: ${esc(a.title)}</h3><span class="clock" data-clock>${fmtSec((Date.now() - new Date(a.startedAt)) / 1000)}</span></div>
             <p class="muted small">${a.exercises.length} Übungen · gestartet ${esc(C.localTime(new Date(a.startedAt)))} Uhr</p>
             <button class="btn primary block" data-go="workout">Weiter trainieren</button></section>`
-        : `<div class="big-actions">
-            <button class="btn primary" data-go="plans">Plan starten<small>${c.plans.length ? `${c.plans.length} Trainingspläne` : "Noch keine Pläne am PC angelegt"}</small></button>
-            <button class="btn blue" data-act="start-free">Freies Training<small>Maschinen spontan auswählen</small></button>
-          </div>`
+        : ""
     }
     ${
       offen
@@ -831,12 +828,44 @@ const VIEWS = {
 function render() {
   if (!S.catalog && S.view !== "help") S.view = "setup";
   app.innerHTML = (VIEWS[S.view] || viewHome)();
+  foldTabs();
   renderNav();
   if (S.view === "picker") {
     const q = document.getElementById("q");
     q?.focus();
   }
   renderRest();
+}
+
+/**
+ * Reiter eines Bereichs (1.20.0) als auf- und zuklappbare Auswahl am linken Rand: zu sieht man nur
+ * den gewählten Reiter (orange) mit Pfeil, aufgeklappt alle Reiter untereinander. Gilt für alle
+ * `nav.tabs` (Training, Nutrition, Health, Superhuman, iCoach.me); offen/zu bleibt je Bereich.
+ */
+function foldTabs() {
+  for (const nav of app.querySelectorAll("nav.tabs")) {
+    const key = nav.getAttribute("aria-label") || "tabs";
+    const tabs = [...nav.querySelectorAll(".tab")];
+    if (!tabs.length) continue;
+    const active = nav.querySelector(".tab.active") ?? tabs[0];
+    const open = Boolean(S.tabsOpen?.[key]);
+    nav.classList.add("tabs--fold");
+    nav.classList.toggle("is-open", open);
+    const list = document.createElement("div");
+    list.className = "tabs__list";
+    list.id = `tabs-${key.replace(/[^a-z0-9]/gi, "")}`;
+    list.append(...tabs);
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "tabs__toggle";
+    toggle.dataset.act = "tabs-fold";
+    toggle.dataset.arg = key;
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-controls", list.id);
+    toggle.title = open ? "Auswahl zuklappen" : "Weitere Bereiche anzeigen";
+    toggle.innerHTML = `<span class="tabs__chevron" aria-hidden="true">${open ? "▾" : "▸"}</span><span class="tabs__current">${esc(active.textContent.trim())}</span>`;
+    nav.replaceChildren(toggle, list);
+  }
 }
 
 // ------------------------------------------------------------------ Aktionen
@@ -1259,6 +1288,11 @@ const actions = {
     toast("Training verworfen");
     render();
   },
+  "tabs-fold": (el) => {
+    const key = el.dataset.arg;
+    S.tabsOpen = { ...(S.tabsOpen ?? {}), [key]: !S.tabsOpen?.[key] };
+    rerenderKeepScroll();
+  },
   "menu-open": () => setMenu(true),
   "menu-go": (el) => {
     S.menuOpen = false;
@@ -1349,6 +1383,9 @@ app.addEventListener("click", (ev) => {
   const el = ev.target.closest("[data-act],[data-go]");
   if (!el || el.disabled) return;
   unlockAudio();
+  // Reiter gewählt: Auswahl wieder zuklappen
+  const fold = el.classList.contains("tab") ? el.closest("nav.tabs--fold") : null;
+  if (fold) S.tabsOpen = { ...(S.tabsOpen ?? {}), [fold.getAttribute("aria-label") || "tabs"]: false };
   if (el.dataset.go) {
     return go(el.dataset.go, el.dataset.arg ?? null);
   }

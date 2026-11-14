@@ -18,13 +18,13 @@ export const INDEPENDENT_LABEL = "Unabhängig";
 export const MAX_AMOUNT = 100000;
 
 export function emptySupp() {
-  return { intakes: {}, items: {}, deleted: {} };
+  return { intakes: {}, items: {}, deleted: {}, supplements: {}, fields: {}, packages: {} };
 }
 
 /** Ältere oder fehlende Ablage vervollständigen. */
 export function normSupp(local) {
   const l = local && typeof local === "object" ? local : {};
-  return { intakes: l.intakes ?? {}, items: l.items ?? {}, deleted: l.deleted ?? {} };
+  return { intakes: l.intakes ?? {}, items: l.items ?? {}, deleted: l.deleted ?? {}, supplements: l.supplements ?? {}, fields: l.fields ?? {}, packages: l.packages ?? {} };
 }
 
 // ------------------------------------------------------------------ Zusammenführen (für makeDb)
@@ -38,6 +38,10 @@ export function phoneSupp(local) {
     items: Object.values(l.items).map((e) => e.row),
     deletedIntakes: gone("supplement_intake"),
     deletedItems: gone("supplement_intake_item"),
+    // Herstellerpakete (1.27.0): am Handy angelegte Supplements mit Nährwerten und eigene Felder
+    supplements: Object.values(l.supplements).map((e) => e.row),
+    values: Object.values(l.supplements).flatMap((e) => Object.entries(e.values ?? {}).map(([nutrient, amount]) => ({ supplement_id: e.row.id, nutrient, amount }))),
+    fields: Object.values(l.fields).map((e) => e.row),
   };
 }
 
@@ -282,7 +286,8 @@ export const unsentSupp = (local) => {
   const l = normSupp(local);
   return (
     Object.values(l.intakes).filter((e) => !e.sent).length +
-    Object.values(l.deleted).filter((d) => !d.sent && d.table === "supplement_intake").length
+    Object.values(l.deleted).filter((d) => !d.sent && d.table === "supplement_intake").length +
+    Object.values(l.packages).filter((p) => !p.sent).length
   );
 };
 
@@ -309,14 +314,26 @@ export function suppTables(local, db, { all = false, withSupplements = false, no
   }
   if (intakes.length) out.supplement_intake = intakes;
   if (items.length) out.supplement_intake_item = items;
-  if (withSupplements && items.length) {
+  // Herstellerpakete (1.27.0): neue Supplements, eigene Felder, Paket mit seinen Einträgen
+  const ownSupps = Object.values(l.supplements).filter((e) => all || !e.sent);
+  const fields = Object.values(l.fields).filter((e) => all || !e.sent).map((e) => e.row);
+  if (fields.length) out.nutrient_field = fields;
+  const packs = Object.values(l.packages).filter((p) => all || !p.sent);
+  if (packs.length) {
+    out.vendor_package = packs.map((p) => ({ ...p.row }));
+    const links = packs.flatMap((p) => p.items);
+    if (links.length) out.vendor_package_item = links;
+  }
+  const sendIds = new Set(ownSupps.map((e) => e.row.id));
+  if (withSupplements && items.length) for (const i of items) if (db.supplements.has(i.supplement_id)) sendIds.add(i.supplement_id);
+  if (sendIds.size) {
     const iso = now.toISOString();
-    const used = [...new Set(items.map((i) => i.supplement_id))].map((id) => db.supplements.get(id)).filter(Boolean);
+    const used = [...sendIds].map((id) => db.supplements.get(id)).filter(Boolean);
     out.supplement = used.map((s) => ({
       id: s.id,
       name: s.name,
       unit: s.unit,
-      notes: null,
+      notes: s.notes ?? null,
       archived: s.archived ? 1 : 0,
       created_at: s.created_at ?? iso,
       updated_at: s.updated_at ?? iso,
@@ -362,6 +379,7 @@ export function markSuppSent(local) {
   for (const e of Object.values(local.intakes ?? {})) e.sent = true;
   for (const e of Object.values(local.items ?? {})) e.sent = true;
   for (const d of Object.values(local.deleted ?? {})) d.sent = true;
+  for (const k of ["supplements", "fields", "packages"]) for (const e of Object.values(local[k] ?? {})) e.sent = true;
 }
 
 /** Nach neuen Daten vom PC: Übertragenes, das der PC jetzt selbst hat, entfernen. */
@@ -377,6 +395,14 @@ export function pruneSupp(catalog, local) {
     const set = d.table === "supplement_intake" ? intakes : items;
     if (d.sent && !set.has(d.id)) delete l.deleted[key];
   }
+  // Herstellerpakete: was der PC jetzt selbst mitbringt, entfällt am Handy
+  const supps = has("supplement");
+  const suppNames = new Set((pc.supplement ?? []).map((s) => String(s.name).toLowerCase()));
+  for (const [id, e] of Object.entries(l.supplements)) if (e.sent && (supps.has(id) || suppNames.has(String(e.row.name).toLowerCase()))) delete l.supplements[id];
+  const fieldKeys = new Set((pc.nutrient_field ?? []).map((f) => f.key));
+  for (const [k, e] of Object.entries(l.fields)) if (e.sent && fieldKeys.has(k)) delete l.fields[k];
+  const packs = new Map((pc.vendor_package ?? []).map((p) => [p.package_key, p]));
+  for (const [k, p] of Object.entries(l.packages)) if (p.sent && packs.get(k)?.version === p.row.version) delete l.packages[k];
   return l;
 }
 

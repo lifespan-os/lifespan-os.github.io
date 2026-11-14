@@ -71,6 +71,7 @@ export const KEEP_TABLES = [
   "protocol_entry",
   "checklist",
   "checklist_item",
+  "vendor_package",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */
@@ -152,6 +153,8 @@ export function makeDb(catalog, phone = {}) {
   const intakes = merge(t("supplement_intake"), ps.intakes ?? [], new Set(ps.deletedIntakes ?? []));
   const liveIntakes = new Set(intakes.map((r) => r.id));
   const intakeItems = merge(t("supplement_intake_item"), ps.items ?? [], new Set(ps.deletedItems ?? [])).filter((r) => liveIntakes.has(r.intake_id));
+  const phoneSuppIds = new Set((ps.supplements ?? []).map((r) => r.id));
+  const phoneFieldKeys = new Set((ps.fields ?? []).map((r) => r.key));
   const pcIds = {
     supplement_intake: new Set(t("supplement_intake").map((r) => r.id)),
     supplement_intake_item: new Set(t("supplement_intake_item").map((r) => r.id)),
@@ -201,9 +204,9 @@ export function makeDb(catalog, phone = {}) {
     intakesByDate: groupBy(intakes, "date"),
     intakeItems: groupBy(intakeItems, "intake_id"),
     pcIds,
-    supplements: byId(t("supplement")),
-    supValues: groupBy(t("supplement_value"), "supplement_id"),
-    nutrientFields: t("nutrient_field"),
+    supplements: byId(merge(t("supplement"), ps.supplements ?? [])),
+    supValues: groupBy([...t("supplement_value").filter((v) => !phoneSuppIds.has(v.supplement_id)), ...(ps.values ?? [])], "supplement_id"),
+    nutrientFields: [...t("nutrient_field").filter((f) => !phoneFieldKeys.has(f.key)), ...(ps.fields ?? [])],
     water: waterRows,
     waterByDate: groupBy(waterRows, "date"),
     caffeine: t("caffeine_intake"),

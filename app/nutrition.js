@@ -562,7 +562,7 @@ export function dishPortionItems(catalog, local, dish, eatenText) {
 /** Anzahl noch nicht gesendeter Einträge (Lebensmittel, Strichcodes, Mahlzeiten, Rezepte). */
 export function unsentCount(local) {
   return (
-    Object.values(local.foods).filter((f) => !f.sent).length +
+    Object.values(local.foods).filter((f) => !f.sent && !f.pkg).length +
     Object.values(local.barcodes).filter((b) => !b.sent).length +
     Object.values(local.meals).reduce((n, m) => n + m.items.filter((i) => !i.sent).length, 0) +
     Object.values(local.recipes).filter((r) => !r.sent).length

@@ -256,11 +256,15 @@ function dayTitle(iso) {
   return `${iso === today() ? "Heute, " : ""}${wd} ${d}.${m}.${y}`;
 }
 
+/** Am Handy installierte, noch nicht gesendete Herstellerpakete (1.27.0). */
+const openPackages = () => Object.values(X.S.supp?.packages ?? {}).filter((p) => !p.sent);
+
 export function viewFoodReview() {
   const s = F();
   const local = s.local;
   const days = N.unsentDays(X.S.catalog, local);
-  const foods = Object.values(local.foods).filter((f) => !f.sent);
+  // Lebensmittel aus Herstellerpaketen stehen beim Paket (Settings → Herstellerpakete), nicht einzeln
+  const foods = Object.values(local.foods).filter((f) => !f.sent && !f.pkg);
   const recipes = Object.values(local.recipes).filter((r) => !r.sent);
   const allCodes = Object.entries(local.barcodes).filter(([, b]) => !b.sent);
   // Strichcodes neuer Lebensmittel stehen beim Lebensmittel, nur die übrigen (z. B. für ein Lebensmittel vom PC) einzeln
@@ -283,7 +287,14 @@ export function viewFoodReview() {
       </div></div>`;
   return `${X.header("Vor dem Senden prüfen", { back: X.S.reviewFrom || "home" })}<main class="wrap">
     <p class="muted small">Hier siehst du alles, was noch nicht am PC ist. Änderungen gelten sofort; gesendet wird erst mit „An den PC senden“.</p>
-    ${empty ? `<section class="card"><p class="empty">Keine offenen Ernährungseinträge.</p></section>` : ""}
+    ${empty && !openPackages().length ? `<section class="card"><p class="empty">Keine offenen Ernährungseinträge.</p></section>` : ""}
+    ${
+      openPackages().length
+        ? `<section class="card"><h3>Herstellerpakete</h3>${openPackages()
+            .map((p) => `<p class="small"><b>${esc(p.row.manufacturer)}</b> · Version ${esc(p.row.version)} · ${p.added?.foods ?? 0} Lebensmittel, ${p.added?.supplements ?? 0} Supplements neu</p>`)
+            .join("")}<button class="btn block" data-act="vendor-open">Herstellerpakete ansehen</button></section>`
+        : ""
+    }
     ${days
       .map(
         (d) => `<section class="card"><div class="wo-head"><h3>${esc(dayTitle(d.date))}</h3>

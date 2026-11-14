@@ -10,6 +10,7 @@ import { focusInfo, machineNamesOf } from "./focusinfo.js";
 import * as P from "./pcdb.js";
 import { buildDb, diaryActions, diaryChange, diaryInput, initDiary, today as todayIso, viewDiary, viewNutritionHistory, viewSuppIntake } from "./diary.js";
 import * as SP from "./supplements.js";
+import { initVendor, vendorActions, vendorChange, viewVendor } from "./vendorui.js";
 import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewDayNav } from "./overview.js";
 import { initLogs, logsActions, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
@@ -226,6 +227,11 @@ function viewSettings() {
   const total = unsent().length + unsentFood() + unsentBodyCount();
   return `${header("Settings")}<main class="wrap">
     ${accountsCard()}
+    <section class="card">
+      <h3>Herstellerpakete</h3>
+      <p class="muted small">Lebensmittel und Supplements von Herstellern (PEAK, GymBeam, IronMaxx, #sinob, Proteini.si …) mit einem Tipp installieren – wie am PC.</p>
+      <button class="btn block" data-act="vendor-open">Herstellerpakete</button>
+    </section>
     <section class="card">
       <h3>${c.startpaket ? "Grunddaten" : "Daten vom PC"}</h3>
       <p class="muted small">Stand: ${fmtDateTime(c.exportedAt)} · ${c.machines.length.toLocaleString("de-DE")} Maschinen · ${c.exercises.length} Übungen · ${c.plans.length} Pläne</p>
@@ -847,6 +853,7 @@ const VIEWS = {
   pending: viewPending,
   "account-new": viewAccountNew,
   "supp-intake": viewSuppIntake,
+  vendor: viewVendor,
   detail: viewDetail,
   help: viewHelp,
 };
@@ -1113,6 +1120,7 @@ function addExercise(exerciseId) {
 const actions = {
   ...foodActions,
   ...diaryActions,
+  ...vendorActions,
   ...overviewActions,
   ...logsActions,
   ...insightsActions,
@@ -1633,6 +1641,7 @@ app.addEventListener("change", async (ev) => {
   if (foodChange(el)) return;
   if (bodyChange(el)) return;
   if (diaryChange(el)) return;
+  if (vendorChange(el)) return;
   if (overviewChange(el)) return;
   if (logsChange(el)) return;
   if (todoChange(el)) return;
@@ -1960,6 +1969,7 @@ const moduleCtx = {
 };
 initBody(moduleCtx);
 initDiary(moduleCtx);
+initVendor(moduleCtx);
 initOverview({ ...moduleCtx, S, today: todayIso });
 initLogs(moduleCtx);
 initInsights(moduleCtx);

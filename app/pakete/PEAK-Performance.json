@@ -1,0 +1,4105 @@
+{
+ "format": "lifespan-os-paket",
+ "version": 1,
+ "package": {
+  "key": "peak-performance",
+  "manufacturer": "PEAK",
+  "title": "PEAK Performance – Lebensmittel und Supplements",
+  "version": "2026.11.05",
+  "source": "https://www.peak.ag",
+  "description": "Produkte der Bereiche Booster, Proteine, Muskelaufbau, Performance, Gesundheit und Timing laut www.peak.ag (Stand 05.11.2026). Nährwerte gelten für die auf der Seite gezeigte Sorte; Inhaltsstoffe ohne passendes Feld stehen in den Notizen."
+ },
+ "fields": [
+  {
+   "key": "acetyl_carnitine",
+   "group": "sport",
+   "label": "Acetyl-L-Carnitin",
+   "unit": "mg"
+  },
+  {
+   "key": "alanine",
+   "group": "amino",
+   "label": "L-Alanin",
+   "unit": "mg"
+  },
+  {
+   "key": "alpha_lipoic_acid",
+   "group": "sport",
+   "label": "Alpha-Liponsäure",
+   "unit": "mg"
+  },
+  {
+   "key": "apigenin",
+   "group": "plants",
+   "label": "Apigenin",
+   "unit": "mg"
+  },
+  {
+   "key": "arginine",
+   "group": "amino",
+   "label": "L-Arginin",
+   "unit": "mg"
+  },
+  {
+   "key": "ashwagandha_extract",
+   "group": "plants",
+   "label": "Ashwagandha-Extrakt",
+   "unit": "mg"
+  },
+  {
+   "key": "aspartic_acid",
+   "group": "amino",
+   "label": "L-Asparaginsäure (Aspartat)",
+   "unit": "mg"
+  },
+  {
+   "key": "astaxanthin",
+   "group": "plants",
+   "label": "Astaxanthin",
+   "unit": "mg"
+  },
+  {
+   "key": "beta_alanine",
+   "group": "sport",
+   "label": "Beta-Alanin",
+   "unit": "g"
+  },
+  {
+   "key": "beta_carotene",
+   "group": "plants",
+   "label": "Beta-Carotin",
+   "unit": "mg"
+  },
+  {
+   "key": "beta_glucans",
+   "group": "plants",
+   "label": "Beta-Glucane",
+   "unit": "mg"
+  },
+  {
+   "key": "betaine",
+   "group": "sport",
+   "label": "Betain (Trimethylglycin)",
+   "unit": "g"
+  },
+  {
+   "key": "bitter_melon_extract",
+   "group": "plants",
+   "label": "Bittermelonen-Extrakt",
+   "unit": "mg"
+  },
+  {
+   "key": "boron",
+   "group": "minerals",
+   "label": "Bor",
+   "unit": "mg"
+  },
+  {
+   "key": "bromelain",
+   "group": "enzymes",
+   "label": "Bromelain",
+   "unit": "mg"
+  },
+  {
+   "key": "calcium",
+   "group": "minerals",
+   "label": "Calcium",
+   "unit": "mg"
+  },
+  {
+   "key": "capsaicin",
+   "group": "plants",
+   "label": "Capsaicin",
+   "unit": "mg"
+  },
+  {
+   "key": "carbs",
+   "group": "macros",
+   "label": "Kohlenhydrate",
+   "unit": "g"
+  },
+  {
+   "key": "carnitine",
+   "group": "sport",
+   "label": "L-Carnitin",
+   "unit": "mg"
+  },
+  {
+   "key": "carnitine_tartrate",
+   "group": "sport",
+   "label": "L-Carnitintartrat",
+   "unit": "mg"
+  },
+  {
+   "key": "chloride",
+   "group": "minerals",
+   "label": "Chlorid",
+   "unit": "mg"
+  },
+  {
+   "key": "chlorogenic_acid",
+   "group": "plants",
+   "label": "Chlorogensäure",
+   "unit": "mg"
+  },
+  {
+   "key": "choline",
+   "group": "sport",
+   "label": "Cholin",
+   "unit": "mg"
+  },
+  {
+   "key": "chondroitin_sulfate",
+   "group": "plants",
+   "label": "Chondroitinsulfat",
+   "unit": "mg"
+  },
+  {
+   "key": "chromium",
+   "group": "minerals",
+   "label": "Chrom",
+   "unit": "µg"
+  },
+  {
+   "key": "cinnamon_extract",
+   "group": "plants",
+   "label": "Zimt-Extrakt",
+   "unit": "mg"
+  },
+  {
+   "key": "citrulline",
+   "group": "amino",
+   "label": "L-Citrullin",
+   "unit": "g"
+  },
+  {
+   "key": "citrulline_malate",
+   "group": "amino",
+   "label": "L-Citrullin-Malat",
+   "unit": "g"
+  },
+  {
+   "key": "cluster_dextrin",
+   "group": "sources",
+   "label": "Cluster Dextrin",
+   "unit": "g"
+  },
+  {
+   "key": "collagen_hydrolysate",
+   "group": "sources",
+   "label": "Kollagenhydrolysat",
+   "unit": "g"
+  },
+  {
+   "key": "copper",
+   "group": "minerals",
+   "label": "Kupfer",
+   "unit": "mg"
+  },
+  {
+   "key": "coq10",
+   "group": "sport",
+   "label": "Coenzym Q10",
+   "unit": "mg"
+  },
+  {
+   "key": "cordyceps_extract",
+   "group": "plants",
+   "label": "Cordyceps-Extrakt",
+   "unit": "mg"
+  },
+  {
+   "key": "creatine",
+   "group": "sport",
+   "label": "Kreatin",
+   "unit": "g"
+  },
+  {
+   "key": "creatine_akg",
+   "group": "sport",
+   "label": "Kreatin-Alpha-Ketoglutarat",
+   "unit": "g"
+  },
+  {
+   "key": "creatine_monohydrate",
+   "group": "sport",
+   "label": "Kreatin-Monohydrat",
+   "unit": "g"
+  },
+  {
+   "key": "curcumin",
+   "group": "plants",
+   "label": "Curcumin",
+   "unit": "mg"
+  },
+  {
+   "key": "custom_peakcitikolin",
+   "group": "sport",
+   "label": "Citicolin",
+   "unit": "mg"
+  },
+  {
+   "key": "custom_peakglucuronolacton",
+   "group": "sport",
+   "label": "Glucuronolacton",
+   "unit": "mg"
+  },
+  {
+   "key": "custom_peakhyaluron",
+   "group": "sport",
+   "label": "Hyaluronsäure",
+   "unit": "mg"
+  },
+  {
+   "key": "custom_peakkoffein",
+   "group": "plants",
+   "label": "Koffein",
+   "unit": "mg"
+  },
+  {
+   "key": "custom_peakmelatonin",
+   "group": "sport",
+   "label": "Melatonin",
+   "unit": "mg"
+  },
+  {
+   "key": "custom_peaksynephrin",
+   "group": "plants",
+   "label": "Synephrin",
+   "unit": "mg"
+  },
+  {
+   "key": "custom_peaktheanin",
+   "group": "amino",
+   "label": "L-Theanin",
+   "unit": "mg"
+  },
+  {
+   "key": "custom_peaktheobromin",
+   "group": "plants",
+   "label": "Theobromin",
+   "unit": "mg"
+  },
+  {
+   "key": "cysteine",
+   "group": "amino",
+   "label": "L-Cystein",
+   "unit": "mg"
+  },
+  {
+   "key": "d_pinitol",
+   "group": "sport",
+   "label": "D-Pinitol",
+   "unit": "mg"
+  },
+  {
+   "key": "dextrose",
+   "group": "sources",
+   "label": "Dextrose",
+   "unit": "g"
+  },
+  {
+   "key": "dha",
+   "group": "omega3",
+   "label": "DHA (Docosahexaensäure)",
+   "unit": "mg"
+  },
+  {
+   "key": "egcg",
+   "group": "plants",
+   "label": "EGCG (Epigallocatechingallat)",
+   "unit": "mg"
+  },
+  {
+   "key": "epa",
+   "group": "omega3",
+   "label": "EPA (Eicosapentaensäure)",
+   "unit": "mg"
+  },
+  {
+   "key": "fat",
+   "group": "macros",
+   "label": "Fett",
+   "unit": "g"
+  },
+  {
+   "key": "fenugreek_extract",
+   "group": "plants",
+   "label": "Bockshornklee-Extrakt",
+   "unit": "mg"
+  },
+  {
+   "key": "fiber",
+   "group": "macros",
+   "label": "Ballaststoffe",
+   "unit": "g"
+  },
+  {
+   "key": "fos",
+   "group": "plants",
+   "label": "FOS (Fructooligosaccharide)",
+   "unit": "g"
+  },
+  {
+   "key": "garcinia",
+   "group": "plants",
+   "label": "Garcinia Cambogia",
+   "unit": "mg"
+  },
+  {
+   "key": "ginseng_extract",
+   "group": "plants",
+   "label": "Ginseng-Extrakt",
+   "unit": "mg"
+  },
+  {
+   "key": "glucosamine_sulfate",
+   "group": "plants",
+   "label": "Glucosaminsulfat",
+   "unit": "mg"
+  },
+  {
+   "key": "glutamine",
+   "group": "amino",
+   "label": "L-Glutamin",
+   "unit": "mg"
+  },
+  {
+   "key": "glutamine_akg",
+   "group": "sport",
+   "label": "L-Glutamin-Alpha-Ketoglutarat",
+   "unit": "g"
+  },
+  {
+   "key": "glycine",
+   "group": "amino",
+   "label": "Glycin",
+   "unit": "mg"
+  },
+  {
+   "key": "grape_seed_extract",
+   "group": "plants",
+   "label": "Traubenkern-Extrakt",
+   "unit": "mg"
+  },
+  {
+   "key": "green_tea_extract",
+   "group": "plants",
+   "label": "Grüntee-Extrakt",
+   "unit": "mg"
+  },
+  {
+   "key": "hesperidin",
+   "group": "plants",
+   "label": "Hesperidin",
+   "unit": "mg"
+  },
+  {
+   "key": "histidine",
+   "group": "amino",
+   "label": "L-Histidin",
+   "unit": "mg"
+  },
+  {
+   "key": "hmb",
+   "group": "sport",
+   "label": "Calcium-β-Hydroxy-β-Methylbutyrat (HMB)",
+   "unit": "mg"
+  },
+  {
+   "key": "hydroxylysine",
+   "group": "amino",
+   "label": "Hydroxylysin",
+   "unit": "mg"
+  },
+  {
+   "key": "hydroxyproline",
+   "group": "amino",
+   "label": "Hydroxyprolin",
+   "unit": "mg"
+  },
+  {
+   "key": "indole3carbinol",
+   "group": "plants",
+   "label": "Indol-3-Carbinol",
+   "unit": "mg"
+  },
+  {
+   "key": "inositol",
+   "group": "sport",
+   "label": "Inositol",
+   "unit": "mg"
+  },
+  {
+   "key": "inulin",
+   "group": "plants",
+   "label": "Inulin",
+   "unit": "g"
+  },
+  {
+   "key": "iodine",
+   "group": "minerals",
+   "label": "Jod",
+   "unit": "µg"
+  },
+  {
+   "key": "iron",
+   "group": "minerals",
+   "label": "Eisen",
+   "unit": "mg"
+  },
+  {
+   "key": "isoleucine",
+   "group": "amino",
+   "label": "L-Isoleucin",
+   "unit": "mg"
+  },
+  {
+   "key": "isomaltulose",
+   "group": "sources",
+   "label": "Isomaltulose",
+   "unit": "g"
+  },
+  {
+   "key": "leucine",
+   "group": "amino",
+   "label": "L-Leucin",
+   "unit": "mg"
+  },
+  {
+   "key": "lutein",
+   "group": "plants",
+   "label": "Lutein",
+   "unit": "mg"
+  },
+  {
+   "key": "lysine",
+   "group": "amino",
+   "label": "L-Lysin",
+   "unit": "mg"
+  },
+  {
+   "key": "magnesium",
+   "group": "minerals",
+   "label": "Magnesium",
+   "unit": "mg"
+  },
+  {
+   "key": "maltodextrin",
+   "group": "sources",
+   "label": "Maltodextrin",
+   "unit": "g"
+  },
+  {
+   "key": "manganese",
+   "group": "minerals",
+   "label": "Mangan",
+   "unit": "mg"
+  },
+  {
+   "key": "methionine",
+   "group": "amino",
+   "label": "L-Methionin",
+   "unit": "mg"
+  },
+  {
+   "key": "molybdenum",
+   "group": "minerals",
+   "label": "Molybdän",
+   "unit": "µg"
+  },
+  {
+   "key": "msm",
+   "group": "plants",
+   "label": "Methylsulfonylmethan (MSM)",
+   "unit": "mg"
+  },
+  {
+   "key": "nac",
+   "group": "sport",
+   "label": "N-Acetyl-L-Cystein (NAC)",
+   "unit": "mg"
+  },
+  {
+   "key": "naringin",
+   "group": "plants",
+   "label": "Naringin",
+   "unit": "mg"
+  },
+  {
+   "key": "omega3_total",
+   "group": "omega3",
+   "label": "Omega-3 Gesamt",
+   "unit": "mg"
+  },
+  {
+   "key": "papain",
+   "group": "enzymes",
+   "label": "Papain",
+   "unit": "mg"
+  },
+  {
+   "key": "pectin",
+   "group": "plants",
+   "label": "Pektin",
+   "unit": "g"
+  },
+  {
+   "key": "phenylalanine",
+   "group": "amino",
+   "label": "L-Phenylalanin",
+   "unit": "mg"
+  },
+  {
+   "key": "phosphatidylserine",
+   "group": "sport",
+   "label": "Phosphatidylserin",
+   "unit": "mg"
+  },
+  {
+   "key": "phosphorus",
+   "group": "minerals",
+   "label": "Phosphor (Phosphat)",
+   "unit": "mg"
+  },
+  {
+   "key": "piperine",
+   "group": "plants",
+   "label": "Piperin",
+   "unit": "mg"
+  },
+  {
+   "key": "polygonum_extract",
+   "group": "plants",
+   "label": "Polygonum-cuspidatum-Extrakt",
+   "unit": "mg"
+  },
+  {
+   "key": "polyphenols",
+   "group": "plants",
+   "label": "Polyphenole gesamt",
+   "unit": "mg"
+  },
+  {
+   "key": "potassium",
+   "group": "minerals",
+   "label": "Kalium",
+   "unit": "mg"
+  },
+  {
+   "key": "pqq",
+   "group": "sport",
+   "label": "PQQ (Pyrrolochinolinchinon)",
+   "unit": "mg"
+  },
+  {
+   "key": "proline",
+   "group": "amino",
+   "label": "L-Prolin",
+   "unit": "mg"
+  },
+  {
+   "key": "protein",
+   "group": "macros",
+   "label": "Protein",
+   "unit": "g"
+  },
+  {
+   "key": "quercetin",
+   "group": "plants",
+   "label": "Quercetin",
+   "unit": "mg"
+  },
+  {
+   "key": "resveratrol",
+   "group": "plants",
+   "label": "Resveratrol (Trans-Resveratrol)",
+   "unit": "mg"
+  },
+  {
+   "key": "rhodiola_extract",
+   "group": "plants",
+   "label": "Rhodiola-rosea-Extrakt (Rosenwurz)",
+   "unit": "mg"
+  },
+  {
+   "key": "ribose",
+   "group": "sources",
+   "label": "Ribose",
+   "unit": "g"
+  },
+  {
+   "key": "saponins",
+   "group": "plants",
+   "label": "Saponine",
+   "unit": "mg"
+  },
+  {
+   "key": "saturated_fat",
+   "group": "macros",
+   "label": "Gesättigte Fettsäuren",
+   "unit": "g"
+  },
+  {
+   "key": "schisandra_extract",
+   "group": "plants",
+   "label": "Schisandra-Extrakt",
+   "unit": "mg"
+  },
+  {
+   "key": "selenium",
+   "group": "minerals",
+   "label": "Selen",
+   "unit": "µg"
+  },
+  {
+   "key": "serine",
+   "group": "amino",
+   "label": "L-Serin",
+   "unit": "mg"
+  },
+  {
+   "key": "silicon",
+   "group": "minerals",
+   "label": "Silizium",
+   "unit": "mg"
+  },
+  {
+   "key": "sodium",
+   "group": "minerals",
+   "label": "Natrium",
+   "unit": "mg"
+  },
+  {
+   "key": "sugar",
+   "group": "macros",
+   "label": "Zucker",
+   "unit": "g"
+  },
+  {
+   "key": "taurine",
+   "group": "amino",
+   "label": "Taurin",
+   "unit": "mg"
+  },
+  {
+   "key": "threonine",
+   "group": "amino",
+   "label": "L-Threonin",
+   "unit": "mg"
+  },
+  {
+   "key": "tribulus",
+   "group": "plants",
+   "label": "Tribulus terrestris",
+   "unit": "mg"
+  },
+  {
+   "key": "tryptophan",
+   "group": "amino",
+   "label": "L-Tryptophan",
+   "unit": "mg"
+  },
+  {
+   "key": "tyrosine",
+   "group": "amino",
+   "label": "L-Tyrosin",
+   "unit": "mg"
+  },
+  {
+   "key": "valine",
+   "group": "amino",
+   "label": "L-Valin",
+   "unit": "mg"
+  },
+  {
+   "key": "vit_a",
+   "group": "vitamins",
+   "label": "Vitamin A (Retinol, Provitamin-A-Carotinoide)",
+   "unit": "µg"
+  },
+  {
+   "key": "vit_b1",
+   "group": "vitamins",
+   "label": "Vitamin B1 (Thiamin)",
+   "unit": "mg"
+  },
+  {
+   "key": "vit_b12",
+   "group": "vitamins",
+   "label": "Vitamin B12 (Cobalamin)",
+   "unit": "µg"
+  },
+  {
+   "key": "vit_b2",
+   "group": "vitamins",
+   "label": "Vitamin B2 (Riboflavin)",
+   "unit": "mg"
+  },
+  {
+   "key": "vit_b3",
+   "group": "vitamins",
+   "label": "Vitamin B3 (Niacin)",
+   "unit": "mg"
+  },
+  {
+   "key": "vit_b5",
+   "group": "vitamins",
+   "label": "Vitamin B5 (Pantothensäure)",
+   "unit": "mg"
+  },
+  {
+   "key": "vit_b6",
+   "group": "vitamins",
+   "label": "Vitamin B6 (Pyridoxin)",
+   "unit": "mg"
+  },
+  {
+   "key": "vit_b7",
+   "group": "vitamins",
+   "label": "Vitamin B7 (Biotin)",
+   "unit": "µg"
+  },
+  {
+   "key": "vit_b9",
+   "group": "vitamins",
+   "label": "Vitamin B9 (Folat, Folsäure)",
+   "unit": "µg"
+  },
+  {
+   "key": "vit_c",
+   "group": "vitamins",
+   "label": "Vitamin C (Ascorbinsäure)",
+   "unit": "mg"
+  },
+  {
+   "key": "vit_d",
+   "group": "vitamins",
+   "label": "Vitamin D (D3)",
+   "unit": "µg"
+  },
+  {
+   "key": "vit_e",
+   "group": "vitamins",
+   "label": "Vitamin E (Tocopherole, Tocotrienole)",
+   "unit": "mg"
+  },
+  {
+   "key": "vit_k",
+   "group": "vitamins",
+   "label": "Vitamin K (K1, K2)",
+   "unit": "µg"
+  },
+  {
+   "key": "waxy_maize",
+   "group": "sources",
+   "label": "Waxy Maize Stärke",
+   "unit": "g"
+  },
+  {
+   "key": "whey_hydrolysate",
+   "group": "sources",
+   "label": "Molkenproteinhydrolysat",
+   "unit": "g"
+  },
+  {
+   "key": "whey_isolate",
+   "group": "sources",
+   "label": "Molkenproteinisolat (β-Lactoglobulin-Fraktion)",
+   "unit": "g"
+  },
+  {
+   "key": "withanolides",
+   "group": "plants",
+   "label": "Withanolide",
+   "unit": "mg"
+  },
+  {
+   "key": "zeaxanthin",
+   "group": "plants",
+   "label": "Zeaxanthin",
+   "unit": "mg"
+  },
+  {
+   "key": "zinc",
+   "group": "minerals",
+   "label": "Zink",
+   "unit": "mg"
+  }
+ ],
+ "foods": [
+  {
+   "id": "019a1904-de08-7f3a-8bbf-88edb5a46e71",
+   "name": "PEAK ANABOLIC PROTEIN SELECTION",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 351.0,
+   "proteinG": 79.0,
+   "carbsG": 2.4,
+   "fatG": 2.8,
+   "fiberG": null,
+   "sugarG": 1.0,
+   "saturatedFatG": 1.4,
+   "saltG": 1.7,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/aps-900 (Stand 05.11.2026), Sorte Chocolate. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser oder Magermilch."
+  },
+  {
+   "id": "019ab92d-30a3-78d2-8022-11743083cf21",
+   "name": "PEAK CLEAR PROTEIN",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 331.0,
+   "proteinG": 81.0,
+   "carbsG": 1.1,
+   "fatG": 0.3,
+   "fiberG": null,
+   "sugarG": 0.3,
+   "saturatedFatG": 0.0,
+   "saltG": 0.1,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/clear-protein (Stand 05.11.2026), Sorte Calamansi Citrus. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 500 ml kaltes Wasser."
+  },
+  {
+   "id": "019a216a-5b03-76c2-8133-e36e80520be5",
+   "name": "PEAK Clear Whey Isolate",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 338.0,
+   "proteinG": 83.0,
+   "carbsG": 0.7,
+   "fatG": 0.3,
+   "fiberG": null,
+   "sugarG": 0.2,
+   "saturatedFatG": 0.1,
+   "saltG": 0.2,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/clear-whey-isolate (Stand 05.11.2026), Sorte Blue Raspberry. Portion: 30 g Pulver."
+  },
+  {
+   "id": "019a8d3b-04e2-7e08-8dde-082262b76d31",
+   "name": "PEAK Beer Whey\" Isolate",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 338.0,
+   "proteinG": 79.0,
+   "carbsG": 5.0,
+   "fatG": 0.2,
+   "fiberG": null,
+   "sugarG": 0.1,
+   "saturatedFatG": 0.1,
+   "saltG": 0.2,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/clear-whey-limited-edition (Stand 05.11.2026), Sorte Radler. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 500 ml eiskaltes Wasser."
+  },
+  {
+   "id": "019ae0d5-9763-7b7c-8c84-66ce8aeb75f1",
+   "name": "PEAK Collagen Pro",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 359.0,
+   "proteinG": 85.0,
+   "carbsG": 0.2,
+   "fatG": 0.2,
+   "fiberG": null,
+   "sugarG": 0.0,
+   "saturatedFatG": 0.0,
+   "saltG": 0.0,
+   "portionName": "Portion",
+   "portionAmount": 27.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/gesundheit/products/collagen-pro (Stand 05.11.2026), Sorte Cherry. Portion: 27 g Pulver (2 gestrichene Messlöffel) mit 300 ml Wasser."
+  },
+  {
+   "id": "019a76b2-9da6-79f2-8cd9-b1b2c3e91ef5",
+   "name": "PEAK CREATESTON CLASSIC+",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 324.0,
+   "proteinG": 30.4,
+   "carbsG": 43.0,
+   "fatG": 1.3,
+   "fiberG": null,
+   "sugarG": 12.5,
+   "saturatedFatG": 0.6,
+   "saltG": 1.3,
+   "portionName": "Portion",
+   "portionAmount": 103.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/createston-classic-kopie (Stand 05.11.2026), Sorte Cherry. Portion: Tagesportion = 103 g (100 g Pulver + 3 Kapseln à 1000 mg) + 500 ml Wasser."
+  },
+  {
+   "id": "019ad81a-f92c-7883-80f8-d40a4643dfb0",
+   "name": "PEAK Createston Professional",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 318.0,
+   "proteinG": 30.0,
+   "carbsG": 40.4,
+   "fatG": 1.9,
+   "fiberG": null,
+   "sugarG": 12.4,
+   "saturatedFatG": 0.6,
+   "saltG": 1.3,
+   "portionName": "Portion",
+   "portionAmount": 105.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/createston-professional-kopie (Stand 05.11.2026), Sorte Cherry. Portion: Tagesportion = 105 g (100 g Pulver + 5 Kapseln à 1000 mg) + 500 ml Wasser."
+  },
+  {
+   "id": "019a3c39-fc73-7c5f-848c-4b32ea61eec9",
+   "name": "PEAK Createston Vegan",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 324.0,
+   "proteinG": 31.0,
+   "carbsG": 43.0,
+   "fatG": 0.9,
+   "fiberG": null,
+   "sugarG": 12.3,
+   "saturatedFatG": 0.5,
+   "saltG": 1.3,
+   "portionName": "Portion",
+   "portionAmount": 100.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/createston-vegan-kopie (Stand 05.11.2026), Sorte Cherry. Portion: 100 g Pulver + 3 Kapseln (à 1000 mg)."
+  },
+  {
+   "id": "019a58bc-188e-74c5-8bee-8dd0468c085d",
+   "name": "PEAK Createston Zero",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 280.0,
+   "proteinG": 58.0,
+   "carbsG": 1.5,
+   "fatG": 1.2,
+   "fiberG": null,
+   "sugarG": 0.1,
+   "saturatedFatG": 0.1,
+   "saltG": 2.3,
+   "portionName": "Portion",
+   "portionAmount": 52.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/createston-zero-kopie (Stand 05.11.2026), Sorte Cherry. Portion: 52 g Pulver (ca. 3 Messlöffel) + 500 ml Wasser."
+  },
+  {
+   "id": "019a6d60-fd77-7fbe-8143-f567d4a9e29e",
+   "name": "PEAK Daily Protein",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 344.0,
+   "proteinG": 78.0,
+   "carbsG": 2.9,
+   "fatG": 2.3,
+   "fiberG": null,
+   "sugarG": 1.0,
+   "saturatedFatG": 1.2,
+   "saltG": 2.3,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/daily-protein (Stand 05.11.2026), Sorte Chocolate. Portion: 30 g Pulver (ca. 2 Messlöffel) mit 300 ml Wasser, fettarmer Milch oder Milchalternative."
+  },
+  {
+   "id": "019ab2ce-ff9f-7ef3-8a9d-cc60ac89b13f",
+   "name": "PEAK Delicious Whey",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 362.0,
+   "proteinG": 75.0,
+   "carbsG": 6.85,
+   "fatG": 3.8,
+   "fiberG": null,
+   "sugarG": 4.9,
+   "saturatedFatG": 2.7,
+   "saltG": 1.7,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/delicious-whey-protein (Stand 05.11.2026), Sorte Chocolate Milkshake. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser oder Magermilch."
+  },
+  {
+   "id": "019a1071-ff0c-7978-8dc1-99c85a923dce",
+   "name": "PEAK Epic Intra",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 347.0,
+   "proteinG": 20.0,
+   "carbsG": 60.0,
+   "fatG": 0.0,
+   "fiberG": null,
+   "sugarG": 0.0,
+   "saturatedFatG": 0.0,
+   "saltG": 1.5,
+   "portionName": "Portion",
+   "portionAmount": 50.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/muskelaufbau/products/epic-intra (Stand 05.11.2026), Sorte Cherry. Portion: 50 g Pulver (ca. 2 leicht gehäufte Messlöffel) mit 600 bis 700 ml Wasser."
+  },
+  {
+   "id": "019a1275-440c-7d5c-84f9-3746cdb3f6b6",
+   "name": "PEAK EPIC WEIGHT GAINER",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 372.0,
+   "proteinG": 27.0,
+   "carbsG": 53.4,
+   "fatG": 5.8,
+   "fiberG": null,
+   "sugarG": 8.6,
+   "saturatedFatG": 1.7,
+   "saltG": 0.4,
+   "portionName": "Portion",
+   "portionAmount": 150.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/epic-weight-gainer (Stand 05.11.2026), Sorte Chocolate. Portion: 150 g Pulver (9 gestrichene Messlöffel) + 400 – 600 ml Wasser."
+  },
+  {
+   "id": "019a6e90-3a96-7367-84e0-a34b6eddfe69",
+   "name": "PEAK FIGHT PROTECT",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 263.0,
+   "proteinG": 54.0,
+   "carbsG": 1.6,
+   "fatG": 0.3,
+   "fiberG": null,
+   "sugarG": 0.0,
+   "saturatedFatG": 0.0,
+   "saltG": 0.0,
+   "portionName": "Portion",
+   "portionAmount": 18.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/performance/products/fight-protect (Stand 05.11.2026), Sorte Sour Apple. Portion: 18 g Pulver (3 Messlöffel) + 300 ml Wasser."
+  },
+  {
+   "id": "019ac0be-9fde-7b5a-8959-7c0125f0ad65",
+   "name": "PEAK Fruity Vegan Protein",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 319.0,
+   "proteinG": 77.0,
+   "carbsG": 2.0,
+   "fatG": 0.2,
+   "fiberG": null,
+   "sugarG": 1.0,
+   "saturatedFatG": 0.1,
+   "saltG": 0.8,
+   "portionName": "Portion",
+   "portionAmount": 20.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/fruity-vegan-protein (Stand 05.11.2026), Sorte Calamansi Citrus. Portion: 20 g Pulver (2 Messlöffel) mit 500 ml Wasser."
+  },
+  {
+   "id": "019ad09a-c931-79fd-80e8-1f7de1848e62",
+   "name": "PEAK GLUCOFAST",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 384.0,
+   "proteinG": 0.0,
+   "carbsG": 96.0,
+   "fatG": 0.0,
+   "fiberG": null,
+   "sugarG": 0.0,
+   "saturatedFatG": 0.0,
+   "saltG": 0.0,
+   "portionName": "Portion",
+   "portionAmount": 50.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/performance/products/glucofast (Stand 05.11.2026), Sorte Natural. Portion: 50 g powder."
+  },
+  {
+   "id": "019a87d2-581b-7080-819a-0d2ec5a1f5df",
+   "name": "PEAK Hybrid Protein",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 339.0,
+   "proteinG": 79.0,
+   "carbsG": 5.0,
+   "fatG": 1.2,
+   "fiberG": null,
+   "sugarG": 3.7,
+   "saturatedFatG": 0.8,
+   "saltG": 1.5,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/hybrid-protein (Stand 05.11.2026), Sorte Cereal Milk. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser oder Magermilch."
+  },
+  {
+   "id": "019a85ee-27d8-7a02-8ba7-5da2a8d6ba5b",
+   "name": "PEAK MICELLAR CASEIN",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 345.0,
+   "proteinG": 76.0,
+   "carbsG": 5.4,
+   "fatG": 2.1,
+   "fiberG": null,
+   "sugarG": 3.6,
+   "saturatedFatG": 1.2,
+   "saltG": 1.0,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/micellar-casein-900 (Stand 05.11.2026), Sorte Chocolate. Portion: 30 g Pulver + 300 ml Wasser."
+  },
+  {
+   "id": "019a52b7-eca9-724a-8d79-47ba5d3dbb85",
+   "name": "PEAK OPTIMEAL",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 336.0,
+   "proteinG": 59.0,
+   "carbsG": 7.0,
+   "fatG": 7.1,
+   "fiberG": 12.9,
+   "sugarG": 1.6,
+   "saturatedFatG": 4.3,
+   "saltG": 1.7,
+   "portionName": "Portion",
+   "portionAmount": 50.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/gesundheit/products/optimeal (Stand 05.11.2026), Sorte Chocolate. Portion: 50 g Pulver (ca. 3 Messlöffel) in 500 ml Wasser."
+  },
+  {
+   "id": "019a491f-9ebc-728f-830f-c48dc68cab8a",
+   "name": "PEAK Plutonium 3.0",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 276.0,
+   "proteinG": 29.4,
+   "carbsG": 31.6,
+   "fatG": 0.2,
+   "fiberG": null,
+   "sugarG": 0.2,
+   "saturatedFatG": 0.2,
+   "saltG": 1.8,
+   "portionName": "Portion",
+   "portionAmount": 50.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/booster/products/plutonium-3-0 (Stand 05.11.2026), Sorte Hot Blood Orange. Portion: 50 g Pulver + 3 Kapseln (500 ml Wasser)."
+  },
+  {
+   "id": "019a8bfe-895d-727d-855a-2d205cc351ac",
+   "name": "PEAK Protein 85",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 366.0,
+   "proteinG": 83.0,
+   "carbsG": 3.0,
+   "fatG": 2.4,
+   "fiberG": null,
+   "sugarG": 1.0,
+   "saturatedFatG": 1.0,
+   "saltG": 2.3,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/protein-85 (Stand 05.11.2026), Sorte Banana. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser."
+  },
+  {
+   "id": "019a4bc8-d8ef-7c67-812d-13a31fab3784",
+   "name": "PEAK Rice Pudding",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 382.0,
+   "proteinG": 7.6,
+   "carbsG": 84.2,
+   "fatG": 0.7,
+   "fiberG": 1.5,
+   "sugarG": 0.4,
+   "saturatedFatG": 0.2,
+   "saltG": 0.0,
+   "portionName": null,
+   "portionAmount": null,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/performance/products/rice-pudding (Stand 05.11.2026)."
+  },
+  {
+   "id": "019abbb2-a3e7-747e-8760-ca5d80df329e",
+   "name": "PEAK Soja Protein Isolat - Natural",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 366.0,
+   "proteinG": 86.0,
+   "carbsG": 1.0,
+   "fatG": 2.0,
+   "fiberG": null,
+   "sugarG": 0.5,
+   "saturatedFatG": 1.0,
+   "saltG": 3.85,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/soja-protein-isolat-natural (Stand 05.11.2026), Sorte Natural. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser."
+  },
+  {
+   "id": "019acd3a-ab62-7016-8d81-9107fba0f4dd",
+   "name": "PEAK SOY PROTEIN ISOLATE",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 354.0,
+   "proteinG": 81.0,
+   "carbsG": 2.0,
+   "fatG": 2.5,
+   "fiberG": null,
+   "sugarG": 0.5,
+   "saturatedFatG": 1.3,
+   "saltG": 3.79,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/sp-isolat-750 (Stand 05.11.2026), Sorte Chocolate. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser."
+  },
+  {
+   "id": "019a1ad1-fa34-722e-8754-f3d0ee843d2f",
+   "name": "PEAK VEGAN PROTEIN ISOLAT",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 383.0,
+   "proteinG": 77.0,
+   "carbsG": 6.0,
+   "fatG": 5.8,
+   "fiberG": null,
+   "sugarG": 0.5,
+   "saturatedFatG": 1.9,
+   "saltG": 2.1,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/vegan-protein-750 (Stand 05.11.2026), Sorte Banana. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser."
+  },
+  {
+   "id": "019a40f7-4f9d-7a07-85c5-d24bd4af386e",
+   "name": "PEAK Vegan Protein Isolat - Natural",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 394.0,
+   "proteinG": 80.0,
+   "carbsG": 5.0,
+   "fatG": 6.0,
+   "fiberG": null,
+   "sugarG": 0.5,
+   "saturatedFatG": 2.0,
+   "saltG": 1.4,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/vegan-protein-isolat-natural (Stand 05.11.2026), Sorte Natural. Portion: 30 g Pulver (2 gestrichene Messlöffel) mit 300 ml Wasser."
+  },
+  {
+   "id": "019a93f2-2860-73d2-86fa-6d0d5c571c21",
+   "name": "PEAK Whey Protein Concentrate",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 370.0,
+   "proteinG": 73.0,
+   "carbsG": 8.0,
+   "fatG": 5.2,
+   "fiberG": null,
+   "sugarG": 7.2,
+   "saturatedFatG": 3.8,
+   "saltG": 1.7,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/whey-protein-concentrate (Stand 05.11.2026), Sorte Banana. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser (oder Magermilch)."
+  },
+  {
+   "id": "019aa6f5-8294-72b0-82e5-9bffc257e125",
+   "name": "PEAK WHEY PROTEIN ISOLATE - NATURAL",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 361.0,
+   "proteinG": 86.2,
+   "carbsG": 2.0,
+   "fatG": 0.9,
+   "fiberG": null,
+   "sugarG": 0.9,
+   "saturatedFatG": 0.3,
+   "saltG": 0.65,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/whey-protein-isolat-natural (Stand 05.11.2026), Sorte Natural. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser (oder Magermilch)."
+  },
+  {
+   "id": "019a360d-5a7a-7eb0-8084-7e9ca9194adf",
+   "name": "PEAK Whey Protein Isolat",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 349.0,
+   "proteinG": 83.0,
+   "carbsG": 2.2,
+   "fatG": 0.9,
+   "fiberG": null,
+   "sugarG": 1.1,
+   "saturatedFatG": 0.5,
+   "saltG": 1.3,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/wpi (Stand 05.11.2026), Sorte Blueberry Vanilla. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser."
+  },
+  {
+   "id": "019a526f-e1a8-7d69-8389-31850ab67e6b",
+   "name": "PEAK Whey Selection",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 354.0,
+   "proteinG": 80.0,
+   "carbsG": 1.7,
+   "fatG": 3.0,
+   "fiberG": null,
+   "sugarG": 0.5,
+   "saturatedFatG": 2.0,
+   "saltG": 1.6,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/ws-900 (Stand 05.11.2026), Sorte Banana. Portion: 30 g Pulver (2 gestrichene Messlöffel) mit 300 ml Wasser oder Magermilch."
+  },
+  {
+   "id": "019a5534-1e71-7856-871c-05a14522fe9e",
+   "name": "PEAK Yummy Flav Powder",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 194.0,
+   "proteinG": 0.0,
+   "carbsG": 13.5,
+   "fatG": 0.0,
+   "fiberG": 69.7,
+   "sugarG": 5.4,
+   "saturatedFatG": 0.0,
+   "saltG": 4.0,
+   "portionName": "Portion",
+   "portionAmount": 5.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/muskelaufbau/products/yummy-flav-powder (Stand 05.11.2026), Sorte Apple Strudel. Portion: 5 g Pulver (1 gehäufter Messlöffel)."
+  },
+  {
+   "id": "019a8e23-0196-7087-892f-33641c2d59f4",
+   "name": "PEAK Yummy Protein Pudding",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 332.0,
+   "proteinG": 70.0,
+   "carbsG": 4.2,
+   "fatG": 2.3,
+   "fiberG": null,
+   "sugarG": 1.6,
+   "saturatedFatG": 1.4,
+   "saltG": 2.6,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/muskelaufbau/products/yummy-protein-pudding (Stand 05.11.2026), Sorte Chocolate. Portion: 30 g powder (about 2 measuring spoons) + 150–200 ml water or skim milk."
+  },
+  {
+   "id": "019a2da5-223b-7358-82dc-0f0417860008",
+   "name": "PEAK Yummy Vegan Protein",
+   "brand": "PEAK",
+   "basisUnit": "g",
+   "energyKcal": 347.0,
+   "proteinG": 64.0,
+   "carbsG": 7.0,
+   "fatG": 7.2,
+   "fiberG": 9.2,
+   "sugarG": 1.0,
+   "saturatedFatG": 1.8,
+   "saltG": 2.7,
+   "portionName": "Portion",
+   "portionAmount": 30.0,
+   "notes": "Nährwerte je 100 g laut https://www.peak.ag/collections/proteine/products/yummy-vegan-protein (Stand 05.11.2026), Sorte Black Forest Cake. Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser oder vegane Milchalternative."
+  }
+ ],
+ "supplements": [
+  {
+   "id": "019acc45-cfb8-7c0b-841e-57cf940ba85b",
+   "name": "PEAK Aggro Shot",
+   "manufacturer": "PEAK",
+   "unit": "ml",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/vor-dem-training-1/products/aggro-shot (Stand 05.11.2026). Portion: Portion = 30 ml (½ Shot). Werte der Sorte Sour Candy. Inhaltsstoffe je Portion: Thiamin 1,1 mg; Riboflavin 1,4 mg; Niacin 16 mg; Pantothensäure 6 mg; Vitamin B6 1,4 mg; Vitamin B12 2,5 µg; Biotin 50 µg; Arginin 2000 mg; Beta Alanin 1500 mg; Koffein 150 mg.",
+   "values": {
+    "energy": 31.0,
+    "protein": 5.5,
+    "vit_b1": 1.1,
+    "vit_b2": 1.4,
+    "vit_b3": 16.0,
+    "vit_b5": 6.0,
+    "vit_b6": 1.4,
+    "vit_b12": 2.5,
+    "vit_b7": 50.0,
+    "arginine": 2000.0,
+    "beta_alanine": 1.5,
+    "custom_peakkoffein": 150.0
+   }
+  },
+  {
+   "id": "019a6936-b139-7f75-8619-41384d9807f4",
+   "name": "PEAK ANABOLIC PROTEIN SELECTION",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/aps-900 (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser oder Magermilch. Werte der Sorte Chocolate. Inhaltsstoffe je Portion: Vitamin E 3 mg; Vitamin C 20 mg; Thiamin 0,27 mg; Riboflavin 0,35 mg; Niacin 4 mg; Vitamin B6 0,35 mg; Folsäure 0,5 µg; Vitamin B12 0,62 µg; Biotin 13 µg; Pantothensäure 1,5 mg; Freies L-Leucin 1500 mg; Laktase 105 ALU units. Aminosäuren je 100 g Protein: Alanin 4,3 g; Arginin 4,3 g; Asparagin – Asparaginsäure 10,1 g; Cystein 1,9 g; Glutamin – Glutaminsäure 16,8 g; Glycin 2,7 g; Histidin 1,6 g; Isoleucin 5,6 g; Leucin 14,9 g; Lysin 8,3 g; Methionin 1,7 g; Phenylalanin 4,7 g; Prolin 5,9 g; Serin 2,9 g; Threonin 4,9 g; Tryptophan 1,2 g; Tyrosin 3,1 g; Valin 5,1 g; BCAAs 25,6 g; EAAs 46,4 g.",
+   "values": {
+    "energy": 105.0,
+    "fat": 0.8,
+    "saturated_fat": 0.4,
+    "carbs": 0.7,
+    "sugar": 0.3,
+    "protein": 24.0,
+    "vit_e": 3.0,
+    "vit_c": 20.0,
+    "vit_b1": 0.27,
+    "vit_b2": 0.35,
+    "vit_b3": 4.0,
+    "vit_b6": 0.35,
+    "vit_b9": 0.5,
+    "vit_b12": 0.62,
+    "vit_b7": 13.0,
+    "vit_b5": 1.5
+   }
+  },
+  {
+   "id": "019a00f0-ee9a-7a97-8147-2c3b0ced8c40",
+   "name": "PEAK ARGININ (L-Arginin)",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/vor-dem-training-1/products/arginin (Stand 05.11.2026). Portion: Tagesportion = 3 Kapseln. Inhaltsstoffe je Portion: Niacin 24 mg; Vitamin B6 2,1 mg; Vitamin B12 3,75 µg; L-Arginin 2100 mg.",
+   "values": {
+    "vit_b3": 24.0,
+    "vit_b6": 2.1,
+    "vit_b12": 3.75,
+    "arginine": 2100.0
+   }
+  },
+  {
+   "id": "019ae15b-c241-7cbb-88d0-28525eedac8a",
+   "name": "PEAK ARGININ AKG",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 5.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/vor-dem-training-1/products/arginin-akg (Stand 05.11.2026). Portion: Tagesportion = 5 Kapseln. Inhaltsstoffe je Portion: L-Arginin-Alpha-Ketoglutarat 4000 mg.",
+   "values": {}
+  },
+  {
+   "id": "019abfeb-e6c5-7960-851f-445a54f3703a",
+   "name": "PEAK ARTHRO STACK",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 6.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/arthro-stack (Stand 05.11.2026). Portion: 6 Kapseln. Inhaltsstoffe je Portion: Vitamin C 160 mg; Vitamin E 12 mg; Mangan 2 mg; Chlorid 280 mg; Kalium 300 mg; Methylsulfonylmethan 2000 mg; Glucosaminsulfat 1200 mg; Chondroitinsulfat 500 mg; UC-II® 40 mg; Schwarzer Pfeffer-Extrakt 2,1 mg; davon Piperin 2 mg.",
+   "values": {
+    "vit_c": 160.0,
+    "vit_e": 12.0,
+    "manganese": 2.0,
+    "chloride": 280.0,
+    "potassium": 300.0,
+    "msm": 2000.0,
+    "glucosamine_sulfate": 1200.0,
+    "chondroitin_sulfate": 500.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a67aa-8651-7f8d-875c-a840bb88e2a5",
+   "name": "PEAK ASHWAGANDHA PRO",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/ashwagandha-pro (Stand 05.11.2026). Portion: Daily serving = 2 capsules. Inhaltsstoffe je Portion: Ashwagandha extract KSM-66® (root) 500 mg.",
+   "values": {
+    "ashwagandha_extract": 500.0
+   }
+  },
+  {
+   "id": "019a8d86-f16a-77a7-88fc-a3ae7a9cca15",
+   "name": "PEAK BCAA Caps",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 10.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/bcaa-caps (Stand 05.11.2026). Portion: 10 Kapseln. Inhaltsstoffe je Portion: Niacin 16 mg; Vitamin B6 1,4 mg; Vitamin B12 2,5 µg; Pantothensäure 6 mg; L-Leucin 4000 mg; L-Isoleucin 2000 mg; L-Valin 2000 mg.",
+   "values": {
+    "vit_b3": 16.0,
+    "vit_b6": 1.4,
+    "vit_b12": 2.5,
+    "vit_b5": 6.0,
+    "leucine": 4000.0,
+    "isoleucine": 2000.0,
+    "valine": 2000.0
+   }
+  },
+  {
+   "id": "019a1a91-b057-7247-8a2b-4c8af0b6d2f6",
+   "name": "PEAK BCAA - TST",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 13.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/bcaa-tst (Stand 05.11.2026). Portion: 13 g Pulver + 500 ml Wasser. Inhaltsstoffe je Portion: Niacin 2,4 mg; Vitamin B6 0,21 mg; Vitamin B12 0,38 µg; L-Leucin 5000 mg; L-Isoleucin 2500 mg; L-Valin 2500 mg.",
+   "values": {
+    "vit_b3": 2.4,
+    "vit_b6": 0.21,
+    "vit_b12": 0.38,
+    "leucine": 5000.0,
+    "isoleucine": 2500.0,
+    "valine": 2500.0
+   }
+  },
+  {
+   "id": "019a2409-3a87-7690-8d94-35f706a7941c",
+   "name": "PEAK Beauty All-Rounder",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 8.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/beauty-allrounder (Stand 05.11.2026). Portion: 8 g powder (1 measuring spoon). Werte der Sorte White Tea Peach. Inhaltsstoffe je Portion: Vitamin A 400 µg; Vitamin B3 8 mg; Biotin 25 µg; Vitamin B12 1,25 µg; Vitamin C 40 mg; Vitamin E 6 mg; Zinc 5 mg; Selenium 27,5 µg; Hydrolyzed collagen peptides (VERISOL®) 2500 mg; Cynatine HNS® (keratin hydrolysate) 500 mg; Hyaluronic acid 100 mg; L-glycine 2200 mg; L-lysine 700 mg; L-cysteine 300 mg.",
+   "values": {
+    "vit_a": 400.0,
+    "vit_b3": 8.0,
+    "vit_b7": 25.0,
+    "vit_b12": 1.25,
+    "vit_c": 40.0,
+    "vit_e": 6.0,
+    "zinc": 5.0,
+    "selenium": 27.5,
+    "custom_peakhyaluron": 100.0,
+    "glycine": 2200.0,
+    "lysine": 700.0,
+    "cysteine": 300.0
+   }
+  },
+  {
+   "id": "019a45cd-4048-7467-8788-a39c3d520191",
+   "name": "PEAK BERBER WOMAN",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/berberin (Stand 05.11.2026). Portion: 2 Kapseln. Inhaltsstoffe je Portion: Berberine HCl 600 mg; Piperine 2 mg.",
+   "values": {
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a2cfa-7512-7450-85a8-0b396c392f40",
+   "name": "PEAK BETA-ALANINE",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 5.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/beta-alanin (Stand 05.11.2026). Portion: 5 capsules. Inhaltsstoffe je Portion: Niacin 4 mg; Vitamin B6 0,35 mg; Folic Acid 100 µg; Vitamin B12 0,63 µg; Beta-Alanine 4000 mg.",
+   "values": {
+    "vit_b3": 4.0,
+    "vit_b6": 0.35,
+    "vit_b9": 100.0,
+    "vit_b12": 0.63,
+    "beta_alanine": 4.0
+   }
+  },
+  {
+   "id": "019a2a9d-d7fa-7e15-8af0-cebc2b24743a",
+   "name": "PEAK BETAINE TMG",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/betaine-tmg (Stand 05.11.2026). Portion: 4 Kapseln. Inhaltsstoffe je Portion: Trimethylglycin (TMG) (als Betain anhydrous) 2500 mg.",
+   "values": {
+    "betaine": 2.5
+   }
+  },
+  {
+   "id": "019a2d49-f234-7568-86ed-232737cb30eb",
+   "name": "PEAK BUFFED ENERGY",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 10.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/buffed-energy (Stand 05.11.2026). Portion: 10 g Pulver (ca. 1 leicht gehäufter Messlöffel) + 500 ml Wasser. Inhaltsstoffe je Portion: Vitamin B3 (Nicotinamid) 8 mg; Vitamin B6 (Pyridoxinhydrochlorid) 0,7 mg; Vitamin B12 (Cyanocobalamin) 1,25 µg; L-Tyrosin 2500 mg; Glycin 1100 mg; Acetyl-L-Carnitin 640 mg; Acetyl-L-Carnitin, davon L-Carnitin 500 mg; Glucuronolaceton 400 mg; Grüntee-Extrakt 250 mg; Grüntee-Extrakt, davon L-Theanin 150 mg; Cholin Bitartrat 250 mg; Cholin Bitartrat, davon Cholin 104 mg; Panax Ginseng-Extrakt 200 mg; Panax Ginseng-Extrakt, davon Ginsenosid 30 mg; Koffein anhydrous 167 mg; Guarana-Extrakt 150 mg; Guarana-Extrakt, davon Koffein 33 mg; Koffein gesamt 200 mg; enXtra™ (Alpinia Galanga, Rhizom) 100 mg; BRAINBERRY® (Aroniabeeren-Extrakt) 65 mg; Schwarzpfeffer-Extrakt 2,1 mg; Schwarzpfeffer-Extrakt, davon Piperin 2 mg.",
+   "values": {
+    "energy": 28.0,
+    "vit_b3": 8.0,
+    "vit_b6": 0.7,
+    "vit_b12": 1.25,
+    "tyrosine": 2500.0,
+    "glycine": 1100.0,
+    "acetyl_carnitine": 640.0,
+    "carnitine": 500.0,
+    "custom_peakglucuronolacton": 400.0,
+    "green_tea_extract": 250.0,
+    "custom_peaktheanin": 150.0,
+    "choline": 104.0,
+    "ginseng_extract": 200.0,
+    "custom_peakkoffein": 200.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019ab4ef-5255-75a1-872a-fe0c1f770e35",
+   "name": "PEAK CARNITIN",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/nach-dem-aufstehen/products/carnitin (Stand 05.11.2026). Portion: Portion = 2 Kapseln. Inhaltsstoffe je Portion: Thiamin 1,1 mg; Niacin 16 mg; L-Carnitin-Tartrat 1470 mg; L-Carnitin-Tartrat, davon L-Carnitin 1000 mg; Cholin 100 mg.",
+   "values": {
+    "vit_b1": 1.1,
+    "vit_b3": 16.0,
+    "carnitine_tartrate": 1470.0,
+    "carnitine": 1000.0,
+    "choline": 100.0
+   }
+  },
+  {
+   "id": "019aae26-8994-7f0d-8f07-a338dba19a7b",
+   "name": "PEAK CHOLEST SUPPORT",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 6.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/cholest-support (Stand 05.11.2026). Portion: 6 Kapseln. Inhaltsstoffe je Portion: Vitamin B5 200 mg; Citrus Bergamot-Extrakt 1000 mg; davon Flavonoide 250 mg; Schwarzer Knoblauch-Extrakt 1000 mg; davon Polyphenole 30 mg; Olivenblatt-Extrakt 600 mg; davon Oleuropeine 30 mg; Traubenkern-Extrakt 420 mg; davon OPC 400 mg; Phytosterol 400 mg; davon ß-Sitosterol 200 mg.",
+   "values": {
+    "vit_b5": 200.0,
+    "polyphenols": 30.0,
+    "grape_seed_extract": 420.0
+   }
+  },
+  {
+   "id": "019ad812-6d06-7939-8c87-30cec5869fe4",
+   "name": "PEAK CLA",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/cla (Stand 05.11.2026). Portion: 4 Kapseln. Inhaltsstoffe je Portion: Conjugated linoleic acid 3200 mg; of which cis-9, trans-11 isomers 1400 mg; of which trans-10, cis-12 isomers 1400 mg.",
+   "values": {}
+  },
+  {
+   "id": "019aacfe-ff9f-7a3d-8cb2-fa49469c1ebb",
+   "name": "PEAK CLEAR PROTEIN",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/clear-protein (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 500 ml kaltes Wasser. Werte der Sorte Calamansi Citrus. Inhaltsstoffe je Portion: BODYBALANCE® (hydrolysiertes Kollagen) 15000 mg. Aminosäuren je 100 g Protein: Alanin 7,4 g; Arginin 6 g; Asparagin – Asparaginsäure 8 g; Cystin – Cystein 0,9 g; Glutamin – Glutaminsäure 14,2 g; Glycin 10,6 g; Histidin 1,1 g; Isoleucin 3,4 g; Leucin 6,3 g; Lysin 6,5 g; Methionin 1,5 g; Phenylalanin 2,5 g; Prolin 10,3 g; Serin 3,9 g; Threonin 4 g; Tryptophan 0,8 g; Tyrosin 1,3 g; Valin 3,7 g; Hydroxylysin 0,6 g; Hydroxprolin 7,4 g; BCAAs 13,4 g; EAAs 28,7 g.",
+   "values": {
+    "energy": 99.0,
+    "fat": 0.1,
+    "saturated_fat": 0.0,
+    "carbs": 0.3,
+    "sugar": 0.1,
+    "protein": 24.0
+   }
+  },
+  {
+   "id": "019ac347-ea35-7944-8468-c74086a7e1b6",
+   "name": "PEAK Clear Whey Isolate",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/clear-whey-isolate (Stand 05.11.2026). Portion: 30 g Pulver. Werte der Sorte Blue Raspberry. Aminosäuren je 100 g Protein: Alanin 5,3 g; Arginin 1,9 g; Asparagin–Asparaginsäure 10,7 g; Cystin–Cystein 2,2 g; Glutamin–Glutaminsäure 17,7 g; Glycin 1,5 g; Histidin 1,5 g; Isoleucin 6,2 g; Leucin 10,5 g; Lysin 9,6 g; Methionin 2,2 g; Phenylalanin 2,8 g; Prolin 6,2 g; Serin 4,7 g; Threonin 7,1 g; Tryptophan 1,8 g; Tyrosin 2,7 g; Valin 5,5 g; BCAAs 22,3 g; EAAs 45,7 g.",
+   "values": {
+    "energy": 101.0,
+    "fat": 0.1,
+    "saturated_fat": 0.0,
+    "carbs": 0.2,
+    "sugar": 0.1,
+    "protein": 25.0
+   }
+  },
+  {
+   "id": "019a4455-f3bc-76cf-83b9-8826f8506971",
+   "name": "PEAK Beer Whey\" Isolate",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/clear-whey-limited-edition (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 500 ml eiskaltes Wasser. Werte der Sorte Radler. Aminosäuren je 100 g Protein: Alanin 5,3 g; Arginin 1,9 g; Asparagin – Asparaginsäure 10,7 g; Cystin – Cystein 2,2 g; Glutamin – Glutaminsäure 17,7 g; Glycin 1,5 g; Histidin 1,5 g; Isoleucin 6,2 g; Leucin 10,5 g; Lysin 9,6 g; Methionin 2,2 g; Phenylalanin 2,8 g; Prolin 6,2 g; Serin 4,7 g; Threonin 7,1 g; Tryptophan 1,8 g; Tyrosin 2,7 g; Valin 5,5 g; BCAAs 22,3 g; EAAs 45,7 g.",
+   "values": {
+    "energy": 101.0,
+    "fat": 0.1,
+    "saturated_fat": 0.0,
+    "carbs": 1.5,
+    "sugar": 0.0,
+    "protein": 24.0
+   }
+  },
+  {
+   "id": "019afdd0-26b7-7275-8f5a-df06a2236cf4",
+   "name": "PEAK Collagen Pro",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 27.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/collagen-pro (Stand 05.11.2026). Portion: 27 g Pulver (2 gestrichene Messlöffel) mit 300 ml Wasser. Werte der Sorte Cherry. Inhaltsstoffe je Portion: Vitamin C 12 mg; BODYBALANCE® 15000 mg; TENDOFORTE® 5000 mg; FORTIGEL® 5000 mg. Aminosäuren je 100 g Protein: Alanin 10,7 g; Arginin 4,5 g; Asparagin–Asparaginsäure 4,8 g; Glutamin–Glutaminsäure 7,7 g; Glycin 32,6 g; Histidin 0,6 g; Hydroxylysin 1,1 g; Hydroxyprolin 10 g; Isoleucin 1,1 g; Leucin 2,3 g; Lysin 2,6 g; Methionin 0,7 g; Phenylalanin 1,4 g; Prolin 12,1 g; Serin 3,4 g; Threonin 1,7 g; Tyrosin 0,4 g; Valin 2,3 g; BCAAs 5,7 g; EAAs 12,1 g.",
+   "values": {
+    "energy": 97.0,
+    "fat": 0.1,
+    "saturated_fat": 0.0,
+    "carbs": 0.1,
+    "sugar": 0.0,
+    "protein": 23.0,
+    "vit_c": 12.0
+   }
+  },
+  {
+   "id": "019aca71-f61a-7748-85de-deef54679d9d",
+   "name": "PEAK CREA-DROPS",
+   "manufacturer": "PEAK",
+   "unit": "Tablette(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/crea-drops (Stand 05.11.2026). Portion: 3 Kautabletten. Inhaltsstoffe je Portion: Creatine monohydrate (OptiCreatine™) 3000 mg.",
+   "values": {
+    "creatine_monohydrate": 3.0
+   }
+  },
+  {
+   "id": "019ae4e8-efb9-757e-8344-2277fb32229a",
+   "name": "PEAK CREATESTON CLASSIC+",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 103.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/createston-classic-kopie (Stand 05.11.2026). Portion: Tagesportion = 103 g (100 g Pulver + 3 Kapseln à 1000 mg) + 500 ml Wasser. Werte der Sorte Cherry. Inhaltsstoffe je Portion: Vitamin A 2400 µg; Vitamin D 15 µg; Vitamin E 36 mg; Vitamin K 225 µg; Vitamin C 240 mg; Thiamin 3,3 mg; Riboflavin 4,2 mg; Niacin 48 mg; Vitamin B6 4,2 mg; Folsäure 600 µg; Vitamin B12 7,5 µg; Biotin 150 µg; Pantothensäure 18 mg; Natrium 400 mg; Kalium 300 mg; Calcium 260 mg; Phosphor 120 mg; Magnesium 100 mg; Eisen 5 mg; Zink 15 mg; Kupfer 1 mg; Mangan 2 mg; Selen 55 µg; Chrom 40 µg; Molybdän 50 µg; Jod 50 µg; Maltodextrin 30000 mg; Dextrose 14500 mg; Molkenproteinisolat 10000 mg; Molkenprotein Hydrolysat 10000 mg; Kollagenes Hydrolysat 5000 mg; Creatin-Alphaketoglutarat 4700 mg; davon Creatin 3000 mg; L-Leucin 5000 mg; L-Glutamin + Glutaminsäure 5000 mg; Glycin 3500 mg; L-Isoleucin 2500 mg; L-Valin 2500 mg; L-Asparaginsäure 2050 mg; L-Lysin 185…",
+   "values": {
+    "energy": 334.0,
+    "fat": 1.3,
+    "saturated_fat": 0.6,
+    "carbs": 44.3,
+    "sugar": 12.9,
+    "protein": 31.3,
+    "vit_a": 2400.0,
+    "vit_d": 15.0,
+    "vit_e": 36.0,
+    "vit_k": 225.0,
+    "vit_c": 240.0,
+    "vit_b1": 3.3,
+    "vit_b2": 4.2,
+    "vit_b3": 48.0,
+    "vit_b6": 4.2,
+    "vit_b9": 600.0,
+    "vit_b12": 7.5,
+    "vit_b7": 150.0,
+    "vit_b5": 18.0,
+    "sodium": 400.0,
+    "potassium": 300.0,
+    "calcium": 260.0,
+    "phosphorus": 120.0,
+    "magnesium": 100.0,
+    "iron": 5.0,
+    "zinc": 15.0,
+    "copper": 1.0,
+    "manganese": 2.0,
+    "selenium": 55.0,
+    "chromium": 40.0,
+    "molybdenum": 50.0,
+    "iodine": 50.0,
+    "maltodextrin": 30.0,
+    "dextrose": 14.5,
+    "whey_isolate": 10.0,
+    "whey_hydrolysate": 10.0,
+    "collagen_hydrolysate": 5.0,
+    "creatine_akg": 4.7,
+    "creatine": 3.0,
+    "leucine": 5000.0,
+    "glycine": 3500.0,
+    "isoleucine": 2500.0,
+    "valine": 2500.0,
+    "aspartic_acid": 2050.0,
+    "lysine": 1850.0,
+    "proline": 1460.0,
+    "alanine": 1320.0,
+    "arginine": 1000.0,
+    "threonine": 950.0,
+    "serine": 830.0,
+    "phenylalanine": 700.0,
+    "hydroxylysine": 660.0,
+    "tyrosine": 600.0,
+    "methionine": 370.0,
+    "tryptophan": 360.0,
+    "histidine": 350.0,
+    "hydroxyproline": 80.0,
+    "carnitine_tartrate": 1470.0,
+    "carnitine": 1000.0,
+    "citrulline_malate": 1.4,
+    "citrulline": 1.0,
+    "taurine": 1000.0,
+    "ribose": 1.0,
+    "garcinia": 1000.0,
+    "fenugreek_extract": 600.0,
+    "saponins": 300.0,
+    "tribulus": 600.0,
+    "polygonum_extract": 500.0,
+    "resveratrol": 250.0,
+    "glucosamine_sulfate": 500.0,
+    "cinnamon_extract": 400.0,
+    "bitter_melon_extract": 250.0,
+    "choline": 100.0,
+    "inositol": 50.0,
+    "bromelain": 10.0,
+    "papain": 10.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019acd28-9376-7a13-814f-38f5910ea0a7",
+   "name": "PEAK Createston Professional",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 105.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/createston-professional-kopie (Stand 05.11.2026). Portion: Tagesportion = 105 g (100 g Pulver + 5 Kapseln à 1000 mg) + 500 ml Wasser. Werte der Sorte Cherry. Inhaltsstoffe je Portion: Vitamin A 2400 µg; Vitamin D 15 µg; Vitamin E 36 mg; Vitamin K 225 µg; Vitamin C 240 mg; Thiamin 3,3 mg; Riboflavin 48 mg; Niacin 48 mg; Vitamin B6 4,2 mg; Folsäure 600 µg; Vitamin B12 7,5 µg; Biotin 150 µg; Pantothensäure 18 mg; Natrium 400 mg; Kalium 300 mg; Calcium 260 mg; Phosphor 120 mg; Magnesium 100 mg; Eisen 5 mg; Zink 15 mg; Kupfer 1 mg; Mangan 2 mg; Selen 55 µg; Chrom 40 µg; Molybdän 50 µg; Jod 50 µg; Waxy Maize Stärke 10000 mg; Cluster Dextrin 10000 mg; Maltodextrin 8000 mg; Isomaltulose 5000 mg; Dextrose 5000 mg; Molkenproteinisolat (ß-Lactoglobulin-Fraktion) 10000 mg; Molkenprotein Hydrolysat 10000 mg; Kollagenes Hydrolysat 5000 mg; L-Leucin 5000 mg; L-Glutamin + Glutaminsäure 5000 mg; Glycin 3500 mg; L-Isoleucin 2500 mg; L-Valin…",
+   "values": {
+    "energy": 334.0,
+    "fat": 2.0,
+    "saturated_fat": 0.6,
+    "carbs": 42.4,
+    "sugar": 13.0,
+    "protein": 31.5,
+    "vit_a": 2400.0,
+    "vit_d": 15.0,
+    "vit_e": 36.0,
+    "vit_k": 225.0,
+    "vit_c": 240.0,
+    "vit_b1": 3.3,
+    "vit_b2": 48.0,
+    "vit_b3": 48.0,
+    "vit_b6": 4.2,
+    "vit_b9": 600.0,
+    "vit_b12": 7.5,
+    "vit_b7": 150.0,
+    "vit_b5": 18.0,
+    "sodium": 400.0,
+    "potassium": 300.0,
+    "calcium": 260.0,
+    "phosphorus": 120.0,
+    "magnesium": 100.0,
+    "iron": 5.0,
+    "zinc": 15.0,
+    "copper": 1.0,
+    "manganese": 2.0,
+    "selenium": 55.0,
+    "chromium": 40.0,
+    "molybdenum": 50.0,
+    "iodine": 50.0,
+    "waxy_maize": 10.0,
+    "cluster_dextrin": 10.0,
+    "maltodextrin": 8.0,
+    "isomaltulose": 5.0,
+    "dextrose": 5.0,
+    "whey_isolate": 10.0,
+    "whey_hydrolysate": 10.0,
+    "collagen_hydrolysate": 5.0,
+    "leucine": 5000.0,
+    "glycine": 3500.0,
+    "isoleucine": 2500.0,
+    "valine": 2500.0,
+    "aspartic_acid": 2050.0,
+    "lysine": 1850.0,
+    "proline": 1460.0,
+    "alanine": 1320.0,
+    "arginine": 1000.0,
+    "threonine": 950.0,
+    "serine": 830.0,
+    "phenylalanine": 700.0,
+    "hydroxylysine": 660.0,
+    "tyrosine": 600.0,
+    "methionine": 370.0,
+    "tryptophan": 360.0,
+    "histidine": 350.0,
+    "hydroxyproline": 80.0,
+    "creatine_akg": 4.7,
+    "creatine": 3.0,
+    "glutamine_akg": 2.0,
+    "carnitine_tartrate": 1200.0,
+    "acetyl_carnitine": 250.0,
+    "carnitine": 1000.0,
+    "citrulline_malate": 1.4,
+    "citrulline": 1.0,
+    "beta_alanine": 1.0,
+    "taurine": 1000.0,
+    "ribose": 1.0,
+    "garcinia": 1000.0,
+    "hmb": 750.0,
+    "fenugreek_extract": 600.0,
+    "saponins": 300.0,
+    "tribulus": 600.0,
+    "polygonum_extract": 500.0,
+    "resveratrol": 250.0,
+    "glucosamine_sulfate": 500.0,
+    "cinnamon_extract": 400.0,
+    "bitter_melon_extract": 250.0,
+    "alpha_lipoic_acid": 250.0,
+    "chondroitin_sulfate": 250.0,
+    "msm": 250.0,
+    "nac": 250.0,
+    "green_tea_extract": 250.0,
+    "polyphenols": 240.0,
+    "rhodiola_extract": 250.0,
+    "ginseng_extract": 250.0,
+    "ashwagandha_extract": 250.0,
+    "d_pinitol": 200.0,
+    "cordyceps_extract": 150.0,
+    "phosphatidylserine": 100.0,
+    "choline": 100.0,
+    "grape_seed_extract": 100.0,
+    "inositol": 50.0,
+    "bromelain": 10.0,
+    "papain": 10.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a6dcc-3f2f-7fbc-87f2-3c7fd8c26369",
+   "name": "PEAK Createston Vegan",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 100.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/createston-vegan-kopie (Stand 05.11.2026). Portion: 100 g Pulver + 3 Kapseln (à 1000 mg). Werte der Sorte Cherry. Inhaltsstoffe je Portion: Vitamin A 800 µg; Vitamin D 7,5 µg; Vitamin E 36 mg; Vitamin K 225 µg; Vitamin C 240 mg; Thiamin 3,3 g; Riboflavin 4,2 mg; Niacin 48 mg; Vitamin B6 4,2 mg; Folsäure 600 µg; Vitamin B12 7,5 µg; Biotin 150 µg; Pantothensäure 18 mg; Natrium 400 mg; Kalium 300 mg; Calcium 300 mg; Phosphor 138 mg; Magnesium 150 mg; Eisen 7 mg; Zink 15 mg; Kupfer 1 mg; Mangan 2 mg; Selen 55 mg; Chrom 40 µg; Molybdän 50 µg; Jod 75 µg; Maltodextrin 30000 mg; Erbsenprotein Hydrolysat 20000 mg; Dextrose 15150 mg; Creatin AKG 4700 mg; davon Creatin 3000 mg; L-Leucin 2050 mg; L-Glutamin + Glutaminsäure 2040 mg; Glycin 2350 mg; L-Lysin 1800 mg; L-Valin 1710 mg; L-Isoleucin 1530 mg; L-Phenylalanin 1315 mg; L-Threonin 1130 mg; L-Methionin 710 mg; L-Tryptophan 375 mg; L-Carnitintartrat 1470 mg; davon L-Carnitin 1000 m…",
+   "values": {
+    "energy": 334.0,
+    "fat": 0.9,
+    "saturated_fat": 0.5,
+    "carbs": 44.3,
+    "sugar": 12.7,
+    "protein": 31.9,
+    "vit_a": 800.0,
+    "vit_d": 7.5,
+    "vit_e": 36.0,
+    "vit_k": 225.0,
+    "vit_c": 240.0,
+    "vit_b1": 3300.0,
+    "vit_b2": 4.2,
+    "vit_b3": 48.0,
+    "vit_b6": 4.2,
+    "vit_b9": 600.0,
+    "vit_b12": 7.5,
+    "vit_b7": 150.0,
+    "vit_b5": 18.0,
+    "sodium": 400.0,
+    "potassium": 300.0,
+    "calcium": 300.0,
+    "phosphorus": 138.0,
+    "magnesium": 150.0,
+    "iron": 7.0,
+    "zinc": 15.0,
+    "copper": 1.0,
+    "manganese": 2.0,
+    "selenium": 55000.0,
+    "chromium": 40.0,
+    "molybdenum": 50.0,
+    "iodine": 75.0,
+    "maltodextrin": 30.0,
+    "dextrose": 15.15,
+    "creatine_akg": 4.7,
+    "creatine": 3.0,
+    "leucine": 2050.0,
+    "glycine": 2350.0,
+    "lysine": 1800.0,
+    "valine": 1710.0,
+    "isoleucine": 1530.0,
+    "phenylalanine": 1315.0,
+    "threonine": 1130.0,
+    "methionine": 710.0,
+    "tryptophan": 375.0,
+    "carnitine_tartrate": 1470.0,
+    "carnitine": 1000.0,
+    "citrulline_malate": 1.4,
+    "citrulline": 1.0,
+    "taurine": 1000.0,
+    "ribose": 1.0,
+    "garcinia": 1000.0,
+    "fenugreek_extract": 600.0,
+    "saponins": 300.0,
+    "tribulus": 600.0,
+    "polygonum_extract": 500.0,
+    "resveratrol": 250.0,
+    "cinnamon_extract": 400.0,
+    "bitter_melon_extract": 400.0,
+    "choline": 200.0,
+    "inositol": 100.0,
+    "bromelain": 45.0,
+    "papain": 45.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a5d0b-8641-735c-8c19-cb6eebbd375b",
+   "name": "PEAK Createston Zero",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 52.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/createston-zero-kopie (Stand 05.11.2026). Portion: 52 g Pulver (ca. 3 Messlöffel) + 500 ml Wasser. Werte der Sorte Cherry. Inhaltsstoffe je Portion: Vitamin A 2400 µg; Vitamin D 15 µg; Vitamin E 36 mg; Vitamin K 225 µg; Vitamin C 240 mg; Thiamin 3,3 mg; Riboflavin 4,2 mg; Niacin 48 mg; Vitamin B6 4,2 mg; Folsäure 600 µg; Vitamin B12 7,5 µg; Biotin 150 µg; Pantothensäure 18 mg; Kalium 300 mg; Calcium 260 mg; Phosphor 120 mg; Magnesium 100 mg; Eisen 5 mg; Zink 15 mg; Kupfer 1 mg; Mangan 2 mg; Selen 55 µg; Chrom 40 µg; Molybdän 50 µg; Jod 50 µg; Molkenproteinisolat 7000 mg; Kollagenes Hydrolysat 7000 mg; L-Glutamin + Glutaminsäure 6730 mg; Glycin 3230 mg; L-Leucin 2990 mg; L-Lysin 2340 mg; L-Valin 2135 mg; L-Isoleucin 1925 mg; L-Phenylalanin 1650 mg; L-Threonin 1515 mg; L-Prolin 1125 mg; L-Asparaginsäure 1100 mg; L-Alanin 900 mg; L-Methionin 900 mg; Hydroxylysin 830 mg; L-Arginin 760 mg; L-Tryptophan 510 mg; L-Serin 470 mg; L…",
+   "values": {
+    "energy": 146.0,
+    "fat": 0.6,
+    "saturated_fat": 0.1,
+    "carbs": 0.8,
+    "sugar": 0.1,
+    "protein": 30.0,
+    "vit_a": 2400.0,
+    "vit_d": 15.0,
+    "vit_e": 36.0,
+    "vit_k": 225.0,
+    "vit_c": 240.0,
+    "vit_b1": 3.3,
+    "vit_b2": 4.2,
+    "vit_b3": 48.0,
+    "vit_b6": 4.2,
+    "vit_b9": 600.0,
+    "vit_b12": 7.5,
+    "vit_b7": 150.0,
+    "vit_b5": 18.0,
+    "potassium": 300.0,
+    "calcium": 260.0,
+    "phosphorus": 120.0,
+    "magnesium": 100.0,
+    "iron": 5.0,
+    "zinc": 15.0,
+    "copper": 1.0,
+    "manganese": 2.0,
+    "selenium": 55.0,
+    "chromium": 40.0,
+    "molybdenum": 50.0,
+    "iodine": 50.0,
+    "whey_isolate": 7.0,
+    "collagen_hydrolysate": 7.0,
+    "glycine": 3230.0,
+    "leucine": 2990.0,
+    "lysine": 2340.0,
+    "valine": 2135.0,
+    "isoleucine": 1925.0,
+    "phenylalanine": 1650.0,
+    "threonine": 1515.0,
+    "proline": 1125.0,
+    "aspartic_acid": 1100.0,
+    "alanine": 900.0,
+    "methionine": 900.0,
+    "hydroxylysine": 830.0,
+    "arginine": 760.0,
+    "tryptophan": 510.0,
+    "serine": 470.0,
+    "tyrosine": 250.0,
+    "histidine": 165.0,
+    "hydroxyproline": 65.0,
+    "creatine_monohydrate": 3.0,
+    "carnitine_tartrate": 1200.0,
+    "acetyl_carnitine": 250.0,
+    "carnitine": 1000.0,
+    "citrulline_malate": 1.4,
+    "citrulline": 1.0,
+    "taurine": 1000.0,
+    "hmb": 750.0,
+    "glucosamine_sulfate": 500.0,
+    "nac": 250.0,
+    "phosphatidylserine": 100.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019af42a-cb23-73d1-8e69-a0cccd3315b3",
+   "name": "PEAK ALKALINE CREATINE",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 5.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/creatin-alkalin (Stand 05.11.2026). Portion: 5 capsules. Inhaltsstoffe je Portion: Niacin 32 mg; Vitamin B6 2,8 mg; Vitamin B12 5 µg; Creatine Monohydrate 3000 mg; Sodium bicarbonate 1300 mg.",
+   "values": {
+    "vit_b3": 32.0,
+    "vit_b6": 2.8,
+    "vit_b12": 5.0,
+    "creatine_monohydrate": 3.0
+   }
+  },
+  {
+   "id": "019a7d41-a03b-7c91-8228-3f255cceb108",
+   "name": "PEAK Creatin (Creapure®)",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/creatin-creapure (Stand 05.11.2026). Portion: 3 g (ca. 1 Scoop) Pulver. Inhaltsstoffe je Portion: Creapure® 3000 mg.",
+   "values": {
+    "creatine_monohydrate": 3.0
+   }
+  },
+  {
+   "id": "019ab86b-b379-7562-8e9a-4169bb74244e",
+   "name": "PEAK Creatin Monohydrat",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/creatin-monohydrat (Stand 05.11.2026). Portion: ca. 1 Scoop (3 g) Creatine Monohydrate Powder. Inhaltsstoffe je Portion: Creatin Monohydrat 3 g; Niacin 16 mg; Vitamin B6 1,4 mg; Vitamin B12 2,5 µg.",
+   "values": {
+    "creatine_monohydrate": 3.0,
+    "vit_b3": 16.0,
+    "vit_b6": 1.4,
+    "vit_b12": 2.5
+   }
+  },
+  {
+   "id": "019a0abd-f1c7-7dbd-8d5e-824e8da0cdcd",
+   "name": "PEAK CURCUMIN PRO",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/curcumin-pro (Stand 05.11.2026). Portion: 2 Kapseln. Inhaltsstoffe je Portion: Kurkuma-Extrakt 500 mg; davon Curcumin 475 mg; Cholin 166 mg; Schwarzpfeffer-Extrakt 2,1 mg; davon Piperin 2 mg.",
+   "values": {
+    "curcumin": 475.0,
+    "choline": 166.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a4e1d-5e0b-76e7-8227-f919d0ded7b6",
+   "name": "PEAK CYCLIC DEXTRIN",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 60.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/cyclic-dextrin (Stand 05.11.2026). Portion: 60 g powder + 300 ml water. Inhaltsstoffe je Portion: Cluster Dextrin® 60 g.",
+   "values": {
+    "cluster_dextrin": 60.0
+   }
+  },
+  {
+   "id": "019a71a9-4ad4-75df-833a-0b79889d633e",
+   "name": "PEAK Daily Protein",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/daily-protein (Stand 05.11.2026). Portion: 30 g Pulver (ca. 2 Messlöffel) mit 300 ml Wasser, fettarmer Milch oder Milchalternative. Werte der Sorte Chocolate. Aminosäuren je 100 g Protein: Alanin 4,4 g; Arginin 4,5 g; Asparagin/Asparaginsäure 11 g; Cystin/Cystein 2,8 g; Glutamin/Glutaminsäure 17,1 g; Glycin 2,6 g; Histidin 2,4 g; Isoleucin 4,8 g; Leucin 12,8 g; Lysin 8 g; Methionin 1,8 g; Phenylalanin 3,9 g; Prolin 5 g; Serin 4,7 g; Threonin 4,3 g; Tryptophan 1,9 g; Tyrosin 3,5 g; Valin 4,7 g; BCAAs 22,3 g; EAAs 42,2 g.",
+   "values": {
+    "energy": 103.0,
+    "fat": 0.7,
+    "saturated_fat": 0.4,
+    "carbs": 0.9,
+    "sugar": 0.3,
+    "protein": 23.4
+   }
+  },
+  {
+   "id": "019a80e7-bc1c-7b6f-89a0-169b3f29736c",
+   "name": "PEAK Delicious Whey",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/delicious-whey-protein (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser oder Magermilch. Werte der Sorte Chocolate Milkshake. Inhaltsstoffe je Portion: Laktase 105 ALU units. Aminosäuren je 100 g Protein: Alanin 4,7 g; Arginin 3 g; Asparagin/Asparaginsäure 10,6 g; Cystin/Cystein 2,1 g; Glutamin/Glutaminsäure 16,7 g; Glycin 1,9 g; Histidin 1,8 g; Isoleucin 5,8 g; Leucin 11,4 g; Lysin 9,4 g; Methionin 2,1 g; Phenylalanin 3,2 g; Prolin 5,3 g; Serin 5,1 g; Threonin 5,7 g; Tryptophan 2,5 g; Tyrosin 3,4 g; Valin 5,2 g; BCAAs 22,4 g; EAAs 45,3 g.",
+   "values": {
+    "energy": 109.0,
+    "fat": 1.1,
+    "saturated_fat": 0.8,
+    "carbs": 2.0,
+    "sugar": 1.5,
+    "protein": 23.0
+   }
+  },
+  {
+   "id": "019aba28-0bed-718e-839b-8f1b32345ad4",
+   "name": "PEAK DIGESTIVE ENZYMES",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/digestive-enzymes (Stand 05.11.2026). Portion: 1 Kapsel. Inhaltsstoffe je Portion: DigeZyme® 175 mg.",
+   "values": {}
+  },
+  {
+   "id": "019abaf4-5d7c-7e57-8cef-d534e5ab396e",
+   "name": "PEAK Digestive Fiber",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 13.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/digestive-fiber (Stand 05.11.2026). Portion: 13 g Pulver + 300 ml Wasser (2 Messlöffel). Werte der Sorte Apple. Inhaltsstoffe je Portion: Fibersol®-2 3100 mg; Psyllium husks 3000 mg; Pectin 2000 mg; Oligofructose 2000 mg; Inulin 2000 mg.",
+   "values": {
+    "pectin": 2.0,
+    "fos": 2.0,
+    "inulin": 2.0
+   }
+  },
+  {
+   "id": "019a528d-3adf-76b6-8962-0f90a68d396e",
+   "name": "PEAK EAA TST",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 14.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/eaa-ts-technology (Stand 05.11.2026). Portion: 14 g Pulver (2 Messlöffel) in 500 ml Wasser. Inhaltsstoffe je Portion: Niacin 2,4 mg; Vitamin B6 0,21 mg; Vitamin B12 0,38 µg; L-Leucin 2600 mg; L-Lysin 1500 mg; L-Isoleucin 1300 mg; L-Valin 1300 mg; L-Phenylalanin 1250 mg; L-Threonin 750 mg; L-Methionin 520 mg; L-Histidin 500 mg; L-Tyrosin (semi-essentiell) 250 mg; L-Tryptophan 250 mg; L-Cystein (semi-essentiell) 205 mg.",
+   "values": {
+    "vit_b3": 2.4,
+    "vit_b6": 0.21,
+    "vit_b12": 0.38,
+    "leucine": 2600.0,
+    "lysine": 1500.0,
+    "isoleucine": 1300.0,
+    "valine": 1300.0,
+    "phenylalanine": 1250.0,
+    "threonine": 750.0,
+    "methionine": 520.0,
+    "histidine": 500.0,
+    "tyrosine": 250.0,
+    "tryptophan": 250.0,
+    "cysteine": 205.0
+   }
+  },
+  {
+   "id": "019acf31-9e9a-7baa-8233-b971ed0d2dc1",
+   "name": "PEAK ECDYSTERON (Beta Ecdysteron)",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/nach-dem-training-1/products/ecdysterone (Stand 05.11.2026). Portion: Portion = 4 Kapseln. Inhaltsstoffe je Portion: Spinat-Extrakt 2000 mg; Spinat-Extrakt, davon ß-Ecdysteron 100 mg; L-Leucin 1000 mg.",
+   "values": {
+    "leucine": 1000.0
+   }
+  },
+  {
+   "id": "019a20fb-6b0b-7c6e-84e7-20e10c0b2684",
+   "name": "PEAK Grüntee Extrakt - 120 Kapseln - EGCG",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/egcg-gruentee-extrakt (Stand 05.11.2026). Portion: 1 Kapsel. Inhaltsstoffe je Portion: Vitamin C 40 mg; Grüntee-Extrakt 800 mg; davon gesamt Polyphenole 760 mg; davon Epigallocatechingallat 320 mg.",
+   "values": {
+    "vit_c": 40.0,
+    "green_tea_extract": 800.0,
+    "polyphenols": 760.0,
+    "egcg": 320.0
+   }
+  },
+  {
+   "id": "019adec7-fb65-7256-87f9-05bfea18458b",
+   "name": "PEAK EPA - DHA - GLA",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/epa-dha-gla (Stand 05.11.2026). Portion: 3 Kapseln. Inhaltsstoffe je Portion: Eicosapentaensäure 540 mg; Docosahexaensäure 360 mg; Gamma-Linolensäure 30 mg.",
+   "values": {
+    "epa": 540.0,
+    "dha": 360.0
+   }
+  },
+  {
+   "id": "019a4424-8ae6-7d72-8eab-8e1441c1cd8a",
+   "name": "PEAK Epic Intra",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 50.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/epic-intra (Stand 05.11.2026). Portion: 50 g Pulver (ca. 2 leicht gehäufte Messlöffel) mit 600 bis 700 ml Wasser. Werte der Sorte Cherry. Inhaltsstoffe je Portion: Kalium 500 mg; Natrium 300 mg; Calcium 195 mg; Magnesium 100 mg; Chrom 100 µg; L-Leucin 1964 mg; L-Valin 1657 mg; L-Isoleucin 1483 mg; L-Lysin 1436 mg; L-Phenylalanin 1289 mg; L-Threonin 1111 mg; L-Methionin 699 mg; L-Tryptophan 368 mg; L-Carnitintartrat 1470 mg; davon L-Carnitin 1000 mg; Betain 500 mg.",
+   "values": {
+    "energy": 174.0,
+    "fat": 0.0,
+    "saturated_fat": 0.0,
+    "carbs": 30.0,
+    "sugar": 0.0,
+    "protein": 10.0,
+    "potassium": 500.0,
+    "sodium": 300.0,
+    "calcium": 195.0,
+    "magnesium": 100.0,
+    "chromium": 100.0,
+    "leucine": 1964.0,
+    "valine": 1657.0,
+    "isoleucine": 1483.0,
+    "lysine": 1436.0,
+    "phenylalanine": 1289.0,
+    "threonine": 1111.0,
+    "methionine": 699.0,
+    "tryptophan": 368.0,
+    "carnitine_tartrate": 1470.0,
+    "carnitine": 1000.0,
+    "betaine": 0.5
+   }
+  },
+  {
+   "id": "019a469a-4bcb-7720-8e31-961bb514b6f9",
+   "name": "PEAK Epic Pump (500 g)",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 25.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/epic-pump (Stand 05.11.2026). Portion: 25 g Pulver aufgelöst in 500 ml Wasser. Werte der Sorte Blood Orange. Inhaltsstoffe je Portion: L-Citrullin-Malat 8000 mg; L-Arginin Hydrochlorid 6000 mg; Taurin 4000 mg; L-Arginin-Nitrat 2000 mg; L-Arginin-Nitrat, davon Nitrat 500 mg; Rote Bete Saft-Extrakt 1000 mg.",
+   "values": {
+    "citrulline_malate": 8.0,
+    "taurine": 4000.0
+   }
+  },
+  {
+   "id": "019a6876-e22d-7d83-8d8e-6d0340eaad90",
+   "name": "PEAK Epic Pump Stim Edition (500 g)",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 25.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/epic-pump-stim-edition (Stand 05.11.2026). Portion: 25 g Pulver (ca. 3 Messlöffel) in 500 ml Wasser. Werte der Sorte Calamansi Citrus. Inhaltsstoffe je Portion: L-Citrullin-Malat 8000 mg; L-Arginin-HCl 6000 mg; Taurin 4000 mg; L-Arginin-Nitrat 2000 mg; L-Arginin-Nitrat, davon Nitrat 500 mg; L-Tyrosin 2000 mg; Koffein anhydrous 300 mg.",
+   "values": {
+    "citrulline_malate": 8.0,
+    "taurine": 4000.0,
+    "tyrosine": 2000.0,
+    "custom_peakkoffein": 300.0
+   }
+  },
+  {
+   "id": "019a7227-6cca-7889-8edc-cac2dc2a38dd",
+   "name": "PEAK Epic Pump Unlimited",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/epic-pump-unlimited (Stand 05.11.2026). Portion: 30 g Pulver + 5 ml Liquid Glycerol (+ 500 ml Wasser). Werte der Sorte Fresh Berry. Inhaltsstoffe je Portion: L-Citrullin-Malat 10000 mg; Flüssiges Glycerin 6000 mg; L-Arginin HCl 6000 mg; Taurin 4000 mg; OXYSTORM® (Amaranth-Extrakt) 2500 mg; Cellflo6™ (Grüntee-Extrakt) 700 mg; Cellflo6™, davon Gesamt Polyphenols 630 mg; Cellflo6™, davon EGCG 315 mg; AstraGin® 50 mg; AstraGin®, davon Astragallus Membranaceus-Extrakt 24 mg; AstraGin®, davon Panax Notoginseng-Extrakt 24 mg; Calcium 424 mg; Kalium 350 mg; Natrium 360 mg; Magnesium 36 mg.",
+   "values": {
+    "citrulline_malate": 10.0,
+    "taurine": 4000.0,
+    "green_tea_extract": 700.0,
+    "polyphenols": 630.0,
+    "egcg": 315.0,
+    "calcium": 424.0,
+    "potassium": 350.0,
+    "sodium": 360.0,
+    "magnesium": 36.0
+   }
+  },
+  {
+   "id": "019a3872-6fd1-7ebe-82ec-8d487eb68286",
+   "name": "PEAK Epic Rage",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 15.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/epic-rage (Stand 05.11.2026). Portion: 15 g Pulver, aufgelöst in 350 ml Wasser. Werte der Sorte Ginger Lemon. Inhaltsstoffe je Portion: Vitamin B6 3 mg; Vitamin B12 1,5 µg; N-Acetyl-Tyrosin 3000 mg; Glycin 1600 mg; Kakao-Extrakt 1040 mg; Kakao-Extrakt, davon Theobromine 250 mg; L-Carnitintartrat 1000 mg; Glucuronolaceton 600 mg; Grüntee-Extrakt 500 mg; Grüntee-Extrakt, davon Polyphenole 475 mg; Rhodiola Rosea-Extrakt 500 mg; Rhodiola Rosea-Extrakt, davon Rosavin 20 mg; Bitterorange-Extrakt 450 mg; Bitterorange-Extrakt, davon Synephrin 27 mg; Panax Ginseng-Extrakt 400 mg; Panax Ginseng-Extrakt, davon Ginsenosid 60 mg; Koffein anhydrous 350 mg; Schisandra Chinensis-Extrakt 300 mg; Ginkgo Biloba-Extrakt 250 mg; Ginkgo Biloba-Extrakt, davon Flavone 60 mg; Ingwer-Extrakt 220 mg; Ingwer-Extrakt, davon Gingerol 11 mg; Schwarzer Pfeffer-Extrakt 2,1 mg; Schwarzer Pfeffer-Extrakt, davon Piperin 2 mg.",
+   "values": {
+    "vit_b6": 3.0,
+    "vit_b12": 1.5,
+    "glycine": 1600.0,
+    "custom_peaktheobromin": 250.0,
+    "carnitine_tartrate": 1000.0,
+    "custom_peakglucuronolacton": 600.0,
+    "green_tea_extract": 500.0,
+    "polyphenols": 475.0,
+    "rhodiola_extract": 500.0,
+    "custom_peaksynephrin": 27.0,
+    "ginseng_extract": 400.0,
+    "custom_peakkoffein": 350.0,
+    "schisandra_extract": 300.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a8ad9-c591-7869-8680-fe6d2f54ea06",
+   "name": "PEAK Epic Refuel",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 75.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/epic-refuel (Stand 05.11.2026). Portion: 75 g Pulver (ca. 4 Messlöffel). Werte der Sorte Cherry Lemon. Inhaltsstoffe je Portion: Natrium 270 mg; Kalium 350 mg; Calcium 200 mg; Magnesium 100 mg; Chrom 40 mcg; Maltodextrine 30000 mg; Molkenprotein Isolat (Clear) 24500 mg; L-Glutamin 10000 mg; Creapure® 3000 mg; L-Leucin 1000 mg.",
+   "values": {
+    "sodium": 270.0,
+    "potassium": 350.0,
+    "calcium": 200.0,
+    "magnesium": 100.0,
+    "chromium": 40.0,
+    "maltodextrin": 30.0,
+    "glutamine": 10000.0,
+    "creatine_monohydrate": 3.0,
+    "leucine": 1000.0
+   }
+  },
+  {
+   "id": "019a80ce-dceb-742d-82c8-3ef6460ad621",
+   "name": "PEAK Epic Rush",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 10.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/epic-rush (Stand 05.11.2026). Portion: 10 g (1 leicht gehäufter Messlöffel) Pulver in 500 ml Wasser. Werte der Sorte Energy. Inhaltsstoffe je Portion: Vitamin B6 0,7 mg; N-Acetyl-Tyrosin 3000 mg; L-Carnitintartrat 1000 mg; Glucuronolacton 500 mg; Glycin 500 mg; Koffein anhydrous 300 mg; Grüntee Extrakt 300 mg; Grüntee Extrakt, davon Polyphenole 285 mg; Panax Ginseng Extrakt 300 mg; Panax Ginseng Extrakt, davon Ginsenosid 45 mg; EnXtra™ (Alpinia Galanga-Extrakt 10:1) 150 mg; Schwarzer Peffer Extrakt 2,1 mg; Schwarzer Peffer Extrakt, davon Piperin 2 mg.",
+   "values": {
+    "vit_b6": 0.7,
+    "carnitine_tartrate": 1000.0,
+    "custom_peakglucuronolacton": 500.0,
+    "glycine": 500.0,
+    "custom_peakkoffein": 300.0,
+    "green_tea_extract": 300.0,
+    "polyphenols": 285.0,
+    "ginseng_extract": 300.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a8ec2-7845-75e3-8c32-2de010ac74dc",
+   "name": "PEAK Epic Strength",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 8.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/epic-strength (Stand 05.11.2026). Portion: 8 g Pulver aufgelöst in 300 ml Wasser. Inhaltsstoffe je Portion: Creapure® 3300 mg; Beta-Alanin 2000 mg; WATTS'UP® 500 mg.",
+   "values": {
+    "creatine_monohydrate": 3.3,
+    "beta_alanine": 2.0
+   }
+  },
+  {
+   "id": "019a26bd-7853-7f1b-87e1-9c1b9e4936c0",
+   "name": "PEAK EPIC WEIGHT GAINER",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 150.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/epic-weight-gainer (Stand 05.11.2026). Portion: 150 g Pulver (9 gestrichene Messlöffel) + 400 – 600 ml Wasser. Werte der Sorte Chocolate. Inhaltsstoffe je Portion: Chrom 40 µg; Laktase 105 ALU units; Zimt-Extrakt 250 mg. Aminosäuren je 100 g Protein: Alanin 4,6 g; Arginin 4,5 g; Asparagin/Asparaginsäure 9,1 g; Cystein 1,9 g; Glutamin/Glutaminsäure 18,9 g; Glycin 3,4 g; Histidin 2,1 g; Isoleucin 4,9 g; Leucin 9,6 g; Lysin 6,6 g; Methionin 2,2 g; Phenylalanin 4,6 g; Prolin 6,4 g; Serin 5,3 g; Threonin 4,3 g; Tryptophan 1,9 g; Tyrosin 4,2 g; Valin 5,6 g; BCAAs 20,1 g; EAAs 39,7 g.",
+   "values": {
+    "energy": 558.0,
+    "fat": 8.7,
+    "saturated_fat": 2.6,
+    "carbs": 80.1,
+    "sugar": 12.9,
+    "protein": 40.0,
+    "chromium": 40.0,
+    "cinnamon_extract": 250.0
+   }
+  },
+  {
+   "id": "019ac483-5fcb-72ae-8624-c56cf286bcb9",
+   "name": "PEAK Eye Support",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/eye-support (Stand 05.11.2026). Portion: 2 Kapseln. Inhaltsstoffe je Portion: Vitamin A 800 µg; Vitamin C 80 mg; Vitamin E 6 mg; Vitamin B2 0,7 mg; Vitamin B3 8 mg; Vitamin B6 0,7 mg; Vitamin B12 1,25 µg; Zinc 10 mg; Copper 0,5 mg; Selenium 55 µg; Marigold extract (Tagetes erecta L.) 500 mg; of which lutein 25 mg; of which zeaxanthin 2,5 mg; Algae oil powder 340 mg; of which omega-3 37 mg; of which DHA 20 mg; of which EPA 10 mg; Acai berry extract 200 mg; Elderberry extract 200 mg; Saffron extract 15 mg; Astaxanthin 6 mg; β-carotene 200 µg.",
+   "values": {
+    "vit_a": 800.0,
+    "vit_c": 80.0,
+    "vit_e": 6.0,
+    "vit_b2": 0.7,
+    "vit_b3": 8.0,
+    "vit_b6": 0.7,
+    "vit_b12": 1.25,
+    "zinc": 10.0,
+    "copper": 0.5,
+    "selenium": 55.0,
+    "lutein": 25.0,
+    "zeaxanthin": 2.5,
+    "omega3_total": 37.0,
+    "dha": 20.0,
+    "epa": 10.0,
+    "astaxanthin": 6.0,
+    "beta_carotene": 0.2
+   }
+  },
+  {
+   "id": "019a4d57-387e-726d-82aa-d9f750830f4e",
+   "name": "PEAK FIGHT FORCE",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 8.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/fight-force (Stand 05.11.2026). Portion: 8 g (1 scoop) in 300 ml water. Inhaltsstoffe je Portion: Creapure® (Creatine Monohydrate) 3000 mg; Beta-alanine 3000 mg.",
+   "values": {
+    "creatine_monohydrate": 3.0,
+    "beta_alanine": 3.0
+   }
+  },
+  {
+   "id": "019acad6-ae32-76b2-863d-ca4b1c39210d",
+   "name": "PEAK FIGHT IQ",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/fight-iq (Stand 05.11.2026). Portion: Tagesportion = 4 Kapseln. Inhaltsstoffe je Portion: Cholinbitartrat 964 mg; davon Cholin 400 mg; N-Acetyl-L-Tyrosin 588 mg; davon L-Tyrosin 400 mg; Hericium Erinaceus-Extrakt 500 mg; davon Polysaccharide (Hericium) 250 mg; davon Beta Glucan 50 mg; Cordyceps sinensis-Extrakt 500 mg; davon Polysaccharide (Cordyceps) 200 mg; Bacopa Monnieri-Extrakt 150 mg; davon Bacopaside 75 mg; Schwarzer Pfeffer-Extrakt 2,1 mg; davon Piperin 2 mg.",
+   "values": {
+    "choline": 400.0,
+    "tyrosine": 400.0,
+    "beta_glucans": 50.0,
+    "cordyceps_extract": 500.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019abc29-f28d-7628-89e5-36cbe654103a",
+   "name": "PEAK FIGHT PROTECT",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 18.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/fight-protect (Stand 05.11.2026). Portion: 18 g Pulver (3 Messlöffel) + 300 ml Wasser. Werte der Sorte Sour Apple. Inhaltsstoffe je Portion: Vitamin C 50 mg; FORTIGEL® 5200 mg; TENDOFORTE® 5200 mg; Methylsulfonylmethan (MSM) 3000 mg; Glucosaminsulfat 1250 mg; UC-II® 40 mg.",
+   "values": {
+    "energy": 46.0,
+    "fat": 0.1,
+    "saturated_fat": 0.0,
+    "carbs": 0.3,
+    "sugar": 0.0,
+    "protein": 10.0,
+    "vit_c": 50.0,
+    "msm": 3000.0,
+    "glucosamine_sulfate": 1250.0
+   }
+  },
+  {
+   "id": "019a99e0-2d70-7ad7-8728-9bc36df17fe7",
+   "name": "PEAK Fruity Vegan Protein",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 20.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/fruity-vegan-protein (Stand 05.11.2026). Portion: 20 g Pulver (2 Messlöffel) mit 500 ml Wasser. Werte der Sorte Calamansi Citrus. Aminosäuren je 100 g Protein: Alanin 0 g; Arginin 6,2 g; Asparagin – Asparaginsäure 13,1 g; Cystein 0 g; Glutamin – Glutaminsäure 18,3 g; Glycin 3,1 g; Histidin 1,8 g; Isoleucin 5,6 g; Leucin 16,2 g; Lysin 6,1 g; Methionin 1,3 g; Phenylalanin 4,4 g; Prolin 3,7 g; Serin 3,2 g; Threonin 2,6 g; Tryptophan 3,7 g; Tyrosin 1,4 g; Valin 9,3 g; BCAAs 31,1 g; EAAs 49,2 g.",
+   "values": {
+    "energy": 64.0,
+    "fat": 0.0,
+    "saturated_fat": 0.0,
+    "carbs": 0.4,
+    "sugar": 0.2,
+    "protein": 15.4
+   }
+  },
+  {
+   "id": "019a8ec4-6b6a-7d80-862b-3acb0bd40aea",
+   "name": "PEAK Gelenk Support",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 18.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/gelenk-support (Stand 05.11.2026). Portion: 18 g Pulver (3 gestrichene Messlöffel) mit 500 ml Wasser. Werte der Sorte Apfelsaft. Inhaltsstoffe je Portion: Vitamin C 50 mg; FORTIGEL® 5000 mg; TENDOFORTE® 5000 mg; Methylsulfonylmethan (MSM) 3500 mg; Glucosaminsulfat 1250 mg; 5-LOXIN® 100 mg; davon AKBA 30 mg; UC-II® 40 mg.",
+   "values": {
+    "energy": 44.0,
+    "fat": 0.1,
+    "saturated_fat": 0.0,
+    "carbs": 0.3,
+    "sugar": 0.0,
+    "protein": 9.0,
+    "vit_c": 50.0,
+    "msm": 3500.0,
+    "glucosamine_sulfate": 1250.0
+   }
+  },
+  {
+   "id": "019a595e-4797-7fa0-8567-c0b15f894fba",
+   "name": "PEAK GLUCOFAST",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 50.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/glucofast (Stand 05.11.2026). Portion: 50 g powder. Werte der Sorte Natural. Inhaltsstoffe je Portion: Vitamin E 6 mg; Vitamin C 40 mg; Thiamine 0,55 mg; Riboflavin 0,7 mg; Niacin 8 mg; Vitamin B6 0,7 mg; Folic Acid 100 µg; Vitamin B12 1,25 µg; Biotin 25 µg; Pantothenic acid 3 mg.",
+   "values": {
+    "energy": 192.0,
+    "fat": 0.0,
+    "saturated_fat": 0.0,
+    "carbs": 48.0,
+    "sugar": 0.0,
+    "protein": 0.0,
+    "vit_e": 6.0,
+    "vit_c": 40.0,
+    "vit_b1": 0.55,
+    "vit_b2": 0.7,
+    "vit_b3": 8.0,
+    "vit_b6": 0.7,
+    "vit_b9": 100.0,
+    "vit_b12": 1.25,
+    "vit_b7": 25.0,
+    "vit_b5": 3.0
+   }
+  },
+  {
+   "id": "019acdc7-8fa3-7fe8-8985-fbe1166bc691",
+   "name": "PEAK GLUCOSAMINE",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/glucosamin (Stand 05.11.2026). Portion: 3 Kapseln. Inhaltsstoffe je Portion: Vitamin E 30 mg; Vitamin C 180 mg; Glucosamine sulfate 1250 mg; of which glucosamine 1000 mg; Collagen hydrolyzate 650 mg.",
+   "values": {
+    "vit_e": 30.0,
+    "vit_c": 180.0,
+    "glucosamine_sulfate": 1250.0,
+    "collagen_hydrolysate": 0.65
+   }
+  },
+  {
+   "id": "019a33e4-7727-7642-8205-5085df1123c1",
+   "name": "PEAK Glucose Support (GDA)",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/glucose-support (Stand 05.11.2026). Portion: 1 Kapsel. Inhaltsstoffe je Portion: Chrom 20 µg; Berberis-aristata-Extrakt (Rinde) 333 mg; davon Berberin-HCl 300 mg; Alpha-Liponsäure (ALA) 200 mg; Zimtextrakt (Rinde) 100 mg; davon MHCP 5 mg; Schwarzpfefferextrakt (Frucht) 2,1 mg; davon Piperin 2 mg.",
+   "values": {
+    "chromium": 20.0,
+    "alpha_lipoic_acid": 200.0,
+    "cinnamon_extract": 100.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a5cdb-52b9-7e45-8634-7fd5c8416270",
+   "name": "PEAK GLUTAMIN",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 10.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/glutamin (Stand 05.11.2026). Portion: 10 g Pulver. Inhaltsstoffe je Portion: Niacin 2,4 mg; Vitamin B6 0,21 mg; Vitamin B12 0,38 µg; L-Glutamin 9,9 g.",
+   "values": {
+    "vit_b3": 2.4,
+    "vit_b6": 0.21,
+    "vit_b12": 0.38,
+    "glutamine": 9900.0
+   }
+  },
+  {
+   "id": "019ac978-e6c6-7507-8797-a69118818c03",
+   "name": "PEAK HBN - Bacillus Subtilis",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/hbn-bacillus-subtilis (Stand 05.11.2026). Portion: 2 Kapseln. Inhaltsstoffe je Portion: Gerstengraspulver 1000 mg; Bacillus Subtilis DSM 21097 2000000000 KBE.",
+   "values": {}
+  },
+  {
+   "id": "019ab724-ced5-7aef-80ae-d5514538371e",
+   "name": "PEAK HBN - EAA-CODE",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 8.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/wahrend-des-trainings/products/hbn-eaa-code (Stand 05.11.2026). Portion: Tagesportion = 8 Kapseln. Inhaltsstoffe je Portion: L-Leucin 1176 mg; L-Valin 996 mg; L-Lysin 888 mg; L-Phenylalanin 858 mg; L-Threonin 774 mg; L-Methionin 666 mg; L-Tryptophan 420 mg; Piperin 222 mg.",
+   "values": {
+    "leucine": 1176.0,
+    "valine": 996.0,
+    "lysine": 888.0,
+    "phenylalanine": 858.0,
+    "threonine": 774.0,
+    "methionine": 666.0,
+    "tryptophan": 420.0
+   }
+  },
+  {
+   "id": "019a2d2c-3075-74ae-81ca-5bec0cf26e82",
+   "name": "PEAK HBN - Elektrolyte & pH-Complex",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 6.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/hbn-elektrolyt-ph-complex (Stand 05.11.2026). Portion: 6 Kapseln. Inhaltsstoffe je Portion: Vitamin D 5 µg; Calcium 400 mg; Magnesium 187,5 mg; Natrium 160 mg; Kalium 580 mg.",
+   "values": {
+    "vit_d": 5.0,
+    "calcium": 400.0,
+    "magnesium": 187.5,
+    "sodium": 160.0,
+    "potassium": 580.0
+   }
+  },
+  {
+   "id": "019acb97-530f-7593-86b8-8201c9549bdf",
+   "name": "PEAK HBN - Female Harmony",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 6.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/hbn-female-harmony (Stand 05.11.2026). Portion: 6 Kapseln. Inhaltsstoffe je Portion: Vitamin B6 1,4 mg; Folic Acid 200 µg; Vitamin E 15 mg; Calcium 250 mg; Magnesium 125 mg; Iron 14 mg; Zinc 10 mg; L-tryptophan 1000 mg; Ginger extract 500 mg; of which gingerol 25 mg; Lemon Balm Extract 350 mg; Turmeric Extract 210 mg; of which curcumin 200 mg; Fennel Seed Extract 150 mg; Monk's pepper extract 24 mg; of which Agnus Castus 20 mg; Saffron extract 10 mg; of which safranal 0,2 mg; Black pepper extract 5,3 mg; of which piperine 5 mg.",
+   "values": {
+    "vit_b6": 1.4,
+    "vit_b9": 200.0,
+    "vit_e": 15.0,
+    "calcium": 250.0,
+    "magnesium": 125.0,
+    "iron": 14.0,
+    "zinc": 10.0,
+    "tryptophan": 1000.0,
+    "curcumin": 200.0,
+    "piperine": 5.0
+   }
+  },
+  {
+   "id": "019a32b5-fe1f-7fc4-8ee4-1d15f807154c",
+   "name": "PEAK HBN - FIREUP",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/vor-dem-training-1/products/hbn-fireup (Stand 05.11.2026). Portion: Tagesportion = 3 Kapseln. Inhaltsstoffe je Portion: Koffein 25 mg.",
+   "values": {
+    "custom_peakkoffein": 25.0
+   }
+  },
+  {
+   "id": "019affc7-f4fc-7f7d-837e-6c3853c44c8a",
+   "name": "PEAK HBN - FIREUP DRINK",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 5.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/vor-dem-training-1/products/hbn-fireup-drink (Stand 05.11.2026). Portion: Tagesportion = 5 g Pulver aufgelöst in 500 ml Wasser. Inhaltsstoffe je Portion: Glycin 1030 mg; Yerba Mate-Extrakt 1000 mg; Yerba Mate-Extrakt, davon Koffein 80 mg; Grüntee-Extrakt 300 mg; Grüntee-Extrakt, davon Polyphenole 285 mg; Grüntee-Extrakt, davon Epigallocatechingallat (EGCG) 135 mg; Grüner Kaffeebohnen-Extrakt 200 mg; Grüner Kaffeebohnen-Extrakt, davon Chlorogensäure 100 mg; Aloe Vera-Extrakt 200 mg.",
+   "values": {
+    "glycine": 1030.0,
+    "custom_peakkoffein": 80.0,
+    "green_tea_extract": 300.0,
+    "polyphenols": 285.0,
+    "egcg": 135.0,
+    "chlorogenic_acid": 100.0
+   }
+  },
+  {
+   "id": "019abaa6-86d7-73a3-8115-21fce1ab901d",
+   "name": "PEAK HBN - Hair Care",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 5.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/hbn-hair-care (Stand 05.11.2026). Portion: 5 Kapseln. Inhaltsstoffe je Portion: Vitamin A 400 µg; Biotin 25 µg; Copper 1 mg; Selenium 28 µg; AnnurtriComplex® (Annurca apple extract) 1000 mg; of which procyanidin B2; Organic silicon powder 800 mg; of which orthosilicic acid 32 mg; Cynatine® HNS (keratin hydrolysate) 645 mg; L-lysine 500 mg; Saw palmetto extract 500 mg; Fenugreek extract 320 mg; of which saponins; L-cysteine 300 mg.",
+   "values": {
+    "vit_a": 400.0,
+    "vit_b7": 25.0,
+    "copper": 1.0,
+    "selenium": 28.0,
+    "lysine": 500.0,
+    "fenugreek_extract": 320.0,
+    "cysteine": 300.0
+   }
+  },
+  {
+   "id": "019a2102-1405-7690-89a9-2252b20c5135",
+   "name": "PEAK HBN - SKIN CARE",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/hbn-skin-care (Stand 05.11.2026). Portion: 4 Kapseln. Inhaltsstoffe je Portion: Thiamin (Vitamin B1) 1,1 mg; Riboflavin (Vitamin B2) 1,4 mg; Niacin (Vitamin B3) 16 mg; Pantothensäure (Vitamin B5) 6 mg; Pyridoxin (Vitamin B6) 1,4 mg; Biotin (Vitamin B7) 55 µg; Folsäure (Vitamin B9) 200 µg; Cyanocobalamin (Vitamin B12) 2,5 µg; Acerola-Extrakt 129 mg; davon Vitamin C 20 mg; Zink 2,5 mg; Iod 37 µg; VERISOL® 2500 mg; Coenzym Q10 50 mg; Astaxanthin 6 mg; Beta-Carotin 20 µg; Bacillus subtilis DSM 21097 0,5 x 10⁹ KBE.",
+   "values": {
+    "vit_b1": 1.1,
+    "vit_b2": 1.4,
+    "vit_b3": 16.0,
+    "vit_b5": 6.0,
+    "vit_b6": 1.4,
+    "vit_b7": 55.0,
+    "vit_b9": 200.0,
+    "vit_b12": 2.5,
+    "vit_c": 20.0,
+    "zinc": 2.5,
+    "iodine": 37.0,
+    "coq10": 50.0,
+    "astaxanthin": 6.0,
+    "beta_carotene": 0.02
+   }
+  },
+  {
+   "id": "019a2746-9384-7c91-850c-082d2c8f055f",
+   "name": "PEAK HCA",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/hca (Stand 05.11.2026). Portion: 4 Kapseln. Inhaltsstoffe je Portion: Chromium 40 µg; Garcinia cambogia 2500 mg; of which hydroxycitric acid (HCA) 1500 mg; L-Carnitine 250 mg; Choline 100 mg; Inositol 100 mg.",
+   "values": {
+    "chromium": 40.0,
+    "garcinia": 2500.0,
+    "carnitine": 250.0,
+    "choline": 100.0,
+    "inositol": 100.0
+   }
+  },
+  {
+   "id": "019aaac1-ad5f-727c-89d7-f02d6d797897",
+   "name": "PEAK HELLBURNER BLACK EDITION",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/nach-dem-aufstehen/products/hellburner-black-edition (Stand 05.11.2026). Portion: Portion = 4 Kapseln. Inhaltsstoffe je Portion: Vitamin C 120 mg; Vitamin B6 2,1 mg; Chrom (als Picolinat) 120 µg; N-Acetyl-L-Tyrosin 400 mg; Theobroma-Kakao-Extrakt (Frucht) 24 % Theobromin 400 mg; Koffein gesamt 400 mg; Grüner Camellia sinensis-Extrakt (Blatt) 95 % Polyphenole 300 mg; Cholinbitartrat 205 mg; Himbeerextrakt (Frucht) 200 mg; Naringin (aus Citrus Paradise) 200 mg; Ilex paraguariensis-Extrakt (Blatt) 150 mg; Coleus forskohlii-Extrakt (Wurzel) 20 % Forskolin 150 mg; Commiphora Mukul-Extrakt (Harz) 3 % Guggulsterone 100 mg; Hesperidin (aus Citrus Aurantium) 100 mg; Citrus Aurantium-Extrakt (Fruchtrinde) 6 % Synephrin 100 mg; Salix Alba-Extrakt (Rinde) 15 % Salicin 100 mg; Weißer Camellia Sinensis-Extrakt (Blatt) mit 35 % Polyphenolen 80 mg; Lagerstroemia Speciosa-Extrakt (Blatt) 60 mg; Cola Nitida-Extrakt (Frucht) 50 mg; Zingiber Officinale-Extrakt…",
+   "values": {
+    "vit_c": 120.0,
+    "vit_b6": 2.1,
+    "chromium": 120.0,
+    "custom_peakkoffein": 400.0,
+    "naringin": 200.0,
+    "hesperidin": 100.0,
+    "piperine": 5.0
+   }
+  },
+  {
+   "id": "019a848d-38b1-7dc5-849d-7d0e47ca437c",
+   "name": "PEAK Hellburner Hers",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/nach-dem-aufstehen/products/hellburner-hers (Stand 05.11.2026). Portion: Portion = 3 Kapseln. Inhaltsstoffe je Portion: Zink 5 mg; Grüntee-Extrakt (Blatt) – 95% Polyphenole 400 mg; L-Tyrosin 400 mg; Guarana-Extrakt (Samen) 300 mg; Löwenzahn-Extrakt (Wurzel) 250 mg; Petersilieextrakt (Wurzel) 200 mg; Traubenkern-Extrakt – 95% Oligo Proanthocyanidine 100 mg; Poligonum cuspidatum Extrakt (Stamm) – 50% Resveratrol 100 mg; Schachtelhalm-Extrakt (Stengel) 100 mg; Cranberry-Extrakt (Frucht) 100 mg; Wachholder-Extrakt (Frucht) 100 mg; Cayennepfeffer-Extrakt (Frucht) 10% Capsaicin (40.000 SHU) 100 mg; Ginkgo Biloba Extrakt (Blatt) 50 mg; Mangostane-Extrakt (Frucht) 50 mg; Brassaiopsis Glomerulata Extrakt (Wurzel) 25 mg; Piperin (vom Piper nigrum) 5 mg; Koffein gesamt 80 mg.",
+   "values": {
+    "zinc": 5.0,
+    "tyrosine": 400.0,
+    "piperine": 5.0,
+    "custom_peakkoffein": 80.0
+   }
+  },
+  {
+   "id": "019a78d3-42a6-7b13-856f-9644563b5c47",
+   "name": "PEAK HELLBURNER STIMFREE",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/vor-dem-training-1/products/hellburner-stimfree (Stand 05.11.2026). Portion: Tagesportion = 1 Kapsel. Inhaltsstoffe je Portion: Grüntee-Extrakt 222 mg; Grüntee-Extrakt, davon Polyphenole 211 mg; Cayenne Pfeffer-Extrakt 200 mg; Cayenne Pfeffer-Extrakt, davon Capsaicin 2 mg; Grüner Kaffeebohnen-Extrakt 120 mg; Grüner Kaffeebohnen-Extrakt, davon Chlorogensäure 30 mg; Paradoxine® 100 mg; Paradoxine®, davon 6-Paradol 12,5 mg; Wakame-Extrakt 100 mg; Wakame-Extrakt, davon Fucoxanthin 10 mg; GBBGO® 50 mg; Schwarzer Pfeffer-Extrakt 2,1 mg; Schwarzer Pfeffer-Extrakt, davon Piperin 2 mg.",
+   "values": {
+    "green_tea_extract": 222.0,
+    "polyphenols": 211.0,
+    "capsaicin": 2.0,
+    "chlorogenic_acid": 30.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a4026-c5d8-7114-8ded-8c879b03cebe",
+   "name": "PEAK HELLBURNER UNLIMITED",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/nach-dem-aufstehen/products/hellburner-unlimited (Stand 05.11.2026). Portion: Tagesportion = 2 Kapsel. Inhaltsstoffe je Portion: Kakao-Extrakt 417 mg; Kakao-Extrakt, davon Theobromin 100 mg; Grüntee-Extrakt 267 mg; Grüntee-Extrakt, davon Polyphenole 253 mg; Cayenne Pfeffer-Extrakt 250 mg; Cayenne Pfeffer-Extrakt, davon Capsaicin 2,5 mg; Koffein 200 mg; Coleus Forskohlii-Extrakt 125 mg; Coleus Forskohlii-Extrakt, davon Forskolin 25 mg; Paradoxine® 100 mg; Paradoxine®, davon 6-Paradol 12,5 mg; Wakame-Extrakt 100 mg; Wakame-Extrakt, davon Fucoxanthin 10 mg; Bitter Orange-Extrakt 100 mg; Bitter Orange-Extrakt, davon Synephrin 6 mg; GBBGO® 50 mg; Schwarzer Pfeffer-Extrakt 2,1 mg; Schwarzer Pfeffer-Extrakt, davon Piperin 2 mg.",
+   "values": {
+    "custom_peaktheobromin": 100.0,
+    "green_tea_extract": 267.0,
+    "polyphenols": 253.0,
+    "capsaicin": 2.5,
+    "custom_peakkoffein": 200.0,
+    "custom_peaksynephrin": 6.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a069e-1afe-7e34-89e5-54f963a15a98",
+   "name": "PEAK HIGHWHEY PROTEIN SHOT",
+   "manufacturer": "PEAK",
+   "unit": "ml",
+   "servingAmount": 100.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/highwhey-shot-100ml (Stand 05.11.2026). Portion: Shot (100 ml). Werte der Sorte Multifrucht. Aminosäuren je 100 g Protein: Alanin 6 g; Arginin 2,4 g; Asparagin – Asparaginsäure 9,9 g; Cystein 2,5 g; Glutamin – Glutaminsäure 17,8 g; Glycin 1,2 g; Histidin 1,4 g; Isoleucin 5,5 g; Leucin 13,7 g; Lysin 10,3 g; Methionin 2,9 g; Phenylalanin 3,1 g; Prolin 4,8 g; Serin 3,4 g; Threonin 4,6 g; Tryptophan 1,9 g; Tyrosin 3,3 g; Valin 5,3 g; BCAAs 24,5 g; EAAs 47,3 g.",
+   "values": {
+    "energy": 81.0,
+    "fat": 0.0,
+    "saturated_fat": 0.0,
+    "carbs": 0.1,
+    "sugar": 0.0,
+    "protein": 20.0
+   }
+  },
+  {
+   "id": "019a5a2b-3a7a-793e-873b-b7aa4d6c0bcd",
+   "name": "PEAK Hybrid Protein",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/hybrid-protein (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser oder Magermilch. Werte der Sorte Cereal Milk. Inhaltsstoffe je Portion: Laktase 105 ALU units. Aminosäuren je 100 g Protein: Alanin 3,8 g; Arginin 3,5 g; Asparagin–Asparaginsäure 8,5 g; Cystin–Cystein 1,4 g; Glutamin–Glutaminsäure 18,3 g; Glycin 1,9 g; Histidin 3,4 g; Isoleucin 5,3 g; Leucin 9,5 g; Lysin 8,1 g; Methionin 2,7 g; Phenylalanin 4,2 g; Prolin 7,9 g; Serin 5 g; Threonin 5 g; Tryptophan 1,6 g; Tyrosin 4,3 g; Valin 5,9 g; BCAAs 20,6 g; EAAs 42,2 g.",
+   "values": {
+    "energy": 105.0,
+    "fat": 0.4,
+    "saturated_fat": 0.2,
+    "carbs": 1.5,
+    "sugar": 1.1,
+    "protein": 24.0
+   }
+  },
+  {
+   "id": "019a97fe-8db8-7e53-871d-ba0147498192",
+   "name": "PEAK Iron + C",
+   "manufacturer": "PEAK",
+   "unit": "Tablette(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/iron-c (Stand 05.11.2026). Portion: 1 Tablette. Inhaltsstoffe je Portion: Vitamin C 100 mg; Eisen 14 mg.",
+   "values": {
+    "vit_c": 100.0,
+    "iron": 14.0
+   }
+  },
+  {
+   "id": "019a2d53-ea4b-7959-8244-efdcc3664cb0",
+   "name": "PEAK Kidney Support",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 8.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/kidney-support (Stand 05.11.2026). Portion: 8 Kapseln. Inhaltsstoffe je Portion: Astragalus-Extrakt 4400 mg; davon Polysaccharide 704 mg; Weißdorn-Extrakt 555 mg; davon Vitexin 10 mg; Selleriesamen-Extrakt 500 mg; Pinienrinden-Extrakt 210 mg; davon Proanthocyanidine 200 mg; Schwarzer Pfeffer-Extrakt 2,1 mg; davon Piperin 2 mg.",
+   "values": {
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019aa76d-931e-78c7-87d5-6af7dfc760f3",
+   "name": "PEAK KRILL OIL",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/krilloil (Stand 05.11.2026). Portion: 4 capsules. Inhaltsstoffe je Portion: SUPERBA 2™ (Antarctic krill oil) 2000 mg; Omega-3 440 mg; davon EPA 240 mg; davon DHA 112 mg; Omega-6 60 mg; Phospholipids 800 mg; davon choline 100 mg; Astaxanthin 200 µg.",
+   "values": {
+    "omega3_total": 440.0,
+    "epa": 240.0,
+    "dha": 112.0,
+    "choline": 100.0,
+    "astaxanthin": 0.2
+   }
+  },
+  {
+   "id": "019ae75a-e1db-73ac-86ab-0a576b73f7d1",
+   "name": "PEAK LIQUID CURCUMIN",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/liquid-curcumin (Stand 05.11.2026). Portion: 2 capsules. Inhaltsstoffe je Portion: NovaSOL® Curcumin 1000 mg; davon curcuminoids 60 mg.",
+   "values": {}
+  },
+  {
+   "id": "019a667f-8993-77d0-80bc-b3bf59fd0a89",
+   "name": "PEAK Liquid Glycerol",
+   "manufacturer": "PEAK",
+   "unit": "ml",
+   "servingAmount": 5.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/liquid-glycerol (Stand 05.11.2026). Portion: Portion = 5 ml (6 g) Liquid Glycerol. Inhaltsstoffe je Portion: Flüssiges Glycerin 6000 mg.",
+   "values": {}
+  },
+  {
+   "id": "019a8369-c069-771a-8f99-2e9d99407259",
+   "name": "PEAK LIVER SUPPORT",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 6.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/liver-support-upgrade (Stand 05.11.2026). Portion: 6 Kapseln. Inhaltsstoffe je Portion: Selen 55 µg; Inositol 800 mg; Cholinbitartrat 1446 mg; davon Cholin 600 mg; Spirulina Pulver 700 mg; davon Phycocyanin 105 mg; davon Chlorophyll 91 mg; Artischoken-Extrakt 600 mg; davon Cynarin 18 mg; Mariendistel-Extrakt 525 mg; davon Silymarin 370 mg; N-Acetyl-L-Cystein (NAC) 400 mg; Sesam-Extrakt 100 mg; davon Sesamin 10 mg; Schwarzer Pfeffer-Extrakt 2,1 mg; davon Piperin 2 mg.",
+   "values": {
+    "selenium": 55.0,
+    "inositol": 800.0,
+    "choline": 600.0,
+    "nac": 400.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a5f60-c27a-7abe-8b80-f77be4b14138",
+   "name": "PEAK Maca Pure",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/maca-pure (Stand 05.11.2026). Portion: 4 Kapseln. Inhaltsstoffe je Portion: Maca Powder 3080 mg.",
+   "values": {}
+  },
+  {
+   "id": "019a0de8-3afc-7cf3-8737-14b3bc6d6c17",
+   "name": "PEAK Magnesium Bisglycinat",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/magnesium-bisglycinat (Stand 05.11.2026). Portion: 2 Kapseln. Inhaltsstoffe je Portion: Magnesium Bisglycinat 1700 mg; davon elementares Magnesium 188 mg.",
+   "values": {
+    "magnesium": 188.0
+   }
+  },
+  {
+   "id": "019ac381-934f-7f11-81ed-ba9dff5877e2",
+   "name": "PEAK Magnesium Citrat",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/magnesium-citrat (Stand 05.11.2026). Portion: 4 g Pulver (ca. 1 Messlöffel) in 200 ml Wasser. Werte der Sorte Berry Mix. Inhaltsstoffe je Portion: Vitamin C 80 mg; Vitamin B6 1,4 mg; Magnesium 250 mg.",
+   "values": {
+    "vit_c": 80.0,
+    "vit_b6": 1.4,
+    "magnesium": 250.0
+   }
+  },
+  {
+   "id": "019a42ce-a5a0-7ec9-8de1-3f35e31286e6",
+   "name": "PEAK MCT-ÖL",
+   "manufacturer": "PEAK",
+   "unit": "ml",
+   "servingAmount": 15.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/mct-oel (Stand 05.11.2026). Portion: 15 ml.",
+   "values": {}
+  },
+  {
+   "id": "019a2e82-a88c-7d02-8435-1e7f176c2dd7",
+   "name": "PEAK MELATONIN",
+   "manufacturer": "PEAK",
+   "unit": "Tablette(n)",
+   "servingAmount": 0.5,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/melatonin-life (Stand 05.11.2026). Portion: ½ tablet. Inhaltsstoffe je Portion: Magnesium 30 mg; Melatonin 0,5 mg.",
+   "values": {
+    "magnesium": 30.0,
+    "custom_peakmelatonin": 0.5
+   }
+  },
+  {
+   "id": "019aeaf2-477c-79f9-814f-6d36bf070654",
+   "name": "PEAK MICELLAR CASEIN",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/micellar-casein-900 (Stand 05.11.2026). Portion: 30 g Pulver + 300 ml Wasser. Werte der Sorte Chocolate. Inhaltsstoffe je Portion: Laktase 105 ALU units. Aminosäuren je 100 g Protein: Alanin 4,5 g; Arginin 2,8 g; Asparagin – Asparaginsäure 10,1 g; Cystein 2,3 g; Glutamin – Glutaminsäure 17,4 g; Glycin 1,8 g; Histidin 2,1 g; Isoleucin 5,4 g; Leucin 11,6 g; Lysin 9,3 g; Methionin 2,2 g; Phenylalanin 3,9 g; Prolin 6,1 g; Serin 4,7 g; Threonin 4,9 g; Tryptophan 1,9 g; Tyrosin 3,8 g; Valin 5,2 g; BCAAs 22,2 g; EAAs 44,4 g.",
+   "values": {
+    "energy": 104.0,
+    "fat": 0.5,
+    "saturated_fat": 0.4,
+    "carbs": 1.6,
+    "sugar": 1.1,
+    "protein": 23.0
+   }
+  },
+  {
+   "id": "019aa68e-a950-7f4a-8fd2-2b9b6fe724c3",
+   "name": "PEAK MSM",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/msm (Stand 05.11.2026). Portion: 3 Kapseln. Inhaltsstoffe je Portion: Vitamin C 80 mg; Methylsulfonylmethan 2500 mg.",
+   "values": {
+    "vit_c": 80.0,
+    "msm": 2500.0
+   }
+  },
+  {
+   "id": "019a56a0-ce5f-7ec2-80a4-78822fbf8afa",
+   "name": "PEAK NAC (N-Acetyl-L-Cystein)",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/nac (Stand 05.11.2026). Portion: 1 Kapsel.",
+   "values": {}
+  },
+  {
+   "id": "019a279c-67c2-7f79-8f73-280e4e2c9e4d",
+   "name": "PEAK Nattokinase",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/nattokinase (Stand 05.11.2026). Portion: 1 Kapsel. Inhaltsstoffe je Portion: Nattokinase (NATTIASE®) 200 mg; Nattokinase (NATTIASE®) Aktivität 2000 FU.",
+   "values": {}
+  },
+  {
+   "id": "019a6a48-be28-703e-87ea-3d8c22277668",
+   "name": "PEAK Natural Antioxidants",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 10.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/natural-antioxidants (Stand 05.11.2026). Portion: 10 g Pulver (2 Messlöffel) + 500 ml Wasser. Inhaltsstoffe je Portion: Acerola-Extrakt 470 mg; davon Vitamin C 80 mg; Acai-Beeren-Extrakt 3700 mg; Heidelbeerpulver 2000 mg; Holunderbeerextrakt 2000 mg; davon Polyphenole 80 mg; Petersilienextrakt (Wurzel) 1000 mg; Zimt 800 mg; Schwarzpfefferextrakt 2,1 mg; davon Piperin 2 mg.",
+   "values": {
+    "vit_c": 80.0,
+    "polyphenols": 80.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a0286-6013-71d3-89a3-cfb78794d758",
+   "name": "PEAK No Jokes 600 g",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 20.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/no-jokes (Stand 05.11.2026). Portion: 20 g Pulver (2 gestrichene Messlöffel) in 400–500 ml Wasser. Werte der Sorte Bloody Cherry. Inhaltsstoffe je Portion: Vitamin B6 1 mg; L-Citrullin-Malat 5000 mg; L-Arginin HCl 4000 mg; N-Acetyl-L-Tyrosin 2800 mg; Beta-Alanin 2000 mg; Taurin 1000 mg; Betain Anhydrous 500 mg; Glucuronolacton 500 mg; Ashwagandha KSM-66® 300 mg; Ashwagandha KSM-66®, davon Withanolide 15 mg; Cholin Bitartrat 250 mg; Cholin Bitartrat, davon Cholin 105 mg; Koffein Anhydrous 200 mg; Guarana-Extrakt 200 mg; Guarana-Extrakt, davon Koffein 22 mg; Koffein gesamt 222 mg; Rhodiola Rosea-Extrakt 100 mg; Rhodiola Rosea-Extrakt, davon Rosavin 4 mg; Panax Ginseng-Extrakt 100 mg; Panax Ginseng-Extrakt, davon Ginsenosid 15 mg; Schwarzpfeffer-Extrakt 2,1 mg; Schwarzpfeffer-Extrakt, davon Piperin 2 mg.",
+   "values": {
+    "vit_b6": 1.0,
+    "citrulline_malate": 5.0,
+    "beta_alanine": 2.0,
+    "taurine": 1000.0,
+    "betaine": 0.5,
+    "custom_peakglucuronolacton": 500.0,
+    "ashwagandha_extract": 300.0,
+    "withanolides": 15.0,
+    "choline": 105.0,
+    "custom_peakkoffein": 222.0,
+    "rhodiola_extract": 100.0,
+    "ginseng_extract": 100.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a4ed3-6519-73e1-8ae4-d6a2f20c2026",
+   "name": "PEAK NootrEpic 240 g",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 8.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/nootrepic (Stand 05.11.2026). Portion: 8 g Pulver (ca. 1 Messlöffel) in 500 ml Wasser. Inhaltsstoffe je Portion: Vitamin B3 2,4 mg; Vitamin B6 0,2 µg; Vitamin B12 0,375 µg; Glycin 2300 mg; N-Acetyl-L-Tyrosin 735 mg; N-Acetyl-L-Tyrosin, davon L-Tyrosin 500 mg; Cholinbitartrat 723 mg; Cholinbitartrat, davon Cholin 300 mg; Cognizin® Citicolin 500 mg; Panax Ginseng-Extrakt 200 mg; Panax Ginseng-Extrakt, davon Ginsenoside 30 mg; Bacopa Monnieri-Extrakt 150 mg; Bacopa Monnieri-Extrakt, davon Bacopaside 75 mg; Ginkgo Biloba Extrakt 120 mg; Ginkgo Biloba Extrakt, davon Flavone 29 mg; Rhodiola Rosea-Extrakt 100 mg; Rhodiola Rosea-Extrakt, davon Rosavin 4 mg; Grüntee-Extrakt 100 mg; Grüntee-Extrakt, davon EGCG 45 mg; Schwarzer Pfeffer Extrakt 2,1 mg; Schwarzer Pfeffer Extrakt, davon Piperin 2 mg.",
+   "values": {
+    "vit_b3": 2.4,
+    "vit_b12": 0.375,
+    "glycine": 2300.0,
+    "tyrosine": 500.0,
+    "choline": 300.0,
+    "custom_peakcitikolin": 500.0,
+    "ginseng_extract": 200.0,
+    "rhodiola_extract": 100.0,
+    "green_tea_extract": 100.0,
+    "egcg": 45.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019aac1d-d925-79ee-8499-22e97fb50d60",
+   "name": "PEAK NOSTRESS",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/nostress (Stand 05.11.2026). Portion: 2 Kapseln.",
+   "values": {}
+  },
+  {
+   "id": "019ab330-8c5a-7931-8a14-dbd634b24700",
+   "name": "PEAK OMEGA-3",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/omega-3 (Stand 05.11.2026). Portion: 3 Kapseln (Tagesportion). Inhaltsstoffe je Portion: Eicosapentaensäure (EPA) 540 mg; Docosahexaensäure (DHA) 360 mg.",
+   "values": {
+    "epa": 540.0,
+    "dha": 360.0
+   }
+  },
+  {
+   "id": "019a384e-4f4d-79a7-87f3-c808271f3786",
+   "name": "PEAK Omega-3+",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/omega-3-plus (Stand 05.11.2026). Portion: 3 Kapseln. Inhaltsstoffe je Portion: Omega-3 gesamt 2400 mg; davon EPA 1500 mg; davon DHA 750 mg.",
+   "values": {
+    "omega3_total": 2400.0,
+    "epa": 1500.0,
+    "dha": 750.0
+   }
+  },
+  {
+   "id": "019a3e89-9494-700b-8ffd-8bb3dccddb0e",
+   "name": "PEAK Omega-3 Vegan",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/omega-3-vegan (Stand 05.11.2026). Portion: 3 capsules. Inhaltsstoffe je Portion: Algae oil 1500 mg; Omega-3 fatty acids 825 mg; DHA 450 mg; EPA 225 mg.",
+   "values": {
+    "omega3_total": 825.0,
+    "dha": 450.0,
+    "epa": 225.0
+   }
+  },
+  {
+   "id": "019ac32c-3766-7d25-88f5-deb172c741ef",
+   "name": "PEAK OPC Pure",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/opc-pure (Stand 05.11.2026). Portion: 1 Kapsel. Inhaltsstoffe je Portion: Grape seed extract 500 mg; of which OPC (oligomeric proanthocyanidins) 475 mg.",
+   "values": {
+    "grape_seed_extract": 500.0
+   }
+  },
+  {
+   "id": "019aaab5-fa9d-796a-8a72-624f89223803",
+   "name": "PEAK OPTIMEAL",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 50.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/optimeal (Stand 05.11.2026). Portion: 50 g Pulver (ca. 3 Messlöffel) in 500 ml Wasser. Werte der Sorte Chocolate. Inhaltsstoffe je Portion: Vitamin A 267 µg; Vitamin B1 0,4 mg; Vitamin B2 0,5 mg; Vitamin B3 5,3 mg; Vitamin B5 2 mg; Vitamin B6 0,5 mg; Vitamin B7 17 µg; Folsäure (Vitamin B9) 66 µg; Vitamin B12 0,83 µg; Acerola-Extrakt 157 mg; davon Vitamin C 26,4 mg; Vitamin D3 1,7 mg; Vitamin E 4 mg; Vitamin K2 25 µg; Kalium 660 mg; Calcium 264 mg; Magnesium 124 mg; Eisen 4,6 mg; Zink 3,3 mg; Kupfer 0,3 mg; Mangan 0,7 mg; Selen 18 µg; Chrom 13 µg; Molybdän 17 µg; Jod 50 µg; Milchprotein Isolat 14000 mg; Erbsenprotein Isolat 10000 mg; Favabohnen Protein 10000 mg; Reducal® 2000 mg; davon Arabinoxylan 1000 mg; davon Inulin 1000 mg; MCT-Öl Pulver 1500 mg; Flohsamen-Pulver 1000 mg; Inulin 1000 mg; Glucomannan 1000 mg; Chia Samen-Pulver 500 mg; Laktase 300 ALU units.",
+   "values": {
+    "energy": 168.0,
+    "fat": 3.6,
+    "saturated_fat": 2.2,
+    "carbs": 3.5,
+    "sugar": 0.8,
+    "protein": 30.0,
+    "fiber": 6.5,
+    "vit_a": 267.0,
+    "vit_b1": 0.4,
+    "vit_b2": 0.5,
+    "vit_b3": 5.3,
+    "vit_b5": 2.0,
+    "vit_b6": 0.5,
+    "vit_b7": 17.0,
+    "vit_b9": 66.0,
+    "vit_b12": 0.83,
+    "vit_c": 26.4,
+    "vit_d": 1700.0,
+    "vit_e": 4.0,
+    "vit_k": 25.0,
+    "potassium": 660.0,
+    "calcium": 264.0,
+    "magnesium": 124.0,
+    "iron": 4.6,
+    "zinc": 3.3,
+    "copper": 0.3,
+    "manganese": 0.7,
+    "selenium": 18.0,
+    "chromium": 13.0,
+    "molybdenum": 17.0,
+    "iodine": 50.0,
+    "inulin": 1.0
+   }
+  },
+  {
+   "id": "019a4748-c432-7b19-8508-49db13d4899e",
+   "name": "PEAK Plutonium 3.0",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 50.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/plutonium-3-0 (Stand 05.11.2026). Portion: 50 g Pulver + 3 Kapseln (500 ml Wasser). Werte der Sorte Hot Blood Orange. Inhaltsstoffe je Portion: Vitamin B3 8 mg; Vitamin B6 0,7 mg; Kalium 400 mg; Natrium 360 mg; Magnesium 56 mg; Calcium 200 mg; Chrom 40 µg; Zyklisches Dextrin 10000 mg; L-Citrullin-Malat 8000 mg; Maltodextrin 5290 mg; L-Arginin-Alphaketoglutarat 5000 mg; L-Leucin 1960 mg; L-Valin 1660 mg; OXYSTORM® 1500 mg; L-Isoleucin 1480 mg; L-Lysin 1430 mg; L-Phenylalanin 1290 mg; L-Threonin 1110 mg; L-Tyrosin 1000 mg; Carnitintartrat 1000 mg; Carnitintartrat, davon Carnitin 680 mg; Taurin 1000 mg; L-Methionin 700 mg; Grüntee-Extrakt 510 mg; Grüntee-Extrakt, davon EGCG 120 mg; Grüntee-Extrakt, davon L-Theanin 150 mg; Kakao-Extrakt 415 mg; Kakao-Extrakt, davon Theobromin 100 mg; Betain 400 mg; L-Tryptophan 370 mg; Rhodiola Rosea 300 mg; Rhodiola Rosea, davon Rosavine 100 mg; Koffein 300 mg; enXtra™ 200 mg; Panax Ginseng-Ex…",
+   "values": {
+    "energy": 138.0,
+    "fat": 0.1,
+    "saturated_fat": 0.1,
+    "carbs": 15.8,
+    "sugar": 0.1,
+    "protein": 14.7,
+    "vit_b3": 8.0,
+    "vit_b6": 0.7,
+    "potassium": 400.0,
+    "sodium": 360.0,
+    "magnesium": 56.0,
+    "calcium": 200.0,
+    "chromium": 40.0,
+    "cluster_dextrin": 10.0,
+    "citrulline_malate": 8.0,
+    "maltodextrin": 5.29,
+    "leucine": 1960.0,
+    "valine": 1660.0,
+    "isoleucine": 1480.0,
+    "lysine": 1430.0,
+    "phenylalanine": 1290.0,
+    "threonine": 1110.0,
+    "tyrosine": 1000.0,
+    "carnitine_tartrate": 1000.0,
+    "carnitine": 680.0,
+    "taurine": 1000.0,
+    "methionine": 700.0,
+    "green_tea_extract": 510.0,
+    "egcg": 120.0,
+    "custom_peaktheanin": 150.0,
+    "custom_peaktheobromin": 100.0,
+    "betaine": 0.4,
+    "tryptophan": 370.0,
+    "rhodiola_extract": 300.0,
+    "custom_peakkoffein": 300.0,
+    "ginseng_extract": 200.0,
+    "custom_peaksynephrin": 6.7,
+    "naringin": 50.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a790c-bfae-75fc-8698-1f4f79d24cda",
+   "name": "PEAK Pre Fight \"Stifler Edition",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 25.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/pre-fight-stifler (Stand 05.11.2026). Portion: 25 g Pulver (ca. 3 Messlöffel) in 500 ml Wasser. Inhaltsstoffe je Portion: L-Citrullin-Malat 7000 mg; Taurin 4000 mg; N-Acetyl-Tyrosin 3000 mg; Betain anhydrous 3000 mg; Glycin 2600 mg; L-Carnitin-Tartrat 2000 mg; Cognizin® (Citicolin) 500 mg; PEAK ATP® (Adenosin-5'-Triphosphat-Dinatrium) 400 mg; Koffein anhydrous 300 mg; Rhodiola Rosea Extrakt 300 mg; BRAINBERRY® 65 mg.",
+   "values": {
+    "citrulline_malate": 7.0,
+    "taurine": 4000.0,
+    "betaine": 3.0,
+    "glycine": 2600.0,
+    "carnitine_tartrate": 2000.0,
+    "custom_peakcitikolin": 500.0,
+    "custom_peakkoffein": 300.0,
+    "rhodiola_extract": 300.0
+   }
+  },
+  {
+   "id": "019a0da6-0f12-7836-8132-dded21ba8ef0",
+   "name": "PEAK Pro-Biome",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 10.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/pro-biome (Stand 05.11.2026). Portion: 10 g Pulver (1 gehäufter Messlöffel) mit 300 ml Wasser + 1 Kapsel. Werte der Sorte Bubble Gum. Inhaltsstoffe je Portion: Bifidobacteria breve B-3 7,5 Mrd. KBE; Bifidobacteria longum BB536 4 Mrd. KBE; L-Glutamin 4400 mg; 2'-Fucosyllactose (GLYCARE™ 2FL) 2000 mg; Lacto-N-Neotetraose (GLYCARE™ LNnT) 500 mg; Lacto-N-Tetraose (GLYCARE™ LNT) 250 mg; 6'-Sialyllactose (GLYCARE™ 6SL) 250 mg.",
+   "values": {
+    "glutamine": 4400.0
+   }
+  },
+  {
+   "id": "019a8bb5-fc6b-7607-80e1-4917b1f5d90a",
+   "name": "PEAK Protein 85",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/protein-85 (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser. Werte der Sorte Banana. Inhaltsstoffe je Portion: Vitamin E 3 mg; Vitamin C 20 mg; Thiamin 0,28 mg; Riboflavin 0,35 mg; Niacin 4 mg; Vitamin B6 0,35 mg; Folsäure 0,5 µg; Vitamin B12 0,63 µg; Biotin 13 µg; Pantothensäure 1,5 mg. Aminosäuren je 100 g Protein: Alanin 4,1 g; Arginin 4,4 g; Asparagin – Asparaginsäure 8,5 g; Cystein 2,2 g; Glutamin – Glutaminsäure 23,5 g; Glycin 3 g; Histidin 2,1 g; Isoleucin 4,4 g; Leucin 9 g; Lysin 6,2 g; Methionin 1,7 g; Phenylalanin 4,7 g; Prolin 7,3 g; Serin 5,1 g; Threonin 4,3 g; Tryptophan 1,4 g; Tyrosin 3,4 g; Valin 4,7 g; BCAAs 18,1 g; EAAs 36,4 g.",
+   "values": {
+    "energy": 110.0,
+    "fat": 0.7,
+    "saturated_fat": 0.3,
+    "carbs": 0.9,
+    "sugar": 0.3,
+    "protein": 25.0,
+    "vit_e": 3.0,
+    "vit_c": 20.0,
+    "vit_b1": 0.28,
+    "vit_b2": 0.35,
+    "vit_b3": 4.0,
+    "vit_b6": 0.35,
+    "vit_b9": 0.5,
+    "vit_b12": 0.63,
+    "vit_b7": 13.0,
+    "vit_b5": 1.5
+   }
+  },
+  {
+   "id": "019a3319-9570-74f5-83f8-3d906e0d5761",
+   "name": "PEAK PYRUVAT",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/pyruvat (Stand 05.11.2026). Portion: 4 Kapseln. Inhaltsstoffe je Portion: Vitamin B1 1,1 mg; Niacin 16 mg; Vitamin B6 1,4 mg; Calcium 1250 mg; Mangan 2 mg; Chrom 40 µg; Calciumpyruvat 3850 mg; davon Pyruvat 2500 mg; Alpha-Liponsäure 50 mg; Schwarz-Pfefferextrakt 5,3 mg.",
+   "values": {
+    "vit_b1": 1.1,
+    "vit_b3": 16.0,
+    "vit_b6": 1.4,
+    "calcium": 1250.0,
+    "manganese": 2.0,
+    "chromium": 40.0,
+    "alpha_lipoic_acid": 50.0
+   }
+  },
+  {
+   "id": "019a8ebe-73c5-7f3b-862b-ee86cad7388a",
+   "name": "PEAK RESPAWN",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/respawn (Stand 05.11.2026). Portion: 4 Kapseln. Inhaltsstoffe je Portion: Vitamin B6 2,1 mg; Magnesium 112 mg; Zinc 5 mg; Valerian extract 500 mg; Lemon balm extract 500 mg; Ashwagandha KSM-66® 500 mg; of which withanolides 25 mg; Hop extract 250 mg; Passionflower extract 250 mg; Green tea extract 333 mg; of which L-theanine 200 mg; Lavender extract 160 mg; Melatonin 0,5 mg.",
+   "values": {
+    "vit_b6": 2.1,
+    "magnesium": 112.0,
+    "zinc": 5.0,
+    "ashwagandha_extract": 500.0,
+    "withanolides": 25.0,
+    "green_tea_extract": 333.0,
+    "custom_peaktheanin": 200.0,
+    "custom_peakmelatonin": 0.5
+   }
+  },
+  {
+   "id": "019af34b-23d8-79f0-82f6-b60304dfd85d",
+   "name": "PEAK RESVERATROL",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/resveratrol (Stand 05.11.2026). Portion: 3 Kapseln. Inhaltsstoffe je Portion: Vitamin C 500 mg; Poligonum Cuspidatum-Extrakt 500 mg; davon Trans-Resveratrol 250 mg; Traubenkern-Extrakt 625 mg; davon Oligomere Proanthocyanidine 595 mg; Grüntee-Extrakt 263 mg; davon Epigallocatechingallat 105 mg; Quercetin 250 mg; Alpha-Liponsäure 200 mg; Curcumin 125 mg; Indol-3-Carbinol 60 mg; Piperin (Schwarzer Pfeffer) 2 mg.",
+   "values": {
+    "vit_c": 500.0,
+    "polygonum_extract": 500.0,
+    "resveratrol": 250.0,
+    "grape_seed_extract": 625.0,
+    "green_tea_extract": 263.0,
+    "egcg": 105.0,
+    "quercetin": 250.0,
+    "alpha_lipoic_acid": 200.0,
+    "curcumin": 125.0,
+    "indole3carbinol": 60.0,
+    "piperine": 2.0
+   }
+  },
+  {
+   "id": "019a4385-a01b-7ef3-8ad8-f3a8f536c549",
+   "name": "PEAK Rice Pudding",
+   "manufacturer": "PEAK",
+   "unit": "Portion(en)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/rice-pudding (Stand 05.11.2026).",
+   "values": {}
+  },
+  {
+   "id": "019a1255-9732-779a-831b-b50b16fb42e5",
+   "name": "PEAK SHREDDED TO THE BONE (S.T.T.B.)",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 10.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/vor-dem-training-1/products/shredded-to-the-bone (Stand 05.11.2026). Portion: Portion = 10 g Pulver mit 500 – 600 ml Wasser. Werte der Sorte Tutti Frutti. Inhaltsstoffe je Portion: Taurin 2000 mg; Glycin 1350 mg; Sinetrol® XPUR C 630 mg; Sinetrol® XPUR C, davon Flavone 252 mg; Zynamite® 140 mg; Zynamite®, davon Mangiferin 21 mg; GBBGO® 30 mg.",
+   "values": {
+    "taurine": 2000.0,
+    "glycine": 1350.0
+   }
+  },
+  {
+   "id": "019a1355-f168-79a6-8e05-b7218607cca9",
+   "name": "PEAK SHUTDOWN®",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 18.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/shutdown (Stand 05.11.2026). Portion: 18 g (2 gestrichene Messlöffel) in 200 ml Wasser. Werte der Sorte Peach Vanilla. Inhaltsstoffe je Portion: P5P (Vitamin B6) 2,6 mg; Magnesium 300 mg; Zinc 10 mg; Glycine 5000 mg; Myo-inositol 4000 mg; Ashwagandha extract 600 mg; of which withanolides 30 mg; Valerian extract 500 mg; Reishi mushroom extract 500 mg; of which polysaccharides 150 mg; Lemon balm extract 500 mg; Passionflower extract 400 mg; of which flavones 12 mg; Green tea extract 333 mg; of which L-theanine 200 mg; Hop extract 300 mg; Chamomile extract 204 mg; of which apigenin 200 mg; Lavender extract 160 mg; Saffron extract 28 mg; of which safranal 0,6 mg.",
+   "values": {
+    "vit_b6": 2.6,
+    "magnesium": 300.0,
+    "zinc": 10.0,
+    "glycine": 5000.0,
+    "inositol": 4000.0,
+    "ashwagandha_extract": 600.0,
+    "withanolides": 30.0,
+    "green_tea_extract": 333.0,
+    "custom_peaktheanin": 200.0,
+    "apigenin": 200.0
+   }
+  },
+  {
+   "id": "019ab2c1-58c3-7ce1-8a9b-cace9508ca30",
+   "name": "PEAK Sleep & Dream",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/sleep-dream-pl (Stand 05.11.2026). Portion: 4 capsules. Inhaltsstoffe je Portion: Vitamin B6 2,1 mg; Magnesium 112 mg; Zinc 5 mg; Valerian extract 500 mg; Lemon Balm Extract 500 mg; Ashwagandha KSM-66® 500 mg; davon withanolides 25 mg; Hop extract 250 mg; Passionflower Extract 250 mg; Green tea extract 333 mg; davon L-theanine 200 mg; Lavender Extract 160 mg; Melatonin 0,5 mg.",
+   "values": {
+    "vit_b6": 2.1,
+    "magnesium": 112.0,
+    "zinc": 5.0,
+    "ashwagandha_extract": 500.0,
+    "withanolides": 25.0,
+    "green_tea_extract": 333.0,
+    "custom_peaktheanin": 200.0,
+    "custom_peakmelatonin": 0.5
+   }
+  },
+  {
+   "id": "019a799b-f6ee-7a9e-8d50-d967e7351086",
+   "name": "PEAK SLIMFERNO",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 6.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/slimferno (Stand 05.11.2026). Portion: 6 g Pulver. Werte der Sorte Grapefruit Lemon. Inhaltsstoffe je Portion: Vitamin C 80 mg; Magnesium 55 mg; Chrom 20 µg; Sinetrol® XPUR 700 mg; davon Flavonoide 91 mg; L-Carnitin 500 mg; Taurin 500 mg; L-Tyrosin 250 mg; Koffein 200 mg; Grüntee-Extrakt 100 mg; davon Polyphenole 95 mg; Panax Ginseng-Extrakt 100 mg; Cholin 100 mg; Inositol 50 mg; Himbeer-Extrakt 50 mg; Ingwer-Extrakt 10 mg.",
+   "values": {
+    "vit_c": 80.0,
+    "magnesium": 55.0,
+    "chromium": 20.0,
+    "carnitine": 500.0,
+    "taurine": 500.0,
+    "tyrosine": 250.0,
+    "custom_peakkoffein": 200.0,
+    "green_tea_extract": 100.0,
+    "polyphenols": 95.0,
+    "ginseng_extract": 100.0,
+    "choline": 100.0,
+    "inositol": 50.0
+   }
+  },
+  {
+   "id": "019afe9a-e6fd-7e9f-86cd-ac6754b30043",
+   "name": "PEAK Soja Protein Isolat - Natural",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/soja-protein-isolat-natural (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser. Werte der Sorte Natural. Aminosäuren je 100 g Protein: Alanin 4 g; Arginin 7,6 g; Asparagin–Asparaginsäure 11,7 g; Cystein 3 g; Glutamin–Glutaminsäure 18,8 g; Glycin 3,9 g; Histidin 3,1 g; Isoleucin 3,9 g; Leucin 8,5 g; Lysin 6,2 g; Methionin 1,4 g; Phenylalanin 4,4 g; Prolin 5,1 g; Serin 5,2 g; Threonin 3,3 g; Tryptophan 1,7 g; Tyrosin 3,6 g; Valin 4,6 g; BCAAs 17 g; EAAs 34 g.",
+   "values": {
+    "energy": 101.0,
+    "fat": 0.6,
+    "saturated_fat": 0.3,
+    "carbs": 0.3,
+    "sugar": 0.2,
+    "protein": 25.0
+   }
+  },
+  {
+   "id": "019a6620-c52e-79bd-849e-ca7a2b32195a",
+   "name": "PEAK SOY PROTEIN ISOLATE",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/sp-isolat-750 (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser. Werte der Sorte Chocolate. Aminosäuren je 100 g Protein: Alanin 4 g; Arginin 7,6 g; Asparagin–Asparaginsäure 11,7 g; Cystein 3 g; Glutamin–Glutaminsäure 18,8 g; Glycin 3,9 g; Histidin 3,1 g; Isoleucin 3,9 g; Leucin 8,5 g; Lysin 6,2 g; Methionin 1,4 g; Phenylalanin 4,4 g; Prolin 5,1 g; Serin 5,2 g; Threonin 3,3 g; Tryptophan 1,7 g; Tyrosin 3,6 g; Valin 4,6 g; BCAAs 17 g; EAAs 34 g.",
+   "values": {
+    "energy": 105.0,
+    "fat": 0.8,
+    "saturated_fat": 0.4,
+    "carbs": 0.6,
+    "sugar": 0.2,
+    "protein": 24.0
+   }
+  },
+  {
+   "id": "019a2687-5308-7db9-8f3c-0a863cf6fa6c",
+   "name": "PEAK Speed (60 Kapseln)",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/speed (Stand 05.11.2026). Portion: 2 Kapseln. Inhaltsstoffe je Portion: L-Tyrosin 500 mg; Taurin 500 mg; Koffein gesamt 400 mg; Panax Ginseng-Extrakt 100 mg; Bitterorangen-Extrakt 100 mg; Bitterorangen-Extrakt, davon Synephrin 6 mg; Naringin 50 mg; Ingwer-Extrakt 25 mg.",
+   "values": {
+    "tyrosine": 500.0,
+    "taurine": 500.0,
+    "custom_peakkoffein": 400.0,
+    "ginseng_extract": 100.0,
+    "custom_peaksynephrin": 6.0,
+    "naringin": 50.0
+   }
+  },
+  {
+   "id": "019a51f2-a12d-76d9-811a-7e5ae82478c4",
+   "name": "PEAK Speed Serum",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 10.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/speed-serum (Stand 05.11.2026). Portion: 10 g Pulver + 400–500 ml Wasser (ca. 2 Messlöffel). Inhaltsstoffe je Portion: Vitamin C 20 mg; Niacin 4 mg; Vitamin B6 0,35 mg; Vitamin B12 0,63 µg; Magnesium 60 mg; L-Leucin 2000 mg; L-Isoleucin 1000 mg; L-Valin 1000 mg; Taurin 1000 mg; L-Carnitin 500 mg; D-Glucuronolacton 500 mg; Koffein 200 mg; Garcinia Cambogia Pulver 100 mg; Grüntee-Extrakt 100 mg; Guarana-Extrakt 100 mg; Ginseng-Extrakt 100 mg; Cholin 50 mg; Inositol 50 mg; Ingwer-Extrakt 10 mg.",
+   "values": {
+    "vit_c": 20.0,
+    "vit_b3": 4.0,
+    "vit_b6": 0.35,
+    "vit_b12": 0.63,
+    "magnesium": 60.0,
+    "leucine": 2000.0,
+    "isoleucine": 1000.0,
+    "valine": 1000.0,
+    "taurine": 1000.0,
+    "carnitine": 500.0,
+    "custom_peakglucuronolacton": 500.0,
+    "custom_peakkoffein": 200.0,
+    "garcinia": 100.0,
+    "green_tea_extract": 100.0,
+    "ginseng_extract": 100.0,
+    "choline": 50.0,
+    "inositol": 50.0
+   }
+  },
+  {
+   "id": "019af37a-83c3-7b04-83d6-165b6a88b335",
+   "name": "PEAK TESTO STACK",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/testo-stack (Stand 05.11.2026). Portion: 2 capsules. Inhaltsstoffe je Portion: Vitamin A 800 µg; Vitamin E 12 mg; Vitamin C 80 mg; Zinc 5 mg; Fenugreek extract 1200 mg; Tribulus terrestris extract 360 mg; Total Steroid Saponins (> Angabe) 800 mg; Saw Palmetto Extract 20 mg.",
+   "values": {
+    "vit_a": 800.0,
+    "vit_e": 12.0,
+    "vit_c": 80.0,
+    "zinc": 5.0,
+    "fenugreek_extract": 1200.0,
+    "tribulus": 360.0
+   }
+  },
+  {
+   "id": "019ab3fd-5658-780f-8ac6-7dc1af0d6669",
+   "name": "PEAK THE PEAK",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 25.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/the-peak (Stand 05.11.2026). Portion: 25 g Pulver + 500 ml Wasser. Inhaltsstoffe je Portion: Natrium 500 mg; Kalium 300 mg; L-Citrullin-Malat 8000 mg; L-Arginin AKG 3000 mg; L-Arginin HCl 3000 mg; Glycin 2000 mg; L-Tyrosin 1000 mg; Cholin Bitartrat 720 mg; Cholin Bitartrat, davon Cholin 300 mg; Cognizin® Citicoline 500 mg; Hericium Erinaceus Extrakt 500 mg; Hericium Erinaceus Extrakt, davon Polysaccharide 250 mg; Hericium Erinaceus Extrakt, davon Beta Glucan 50 mg; Cordyceps sinensis Extrakt 500 mg; Cordyceps sinensis Extrakt, davon Polysaccharide 200 mg; PEAK ATP® (Adenosin 5'-Triphosphat-Dinatrium) 400 mg; Koffein Anhydrous 250 mg; Zynamite® 150 mg; Bitterorange Extrakt 112 mg; Bitterorange Extrakt, davon Synephrin 6,7 mg.",
+   "values": {
+    "sodium": 500.0,
+    "potassium": 300.0,
+    "citrulline_malate": 8.0,
+    "glycine": 2000.0,
+    "tyrosine": 1000.0,
+    "choline": 300.0,
+    "custom_peakcitikolin": 500.0,
+    "beta_glucans": 50.0,
+    "cordyceps_extract": 500.0,
+    "custom_peakkoffein": 250.0,
+    "custom_peaksynephrin": 6.7
+   }
+  },
+  {
+   "id": "019a1ec1-6def-7970-8b83-6386c2b226fe",
+   "name": "PEAK Thyroid Support",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/thyroid-support (Stand 05.11.2026). Portion: 4 Kapseln. Inhaltsstoffe je Portion: Vitamin B9 200 µg; Vitamin B12 25 µg; Selenium 200 µg; Copper 2 mg; Molybdenum 100 µg; Manganese 2 mg; Iodine 50 µg; L-Tyrosine 1000 mg; Olive leaf extract 1000 mg; of which oleuropein 50 mg; Schisandra chinensis extract 400 mg; of which lignans 20 mg; Guggul extract 200 mg; of which guggulsterone 6 mg; Cayenne pepper extract 100 mg; of which capsaicin 2 mg.",
+   "values": {
+    "vit_b9": 200.0,
+    "vit_b12": 25.0,
+    "selenium": 200.0,
+    "copper": 2.0,
+    "molybdenum": 100.0,
+    "manganese": 2.0,
+    "iodine": 50.0,
+    "tyrosine": 1000.0,
+    "schisandra_extract": 400.0,
+    "capsaicin": 2.0
+   }
+  },
+  {
+   "id": "019ac254-68be-7d34-887f-a83b2b5225f2",
+   "name": "PEAK Time To Bleed",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 15.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/booster/products/time-to-bleed (Stand 05.11.2026). Portion: 15 g Pulver (3 gestrichene Messlöffel) mit 500 – 600 ml Wasser. Werte der Sorte Black Pomegranate. Inhaltsstoffe je Portion: Zynamite® 150 mg; Zynamite®, davon Mangiferin 23 mg; Cognizin® 500 mg; enXtra 150 mg; Koffein anhydrous 350 mg; Bitterorange-Extrakt 112 mg; Bitterorange-Extrakt, davon Synephrin 6,7 mg; N-Acetyl-Tyrosin 4400 mg; Glycin 5000 mg.",
+   "values": {
+    "custom_peakkoffein": 350.0,
+    "custom_peaksynephrin": 6.7,
+    "glycine": 5000.0
+   }
+  },
+  {
+   "id": "019a061b-8567-72d3-8b73-a1b6e2094478",
+   "name": "PEAK Tribulus Terrestris",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/tribulus-terrestris (Stand 05.11.2026). Portion: 2 capsules. Inhaltsstoffe je Portion: Zinc 10 mg; Tribulus terrestris extract 1680 mg; thereof saponins (> Angabe) 1000 mg.",
+   "values": {
+    "zinc": 10.0,
+    "tribulus": 1680.0
+   }
+  },
+  {
+   "id": "019aeb12-5425-7d15-82cd-cbe25206ead3",
+   "name": "PEAK TRYPTOPHAN",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/tryptophan (Stand 05.11.2026). Portion: 1 Kapsel. Inhaltsstoffe je Portion: Niacin 8 mg; Vitamin B6 0,7 mg; Vitamin B12 1,25 µg; Magnesium 60 mg; L-Tryptophan 500 mg.",
+   "values": {
+    "vit_b3": 8.0,
+    "vit_b6": 0.7,
+    "vit_b12": 1.25,
+    "magnesium": 60.0,
+    "tryptophan": 500.0
+   }
+  },
+  {
+   "id": "019ad6b8-8070-7f35-8c64-607ee0fdcca6",
+   "name": "PEAK Tyrosine",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/tyrosin (Stand 05.11.2026). Portion: 1 Kapsel. Inhaltsstoffe je Portion: L-tyrosine 500 mg; Niacin 8 mg; Vitamin B6 0,7 mg; Vitamin B12 1,25 µg.",
+   "values": {
+    "tyrosine": 500.0,
+    "vit_b3": 8.0,
+    "vit_b6": 0.7,
+    "vit_b12": 1.25
+   }
+  },
+  {
+   "id": "019a0329-f99e-7e19-8c68-9cca32395cf4",
+   "name": "PEAK UBIQUINOL",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/ubiquinol (Stand 05.11.2026). Portion: 1 Kapsel. Inhaltsstoffe je Portion: KANEKA UBIQUINOL™ 100 mg.",
+   "values": {
+    "coq10": 100.0
+   }
+  },
+  {
+   "id": "019acaf6-b8a2-71dc-82a8-a13b5dff2988",
+   "name": "PEAK UC-II",
+   "manufacturer": "PEAK",
+   "unit": "Tablette(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/uc-ii (Stand 05.11.2026). Portion: 1 Tablette. Inhaltsstoffe je Portion: Vitamin C 80 mg; UC-II® (type II collagen) 40 mg.",
+   "values": {
+    "vit_c": 80.0
+   }
+  },
+  {
+   "id": "019aebbb-a1c8-74cf-80f1-c53a3cd30c92",
+   "name": "PEAK Ultra A-Z",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 4.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/ultra-a-z-caps (Stand 05.11.2026). Portion: 4 Kapseln. Inhaltsstoffe je Portion: Vitamin A 800 µg; Vitamin C 160 mg; Vitamin D3 25 µg; Vitamin E 24 mg; Vitamin K2 75 µg; Vitamin B1 1,65 mg; Vitamin B2 2,1 mg; Vitamin B3 24 mg; Vitamin B5 9 mg; Vitamin B6 2,1 mg; Vitamin B7 75 µg; Vitamin B9 300 µg; Vitamin B12 3,75 µg; Calcium 350 mg; Magnesium 175 mg; Eisen 14 mg; Zink 10 mg; Kupfer 1 mg; Mangan 2 mg; Selen 55 µg; Chrom 40 µg; Molybdän 50 µg; Iod 150 µg; Bor 3 mg; MGCPQQ® 400 µg; Coenzym Q10 90 mg.",
+   "values": {
+    "vit_a": 800.0,
+    "vit_c": 160.0,
+    "vit_d": 25.0,
+    "vit_e": 24.0,
+    "vit_k": 75.0,
+    "vit_b1": 1.65,
+    "vit_b2": 2.1,
+    "vit_b3": 24.0,
+    "vit_b5": 9.0,
+    "vit_b6": 2.1,
+    "vit_b7": 75.0,
+    "vit_b9": 300.0,
+    "vit_b12": 3.75,
+    "calcium": 350.0,
+    "magnesium": 175.0,
+    "iron": 14.0,
+    "zinc": 10.0,
+    "copper": 1.0,
+    "manganese": 2.0,
+    "selenium": 55.0,
+    "chromium": 40.0,
+    "molybdenum": 50.0,
+    "iodine": 150.0,
+    "boron": 3.0,
+    "pqq": 0.4,
+    "coq10": 90.0
+   }
+  },
+  {
+   "id": "019ad479-d272-7e91-89b8-d7f4fa1b4d4d",
+   "name": "PEAK VEGAN PROTEIN ISOLAT",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/vegan-protein-750 (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser. Werte der Sorte Banana. Aminosäuren je 100 g Protein: Alanin 5 g; Arginin 8,1 g; Asparagin – Asparaginsäure 10,1 g; Cystein 1,6 g; Glutamin – Glutaminsäure 16,8 g; Glycin 4 g; Histidin 2,2 g; Isoleucin 4,6 g; Leucin 8,5 g; Lysin 6 g; Methionin 2,4 g; Phenylalanin 5,2 g; Prolin 4 g; Serin 6,5 g; Threonin 3,6 g; Tryptophan 0,8 g; Tyrosin 2,7 g; Valin 7,9 g; BCAAs 21 g; EAAs 39 g.",
+   "values": {
+    "energy": 115.0,
+    "fat": 1.7,
+    "saturated_fat": 0.6,
+    "carbs": 1.8,
+    "sugar": 0.2,
+    "protein": 23.1
+   }
+  },
+  {
+   "id": "019aef04-abe3-7a31-8c01-d950de7e4759",
+   "name": "PEAK Vegan Protein Isolat - Natural",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/vegan-protein-isolat-natural (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) mit 300 ml Wasser. Werte der Sorte Natural. Aminosäuren je 100 g Protein: Alanin 5 g; Arginin 8,1 g; Asparagin – Asparaginsäure 10,1 g; Cystein 1,6 g; Glutamin – Glutaminsäure 16,8 g; Glycin 4 g; Histidin 2,2 g; Isoleucin 4,6 g; Leucin 8,5 g; Lysin 6 g; Methionin 2,4 g; Phenylalanin 5,2 g; Prolin 4 g; Serin 6,5 g; Threonin 3,6 g; Tryptophan 0,8 g; Tyrosin 2,7 g; Valin 7,9 g; BCAAs 21 g; EAAs 39 g.",
+   "values": {
+    "energy": 118.0,
+    "fat": 1.8,
+    "saturated_fat": 0.6,
+    "carbs": 1.5,
+    "sugar": 0.2,
+    "protein": 24.0
+   }
+  },
+  {
+   "id": "019a686d-66af-7be2-8ff9-252df0e0cb57",
+   "name": "PEAK VITAMINS A-Z",
+   "manufacturer": "PEAK",
+   "unit": "Tablette(n)",
+   "servingAmount": 2.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/vitamin-a-z-180 (Stand 05.11.2026). Portion: 2 Tabletten. Inhaltsstoffe je Portion: Vitamin A 800 µg; Vitamin C 80 mg; Vitamin D3 5 µg; Vitamin E 12 mg; Vitamin K 75 µg; Vitamin B1 1,1 mg; Vitamin B2 1,4 mg; Vitamin B3 16 mg; Vitamin B5 6 mg; Vitamin B6 1,4 mg; Vitamin B7 50 µg; Vitamin B9 200 µg; Vitamin B12 2,5 µg; Calcium 200 mg; Magnesium 100 mg; Eisen 4 mg; Zink 5 mg; Kupfer 0,5 mg; Mangan 1 mg; Selen 27,5 µg; Chrom 20 µg; Molybdän 25 µg; Iod 75 µg.",
+   "values": {
+    "vit_a": 800.0,
+    "vit_c": 80.0,
+    "vit_d": 5.0,
+    "vit_e": 12.0,
+    "vit_k": 75.0,
+    "vit_b1": 1.1,
+    "vit_b2": 1.4,
+    "vit_b3": 16.0,
+    "vit_b5": 6.0,
+    "vit_b6": 1.4,
+    "vit_b7": 50.0,
+    "vit_b9": 200.0,
+    "vit_b12": 2.5,
+    "calcium": 200.0,
+    "magnesium": 100.0,
+    "iron": 4.0,
+    "zinc": 5.0,
+    "copper": 0.5,
+    "manganese": 1.0,
+    "selenium": 27.5,
+    "chromium": 20.0,
+    "molybdenum": 25.0,
+    "iodine": 75.0
+   }
+  },
+  {
+   "id": "019abff8-00e1-7be4-8ad7-ae54450a62f5",
+   "name": "PEAK VITAMIN B COMPLEX",
+   "manufacturer": "PEAK",
+   "unit": "Tablette(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/vitamin-b-complex (Stand 05.11.2026). Portion: 1 Tablette. Inhaltsstoffe je Portion: Thiamin (Vitamin B1) 3,3 mg; Riboflavin (Vitamin B2) 4 mg; Niacin (Vitamin B3) 48 mg; Pantothensäure (Vitamin B5) 18 mg; Pyridoxin (Vitamin B6) 4,2 mg; Biotin (Vitamin B7) 150 µg; Folsäure (Vitamin B9) 600 µg; Cyanocobalamin (Vitamin B12) 7,5 µg.",
+   "values": {
+    "vit_b1": 3.3,
+    "vit_b2": 4.0,
+    "vit_b3": 48.0,
+    "vit_b5": 18.0,
+    "vit_b6": 4.2,
+    "vit_b7": 150.0,
+    "vit_b9": 600.0,
+    "vit_b12": 7.5
+   }
+  },
+  {
+   "id": "019a7bab-203b-78eb-8243-7792460e225a",
+   "name": "PEAK VITAMIN C",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/vitamin-c (Stand 05.11.2026). Portion: 1 Kapsel (1080 mg). Inhaltsstoffe je Portion: Vitamin C 750 mg; Traubenkern-Extrakt 100 mg.",
+   "values": {
+    "vit_c": 750.0,
+    "grape_seed_extract": 100.0
+   }
+  },
+  {
+   "id": "019ac8bc-d25d-775b-8e6e-b9d5c40448cf",
+   "name": "PEAK Vitamin C Drops",
+   "manufacturer": "PEAK",
+   "unit": "Tablette(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/vitamin-c-drops (Stand 05.11.2026). Portion: 3 Tabletten. Inhaltsstoffe je Portion: Acerola extract 1050 mg; of which vitamin C 240 mg.",
+   "values": {
+    "vit_c": 240.0
+   }
+  },
+  {
+   "id": "019a204b-cb8c-77ff-8a59-9c97fd84e19e",
+   "name": "PEAK VITAMIN D",
+   "manufacturer": "PEAK",
+   "unit": "Tablette(n)",
+   "servingAmount": 0.5,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/vitamin-d (Stand 05.11.2026). Portion: ½ Tablette. Inhaltsstoffe je Portion: Vitamin D 25 µg.",
+   "values": {
+    "vit_d": 25.0
+   }
+  },
+  {
+   "id": "019a9b66-5a75-7126-8f0b-dba714d883ac",
+   "name": "PEAK Vitamin D3 + K2",
+   "manufacturer": "PEAK",
+   "unit": "Tablette(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/vitamin-d3-k2 (Stand 05.11.2026). Portion: 1 Tablette (750 mg). Inhaltsstoffe je Portion: Vitamin D 125 µg; Vitamin K2 150 µg.",
+   "values": {
+    "vit_d": 125.0,
+    "vit_k": 150.0
+   }
+  },
+  {
+   "id": "019a19c3-9562-77b6-8549-b9b8ced6d53b",
+   "name": "PEAK WakeUp",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 1.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/wakeup (Stand 05.11.2026). Portion: 1 capsule. Inhaltsstoffe je Portion: Caffeine 100 mg; Green tea extract 167 mg; davon L-theanine 100 mg.",
+   "values": {
+    "custom_peakkoffein": 100.0,
+    "green_tea_extract": 167.0,
+    "custom_peaktheanin": 100.0
+   }
+  },
+  {
+   "id": "019ac534-3d18-787b-8e85-c963395cca89",
+   "name": "PEAK WATERFLUSH",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 7.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/nach-dem-aufstehen/products/waterflush (Stand 05.11.2026). Portion: Tagesportion = 7 Kapseln. Inhaltsstoffe je Portion: Vitamin C 756 mg; Wacholderbeeren-Extrakt 1000 mg; Löwenzahn-Extrakt 1000 mg; Löwenzahn-Extrakt, davon Flavonoide 30 mg; Schachtelhalm-Extrakt 900 mg; Schachtelhalm-Extrakt, davon Silizium 63 mg; Rosskastanien-Extrakt 750 mg; Rosskastanien-Extrakt, davon Aescin 150 mg; Brennessel-Extrakt 600 mg; Mäusedorn-Extrakt 300 mg.",
+   "values": {
+    "vit_c": 756.0,
+    "silicon": 63.0
+   }
+  },
+  {
+   "id": "019ad901-e7a2-7c75-8fdc-5e4276dc0118",
+   "name": "PEAK Whey Protein Concentrate",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/whey-protein-concentrate (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser (oder Magermilch). Werte der Sorte Banana. Aminosäuren je 100 g Protein: Alanin 5,1 g; Arginin 3,3 g; Asparagin/Asparaginsäure 11,6 g; Cystein 2,2 g; Glutamin/Glutaminsäure 9,3 g; Glycin 2,1 g; Histidin 1,7 g; Isoleucin 6,1 g; Leucin 12 g; Lysin 10,7 g; Methionin 2,2 g; Phenylalanin 3,4 g; Prolin 6,6 g; Serin 5,4 g; Threonin 6,5 g; Tryptophan 2,3 g; Tyrosin 3,5 g; Valin 5,9 g; BCAAs 24 g; EAAs 49,1 g.",
+   "values": {
+    "energy": 111.0,
+    "fat": 1.6,
+    "saturated_fat": 1.1,
+    "carbs": 2.4,
+    "sugar": 2.2,
+    "protein": 22.0
+   }
+  },
+  {
+   "id": "019a6d7e-44b4-760b-858e-d9d6d1b8a93f",
+   "name": "PEAK WHEY PROTEIN ISOLATE - NATURAL",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/whey-protein-isolat-natural (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser (oder Magermilch). Werte der Sorte Natural. Aminosäuren je 100 g Protein: Alanin 4,9 g; Arginin 2,1 g; Asparagin–Asparaginsäure 10,6 g; Cystin–Cystein 2,6 g; Glutamin–Glutaminsäure 17,1 g; Glycin 1,7 g; Histidin 1,7 g; Isoleucin 6,6 g; Leucin 10,5 g; Lysin 9,6 g; Methionin 2,2 g; Phenylalanin 3 g; Prolin 5,8 g; Serin 4,5 g; Threonin 6,7 g; Tryptophan 1,8 g; Tyrosin 3 g; Valin 5,6 g; BCAAs 22,7 g; EAAs 46 g.",
+   "values": {
+    "energy": 108.0,
+    "fat": 0.3,
+    "saturated_fat": 0.1,
+    "carbs": 0.6,
+    "sugar": 0.3,
+    "protein": 25.9
+   }
+  },
+  {
+   "id": "019a8394-ffde-7824-8f1f-3c9a52829ae3",
+   "name": "PEAK Whey Protein Isolat",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/wpi (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser. Werte der Sorte Blueberry Vanilla. Aminosäuren je 100 g Protein: Alanin 4,9 g; Arginin 2,1 g; Asparagin/Asparaginsäure 10,6 g; Cystin/Cystein 2,6 g; Glutamin/Glutaminsäure 17,1 g; Glycin 1,7 g; Histidin 1,7 g; Isoleucin 6,6 g; Leucin 10,5 g; Lysin 9,6 g; Methionin 2,2 g; Phenylalanin 3 g; Prolin 5,8 g; Serin 4,5 g; Threonin 6,7 g; Tryptophan 1,8 g; Tyrosin 3 g; Valin 5,6 g; BCAAs 22,7 g; EAAs 46 g.",
+   "values": {
+    "energy": 105.0,
+    "fat": 0.3,
+    "saturated_fat": 0.2,
+    "carbs": 0.7,
+    "sugar": 0.3,
+    "protein": 25.0
+   }
+  },
+  {
+   "id": "019a9c0c-9685-7a48-8dbf-4356f0e034e9",
+   "name": "PEAK Whey Selection",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/ws-900 (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) mit 300 ml Wasser oder Magermilch. Werte der Sorte Banana. Inhaltsstoffe je Portion: Vitamin E 3 mg; Vitamin C 20 mg; Thiamin 0,28 mg; Riboflavin 0,35 mg; Niacin 4 mg; Vitamin B6 0,35 mg; Folsäure 50 µg; Vitamin B12 0,63 µg; Biotin 13 µg; Pantothensäure 1,5 mg; Freies L-Leucin 1500 mg; Laktase 105 ALU units. Aminosäuren je 100 g Protein: Alanin 5 g; Arginin 2 g; Asparagin – Asparaginsäure 11 g; Cystein 2,9 g; Glutamin – Glutaminsäure 14,5 g; Glycin 1,8 g; Histidin 1,3 g; Isoleucin 6,8 g; Leucin 15,8 g; Lysin 8,1 g; Methionin 2,3 g; Phenylalanin 2,7 g; Prolin 5,3 g; Serin 4,1 g; Threonin 6,2 g; Tryptophan 1,5 g; Tyrosin 2,8 g; Valin 5,9 g; BCAAs 28,5 g; EAAs 49,3 g.",
+   "values": {
+    "energy": 106.0,
+    "fat": 0.9,
+    "saturated_fat": 0.6,
+    "carbs": 0.5,
+    "sugar": 0.2,
+    "protein": 24.0,
+    "vit_e": 3.0,
+    "vit_c": 20.0,
+    "vit_b1": 0.28,
+    "vit_b2": 0.35,
+    "vit_b3": 4.0,
+    "vit_b6": 0.35,
+    "vit_b9": 50.0,
+    "vit_b12": 0.63,
+    "vit_b7": 13.0,
+    "vit_b5": 1.5
+   }
+  },
+  {
+   "id": "019a5fa1-13f0-77cf-8ad5-0dd842989498",
+   "name": "PEAK Yummy EAA",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 16.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/yummy-eaa (Stand 05.11.2026). Portion: 16 g Pulver + 500 ml Wasser gemixt. Inhaltsstoffe je Portion: L-Leucin 1960 mg; L-Valin 1660 mg; L-Isoleucin 1480 mg; L-Lysin 1430 mg; L-Phenylalanin 1290 mg; L-Threonin 1110 mg; L-Methionin 700 mg; L-Tryptophan 370 mg.",
+   "values": {
+    "leucine": 1960.0,
+    "valine": 1660.0,
+    "isoleucine": 1480.0,
+    "lysine": 1430.0,
+    "phenylalanine": 1290.0,
+    "threonine": 1110.0,
+    "methionine": 700.0,
+    "tryptophan": 370.0
+   }
+  },
+  {
+   "id": "019aefe3-7bbe-7c1d-8a84-860a46503dfb",
+   "name": "PEAK Yummy Flav Powder",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 5.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/yummy-flav-powder (Stand 05.11.2026). Portion: 5 g Pulver (1 gehäufter Messlöffel). Werte der Sorte Apple Strudel.",
+   "values": {
+    "energy": 10.0,
+    "fat": 0.0,
+    "saturated_fat": 0.0,
+    "carbs": 0.7,
+    "sugar": 0.3,
+    "protein": 0.0,
+    "fiber": 3.5
+   }
+  },
+  {
+   "id": "019a0597-4e14-7fd9-8ade-85d05dc111cb",
+   "name": "PEAK Yummy Protein Pudding",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/muskelaufbau/products/yummy-protein-pudding (Stand 05.11.2026). Portion: 30 g powder (about 2 measuring spoons) + 150–200 ml water or skim milk. Werte der Sorte Chocolate.",
+   "values": {
+    "energy": 100.0,
+    "fat": 0.7,
+    "saturated_fat": 0.4,
+    "carbs": 1.3,
+    "sugar": 0.5,
+    "protein": 21.0
+   }
+  },
+  {
+   "id": "019ade2b-0695-7e20-8cbc-0e90feb276ff",
+   "name": "PEAK Yummy Vegan Protein",
+   "manufacturer": "PEAK",
+   "unit": "g",
+   "servingAmount": 30.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/proteine/products/yummy-vegan-protein (Stand 05.11.2026). Portion: 30 g Pulver (2 gestrichene Messlöffel) + 300 ml Wasser oder vegane Milchalternative. Werte der Sorte Black Forest Cake. Aminosäuren je 100 g Protein: Alanin 4,4 g; Arginin 10,7 g; Asparagin/Asparaginsäure 10,5 g; Cystein 1,1 g; Glutamin/Glutaminsäure 17,9 g; Glycin 4,5 g; Histidin 2,3 g; Isoleucin 4,5 g; Leucin 8,1 g; Lysin 6,1 g; Methionin 1,2 g; Phenylalanin 5 g; Prolin 4 g; Serin 6,1 g; Threonin 3,4 g; Tryptophan 1,1 g; Tyrosin 2,4 g; Valin 6,5 g; BCAAs 19,1 g; EAAs 35,9 g.",
+   "values": {
+    "energy": 104.0,
+    "fat": 2.2,
+    "saturated_fat": 0.5,
+    "carbs": 2.1,
+    "sugar": 0.3,
+    "protein": 19.2,
+    "fiber": 1.76
+   }
+  },
+  {
+   "id": "019abb76-25b0-7bd1-8fb0-e0742462e476",
+   "name": "PEAK Zink Chelat",
+   "manufacturer": "PEAK",
+   "unit": "Tablette(n)",
+   "servingAmount": 0.5,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/gesundheit/products/zink-chelat (Stand 05.11.2026). Portion: ½ Tablette. Inhaltsstoffe je Portion: Zink 12 mg; Kupfer 1 mg.",
+   "values": {
+    "zinc": 12.0,
+    "copper": 1.0
+   }
+  },
+  {
+   "id": "019a61fe-1ba7-756a-84e4-a0fbafcbfbb8",
+   "name": "PEAK ZINKMA",
+   "manufacturer": "PEAK",
+   "unit": "Kapsel(n)",
+   "servingAmount": 3.0,
+   "dailyDose": false,
+   "notes": "Angaben laut https://www.peak.ag/collections/performance/products/zinkma (Stand 05.11.2026). Portion: 3 Kapseln. Inhaltsstoffe je Portion: Vitamin B6 10,5 mg; Magnesium 375 mg; Zink 25 mg.",
+   "values": {
+    "vit_b6": 10.5,
+    "magnesium": 375.0,
+    "zinc": 25.0
+   }
+  }
+ ]
+}

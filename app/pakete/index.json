@@ -1,0 +1,55 @@
+{
+ "format": "lifespan-os-paketliste",
+ "packages": [
+  {
+   "key": "gymbeam-shop",
+   "manufacturer": "GymBeam",
+   "title": "GymBeam-Shop – Lebensmittel, Protein und Sportnahrung",
+   "version": "2026.11.05",
+   "file": "GymBeam-Shop.json",
+   "foods": 1059,
+   "supplements": 1433,
+   "bytes": 1296366
+  },
+  {
+   "key": "ironmaxx",
+   "manufacturer": "IronMaxx",
+   "title": "IronMaxx – Lebensmittel und Supplements",
+   "version": "2026.11.12",
+   "file": "IronMaxx.json",
+   "foods": 286,
+   "supplements": 109,
+   "bytes": 232842
+  },
+  {
+   "key": "peak-performance",
+   "manufacturer": "PEAK",
+   "title": "PEAK Performance – Lebensmittel und Supplements",
+   "version": "2026.11.05",
+   "file": "PEAK-Performance.json",
+   "foods": 33,
+   "supplements": 142,
+   "bytes": 152047
+  },
+  {
+   "key": "proteini-si",
+   "manufacturer": "Proteini.si",
+   "title": "Proteini.si – Lebensmittel und Supplements (viele Marken)",
+   "version": "2026.11.14",
+   "file": "Proteini.json",
+   "foods": 694,
+   "supplements": 780,
+   "bytes": 927868
+  },
+  {
+   "key": "sinob",
+   "manufacturer": "#sinob",
+   "title": "#sinob – Lebensmittel und Supplements",
+   "version": "2026.11.12",
+   "file": "SINOB.json",
+   "foods": 98,
+   "supplements": 39,
+   "bytes": 88283
+  }
+ ]
+}

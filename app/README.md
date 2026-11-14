@@ -380,3 +380,9 @@ Fassung laden.
 - **iCoach.me:** Bücher und Magazine liegen unter `media/icoach/` außerhalb des App-Bereichs und
   öffnen sich in einem eigenen Fenster; mit „Fertig“ bzw. ✕ kommt man zurück in die App, auch wenn
   das Passwort nicht eingegeben wird.
+
+## Version 1.16.2 (14.11.2026): neues Heft im Magazin
+
+- **iCoach.me → Magazin:** neues Heft „Brutto vs. Netto: Welche Kalorie zählt?“ (iCoach.Me Magazin ·
+  Ernährung, 3 Seiten) in der neuen Kategorie **Ernährung**; PDF unter `media/icoach/magazin/brutto-netto.pdf`,
+  Titelbild unter `icoach/magazin/brutto-netto.jpg`. Daten aus `src/domain/magazines.ts` (pcdomain.js neu gebaut).

@@ -14252,6 +14252,7 @@ __export(magazines_exports, {
 var MAGAZINE_CATEGORY_LABELS = {
   ausgabe: "iCoach.Me Magazin",
   training: "Training",
+  ernaehrung: "Ern\xE4hrung",
   supplements: "Supplements",
   gesundheit: "Gesundheit & Werte",
   longevity: "Longevity"
@@ -14259,11 +14260,28 @@ var MAGAZINE_CATEGORY_LABELS = {
 var MAGAZINE_CATEGORY_ORDER = [
   "ausgabe",
   "training",
+  "ernaehrung",
   "supplements",
   "gesundheit",
   "longevity"
 ];
 var MAGAZINES = [
+  {
+    id: "brutto-netto",
+    title: "Brutto vs. Netto: Welche Kalorie z\xE4hlt?",
+    series: "iCoach.Me Magazin \xB7 Ern\xE4hrung",
+    category: "ernaehrung",
+    pages: 3,
+    issued: "November 2026",
+    summary: "Brutto ist immer die gesamte Energie \u2013 im Essen wie im Training. Netto ist, was davon wirklich ankommt oder wirklich zus\xE4tzlich verbraucht wird. Das Heft zeigt, warum der Unterschied entscheidet, ob deine Kalorienrechnung aufgeht.",
+    learn: [
+      "Was die 4-4-9-Werte auf dem Etikett bedeuten und wie viel nach dem thermischen Effekt (TEF) von Eiwei\xDF, Kohlenhydraten und Fett netto ankommt",
+      "Warum Ballaststoffe nur etwa 2 kcal/g liefern und was \u201ENet Carbs\u201C in den USA hei\xDFt",
+      "Trainingskalorien brutto und netto mit MET berechnen \u2013 Rechenbeispiel 80 kg, 1 Stunde Laufen",
+      "Warum Uhren Bruttowerte zeigen und wer Sportkalorien \u201Ezur\xFCckisst\u201C, seinen Fortschritt bremst"
+    ],
+    bytes: 599975
+  },
   {
     id: "icoach-02",
     title: "Stark durch den Winter",

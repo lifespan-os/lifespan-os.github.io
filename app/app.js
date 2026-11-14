@@ -5,7 +5,7 @@ import * as N from "./nutrition.js";
 import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, viewFood, viewFoodReview } from "./food.js";
 import { bodyActions, bodyChange, bodyInput, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
 import * as BD from "./bodydata.js";
-import { SECTIONS, drawerHtml, icon, pcOnlyHtml } from "./nav.js";
+import { SECTIONS, drawerHtml, icon, pcOnlyHtml, quickSheetHtml, tabbarHtml } from "./nav.js";
 import { focusInfo, machineNamesOf } from "./focusinfo.js";
 import * as P from "./pcdb.js";
 import { buildDb, diaryActions, diaryChange, initDiary, today as todayIso, viewDiary, viewNutritionHistory } from "./diary.js";
@@ -131,7 +131,7 @@ function header(title, { back = null, sub = "" } = {}) {
 function brandHeader() {
   return `<header class="top"><div class="wrap">
     ${menuButton()}
-    <div class="brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b> <small>Mobil</small></div></div>
+    <div class="brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b><small class="brand__date">${esc(new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" }))}</small></div></div>
     ${S.catalog ? "" : `<button class="back" data-go="help">Hilfe</button>`}
   </div></header>`;
 }
@@ -883,9 +883,47 @@ const navRoot = document.createElement("div");
 navRoot.id = "nav-root";
 document.body.appendChild(navRoot);
 
+/** Ansichten mit eigener Leiste unten (Training läuft, Speichern): dort keine Hauptleiste. */
+const NO_TABBAR = new Set(["setup", "workout", "picker", "machine", "finish"]);
+
 function renderNav() {
-  navRoot.innerHTML = S.catalog ? drawerHtml({ view: S.view, arg: S.arg, open: S.menuOpen, esc, back: S.logEdit?.back ?? null }) : "";
-  document.body.classList.toggle("menu-open", Boolean(S.menuOpen));
+  if (!S.catalog) {
+    navRoot.innerHTML = "";
+    document.body.classList.remove("has-tabbar");
+    return;
+  }
+  const bar = !NO_TABBAR.has(S.view) && !app.querySelector(".bottom");
+  navRoot.innerHTML =
+    drawerHtml({ view: S.view, arg: S.arg, open: S.menuOpen, esc, back: S.logEdit?.back ?? null }) +
+    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen) }) + quickSheetHtml(Boolean(S.quickOpen)) : "");
+  document.body.classList.toggle("has-tabbar", bar);
+  document.body.classList.toggle("menu-open", Boolean(S.menuOpen || (bar && S.quickOpen)));
+}
+
+/** Schnell erfassen (Design C): Ziel je Eintrag. */
+function quickGo(id) {
+  S.quickOpen = false;
+  S.menuOpen = false;
+  const t = todayIso();
+  if (id === "meal") {
+    const f = S.food;
+    if (f) {
+      f.mealType = N.suggestMealType(new Date().getHours());
+      f.trackDate = t;
+      f.returnTo = "diary";
+    }
+    S.diaryDate = t;
+    return go(f ? "food" : "diary");
+  }
+  if (id === "water") {
+    S.diaryDate = t;
+    return go("diary");
+  }
+  if (id === "training") S.trainTab = "workouts";
+  if (id === "caffeine") S.icTab = "widgets";
+  if (id === "todo") S.todoDate = t;
+  const view = { body: "body", training: "training", sleep: "sleep", recovery: "recovery", todo: "todos", caffeine: "icoach" }[id];
+  return go(view ?? "home");
 }
 
 function setMenu(open) {
@@ -909,6 +947,24 @@ navRoot.addEventListener("click", (ev) => {
   const el = ev.target.closest("[data-act]");
   if (!el) return;
   if (el.dataset.act === "menu-close") return setMenu(false);
+  if (el.dataset.act === "menu-open-bar") {
+    S.quickOpen = false;
+    return setMenu(true);
+  }
+  if (el.dataset.act === "quick-open" || el.dataset.act === "quick-close") {
+    S.quickOpen = el.dataset.act === "quick-open" ? !S.quickOpen : false;
+    return renderNav();
+  }
+  if (el.dataset.act === "quick-go") return quickGo(el.dataset.arg);
+  if (el.dataset.act === "tabbar-go") {
+    S.menuOpen = false;
+    S.quickOpen = false;
+    const id = el.dataset.arg;
+    if (id === "training") S.trainTab = "workouts";
+    if (id === "nutrition") S.diaryDate = S.diaryDate ?? todayIso();
+    const sec = SECTIONS.find((x) => x.id === id);
+    return go(sec?.view ?? "home");
+  }
   if (el.dataset.act === "menu-go") {
     S.menuOpen = false;
     const sec = SECTIONS.find((x) => x.id === el.dataset.arg);
@@ -918,6 +974,10 @@ navRoot.addEventListener("click", (ev) => {
 
 document.addEventListener("keydown", (ev) => {
   if (ev.key === "Escape" && S.menuOpen) setMenu(false);
+  if (ev.key === "Escape" && S.quickOpen) {
+    S.quickOpen = false;
+    renderNav();
+  }
 });
 
 /**

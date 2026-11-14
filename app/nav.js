@@ -20,6 +20,10 @@ const ICONS = {
   settings: svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
   info: svg('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>'),
   menu: svg('<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>'),
+  more: svg('<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>'),
+  plus: svg('<path d="M12 5v14"/><path d="M5 12h14"/>'),
+  water: svg('<path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/>'),
+  coffee: svg('<path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h2a2 2 0 0 1 0 4h-2"/><path d="M8 3v3M12 3v3"/>'),
 };
 
 /**
@@ -81,4 +85,48 @@ export function pcOnlyHtml(id, esc) {
       <p class="muted small">Er kommt nach und nach auch in die Handy-App. Deine Daten dazu bleiben am PC.</p>
       <button class="btn block" data-act="menu-go" data-arg="overview">Zur Overview</button>
     </section>`;
+}
+
+/** Untere Leiste (Design C, 1.21.0): Hauptbereiche mit einem Tipp, in der Mitte „+“ zum schnellen Erfassen. */
+const BAR = [
+  { id: "overview", label: "Overview", icon: "overview" },
+  { id: "training", label: "Training", icon: "training" },
+  { id: "quick" },
+  { id: "nutrition", label: "Nutrition", icon: "nutrition" },
+  { id: "more", label: "Mehr", icon: "more" },
+];
+
+export function tabbarHtml({ view, arg, back = null, quickOpen = false }) {
+  const current = sectionOf(view, arg, back);
+  const main = ["overview", "training", "nutrition"];
+  return `<nav class="tabbar" aria-label="Hauptbereiche">${BAR.map((b) => {
+    if (b.id === "quick")
+      return `<button class="tabbar__quick" data-act="quick-open" aria-label="Schnell erfassen" aria-expanded="${quickOpen}">${ICONS.plus}</button>`;
+    const active = b.id === "more" ? !main.includes(current) : b.id === current;
+    const act = b.id === "more" ? `data-act="menu-open-bar"` : `data-act="tabbar-go" data-arg="${b.id}"`;
+    return `<button class="tabbar__item ${active ? "active" : ""}" ${act} ${active ? 'aria-current="page"' : ""}>${ICONS[b.icon]}<span>${b.label}</span></button>`;
+  }).join("")}</nav>`;
+}
+
+/** Schnell erfassen: die häufigsten Einträge mit einem Tipp. */
+export const QUICK = [
+  { id: "meal", label: "Mahlzeit", icon: "nutrition" },
+  { id: "water", label: "Wasser", icon: "water" },
+  { id: "body", label: "Gewicht & Körperwerte", icon: "body" },
+  { id: "training", label: "Training", icon: "training" },
+  { id: "sleep", label: "Schlaf", icon: "sleep" },
+  { id: "recovery", label: "Recovery", icon: "recovery" },
+  { id: "todo", label: "To-do", icon: "checklists" },
+  { id: "caffeine", label: "Koffein", icon: "coffee" },
+];
+
+export function quickSheetHtml(open) {
+  return `<div class="quick-backdrop ${open ? "open" : ""}" data-act="quick-close"></div>
+  <section class="quick-sheet ${open ? "open" : ""}" aria-label="Schnell erfassen" ${open ? "" : 'aria-hidden="true" inert'}>
+    <h2 class="quick-sheet__title">Schnell erfassen</h2>
+    <div class="quick-sheet__grid">${QUICK.map(
+      (q) => `<button class="quick-sheet__item" data-act="quick-go" data-arg="${q.id}">${ICONS[q.icon]}<span>${q.label}</span></button>`,
+    ).join("")}</div>
+    <button class="btn block" data-act="quick-close">Schließen</button>
+  </section>`;
 }

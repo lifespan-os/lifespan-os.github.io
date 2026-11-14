@@ -449,3 +449,15 @@ Fassung laden.
   (orange, mit ▸), aufgeklappt alle Reiter untereinander mit oranger Linie. Nach der Wahl klappt sie zu.
   Umgesetzt zentral in `foldTabs()` (app.js) für alle `nav.tabs`.
 - Overview: „Plan starten“ und „Freies Training“ entfernt (Training starten unter Training → Einheiten).
+
+### Version 1.21.0 (14.11.2026): Design C „Flame Drive“
+
+- Neues Design in den Logo-Farben (Navy, Ozeanblau, Türkis, Flammen-Orange): schräg angeschnittener
+  Navy-Kopf mit orangem und türkisem Streifen, Überschriften und Zahlen in schmaler, kursiver
+  Sportschrift (Barlow Condensed von Google Fonts, offline im Service Worker gespeichert), Karten-
+  überschriften mit orangem „/“, Menü links in Navy mit oranger Markierung.
+- Untere Leiste für die Hauptbereiche: Overview, Training, „+“ (Schnell erfassen), Nutrition, Mehr
+  (öffnet das Menü). Ausgeblendet, solange ein Training läuft oder unten ein Speichern-Knopf steht.
+- „Schnell erfassen“: Mahlzeit, Wasser, Gewicht & Körperwerte, Training, Schlaf, Recovery, To-do,
+  Koffein mit einem Tipp.
+- nav.js: `tabbarHtml`, `quickSheetHtml`; app.js: `renderNav` mit Leiste, `quickGo`.

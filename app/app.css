@@ -906,3 +906,120 @@ input[type="date"], input[type="time"] { min-width: 0; max-width: 100%; }
   color: var(--fg); text-align: left; white-space: normal; font-weight: 600; }
 .tabs--fold .tab.active { background: color-mix(in srgb, var(--orange) 16%, transparent); color: var(--orange-text); }
 .tabs--fold .tab:not(.active):hover { background: var(--surface-2); }
+
+/* ================================================================ Design C „Flame Drive“ (1.21.0)
+   Farben aus dem Logo: Navy, Ozeanblau, Türkis, Flammen-Orange. Schmale, kursive Sportschrift für
+   Überschriften und Zahlen; schräg angeschnittener Navy-Kopf mit orangem Streifen; untere Leiste
+   für die Hauptbereiche mit „+“ zum schnellen Erfassen. */
+:root {
+  --bg: #eef5f8;
+  --surface: #ffffff;
+  --surface-2: #e8f1f6;
+  --line: #d5e2ea;
+  --fg: #0b2a4a;
+  --muted: #4a6178;
+  --blue: #0e6fa8;
+  --cyan: #14a3c7;
+  --navy: #0b2a4a;
+  --navy-2: #1c4268;
+  --orange: #f39a22;
+  --orange-ink: #2a1500;
+  --orange-text: #a85800;
+  --on-navy-muted: #a9c6de;
+  --shadow: 0 1px 2px rgba(11, 42, 74, .06);
+  --radius: 16px;
+  --display: "Barlow Condensed", "Roboto Condensed", "Arial Narrow", "Helvetica Neue Condensed", sans-serif-condensed, sans-serif;
+}
+:focus-visible { outline-color: var(--orange); }
+
+/* Kopf: Navy, schräger Abschluss, oranger und türkiser Streifen */
+.top { background: var(--navy); color: #fff; border-bottom: 0; padding-bottom: 16px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), 0 100%); overflow: hidden; }
+.top::before, .top::after { content: ""; position: absolute; right: -30px; transform: rotate(-24deg); pointer-events: none; }
+.top::before { top: calc(var(--safe-top) + 8px); width: 150px; height: 14px; background: var(--orange); opacity: .9; }
+.top::after { top: calc(var(--safe-top) + 30px); width: 100px; height: 5px; background: var(--cyan); }
+.top .wrap { position: relative; z-index: 1; min-height: 56px; }
+.top h1 { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 1.75rem; letter-spacing: .02em; text-transform: uppercase; line-height: 1.05; color: #fff; }
+.top .sub { color: var(--on-navy-muted); font-family: var(--font); font-style: normal; text-transform: none; letter-spacing: 0; font-size: .78rem; }
+.top .back { color: #f7b65e; }
+.menu-btn { color: #fff; background: rgba(255, 255, 255, .12); width: 44px; height: 44px; border-radius: 12px; margin-left: 0; }
+.menu-btn:active { background: rgba(255, 255, 255, .22); }
+.brand b { font-family: var(--display); font-weight: 800; font-size: 1.35rem; letter-spacing: .06em; color: #fff; }
+.brand small { color: var(--on-navy-muted); }
+.brand img { width: 34px; height: 34px; border-radius: 9px; background: #fff; }
+.top .back.back--icon, .top .back { color: #f7b65e; }
+
+main { padding-top: 14px; }
+
+/* Karten: weiß, Überschriften in Sportschrift mit orangem Schrägstrich */
+.card { border: 1px solid #e1ebf1; border-radius: var(--radius); }
+.card.hl { border-color: var(--orange); border-left: 6px solid var(--orange); }
+.card > h3, .card .wo-head > h3, .card__head > h3, .card > .card__head h3 {
+  font-family: var(--display); font-weight: 800; font-size: 1.22rem; letter-spacing: .04em; text-transform: uppercase; line-height: 1.15; }
+.card > h3::before, .card .wo-head > h3::before, .card__head > h3::before { content: "/ "; color: #e07f00; }
+h2 { font-family: var(--display); font-weight: 800; font-size: 1.5rem; letter-spacing: .03em; text-transform: uppercase; }
+
+/* Zahlen in Sportschrift */
+.metric__value, .metric--display .metric__value, .compare-list dd, .water-card__amount strong, .level-big, .rest .t, .clock, .meal-slot__kcal {
+  font-family: var(--display); font-style: italic; font-weight: 800; letter-spacing: 0; }
+.metric--display .metric__value { font-size: 2.3rem; }
+.metric__value { font-size: 1.55rem; }
+.compare-list dd { font-size: 1.35rem; }
+
+/* Knöpfe */
+.btn { border-radius: 12px; font-weight: 700; }
+.btn.primary { background: var(--orange); border-color: var(--orange); color: var(--orange-ink); }
+.btn.blue { background: var(--navy); border-color: var(--navy); color: #fff; }
+.btn.blue:active { background: var(--navy-2); }
+.tag { border-color: var(--line); }
+.item { border-color: #e1ebf1; }
+.num { color: var(--orange-text); font-family: var(--display); font-size: 1.15rem; }
+
+/* Reiter-Auswahl (1.20.0) im Sportstil */
+.tabs__toggle { border-radius: 10px; font-family: var(--display); font-weight: 800; font-size: 1.1rem; letter-spacing: .04em; text-transform: uppercase; }
+.tabs--fold .tab.active { color: var(--orange-text); }
+
+/* Menü (links) */
+.drawer { background: var(--navy); color: #fff; }
+.drawer__brand { border-bottom-color: rgba(255, 255, 255, .14); }
+.drawer__brand b { font-family: var(--display); font-weight: 800; font-size: 1.3rem; letter-spacing: .06em; }
+.drawer__brand small { color: var(--on-navy-muted); }
+.drawer__item { color: #fff; }
+.drawer__item.pc-only { color: var(--on-navy-muted); }
+.drawer__item small { color: var(--on-navy-muted); border-color: rgba(255, 255, 255, .25); }
+.drawer__item.active { background: rgba(243, 154, 34, .16); color: #f7b65e; box-shadow: inset 4px 0 0 var(--orange); }
+.drawer__item:active { background: rgba(255, 255, 255, .1); }
+
+/* Untere Leiste */
+body.has-tabbar { padding-bottom: calc(env(safe-area-inset-bottom) + 104px); }
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center;
+  background: var(--navy); padding: 8px max(8px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  box-shadow: 0 -4px 18px rgba(11, 42, 74, .18); }
+.tabbar__item { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 52px; justify-content: center; border: 0; background: none;
+  color: var(--on-navy-muted); font-size: .7rem; font-weight: 600; padding: 4px 0; border-radius: 12px; }
+.tabbar__item.active { color: #f7b65e; font-weight: 700; }
+.tabbar__item:active { background: rgba(255, 255, 255, .08); }
+.tabbar__quick { justify-self: center; width: 60px; height: 60px; margin-top: -30px; border-radius: 30px; border: 4px solid var(--bg);
+  background: var(--orange); color: var(--orange-ink); display: grid; place-items: center; box-shadow: 0 6px 16px rgba(243, 154, 34, .35); }
+.tabbar__quick svg { width: 28px; height: 28px; stroke-width: 2.8; }
+.tabbar__quick[aria-expanded="true"] svg { transform: rotate(45deg); transition: transform .15s; }
+.rest { bottom: calc(92px + env(safe-area-inset-bottom)); }
+body:not(.has-tabbar) .rest { bottom: calc(76px + env(safe-area-inset-bottom)); }
+
+/* Schnell erfassen */
+.quick-backdrop { position: fixed; inset: 0; z-index: 23; background: rgba(11, 42, 74, .42); opacity: 0; pointer-events: none; transition: opacity .18s; }
+.quick-backdrop.open { opacity: 1; pointer-events: auto; }
+.quick-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 24; background: var(--surface); border-radius: 22px 22px 0 0;
+  padding: 18px max(16px, env(safe-area-inset-right)) calc(100px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  display: grid; gap: 14px; transform: translateY(105%); transition: transform .2s ease-out; max-width: 640px; margin: 0 auto; }
+.quick-sheet.open { transform: none; }
+.quick-sheet__title { margin: 0; }
+.quick-sheet__title::before { content: "/ "; color: #e07f00; }
+.quick-sheet__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.quick-sheet__item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px; min-height: 84px; border: 1px solid #e1ebf1;
+  border-radius: 14px; background: var(--surface-2); color: var(--fg); font-size: .78rem; font-weight: 600; text-align: center; line-height: 1.2; }
+.quick-sheet__item svg { color: var(--blue); }
+.quick-sheet__item:active { background: #fde9cf; }
+@media (max-width: 360px) { .quick-sheet__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.brand > div { display: grid; line-height: 1.1; }
+.brand__date { font-size: .78rem; }

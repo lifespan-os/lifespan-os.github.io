@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar. Speichert nur die App-Dateien,
 // niemals Trainingsdaten (die liegen in IndexedDB auf dem Gerät).
-const VERSION = "lifespan-mobil-1.20.0";
+const VERSION = "lifespan-mobil-1.21.0";
 const FILES = [
   "./",
   "index.html",
@@ -76,14 +76,34 @@ self.addEventListener("activate", (ev) => {
   ev.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION && k !== FONT_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
 
 // Online zuerst aus dem Netz (so kommen Updates sofort an), nach 3 s oder offline aus dem Speicher.
+// Schrift „Barlow Condensed“ (Design C, 1.21.0) von Google Fonts: einmal laden, dann offline aus dem Speicher.
+const FONT_CACHE = "lifespan-fonts-1";
+const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
+
 self.addEventListener("fetch", (ev) => {
   const req = ev.request;
+  if (req.method === "GET" && FONT_HOSTS.includes(new URL(req.url).hostname)) {
+    ev.respondWith(
+      caches.open(FONT_CACHE).then(async (cache) => {
+        const hit = await cache.match(req);
+        if (hit) return hit;
+        try {
+          const res = await fetch(req);
+          if (res.ok || res.type === "opaque") cache.put(req, res.clone());
+          return res;
+        } catch {
+          return new Response("", { status: 503 });
+        }
+      }),
+    );
+    return;
+  }
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
   ev.respondWith(
     caches.open(VERSION).then(async (cache) => {

@@ -738,3 +738,23 @@ mark { background: rgba(242, 138, 26, .35); color: inherit; border-radius: 3px; 
 .magazine__body h3 { margin: 2px 0 6px; }
 .magazine__body ul { margin: 4px 0 8px; padding-left: 18px; }
 @media (max-width: 380px) { .magazine { grid-template-columns: 1fr; } }
+
+/* 1.16.1: Bildschirmbreite ist die Grenze – Reiter, Sprungmarken und Segmente umbrechen in
+   mehrere Reihen statt seitlich zu scrollen */
+.tabs { flex-wrap: wrap; overflow-x: visible; }
+.tab { flex: 0 1 auto; min-width: 0; white-space: normal; text-align: center; }
+.entry-jump { flex-wrap: wrap; overflow-x: visible; }
+.segmented { display: inline-flex; flex-wrap: wrap; max-width: 100%; }
+.segmented > button { flex: 1 1 auto; }
+.chip-row, .row-actions { flex-wrap: wrap; }
+/* Checklisten: „Heute noch einzutragen“ linksbündig */
+.status-grid .linkbtn { justify-self: start; text-align: left; }
+.status-grid li > span:last-child { justify-items: start; text-align: left; }
+/* Nutrition: Mahlzeiten auf-/zuklappen (1.16.1) */
+.meal-slot__toggle { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 4px 0; color: inherit; font: inherit; text-align: left; min-height: 36px; }
+.meal-slot__chevron { display: inline-block; width: 14px; color: var(--muted); }
+.meal-slot--collapsed { padding-bottom: 6px; }
+/* Zwei Felder nebeneinander dürfen schrumpfen (Datumsfelder sind sonst breiter als der Bildschirm) */
+.lab-row__grid > * { min-width: 0; }
+.lab-row__grid input { min-width: 0; width: 100%; max-width: 100%; }
+input[type="date"], input[type="time"] { min-width: 0; max-width: 100%; }

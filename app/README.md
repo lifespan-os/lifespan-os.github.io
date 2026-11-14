@@ -369,3 +369,14 @@ Fassung laden.
     „Körperwerte … senden“ an den PC.
 - Der Ordner `icoach/` (≈ 20 MB) liegt nur auf GitHub Pages und wird aus den Quellen des PCs
   erzeugt; er ist nicht Teil von `mobile/` im PC-Repository.
+
+## Version 1.16.1 (14.11.2026): Bildschirmbreite, Mahlzeiten, Bücher
+
+- **Reiter umbrechen** in mehrere Reihen statt seitlich zu wischen (Health, Superhuman, iCoach.me
+  und alle anderen Bereiche); Knopfgruppen und Datumsfelder bleiben innerhalb der Bildschirmbreite.
+- **Nutrition → Tagebuch:** Mahlzeiten lassen sich auf- und zuklappen (leere Mahlzeiten sind
+  anfangs offen, gefüllte zu – wie am PC).
+- **Checklisten → Heute noch einzutragen:** Spalten linksbündig.
+- **iCoach.me:** Bücher und Magazine liegen unter `media/icoach/` außerhalb des App-Bereichs und
+  öffnen sich in einem eigenen Fenster; mit „Fertig“ bzw. ✕ kommt man zurück in die App, auch wenn
+  das Passwort nicht eingegeben wird.

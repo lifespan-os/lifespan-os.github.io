@@ -268,11 +268,17 @@ function mealsCard(slots, fast, date) {
   const slotHtml = (slot) => {
     const m = slot.meal;
     const has = m && D.mealHasContent(m);
-    return `<div class="meal-slot ${has ? "" : "is-empty"}">
-      <div class="meal-slot__head"><span><b>${esc(slot.title)}</b>${m?.time ? ` <span class="muted small">${esc(m.time)}</span>` : ""}</span>
+    // Wie am PC: gefüllte Mahlzeiten anfangs zugeklappt, leere aufgeklappt; Wahl bleibt je Mahlzeit
+    const key = slot.ref.mealType;
+    const expanded = X.S.mealOpen?.[key] ?? !has;
+    return `<div class="meal-slot ${has ? "" : "is-empty"} ${expanded ? "" : "meal-slot--collapsed"}">
+      <div class="meal-slot__head"><button type="button" class="meal-slot__toggle" data-act="meal-toggle" data-arg="${esc(key)}|${expanded ? 0 : 1}" aria-expanded="${expanded}" title="${expanded ? "Zuklappen" : "Aufklappen"}"><span class="meal-slot__chevron" aria-hidden="true">${expanded ? "▾" : "▸"}</span><b>${esc(slot.title)}</b>${m?.time ? ` <span class="muted small">${esc(m.time)}</span>` : ""}</button>
         ${has ? `<span class="meal-slot__kcal">${esc(D.formatKcal(m.energyKcal))}</span>` : ""}</div>
       ${has ? `<p class="muted small">Protein ${esc(D.formatGrams(m.proteinG))} · KH ${esc(D.formatGrams(m.carbsG))} · Fett ${esc(D.formatGrams(m.fatG))}</p>` : ""}
       ${
+        !expanded
+          ? ""
+          : `${
         m && m.items.length
           ? `<ul class="meal-items">${m.items
               .map((i) => {
@@ -287,7 +293,8 @@ function mealsCard(slots, fast, date) {
           : ""
       }
       ${m && Object.keys(m.values ?? {}).length ? `<p class="muted small">Mit Fasttracking-Werten an dieser Mahlzeit.</p>` : ""}
-      <button class="btn sm" data-act="diary-add" data-arg="${esc(slot.ref.mealType)}">+ Lebensmittel eintragen</button>
+      <button class="btn sm" data-act="diary-add" data-arg="${esc(slot.ref.mealType)}">+ Lebensmittel eintragen</button>`
+      }
     </div>`;
   };
   const anyContent = slots.some((s) => s.meal && D.mealHasContent(s.meal));
@@ -430,6 +437,11 @@ const shift = (iso, n) => {
 };
 
 export const diaryActions = {
+  "meal-toggle": (el) => {
+    const [key, open] = el.dataset.arg.split("|");
+    X.S.mealOpen = { ...(X.S.mealOpen ?? {}), [key]: open === "1" };
+    X.rerender();
+  },
   "diary-shift": (el) => {
     const next = shift(X.S.diaryDate ?? today(), Number(el.dataset.arg));
     X.S.diaryDate = next > today() ? today() : next;

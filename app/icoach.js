@@ -27,12 +27,19 @@ const TABS = [
   ["widgets", "Widgets"],
 ];
 
+/**
+ * PDFs liegen außerhalb des App-Bereichs (`/media/icoach/` statt `/app/`): So öffnet die
+ * installierte App sie im Browserfenster mit „Fertig“ bzw. X – man kommt jederzeit zurück, auch
+ * wenn man das Passwort eines Buchs nicht eingibt (1.16.1).
+ */
+const MEDIA = "../media/icoach/";
 /** PDF-Dateien der Bücher (mit Passwort verschlüsselt). */
 const BOOK_FILES = {
-  masterclass: "icoach/books/iCoachMe_Die_Masterclass.pdf",
-  blutwerte: "icoach/books/iCoachMe_Die_Masterclass_Blutwerte.pdf",
-  blutgruppen: "icoach/books/iCoachMe_Die_Masterclass_Blutgruppen.pdf",
+  masterclass: `${MEDIA}books/iCoachMe_Die_Masterclass.pdf`,
+  blutwerte: `${MEDIA}books/iCoachMe_Die_Masterclass_Blutwerte.pdf`,
+  blutgruppen: `${MEDIA}books/iCoachMe_Die_Masterclass_Blutgruppen.pdf`,
 };
+const magazinePdf = (id) => `${MEDIA}magazin/${encodeURIComponent(id)}.pdf`;
 const FAQ_FILES = [
   ["masterclass", "icoach/icoachme-faq.json"],
   ["blutwerte", "icoach/icoachme-faq-blutwerte.json"],
@@ -234,7 +241,7 @@ function openTarget(target) {
 function downloadsTab() {
   return `<section class="card">
       <h3>Downloads</h3>
-      <p class="muted small">Die Bücher als PDF. Sie sind mit einem Passwort geschützt – beim Öffnen fragt das PDF-Programm danach.</p>
+      <p class="muted small">Die Bücher als PDF. Sie sind mit einem Passwort geschützt – beim Öffnen fragt das PDF-Programm danach. Das Buch öffnet sich in einem eigenen Fenster; mit „Fertig“ bzw. ✕ oben kommst du zurück in die App.</p>
     </section>
     ${D.BOOK_ORDER.map((id) => {
       const b = D.BOOKS[id];
@@ -262,7 +269,7 @@ function magazineTab() {
     ${list
       .map(
         (m) => `<section class="card magazine">
-      <a class="magazine__cover" href="icoach/magazin/${esc(m.id)}.pdf" target="_blank" rel="noopener" title="„${esc(m.title)}“ lesen"><img src="icoach/magazin/${esc(m.id)}.jpg" alt="" loading="lazy" width="112" height="158"></a>
+      <a class="magazine__cover" href="${esc(magazinePdf(m.id))}" target="_blank" rel="noopener" title="„${esc(m.title)}“ lesen"><img src="icoach/magazin/${esc(m.id)}.jpg" alt="" loading="lazy" width="112" height="158"></a>
       <div class="magazine__body">
         <p class="muted small">${esc(m.series)} · ${esc(m.issued)}</p>
         <h3>${esc(m.title)}</h3>
@@ -270,7 +277,7 @@ function magazineTab() {
         <p class="small"><strong>Das lernst du</strong></p>
         <ul class="small">${m.learn.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
         <p class="muted small">${esc(M().magazineMeta(m))}</p>
-        <div class="row-actions"><a class="btn primary" href="icoach/magazin/${esc(m.id)}.pdf" target="_blank" rel="noopener">Lesen</a><a class="btn" href="icoach/magazin/${esc(m.id)}.pdf" download>Herunterladen</a></div>
+        <div class="row-actions"><a class="btn primary" href="${esc(magazinePdf(m.id))}" target="_blank" rel="noopener">Lesen</a><a class="btn" href="${esc(magazinePdf(m.id))}" download>Herunterladen</a></div>
       </div>
     </section>`,
       )

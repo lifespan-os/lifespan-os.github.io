@@ -19,6 +19,7 @@ export const SOURCES = [
   { store: "body", area: "body", maps: { entries: "body_measurement" } },
   { store: "health", area: "health", maps: { analytes: "lab_analyte", draws: "lab_draw", results: "lab_result", lifetime: "lifetime_record" } },
   { store: "super", area: "superhuman", maps: { entries: "hrt_entry", products: "hrt_product", substances: "protocol_substance", protocol: "protocol_entry" } },
+  { store: "goals", area: "settings", maps: { rows: "daily_goal" }, delTable: "daily_goal" },
   { store: "supp", area: "nutrition", maps: { intakes: "supplement_intake", items: "supplement_intake_item" } },
   { store: "caffeine", area: "icoach", maps: { rows: "caffeine_intake" }, delTable: "caffeine_intake" },
 ];
@@ -33,6 +34,7 @@ export const AREAS = [
   ["health", "Health"],
   ["superhuman", "Superhuman"],
   ["icoach", "iCoach.me – Koffein"],
+  ["settings", "Settings – Tagesziele"],
 ];
 
 export const TABLE_LABELS = {
@@ -64,6 +66,7 @@ export const TABLE_LABELS = {
   protocol_entry: "Protokolleintrag",
   caffeine_intake: "Koffein",
   supplement_intake: "Supplements",
+  daily_goal: "Tagesziele",
   supplement_intake_item: "Supplement",
 };
 
@@ -169,10 +172,24 @@ const FIELD_LABELS = {
   stack_id: "Stack",
   intake_id: "Einnahme",
   supplement_id: "Supplement",
+  valid_from: "Gültig ab",
+  energy_kcal: "Energie (kcal)",
+  protein_g: "Protein (g)",
+  carbs_g: "Kohlenhydrate (g)",
+  fat_g: "Fett (g)",
+  energy_mode: "Kalorienziel",
+  energy_adjust_kcal: "Anpassung (kcal)",
+  energy_adjust_percent: "Anpassung (%)",
+  calibrate: "Kalibrieren",
+  protein_g_per_kg: "Protein (g je kg)",
+  protein_pct: "Protein (%)",
+  carbs_pct: "Kohlenhydrate (%)",
+  fat_pct: "Fett (%)",
+  water_l: "Trinkziel (l)",
 };
 
 const HIDDEN = new Set(["id", "created_at", "updated_at", "position", "builtin", "image_data", "thumb_data", "image_key", "mime", "width", "height", "resistance_profiles"]);
-const BOOLEAN = new Set(["done", "archived", "is_warmup", "fasting", "in_water"]);
+const BOOLEAN = new Set(["done", "archived", "is_warmup", "fasting", "in_water", "calibrate"]);
 const WEEKDAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 const DAY_KINDS = { rest: "Restday", sick: "Krankheit" };
 const TIMINGS = { meal: "zu einer Mahlzeit", fasted: "nüchtern", independent: "unabhängig von Mahlzeiten" };
@@ -260,6 +277,7 @@ export function fieldValue(col, v, names) {
   if (col === "weekday" && Number.isInteger(Number(v))) return WEEKDAYS[Number(v) % 7] ?? String(v);
   if (col === "kind" && DAY_KINDS[v]) return DAY_KINDS[v];
   if (col === "timing" && TIMINGS[v]) return TIMINGS[v];
+  if (col === "energy_mode") return v === "dynamic" ? "dynamisch aus Gesamtverbrauch" : "fester Wert";
   if ((col === "date" || col.endsWith("_date")) && fmtDate(v)) return fmtDate(v);
   if (col.endsWith("_id") && names.has(v)) return names.get(v);
   if (col.endsWith("_id")) return "(Verweis)";
@@ -298,6 +316,8 @@ export function titleOf(table, row, names) {
       return `${n(row.metric_id) || label}: ${fmtNum(row.value ?? "")}`;
     case "water_intake":
       return `Wasser ${row.ml ? `${fmtNum(row.ml)} ml` : ""}`.trim();
+    case "daily_goal":
+      return `Ziele ab ${fmtDate(row.valid_from)}`;
     case "supplement_intake_item":
       return `${n(row.supplement_id) || label} ${fmtNum(row.amount ?? "")}`.trim();
     case "caffeine_intake":
@@ -346,6 +366,8 @@ export function editTarget(table, row) {
       return { view: "training", set: { trainTab: "checkins" }, act: "train-checkin-edit", arg: id };
     case "water_intake":
       return { view: "diary", set: { diaryDate: row.date } };
+    case "daily_goal":
+      return { view: "goals", act: "goal-edit", arg: id };
     case "supplement_intake":
       return { view: "diary", set: { diaryDate: row.date }, act: "supp-edit", arg: id };
     case "body_measurement":

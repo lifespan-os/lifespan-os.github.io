@@ -7,6 +7,7 @@ import * as P from "./pcdb.js";
 import * as D from "./pcdomain.js";
 import * as N from "./nutrition.js";
 import * as SP from "./supplements.js";
+import * as GL from "./goals.js";
 import { phoneLogs } from "./logsdata.js";
 import { CATALOG, GROUPS } from "./nutrientcatalog.js";
 import { barTrendSvg, compareHtml, COLOR, dayGoalHtml, macroBreakdownHtml } from "./pcview.js";
@@ -56,6 +57,7 @@ export function buildDb() {
     exercises: S.localExercises ?? [],
     logs: phoneLogs(S.logs),
     supp: SP.phoneSupp(S.supp),
+    goals: GL.phoneGoals(S.goals),
   });
   // Eigene Namen der Standardmahlzeiten wie am PC (Settings → meal_name.*)
   const names = {};
@@ -160,7 +162,7 @@ export function viewDiary() {
 
   // ---------------- Karten
   const totalsCard = `<section class="card card--nutrition"><div class="card__head"><h3>Tagessumme</h3>
-      <span class="card__meta">${goal ? `Ziele gültig ab ${esc(D.formatDate(goal.validFrom))}` : "Tagesziele am PC festlegen"}</span></div>
+      <span class="card__meta">${goal ? `Ziele gültig ab ${esc(D.formatDate(goal.validFrom))}` : `<button class="linkbtn" data-act="goals-open">Tagesziele festlegen</button>`}</span></div>
     ${
       goalBased && goal
         ? `${dayGoalHtml({ totals, goal, stepKcal: energy.step.kcal, expenditure: energy })}
@@ -174,7 +176,7 @@ export function viewDiary() {
           }`
         : `<dl class="compare-list">${compareHtml("Energie", totals.energyKcal, null, "kcal")}${compareHtml("Protein", totals.proteinG, null, "g")}${compareHtml("Kohlenhydrate", totals.carbsG, null, "g")}${compareHtml("Fett", totals.fatG, null, "g")}</dl>
           ${totals.energyKcal > 0 ? macroBreakdownHtml(totals, "shares") : ""}
-          <p class="card__note">Mit Tageszielen für Energie und Makronährstoffe (am PC: Settings → Tagesziele) zeigt die Tagessumme, wie viel noch offen ist (Defizit) oder darüber liegt (Überschuss).</p>`
+          <p class="card__note">Mit Tageszielen für Energie und Makronährstoffe (Settings → Tagesziele) zeigt die Tagessumme, wie viel noch offen ist (Defizit) oder darüber liegt (Überschuss).</p>`
     }
     ${
       allItems.length > 0 || fast || hasSuppMacros || hasMealValues
@@ -239,7 +241,7 @@ function waterCard(db, date, goal) {
   const target = D.goalGlasses(goalL, day.glassMl);
   const unsent = P.unsentWater(X.S.water);
   return `<section class="card card--nutrition water-card"><div class="card__head"><h3>Wasserhaushalt</h3>
-      <span class="card__meta">${goalL !== null ? `Ziel ${esc(D.formatLiters(goalL * 1000))}` : "Trinkziel am PC festlegen"}</span></div>
+      <span class="card__meta">${goalL !== null ? `Ziel ${esc(D.formatLiters(goalL * 1000))}` : `<button class="linkbtn" data-act="goals-open">Trinkziel festlegen</button>`}</span></div>
     <div class="water-card__summary">
       <p class="water-card__amount"><strong>${esc(D.formatLiters(day.totalMl))}</strong>${goalL !== null ? `<span class="of">von ${esc(D.formatLiters(goalL * 1000))}</span>` : ""}
         <span class="muted small">${esc(D.waterSummary(day))}${target !== null ? ` · Ziel ≈ ${target} ${target === 1 ? "Glas" : "Gläser"} à ${esc(D.formatLiters(day.glassMl))}` : ""}</span></p>

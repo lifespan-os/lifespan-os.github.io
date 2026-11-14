@@ -1089,3 +1089,12 @@ body.sheet-open { overflow: hidden; }
 .vendor-list li > .btn { flex-shrink: 0; }
 .vendor-preview { border-left: 6px solid var(--orange, #f39a22); }
 .vendor-preview details ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* Tagesziele (1.28.0) */
+.goal-form .grid2 { align-items: start; }
+.goal-list { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.goal-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px solid var(--line, #cfdce7); border-radius: 12px; }
+.goal-list li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.goal-list .row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.goal-form label.goal-check { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-weight: 600; }
+.goal-form label.goal-check input { width: 22px; height: 22px; }

@@ -166,7 +166,7 @@ function dashboardCards(data, w, isToday) {
                 : goals.some((g) => g.key === "sleep")
                   ? "Der Proteinring erscheint mit einem Proteinziel"
                   : "Protein- und Schlafring erscheinen mit einem Proteinziel bzw. Schlafziel"
-            } unter Settings → Tagesziele (am PC).`,
+            } unter Settings → Tagesziele.`,
           )
         : ""
     }
@@ -181,7 +181,7 @@ function dashboardCards(data, w, isToday) {
     "Streaks",
     `Tage in Folge · letzte ${O.STREAK_DAYS} Tage`,
     list.length === 0
-      ? `<p class="muted">Für Streaks braucht es Tagesziele (Protein, Wasser, Schritte, Schlaf) oder Supplement-Einträge – am PC unter Settings → Tagesziele.</p>`
+      ? `<p class="muted">Für Streaks braucht es Tagesziele (Protein, Wasser, Schritte, Schlaf) oder Supplement-Einträge – unter Settings → Tagesziele.</p>`
       : `<ul class="streaks">${list
           .map(
             (s) => `<li class="${s.current > 0 ? "is-active" : ""}">${FLAME}

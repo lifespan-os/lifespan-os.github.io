@@ -11,6 +11,8 @@ import * as P from "./pcdb.js";
 import { buildDb, diaryActions, diaryChange, diaryInput, initDiary, today as todayIso, viewDiary, viewNutritionHistory, viewSuppIntake } from "./diary.js";
 import * as SP from "./supplements.js";
 import { initVendor, vendorActions, vendorChange, viewVendor } from "./vendorui.js";
+import { initGoals, goalActions, goalChange, viewGoals } from "./goalsui.js";
+import * as GL from "./goals.js";
 import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewDayNav } from "./overview.js";
 import { initLogs, logsActions, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
@@ -109,7 +111,7 @@ const machineById = () => new Map(S.catalog.machines.map((m) => [m.id, m]));
 const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported);
 const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWater(S.water) + SP.unsentSupp(S.supp);
 // Körperwerte plus Schlaf und Regeneration (gehen zusammen in die Datei „Körperwerte“, 1.7.0)
-const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + TR.unsentTrain(S.train);
+const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + TR.unsentTrain(S.train) + GL.unsentGoals(S.goals);
 
 function go(view, arg = null) {
   if (view === "food-review" && S.view !== "food-review") S.reviewFrom = S.view === "send" ? "send" : S.view === "pending" ? "pending" : S.view === "food" ? "food" : "home";
@@ -227,6 +229,11 @@ function viewSettings() {
   const total = unsent().length + unsentFood() + unsentBodyCount();
   return `${header("Settings")}<main class="wrap">
     ${accountsCard()}
+    <section class="card">
+      <h3>Tagesziele</h3>
+      <p class="muted small">Energie (fest oder dynamisch aus dem Verbrauch), Makros, Schlaf, Gewicht, Schritte und Wasser – wie am PC.</p>
+      <button class="btn block" data-act="goals-open">Tagesziele festlegen</button>
+    </section>
     <section class="card">
       <h3>Herstellerpakete</h3>
       <p class="muted small">Lebensmittel und Supplements von Herstellern (PEAK, GymBeam, IronMaxx, #sinob, Proteini.si …) mit einem Tipp installieren – wie am PC.</p>
@@ -660,7 +667,7 @@ function viewSend() {
       <button class="btn primary block" data-act="send" data-arg="training" ${open.length ? "" : "disabled"}>${open.length ? `Trainings senden (${open.length})` : "Keine offenen Trainings"}</button>
       <button class="btn primary block" data-act="send" data-arg="food" ${food ? "" : "disabled"}>${food ? `Lebensmittel senden (${food} Einträge)` : "Keine offenen Ernährungseinträge"}</button>
       ${food ? `<button class="btn block" data-go="food-review">Vorher Ernährungseinträge prüfen und bearbeiten</button>` : ""}
-      ${body ? `<button class="btn primary block" data-act="send" data-arg="body">Körperwerte, Schlaf, Regeneration, To-dos, Training, Health &amp; Superhuman senden (${body})</button>` : ""}
+      ${body ? `<button class="btn primary block" data-act="send" data-arg="body">Körperwerte, Schlaf, Regeneration, To-dos, Training, Health, Superhuman &amp; Tagesziele senden (${body})</button>` : ""}
     </section>
     ${
       all.length || Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length || Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || (Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length || Object.keys(TR.trainTables(S.train, { all: true })).length)
@@ -854,6 +861,7 @@ const VIEWS = {
   "account-new": viewAccountNew,
   "supp-intake": viewSuppIntake,
   vendor: viewVendor,
+  goals: viewGoals,
   detail: viewDetail,
   help: viewHelp,
 };
@@ -1121,6 +1129,7 @@ const actions = {
   ...foodActions,
   ...diaryActions,
   ...vendorActions,
+  ...goalActions,
   ...overviewActions,
   ...logsActions,
   ...insightsActions,
@@ -1325,6 +1334,8 @@ const actions = {
       await store.set("super", S.super);
       TR.markTrainSent(S.train);
       await store.set("train", S.train);
+      GL.markGoalsSent(S.goals);
+      await store.set("goals", S.goals);
     }
     if (kind === "food" && S.food) {
       N.markNutritionSent(S.food.local);
@@ -1507,7 +1518,7 @@ async function sendFile(kind, all) {
       kind === "food" && S.food
         ? foodTables(all)
         : kind === "body" && S.body
-          ? mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), CF.caffeineTables(S.caffeine, { all })), TR.trainTables(S.train, { all }))))))
+          ? mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), CF.caffeineTables(S.caffeine, { all })), mergeTables(TR.trainTables(S.train, { all }), GL.goalTables(S.goals, { all })))))))
           : {};
     if (kind === "food" && !Object.keys(food).length) return toast("Keine Ernährungseinträge zum Senden.", true);
     if (kind === "body" && !Object.keys(food).length) return toast("Keine Körperwerte, Schlaf-, Regenerations-, To-do-, Training-, Health- oder Superhuman-Einträge zum Senden.", true);
@@ -1642,6 +1653,7 @@ app.addEventListener("change", async (ev) => {
   if (bodyChange(el)) return;
   if (diaryChange(el)) return;
   if (vendorChange(el)) return;
+  if (goalChange(el)) return;
   if (overviewChange(el)) return;
   if (logsChange(el)) return;
   if (todoChange(el)) return;
@@ -1707,6 +1719,8 @@ async function applyCatalog(catalog) {
     await store.set("water", S.water);
     S.supp = SP.pruneSupp(catalog, S.supp);
     await store.set("supp", S.supp);
+    S.goals = GL.pruneGoals(catalog, S.goals);
+    await store.set("goals", S.goals);
     S.logs = LG.pruneLogs(catalog, S.logs);
     await store.set("logs", S.logs);
     S.todos = TD.pruneTodos(catalog, S.todos);
@@ -1970,6 +1984,7 @@ const moduleCtx = {
 initBody(moduleCtx);
 initDiary(moduleCtx);
 initVendor(moduleCtx);
+initGoals(moduleCtx);
 initOverview({ ...moduleCtx, S, today: todayIso });
 initLogs(moduleCtx);
 initInsights(moduleCtx);
@@ -2039,6 +2054,7 @@ async function boot() {
     S.body = bodyState(await store.get("body"));
     S.water = (await store.get("water")) || P.emptyWaterLocal();
     S.supp = SP.normSupp(await store.get("supp"));
+    S.goals = GL.normGoals(await store.get("goals"));
     S.logs = LG.logsState(await store.get("logs"));
     S.todos = TD.todosState(await store.get("todos"));
     S.checklists = CD.checklistState(await store.get("checklists"));

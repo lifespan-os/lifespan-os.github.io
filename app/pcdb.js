@@ -210,7 +210,8 @@ export function makeDb(catalog, phone = {}) {
     water: waterRows,
     waterByDate: groupBy(waterRows, "date"),
     caffeine: t("caffeine_intake"),
-    goals: [...t("daily_goal")].sort((a, b) => cmp(b.valid_from, a.valid_from)),
+    // Tagesziele (1.28.0): Zielstände vom Handy ersetzen bzw. löschen die vom PC
+    goals: merge(t("daily_goal"), phone.goals?.rows ?? [], new Set(phone.goals?.deleted ?? [])).sort((a, b) => cmp(b.valid_from, a.valid_from)),
     profile: t("profile")[0] ?? null,
     neatByDate: new Map(t("neat_day").map((d) => [d.date, d])),
     workouts,

@@ -520,8 +520,8 @@ function describeGoalProgress(p, unit) {
 
 // src/domain/forms.ts
 function textOrNull(value) {
-  const clean = value.trim();
-  return clean === "" ? null : clean;
+  const clean2 = value.trim();
+  return clean2 === "" ? null : clean2;
 }
 function numberToInput(value, maxDecimals = 2) {
   if (value === null || value === void 0 || !Number.isFinite(value)) return "";
@@ -1135,6 +1135,9 @@ function ageOn(birthDate, today) {
   const reached = today.slice(5) >= birthDate.slice(5);
   return reached ? years : years - 1;
 }
+function ageInYear(birthYear, year) {
+  return year - birthYear;
+}
 
 // src/domain/nutrientReferences.ts
 function byGroup(...v) {
@@ -1510,12 +1513,12 @@ function parseLayout(json) {
   }
 }
 function orderedIds(defaults, layout) {
-  const known = layout.order.filter((id2) => defaults.includes(id2));
+  const known = layout.order.filter((id3) => defaults.includes(id3));
   const result = [...known];
-  defaults.forEach((id2, i) => {
-    if (result.includes(id2)) return;
+  defaults.forEach((id3, i) => {
+    if (result.includes(id3)) return;
     const before = defaults.slice(0, i).reverse().find((x) => result.includes(x));
-    result.splice(before ? result.indexOf(before) + 1 : 0, 0, id2);
+    result.splice(before ? result.indexOf(before) + 1 : 0, 0, id3);
   });
   return result;
 }
@@ -5637,7 +5640,7 @@ var FLY_PROFILE = FLY_PROFILES.wide.pronated;
 var REVERSE_FLY_PROFILE = REVERSE_FLY_PROFILES.wide.pronated;
 var PATTERN_OF = new Map(
   Object.entries(PATTERN_MACHINE_IDS).flatMap(
-    ([pattern, ids]) => [...ids].map((id2) => [id2, pattern])
+    ([pattern, ids]) => [...ids].map((id3) => [id3, pattern])
   )
 );
 function comboHint(exerciseName, machineName) {
@@ -5963,7 +5966,7 @@ function exerciseMuscles(muscleGroup, machineMuscleGroups = [], exerciseFocus, m
       return;
     }
     const factor = i === 0 ? 1 : SECONDARY_FACTOR;
-    for (const id2 of ids) factors[id2] = Math.max(factors[id2] ?? 0, factor);
+    for (const id3 of ids) factors[id3] = Math.max(factors[id3] ?? 0, factor);
   });
   return { factors, unmapped };
 }
@@ -6035,9 +6038,9 @@ function muscleMapData(log, exercises, machines, include, focus = NO_FOCUS) {
       continue;
     }
     const volume = setVolumeKg(s);
-    for (const [id2, factor] of entries) {
-      sets[id2] += factor;
-      volumeKg[id2] += volume * factor;
+    for (const [id3, factor] of entries) {
+      sets[id3] += factor;
+      volumeKg[id3] += volume * factor;
     }
   }
   return {
@@ -7196,8 +7199,8 @@ function item(key, label, have, need, benefit, status = `an ${days(have)} von ${
 function coverage(data, today) {
   const from = shiftDays(today, -(COVERAGE_DAYS - 1));
   const weekly = MIN_WEEK_VALUES * WEEKS;
-  const metricDays = (id2) => distinctDays(
-    data.measurements.filter((m) => m.metricId === id2).map((m) => m.date),
+  const metricDays = (id3) => distinctDays(
+    data.measurements.filter((m) => m.metricId === id3).map((m) => m.date),
     from,
     today
   );
@@ -7639,7 +7642,7 @@ function sleepEntryRows(logs, naps) {
 // src/domain/dayStatus.ts
 function dayStatus(overview, supplementIntakes) {
   const day = overview.date;
-  const vital = (id2) => overview.vitalsLast7Days.find((m) => m.metricId === id2 && m.date === day) ?? null;
+  const vital = (id3) => overview.vitalsLast7Days.find((m) => m.metricId === id3 && m.date === day) ?? null;
   const weight = overview.weightLast30Days.find((m) => m.date === day) ?? null;
   const hrv = vital(HRV_METRIC_ID);
   const hr = vital(RESTING_HR_METRIC_ID);
@@ -8950,8 +8953,8 @@ for (const s of SUBSTANCES) {
 function findSubstance(hormone) {
   return BY_NAME.get(normalizeName(hormone)) ?? null;
 }
-function substanceById(id2) {
-  return SUBSTANCES.find((s) => s.id === id2) ?? null;
+function substanceById(id3) {
+  return SUBSTANCES.find((s) => s.id === id3) ?? null;
 }
 var DEFAULT_TIME = "08:00";
 function wallClockMs(date, time) {
@@ -9449,6 +9452,7 @@ function draftToInput(draft) {
 
 // src/domain/labReference.ts
 var REFERENCE_SOURCE = "AKH Wien";
+var REFERENCE_URL = "https://www.akhwien.at/default.aspx?pid=3986";
 var id = (n) => `00000000-0000-7000-8000-000000000${n}`;
 var ADULT = { ageMin: 20 };
 var AKH_REFERENCES = {
@@ -10364,7 +10368,7 @@ function applyProduct(d, p) {
     concentrationMgMl: num(p.concentrationMgMl)
   };
 }
-function productFromDraft(d, id2 = null) {
+function productFromDraft(d, id3 = null) {
   const p = new FormParser();
   const hormone = p.required(
     "hormone",
@@ -10376,7 +10380,7 @@ function productFromDraft(d, id2 = null) {
   return p.ok ? {
     ok: true,
     input: {
-      id: id2,
+      id: id3,
       hormone,
       manufacturer: textOrNull(d.manufacturer),
       batch: textOrNull(d.batch),
@@ -10696,14 +10700,14 @@ function parseItems(value) {
   const seen = /* @__PURE__ */ new Set();
   for (const v of value) {
     if (!v || typeof v !== "object") continue;
-    const { id: id2, text, t, done, d } = v;
-    if (typeof id2 !== "string" || !id2 || seen.has(id2)) continue;
-    const raw = typeof text === "string" ? text : typeof t === "string" ? t : TEMPLATE_TEXT.get(id2);
+    const { id: id3, text, t, done, d } = v;
+    if (typeof id3 !== "string" || !id3 || seen.has(id3)) continue;
+    const raw = typeof text === "string" ? text : typeof t === "string" ? t : TEMPLATE_TEXT.get(id3);
     if (typeof raw !== "string") continue;
-    const clean = raw.trim().slice(0, ITEM_MAX_LENGTH);
-    if (!clean) continue;
-    seen.add(id2);
-    out.push({ id: id2, text: clean, done: done === true || d === 1 });
+    const clean2 = raw.trim().slice(0, ITEM_MAX_LENGTH);
+    if (!clean2) continue;
+    seen.add(id3);
+    out.push({ id: id3, text: clean2, done: done === true || d === 1 });
   }
   return out;
 }
@@ -10740,37 +10744,37 @@ var update = (list, section, items) => ({
   ...list,
   [section]: items
 });
-function addItem(list, section, text, id2) {
-  const clean = text.trim().slice(0, ITEM_MAX_LENGTH);
-  if (!clean || list[section].some((i) => i.id === id2)) return list;
-  return update(list, section, [...list[section], { id: id2, text: clean, done: false }]);
+function addItem(list, section, text, id3) {
+  const clean2 = text.trim().slice(0, ITEM_MAX_LENGTH);
+  if (!clean2 || list[section].some((i) => i.id === id3)) return list;
+  return update(list, section, [...list[section], { id: id3, text: clean2, done: false }]);
 }
-function editItem(list, section, id2, text) {
-  const clean = text.trim().slice(0, ITEM_MAX_LENGTH);
-  if (!clean) return list;
+function editItem(list, section, id3, text) {
+  const clean2 = text.trim().slice(0, ITEM_MAX_LENGTH);
+  if (!clean2) return list;
   return update(
     list,
     section,
-    list[section].map((i) => i.id === id2 ? { ...i, text: clean } : i)
+    list[section].map((i) => i.id === id3 ? { ...i, text: clean2 } : i)
   );
 }
-function removeItem(list, section, id2) {
+function removeItem(list, section, id3) {
   return update(
     list,
     section,
-    list[section].filter((i) => i.id !== id2)
+    list[section].filter((i) => i.id !== id3)
   );
 }
-function toggleItem(list, section, id2) {
+function toggleItem(list, section, id3) {
   return update(
     list,
     section,
-    list[section].map((i) => i.id === id2 ? { ...i, done: !i.done } : i)
+    list[section].map((i) => i.id === id3 ? { ...i, done: !i.done } : i)
   );
 }
-function moveItem(list, section, id2, direction) {
+function moveItem(list, section, id3, direction) {
   const items = [...list[section]];
-  const index = items.findIndex((i) => i.id === id2);
+  const index = items.findIndex((i) => i.id === id3);
   const target = index + direction;
   if (index < 0 || target < 0 || target >= items.length) return list;
   const [item2] = items.splice(index, 1);
@@ -11195,10 +11199,10 @@ function findPdfImage(bytes) {
   const re = /<<((?:(?!>>\s*stream)[\s\S])*?\/Subtype\s*\/Image[\s\S]*?)>>\s*stream\r?\n/g;
   for (let m = re.exec(text); m; m = re.exec(text)) {
     const dict = m[1] ?? "";
-    const num2 = (key) => Number(new RegExp(`/${key}\\s+(\\d+)`).exec(dict)?.[1] ?? NaN);
-    const width = num2("Width");
-    const height = num2("Height");
-    const bitsPerComponent = num2("BitsPerComponent");
+    const num3 = (key) => Number(new RegExp(`/${key}\\s+(\\d+)`).exec(dict)?.[1] ?? NaN);
+    const width = num3("Width");
+    const height = num3("Height");
+    const bitsPerComponent = num3("BitsPerComponent");
     const filter = /\/Filter\s*\/(\w+)/.exec(dict)?.[1];
     if (!Number.isFinite(width) || !Number.isFinite(height)) continue;
     if (filter !== "DCTDecode" && filter !== "FlateDecode") continue;
@@ -11300,7 +11304,1935 @@ function derivedComposition(values, weightFallbackKg, heightCm = null) {
   }
   return out;
 }
+
+// src/domain/doctorReport.ts
+var doctorReport_exports = {};
+__export(doctorReport_exports, {
+  buildDoctorReport: () => buildDoctorReport,
+  fmtStat: () => fmtStat
+});
+var isoDays = (from, to) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 864e5) + 1;
+function stat(label, unit, decimals, values) {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a.date.localeCompare(b.date));
+  const nums = sorted.map((v) => v.value);
+  return {
+    label,
+    unit,
+    decimals,
+    count: nums.length,
+    mean: nums.reduce((s, v) => s + v, 0) / nums.length,
+    min: Math.min(...nums),
+    max: Math.max(...nums),
+    first: sorted[0],
+    last: sorted[sorted.length - 1]
+  };
+}
+function metricRows(measurements, metrics, categories, from, to) {
+  const rows = [];
+  const list = [...metrics].filter((m) => categories.includes(m.category)).sort((a, b) => a.position - b.position);
+  for (const m of list) {
+    const values = measurements.filter((x) => x.metricId === m.id && x.date >= from && x.date <= to).map((x) => ({ date: x.date, value: x.value }));
+    const row = stat(m.name, m.unit, m.decimals, values);
+    if (row) rows.push(row);
+  }
+  return rows;
+}
+function labRows(draws, analytes, from, to) {
+  const byId = new Map(analytes.map((a) => [a.id, a]));
+  const order = new Map(analytes.map((a, i) => [a.id, i]));
+  const key = (d) => d.date + (d.time ?? "");
+  const sorted = [...draws].sort((a, b) => key(b).localeCompare(key(a)));
+  const rows = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const d of sorted) {
+    if (d.date < from || d.date > to) continue;
+    for (const r2 of d.results) {
+      if (seen.has(r2.analyteId)) continue;
+      seen.add(r2.analyteId);
+      const range = rangeFor(r2, byId.get(r2.analyteId));
+      let previous = null;
+      for (const older of sorted) {
+        if (key(older) >= key(d)) continue;
+        const p = older.results.find((x) => x.analyteId === r2.analyteId && x.unit === r2.unit);
+        if (p) {
+          previous = { date: older.date, value: p.value, comparator: p.comparator };
+          break;
+        }
+      }
+      rows.push({
+        analyteId: r2.analyteId,
+        category: r2.category,
+        name: r2.analyteName,
+        unit: r2.unit,
+        date: d.date,
+        value: r2.value,
+        comparator: r2.comparator,
+        range,
+        flag: flagOf(r2.value, r2.comparator, range),
+        previous
+      });
+    }
+  }
+  const catIndex = (c) => LAB_CATEGORIES.indexOf(c);
+  return rows.sort(
+    (a, b) => catIndex(a.category) - catIndex(b.category) || (order.get(a.analyteId) ?? 0) - (order.get(b.analyteId) ?? 0)
+  );
+}
+function hrtRows(entries, from, to) {
+  const inRange4 = entries.filter((e) => e.date >= from && e.date <= to);
+  const groups = /* @__PURE__ */ new Map();
+  for (const e of inRange4) {
+    const k = `${e.hormone.trim().toLowerCase()}|${e.unit}`;
+    groups.set(k, [...groups.get(k) ?? [], e]);
+  }
+  const rows = [];
+  for (const list of groups.values()) {
+    const taken = list.filter((e) => e.status === "taken").sort((a, b) => a.date.localeCompare(b.date));
+    const first = taken[0];
+    const last = taken[taken.length - 1];
+    if (!first || !last) continue;
+    rows.push({
+      hormone: first.hormone,
+      unit: first.unit,
+      count: taken.length,
+      total: taken.reduce((s, e) => s + e.amount, 0),
+      intervalDays: taken.length >= 2 ? (isoDays(first.date, last.date) - 1) / (taken.length - 1) : null,
+      first: first.date,
+      last: last.date,
+      missed: list.length - taken.length
+    });
+  }
+  return rows.sort((a, b) => a.hormone.localeCompare(b.hormone, "de"));
+}
+function buildDoctorReport(input) {
+  const { from, to, data, profile } = input;
+  const labs = labRows(input.draws, input.analytes, from, to);
+  const done = data.workouts.filter((w) => w.status === "done" && w.date >= from && w.date <= to);
+  const rpe = done.filter((w) => w.perceivedExertion !== null);
+  const sleep = sleepSeries(data.sleep.filter((s) => s.date >= from && s.date <= to)).filter(
+    (s) => s.value > 0
+  );
+  const days2 = isoDays(from, to);
+  let hrt = null;
+  if (input.hrt) {
+    const { events } = dosesFromHrt(input.hrt);
+    const nowMs = input.nowMs ?? nowWallClockMs();
+    hrt = {
+      rows: hrtRows(input.hrt, from, to),
+      levels: measurandsOf(events).map((m) => {
+        const c = calibrateLevel(events, m, input.draws, nowMs);
+        return {
+          measurand: m,
+          label: MEASURAND_LABELS[m],
+          estimate: c ? { value: c.nowEstimate, unit: c.unit, bloodValues: c.rows.length } : null
+        };
+      })
+    };
+  }
+  return {
+    from,
+    to,
+    dayCount: days2,
+    person: profile ? {
+      name: profile.name,
+      age: profile.birthDate ? ageOn(profile.birthDate, input.today) : ageInYear(profile.birthYear, Number(input.today.slice(0, 4))),
+      sex: profile.sex ?? null,
+      heightCm: profile.heightCm || null
+    } : null,
+    vitals: metricRows(data.measurements, data.metrics, ["vital"], from, to),
+    body: metricRows(
+      data.measurements,
+      data.metrics,
+      ["weight", "composition", "circumference"],
+      from,
+      to
+    ),
+    labs,
+    flagged: labs.filter((l) => l.flag === "low" || l.flag === "high"),
+    drawCount: input.draws.filter((d) => d.date >= from && d.date <= to).length,
+    hrt,
+    training: {
+      sessions: done.length,
+      perWeek: done.length / (days2 / 7),
+      minutes: done.reduce((s, w) => s + (w.durationMin ?? 0), 0),
+      rpe: rpe.length > 0 ? rpe.reduce((s, w) => s + (w.perceivedExertion ?? 0), 0) / rpe.length : null
+    },
+    sleep: {
+      nights: sleep.length,
+      meanMinutes: sleep.length > 0 ? sleep.reduce((s, x) => s + x.value, 0) / sleep.length : null
+    }
+  };
+}
+var fmtStat = (row, v) => formatNumber(v, row.decimals);
+
+// src/domain/pdf.ts
+var WIN_ANSI_EXTRA = {
+  "\u20AC": 128,
+  "\u201A": 130,
+  \u0192: 131,
+  "\u201E": 132,
+  "\u2026": 133,
+  "\u2020": 134,
+  "\u2021": 135,
+  "\u02C6": 136,
+  "\u2030": 137,
+  \u0160: 138,
+  "\u2039": 139,
+  \u0152: 140,
+  \u017D: 142,
+  "\u2018": 145,
+  "\u2019": 146,
+  "\u201C": 147,
+  "\u201D": 148,
+  "\u2022": 149,
+  "\u2013": 150,
+  "\u2014": 151,
+  "\u02DC": 152,
+  "\u2122": 153,
+  \u0161: 154,
+  "\u203A": 155,
+  \u0153: 156,
+  \u017E: 158,
+  \u0178: 159,
+  // Ersatz für häufige Zeichen außerhalb von WinAnsi
+  "\u2212": 45,
+  \u03BC: 181,
+  "\u2011": 45,
+  "\u202F": 32
+};
+function winAnsiByte(ch) {
+  const code = ch.codePointAt(0) ?? 63;
+  const extra = WIN_ANSI_EXTRA[ch];
+  if (extra !== void 0) return extra;
+  if (code >= 32 && code < 127 || code >= 160 && code <= 255) return code;
+  return 63;
+}
+function pdfText(text) {
+  let out = "";
+  for (const ch of text.replace(/\s+/g, " ")) {
+    const c = String.fromCharCode(winAnsiByte(ch));
+    out += c === "\\" || c === "(" || c === ")" ? `\\${c}` : c;
+  }
+  return out;
+}
+
+// src/domain/pdfFontMetrics.ts
+var HELVETICA_WIDTHS = [
+  278,
+  278,
+  355,
+  556,
+  556,
+  889,
+  667,
+  191,
+  333,
+  333,
+  389,
+  584,
+  278,
+  333,
+  278,
+  278,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  278,
+  278,
+  584,
+  584,
+  584,
+  556,
+  1015,
+  667,
+  667,
+  722,
+  722,
+  667,
+  611,
+  778,
+  722,
+  278,
+  500,
+  667,
+  556,
+  833,
+  722,
+  778,
+  667,
+  778,
+  722,
+  667,
+  611,
+  722,
+  667,
+  944,
+  667,
+  667,
+  611,
+  278,
+  278,
+  278,
+  469,
+  556,
+  333,
+  556,
+  556,
+  500,
+  556,
+  556,
+  278,
+  556,
+  556,
+  222,
+  222,
+  500,
+  222,
+  833,
+  556,
+  556,
+  556,
+  556,
+  333,
+  500,
+  278,
+  556,
+  500,
+  722,
+  500,
+  500,
+  500,
+  334,
+  260,
+  334,
+  584,
+  761,
+  556,
+  556,
+  222,
+  556,
+  333,
+  1e3,
+  556,
+  556,
+  333,
+  1e3,
+  667,
+  333,
+  1e3,
+  556,
+  611,
+  556,
+  556,
+  222,
+  222,
+  333,
+  333,
+  350,
+  556,
+  1e3,
+  333,
+  1e3,
+  500,
+  333,
+  944,
+  556,
+  500,
+  667,
+  278,
+  333,
+  556,
+  556,
+  556,
+  556,
+  260,
+  556,
+  333,
+  737,
+  370,
+  556,
+  584,
+  333,
+  737,
+  333,
+  400,
+  584,
+  333,
+  333,
+  333,
+  556,
+  537,
+  278,
+  333,
+  333,
+  365,
+  556,
+  834,
+  834,
+  834,
+  611,
+  667,
+  667,
+  667,
+  667,
+  667,
+  667,
+  1e3,
+  722,
+  667,
+  667,
+  667,
+  667,
+  278,
+  278,
+  278,
+  278,
+  722,
+  722,
+  778,
+  778,
+  778,
+  778,
+  778,
+  584,
+  778,
+  722,
+  722,
+  722,
+  722,
+  667,
+  667,
+  611,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  889,
+  500,
+  556,
+  556,
+  556,
+  556,
+  278,
+  278,
+  278,
+  278,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  584,
+  611,
+  556,
+  556,
+  556,
+  556,
+  500,
+  556,
+  500
+];
+var HELVETICA_BOLD_WIDTHS = [
+  278,
+  333,
+  474,
+  556,
+  556,
+  889,
+  722,
+  238,
+  333,
+  333,
+  389,
+  584,
+  278,
+  333,
+  278,
+  278,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  333,
+  333,
+  584,
+  584,
+  584,
+  611,
+  975,
+  722,
+  722,
+  722,
+  722,
+  667,
+  611,
+  778,
+  722,
+  278,
+  556,
+  722,
+  611,
+  833,
+  722,
+  778,
+  667,
+  778,
+  722,
+  667,
+  611,
+  722,
+  667,
+  944,
+  667,
+  667,
+  611,
+  333,
+  278,
+  333,
+  584,
+  556,
+  333,
+  556,
+  611,
+  556,
+  611,
+  556,
+  333,
+  611,
+  611,
+  278,
+  278,
+  556,
+  278,
+  889,
+  611,
+  611,
+  611,
+  611,
+  389,
+  556,
+  333,
+  611,
+  556,
+  778,
+  556,
+  556,
+  500,
+  389,
+  280,
+  389,
+  584,
+  761,
+  556,
+  611,
+  278,
+  556,
+  500,
+  1e3,
+  556,
+  556,
+  333,
+  1e3,
+  667,
+  333,
+  1e3,
+  611,
+  611,
+  611,
+  611,
+  278,
+  278,
+  500,
+  500,
+  350,
+  556,
+  1e3,
+  333,
+  1e3,
+  556,
+  333,
+  944,
+  611,
+  500,
+  667,
+  278,
+  333,
+  556,
+  556,
+  556,
+  556,
+  280,
+  556,
+  333,
+  737,
+  370,
+  556,
+  584,
+  333,
+  737,
+  333,
+  400,
+  584,
+  333,
+  333,
+  333,
+  611,
+  556,
+  278,
+  333,
+  333,
+  365,
+  556,
+  834,
+  834,
+  834,
+  611,
+  722,
+  722,
+  722,
+  722,
+  722,
+  722,
+  1e3,
+  722,
+  667,
+  667,
+  667,
+  667,
+  278,
+  278,
+  278,
+  278,
+  722,
+  722,
+  778,
+  778,
+  778,
+  778,
+  778,
+  584,
+  778,
+  722,
+  722,
+  722,
+  722,
+  667,
+  667,
+  611,
+  556,
+  556,
+  556,
+  556,
+  556,
+  556,
+  889,
+  556,
+  556,
+  556,
+  556,
+  556,
+  278,
+  278,
+  278,
+  278,
+  611,
+  611,
+  611,
+  611,
+  611,
+  611,
+  611,
+  584,
+  611,
+  611,
+  611,
+  611,
+  611,
+  556,
+  611,
+  556
+];
+
+// src/domain/pdfDoc.ts
+var A4_W = 595.28;
+var A4_H = 841.89;
+function hex(color) {
+  const v = color.replace("#", "");
+  return [0, 2, 4].map((i) => parseInt(v.slice(i, i + 2), 16) / 255);
+}
+var num2 = (v) => (Math.round(v * 100) / 100).toString();
+var rgb = (c) => c.map((x) => num2(x)).join(" ");
+function textWidth(text, size, bold = false) {
+  const table = bold ? HELVETICA_BOLD_WIDTHS : HELVETICA_WIDTHS;
+  let w = 0;
+  for (const ch of text.replace(/\s+/g, " ")) {
+    const b = winAnsiByte(ch);
+    w += table[b - 32] ?? 556;
+  }
+  return w * size / 1e3;
+}
+function latin12(bytes) {
+  let s = "";
+  for (let i = 0; i < bytes.length; i += 32768) {
+    s += String.fromCharCode(...bytes.subarray(i, i + 32768));
+  }
+  return s;
+}
+var PdfPage = class {
+  constructor() {
+    __publicField(this, "ops", []);
+  }
+  y(v) {
+    return A4_H - v;
+  }
+  text(x, y, value, style = {}) {
+    const size = style.size ?? 10;
+    const font = style.bold ? "F2" : "F1";
+    const w = textWidth(value, size, style.bold);
+    const left = style.align === "right" ? x - w : style.align === "center" ? x - w / 2 : x;
+    this.ops.push(
+      `${rgb(style.color ?? [0, 0, 0])} rg BT /${font} ${num2(size)} Tf ${num2(left)} ${num2(this.y(y))} Td (${pdfText(value)}) Tj ET`
+    );
+  }
+  /** Rechteck (optional mit runden Ecken), gefüllt und/oder umrandet. */
+  rect(x, y, w, h, opts) {
+    const r2 = Math.min(opts.radius ?? 0, w / 2, h / 2);
+    const x0 = x;
+    const y0 = this.y(y + h);
+    const parts2 = [];
+    if (opts.fill) parts2.push(`${rgb(opts.fill)} rg`);
+    if (opts.stroke) parts2.push(`${rgb(opts.stroke)} RG ${num2(opts.width ?? 0.5)} w`);
+    if (r2 <= 0) parts2.push(`${num2(x0)} ${num2(y0)} ${num2(w)} ${num2(h)} re`);
+    else {
+      const k = 0.5523 * r2;
+      const x1 = x0 + w;
+      const y1 = y0 + h;
+      parts2.push(
+        `${num2(x0 + r2)} ${num2(y0)} m`,
+        `${num2(x1 - r2)} ${num2(y0)} l ${num2(x1 - r2 + k)} ${num2(y0)} ${num2(x1)} ${num2(y0 + r2 - k)} ${num2(x1)} ${num2(y0 + r2)} c`,
+        `${num2(x1)} ${num2(y1 - r2)} l ${num2(x1)} ${num2(y1 - r2 + k)} ${num2(x1 - r2 + k)} ${num2(y1)} ${num2(x1 - r2)} ${num2(y1)} c`,
+        `${num2(x0 + r2)} ${num2(y1)} l ${num2(x0 + r2 - k)} ${num2(y1)} ${num2(x0)} ${num2(y1 - r2 + k)} ${num2(x0)} ${num2(y1 - r2)} c`,
+        `${num2(x0)} ${num2(y0 + r2)} l ${num2(x0)} ${num2(y0 + r2 - k)} ${num2(x0 + r2 - k)} ${num2(y0)} ${num2(x0 + r2)} ${num2(y0)} c h`
+      );
+    }
+    parts2.push(opts.fill && opts.stroke ? "B" : opts.fill ? "f" : "S");
+    this.ops.push(parts2.join(" "));
+  }
+  line(x1, y1, x2, y2, color, width = 0.5, dash) {
+    this.ops.push(
+      `${rgb(color)} RG ${num2(width)} w ${dash ? `[${dash} ${dash}] 0 d ` : ""}${num2(x1)} ${num2(this.y(y1))} m ${num2(x2)} ${num2(this.y(y2))} l S${dash ? " [] 0 d" : ""}`
+    );
+  }
+  /** Linienzug durch Punkte; optional als Fläche bis zur Grundlinie `baseY`. */
+  polyline(points, color, width = 1.2, area) {
+    if (points.length === 0) return;
+    const path = points.map(([px, py], i) => `${num2(px)} ${num2(this.y(py))} ${i === 0 ? "m" : "l"}`).join(" ");
+    if (area && points.length > 1) {
+      const first = points[0];
+      const last = points[points.length - 1];
+      this.ops.push(
+        `${rgb(area.fill)} rg ${path} ${num2(last[0])} ${num2(this.y(area.baseY))} l ${num2(first[0])} ${num2(this.y(area.baseY))} l h f`
+      );
+    }
+    this.ops.push(`${rgb(color)} RG ${num2(width)} w 1 J 1 j ${path} S 0 J 0 j`);
+  }
+  circle(cx, cy, r2, fill) {
+    const k = 0.5523 * r2;
+    const y = this.y(cy);
+    this.ops.push(
+      `${rgb(fill)} rg ${num2(cx + r2)} ${num2(y)} m ${num2(cx + r2)} ${num2(y + k)} ${num2(cx + k)} ${num2(y + r2)} ${num2(cx)} ${num2(y + r2)} c ${num2(cx - k)} ${num2(y + r2)} ${num2(cx - r2)} ${num2(y + k)} ${num2(cx - r2)} ${num2(y)} c ${num2(cx - r2)} ${num2(y - k)} ${num2(cx - k)} ${num2(y - r2)} ${num2(cx)} ${num2(y - r2)} c ${num2(cx + k)} ${num2(y - r2)} ${num2(cx + r2)} ${num2(y - k)} ${num2(cx + r2)} ${num2(y)} c f`
+    );
+  }
+  /**
+   * Bild (Name aus `PdfDoc.addImage`) in das Rechteck x/y/w/h. `multiply`: Mischmodus
+   * „Multiplizieren“ – helle Bildteile verschwinden, Text und Flächen bleiben voll sichtbar
+   * (für Wasserzeichen, die über allem gezeichnet werden und dennoch dahinter wirken).
+   */
+  image(name, x, y, w, h, opts = {}) {
+    this.ops.push(
+      `q ${opts.multiply ? "/GSmul gs " : ""}${num2(w)} 0 0 ${num2(h)} ${num2(x)} ${num2(this.y(y + h))} cm /${name} Do Q`
+    );
+  }
+  /** Gefülltes Dreieck (z. B. Pfeil nach oben/unten). */
+  triangle(points, fill) {
+    const [a, b, c] = points;
+    this.ops.push(
+      `${rgb(fill)} rg ${num2(a[0])} ${num2(this.y(a[1]))} m ${num2(b[0])} ${num2(this.y(b[1]))} l ${num2(c[0])} ${num2(this.y(c[1]))} l h f`
+    );
+  }
+};
+var PdfDoc = class {
+  constructor() {
+    __publicField(this, "pages", []);
+    __publicField(this, "images", []);
+  }
+  /** Bild einmal einbetten; Rückgabe: Name für `PdfPage.image`. */
+  addImage(img) {
+    this.images.push(img);
+    return `Im${this.images.length}`;
+  }
+  addPage() {
+    const p = new PdfPage();
+    this.pages.push(p);
+    return p;
+  }
+  /** PDF-Datei als Bytes. `title` landet in den Dokumenteigenschaften. */
+  toBytes(title) {
+    const objects = [];
+    objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+    const kids = this.pages.map((_, i) => `${6 + i * 2} 0 R`).join(" ");
+    objects[2] = `<< /Type /Pages /Kids [${kids}] /Count ${this.pages.length} >>`;
+    objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+    objects[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
+    objects[5] = `<< /Title (${pdfText(title)}) /Producer (LIFESPAN OS) >>`;
+    const imageBase = 6 + this.pages.length * 2;
+    this.images.forEach((img, i) => {
+      objects[imageBase + i] = `<< /Type /XObject /Subtype /Image /Width ${img.width} /Height ${img.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length ${img.data.length} >>
+stream
+${latin12(img.data)}
+endstream`;
+    });
+    const xobjects = this.images.length > 0 ? ` /XObject << ${this.images.map((_, i) => `/Im${i + 1} ${imageBase + i} 0 R`).join(" ")} >> /ExtGState << /GSmul << /Type /ExtGState /BM /Multiply >> >>` : "";
+    this.pages.forEach((p, i) => {
+      const id3 = 6 + i * 2;
+      const content = p.ops.join("\n");
+      objects[id3] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${num2(A4_W)} ${num2(A4_H)}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>${xobjects} >> /Contents ${id3 + 1} 0 R >>`;
+      objects[id3 + 1] = `<< /Length ${content.length} >>
+stream
+${content}
+endstream`;
+    });
+    let out = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";
+    const offsets = [];
+    for (let id3 = 1; id3 < objects.length; id3++) {
+      offsets[id3] = out.length;
+      out += `${id3} 0 obj
+${objects[id3]}
+endobj
+`;
+    }
+    const xref = out.length;
+    out += `xref
+0 ${objects.length}
+0000000000 65535 f 
+`;
+    for (let id3 = 1; id3 < objects.length; id3++) {
+      out += `${String(offsets[id3]).padStart(10, "0")} 00000 n 
+`;
+    }
+    out += `trailer
+<< /Size ${objects.length} /Root 1 0 R /Info 5 0 R >>
+startxref
+${xref}
+%%EOF
+`;
+    const bytes = new Uint8Array(out.length);
+    for (let i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 255;
+    return bytes;
+  }
+};
+
+// src/domain/doctorReportPdf.ts
+var M = 40;
+var CONTENT_W = A4_W - 2 * M;
+var BOTTOM = A4_H - 52;
+var INK = hex("#14233B");
+var MUTED = hex("#55657C");
+var SUBTLE = hex("#7A889D");
+var LINE = hex("#DCE3EC");
+var SOFT = hex("#F5F7FA");
+var NAVY = hex("#0B1F3A");
+var DANGER = hex("#B42318");
+var ACCENT = hex("#2B59C3");
+var WHITE = [1, 1, 1];
+var tint = (c, amount) => [0, 1, 2].map((i) => c[i] + (1 - c[i]) * amount);
+var TITLE = "Bericht f\xFCr den Arzttermin";
+var PDF_MARKS = { low: "\u2013", high: "+", normal: "", none: "" };
+function fit(text, max, size, bold = false) {
+  if (textWidth(text, size, bold) <= max) return text;
+  let t = text;
+  while (t.length > 1 && textWidth(`${t}\u2026`, size, bold) > max) t = t.slice(0, -1);
+  return `${t.trimEnd()}\u2026`;
+}
+var Layout = class {
+  constructor(title) {
+    __publicField(this, "title", title);
+    __publicField(this, "doc", new PdfDoc());
+    __publicField(this, "page");
+    __publicField(this, "y", 0);
+    this.newPage(true);
+  }
+  newPage(first = false) {
+    this.page = this.doc.addPage();
+    if (first) this.y = M;
+    else {
+      this.page.rect(0, 0, A4_W, 28, { fill: NAVY });
+      this.page.text(M, 18, "LIFESPAN OS", { size: 8, bold: true, color: WHITE });
+      this.page.text(A4_W - M, 18, this.title, { size: 8, color: tint(NAVY, 0.7), align: "right" });
+      this.y = 48;
+    }
+  }
+  ensure(h) {
+    if (this.y + h > BOTTOM) {
+      this.newPage();
+      return true;
+    }
+    return false;
+  }
+  heading(text, color = ACCENT) {
+    this.ensure(48);
+    this.y += 10;
+    this.page.rect(M, this.y, 4, 16, { fill: color, radius: 2 });
+    this.page.text(M + 12, this.y + 13, text, { size: 13, bold: true, color: INK });
+    this.y += 26;
+  }
+  note(text) {
+    this.ensure(14);
+    this.page.text(M, this.y + 9, fit(text, CONTENT_W, 8), { size: 8, color: MUTED });
+    this.y += 14;
+  }
+  subheading(text) {
+    this.ensure(30);
+    this.page.text(M, this.y + 12, text, { size: 9, bold: true, color: MUTED });
+    this.y += 18;
+  }
+  table(columns, rows) {
+    const rowH = 15;
+    const total = columns.reduce((s, c) => s + c.width, 0);
+    const scale = CONTENT_W / total;
+    const xs = [];
+    let x = M;
+    for (const c of columns) {
+      xs.push(x);
+      x += c.width * scale;
+    }
+    const head = () => {
+      this.page.rect(M, this.y, CONTENT_W, rowH, { fill: SOFT });
+      columns.forEach((c, i) => {
+        const w = c.width * scale - 6;
+        const left = xs[i] + 3;
+        this.page.text(
+          c.align === "right" ? left + w : left,
+          this.y + 10.5,
+          fit(c.label, w, 7.5, true),
+          {
+            size: 7.5,
+            bold: true,
+            color: MUTED,
+            align: c.align === "right" ? "right" : "left"
+          }
+        );
+      });
+      this.y += rowH;
+    };
+    this.ensure(rowH * 2);
+    head();
+    for (const row of rows) {
+      if (this.ensure(rowH)) head();
+      row.forEach((cell2, i) => {
+        const c = columns[i];
+        const w = c.width * scale - 6;
+        const left = xs[i] + 3;
+        this.page.text(
+          c.align === "right" ? left + w : left,
+          this.y + 10.5,
+          fit(cell2.text, w, 8.5, cell2.bold),
+          {
+            size: 8.5,
+            bold: cell2.bold,
+            color: cell2.color ?? INK,
+            align: c.align === "right" ? "right" : "left"
+          }
+        );
+      });
+      this.page.line(M, this.y + rowH, M + CONTENT_W, this.y + rowH, LINE, 0.4);
+      this.y += rowH;
+    }
+    this.y += 6;
+  }
+};
+var sexLabel = (s) => s === "male" ? "m\xE4nnlich" : s === "female" ? "weiblich" : null;
+function header(l, r2, createdAt) {
+  const p = l.page;
+  p.rect(0, 0, A4_W, 120, { fill: NAVY });
+  p.text(M, 36, "LIFESPAN OS", { size: 9, bold: true, color: tint(NAVY, 0.6) });
+  p.text(M, 64, TITLE, { size: 24, bold: true, color: WHITE });
+  p.text(M, 86, `Zeitraum ${formatDate(r2.from)} \u2013 ${formatDate(r2.to)} (${r2.dayCount} Tage)`, {
+    size: 11,
+    color: tint(NAVY, 0.85)
+  });
+  const person = r2.person ? [
+    r2.person.name,
+    r2.person.age !== null ? `${r2.person.age} Jahre` : null,
+    sexLabel(r2.person.sex),
+    r2.person.heightCm ? `${formatNumber(r2.person.heightCm, 0)} cm` : null
+  ].filter(Boolean).join(" \xB7 ") : "";
+  p.text(M, 104, `${person ? `${person} \xB7 ` : ""}erstellt am ${createdAt}`, {
+    size: 9,
+    color: tint(NAVY, 0.6)
+  });
+  l.y = 138;
+}
+function glance(l, r2) {
+  const weight = r2.body.find((b) => /gewicht/i.test(b.label) && !/fett|muskel/i.test(b.label));
+  const items = [
+    ["Blutabnahmen", `${r2.drawCount}`],
+    ["Au\xDFerhalb Referenz", `${r2.flagged.length} von ${r2.labs.length} Werten`],
+    [
+      "Gewicht",
+      weight ? `${fmtStat(weight, weight.first.value)} bis ${fmtStat(weight, weight.last.value)} ${weight.unit}` : "\u2013"
+    ],
+    [
+      "Training",
+      r2.training.sessions > 0 ? `${r2.training.sessions} \xB7 ${formatNumber(r2.training.perWeek, 1)}/Woche` : "keine Einheiten"
+    ],
+    [
+      "Schlaf (\xD8 je Nacht)",
+      r2.sleep.meanMinutes !== null ? formatDuration(Math.round(r2.sleep.meanMinutes)) : "\u2013"
+    ]
+  ];
+  const gap = 8;
+  const w = (CONTENT_W - gap * (items.length - 1)) / items.length;
+  l.ensure(52);
+  items.forEach(([label, value], i) => {
+    const x = M + i * (w + gap);
+    l.page.rect(x, l.y, w, 44, { fill: SOFT, stroke: LINE, radius: 4 });
+    l.page.text(x + 8, l.y + 15, fit(label, w - 16, 7.5), { size: 7.5, color: MUTED });
+    l.page.text(x + 8, l.y + 33, fit(value, w - 16, 10.5, true), {
+      size: 10.5,
+      bold: true,
+      color: label.startsWith("Au\xDFerhalb") && r2.flagged.length > 0 ? DANGER : INK
+    });
+  });
+  l.y += 56;
+}
+var LAB_COLUMNS = [
+  { label: "Parameter", width: 150 },
+  { label: "Wert", width: 62, align: "right" },
+  { label: "", width: 14 },
+  { label: "Einheit", width: 62 },
+  { label: "Referenz", width: 72 },
+  { label: "Datum", width: 58 },
+  { label: "davor", width: 90 }
+];
+function labCells(row) {
+  const out = row.flag === "low" || row.flag === "high";
+  return [
+    { text: row.name },
+    { text: formatLabValue(row.value, row.comparator), bold: true, color: out ? DANGER : INK },
+    { text: PDF_MARKS[row.flag], bold: true, color: DANGER },
+    { text: row.unit },
+    { text: formatRange2(row.range) || "\u2013", color: MUTED },
+    { text: formatDate(row.date), color: MUTED },
+    {
+      text: row.previous ? `${formatLabValue(row.previous.value, row.previous.comparator)} (${formatDate(row.previous.date)})` : "\u2013",
+      color: MUTED
+    }
+  ];
+}
+function labSections(l, r2) {
+  if (r2.flagged.length > 0) {
+    l.heading("Laborwerte au\xDFerhalb des Referenzbereichs", DANGER);
+    l.table(LAB_COLUMNS, r2.flagged.map(labCells));
+  }
+  l.heading("Laborwerte");
+  if (r2.labs.length === 0) {
+    l.note("Keine Laborwerte im Zeitraum.");
+    return;
+  }
+  l.note(
+    "Je Parameter der letzte Wert im Zeitraum; Referenzbereich laut Befund. + / \u2013 = \xFCber bzw. unter dem Bereich."
+  );
+  let category = "";
+  const batch = [];
+  const flush = () => {
+    if (batch.length === 0) return;
+    l.subheading(LAB_CATEGORY_LABELS[batch[0].category]);
+    l.table(LAB_COLUMNS, batch.map(labCells));
+    batch.length = 0;
+  };
+  for (const row of r2.labs) {
+    if (row.category !== category) {
+      flush();
+      category = row.category;
+    }
+    batch.push(row);
+  }
+  flush();
+}
+var STAT_COLUMNS = [
+  { label: "Messgr\xF6\xDFe", width: 150 },
+  { label: "\xD8", width: 60, align: "right" },
+  { label: "Min \u2013 Max", width: 90, align: "right" },
+  { label: "Erster / letzter", width: 110, align: "right" },
+  { label: "Einheit", width: 60 },
+  { label: "Messungen", width: 50, align: "right" }
+];
+function statCells(s) {
+  return [
+    { text: s.label },
+    { text: fmtStat(s, s.mean), bold: true },
+    { text: `${fmtStat(s, s.min)} \u2013 ${fmtStat(s, s.max)}`, color: MUTED },
+    { text: `${fmtStat(s, s.first.value)} / ${fmtStat(s, s.last.value)}` },
+    { text: s.unit, color: MUTED },
+    { text: String(s.count), color: MUTED }
+  ];
+}
+function statSection(l, title, rows, empty) {
+  l.heading(title);
+  if (rows.length === 0) l.note(empty);
+  else l.table(STAT_COLUMNS, rows.map(statCells));
+}
+function hrtSection(l, r2) {
+  if (!r2.hrt) return;
+  l.heading("Hormontherapie (eigene Eintr\xE4ge)", hex("#6B3FA0"));
+  if (r2.hrt.rows.length === 0) l.note("Keine durchgef\xFChrten Gaben im Zeitraum.");
+  else {
+    l.table(
+      [
+        { label: "Pr\xE4parat", width: 150 },
+        { label: "Gaben", width: 44, align: "right" },
+        { label: "Summe", width: 70, align: "right" },
+        { label: "\xD8 Abstand", width: 70, align: "right" },
+        { label: "Erste \u2013 letzte", width: 120 },
+        { label: "ausgelassen", width: 56, align: "right" }
+      ],
+      r2.hrt.rows.map((h) => [
+        { text: h.hormone },
+        { text: String(h.count), bold: true },
+        { text: `${formatLabNumber(h.total)} ${h.unit}` },
+        { text: h.intervalDays === null ? "\u2013" : `${formatNumber(h.intervalDays, 1)} Tage` },
+        { text: `${formatDate(h.first)} \u2013 ${formatDate(h.last)}`, color: MUTED },
+        { text: String(h.missed), color: MUTED }
+      ])
+    );
+  }
+  for (const lv of r2.hrt.levels) {
+    l.note(
+      lv.estimate ? `${lv.label}: Sch\xE4tzwert jetzt ${formatLabNumber(Math.round(lv.estimate.value * 100) / 100)} ${lv.estimate.unit} (Modellrechnung, an ${lv.estimate.bloodValues} ${lv.estimate.bloodValues === 1 ? "Blutwert" : "Blutwerte"} angepasst \u2013 keine Messung).` : `${lv.label}: Wirkstoffspiegel nur als relativer Verlauf (keine verkn\xFCpften Blutwerte).`
+    );
+  }
+}
+function trainingSleep(l, r2) {
+  l.heading("Training und Schlaf");
+  const t = r2.training;
+  l.table(
+    [
+      { label: "Angabe", width: 180 },
+      { label: "Wert im Zeitraum", width: 320 }
+    ],
+    [
+      [
+        { text: "Abgeschlossene Einheiten" },
+        { text: `${t.sessions} (${formatNumber(t.perWeek, 1)} je Woche)`, bold: true }
+      ],
+      [
+        { text: "Erfasste Trainingszeit" },
+        { text: t.minutes > 0 ? formatDuration(t.minutes) : "\u2013" }
+      ],
+      [
+        { text: "\xD8 Anstrengung (RPE 1\u201310)" },
+        { text: t.rpe === null ? "\u2013" : formatNumber(t.rpe, 1) }
+      ],
+      [
+        { text: "Schlaf" },
+        {
+          text: r2.sleep.meanMinutes === null ? "keine Eintr\xE4ge" : `\xD8 ${formatDuration(Math.round(r2.sleep.meanMinutes))} je Nacht (${r2.sleep.nights} N\xE4chte erfasst)`
+        }
+      ]
+    ]
+  );
+}
+function footers(doc) {
+  const n = doc.pages.length;
+  doc.pages.forEach((p, i) => {
+    p.line(M, A4_H - 36, A4_W - M, A4_H - 36, LINE, 0.5);
+    p.text(
+      M,
+      A4_H - 24,
+      `LIFESPAN OS \xB7 ${TITLE} \xB7 selbst erfasste Daten, keine Diagnose und keine Bewertung`,
+      {
+        size: 7,
+        color: SUBTLE
+      }
+    );
+    p.text(A4_W - M, A4_H - 24, `Seite ${i + 1} von ${n}`, {
+      size: 7,
+      color: SUBTLE,
+      align: "right"
+    });
+  });
+}
+function doctorReportToPdf(r2, createdAt) {
+  const l = new Layout(`${TITLE} \xB7 ${formatDate(r2.from)} \u2013 ${formatDate(r2.to)}`);
+  header(l, r2, createdAt);
+  glance(l, r2);
+  labSections(l, r2);
+  statSection(l, "Vitalwerte", r2.vitals, "Keine Vitalwerte im Zeitraum.");
+  statSection(l, "Gewicht und K\xF6rper", r2.body, "Keine K\xF6rperwerte im Zeitraum.");
+  hrtSection(l, r2);
+  trainingSleep(l, r2);
+  footers(l.doc);
+  return l.doc.toBytes(`LIFESPAN OS \u2013 ${TITLE} ${formatDate(r2.from)} \u2013 ${formatDate(r2.to)}`);
+}
+var doctorReportFileName = (r2) => `Arztbericht ${r2.from} bis ${r2.to}`;
+
+// src/domain/labImport.ts
+var labImport_exports = {};
+__export(labImport_exports, {
+  matchAnalyte: () => matchAnalyte,
+  normalizeName: () => normalizeName2,
+  parseDateCell: () => parseDateCell,
+  parseLabTable: () => parseLabTable,
+  previewRows: () => previewRows,
+  splitHeaderUnit: () => splitHeaderUnit,
+  toImportRows: () => toImportRows
+});
+var H = {
+  date: /^(datum|date|abnahme(datum)?|entnahme(datum)?|probenahme|befunddatum|eingang(sdatum)?)$/i,
+  time: /^(uhrzeit|zeit|time|abnahmezeit)$/i,
+  name: /^(parameter|analyt|analyse|test|untersuchung|bezeichnung|name|messgröße|laborwert|anforderung)$/i,
+  value: /^(wert|ergebnis|resultat|result|value|messwert|befund)$/i,
+  unit: /^(einheit|einh\.?|unit|units)$/i,
+  ref: /^(referenz(bereich|wert|werte)?|ref\.?( ?bereich)?|norm(al)?(bereich|wert|werte)?|reference( range)?|range)$/i,
+  refLow: /^(ref(erenz)?\.? ?(unten|min|von|untergrenze)|untergrenze|norm ?von|min(imum)?)$/i,
+  refHigh: /^(ref(erenz)?\.? ?(oben|max|bis|obergrenze)|obergrenze|norm ?bis|max(imum)?)$/i,
+  lab: /^(labor|lab|praxis|einsender)$/i
+};
+var clean = (s) => s.replace(/\s+/g, " ").trim().replace(/:$/, "");
+function parseDateCell(text) {
+  const t = clean(text);
+  if (t === "") return null;
+  const pad = (n) => String(n).padStart(2, "0");
+  const make = (y, m2, d) => {
+    const dt = new Date(Date.UTC(y, m2 - 1, d));
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m2 - 1 || dt.getUTCDate() !== d)
+      return null;
+    return `${y}-${pad(m2)}-${pad(d)}`;
+  };
+  const timeOf = (rest) => {
+    const m2 = /^(\d{1,2}):(\d{2})/.exec((rest ?? "").trim());
+    if (!m2) return null;
+    const h = Number(m2[1]);
+    const min = Number(m2[2]);
+    return h < 24 && min < 60 ? `${pad(h)}:${pad(min)}` : null;
+  };
+  let m = /^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](.*))?$/.exec(t);
+  if (m) {
+    const date = make(Number(m[1]), Number(m[2]), Number(m[3]));
+    return date ? { date, time: timeOf(m[4]) } : null;
+  }
+  m = /^(\d{1,2})[./](\d{1,2})[./](\d{2}|\d{4})(?:,?\s+(.*))?$/.exec(t);
+  if (m) {
+    const yy = Number(m[3]);
+    const date = make(yy < 100 ? 2e3 + yy : yy, Number(m[2]), Number(m[1]));
+    return date ? { date, time: timeOf(m[4]) } : null;
+  }
+  if (/^\d{5}(\.\d+)?$/.test(t)) {
+    const serial = Number(t);
+    if (serial < 2e4 || serial > 8e4) return null;
+    const ms = Math.round((serial - 25569) * 864e5);
+    const dt = new Date(ms);
+    const date = `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
+    const minutes = dt.getUTCHours() * 60 + dt.getUTCMinutes();
+    return {
+      date,
+      time: minutes > 0 ? `${pad(dt.getUTCHours())}:${pad(dt.getUTCMinutes())}` : null
+    };
+  }
+  return null;
+}
+function parseTimeCell(text) {
+  const t = clean(text);
+  const m = /^(\d{1,2}):(\d{2})/.exec(t);
+  const pad = (n) => String(n).padStart(2, "0");
+  if (m) {
+    const h = Number(m[1]);
+    const min = Number(m[2]);
+    return h < 24 && min < 60 ? `${pad(h)}:${pad(min)}` : null;
+  }
+  if (/^0?\.\d+$/.test(t)) {
+    const minutes = Math.round(Number(t) * 1440);
+    return minutes > 0 && minutes < 1440 ? `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}` : null;
+  }
+  return null;
+}
+function splitHeaderUnit(header2) {
+  const h = clean(header2);
+  const square = /^(.*?)\s*\[([^\]]+)\]$/.exec(h);
+  if (square) return { name: clean(square[1] ?? ""), unit: clean(square[2] ?? "") };
+  const round3 = /^(.*?)\s*\(([^)]+)\)$/.exec(h);
+  if (round3 && /[/%µ]|^(mg|g|ng|pg|µg|u|iu|ie|mmol|nmol|pmol|mu)\b/i.test(round3[2] ?? "")) {
+    return { name: clean(round3[1] ?? ""), unit: clean(round3[2] ?? "") };
+  }
+  return { name: h, unit: "" };
+}
+function findHeader(rows) {
+  for (let i = 0; i < Math.min(rows.length, 15); i++) {
+    const cells = (rows[i] ?? []).map(clean);
+    const hasName = cells.some((c) => H.name.test(c));
+    const hasValue = cells.some((c) => H.value.test(c));
+    const hasDate = cells.some((c) => H.date.test(c));
+    if (hasName && hasValue || hasDate && cells.filter((c) => c !== "").length >= 2) return i;
+  }
+  return -1;
+}
+function parseLabTable(rows, fallbackDate) {
+  const result = { format: "long", rows: [], skipped: [] };
+  const headerIndex = findHeader(rows);
+  if (headerIndex < 0) {
+    result.skipped.push({
+      line: 1,
+      text: "",
+      reason: "Keine Kopfzeile erkannt. Erwartet werden Spalten wie \u201EDatum\u201C, \u201EParameter\u201C, \u201EWert\u201C, \u201EEinheit\u201C, \u201EReferenzbereich\u201C."
+    });
+    return result;
+  }
+  const header2 = (rows[headerIndex] ?? []).map(clean);
+  const col = (re) => header2.findIndex((c2) => re.test(c2));
+  const c = {
+    date: col(H.date),
+    time: col(H.time),
+    name: col(H.name),
+    value: col(H.value),
+    unit: col(H.unit),
+    ref: col(H.ref),
+    refLow: col(H.refLow),
+    refHigh: col(H.refHigh),
+    lab: col(H.lab)
+  };
+  const cell2 = (row, i) => i >= 0 ? clean(row[i] ?? "") : "";
+  const body = rows.slice(headerIndex + 1);
+  let lastDate = null;
+  const dateOf = (row) => {
+    const parsed = c.date >= 0 ? parseDateCell(cell2(row, c.date)) : null;
+    if (parsed) {
+      lastDate = parsed;
+      const time = c.time >= 0 ? parseTimeCell(cell2(row, c.time)) : null;
+      return { date: parsed.date, time: time ?? parsed.time };
+    }
+    if (lastDate) return lastDate;
+    return fallbackDate ? { date: fallbackDate, time: null } : null;
+  };
+  if (c.name >= 0 && c.value >= 0) {
+    body.forEach((row, i) => {
+      const line = headerIndex + i + 2;
+      const name = cell2(row, c.name);
+      const raw = cell2(row, c.value);
+      if (name === "" && raw === "") return;
+      const text = `${name} ${raw}`.trim();
+      if (name === "") {
+        result.skipped.push({ line, text, reason: "Parameter fehlt" });
+        return;
+      }
+      const when = dateOf(row);
+      if (!when) {
+        result.skipped.push({
+          line,
+          text,
+          reason: "Datum fehlt \u2013 bitte im Import ein Datum w\xE4hlen"
+        });
+        return;
+      }
+      const v = parseLabValue(raw);
+      if (!v) {
+        result.skipped.push({ line, text, reason: raw === "" ? "Wert fehlt" : "kein Zahlenwert" });
+        return;
+      }
+      let refLow = null;
+      let refHigh = null;
+      if (c.refLow >= 0 || c.refHigh >= 0) {
+        refLow = parseLabValue(cell2(row, c.refLow))?.value ?? null;
+        refHigh = parseLabValue(cell2(row, c.refHigh))?.value ?? null;
+      } else if (c.ref >= 0) {
+        const r2 = parseRange(cell2(row, c.ref));
+        refLow = r2?.low ?? null;
+        refHigh = r2?.high ?? null;
+      }
+      if (refLow !== null && refHigh !== null && refLow >= refHigh) {
+        refLow = null;
+        refHigh = null;
+      }
+      const split = splitHeaderUnit(name);
+      result.rows.push({
+        line,
+        date: when.date,
+        time: when.time,
+        lab: cell2(row, c.lab) || null,
+        name: split.name,
+        value: v.value,
+        comparator: v.comparator,
+        unit: cell2(row, c.unit) || split.unit,
+        refLow,
+        refHigh
+      });
+    });
+    return result;
+  }
+  result.format = "wide";
+  const skip = new Set([c.date, c.time, c.lab].filter((i) => i >= 0));
+  const analyteCols = header2.map((h, i) => ({ i, ...splitHeaderUnit(h) })).filter((h) => !skip.has(h.i) && h.name !== "");
+  body.forEach((row, i) => {
+    const line = headerIndex + i + 2;
+    if (row.every((x) => clean(x) === "")) return;
+    const when = dateOf(row);
+    if (!when) {
+      result.skipped.push({ line, text: cell2(row, 0), reason: "Datum fehlt oder ist ung\xFCltig" });
+      return;
+    }
+    for (const h of analyteCols) {
+      const raw = cell2(row, h.i);
+      if (raw === "") continue;
+      const v = parseLabValue(raw);
+      if (!v) {
+        result.skipped.push({ line, text: `${h.name} ${raw}`, reason: "kein Zahlenwert" });
+        continue;
+      }
+      result.rows.push({
+        line,
+        date: when.date,
+        time: when.time,
+        lab: cell2(row, c.lab) || null,
+        name: h.name,
+        value: v.value,
+        comparator: v.comparator,
+        unit: h.unit,
+        refLow: null,
+        refHigh: null
+      });
+    }
+  });
+  return result;
+}
+var ALIASES = {
+  "testosteron (gesamt)": [
+    "testosteron",
+    "testosteron gesamt",
+    "gesamttestosteron",
+    "total testosterone",
+    "testosterone"
+  ],
+  "freies testosteron": ["testosteron frei", "testosteron, frei", "free testosterone"],
+  "estradiol (e2)": ["estradiol", "\xF6stradiol", "oestradiol", "e2", "17-beta-estradiol"],
+  "dhea-s": ["dheas", "dhea-sulfat", "dhea sulfat"],
+  "igf-1": ["igf1", "igf 1", "somatomedin c"],
+  h\u00E4moglobin: ["hb", "haemoglobin", "hemoglobin", "hgb"],
+  h\u00E4matokrit: ["hk", "hkt", "hct", "haematokrit", "hematocrit"],
+  erythrozyten: ["ery", "erys", "rbc"],
+  leukozyten: ["leuko", "leukos", "wbc"],
+  thrombozyten: ["thrombo", "thrombos", "plt"],
+  gesamtcholesterin: [
+    "cholesterin",
+    "cholesterin gesamt",
+    "cholesterin, gesamt",
+    "total cholesterol"
+  ],
+  "ldl-cholesterin": ["ldl", "ldl cholesterin"],
+  "hdl-cholesterin": ["hdl", "hdl cholesterin"],
+  triglyceride: ["triglyzeride", "tg"],
+  "lipoprotein(a)": ["lp(a)", "lpa", "lipoprotein a"],
+  "apolipoprotein b": ["apob", "apo b", "apo-b"],
+  "glukose (n\xFCchtern)": ["glukose", "glucose", "blutzucker", "n\xFCchternglukose", "n\xFCchtern-glukose"],
+  "insulin (n\xFCchtern)": ["insulin"],
+  "got (ast)": ["got", "ast", "asat"],
+  "gpt (alt)": ["gpt", "alt", "alat"],
+  "gamma-gt": ["ggt", "\u03B3-gt", "gamma gt", "gamma-glutamyltransferase"],
+  "bilirubin (gesamt)": ["bilirubin", "bilirubin gesamt", "gesamtbilirubin"],
+  kreatinin: ["creatinin", "creatinine"],
+  egfr: ["gfr", "egfr (ckd-epi)", "egfr ckd-epi"],
+  "cystatin c": ["cystatin"],
+  harns\u00E4ure: ["urat", "uric acid"],
+  tsh: ["tsh basal", "tsh, basal"],
+  ft3: ["freies t3", "t3 frei"],
+  ft4: ["freies t4", "t4 frei"],
+  crp: ["c-reaktives protein"],
+  "hs-crp": ["hscrp", "crp hochsensitiv", "crp (hochsensitiv)"],
+  "25-oh-vitamin d": [
+    "vitamin d",
+    "vitamin d3",
+    "25-oh-d",
+    "25(oh)d",
+    "25-oh vitamin d",
+    "25-hydroxy-vitamin d"
+  ],
+  "vitamin b12": ["b12", "cobalamin", "holo-tc"],
+  fols\u00E4ure: ["folat", "folic acid"],
+  eisen: ["fe", "iron"],
+  "ck (kreatinkinase)": ["ck", "cpk", "kreatinkinase"],
+  "psa (gesamt)": ["psa", "gesamt-psa", "psa gesamt"]
+};
+var normalizeName2 = (s) => clean(s).toLowerCase().replace(/\s*,\s*/g, ", ").replace(/\s+/g, " ");
+function matchAnalyte(name, analytes) {
+  const n = normalizeName2(name);
+  const byName = analytes.find((a) => normalizeName2(a.name) === n);
+  if (byName) return byName;
+  for (const a of analytes) {
+    const aliases = ALIASES[normalizeName2(a.name)] ?? [];
+    if (aliases.includes(n)) return a;
+  }
+  return null;
+}
+function previewRows(parsed, analytes) {
+  return parsed.map((r2) => {
+    const analyte = matchAnalyte(r2.name, analytes);
+    const unit = r2.unit || analyte?.unit || "";
+    return {
+      ...r2,
+      unit,
+      analyte,
+      unitDiffers: analyte !== null && unit !== "" && analyte.unit !== "" && unit.toLowerCase() !== analyte.unit.toLowerCase()
+    };
+  });
+}
+function toImportRows(rows) {
+  return rows.map((r2) => ({
+    date: r2.date,
+    time: r2.time,
+    lab: r2.lab,
+    analyteId: r2.analyte?.id ?? null,
+    analyteName: r2.analyte?.name ?? r2.name,
+    category: r2.analyte ? null : "other",
+    value: r2.value,
+    comparator: r2.comparator,
+    unit: r2.unit,
+    refLow: r2.refLow,
+    refHigh: r2.refHigh
+  }));
+}
+
+// src/domain/labReferenceIntl.ts
+var labReferenceIntl_exports = {};
+__export(labReferenceIntl_exports, {
+  BAR_RANGE_END: () => BAR_RANGE_END,
+  BAR_RANGE_START: () => BAR_RANGE_START,
+  INTL_NO_RANGE: () => INTL_NO_RANGE,
+  INTL_REFERENCES: () => INTL_REFERENCES,
+  INTL_SOURCE: () => INTL_SOURCE,
+  intlMissingText: () => intlMissingText,
+  intlRange: () => intlRange,
+  placeOnBar: () => placeOnBar
+});
+var INTL_SOURCE = "Tabelle \u201EBlutbild und Hormone \u2013 Referenzbereiche international\u201C, Recherche 10.11.2026";
+var id2 = (n) => `00000000-0000-7000-8000-000000000${n}`;
+var ADULT2 = { ageMin: 18 };
+var INTL_REFERENCES = {
+  // Testosteron (gesamt): Männer < 50 J. 8–34,7 nmol/l, Frauen 0,21–2,98 nmol/l (÷ 3,467)
+  [id2(101)]: {
+    unit: "ng/ml",
+    rows: [
+      { sex: "male", ageMin: 18, ageMax: 50, low: 2.31, high: 10.01 },
+      { sex: "female", ...ADULT2, low: 0.06, high: 0.86 }
+    ],
+    note: "umgerechnet aus nmol/l; M\xE4nner nur unter 50 Jahren"
+  },
+  // SHBG: Frauen prämenopausal
+  [id2(104)]: {
+    unit: "nmol/l",
+    rows: [
+      { sex: "male", ...ADULT2, low: 10, high: 89.5 },
+      { sex: "female", ...ADULT2, low: 18.2, high: 145 }
+    ],
+    note: "Frauen: pr\xE4menopausal"
+  },
+  // LH, FSH: Frauen zyklusabhängig
+  [id2(105)]: {
+    unit: "U/l",
+    rows: [{ sex: "male", ...ADULT2, low: 0.5, high: 12 }],
+    note: "Frauen: abh\xE4ngig von der Zyklusphase"
+  },
+  [id2(106)]: {
+    unit: "U/l",
+    rows: [{ sex: "male", ...ADULT2, low: 1, high: 17 }],
+    note: "Frauen: abh\xE4ngig von der Zyklusphase"
+  },
+  // Prolaktin
+  [id2(107)]: {
+    unit: "ng/ml",
+    rows: [
+      { sex: "male", ...ADULT2, low: 3, high: 17.3 },
+      { sex: "female", ...ADULT2, low: 1.6, high: 23.3 }
+    ],
+    note: "Frauen: ohne Schwangerschaft und Stillzeit"
+  },
+  // DHEA-S: nur 20–25 Jahre, µmol/l × 36,85
+  [id2(109)]: {
+    unit: "\xB5g/dl",
+    rows: [
+      { sex: "male", ageMin: 20, ageMax: 26, low: 66, high: 730 },
+      { sex: "female", ageMin: 20, ageMax: 26, low: 44, high: 405 }
+    ],
+    note: "umgerechnet aus \xB5mol/l; nur f\xFCr 20\u201325 Jahre angegeben"
+  },
+  // IGF-1: altersgetrennt
+  [id2(110)]: {
+    unit: "ng/ml",
+    rows: [
+      { ageMin: 20, ageMax: 25, low: 83, high: 456 },
+      { ageMin: 30, ageMax: 40, low: 53, high: 331 },
+      { ageMin: 60, ageMax: 70, low: 41, high: 279 }
+    ],
+    note: "nur f\xFCr 20\u201324, 30\u201339 und 60\u201369 Jahre angegeben"
+  },
+  // Cortisol (Serum, morgens)
+  [id2(111)]: {
+    unit: "\xB5g/dl",
+    rows: [{ ...ADULT2, low: 5, high: 25 }],
+    note: "Serum, morgens"
+  },
+  // Blutbild
+  [id2(112)]: {
+    unit: "g/dl",
+    rows: [
+      { sex: "male", ...ADULT2, low: 13, high: 18 },
+      { sex: "female", ...ADULT2, low: 11.5, high: 16.5 }
+    ]
+  },
+  [id2(113)]: {
+    unit: "%",
+    rows: [
+      { sex: "male", ...ADULT2, low: 40, high: 54 },
+      { sex: "female", ...ADULT2, low: 35, high: 48 }
+    ]
+  },
+  // Erythrozyten (/pl = 10¹²/l)
+  [id2(114)]: {
+    unit: "/pl",
+    rows: [
+      { sex: "male", ...ADULT2, low: 4.2, high: 6.5 },
+      { sex: "female", ...ADULT2, low: 3.7, high: 5.8 }
+    ]
+  },
+  // Leukozyten, Thrombozyten (/nl = 10⁹/l)
+  [id2(115)]: { unit: "/nl", rows: [{ ...ADULT2, low: 3.3, high: 11 }] },
+  [id2(116)]: { unit: "/nl", rows: [{ ...ADULT2, low: 125, high: 410 }] },
+  // Blutfette
+  [id2(117)]: { unit: "mg/dl", rows: [{ ...ADULT2, low: 100, high: 248 }] },
+  [id2(118)]: { unit: "mg/dl", rows: [{ ...ADULT2, low: 65, high: 163 }] },
+  [id2(119)]: {
+    unit: "mg/dl",
+    rows: [
+      { sex: "male", ...ADULT2, low: 38, high: 110 },
+      { sex: "female", ...ADULT2, low: 48, high: 110 }
+    ]
+  },
+  [id2(120)]: {
+    unit: "mg/dl",
+    rows: [
+      { sex: "male", ...ADULT2, low: 40, high: 234 },
+      { sex: "female", ...ADULT2, low: 30, high: 150 }
+    ]
+  },
+  // Zucker
+  [id2(123)]: { unit: "mg/dl", rows: [{ ...ADULT2, low: 73, high: 109 }] },
+  [id2(124)]: { unit: "%", rows: [{ ...ADULT2, low: 4.5, high: 6.3 }] },
+  [id2(125)]: { unit: "\xB5U/ml", rows: [{ ...ADULT2, low: 2.1, high: 24.9 }] },
+  // Leber
+  [id2(126)]: { unit: "U/l", rows: [{ ...ADULT2, low: 8, high: 48 }] },
+  [id2(127)]: {
+    unit: "U/l",
+    rows: [
+      { sex: "male", ...ADULT2, low: 7, high: 55 },
+      { sex: "female", ...ADULT2, low: 7, high: 45 }
+    ]
+  },
+  [id2(128)]: {
+    unit: "U/l",
+    rows: [
+      { sex: "male", ...ADULT2, low: 7, high: 73 },
+      { sex: "female", ...ADULT2, low: 7, high: 38 }
+    ]
+  },
+  [id2(129)]: { unit: "mg/dl", rows: [{ ...ADULT2, low: 0, high: 1.5 }] },
+  // Niere
+  [id2(130)]: {
+    unit: "mg/dl",
+    rows: [
+      { sex: "male", ...ADULT2, low: 0.65, high: 1.35 },
+      { sex: "female", ...ADULT2, low: 0.46, high: 1.1 }
+    ]
+  },
+  // Harnstoff: 2,5–7,8 mmol/l × 6,006 (nicht BUN)
+  [id2(133)]: {
+    unit: "mg/dl",
+    rows: [{ ...ADULT2, low: 15, high: 46.8 }],
+    note: "umgerechnet aus mmol/l; Harnstoff, nicht Harnstoff-Stickstoff (BUN)"
+  },
+  [id2(134)]: {
+    unit: "mg/dl",
+    rows: [
+      { sex: "male", ...ADULT2, low: 3, high: 7.8 },
+      { sex: "female", ...ADULT2, low: 2.4, high: 5.7 }
+    ]
+  },
+  // Schilddrüse
+  [id2(135)]: { unit: "mU/l", rows: [{ ...ADULT2, low: 0.2, high: 5.6 }] },
+  // fT4: 8,5–23,2 pmol/l ÷ 12,87
+  [id2(137)]: {
+    unit: "ng/dl",
+    rows: [{ ...ADULT2, low: 0.66, high: 1.8 }],
+    note: "umgerechnet aus pmol/l"
+  },
+  // Entzündung
+  [id2(138)]: { unit: "mg/l", rows: [{ ...ADULT2, low: 0, high: 5 }] },
+  // Vitamine und Eisen
+  [id2(140)]: { unit: "ng/ml", rows: [{ ...ADULT2, low: 30, high: 100 }] },
+  [id2(141)]: { unit: "pg/ml", rows: [{ ...ADULT2, low: 210, high: 910 }] },
+  [id2(142)]: { unit: "ng/ml", rows: [{ ...ADULT2, low: 5.4, high: 24 }] },
+  // Ferritin (ng/ml = µg/l): Frauen nur 18–50 Jahre
+  [id2(143)]: {
+    unit: "ng/ml",
+    rows: [
+      { sex: "male", ...ADULT2, low: 22, high: 409 },
+      { sex: "female", ageMin: 18, ageMax: 51, low: 6, high: 310 }
+    ],
+    note: "Frauen: nur 18\u201350 Jahre angegeben"
+  },
+  [id2(144)]: { unit: "\xB5g/dl", rows: [{ ...ADULT2, low: 40, high: 188 }] },
+  // Elektrolyte
+  [id2(146)]: { unit: "mmol/l", rows: [{ ...ADULT2, low: 0.7, high: 1.1 }] },
+  [id2(147)]: { unit: "mmol/l", rows: [{ ...ADULT2, low: 133, high: 146 }] },
+  [id2(148)]: { unit: "mmol/l", rows: [{ ...ADULT2, low: 3.4, high: 5.4 }] },
+  [id2(149)]: { unit: "mmol/l", rows: [{ ...ADULT2, low: 2.2, high: 2.6 }] },
+  // CK
+  [id2(150)]: {
+    unit: "U/l",
+    rows: [
+      { sex: "male", ...ADULT2, low: 46, high: 248 },
+      { sex: "female", ...ADULT2, low: 34, high: 153 }
+    ],
+    note: "Training und Muskelbelastung erh\xF6hen den Wert"
+  }
+};
+var INTL_NO_RANGE = {
+  [id2(102)]: "keine vergleichbare Spanne (Messung und Berechnung uneinheitlich)",
+  [id2(103)]: "nur Frauen, abh\xE4ngig von der Zyklusphase",
+  [id2(108)]: "nur Lutealphase angegeben",
+  [id2(121)]: "keine Spanne (Assay, Einheit und Genetik)",
+  [id2(122)]: "keine einheitliche Spanne",
+  [id2(131)]: "keine universelle Obergrenze (altersabh\xE4ngig)"
+};
+function intlRange(analyte, person) {
+  return entryRange(INTL_REFERENCES[analyte.id], analyte, person);
+}
+function intlMissingText(analyte) {
+  const entry = INTL_REFERENCES[analyte.id];
+  if (entry && entry.unit !== analyte.unit) return `nur f\xFCr ${entry.unit}`;
+  if (entry) return entry.note ?? "f\xFCr Profil (Geschlecht/Alter) nicht angegeben";
+  return INTL_NO_RANGE[analyte.id] ?? "\u2013";
+}
+var BAR_RANGE_START = 20;
+var BAR_RANGE_END = 80;
+function placeOnBar(value, comparator, range) {
+  const low = range.low ?? 0;
+  const high = range.high;
+  if (high === null || !(high > low)) return null;
+  const span = BAR_RANGE_END - BAR_RANGE_START;
+  const raw = BAR_RANGE_START + (value - low) / (high - low) * span;
+  const position = Math.min(100, Math.max(0, raw));
+  return {
+    position: Math.round(position * 10) / 10,
+    // Untergrenze 0 heißt „keine Untergrenze“ (z. B. „< 0,5“ bei CRP 0–5 liegt im Bereich)
+    flag: flagOf(value, comparator, { low: range.low === 0 ? null : range.low, high }),
+    clamped: raw < 0 || raw > 100
+  };
+}
+
+// src/domain/checklistImport.ts
+function parseCsv(text) {
+  const clean2 = text.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
+  const firstLine = clean2.split("\n")[0] ?? "";
+  const count = (ch) => firstLine.split(ch).length - 1;
+  const sep = [";", "	", ","].reduce((best, ch) => count(ch) > count(best) ? ch : best, ";");
+  const rows = [];
+  let row = [];
+  let cell2 = "";
+  let quoted = false;
+  for (let i = 0; i < clean2.length; i++) {
+    const ch = clean2[i];
+    if (quoted) {
+      if (ch === '"' && clean2[i + 1] === '"') {
+        cell2 += '"';
+        i++;
+      } else if (ch === '"') quoted = false;
+      else cell2 += ch;
+    } else if (ch === '"' && cell2 === "") quoted = true;
+    else if (ch === sep) {
+      row.push(cell2);
+      cell2 = "";
+    } else if (ch === "\n") {
+      row.push(cell2);
+      rows.push(row);
+      row = [];
+      cell2 = "";
+    } else cell2 += ch;
+  }
+  if (cell2 !== "" || row.length > 0) {
+    row.push(cell2);
+    rows.push(row);
+  }
+  return rows;
+}
+
+// src/domain/zip.ts
+var SIG_LOCAL = 67324752;
+var SIG_CENTRAL = 33639248;
+var SIG_END = 101010256;
+function u16(b, o) {
+  return (b[o] ?? 0) | (b[o + 1] ?? 0) << 8;
+}
+function u32(b, o) {
+  return (u16(b, o) | u16(b, o + 2) << 16) >>> 0;
+}
+var utf8 = new TextDecoder("utf-8");
+async function readZip(bytes, inflateRaw) {
+  let end = -1;
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 22 - 65535); i--) {
+    if (u32(bytes, i) === SIG_END) {
+      end = i;
+      break;
+    }
+  }
+  if (end < 0) throw new Error("Die Datei ist keine g\xFCltige Excel-Datei (kein ZIP-Archiv).");
+  const count = u16(bytes, end + 10);
+  let p = u32(bytes, end + 16);
+  const entries = [];
+  for (let n = 0; n < count; n++) {
+    if (u32(bytes, p) !== SIG_CENTRAL) throw new Error("Die Excel-Datei ist besch\xE4digt.");
+    const method = u16(bytes, p + 10);
+    const compressedSize = u32(bytes, p + 20);
+    const nameLen = u16(bytes, p + 28);
+    const extraLen = u16(bytes, p + 30);
+    const commentLen = u16(bytes, p + 32);
+    const localOffset = u32(bytes, p + 42);
+    const name = utf8.decode(bytes.subarray(p + 46, p + 46 + nameLen));
+    p += 46 + nameLen + extraLen + commentLen;
+    if (u32(bytes, localOffset) !== SIG_LOCAL) throw new Error("Die Excel-Datei ist besch\xE4digt.");
+    const start = localOffset + 30 + u16(bytes, localOffset + 26) + u16(bytes, localOffset + 28);
+    const raw = bytes.subarray(start, start + compressedSize);
+    if (name.endsWith("/")) continue;
+    if (method === 0) entries.push({ name, data: raw });
+    else if (method === 8) entries.push({ name, data: await inflateRaw(raw) });
+    else throw new Error(`Nicht unterst\xFCtzte Kompression in \u201E${name}\u201C.`);
+  }
+  return entries;
+}
+
+// src/domain/xlsx.ts
+var ENTITIES = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'"
+};
+function decodeXml(text) {
+  return text.replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g, (_, e) => {
+    if (e.startsWith("#x")) return String.fromCodePoint(parseInt(e.slice(2), 16));
+    if (e.startsWith("#")) return String.fromCodePoint(parseInt(e.slice(1), 10));
+    return ENTITIES[e] ?? "";
+  });
+}
+function texts(xml) {
+  let out = "";
+  for (const m of xml.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)) out += decodeXml(m[1] ?? "");
+  return out;
+}
+function attr(tag, name) {
+  const m = new RegExp(`\\s${name}="([^"]*)"`).exec(tag);
+  return m ? decodeXml(m[1] ?? "") : null;
+}
+function columnIndex(ref) {
+  const letters = /^[A-Z]+/.exec(ref.toUpperCase())?.[0] ?? "A";
+  let n = 0;
+  for (const ch of letters) n = n * 26 + (ch.charCodeAt(0) - 64);
+  return n - 1;
+}
+function numberText(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return v;
+  return String(Number.isInteger(n) ? n : Number(n.toPrecision(12)));
+}
+async function readXlsx(bytes, inflateRaw) {
+  const entries = await readZip(bytes, inflateRaw);
+  const text = new TextDecoder("utf-8");
+  const file = (name) => {
+    const e = entries.find((x) => x.name.toLowerCase() === name.toLowerCase());
+    return e ? text.decode(e.data) : null;
+  };
+  const workbook = file("xl/workbook.xml");
+  if (!workbook) throw new Error("Die Datei ist keine Excel-Arbeitsmappe (.xlsx).");
+  const firstSheet = /<sheet\s[^>]*>/.exec(workbook)?.[0] ?? "";
+  const sheetName = attr(firstSheet, "name") ?? "Tabelle1";
+  const relId = attr(firstSheet, "r:id");
+  let sheetPath = null;
+  const rels = file("xl/_rels/workbook.xml.rels");
+  if (rels && relId) {
+    for (const m of rels.matchAll(/<Relationship\s[^>]*>/g)) {
+      if (attr(m[0], "Id") === relId) {
+        const target = attr(m[0], "Target") ?? "";
+        sheetPath = target.startsWith("/") ? target.slice(1) : `xl/${target}`;
+      }
+    }
+  }
+  const sheetXml = (sheetPath ? file(sheetPath) : null) ?? entries.filter((e) => /^xl\/worksheets\/[^/]+\.xml$/i.test(e.name)).sort((a, b) => a.name.localeCompare(b.name, void 0, { numeric: true })).map((e) => text.decode(e.data))[0] ?? null;
+  if (!sheetXml) throw new Error("In der Excel-Datei wurde kein Tabellenblatt gefunden.");
+  const shared = [];
+  const sst = file("xl/sharedStrings.xml");
+  if (sst) for (const m of sst.matchAll(/<si>([\s\S]*?)<\/si>/g)) shared.push(texts(m[1] ?? ""));
+  const rows = [];
+  for (const rowMatch of sheetXml.matchAll(/<row\b([^>]*?)(?:\/>|>([\s\S]*?)<\/row>)/g)) {
+    const rowNumber = Number(attr(rowMatch[0], "r") ?? rows.length + 1);
+    const cells = [];
+    const body = rowMatch[2] ?? "";
+    let next = 0;
+    for (const c of body.matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+      const tag = `<c${c[1] ?? ""}>`;
+      const ref = attr(tag, "r");
+      const index = ref ? columnIndex(ref) : next;
+      next = index + 1;
+      const type = attr(tag, "t");
+      const inner = c[2] ?? "";
+      const v = /<v>([\s\S]*?)<\/v>/.exec(inner)?.[1];
+      let value = "";
+      if (type === "s") value = shared[Number(v)] ?? "";
+      else if (type === "inlineStr") value = texts(inner);
+      else if (type === "b") value = v === "1" ? "WAHR" : "FALSCH";
+      else if (type === "str" || type === "e") value = decodeXml(v ?? "");
+      else if (v !== void 0) value = numberText(decodeXml(v));
+      while (cells.length < index) cells.push("");
+      cells[index] = value;
+    }
+    while (rows.length < rowNumber - 1) rows.push([]);
+    rows[rowNumber - 1] = cells;
+  }
+  return { name: sheetName, rows };
+}
+
+// src/lib/files.ts
+async function browserInflateRaw(data) {
+  const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
 export {
+  AKH_REFERENCES,
   ANS_INFO,
   ANS_MAX,
   ANS_MIN,
@@ -11323,6 +13255,7 @@ export {
   OPTIONAL_LABELS,
   OVERVIEW_LAYOUT_KEY,
   REFERENCE_SOURCE,
+  REFERENCE_URL,
   REPEAT_LABEL,
   ROUTE_LABELS,
   SCALE_MODE_LABELS,
@@ -11335,6 +13268,7 @@ export {
   ansPercent,
   arrange,
   associationItem,
+  browserInflateRaw,
   buildFocusIndex,
   countAfterClick,
   coverage,
@@ -11357,6 +13291,9 @@ export {
   describeScheduled,
   describeSupplements,
   describeTiming,
+  doctorReport_exports as doctorReport,
+  doctorReportFileName,
+  doctorReportToPdf,
   dominantMethod,
   doseCalc_exports as doseCalc,
   drinkText,
@@ -11391,6 +13328,8 @@ export {
   hrtDuplicateHint,
   insights_exports as insights,
   lab_exports as lab,
+  labImport_exports as labImport,
+  labReferenceIntl_exports as labIntl,
   legendLabels,
   lifestyleCategoryLabel,
   lifetime_exports as lifetime,
@@ -11410,6 +13349,8 @@ export {
   nutrientPercents,
   nutrientsFor,
   optionalOf,
+  parseCsv,
+  parseDecimal,
   parseIsoDate,
   parseLayout,
   parseMuscleMapSettings,
@@ -11418,6 +13359,7 @@ export {
   portionsFromAmount,
   previousMean,
   protocol_exports as protocol,
+  readXlsx,
   recovery_exports as recovery,
   referenceGroup,
   repeatDates,

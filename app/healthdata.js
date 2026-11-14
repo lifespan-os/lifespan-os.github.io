@@ -1,12 +1,13 @@
-// LIFESPAN OS Mobil – Health am Handy (1.10.0), reine Logik ohne Oberfläche.
+// LIFESPAN OS Mobil – Health am Handy (1.10.0; ab 1.14.0 mit Parametern und Import), reine Logik.
 //
 // Daten vom PC: `lab_analyte`, `lab_draw`, `lab_result` und `lifetime_record` aus der Exportdatei
 // (catalog.pc). Am Handy angelegte oder geänderte Einträge liegen in `local` (id → { row, sent }),
 // Löschungen als Löschvermerk („tabelle:id“). Sie gehen mit „Körperwerte … senden“ an den PC
 // (Abgleich: neuerer Stand gewinnt; Blutabnahmen über Datum + Uhrzeit, Werte über Abnahme +
 // Parameter, Lifetime über Bereich + Bezeichnung).
-// Prüfregeln wie im Rust-Kern (repo/lab.rs, repo/lifetime.rs). Parameter selbst (Namen,
-// Einheiten, eigene Bereiche) werden weiterhin am PC gepflegt.
+// Prüfregeln wie im Rust-Kern (repo/lab.rs, repo/lifetime.rs). Ab 1.14.0 lassen sich auch die
+// Parameter (Name, Einheit, Gruppe, eigener Bereich, Wirkstoffspiegel, archiviert) am Handy
+// pflegen; der PC gleicht sie über die ID bzw. den Namen ab.
 
 import * as D from "./pcdomain.js";
 
@@ -25,12 +26,17 @@ export const RESULT_COLUMNS = [
   "updated_at",
 ];
 export const LIFETIME_COLUMNS = ["id", "category", "name", "value", "date", "source", "notes", "created_at", "updated_at"];
+export const ANALYTE_COLUMNS = ["id", "name", "unit", "category", "ref_low", "ref_high", "measurand", "position", "builtin", "archived", "created_at", "updated_at"];
 
 const LIMIT = 1e9;
-const TABLES = { draws: "lab_draw", results: "lab_result", lifetime: "lifetime_record" };
+const TABLES = { analytes: "lab_analyte", draws: "lab_draw", results: "lab_result", lifetime: "lifetime_record" };
+const COLUMNS = { analytes: ANALYTE_COLUMNS, draws: DRAW_COLUMNS, results: RESULT_COLUMNS, lifetime: LIFETIME_COLUMNS };
+
+export const CATEGORIES = ["hormone", "blood", "lipid", "glucose", "liver", "kidney", "thyroid", "inflammation", "vitamin", "electrolyte", "other"];
+export const MEASURANDS = ["testosterone", "estradiol", "progesterone", "hcg", "dheaS", "gh", "ft4", "ft3"];
 
 export function emptyHealthLocal() {
-  return { draws: {}, results: {}, lifetime: {}, deleted: {} };
+  return { analytes: {}, draws: {}, results: {}, lifetime: {}, deleted: {} };
 }
 
 export function healthState(saved) {
@@ -45,9 +51,11 @@ function merged(catalog, local, key) {
   const table = TABLES[key];
   const m = new Map();
   for (const r of pcRows(catalog, table)) if (!l.deleted[`${table}:${r.id}`]) m.set(r.id, r);
-  for (const e of Object.values(l[key])) m.set(e.row.id, e.row);
+  for (const e of Object.values(l[key] ?? {})) m.set(e.row.id, e.row);
   return [...m.values()];
 }
+
+const analyteRows = (catalog, local) => merged(catalog, local, "analytes");
 
 // ------------------------------------------------------------------ Person und Parameter
 
@@ -69,7 +77,7 @@ export function analytesOf(catalog, local, today) {
   const results = merged(catalog, local, "results");
   const count = new Map();
   for (const r of results) count.set(r.analyte_id, (count.get(r.analyte_id) ?? 0) + 1);
-  const list = pcRows(catalog, "lab_analyte")
+  const list = analyteRows(catalog, local)
     .map((a) => ({
       id: a.id,
       name: a.name,
@@ -93,7 +101,7 @@ export function analytesOf(catalog, local, today) {
 
 /** Blutabnahmen mit Werten wie `list_lab_draws` (neueste zuerst). */
 export function drawsOf(catalog, local) {
-  const analytes = new Map(pcRows(catalog, "lab_analyte").map((a) => [a.id, a]));
+  const analytes = new Map(analyteRows(catalog, local).map((a) => [a.id, a]));
   const byDraw = new Map();
   for (const r of merged(catalog, local, "results")) {
     const a = analytes.get(r.analyte_id);
@@ -151,12 +159,14 @@ function checkNumber(field, label, v) {
 }
 
 function put(local, key, row) {
+  local[key] ??= {};
   local[key][row.id] = { row, sent: false };
   delete local.deleted[`${TABLES[key]}:${row.id}`];
 }
 
 /** Löschen: vom PC oder schon gesendet → Löschvermerk; sonst einfach weg. */
 function remove(catalog, local, key, id, iso) {
+  local[key] ??= {};
   const own = local[key][id];
   delete local[key][id];
   const table = TABLES[key];
@@ -175,7 +185,7 @@ export function saveDraw(catalog, local, input, { uuid, now = new Date() }) {
   const lab = optText("lab", input.lab, 80);
   const notes = optText("notes", input.notes, 1000);
   if (!input.results?.length) throw new Error("Bitte mindestens einen Wert eintragen.");
-  const analytes = new Map(pcRows(catalog, "lab_analyte").map((a) => [a.id, a]));
+  const analytes = new Map(analyteRows(catalog, local).map((a) => [a.id, a]));
   const seen = new Set();
   const checked = input.results.map((r) => {
     const a = analytes.get(r.analyteId);
@@ -311,26 +321,163 @@ export function deleteLifetime(catalog, local, id, now = new Date()) {
   remove(catalog, local, "lifetime", id, now.toISOString());
 }
 
+// ------------------------------------------------------------------ Parameter pflegen (wie lab.rs)
+
+const sameName = (a, b) => String(a).toLocaleLowerCase("de") === String(b).toLocaleLowerCase("de");
+
+function checkUnit(field, value) {
+  const unit = String(value ?? "").trim();
+  if ([...unit].length > 20) throw fieldError(field, "Die Einheit darf höchstens 20 Zeichen lang sein.");
+  return unit;
+}
+
+function checkRange(low, high) {
+  const l = checkNumber("refLow", "Der untere Referenzwert", low);
+  const h = checkNumber("refHigh", "Der obere Referenzwert", high);
+  if (l !== null && h !== null && l >= h) throw fieldError("refHigh", "Der obere Referenzwert muss größer als der untere sein.");
+  return [l, h];
+}
+
+function nextPosition(catalog, local) {
+  return analyteRows(catalog, local).reduce((m, a) => Math.max(m, Number(a.position) || 0), 0) + 10;
+}
+
+/** Parameter speichern wie `save_analyte` (Name eindeutig ohne Groß-/Kleinschreibung). Rückgabe: ID. */
+export function saveAnalyte(catalog, local, input, { uuid, now = new Date() }) {
+  const name = String(input.name ?? "").trim();
+  if (name === "") throw fieldError("name", "Bitte den Namen eingeben.");
+  if ([...name].length > 80) throw fieldError("name", "Höchstens 80 Zeichen.");
+  const unit = checkUnit("unit", input.unit);
+  if (!CATEGORIES.includes(input.category)) throw fieldError("category", "Bitte eine Gruppe wählen.");
+  const measurand = input.measurand ? String(input.measurand) : null;
+  if (measurand && !MEASURANDS.includes(measurand)) throw fieldError("measurand", "Bitte eine Messgröße aus der Liste wählen.");
+  const [refLow, refHigh] = checkRange(input.refLow, input.refHigh);
+  const all = analyteRows(catalog, local);
+  const other = all.find((a) => sameName(a.name, name));
+  if (other && other.id !== input.id) throw fieldError("name", "Diesen Parameter gibt es schon.");
+  const iso = now.toISOString();
+  const old = input.id ? all.find((a) => a.id === input.id) : null;
+  if (input.id && !old) throw new Error("Diesen Parameter gibt es nicht mehr.");
+  const row = old
+    ? { ...old, name, unit, category: input.category, ref_low: refLow, ref_high: refHigh, measurand, archived: input.archived ? 1 : 0, updated_at: iso }
+    : { id: uuid(), name, unit, category: input.category, ref_low: refLow, ref_high: refHigh, measurand, position: nextPosition(catalog, local), builtin: 0, archived: input.archived ? 1 : 0, created_at: iso, updated_at: iso };
+  put(local, "analytes", Object.fromEntries(ANALYTE_COLUMNS.map((c) => [c, row[c] ?? null])));
+  return row.id;
+}
+
+/** Eigenen Parameter ohne Werte löschen wie `delete_analyte`. */
+export function deleteAnalyte(catalog, local, id, now = new Date()) {
+  const a = analyteRows(catalog, local).find((x) => x.id === id);
+  if (!a) throw new Error("Diesen Parameter gibt es nicht mehr.");
+  if (a.builtin) throw new Error("Mitgelieferte Parameter können nicht gelöscht, aber archiviert werden.");
+  if (merged(catalog, local, "results").some((r) => r.analyte_id === id)) {
+    throw new Error(`„${a.name}“ hat noch gespeicherte Werte. Statt zu löschen kannst du den Parameter archivieren.`);
+  }
+  remove(catalog, local, "analytes", id, now.toISOString());
+}
+
+// ------------------------------------------------------------------ Import (wie lab.rs import_rows)
+
+/**
+ * Übernimmt Zeilen aus `toImportRows` – alles oder nichts. Je Datum (und Uhrzeit) eine Blutabnahme:
+ * gibt es sie schon, kommen die Werte dazu; ein vorhandener Wert desselben Parameters wird ersetzt.
+ * Rückgabe: Zählung wie `LabImportReport`.
+ */
+export function importLabRows(catalog, local, rows, { uuid, now = new Date() }) {
+  if (!rows?.length) throw new Error("Die Datei enthält keine Werte.");
+  // Auf einer Kopie arbeiten, damit bei einem Fehler nichts übernommen wird
+  const work = structuredClone(healthState(local));
+  const iso = now.toISOString();
+  const report = { drawsCreated: 0, drawsExtended: 0, resultsAdded: 0, resultsUpdated: 0, analytesCreated: 0 };
+  const draws = new Map();
+  const touched = new Set();
+  rows.forEach((row, i) => {
+    const line = i + 1;
+    const fail = (e) => {
+      throw new Error(`Zeile ${line}: ${e.message}`);
+    };
+    try {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(row.date ?? "")) throw new Error("Bitte ein gültiges Datum angeben.");
+      const time = row.time ? String(row.time).trim() : null;
+      if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw new Error("Bitte eine gültige Uhrzeit angeben.");
+      const lab = optText("lab", row.lab, 80);
+      const unit = checkUnit("unit", row.unit);
+      // Parameter: per ID, per Name oder neu
+      let analyteId;
+      const list = analyteRows(catalog, work);
+      if (row.analyteId) {
+        if (!list.some((a) => a.id === row.analyteId)) throw new Error("Der Parameter wurde nicht gefunden.");
+        analyteId = row.analyteId;
+      } else {
+        const name = String(row.analyteName ?? "").trim();
+        if (name === "") throw new Error("Bitte den Parameter eingeben.");
+        if ([...name].length > 80) throw new Error("Höchstens 80 Zeichen.");
+        const found = list.find((a) => sameName(a.name, name));
+        if (found) analyteId = found.id;
+        else {
+          const category = row.category ?? "other";
+          if (!CATEGORIES.includes(category)) throw new Error("Bitte eine Gruppe wählen.");
+          analyteId = uuid();
+          put(work, "analytes", { id: analyteId, name, unit, category, ref_low: null, ref_high: null, measurand: null, position: nextPosition(catalog, work), builtin: 0, archived: 0, created_at: iso, updated_at: iso });
+          report.analytesCreated += 1;
+        }
+      }
+      // Blutabnahme: gleiche Datei-Zeilen mit gleichem Datum und gleicher Uhrzeit gehören zusammen
+      const key = `${row.date}|${time ?? ""}`;
+      let drawId = draws.get(key);
+      if (!drawId) {
+        const existing = merged(catalog, work, "draws")
+          .filter((d) => d.date === row.date && (d.time ?? "") === (time ?? ""))
+          .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))[0];
+        if (existing) {
+          drawId = existing.id;
+          report.drawsExtended += 1;
+        } else {
+          drawId = uuid();
+          put(work, "draws", { id: drawId, date: row.date, time, lab, fasting: null, notes: null, created_at: iso, updated_at: iso });
+          report.drawsCreated += 1;
+        }
+        draws.set(key, drawId);
+      }
+      const value = checkNumber("value", "Der Wert", row.value);
+      if (value === null) throw new Error("Bitte einen Wert eintragen.");
+      const comparator = row.comparator ?? null;
+      if (comparator !== null && comparator !== "<" && comparator !== ">") throw new Error("Bitte „<“ oder „>“ wählen.");
+      const [refLow, refHigh] = checkRange(row.refLow ?? null, row.refHigh ?? null);
+      if (touched.has(`${drawId}|${analyteId}`)) throw new Error("Derselbe Parameter steht für diese Blutabnahme mehrfach in der Datei.");
+      touched.add(`${drawId}|${analyteId}`);
+      const old = merged(catalog, work, "results").find((r) => r.draw_id === drawId && r.analyte_id === analyteId);
+      const result = { id: old ? old.id : uuid(), draw_id: drawId, analyte_id: analyteId, value, comparator, unit, ref_low: refLow, ref_high: refHigh, notes: old ? (old.notes ?? null) : null, created_at: old ? old.created_at : iso, updated_at: iso };
+      put(work, "results", result);
+      if (old) report.resultsUpdated += 1;
+      else report.resultsAdded += 1;
+    } catch (e) {
+      fail(e);
+    }
+  });
+  Object.assign(local, work);
+  return report;
+}
+
 // ------------------------------------------------------------------ Übertragung an den PC
 
 export function unsentHealth(local) {
   if (!local) return 0;
   const l = healthState(local);
   let n = 0;
-  for (const key of Object.keys(TABLES)) n += Object.values(l[key]).filter((e) => !e.sent).length;
+  for (const key of Object.keys(TABLES)) n += Object.values(l[key] ?? {}).filter((e) => !e.sent).length;
   return n + Object.values(l.deleted).filter((d) => !d.sent).length;
 }
 
-/** Tabellen für die Rückgabedatei: Abnahmen, Werte, Lifetime und Löschvermerke. */
+/** Tabellen für die Rückgabedatei: Parameter, Abnahmen, Werte, Lifetime und Löschvermerke. */
 export function healthTables(local, { all = false } = {}) {
   if (!local) return {};
   const l = healthState(local);
   const out = {};
-  const cols = { draws: DRAW_COLUMNS, results: RESULT_COLUMNS, lifetime: LIFETIME_COLUMNS };
   for (const [key, table] of Object.entries(TABLES)) {
-    const rows = Object.values(l[key])
+    const rows = Object.values(l[key] ?? {})
       .filter((e) => all || !e.sent)
-      .map((e) => Object.fromEntries(cols[key].map((c) => [c, e.row[c] ?? null])));
+      .map((e) => Object.fromEntries(COLUMNS[key].map((c) => [c, e.row[c] ?? null])));
     if (rows.length) out[table] = rows;
   }
   const del = Object.values(l.deleted)
@@ -351,7 +498,7 @@ export function pruneHealth(catalog, local) {
   const l = healthState(local);
   for (const [key, table] of Object.entries(TABLES)) {
     const pc = new Map(pcRows(catalog, table).map((r) => [r.id, r]));
-    for (const [id, e] of Object.entries(l[key])) {
+    for (const [id, e] of Object.entries(l[key] ?? {})) {
       const r = pc.get(id);
       if (e.sent && r && String(r.updated_at) >= String(e.row.updated_at)) delete l[key][id];
     }

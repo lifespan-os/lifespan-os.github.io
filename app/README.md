@@ -319,3 +319,18 @@ Fassung laden.
   Rechnung aus `src/domain/protocol.ts` (in `pcdomain.js`).
 - Daten: `protocol_substance` und `protocol_entry` kommen mit der Exportdatei und gehen mit
   „Körperwerte … senden“ an den PC (Löschungen als Löschvermerk); der PC-Import kennt beide Tabellen.
+
+## Version 1.14.0 (14.11.2026): Health vollständig – Arztbericht, Import, Parameter
+
+- Health hat jetzt alle Reiter wie am PC (`HealthPage.tsx`):
+  - **Arztbericht:** Zeitraum (Von/Bis oder 30 Tage, 90 Tage, 6 Monate, 12 Monate), auf Wunsch mit
+    Hormontherapie (wenn „Secret Protocols“ am PC an ist), Vorschau und PDF wie
+    `doctorReport.ts`/`doctorReportPdf.ts`. Das PDF wird über „Teilen“ weitergegeben oder als Link
+    zum Öffnen angeboten; Daten aus Body, Training und Schlaf wie `report_data` (`doctorReportData`).
+  - **Import:** Laborwerte aus CSV oder Excel (.xlsx) mit Vorschau, übersprungenen Zeilen und neu
+    angelegten Parametern; Übernahme wie `lab.rs import_rows` (alles oder nichts, vorhandene
+    Abnahme am selben Datum/Uhrzeit wird ergänzt, gleicher Parameter ersetzt).
+  - **Parameter:** Gruppen zum Auf-/Zuklappen (anfangs zu), eigener Bereich, Referenz AKH Wien,
+    internationale Referenzwerte mit Balken für den letzten Wert, Wirkstoffspiegel-Verknüpfung;
+    anlegen, bearbeiten, archivieren, eigene ohne Werte löschen (Regeln wie `lab.rs`).
+- `lab_analyte` geht jetzt mit „Körperwerte … senden“ an den PC (Abgleich über ID bzw. Namen).

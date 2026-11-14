@@ -281,6 +281,23 @@ export function insightsFor(db, from, to) {
   };
 }
 
+/**
+ * Teil von `report_data` für den Arztbericht (Health): Einheiten, Schlaf, Messwerte und Messgrößen
+ * im Zeitraum – ohne Ernährung und Energie, die der Bericht nicht braucht.
+ */
+export function doctorReportData(db, from, to) {
+  return {
+    from,
+    to,
+    sleep: listSleep(db, from, to),
+    workouts: P.workoutsBetween(db, from, to)
+      .reverse()
+      .map((w) => workoutSummary(db, w)),
+    measurements: measurementsBetween(db, null, from, to),
+    metrics: (db.pc.body_metric ?? []).map((m) => ({ id: m.id, name: m.name, unit: m.unit ?? "", category: m.category, decimals: m.decimals ?? 1, position: m.position ?? 0, archived: !!m.archived })),
+  };
+}
+
 // ------------------------------------------------------------------ Dashboard (dashboard.rs)
 
 const ISO_WEEKDAY = (iso) => {

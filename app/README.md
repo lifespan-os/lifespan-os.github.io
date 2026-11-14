@@ -287,3 +287,9 @@ Fassung laden.
 - **Body & Longevity → Werte erfassen → „Aus Bild übernehmen“:** Screenshot der Waagen-Auswertung (Hume) wählen. Die Texterkennung (offline) liest je Kachel den aktuellen (rechten) Wert; eine Vorschau zeigt Name im Bild → Körperwert und den Wert zum Prüfen, Ändern oder Abwählen. „Ins Formular übernehmen“ trägt die Werte für den gewählten Tag ein und setzt die Messmethode „Hume …“, gespeichert wird mit „Werte speichern“.
 - Zuordnung und Prüfung wie am PC (`src/domain/scaleScan.ts` in `pcdomain.js`): unscharfe Namen, Wert rechts vom Pfeil, A/G in Prozent → Verhältnis, Herzfrequenz wird nicht übernommen; Werte außerhalb des Bereichs oder mit starker Abweichung zum vorherigen Wert sind abgewählt und markiert.
 - Neue Körperwerte „Grundumsatz (BMR)“ und „Gesundheitspunktzahl“ (unter „Kennzahlen“) gibt es ab der Desktop-Version 1.0.122; am Handy erscheinen sie nach dem nächsten Export.
+
+## Version 1.12.1 (14.11.2026): Waagen-Screenshot sicherer lesen
+
+- Zwei Durchgänge der Texterkennung; gleiche Lesarten zählen, unterschiedliche werden markiert und abgewählt.
+- A/G-Verhältnis mit zwei Stellen abgeschnitten (113,6 % → 1,13).
+- Strengere Prüfung: über 20 % Abweichung zum vorherigen Wert im Bild, fehlendes Komma (51,7 › 52) und Körperfettmasse ≠ Gewicht × Körperfettanteil werden markiert und nicht vorausgewählt.

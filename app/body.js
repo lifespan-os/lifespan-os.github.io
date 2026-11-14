@@ -306,12 +306,22 @@ async function readScale(file) {
       pctx.putImageData(out, 0, 0);
       return part;
     });
-    const rows = await recognizeRows(canvases, (text, p) => {
-      const el = document.getElementById("scale-status");
-      if (el) el.textContent = `${text} ${Math.round((p ?? 0) * 100)} %`;
-    });
     const bounds = metrics().map((m) => ({ id: m.id, name: m.name, unit: m.unit, minValue: m.min_value ?? null, maxValue: m.max_value ?? null, decimals: m.decimals ?? 1 }));
-    const vals = D.scaleScan.scaleValues(D.scaleScan.readScaleRows(rows), bounds);
+    // Zwei Durchgänge (Textblock und Spalten); gleiche Lesarten zählen, Widersprüche werden markiert
+    const PASSES = ["6", "4"];
+    const results = [];
+    for (const [i, psm] of PASSES.entries()) {
+      const rows = await recognizeRows(
+        canvases,
+        (text, p) => {
+          const el = document.getElementById("scale-status");
+          if (el) el.textContent = `Durchgang ${i + 1} von ${PASSES.length}: ${text} ${Math.round((p ?? 0) * 100)} %`;
+        },
+        psm,
+      );
+      results.push(D.scaleScan.scaleValues(D.scaleScan.readScaleRows(rows), bounds));
+    }
+    const vals = D.scaleScan.combinePasses(results);
     const found = vals.filter((v) => v.value !== null).length;
     st.scale = {
       busy: false,

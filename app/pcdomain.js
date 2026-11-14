@@ -10631,7 +10631,9 @@ var scaleScan_exports = {};
 __export(scaleScan_exports, {
   GRUNDUMSATZ_METRIC_ID: () => GRUNDUMSATZ_METRIC_ID,
   HEALTH_SCORE_METRIC_ID: () => HEALTH_SCORE_METRIC_ID,
+  MAX_CHANGE: () => MAX_CHANGE,
   SCALE_FIELDS: () => SCALE_FIELDS,
+  combinePasses: () => combinePasses,
   editDistance: () => editDistance,
   fieldOfRow: () => fieldOfRow,
   normalizeLabel: () => normalizeLabel,
@@ -10652,7 +10654,7 @@ var SCALE_FIELDS = [
   { key: "lean", label: "Magermasse", metricId: builtinMetricId(29) },
   { key: "subcutaneous", label: "Subkutane Fettmasse", metricId: builtinMetricId(26) },
   { key: "visceral", label: "Viszerales Fettindex", metricId: builtinMetricId(28) },
-  { key: "ag", label: "A/G-Verh\xE4ltnis", metricId: builtinMetricId(38), factor: 0.01 },
+  { key: "ag", label: "A/G-Verh\xE4ltnis", metricId: builtinMetricId(38), factor: 0.01, truncate: true },
   { key: "skeletalMuscle", label: "Rate an Skelettmuskel", metricId: builtinMetricId(3) },
   { key: "skeleton", label: "Skelettmasse", metricId: builtinMetricId(39) },
   { key: "water", label: "K\xF6rperwasser", metricId: builtinMetricId(32) },
@@ -10707,14 +10709,23 @@ var ARROW = /[>›»?’]+/;
 function valuesOfRow(row) {
   const arrow = ARROW.exec(row);
   if (arrow) {
-    const left = numbersIn(row.slice(0, arrow.index));
-    const right = numbersIn(row.slice(arrow.index + arrow[0].length));
-    const current = right[0] ?? null;
-    if (current) return { previous: left[0]?.value ?? null, current: current.value };
+    const left = numbersIn(row.slice(0, arrow.index))[0] ?? null;
+    const current = numbersIn(row.slice(arrow.index + arrow[0].length))[0] ?? null;
+    if (current) {
+      return {
+        previous: left?.value ?? null,
+        current: current.value,
+        previousText: left?.text ?? null,
+        currentText: current.text
+      };
+    }
   }
   const nums = numbersIn(row);
-  if (nums.length >= 2) return { previous: nums[0]?.value ?? null, current: nums[1]?.value ?? 0 };
-  return nums[0] ? { previous: null, current: nums[0].value } : null;
+  const [a, b] = nums;
+  if (a && b) {
+    return { previous: a.value, current: b.value, previousText: a.text, currentText: b.text };
+  }
+  return a ? { previous: null, current: a.value, previousText: null, currentText: a.text } : null;
 }
 function readScaleRows(rows) {
   const found = /* @__PURE__ */ new Map();
@@ -10726,7 +10737,7 @@ function readScaleRows(rows) {
       if (fieldOfRow(row)) break;
       const v = valuesOfRow(row);
       if (v) {
-        found.set(field.key, { value: v.current, previous: v.previous, raw: row });
+        found.set(field.key, { v, raw: row });
         break;
       }
     }
@@ -10735,8 +10746,10 @@ function readScaleRows(rows) {
     const f = found.get(field.key);
     return {
       field,
-      imageValue: f?.value ?? null,
-      previousValue: f?.previous ?? null,
+      imageValue: f?.v.current ?? null,
+      previousValue: f?.v.previous ?? null,
+      currentHasDecimal: f ? /[.,]/.test(f.v.currentText) : false,
+      previousHasDecimal: f?.v.previousText ? /[.,]/.test(f.v.previousText) : false,
       raw: f?.raw ?? null
     };
   });
@@ -10746,10 +10759,15 @@ var round = (v, decimals) => {
   const f = 10 ** decimals;
   return Math.round(v * f) / f;
 };
+var truncate = (v, decimals) => {
+  const f = 10 ** decimals;
+  return Math.floor(v * f + 1e-9) / f;
+};
 var de = (v) => v === null ? "\u2026" : String(round(v, 3)).replace(".", ",");
 function scaleValues(readings, metrics) {
   const byId = new Map(metrics.map((m) => [m.id, m]));
-  return readings.map(({ field, imageValue, previousValue }) => {
+  const values = readings.map((reading) => {
+    const { field, imageValue, previousValue } = reading;
     if (!field.metricId) return { field, metric: null, value: null, note: field.skip ?? null, ok: false };
     const metric = byId.get(field.metricId) ?? null;
     if (imageValue === null) {
@@ -10773,14 +10791,23 @@ function scaleValues(readings, metrics) {
         note = "Komma erg\xE4nzt \u2013 bitte pr\xFCfen";
       }
     }
-    v = round(v, metric.decimals);
+    v = field.truncate ? truncate(v, metric.decimals) : round(v, metric.decimals);
     const before = previousValue === null ? null : previousValue * (field.factor ?? 1);
-    if (before !== null && before > 0 && Math.abs(v - before) / before > 0.5) {
+    if (before !== null && before > 0 && Math.abs(v - before) / before > MAX_CHANGE) {
       return {
         field,
         metric,
         value: v,
         note: `weicht stark vom vorherigen Wert (${de(before)}) ab \u2013 bitte pr\xFCfen`,
+        ok: false
+      };
+    }
+    if (metric.decimals > 0 && !field.factor && reading.previousHasDecimal && !reading.currentHasDecimal && note === null) {
+      return {
+        field,
+        metric,
+        value: v,
+        note: "Komma nicht erkannt \u2013 bitte pr\xFCfen",
         ok: false
       };
     }
@@ -10795,6 +10822,33 @@ function scaleValues(readings, metrics) {
     }
     return { field, metric, value: v, note, ok: true };
   });
+  return checkConsistency(values);
+}
+var MAX_CHANGE = 0.2;
+function checkConsistency(values) {
+  const get = (key) => values.find((x) => x.field.key === key && x.ok && x.value !== null);
+  const flag = (keys, note) => {
+    for (const k of keys) {
+      const x = values.find((y) => y.field.key === k);
+      if (x && x.ok) {
+        x.ok = false;
+        x.note = note;
+      }
+    }
+  };
+  const weight = get("weight");
+  const bodyFat = get("bodyFat");
+  const fatMass = get("fatMass");
+  if (weight?.value != null && bodyFat?.value != null && fatMass?.value != null) {
+    const expected = weight.value * bodyFat.value / 100;
+    if (Math.abs(expected - fatMass.value) > 0.5) {
+      flag(
+        ["bodyFat", "fatMass"],
+        `passt nicht zu Gewicht \xD7 K\xF6rperfettanteil (${de(round(expected, 1))} kg) \u2013 bitte pr\xFCfen`
+      );
+    }
+  }
+  return values;
 }
 function prepareGray(rgba) {
   const n = rgba.length / 4;
@@ -10848,6 +10902,28 @@ function sliceRanges(gray, w, h, maxHeight = 2400) {
   }
   out.push([start, h]);
   return out;
+}
+function combinePasses(passes) {
+  const first = passes[0] ?? [];
+  return first.map((base, i) => {
+    const all = passes.map((p) => p[i]).filter((x) => x !== void 0);
+    const good = all.filter((x) => x.ok && x.value !== null);
+    const distinct = [...new Set(good.map((x) => x.value))];
+    if (distinct.length === 1) return good[0] ?? base;
+    if (distinct.length > 1) {
+      const counts = distinct.map((v) => ({ v, n: good.filter((x) => x.value === v).length }));
+      counts.sort((a, b) => b.n - a.n);
+      const top = counts[0];
+      const second = counts[1];
+      if (top && second && top.n > second.n) return good.find((x) => x.value === top.v) ?? base;
+      return {
+        ...good[0] ?? base,
+        ok: false,
+        note: `unterschiedlich gelesen (${distinct.map((v) => de(v)).join(" / ")}) \u2013 bitte pr\xFCfen`
+      };
+    }
+    return all.find((x) => x.value !== null) ?? base;
+  });
 }
 export {
   ANS_INFO,

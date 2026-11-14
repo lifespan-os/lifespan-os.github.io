@@ -348,3 +348,24 @@ Fassung laden.
   CSV, Text/Markdown oder eingefügtem Text aus Apple Notizen (Regeln wie `checklist.rs`).
 - Neue Datei `checklistdata.js` (mit Tests); `checklist` und `checklist_item` kommen jetzt mit der
   Exportdatei und gehen mit „Körperwerte … senden“ an den PC.
+
+## Version 1.16.0 (14.11.2026): iCoach.me am Handy
+
+- Neuer Bereich **iCoach.me** wie `ICoachPage.tsx` mit den Reitern:
+  - **Evolve:** die 16 Module; je Modul der Sprung zu den passenden Fragen. Die Videos liegen im
+    Video-Ordner des PCs und werden nur dort abgespielt.
+  - **Ask iCoach.me:** 2.063 Fragen & Antworten aus „Die Masterclass“, „Blutwerte“ und „Blutgruppen“
+    nach Buch, Teil und Kapitel, Suche über alle (Hervorhebung), Sicherheitshinweis, Fundstelle
+    öffnet das Buch an der Seite. Daten: `icoach/icoachme-faq*.json` (wie `src/data`), erst beim
+    Öffnen geladen.
+  - **Downloads:** die drei Bücher als PDF. Für die öffentliche Seite mit AES-256 und Benutzerpasswort
+    verschlüsselt (`qpdf --encrypt <Passwort> <zufälliges Eigentümerpasswort> 256 --print=full
+    --modify=none --extract=n`); das Passwort steht nicht im Code.
+  - **Magazin:** 16 Magazine und Reports mit Titelbild, Inhalt und „Das lernst du“, nach Rubrik
+    filterbar (`icoach/magazin/<id>.pdf|jpg` aus `src-tauri/assets/magazine` und `public/magazin`).
+  - **Widgets:** Koffein-Zeitstrahl wie `CaffeineWidget.tsx` (Einschlafzeit, Halbwertszeit,
+    Getränk, Uhrzeit, Menge; Kennzahlen, Diagramm, Rest zur Einschlafzeit). Einnahmen in
+    `caffeine_intake` (neue Datei `caffeinedata.js`, Regeln wie `caffeine.rs`), gehen mit
+    „Körperwerte … senden“ an den PC.
+- Der Ordner `icoach/` (≈ 20 MB) liegt nur auf GitHub Pages und wird aus den Quellen des PCs
+  erzeugt; er ist nicht Teil von `mobile/` im PC-Repository.

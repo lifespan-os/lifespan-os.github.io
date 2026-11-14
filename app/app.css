@@ -710,3 +710,31 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .check-edit { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; }
 .check-edit li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center; }
 .check-edit li .row-actions { grid-column: 2; margin: 0; }
+
+/* iCoach.me 1.16.0 */
+.icoach__brand { margin: 0 0 4px; font-weight: 800; letter-spacing: .04em; color: var(--orange-text); text-transform: uppercase; font-size: .78rem; }
+.icoach-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.icoach-tile { display: grid; gap: 4px; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: inherit; font: inherit; }
+.icoach-tile.is-active { border-color: var(--orange); background: rgba(242, 138, 26, .08); }
+.faq-groups, .faq-parts, .faq-chapters, .faq-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+.faq-parts, .faq-chapters { padding-left: 8px; }
+.faq-row { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: inherit; font: inherit; }
+.faq-row--group { background: rgba(242, 138, 26, .08); }
+.faq-row--chapter { padding: 8px 10px; }
+.faq-q { border: 1px solid var(--line); border-radius: 10px; }
+.faq-q.is-open { border-color: var(--orange); }
+.faq-q__button { width: 100%; display: grid; gap: 2px; text-align: left; padding: 9px 11px; background: none; border: 0; color: inherit; font: inherit; font-weight: 600; }
+.faq-q__answer { padding: 0 11px 10px; }
+.faq-q__answer p { margin: 6px 0; line-height: 1.5; }
+.faq-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.faq-meta a.chip { text-decoration: none; display: inline-flex; align-items: center; color: var(--blue); border-color: var(--blue); }
+mark { background: rgba(242, 138, 26, .35); color: inherit; border-radius: 3px; padding: 0 1px; }
+.icoach-book__cover { display: grid; gap: 4px; padding: 16px; border-radius: 12px; background: linear-gradient(135deg, #0b1b33, #1f3b66); color: #fff; margin-bottom: 10px; }
+.icoach-book__brand { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: #f7941d; font-weight: 800; }
+.icoach-book__title { font-size: 1.15rem; font-weight: 800; }
+.icoach-book__sub { font-size: .8rem; opacity: .85; }
+.magazine { display: grid; grid-template-columns: 112px 1fr; gap: 12px; align-items: start; }
+.magazine__cover img { width: 112px; height: auto; border-radius: 6px; box-shadow: var(--shadow); display: block; }
+.magazine__body h3 { margin: 2px 0 6px; }
+.magazine__body ul { margin: 4px 0 8px; padding-left: 18px; }
+@media (max-width: 380px) { .magazine { grid-template-columns: 1fr; } }

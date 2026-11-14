@@ -42,7 +42,7 @@ export const SECTIONS = [
   { id: "health", label: "Health", view: "health", views: ["health", "lab-edit"] },
   { id: "superhuman", label: "Superhuman", view: "super", views: ["super", "hrt-edit", "protocol-edit", "substance-edit"] },
   { id: "insights", label: "Insights", view: "insights", views: ["insights"] },
-  { id: "icoach", label: "iCoach.me", pc: "Fragen, Evolve, Magazin, Downloads und Widgets." },
+  { id: "icoach", label: "iCoach.me", view: "icoach", views: ["icoach"] },
   { id: "settings", label: "Settings", view: "settings", views: ["settings", "send", "help"] },
 ];
 

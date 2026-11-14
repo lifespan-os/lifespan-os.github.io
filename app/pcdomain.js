@@ -7341,6 +7341,32 @@ function coverage(data, today) {
 }
 
 // src/domain/caffeine.ts
+var caffeine_exports = {};
+__export(caffeine_exports, {
+  CAFFEINE_DRINKS: () => CAFFEINE_DRINKS,
+  CAFFEINE_SOURCE_LABELS: () => CAFFEINE_SOURCE_LABELS,
+  CLEARED_BELOW_MG: () => CLEARED_BELOW_MG,
+  DEFAULT_BEDTIME: () => DEFAULT_BEDTIME,
+  DEFAULT_HALF_LIFE_H: () => DEFAULT_HALF_LIFE_H,
+  MAX_HALF_LIFE_H: () => MAX_HALF_LIFE_H,
+  MAX_MG: () => MAX_MG,
+  MAX_ML: () => MAX_ML,
+  MIN_HALF_LIFE_H: () => MIN_HALF_LIFE_H,
+  buildIntake: () => buildIntake,
+  caffeineTimeline: () => caffeineTimeline,
+  chartPoints: () => chartPoints,
+  clearedAt: () => clearedAt,
+  findDrink: () => findDrink,
+  formatClock: () => formatClock,
+  formatDayTime: () => formatDayTime,
+  formatMg: () => formatMg,
+  halfLifeError: () => halfLifeError,
+  isEditableIntake: () => isEditableIntake,
+  levelAt: () => levelAt,
+  mgPer100Ml: () => mgPer100Ml,
+  parseClock: () => parseClock,
+  remainingFraction: () => remainingFraction
+});
 var MAYO = "https://www.mayoclinic.org/healthy-lifestyle/nutrition-and-healthy-eating/in-depth/caffeine/art-20049372";
 var CAFFEINE_DRINKS = [
   { id: "espresso", label: "Espresso", portionMl: 30, portionMg: 63, source: MAYO },
@@ -7394,7 +7420,144 @@ var CAFFEINE_DRINKS = [
     source: "Eigene Angabe (Koffein laut Etikett)"
   }
 ];
+var DEFAULT_HALF_LIFE_H = 5;
+var MIN_HALF_LIFE_H = 1;
+var MAX_HALF_LIFE_H = 12;
+var DEFAULT_BEDTIME = "22:00";
+var CLEARED_BELOW_MG = 1;
+var MAX_ML = 3e3;
+var MAX_MG = 1e3;
 var DAY_MIN = 24 * 60;
+var TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
+function findDrink(id3) {
+  return CAFFEINE_DRINKS.find((d) => d.id === id3);
+}
+function mgPer100Ml(drink) {
+  if (drink.portionMl === null || drink.portionMg === null) return null;
+  return drink.portionMg / drink.portionMl * 100;
+}
+function parseClock(time) {
+  const m = TIME.exec(time.trim());
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+}
+function formatClock(minutes) {
+  const m = (Math.round(minutes) % DAY_MIN + DAY_MIN) % DAY_MIN;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+}
+var CAFFEINE_SOURCE_LABELS = {
+  calculator: "Koffeinrechner",
+  supplement: "Nutrition \u2192 Supplemente",
+  meal: "Nutrition \u2192 Tagebuch",
+  fasttracking: "Nutrition \u2192 Fasttracking"
+};
+function isEditableIntake(i) {
+  return i.source === void 0 || i.source === "calculator";
+}
+function buildIntake(input) {
+  const errors = {};
+  const drink = findDrink(input.drinkId);
+  if (!drink) errors.drinkId = "Bitte ein Getr\xE4nk w\xE4hlen.";
+  if (parseClock(input.time) === null) errors.time = "Uhrzeit als HH:MM eingeben.";
+  const free = drink !== void 0 && drink.portionMl === null;
+  const max = free ? MAX_MG : MAX_ML;
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    errors.amount = free ? "Koffein in mg eingeben (gr\xF6\xDFer als 0)." : "Menge in ml eingeben (gr\xF6\xDFer als 0).";
+  } else if (input.amount > max) {
+    errors.amount = free ? `H\xF6chstens ${max} mg.` : `H\xF6chstens ${formatNumber(max, 0)} ml.`;
+  }
+  if (!drink || Object.keys(errors).length > 0) return { ok: false, errors };
+  const per100 = mgPer100Ml(drink);
+  const mg = per100 === null ? input.amount : input.amount * per100 / 100;
+  return {
+    ok: true,
+    intake: {
+      drinkId: drink.id,
+      time: input.time.trim(),
+      mg,
+      ml: per100 === null ? null : input.amount
+    }
+  };
+}
+function halfLifeError(hours) {
+  if (!Number.isFinite(hours) || hours < MIN_HALF_LIFE_H || hours > MAX_HALF_LIFE_H) {
+    return `Zwischen ${MIN_HALF_LIFE_H} und ${MAX_HALF_LIFE_H} Stunden.`;
+  }
+  return null;
+}
+function remainingFraction(minutes, halfLifeH) {
+  if (minutes < 0) return 0;
+  return 0.5 ** (minutes / (halfLifeH * 60));
+}
+function levelAt(intakes, offset, halfLifeH) {
+  return intakes.reduce(
+    (sum, i) => sum + i.mg * remainingFraction(offset - i.offset, halfLifeH),
+    0
+  );
+}
+function chartPoints(timeline) {
+  const extra = timeline.intakes.flatMap((i) => [
+    {
+      offset: Math.max(0, i.offset - 0.01),
+      mg: levelAt(timeline.intakes, i.offset - 0.01, timeline.halfLifeH)
+    },
+    { offset: i.offset, mg: levelAt(timeline.intakes, i.offset, timeline.halfLifeH) }
+  ]);
+  return [...timeline.points, ...extra].sort((a, b) => a.offset - b.offset || a.mg - b.mg);
+}
+function clearedAt(intakes, halfLifeH, belowMg = CLEARED_BELOW_MG) {
+  if (intakes.length === 0) return null;
+  const last = Math.max(...intakes.map((i) => i.offset));
+  const level = levelAt(intakes, last, halfLifeH);
+  if (level < belowMg) return last;
+  const minutes = halfLifeH * 60 * Math.log2(level / belowMg);
+  return Math.ceil(last + minutes);
+}
+function formatDayTime(offset) {
+  const day = Math.floor(offset / DAY_MIN);
+  const clock2 = `um ${formatClock(offset)} Uhr`;
+  if (day <= 0) return clock2;
+  if (day === 1) return `am Folgetag ${clock2}`;
+  if (day === 2) return `\xFCbermorgen ${clock2}`;
+  return `in ${day} Tagen ${clock2}`;
+}
+function caffeineTimeline(intakes, bedtime, halfLifeH = DEFAULT_HALF_LIFE_H, step = 5) {
+  const placed = intakes.map((i) => ({ ...i, offset: parseClock(i.time) })).filter((i) => i.offset !== null).sort((a, b) => a.offset - b.offset);
+  const bedClock = parseClock(bedtime) ?? parseClock(DEFAULT_BEDTIME);
+  const first = placed[0]?.offset;
+  const bedtimeOffset = first !== void 0 && bedClock < first ? bedClock + DAY_MIN : bedClock;
+  const timeline = placed.map((i) => ({
+    ...i,
+    label: i.label ?? findDrink(i.drinkId)?.label ?? i.drinkId,
+    atBedtimeMg: i.mg * remainingFraction(bedtimeOffset - i.offset, halfLifeH),
+    hoursBeforeBed: (bedtimeOffset - i.offset) / 60
+  }));
+  const points = [];
+  for (let t = 0; t <= DAY_MIN; t += step) {
+    points.push({ offset: t, mg: levelAt(placed, t, halfLifeH) });
+  }
+  let peak = null;
+  for (const i of placed) {
+    const mg = levelAt(placed, i.offset, halfLifeH);
+    if (!peak || mg > peak.mg + 1e-9) peak = { offset: i.offset, mg };
+  }
+  const totalMg = placed.reduce((s, i) => s + i.mg, 0);
+  const bedtimeMg = levelAt(placed, bedtimeOffset, halfLifeH);
+  return {
+    halfLifeH,
+    intakes: timeline,
+    points,
+    bedtimeOffset,
+    bedtimeMg,
+    totalMg,
+    bedtimeShare: totalMg > 0 ? bedtimeMg / totalMg : null,
+    peak,
+    clearedOffset: clearedAt(placed, halfLifeH),
+    afterBedtime: timeline.filter((i) => i.offset > bedtimeOffset).length
+  };
+}
+function formatMg(mg) {
+  return mg < 10 ? formatNumber(mg, 1) : formatNumber(mg, 0);
+}
 
 // src/domain/insightsDaily.ts
 var MIN_SAME_TITLE = 2;
@@ -7539,9 +7702,9 @@ __export(sleep_exports, {
   totalSleepWithNaps: () => totalSleepWithNaps,
   typicalShareText: () => typicalShareText
 });
-var TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
+var TIME2 = /^([01]\d|2[0-3]):([0-5]\d)$/;
 function toMinutes(time) {
-  const m = TIME.exec(time);
+  const m = TIME2.exec(time);
   if (!m) {
     throw new Error(`Ung\xFCltige Uhrzeit: "${time}" (erwartet HH:MM)`);
   }
@@ -8378,7 +8541,7 @@ function clockMinutes(hhmm) {
   if (!m) return null;
   return Number(m[1]) * 60 + Number(m[2]);
 }
-function formatClock(minutes) {
+function formatClock2(minutes) {
   const t = (Math.round(minutes) % 1440 + 1440) % 1440;
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
@@ -8406,8 +8569,8 @@ function sleepRegularity(sleep, today, days2 = 14) {
   const text = level === "good" ? "Regelm\xE4\xDFig \u2013 dein Schlafrhythmus ist stabil." : level === "caution" ? "Mittel \u2013 die Zeiten schwanken sp\xFCrbar." : "Unregelm\xE4\xDFig \u2013 feste Zeiten (auch am Wochenende) helfen oft mehr als l\xE4ngerer Schlaf.";
   return {
     nights: beds.length,
-    bedMean: formatClock(mean2(beds)),
-    wakeMean: formatClock(mean2(wakes)),
+    bedMean: formatClock2(mean2(beds)),
+    wakeMean: formatClock2(mean2(wakes)),
     bedSd,
     wakeSd,
     level,
@@ -8735,7 +8898,7 @@ __export(hormoneLevel_exports, {
   fitCalibration: () => fitCalibration,
   forecastDaysFor: () => forecastDaysFor,
   lastDose: () => lastDose,
-  levelAt: () => levelAt,
+  levelAt: () => levelAt2,
   levelSeries: () => levelSeries,
   measurandsOf: () => measurandsOf,
   normalizeName: () => normalizeName,
@@ -9040,7 +9203,7 @@ function contribution(event, days2) {
   }
   return event.effective * unitCurve(days2, rates);
 }
-function levelAt(events, atMs) {
+function levelAt2(events, atMs) {
   let sum = 0;
   for (const e of events) sum += contribution(e, (atMs - e.atMs) / MS_PER_DAY);
   return sum;
@@ -9108,13 +9271,13 @@ function levelSeries(events, measurand, nowMs, rangeDays) {
   const toMs = nowMs + forecast * MS_PER_DAY;
   const stepMs = stepHoursFor(rangeDays) * 36e5;
   const raw = [];
-  for (let t = fromMs; t <= toMs; t += stepMs) raw.push({ atMs: t, value: levelAt(own, t) });
+  for (let t = fromMs; t <= toMs; t += stepMs) raw.push({ atMs: t, value: levelAt2(own, t) });
   const inRange4 = own.filter((e) => e.atMs >= fromMs && e.atMs <= toMs);
   const peakCandidates = inRange4.map((e) => {
     const s = substanceById(e.substanceId);
-    return s ? levelAt(own, e.atMs + s.tmaxDays * MS_PER_DAY) : 0;
+    return s ? levelAt2(own, e.atMs + s.tmaxDays * MS_PER_DAY) : 0;
   });
-  const nowValue = levelAt(own, nowMs);
+  const nowValue = levelAt2(own, nowMs);
   const peak = Math.max(0, ...raw.map((p) => p.value), ...peakCandidates, nowValue);
   const pct = (v) => peak > 0 ? Math.min(100, v / peak * 100) : 0;
   return {
@@ -9123,7 +9286,7 @@ function levelSeries(events, measurand, nowMs, rangeDays) {
     toMs,
     nowMs,
     points: raw.map((p) => ({ atMs: p.atMs, percent: pct(p.value) })),
-    doses: inRange4.map((event) => ({ event, percent: pct(levelAt(own, event.atMs)) })),
+    doses: inRange4.map((event) => ({ event, percent: pct(levelAt2(own, event.atMs)) })),
     nowPercent: own.length > 0 && peak > 0 ? pct(nowValue) : null,
     peak
   };
@@ -9131,7 +9294,7 @@ function levelSeries(events, measurand, nowMs, rangeDays) {
 function percentAt(events, series, atMs) {
   if (series.peak <= 0) return 0;
   const own = events.filter((e) => e.measurand === series.measurand);
-  return Math.min(100, levelAt(own, atMs) / series.peak * 100);
+  return Math.min(100, levelAt2(own, atMs) / series.peak * 100);
 }
 function lastDose(events, measurand, nowMs) {
   return [...events].reverse().find((e) => e.measurand === measurand && e.atMs <= nowMs) ?? null;
@@ -9366,7 +9529,7 @@ function calibrateLevel(events, measurand, draws, nowMs) {
   const unit = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
   const own = events.filter((e) => e.measurand === measurand);
   const use = measured.filter((m) => m.unit === unit);
-  const models = use.map((m) => levelAt(own, wallClockMs(m.date, m.time)));
+  const models = use.map((m) => levelAt2(own, wallClockMs(m.date, m.time)));
   const calibration = fitCalibration(
     use.map((m, i) => ({ model: models[i] ?? 0, measured: m.value }))
   );
@@ -9381,7 +9544,7 @@ function calibrateLevel(events, measurand, draws, nowMs) {
       measured: m.value,
       estimated: est(models[i] ?? 0)
     })),
-    nowEstimate: est(levelAt(own, nowMs))
+    nowEstimate: est(levelAt2(own, nowMs))
   };
 }
 var draftCounter = 0;
@@ -13818,12 +13981,565 @@ function checklistToXlsx(title, items) {
 function checklistToPdf(title, items, subtitle) {
   return checklistPdf({ title, subtitle, items, footer: "LIFESPAN OS" });
 }
+
+// src/domain/icoach.ts
+function withBook(data, book) {
+  return { ...data, fragen: data.fragen.map((f) => ({ ...f, buch: book })) };
+}
+function buildLibrary(sets) {
+  const collections = sets.map(({ book, data }) => {
+    const tagged = withBook(data, book);
+    return { book, label: BOOKS[book].collection, data: tagged, parts: groupFaq(tagged) };
+  });
+  return { collections, fragen: collections.flatMap((c) => c.data.fragen) };
+}
+function bookOf(q) {
+  return q.buch ?? "masterclass";
+}
+function parseFaq(raw) {
+  const data = JSON.parse(raw);
+  if (!data || !Array.isArray(data.themen) || !Array.isArray(data.fragen) || !data.meta) {
+    throw new Error("Die Fragen-Datei hat nicht das erwartete Format.");
+  }
+  return data;
+}
+var mc = (thema) => ({ kind: "book", book: "masterclass", thema });
+var COACH_MODULES = [
+  {
+    id: "training",
+    title: "Training",
+    description: "Trainingsprinzipien, Volumen, Intensit\xE4t und Planung.",
+    ask: mc("Training")
+  },
+  {
+    id: "muskelaufbau",
+    title: "Muskelaufbau",
+    description: "Was Muskeln wachsen l\xE4sst \u2013 Reiz, Erholung und Fortschritt.",
+    ask: mc("Muskelaufbau")
+  },
+  {
+    id: "ernaehrung",
+    title: "Ern\xE4hrung",
+    description: "Kalorien, Makros, Mikron\xE4hrstoffe und Essensgestaltung.",
+    ask: mc("Ern\xE4hrung")
+  },
+  {
+    id: "fettverbrennung",
+    title: "Fettverbrennung",
+    description: "Fettstoffwechsel, Defizit und nachhaltiger Fettverlust.",
+    ask: mc("Fettverbrennung")
+  },
+  {
+    id: "hormone",
+    title: "Hormone",
+    description: "Hormonsystem, Einflussfaktoren und Zusammenh\xE4nge.",
+    ask: mc("Hormone")
+  },
+  {
+    id: "hunger",
+    title: "Hunger",
+    description: "Hunger, S\xE4ttigung und Appetitsteuerung.",
+    ask: mc("Hunger & S\xE4ttigung")
+  },
+  {
+    id: "immunsystem",
+    title: "Immunsystem",
+    description: "Abwehrkr\xE4fte st\xE4rken \u2013 Schlaf, Ern\xE4hrung und Belastung.",
+    ask: mc("Immunsystem")
+  },
+  {
+    id: "schlaf",
+    title: "Schlafoptimierung",
+    description: "Schlafdauer, Schlafqualit\xE4t und Abendroutine.",
+    ask: mc("Schlaf")
+  },
+  {
+    id: "supplements",
+    title: "Supplements",
+    description: "Was wirkt, was nicht \u2013 Studienlage und Einsatz.",
+    ask: mc("Supplements")
+  },
+  {
+    id: "hrt",
+    title: "HRT",
+    description: "Hormonersatztherapie: Zulassung, Studienlage und Risiken.",
+    ask: mc("Testosteronersatztherapie")
+  },
+  {
+    id: "verletzungen",
+    title: "Verletzungen",
+    description: "Verletzungen vorbeugen, Regeneration und R\xFCckkehr ins Training.",
+    ask: mc("Verletzungen & Regeneration")
+  },
+  {
+    id: "mindset",
+    title: "Mindset",
+    description: "Motivation, Gewohnheiten und Dranbleiben.",
+    ask: null
+  },
+  {
+    id: "blutgruppen",
+    title: "Blutgruppen",
+    description: "ABO, Rhesus und Kell \u2013 Transfusion, Schwangerschaft und Mythen.",
+    ask: { kind: "book", book: "blutgruppen", thema: null }
+  },
+  {
+    id: "blutwerte",
+    title: "Blutwerte",
+    description: "Laborwerte verstehen, Referenzbereiche und Befunde richtig lesen.",
+    ask: { kind: "book", book: "blutwerte", thema: null }
+  },
+  {
+    id: "peptide",
+    title: "Peptide",
+    description: "Peptide im Faktencheck \u2013 Wirkung, Studienlage, Recht und Risiken.",
+    ask: { kind: "search", query: "Peptid" }
+  },
+  {
+    id: "medikamente",
+    title: "Medikamente",
+    description: "Medikamente, Wechselwirkungen und Einfluss auf Training und Laborwerte.",
+    ask: { kind: "search", query: "Medikament" }
+  }
+];
+function groupFaq(data) {
+  return [...data.themen].sort((a, b) => a.teil - b.teil).map((t) => {
+    const own = data.fragen.filter((f) => f.thema === t.thema);
+    const known = new Set(t.kapitel);
+    const names = [
+      ...t.kapitel,
+      ...new Set(own.map((f) => f.kapitel).filter((k) => !known.has(k)))
+    ];
+    const chapters = names.map((name) => ({ name, questions: own.filter((f) => f.kapitel === name) })).filter((c) => c.questions.length > 0);
+    return { teil: t.teil, thema: t.thema, chapters, count: own.length };
+  });
+}
+var ROMAN = [
+  [10, "X"],
+  [9, "IX"],
+  [5, "V"],
+  [4, "IV"],
+  [1, "I"]
+];
+function roman(n2) {
+  let out = "";
+  let rest = Math.max(0, Math.floor(n2));
+  for (const [v, s] of ROMAN) {
+    while (rest >= v) {
+      out += s;
+      rest -= v;
+    }
+  }
+  return out;
+}
+function describePages(pages) {
+  if (pages.length === 0) return "";
+  const sorted = [...new Set(pages)].sort((a, b) => a - b);
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  const contiguous = sorted.every((p, i) => p === first + i);
+  if (sorted.length === 1) return `Buch S. ${first}`;
+  return contiguous ? `Buch S. ${first}\u2013${last}` : `Buch S. ${sorted.join(", ")}`;
+}
+function normalize(text) {
+  return text.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+function searchTerms(query) {
+  return [
+    ...new Set(
+      normalize(query).split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 2)
+    )
+  ];
+}
+function searchFaq(questions, query) {
+  const terms = searchTerms(query);
+  if (terms.length === 0) return [];
+  const hits = [];
+  for (const q of questions) {
+    const frage = normalize(q.frage);
+    const tags = normalize(q.stichworte.join(" "));
+    const where = normalize(`${q.thema} ${q.kapitel} ${q.auch_relevant_fuer.join(" ")}`);
+    const antwort = normalize(q.antwort);
+    let score = 0;
+    let all = true;
+    for (const t of terms) {
+      const s = (frage.includes(t) ? 6 : 0) + (tags.includes(t) ? 4 : 0) + (where.includes(t) ? 2 : 0) + (antwort.includes(t) ? 1 : 0);
+      if (s === 0) {
+        all = false;
+        break;
+      }
+      score += s;
+    }
+    if (all) hits.push({ question: q, score });
+  }
+  return hits.sort((a, b) => b.score - a.score);
+}
+function termPattern(term) {
+  return term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ae/g, "(?:ae|\xE4)").replace(/oe/g, "(?:oe|\xF6)").replace(/ue/g, "(?:ue|\xFC)").replace(/ss/g, "(?:ss|\xDF)");
+}
+function highlight(text, query) {
+  const terms = searchTerms(query);
+  if (terms.length === 0 || text === "") return [{ text, hit: false }];
+  const re = new RegExp(
+    terms.map(termPattern).sort((a, b) => b.length - a.length).join("|"),
+    "giu"
+  );
+  const parts2 = [];
+  let last = 0;
+  for (const m of text.matchAll(re)) {
+    const start = m.index ?? 0;
+    if (m[0] === "") continue;
+    if (start > last) parts2.push({ text: text.slice(last, start), hit: false });
+    parts2.push({ text: m[0], hit: true });
+    last = start + m[0].length;
+  }
+  if (last < text.length) parts2.push({ text: text.slice(last), hit: false });
+  return parts2.length ? parts2 : [{ text, hit: false }];
+}
+var BOOKS = {
+  masterclass: {
+    id: "masterclass",
+    title: "Die Masterclass",
+    brand: "iCoach.Me",
+    subtitle: "Das Wissensbuch f\xFCr Training, Ern\xE4hrung und Gesundheit",
+    description: "14 Teile von Training \xFCber Ern\xE4hrung, Hunger und Fettstoffwechsel bis zu Hormonen, Schlaf und Immunsystem.",
+    pages: 474,
+    parts: 14,
+    edition: "Stand Oktober 2026",
+    collection: "Masterclass"
+  },
+  blutwerte: {
+    id: "blutwerte",
+    title: "Die Masterclass Blutwerte",
+    brand: "iCoach.Me",
+    subtitle: "Blutwerte verstehen \u2013 was dein Labor verr\xE4t und warum Referenzwerte variieren",
+    description: "5 Teile: die gro\xDFen Gruppen von Laborwerten, wie Referenzbereiche entstehen, warum sie weltweit variieren, wie du Befunde richtig liest und die Praxis von der Blutabnahme bis zum Basis-Check.",
+    pages: 56,
+    parts: 5,
+    edition: "Stand November 2026",
+    collection: "Masterclass Blutwerte"
+  },
+  blutgruppen: {
+    id: "blutgruppen",
+    title: "Die Masterclass Blutgruppen",
+    brand: "iCoach.Me",
+    subtitle: "Blutgruppen \u2013 ABO, Rhesus und Kell einfach erkl\xE4rt",
+    description: "3 Teile: was eine Blutgruppe ist, die drei wichtigsten Systeme ABO, Rhesus und Kell, warum eine falsche Blutkonserve lebensgef\xE4hrlich sein kann, die Blutgruppe in der Schwangerschaft und Mythen wie die Blutgruppendi\xE4t.",
+    pages: 18,
+    parts: 3,
+    edition: "Stand November 2026",
+    collection: "Masterclass Blutgruppen"
+  }
+};
+var BOOK_ORDER = ["masterclass", "blutwerte", "blutgruppen"];
+var BOOK = BOOKS.masterclass;
+function firstPage(pages, book = "masterclass") {
+  const max = BOOKS[book].pages;
+  const valid = pages.filter((p) => Number.isInteger(p) && p >= 1 && p <= max);
+  return valid.length ? Math.min(...valid) : null;
+}
+
+// src/domain/magazines.ts
+var magazines_exports = {};
+__export(magazines_exports, {
+  MAGAZINES: () => MAGAZINES,
+  MAGAZINE_CATEGORY_LABELS: () => MAGAZINE_CATEGORY_LABELS,
+  MAGAZINE_CATEGORY_ORDER: () => MAGAZINE_CATEGORY_ORDER,
+  magazineCover: () => magazineCover,
+  magazineMeta: () => magazineMeta,
+  magazinesIn: () => magazinesIn
+});
+var MAGAZINE_CATEGORY_LABELS = {
+  ausgabe: "iCoach.Me Magazin",
+  training: "Training",
+  supplements: "Supplements",
+  gesundheit: "Gesundheit & Werte",
+  longevity: "Longevity"
+};
+var MAGAZINE_CATEGORY_ORDER = [
+  "ausgabe",
+  "training",
+  "supplements",
+  "gesundheit",
+  "longevity"
+];
+var MAGAZINES = [
+  {
+    id: "icoach-02",
+    title: "Stark durch den Winter",
+    series: "iCoach.Me Magazin \xB7 Ausgabe 02",
+    category: "ausgabe",
+    pages: 20,
+    issued: "November 2026",
+    summary: "Aufw\xE4rmen, Cortisol, Vitamin D und Infekte \u2013 was in der dunklen Jahreszeit wirklich sch\xFCtzt und was nur gut klingt. Jedes Thema aus der Masterclass, mit Studien gepr\xFCft und alltagstauglich erkl\xE4rt.",
+    learn: [
+      "Warum Krafttraining dein Verletzungsrisiko deutlich st\xE4rker senkt als Dehnen",
+      "Cortisol: wann es schadet, was es wirklich senkt \u2013 und warum es keine \u201ENebennierenschw\xE4che\u201C gibt",
+      "Vitamin D und K2 richtig dosieren, ohne zu \xFCberdosieren",
+      "Training bei Infekt: warum Fieber Trainingsverbot bedeutet und welche Supplemente bei Erk\xE4ltung helfen"
+    ],
+    bytes: 2987260
+  },
+  {
+    id: "icoach-01",
+    title: "Was wirklich wirkt",
+    series: "iCoach.Me Magazin \xB7 Ausgabe 01",
+    category: "ausgabe",
+    pages: 20,
+    issued: "November 2026",
+    summary: "Die gro\xDFen Hebel aus der Masterclass in einem Heft: Training, Ern\xE4hrung, Fettabbau, Kreatin und Schlaf. Jeder Artikel trennt Belegtes von Behauptetem und endet mit \u201ESo setzt du es um\u201C.",
+    learn: [
+      "Warum Training in der Dehnung mehr Muskel bringt und wie nah du ans Muskelversagen musst",
+      "Wie viel Protein du wirklich brauchst \u2013 und warum du dein Fett zum gr\xF6\xDFten Teil ausatmest",
+      "Kreatin ohne Hype und ob 5,5 Stunden Schlaf reichen",
+      "Eine S\xE4ttigungsroutine, die du in 6 Wochen aufbaust, plus Mythos-Check mit 8 Behauptungen"
+    ],
+    bytes: 3050380
+  },
+  {
+    id: "natron",
+    title: "Natron \u2013 der Puffer f\xFCr harte S\xE4tze",
+    series: "Performance Guide \xB7 01",
+    category: "supplements",
+    pages: 10,
+    issued: "November 2026",
+    summary: "Was Natriumbicarbonat f\xFCr Training, Regeneration und Gesundheit wirklich kann \u2013 und was nicht. Jede Aussage ist an der aktuellen Studienlage gepr\xFCft, vom Trainingsprotokoll bis zu den Nebenwirkungen.",
+    learn: [
+      "Wof\xFCr Natron gut belegt ist: harte Belastungen von 30 Sekunden bis 12 Minuten",
+      "Das Trainingsprotokoll mit der bew\xE4hrten Einzeldosis von 0,3 g pro kg K\xF6rpergewicht",
+      "Warum es f\xFCr Schlaf, Entz\xFCndung, Testosteron oder Krebsschutz keine tragf\xE4higen Belege gibt",
+      "Der Preis: viel Natrium und h\xE4ufig Magen-Darm-Probleme"
+    ],
+    bytes: 1517462
+  },
+  {
+    id: "supplemente-zeit",
+    title: "Dein Supplement wirkt noch nicht? Gib ihm Zeit.",
+    series: "iCoach.Me Magazin \xB7 Supplemente",
+    category: "supplements",
+    pages: 3,
+    issued: "November 2026",
+    summary: "Jede Einnahme legt sich auf das, was von den vorherigen noch \xFCbrig ist. Je nach Wirkstoff dauert es 30 Minuten oder ein halbes Jahr, bis der Spiegel steht \u2013 sechs Stoffe im Vergleich.",
+    learn: [
+      "Wie lange Koffein, Kreatin, Vitamin D und Omega-3 brauchen, bis sie voll wirken",
+      "Warum Kreatin mit Ladephase in 6 Tagen, ohne in rund 4 Wochen voll ist",
+      "Warum Omega-3 in den roten Blutzellen erst nach etwa 5,5 Monaten ein Plateau erreicht",
+      "Wann eine Laborkontrolle sinnvoll ist"
+    ],
+    bytes: 447395
+  },
+  {
+    id: "kreatin",
+    title: "Kreatin hei\xDF gemixt?",
+    series: "Supplement-Report",
+    category: "supplements",
+    pages: 2,
+    issued: "November 2026",
+    summary: "Warum warmes Wasser deinen Kreatin-Shake besser macht \u2013 und wann es dem Kreatin die Wirkung kostet. Vier Fakten und eine einfache Regel f\xFCr den Alltag im Gym.",
+    learn: [
+      "Warum sich Kreatin-Monohydrat in warmem Wasser schneller und feiner l\xF6st",
+      "Wann Kreatin in Fl\xFCssigkeit zu unwirksamem Kreatinin zerf\xE4llt (Hitze, S\xE4fte, Kaffee)",
+      "Die Gym-Regel: warm, vollst\xE4ndig aufl\xF6sen, sofort trinken"
+    ],
+    bytes: 238934
+  },
+  {
+    id: "koffein",
+    title: "Koffein im Direktvergleich",
+    series: "Performance-Report",
+    category: "supplements",
+    pages: 3,
+    issued: "November 2026",
+    summary: "Kaffee, Tee und Energy-Drinks mit Richtwerten je Portion und pro 100 ml \u2013 denn erst beide Zahlen zusammen ergeben ein ehrliches Bild. Dazu die rechtlichen Grenzen und wie schnell dein K\xF6rper Koffein abbaut.",
+    learn: [
+      "Wie viel Koffein in Espresso, Filterkaffee, Tee, Monster und Red Bull steckt",
+      "Warum ein Espresso pro 100 ml st\xE4rker ist, aber meist weniger Koffein liefert als eine Dose",
+      "Die 32-mg-Grenze f\xFCr Energy-Drinks und warum Kaffee mehr darf",
+      "Halbwertszeit von rund 5 Stunden: was davon am Abend noch \xFCbrig ist"
+    ],
+    bytes: 389808
+  },
+  {
+    id: "latissimus",
+    title: "Latissimus: Ein Muskel, sechs Bahnen",
+    series: "iCoach.Me Magazinreihe \xB7 Training",
+    category: "training",
+    pages: 19,
+    issued: "November 2026",
+    summary: "Der Lat ist der am breitesten gef\xE4cherte Muskel des K\xF6rpers: ein schmaler Ansatz am Oberarm, eine lange Ursprungslinie vom Schulterblatt bis zum Becken. Genau deshalb reicht eine Lieblings\xFCbung nicht.",
+    learn: [
+      "Ursprung, Ansatz und die sechs Faseranteile des Latissimus",
+      "Welche Armstellung welche Fasern trainiert \u2013 vom \xDCberzug bis zum einarmigen Latzug",
+      "Warum der Widerstand der \xDCbung zur Kraftkurve des Muskels passen muss",
+      "Eine \xDCbungsauswahl f\xFCr den ganzen Lat, auch wenn keine guten Ger\xE4te da sind"
+    ],
+    bytes: 481417
+  },
+  {
+    id: "testosteron",
+    title: "Testosteron. Mehr als Muskeln.",
+    series: "Hormon-Report",
+    category: "gesundheit",
+    pages: 3,
+    issued: "November 2026",
+    summary: "Ein lebenswichtiges Sexualhormon \u2013 wichtig f\xFCr Muskeln, Knochen, Blutbildung, Fruchtbarkeit und das Wohlbefinden. Was ein Mangel bewirkt und warum mehr Testosteron nicht automatisch mehr Leistung bedeutet.",
+    learn: [
+      "Die 7 wichtigsten Aufgaben von Testosteron im K\xF6rper",
+      "Typische Beschwerden bei Mangel \u2013 und warum Symptome allein keinen Mangel beweisen",
+      "Zu wenig, normal, zu viel: welche Risiken ein zu hoher Spiegel hat",
+      "Das Ziel einer TRT: ein physiologischer Spiegel, nicht m\xF6glichst viel"
+    ],
+    bytes: 406748
+  },
+  {
+    id: "blutdruck",
+    title: "Unter Druck",
+    series: "Longevity-Report \xB7 Blutdruck",
+    category: "gesundheit",
+    pages: 3,
+    issued: "November 2026",
+    summary: "Der Blutdruck ist einer der wichtigsten beeinflussbaren Risikofaktoren f\xFCr Langlebigkeit. Was die beiden Werte bedeuten, wie du ihn nat\xFCrlich senkst und wie du richtig misst.",
+    learn: [
+      "Systolisch und diastolisch: was die beiden Werte zeigen und warum unter 120/80 optimal ist",
+      "Welche Ma\xDFnahme wie viel bringt \u2013 von DASH-Ern\xE4hrung \xFCber Ausdauersport bis Salz und Alkohol",
+      "Richtig messen nach ESH: 3 Tage morgens und abends, Oberarm auf Herzh\xF6he",
+      "Ab welchem Durchschnitt der Heimmessung du zum Arzt solltest"
+    ],
+    bytes: 401908
+  },
+  {
+    id: "herz-hrv",
+    title: "Drei Werte. Ein Herz.",
+    series: "Recovery-Report \xB7 Herz & HRV",
+    category: "gesundheit",
+    pages: 3,
+    issued: "November 2026",
+    summary: "Herzfrequenz, Puls und Blutdruck h\xE4ngen zusammen, messen aber Unterschiedliches. Dazu die Herzfrequenzvariabilit\xE4t (HRV) als Takt der Erholung \u2013 und wie du sie f\xFCr dein Training nutzt.",
+    learn: [
+      "Der Unterschied zwischen Herzfrequenz, Puls und Blutdruck",
+      "Was die HRV \xFCber Sympathikus und Parasympathikus verr\xE4t",
+      "HRV richtig messen und den 7-Tage-Trend zur Trainingssteuerung nutzen",
+      "Womit du deine HRV verbesserst"
+    ],
+    bytes: 488778
+  },
+  {
+    id: "sauerstoff",
+    title: "SpO\u2082. Wie voll ist dein Blut?",
+    series: "Performance-Report \xB7 Sauerstoffs\xE4ttigung",
+    category: "gesundheit",
+    pages: 2,
+    issued: "November 2026",
+    summary: "Die Sauerstoffs\xE4ttigung zeigt, wie viel Prozent des H\xE4moglobins mit Sauerstoff beladen sind. Normwerte, f\xFCnf Gr\xFCnde f\xFCr eine Messung und das Paradoxon von zu viel H\xE4moglobin unter TRT.",
+    learn: [
+      "Normwerte: 95\u2013100 % per Pulsoximeter, 94\u201397 % in der Blutgasanalyse",
+      "Wozu eine Messung dient \u2013 von Lungenfunktion bis Schlafapnoe",
+      "Warum Testosteron das H\xE4moglobin erh\xF6ht, die S\xE4ttigung aber gleich bleibt",
+      "Warum zu dickes Blut gef\xE4hrlich wird und Hb und H\xE4matokrit kontrolliert werden m\xFCssen"
+    ],
+    bytes: 301960
+  },
+  {
+    id: "blutwerte",
+    title: "Blutwerte: Hinweis, kein Urteil",
+    series: "iCoach.Me Magazinreihe \xB7 Ausgaben 01\u201305",
+    category: "gesundheit",
+    pages: 45,
+    issued: "November 2026",
+    summary: "Die 13 wichtigsten Gruppen von Blutwerten in f\xFCnf Ausgaben: vom Blutbild \xFCber Leber, Niere und Fettstoffwechsel bis zu Hormonen, Vitaminen und Gerinnung \u2013 und bei jeder, wo ihre Aussagekraft endet.",
+    learn: [
+      "Was Blutbild, Nieren-, Leber-, Zucker- und Fettwerte aussagen",
+      "Eisen, Elektrolyte, Hormone, Vitamine, Gerinnung und Entz\xFCndungswerte im \xDCberblick",
+      "Wie Referenzbereiche entstehen und was deine Werte verschiebt",
+      "Was Sportler beachten m\xFCssen und warum \xDCbertraining kein Bluttest ist"
+    ],
+    bytes: 458797
+  },
+  {
+    id: "haargesundheit",
+    title: "Haargesundheit: Warum Haare gehen",
+    series: "Body & Longevity \xB7 Magazinreihe",
+    category: "longevity",
+    pages: 37,
+    issued: "November 2026",
+    summary: "Haarausfall hat fast immer eine erkennbare Ursache \u2013 und je fr\xFCher sie behandelt wird, desto mehr Follikel lassen sich retten. Vom Haarzyklus \xFCber die Ursachen bis zu den Behandlungen und ihrer Studienlage.",
+    learn: [
+      "Wie der Haarzyklus funktioniert und was bei der Miniaturisierung im Follikel passiert",
+      "Die drei Gruppen von Ursachen: genetisch, Umwelt und Gesundheit, selbstverursacht",
+      "Was wirklich wirkt \u2013 von Minoxidil und Finasterid/Dutasterid bis Rotlicht und Transplantation",
+      "Was von au\xDFen schadet und was du jetzt tun kannst"
+    ],
+    bytes: 389570
+  },
+  {
+    id: "longevity-protokoll",
+    title: "L\xE4nger leben f\xE4ngt morgen fr\xFCh an",
+    series: "iCoach.Me Magazin \xB7 Longevity",
+    category: "longevity",
+    pages: 6,
+    issued: "November 2026",
+    summary: "Die st\xE4rksten Hebel f\xFCr ein langes, gesundes Leben kosten fast nichts: Licht, Bewegung, Schlaf und echtes Essen. Die Routinen aus Hubermans \u201EProtocols\u201C, reduziert auf das, was im Alltag machbar ist.",
+    learn: [
+      "Ein ganzer Tag nach Protokoll \u2013 vom Tageslicht am Morgen bis zum Schlaf bei 18\u201320 \xB0C",
+      "Die vier S\xE4ulen: Bewegung, Schlaf & Licht, Ern\xE4hrung, Stress",
+      "Ein Trainingsplan mit Kraft, Cardio und t\xE4glichem Gehen",
+      "Priorit\xE4ten und ein Start in 7 Wochen"
+    ],
+    bytes: 922578
+  },
+  {
+    id: "how-not-to-age",
+    title: "Altern ist kein Schicksal. Es ist dein Teller.",
+    series: "iCoach.Me Magazin \xB7 Longevity",
+    category: "longevity",
+    pages: 6,
+    issued: "November 2026",
+    summary: "Die Anti-Aging-Pille gibt es schon \u2013 in der Gem\xFCseabteilung und auf dem Gehweg. Dr. Michael Gregers \u201EHow Not to Age\u201C, reduziert auf die Routinen, die du wirklich in deinen Alltag bekommst.",
+    learn: [
+      "Ein Tag nach Greger: gro\xDFes Fr\xFChst\xFCck, fr\xFChes Essfenster unter 10 Stunden",
+      "Das Prinzip in vier S\xE4tzen: Pflanzen, Bewegung, weniger, Essen statt Pillen",
+      "Die acht Anti-Aging-Tipps, dein Teller und dein Glas",
+      "Bewegung, Schlaf, Supplemente und ein Start in 7 Wochen"
+    ],
+    bytes: 886342
+  },
+  {
+    id: "gen-trick",
+    title: "Deine Gene sind kein Urteil. Sie sind Schalter.",
+    series: "iCoach.Me Magazin \xB7 Longevity",
+    category: "longevity",
+    pages: 6,
+    issued: "November 2026",
+    summary: "Welche Gene laufen und welche schweigen, entscheidest du jeden Tag mit. Dr. Ulrich Strunz\u2019 \u201EDer Gen-Trick\u201C, reduziert auf die Routinen, die im Alltag funktionieren.",
+    learn: [
+      "Ein Tag nach Strunz mit 16 Stunden Essenspause",
+      "Die drei Schalter: Ern\xE4hrung, Bewegung, Denken",
+      "Warum Protein in der Fastenpause den Effekt kippt",
+      "N\xE4hrstoffe & Labor, Priorit\xE4ten und ein Start in 7 Wochen"
+    ],
+    bytes: 844069
+  }
+];
+function magazinesIn(category) {
+  return MAGAZINES.filter((m) => category === "alle" || m.category === category);
+}
+function magazineMeta(m) {
+  const mb = m.bytes / 1048576;
+  const size = mb >= 1 ? `${mb.toFixed(1).replace(".", ",")} MB` : `${Math.round(m.bytes / 1024)} KB`;
+  return `PDF \xB7 ${m.pages} ${m.pages === 1 ? "Seite" : "Seiten"} \xB7 ${size}`;
+}
+function magazineCover(m) {
+  return `/magazin/${m.id}.jpg`;
+}
 export {
   AKH_REFERENCES,
   ANS_INFO,
   ANS_MAX,
   ANS_MIN,
   ANS_TITLE,
+  BOOKS,
+  BOOK_ORDER,
+  COACH_MODULES,
   COVERAGE_DAYS,
   DEFAULT_LAYOUT,
   DISPLAY_DECIMALS,
@@ -13856,8 +14572,11 @@ export {
   ansPercent,
   arrange,
   associationItem,
+  bookOf,
   browserInflateRaw,
   buildFocusIndex,
+  buildLibrary,
+  caffeine_exports as caffeine,
   checklistToPdf,
   checklistToXlsx,
   countAfterClick,
@@ -13877,6 +14596,7 @@ export {
   describeMacroGoals,
   describeNeed,
   describeOptional,
+  describePages,
   describeProteinPerKg,
   describeScheduled,
   describeSupplements,
@@ -13894,6 +14614,7 @@ export {
   exportReminderState,
   fastNutrients,
   fileStem,
+  firstPage,
   formatAmount,
   formatDate,
   formatDuration,
@@ -13913,6 +14634,7 @@ export {
   groupInsights,
   groupIntakes,
   groupedValues,
+  highlight,
   hormoneLevel_exports as hormoneLevel,
   hrt_exports as hrt,
   hrtChecklist_exports as hrtChecklist,
@@ -13929,6 +14651,7 @@ export {
   macroEnergyShares,
   macroGoalRows,
   macrosOf,
+  magazines_exports as magazines,
   mealDisplayName,
   mealHasContent,
   mealTypeLabel,
@@ -13944,6 +14667,7 @@ export {
   parseChecklistText,
   parseCsv,
   parseDecimal,
+  parseFaq,
   parseIsoDate,
   parseLayout,
   parseMuscleMapSettings,
@@ -13957,6 +14681,7 @@ export {
   recovery_exports as recovery,
   referenceGroup,
   repeatDates,
+  roman,
   roundAmount,
   roundGrams,
   roundKcal,
@@ -13965,6 +14690,8 @@ export {
   scaleRecipeItems,
   scaleScan_exports as scaleScan,
   schedule_exports as schedule,
+  searchFaq,
+  searchTerms,
   setMealNames,
   sleep_exports as sleep,
   stats_exports as stats,

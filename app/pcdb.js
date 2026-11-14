@@ -89,9 +89,11 @@ export function pcFromRows(rows) {
     ...rows("supplement_stack_item").map((i) => i.supplement_id),
   ]);
   pc.supplement_stack_item = rows("supplement_stack_item");
+  // Seit 1.26.0 alle nicht archivierten Supplements (Auswahl beim Erfassen am Handy), archivierte nur,
+  // soweit Einnahmen oder Stacks sie nutzen; ohne Notizen (oft lange Links)
   pc.supplement = rows("supplement")
-    .filter((s) => used.has(s.id))
-    .map(({ id, name, manufacturer, unit, serving_amount, daily_dose, archived }) => ({
+    .filter((s) => !s.archived || used.has(s.id))
+    .map(({ id, name, manufacturer, unit, serving_amount, daily_dose, archived, created_at, updated_at }) => ({
       id,
       name,
       manufacturer,
@@ -99,11 +101,14 @@ export function pcFromRows(rows) {
       serving_amount,
       daily_dose,
       archived,
+      created_at,
+      updated_at,
     }));
+  const kept = new Set(pc.supplement.map((s) => s.id));
   pc.supplement_value = rows("supplement_value")
-    .filter((v) => used.has(v.supplement_id))
+    .filter((v) => kept.has(v.supplement_id))
     .map(({ supplement_id, nutrient, amount }) => ({ supplement_id, nutrient, amount }));
-  pc.nutrient_field = rows("nutrient_field").map(({ key, label, unit, category, position }) => ({ key, label, unit, category, position }));
+  pc.nutrient_field = rows("nutrient_field").map(({ id, key, group_key, label, unit, builtin }) => ({ id, key, group_key, label, unit, builtin }));
   const mealFoods = new Set(rows("meal_item").map((i) => i.food_id));
   pc.archived_food = rows("food").filter((f) => f.archived && mealFoods.has(f.id));
   // Overview (1.6.0): Messgrößen auch archiviert (Einheit, Nachkommastellen, Kategorie) und nur
@@ -141,6 +146,16 @@ export function makeDb(catalog, phone = {}) {
   const phoneMeals = phone.meals ?? [];
   const meals = merge(t("meal"), phoneMeals.map((m) => m.row));
   const mealItems = merge(t("meal_item"), phoneMeals.flatMap((m) => m.items));
+
+  // Supplement-Einnahmen (1.26.0): Einträge vom Handy ersetzen die vom PC, Löschvermerke blenden aus
+  const ps = phone.supp ?? {};
+  const intakes = merge(t("supplement_intake"), ps.intakes ?? [], new Set(ps.deletedIntakes ?? []));
+  const liveIntakes = new Set(intakes.map((r) => r.id));
+  const intakeItems = merge(t("supplement_intake_item"), ps.items ?? [], new Set(ps.deletedItems ?? [])).filter((r) => liveIntakes.has(r.intake_id));
+  const pcIds = {
+    supplement_intake: new Set(t("supplement_intake").map((r) => r.id)),
+    supplement_intake_item: new Set(t("supplement_intake_item").map((r) => r.id)),
+  };
 
   // Wasser
   const water = phone.water ?? {};
@@ -183,8 +198,9 @@ export function makeDb(catalog, phone = {}) {
     mealDays: new Set(t("meal_day").map((d) => d.date)),
     fastByDate: groupBy(t("nutrition_day_entry"), "date"),
     fastValues: groupBy(t("nutrition_day_value"), "entry_id"),
-    intakesByDate: groupBy(t("supplement_intake"), "date"),
-    intakeItems: groupBy(t("supplement_intake_item"), "intake_id"),
+    intakesByDate: groupBy(intakes, "date"),
+    intakeItems: groupBy(intakeItems, "intake_id"),
+    pcIds,
     supplements: byId(t("supplement")),
     supValues: groupBy(t("supplement_value"), "supplement_id"),
     nutrientFields: t("nutrient_field"),

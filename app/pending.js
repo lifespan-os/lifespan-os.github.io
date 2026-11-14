@@ -19,6 +19,7 @@ export const SOURCES = [
   { store: "body", area: "body", maps: { entries: "body_measurement" } },
   { store: "health", area: "health", maps: { analytes: "lab_analyte", draws: "lab_draw", results: "lab_result", lifetime: "lifetime_record" } },
   { store: "super", area: "superhuman", maps: { entries: "hrt_entry", products: "hrt_product", substances: "protocol_substance", protocol: "protocol_entry" } },
+  { store: "supp", area: "nutrition", maps: { intakes: "supplement_intake", items: "supplement_intake_item" } },
   { store: "caffeine", area: "icoach", maps: { rows: "caffeine_intake" }, delTable: "caffeine_intake" },
 ];
 
@@ -62,6 +63,8 @@ export const TABLE_LABELS = {
   protocol_substance: "Substanz",
   protocol_entry: "Protokolleintrag",
   caffeine_intake: "Koffein",
+  supplement_intake: "Supplements",
+  supplement_intake_item: "Supplement",
 };
 
 /** Mehrzahl für die Zusammenfassung einer Gruppe. */
@@ -72,6 +75,7 @@ const PLURAL = {
   training_plan_slot: "Termine",
   checklist_item: "Punkte",
   lab_result: "Laborwerte",
+  supplement_intake_item: "Supplements",
 };
 
 /** Verweis auf den übergeordneten Eintrag: Spalte und Tabelle. */
@@ -82,6 +86,7 @@ export const PARENT = {
   training_plan_slot: ["plan_day_id", "training_plan_day"],
   checklist_item: ["checklist_id", "checklist"],
   lab_result: ["draw_id", "lab_draw"],
+  supplement_intake_item: ["intake_id", "supplement_intake"],
 };
 
 const FIELD_LABELS = {
@@ -159,12 +164,18 @@ const FIELD_LABELS = {
   route: "Gabe",
   site: "Stelle",
   default_route: "Übliche Gabe",
+  timing: "Einnahme",
+  meal_id: "Mahlzeit",
+  stack_id: "Stack",
+  intake_id: "Einnahme",
+  supplement_id: "Supplement",
 };
 
 const HIDDEN = new Set(["id", "created_at", "updated_at", "position", "builtin", "image_data", "thumb_data", "image_key", "mime", "width", "height", "resistance_profiles"]);
 const BOOLEAN = new Set(["done", "archived", "is_warmup", "fasting", "in_water"]);
 const WEEKDAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 const DAY_KINDS = { rest: "Restday", sick: "Krankheit" };
+const TIMINGS = { meal: "zu einer Mahlzeit", fasted: "nüchtern", independent: "unabhängig von Mahlzeiten" };
 
 const fmtDate = (iso) => (/^\d{4}-\d{2}-\d{2}/.test(String(iso ?? "")) ? `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}` : "");
 const fmtNum = (v) => (typeof v === "number" ? v.toLocaleString("de-DE", { maximumFractionDigits: 2 }) : String(v));
@@ -248,6 +259,7 @@ export function fieldValue(col, v, names) {
   if (BOOLEAN.has(col)) return v === true || v === 1 || v === "1" ? "Ja" : "Nein";
   if (col === "weekday" && Number.isInteger(Number(v))) return WEEKDAYS[Number(v) % 7] ?? String(v);
   if (col === "kind" && DAY_KINDS[v]) return DAY_KINDS[v];
+  if (col === "timing" && TIMINGS[v]) return TIMINGS[v];
   if ((col === "date" || col.endsWith("_date")) && fmtDate(v)) return fmtDate(v);
   if (col.endsWith("_id") && names.has(v)) return names.get(v);
   if (col.endsWith("_id")) return "(Verweis)";
@@ -286,6 +298,8 @@ export function titleOf(table, row, names) {
       return `${n(row.metric_id) || label}: ${fmtNum(row.value ?? "")}`;
     case "water_intake":
       return `Wasser ${row.ml ? `${fmtNum(row.ml)} ml` : ""}`.trim();
+    case "supplement_intake_item":
+      return `${n(row.supplement_id) || label} ${fmtNum(row.amount ?? "")}`.trim();
     case "caffeine_intake":
       return `${row.label ?? "Koffein"}${row.mg ? ` · ${fmtNum(row.mg)} mg` : ""}`;
     case "hrt_product":
@@ -332,6 +346,8 @@ export function editTarget(table, row) {
       return { view: "training", set: { trainTab: "checkins" }, act: "train-checkin-edit", arg: id };
     case "water_intake":
       return { view: "diary", set: { diaryDate: row.date } };
+    case "supplement_intake":
+      return { view: "diary", set: { diaryDate: row.date }, act: "supp-edit", arg: id };
     case "body_measurement":
       return { view: "body-metric", viewArg: row.metric_id, act: "body-edit", arg: id };
     case "lab_draw":

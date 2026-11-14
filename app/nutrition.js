@@ -342,6 +342,12 @@ function mealFor(catalog, local, date, mealType, { uuid, now }) {
   return meal;
 }
 
+/** Mahlzeit eines Tages (Standardart, ohne eigenen Namen) holen oder leer anlegen; gibt ihre ID zurück (1.26.0). */
+export function ensureMeal(catalog, local, date, mealType, opts) {
+  if (!MEAL_TYPES.some((t) => t.value === mealType)) throw new Error("Unbekannte Mahlzeit.");
+  return mealFor(catalog, local, date, mealType, { uuid: opts.uuid, now: opts.now ?? new Date() }).row.id;
+}
+
 /**
  * Noch nicht gesendete Einträge (1.2.2): alle Tage, neueste zuerst, je Mahlzeit in der Reihenfolge
  * des Tages. Rückgabe [{ date, meals: [{ meal, items: [{ ...item, food, n }], total }] }].

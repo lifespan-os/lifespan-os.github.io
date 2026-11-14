@@ -205,7 +205,7 @@ export function overviewFor(db, date) {
     t("meal_value").length > 0 ||
     db.water.length > 0 ||
     t("nutrition_day_entry").length > 0 ||
-    t("supplement_intake").length > 0 ||
+    db.intakesByDate.size > 0 ||
     db.sleep.length > 0 ||
     db.recovery.length > 0 ||
     db.body.length > 0 ||

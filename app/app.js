@@ -8,7 +8,8 @@ import * as BD from "./bodydata.js";
 import { SECTIONS, barChoices, barSlots, drawerHtml, icon, pcOnlyHtml, quickSheetHtml, tabbarHtml } from "./nav.js";
 import { focusInfo, machineNamesOf } from "./focusinfo.js";
 import * as P from "./pcdb.js";
-import { buildDb, diaryActions, diaryChange, initDiary, today as todayIso, viewDiary, viewNutritionHistory } from "./diary.js";
+import { buildDb, diaryActions, diaryChange, diaryInput, initDiary, today as todayIso, viewDiary, viewNutritionHistory, viewSuppIntake } from "./diary.js";
+import * as SP from "./supplements.js";
 import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewDayNav } from "./overview.js";
 import { initLogs, logsActions, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
@@ -105,7 +106,7 @@ function refreshCatalog() {
 const exById = () => new Map(C.allExercises(S.catalog, S.localExercises).map((e) => [e.id, e]));
 const machineById = () => new Map(S.catalog.machines.map((m) => [m.id, m]));
 const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported);
-const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWater(S.water);
+const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWater(S.water) + SP.unsentSupp(S.supp);
 // Körperwerte plus Schlaf und Regeneration (gehen zusammen in die Datei „Körperwerte“, 1.7.0)
 const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + TR.unsentTrain(S.train);
 
@@ -845,6 +846,7 @@ const VIEWS = {
   send: viewSend,
   pending: viewPending,
   "account-new": viewAccountNew,
+  "supp-intake": viewSuppIntake,
   detail: viewDetail,
   help: viewHelp,
 };
@@ -921,7 +923,7 @@ navRoot.id = "nav-root";
 document.body.appendChild(navRoot);
 
 /** Ansichten mit eigener Leiste unten (Training läuft, Speichern): dort keine Hauptleiste. */
-const NO_TABBAR = new Set(["setup", "workout", "picker", "machine", "finish"]);
+const NO_TABBAR = new Set(["setup", "workout", "picker", "machine", "finish", "supp-intake", "account-new"]);
 
 function renderNav() {
   if (!S.catalog) {
@@ -1321,6 +1323,8 @@ const actions = {
       await store.set("nutrition", S.food.local);
       P.markWaterSent(S.water);
       await store.set("water", S.water);
+      SP.markSuppSent(S.supp);
+      await store.set("supp", S.supp);
     }
     await saveNow();
     toast("Als übertragen markiert");
@@ -1467,6 +1471,23 @@ function mergeTables(a, b) {
 }
 
 /**
+ * Tabellen für „Lebensmittel senden“: Ernährung, Wasser und Supplement-Einnahmen (1.26.0). Eine
+ * Einnahme zu einer am Handy angelegten, noch leeren Mahlzeit nimmt diese Mahlzeit mit.
+ */
+function foodTables(all) {
+  const out = mergeTables(mergeTables(N.nutritionTables(S.catalog, S.food.local, { all }), P.waterTables(S.water, { all })), SP.suppTables(S.supp, buildDb(), { all, withSupplements: Boolean(S.catalog?.startpaket) }));
+  const meals = new Set((out.meal ?? []).map((m) => m.id));
+  for (const i of out.supplement_intake ?? []) {
+    const m = i.meal_id ? S.food.local.meals[i.meal_id] : null;
+    if (m && !m.fromPc && !meals.has(m.row.id)) {
+      out.meal = [...(out.meal ?? []), { ...m.row }];
+      meals.add(m.row.id);
+    }
+  }
+  return out;
+}
+
+/**
  * Rückgabedatei erstellen (1.2.4): Trainings und Ernährung getrennt – `kind` „training“ oder „food“,
  * `all` = auch schon gesendete.
  */
@@ -1476,7 +1497,7 @@ async function sendFile(kind, all) {
   try {
     const food =
       kind === "food" && S.food
-        ? mergeTables(N.nutritionTables(S.catalog, S.food.local, { all }), P.waterTables(S.water, { all }))
+        ? foodTables(all)
         : kind === "body" && S.body
           ? mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), CF.caffeineTables(S.caffeine, { all })), TR.trainTables(S.train, { all }))))))
           : {};
@@ -1538,6 +1559,7 @@ restEl.addEventListener("click", (ev) => {
 app.addEventListener("input", (ev) => {
   const el = ev.target;
   if (foodInput(el)) return;
+  if (diaryInput(el)) return;
   if (bodyInput(el)) return;
   if (logsInput(el)) return;
   if (todoInput(el)) return;
@@ -1674,6 +1696,8 @@ async function applyCatalog(catalog) {
     await store.set("body", S.body.local);
     S.water = P.pruneWater(catalog, S.water);
     await store.set("water", S.water);
+    S.supp = SP.pruneSupp(catalog, S.supp);
+    await store.set("supp", S.supp);
     S.logs = LG.pruneLogs(catalog, S.logs);
     await store.set("logs", S.logs);
     S.todos = TD.pruneTodos(catalog, S.todos);
@@ -2004,6 +2028,7 @@ async function boot() {
     S.food = foodState(await store.get("nutrition"));
     S.body = bodyState(await store.get("body"));
     S.water = (await store.get("water")) || P.emptyWaterLocal();
+    S.supp = SP.normSupp(await store.get("supp"));
     S.logs = LG.logsState(await store.get("logs"));
     S.todos = TD.todosState(await store.get("todos"));
     S.checklists = CD.checklistState(await store.get("checklists"));

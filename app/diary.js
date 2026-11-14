@@ -6,6 +6,7 @@
 import * as P from "./pcdb.js";
 import * as D from "./pcdomain.js";
 import * as N from "./nutrition.js";
+import * as SP from "./supplements.js";
 import { phoneLogs } from "./logsdata.js";
 import { CATALOG, GROUPS } from "./nutrientcatalog.js";
 import { barTrendSvg, compareHtml, COLOR, dayGoalHtml, macroBreakdownHtml } from "./pcview.js";
@@ -54,6 +55,7 @@ export function buildDb() {
     workouts,
     exercises: S.localExercises ?? [],
     logs: phoneLogs(S.logs),
+    supp: SP.phoneSupp(S.supp),
   });
   // Eigene Namen der Standardmahlzeiten wie am PC (Settings → meal_name.*)
   const names = {};
@@ -360,10 +362,13 @@ function mealsCard(slots, fast, date) {
   </section>`;
 }
 
-// ---------------- Supplements
+// ---------------- Supplements (am Handy erfassbar seit 1.26.0)
 
 function supplementsCard(intakes, suppMacros, hasSuppMacros) {
   const groups = D.groupIntakes(intakes);
+  const own = SP.normSupp(X.S.supp);
+  const unsent = SP.unsentSupp(own);
+  const hasChoices = buildDbCached().supplements.size > 0;
   return `<section class="card card--nutrition"><div class="card__head"><h3>Supplements</h3>
       <span class="card__meta">${hasSuppMacros ? `${esc(D.formatKcal(suppMacros.energyKcal))} · P ${esc(D.formatGrams(suppMacros.proteinG))}` : ""}</span></div>
     ${
@@ -373,16 +378,134 @@ function supplementsCard(intakes, suppMacros, hasSuppMacros) {
               (g) => `<div class="supp-group"><p class="small"><b>${esc(g.label.charAt(0).toUpperCase() + g.label.slice(1))}</b></p>
           <ul class="supp-list">${g.intakes
             .map(
-              (i) => `<li><span><b>${esc(i.name)}</b>${i.time ? ` <span class="muted small">${esc(i.time)}</span>` : ""}</span>
-              <span class="muted small">${esc(D.describeSupplements(i.items))}</span>${i.notes ? `<span class="muted small">${esc(i.notes)}</span>` : ""}</li>`,
+              (i) => `<li><button type="button" class="supp-entry" data-act="supp-edit" data-arg="${esc(i.id)}" aria-label="${esc(`${i.name} bearbeiten`)}">
+                <span><b>${esc(i.name)}</b>${i.time ? ` <span class="muted small">${esc(i.time)}</span>` : ""}${own.intakes[i.id] && !own.intakes[i.id].sent ? ` <span class="tag">neu</span>` : ""}</span>
+                <span class="muted small">${esc(D.describeSupplements(i.items))}</span>${i.notes ? `<span class="muted small">${esc(i.notes)}</span>` : ""}</button></li>`,
             )
             .join("")}</ul></div>`,
             )
             .join("")
         : `<p class="muted small">An diesem Tag sind keine Supplements eingetragen.</p>`
     }
-    <p class="card__note">Supplements trägst du bisher am PC ein (Nutrition → Tagebuch).</p>
+    ${
+      hasChoices
+        ? `<button class="btn block" data-act="supp-new">Supplements eintragen</button>`
+        : `<p class="card__note">Noch keine Supplements vorhanden. Sie kommen mit der Supplement-Datenbank (neue Exportdatei vom PC bzw. Grunddaten des Kontos).</p>`
+    }
+    ${unsent ? `<p class="card__note">${unsent} ${unsent === 1 ? "Änderung geht" : "Änderungen gehen"} mit „Lebensmittel senden“ an den PC.</p>` : ""}
   </section>`;
+}
+
+let dbCache = null;
+/** Daten für Supplement-Karte und Editor (innerhalb eines Zeichnens einmal berechnet). */
+function buildDbCached() {
+  if (!dbCache) {
+    dbCache = buildDb();
+    queueMicrotask(() => (dbCache = null));
+  }
+  return dbCache;
+}
+
+const suppLabel = (s) => (s.manufacturer ? `${s.name} (${s.manufacturer})` : s.name);
+
+/** Editor „Supplements eintragen / bearbeiten“ (wie IntakeEditor am PC). */
+export function viewSuppIntake() {
+  const S = X.S;
+  const st = S.suppEdit;
+  if (!st) return viewDiary();
+  const db = buildDbCached();
+  const d = st.draft;
+  const slots = D.daySlots(P.mealDay(db, d.date));
+  const options = SP.timingOptions(slots);
+  if (d.timing && !options.some((o) => o.value === d.timing)) options.unshift({ value: d.timing, label: "Bisherige Mahlzeit" });
+  const stacks = SP.stackChoices(S.catalog?.pc);
+  const hits = st.query ? SP.searchSupplements(db, st.query, 25) : [];
+  const chosen = new Set(d.items.map((i) => i.supplementId));
+  const title = "Einnahme";
+  return `${X.header(title, { back: "diary" })}<main class="wrap">
+    <section class="card">
+      <p class="small"><b>${d.id ? "Bearbeiten" : "Eintragen"}</b> · ${esc(D.formatDate(d.date))}${d.stackId ? ` · Stack „${esc(d.name)}“` : ""}</p>
+      <div class="grid2">
+        <div class="field"><label for="supp-timing">Einnahme</label>
+          <select id="supp-timing" data-diary="supp-timing">${options.map((o) => `<option value="${esc(o.value)}" ${o.value === d.timing ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select></div>
+        <div class="field"><label for="supp-time">Uhrzeit (optional)</label>
+          <input id="supp-time" type="time" data-diary="supp-time" value="${esc(d.time)}"></div>
+      </div>
+      <p class="muted small">Zu einer Mahlzeit dieses Tages, nüchtern oder unabhängig von Mahlzeiten.</p>
+      ${
+        stacks.length
+          ? `<div class="field"><label for="supp-stack">Stack übernehmen</label>
+            <select id="supp-stack" data-diary="supp-stack"><option value="">${d.stackId ? "Stack behalten" : "– kein Stack –"}</option>${stacks
+              .map((s) => `<option value="${esc(s.id)}">${esc(s.name)} (${s.items.length})</option>`)
+              .join("")}</select></div>`
+          : ""
+      }
+      ${d.stackId ? `<p class="muted small">Änderungen gelten nur für diesen Tag – der Stack bleibt unverändert.</p>` : ""}
+    </section>
+    <section class="card">
+      <h3>Supplements</h3>
+      ${
+        d.items.length
+          ? `<ul class="supp-items">${d.items
+              .map((it, i) => {
+                const s = db.supplements.get(it.supplementId);
+                return `<li><span class="supp-items__name">${esc(s ? suppLabel(s) : "Unbekanntes Supplement")}</span>
+                  <span class="supp-items__amount"><input type="text" inputmode="decimal" aria-label="${esc(`Menge von ${s?.name ?? "Eintrag"}`)}" data-diary="supp-amt" data-arg="${i}" value="${esc(it.amount)}">
+                  <span class="muted small">${esc(s?.unit ?? "")}</span></span>
+                  <button class="btn sm ghost danger" data-act="supp-item-del" data-arg="${i}" aria-label="${esc(`${s?.name ?? "Eintrag"} entfernen`)}">✕</button></li>`;
+              })
+              .join("")}</ul>`
+          : `<p class="muted small">Noch keine Supplements gewählt.</p>`
+      }
+      <div class="field"><label for="supp-q">Supplement hinzufügen</label>
+        <input id="supp-q" type="search" data-diary="supp-q" autocomplete="off" placeholder="Supplement suchen, z. B. Vitamin D …" value="${esc(st.query)}"></div>
+      <ul class="supp-hits" id="supp-hits">${suppHits(hits, chosen)}</ul>
+    </section>
+    <section class="card">
+      <div class="field"><label for="supp-notes">Notizen (optional)</label>
+        <textarea id="supp-notes" rows="2" maxlength="1000" data-diary="supp-notes">${esc(d.notes)}</textarea></div>
+      ${st.error ? `<p class="field-error">${esc(st.error)}</p>` : ""}
+      <button class="btn primary block" data-act="supp-save">Speichern</button>
+      ${d.id ? `<button class="btn block ghost danger" data-act="supp-delete">Vom Tag entfernen</button>` : ""}
+    </section>
+  </main>`;
+}
+
+function suppHits(hits, chosen) {
+  const st = X.S.suppEdit;
+  if (!st?.query) return "";
+  if (!hits.length) return `<li class="muted small">Kein Supplement gefunden.</li>`;
+  return hits
+    .map(
+      (s) => `<li><button type="button" class="supp-hit" data-act="supp-add" data-arg="${esc(s.id)}">
+        <span>${esc(s.name)}${s.manufacturer ? ` <span class="muted small">${esc(s.manufacturer)}</span>` : ""}</span>
+        <span class="muted small">${chosen.has(s.id) ? "schon gewählt" : `${esc(SP.fmtAmount(SP.startAmount(s)))} ${esc(s.unit)}`}</span></button></li>`,
+    )
+    .join("");
+}
+
+/** Eingaben des Editors in den Entwurf übernehmen (vor Speichern und vor jedem Neuzeichnen). */
+function readSuppForm() {
+  const st = X.S.suppEdit;
+  if (!st) return;
+  const d = st.draft;
+  const v = (id) => document.getElementById(id);
+  if (v("supp-timing")) d.timing = v("supp-timing").value;
+  if (v("supp-time")) d.time = v("supp-time").value;
+  if (v("supp-notes")) d.notes = v("supp-notes").value;
+  document.querySelectorAll("[data-diary=supp-amt]").forEach((el) => {
+    const it = d.items[Number(el.dataset.arg)];
+    if (it) it.amount = el.value;
+  });
+}
+
+async function persistSupp() {
+  try {
+    await X.store.set("supp", X.S.supp);
+    await X.store.set("nutrition", X.S.food.local);
+  } catch (e) {
+    X.toast("Speichern auf dem Gerät fehlgeschlagen: " + e.message, true);
+  }
 }
 
 // ---------------- Fasttracking und Mikronährstoffe
@@ -489,6 +612,77 @@ const shift = (iso, n) => {
 };
 
 export const diaryActions = {
+  "supp-new": () => {
+    const db = buildDb();
+    const date = X.S.diaryDate ?? today();
+    const slots = D.daySlots(P.mealDay(db, date));
+    const now = new Date();
+    const isToday = date === today();
+    X.S.suppEdit = { draft: SP.emptyDraft(date, SP.suggestTiming(slots, isToday ? now.getHours() : 8), isToday ? nowTime() : ""), query: "", error: null };
+    X.go("supp-intake");
+  },
+  "supp-edit": (el) => {
+    const db = buildDb();
+    const date = X.S.diaryDate ?? today();
+    const i = P.intakesOn(db, date).find((x) => x.id === el.dataset.arg);
+    if (!i) return X.toast("Eintrag nicht gefunden.", true);
+    X.S.suppEdit = { draft: SP.draftFromIntake(i), query: "", error: null };
+    X.go("supp-intake");
+  },
+  "supp-add": (el) => {
+    readSuppForm();
+    const st = X.S.suppEdit;
+    const s = buildDb().supplements.get(el.dataset.arg);
+    if (!st || !s) return;
+    if (!st.draft.items.some((i) => i.supplementId === s.id)) st.draft.items.push({ id: null, supplementId: s.id, amount: SP.fmtAmount(SP.startAmount(s)) });
+    st.query = "";
+    st.error = null;
+    X.rerender();
+    requestAnimationFrame(() => document.getElementById("supp-q")?.focus());
+  },
+  "supp-item-del": (el) => {
+    readSuppForm();
+    const st = X.S.suppEdit;
+    if (!st) return;
+    st.draft.items.splice(Number(el.dataset.arg), 1);
+    X.rerender();
+  },
+  "supp-save": async () => {
+    readSuppForm();
+    const st = X.S.suppEdit;
+    if (!st) return;
+    const db = buildDb();
+    const d = st.draft;
+    const slots = D.daySlots(P.mealDay(db, d.date));
+    const label = SP.timingOptions(slots).find((o) => o.value === d.timing)?.label;
+    const opts = { uuid: X.uuid, now: new Date() };
+    try {
+      SP.saveIntake(db, X.S.supp, d, {
+        ...opts,
+        timingLabel: label,
+        ensureMeal: (date, type) => N.ensureMeal(X.S.catalog, X.S.food.local, date, type, opts),
+      });
+    } catch (e) {
+      st.error = e.message;
+      X.rerender();
+      return;
+    }
+    await persistSupp();
+    X.S.suppEdit = null;
+    X.S.diaryDate = d.date;
+    X.toast(d.stackId ? `Supplements „${d.name}“ gespeichert.` : `Supplements (${label ?? "Einnahme"}) gespeichert.`);
+    X.go("diary");
+  },
+  "supp-delete": async (el) => {
+    const st = X.S.suppEdit;
+    if (!st?.draft.id) return;
+    if (!X.confirmTwice(el, "Nochmal tippen: vom Tag entfernen")) return;
+    SP.deleteIntake(buildDb(), X.S.supp, st.draft.id);
+    await persistSupp();
+    X.S.suppEdit = null;
+    X.toast("Supplements entfernt.");
+    X.go("diary");
+  },
   "meal-act-open": (el) => {
     const [pk, kind] = el.dataset.arg.split("|");
     const ids = X.S.mealPick?.[pk] ?? [];
@@ -593,10 +787,41 @@ export const diaryActions = {
   },
 };
 
+/** Eingaben während des Tippens (Supplement-Suche); true = behandelt. */
+export function diaryInput(el) {
+  if (el.dataset?.diary !== "supp-q") return false;
+  const st = X.S.suppEdit;
+  if (!st) return true;
+  st.query = el.value;
+  const db = buildDbCached();
+  const list = document.getElementById("supp-hits");
+  if (list) list.innerHTML = suppHits(SP.searchSupplements(db, st.query, 25), new Set(st.draft.items.map((i) => i.supplementId)));
+  return true;
+}
+
 /** Änderungen an Auswahlfeldern; true = behandelt. */
 export function diaryChange(el) {
   const k = el.dataset?.diary;
   if (!k) return false;
+  if (k === "supp-stack") {
+    readSuppForm();
+    const st = X.S.suppEdit;
+    const stack = SP.stackChoices(X.S.catalog?.pc).find((s) => s.id === el.value);
+    if (st && stack) {
+      st.draft = SP.applyStack(st.draft, stack);
+      X.rerender();
+    }
+    return true;
+  }
+  if (k === "supp-timing") {
+    readSuppForm();
+    X.rerender();
+    return true;
+  }
+  if (k.startsWith("supp-")) {
+    readSuppForm();
+    return true;
+  }
   if (k === "pick" || k === "pickall") {
     const [pk, id] = el.dataset.arg.split("|");
     const cur = new Set(X.S.mealPick?.[pk] ?? []);

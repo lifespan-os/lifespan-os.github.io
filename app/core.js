@@ -9,7 +9,7 @@ import { pcFromRows } from "./pcdb.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.25.0";
+export const MOBILE_VERSION = "1.26.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -192,7 +192,8 @@ export function expandCompact(doc) {
   const tables = {};
   const columns = {};
   for (const [name, t] of Object.entries(doc.tables ?? {})) {
-    columns[name] = t.c;
+    // `a` = alle Spalten der Tabelle am PC, falls das Paket weniger mitliefert (z. B. Nährwerte ohne IDs)
+    columns[name] = t.a ?? t.c;
     tables[name] = t.r.map((row) => Object.fromEntries(t.c.map((c, i) => [c, row[i]])));
   }
   return { doc: { ...doc, compact: false, tables }, columns };
@@ -215,7 +216,7 @@ export function accountDoc(startDoc, input, now = new Date()) {
   const { doc } = expandCompact(startDoc);
   const iso = isoNow(now);
   const profile = { id: 1, name, height_cm: Math.round(h * 10) / 10, birth_year: year, updated_at: iso, birth_date: bd, sex: input.sex, life_phase: null };
-  const keepColumns = startDoc?.compact ? Object.fromEntries(Object.entries(startDoc.tables).map(([k, t]) => [k, t.c])) : {};
+  const keepColumns = startDoc?.compact ? Object.fromEntries(Object.entries(startDoc.tables).map(([k, t]) => [k, t.a ?? t.c])) : {};
   return { ...doc, exportedAt: iso, columns: keepColumns, tables: { ...doc.tables, profile: [profile] } };
 }
 
@@ -246,7 +247,7 @@ export function parseExport(text) {
   // Spalten je Tabelle merken: die Rückgabedatei darf nur bekannte Spalten enthalten
   const columns = { ...knownColumns };
   for (const [name, list] of Object.entries(t)) {
-    if (Array.isArray(list) && list.length) columns[name] = Object.keys(list[0]);
+    if (Array.isArray(list) && list.length && !knownColumns[name]) columns[name] = Object.keys(list[0]);
   }
 
   const machines = rows("machine");

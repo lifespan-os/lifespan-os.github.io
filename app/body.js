@@ -2,6 +2,7 @@
 // (Verlauf → „… – letzte Werte“), Verlauf je Messgröße, Werte erfassen und an den PC senden.
 
 import * as B from "./bodydata.js";
+import * as D from "./pcdomain.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -240,6 +241,113 @@ function shiftDate(iso, days) {
 
 const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
+// ------------------------------------------------------------------ Aus Bild übernehmen (1.12.0)
+
+/** Karte „Aus Bild übernehmen“: Screenshot der Waagen-Auswertung (Hume) lesen und zuordnen. */
+function scaleCard() {
+  const sc = S().scale ?? null;
+  const rows = sc?.rows ?? null;
+  return `<section class="card scale-scan"><h3>Aus Bild übernehmen</h3>
+    <p class="muted small">Screenshot der Waagen-Auswertung (Hume) wählen. Übernommen wird je Kachel der aktuelle (rechte) Wert für den oben gewählten Tag; Herzfrequenz bleibt außen vor. Gespeichert wird erst mit „Werte speichern“.</p>
+    <label class="btn block ${sc?.busy ? "is-busy" : ""}">${sc?.busy ? "Wird gelesen …" : "Screenshot wählen"}<input type="file" accept="image/*" data-scale="file" hidden ${sc?.busy ? "disabled" : ""}></label>
+    <p class="muted small" id="scale-status" role="status">${esc(sc?.status ?? "")}</p>
+    ${
+      rows
+        ? `<ul class="scale-list">${rows
+            .map(
+              (r) => `<li class="${r.use ? "" : "is-muted"}">
+          <label class="scale-list__check"><input type="checkbox" data-scale-use="${r.key}" ${r.use ? "checked" : ""} ${r.metricId ? "" : "disabled"}>
+            <span><strong>${esc(r.label)}</strong>${r.name && r.name !== r.label ? `<br><span class="muted small">→ ${esc(r.name)}</span>` : ""}${r.note ? `<br><span class="muted small">${esc(r.note)}</span>` : ""}</span></label>
+          ${r.metricId ? `<span class="entry-row__input"><input type="text" inputmode="decimal" data-scale-val="${r.key}" value="${esc(r.text)}" aria-label="Wert ${esc(r.name ?? r.label)}"><span class="unit">${esc(r.unit)}</span></span>` : `<span class="muted">–</span>`}
+        </li>`,
+            )
+            .join("")}</ul>
+      <div class="row-actions"><button class="btn primary" data-act="scale-apply">Ins Formular übernehmen</button><button class="btn" data-act="scale-discard">Verwerfen</button></div>`
+        : ""
+    }
+  </section>`;
+}
+
+const nowTime = () => {
+  const d = new Date();
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+/** Screenshot lesen: Graustufen (dunkel umgekehrt), lange Bilder geteilt, Texterkennung. */
+async function readScale(file) {
+  const st = S();
+  st.scale = { busy: true, status: "Bild wird vorbereitet …", rows: null };
+  X.rerender();
+  try {
+    const { loadImage, recognizeRows } = await import("./ocr.js");
+    const img = await loadImage(file);
+    const w0 = img.naturalWidth || img.width;
+    const h0 = img.naturalHeight || img.height;
+    const f = w0 < 1000 ? Math.min(3, 1400 / w0) : Math.min(1, 1600 / w0);
+    const w = Math.round(w0 * f);
+    const h = Math.round(h0 * f);
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, 0, 0, w, h);
+    const gray = D.scaleScan.prepareGray(ctx.getImageData(0, 0, w, h).data);
+    const canvases = D.scaleScan.sliceRanges(gray, w, h, 2000).map(([y0, y1]) => {
+      const part = document.createElement("canvas");
+      part.width = w;
+      part.height = y1 - y0;
+      const pctx = part.getContext("2d");
+      const out = pctx.createImageData(w, y1 - y0);
+      for (let i = 0, j = y0 * w; j < y1 * w; i += 4, j++) {
+        out.data[i] = out.data[i + 1] = out.data[i + 2] = gray[j];
+        out.data[i + 3] = 255;
+      }
+      pctx.putImageData(out, 0, 0);
+      return part;
+    });
+    const rows = await recognizeRows(canvases, (text, p) => {
+      const el = document.getElementById("scale-status");
+      if (el) el.textContent = `${text} ${Math.round((p ?? 0) * 100)} %`;
+    });
+    const bounds = metrics().map((m) => ({ id: m.id, name: m.name, unit: m.unit, minValue: m.min_value ?? null, maxValue: m.max_value ?? null, decimals: m.decimals ?? 1 }));
+    const vals = D.scaleScan.scaleValues(D.scaleScan.readScaleRows(rows), bounds);
+    const found = vals.filter((v) => v.value !== null).length;
+    st.scale = {
+      busy: false,
+      status: found ? `${found} Werte erkannt – bitte prüfen und übernehmen.` : "Im Bild wurden keine Werte erkannt. Bitte den Screenshot der Auswertung (Kacheln mit „vorher › aktuell“) wählen.",
+      rows: found
+        ? vals.map((v) => ({
+            key: v.field.key,
+            label: v.field.label,
+            metricId: v.metric?.id ?? null,
+            name: v.metric?.name ?? null,
+            unit: v.metric?.unit ?? "",
+            text: v.value === null ? "" : String(v.value).replace(".", ","),
+            use: v.ok,
+            note: v.note,
+          }))
+        : null,
+    };
+  } catch (e) {
+    st.scale = { busy: false, status: e.message || "Das Bild lässt sich nicht lesen.", rows: null };
+  }
+  X.rerender();
+}
+
+/** Messmethode mit „Hume“ für einen Bereich: bisher verwendet, sonst aus den Settings vom PC. */
+function humeMethod(category) {
+  const used = B.methodsInCategory(X.S.catalog, S().local, category).find((m) => /hume/i.test(m));
+  if (used) return used;
+  try {
+    const raw = (X.S.catalog?.pc?.settings ?? []).find((s) => s.key === "measurement_methods")?.value;
+    const list = raw ? JSON.parse(raw)[category] ?? [] : [];
+    return list.find((m) => /hume/i.test(m)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function viewBodyEntry() {
   const st = S();
   if (!X.S.catalog?.body) return viewBody();
@@ -256,6 +364,7 @@ export function viewBodyEntry() {
       <button class="btn sm" data-act="body-day-shift" data-arg="1" aria-label="Folgetag" ${d.date >= today() ? "disabled" : ""}>›</button>
     </section>
     ${d.errors.date ? `<p class="err small">${esc(d.errors.date)}</p>` : ""}
+    ${scaleCard()}
     <nav class="entry-jump">${sections.map((sec) => `<button type="button" data-act="body-jump" data-arg="be-${sec.category}">${esc(sec.label)}</button>`).join("")}</nav>
     ${sections
       .map((sec) => {
@@ -297,6 +406,29 @@ export function viewBodyEntry() {
 // ------------------------------------------------------------------ Ereignisse
 
 export const bodyActions = {
+  "scale-discard": () => {
+    S().scale = null;
+    X.rerender();
+  },
+  "scale-apply": () => {
+    const st = S();
+    const d = st.day;
+    const rows = st.scale?.rows ?? [];
+    const picked = rows.filter((r) => r.use && r.metricId && r.text.trim() && metricById(r.metricId));
+    for (const r of picked) {
+      d.values[r.metricId] = r.text.trim();
+      delete d.errors[r.metricId];
+    }
+    for (const cat of new Set(picked.map((r) => metricById(r.metricId).category))) {
+      if (!d.methods[cat]) {
+        const hume = humeMethod(cat);
+        if (hume) d.methods[cat] = hume;
+      }
+      if (d.date === today() && !d.times[cat]) d.times[cat] = nowTime();
+    }
+    st.scale = { busy: false, status: `${picked.length} ${picked.length === 1 ? "Wert" : "Werte"} übernommen – bitte prüfen und mit „Werte speichern“ speichern.`, rows: null };
+    X.rerender();
+  },
   "body-jump": (el) => document.getElementById(el.dataset.arg)?.scrollIntoView({ block: "start", behavior: "smooth" }),
   "body-day-open": () => {
     S().day = B.dayForm(X.S.catalog, S().local, today());
@@ -386,6 +518,15 @@ export const bodyActions = {
 
 /** Eingaben im Formular (ohne neu zu zeichnen). */
 export function bodyInput(el) {
+  if (el.dataset.scaleVal && S()?.scale?.rows) {
+    const r = S().scale.rows.find((x) => x.key === el.dataset.scaleVal);
+    if (r) {
+      r.text = el.value;
+      r.use = true;
+    }
+    return true;
+  }
+  if (el.dataset.scale || el.dataset.scaleUse) return true;
   const d = S()?.day;
   if (el.dataset.bd && d) {
     if (el.dataset.bd === "value") {
@@ -405,6 +546,19 @@ export function bodyInput(el) {
 
 /** Messgröße gewechselt: Formular neu zeichnen (Einheit, Bereich, Messmethoden). */
 export function bodyChange(el) {
+  if (el.dataset.scale === "file") {
+    const file = el.files?.[0];
+    el.value = "";
+    if (file) readScale(file);
+    return true;
+  }
+  if (el.dataset.scaleUse && S()?.scale?.rows) {
+    const r = S().scale.rows.find((x) => x.key === el.dataset.scaleUse);
+    if (r) r.use = el.checked;
+    X.rerender();
+    return true;
+  }
+  if (el.dataset.scaleVal) return bodyInput(el);
   if (el.dataset.bd === "date") {
     if (el.value && el.value <= today()) S().day = B.dayForm(X.S.catalog, S().local, el.value);
     X.rerender();

@@ -204,3 +204,26 @@ export async function recognizeBest(source, { crop = null, score = () => 0, good
   }
   return best ?? { text: "", value: 0, pass: 0 };
 }
+
+/**
+ * Zeilen eines Screenshots (1.12.0, Waagen-Auswertung): Bild als Graustufen-Leinwände je Abschnitt
+ * (dunkler Hintergrund schon umgekehrt, siehe scaleScan.prepareGray/sliceRanges), Text als ein Block.
+ * `onProgress(text, anteil 0–1)`. Rückgabe: erkannte Zeilen von oben nach unten.
+ */
+export async function recognizeRows(canvases, onProgress) {
+  let current = 0;
+  progressHandler = (m) => {
+    const step = canvases.length > 1 ? ` (Abschnitt ${current + 1} von ${canvases.length})` : "";
+    if (m.status === "recognizing text") onProgress?.(`Text wird erkannt${step} …`, m.progress);
+    else if (/load|initializ/i.test(m.status)) onProgress?.("Texterkennung wird geladen …", m.progress);
+  };
+  const worker = await getWorker();
+  await worker.setParameters({ tessedit_pageseg_mode: "6" });
+  const rows = [];
+  for (; current < canvases.length; current++) {
+    const { data } = await worker.recognize(canvases[current]);
+    rows.push(...String(data.text || "").split(/\n+/).map((r) => r.trim()).filter(Boolean));
+  }
+  progressHandler = null;
+  return rows;
+}

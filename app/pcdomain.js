@@ -6229,7 +6229,10 @@ var METRIC_HINTS = {
 };
 var METRIC_SUBSECTIONS = {
   composition: [
-    { label: "Kennzahlen", ids: [builtinMetricId(23), builtinMetricId(37)] },
+    {
+      label: "Kennzahlen",
+      ids: [builtinMetricId(23), builtinMetricId(37), builtinMetricId(42), builtinMetricId(43)]
+    },
     {
       label: "Fett",
       ids: [
@@ -9077,8 +9080,8 @@ function levelSeries(events, measurand, nowMs, rangeDays) {
   const stepMs = stepHoursFor(rangeDays) * 36e5;
   const raw = [];
   for (let t = fromMs; t <= toMs; t += stepMs) raw.push({ atMs: t, value: levelAt(own, t) });
-  const inRange3 = own.filter((e) => e.atMs >= fromMs && e.atMs <= toMs);
-  const peakCandidates = inRange3.map((e) => {
+  const inRange4 = own.filter((e) => e.atMs >= fromMs && e.atMs <= toMs);
+  const peakCandidates = inRange4.map((e) => {
     const s = substanceById(e.substanceId);
     return s ? levelAt(own, e.atMs + s.tmaxDays * MS_PER_DAY) : 0;
   });
@@ -9091,7 +9094,7 @@ function levelSeries(events, measurand, nowMs, rangeDays) {
     toMs,
     nowMs,
     points: raw.map((p) => ({ atMs: p.atMs, percent: pct(p.value) })),
-    doses: inRange3.map((event) => ({ event, percent: pct(levelAt(own, event.atMs)) })),
+    doses: inRange4.map((event) => ({ event, percent: pct(levelAt(own, event.atMs)) })),
     nowPercent: own.length > 0 && peak > 0 ? pct(nowValue) : null,
     peak
   };
@@ -10622,6 +10625,230 @@ function restoreTemplate(list, section) {
 function progress(items) {
   return { done: items.filter((i) => i.done).length, total: items.length };
 }
+
+// src/domain/scaleScan.ts
+var scaleScan_exports = {};
+__export(scaleScan_exports, {
+  GRUNDUMSATZ_METRIC_ID: () => GRUNDUMSATZ_METRIC_ID,
+  HEALTH_SCORE_METRIC_ID: () => HEALTH_SCORE_METRIC_ID,
+  SCALE_FIELDS: () => SCALE_FIELDS,
+  editDistance: () => editDistance,
+  fieldOfRow: () => fieldOfRow,
+  normalizeLabel: () => normalizeLabel,
+  numbersIn: () => numbersIn,
+  prepareGray: () => prepareGray,
+  readScaleRows: () => readScaleRows,
+  scaleValues: () => scaleValues,
+  sliceRanges: () => sliceRanges,
+  valuesOfRow: () => valuesOfRow
+});
+var GRUNDUMSATZ_METRIC_ID = builtinMetricId(42);
+var HEALTH_SCORE_METRIC_ID = builtinMetricId(43);
+var SCALE_FIELDS = [
+  { key: "score", label: "Gesundheitspunktzahl", metricId: HEALTH_SCORE_METRIC_ID },
+  { key: "weight", label: "Gewicht", metricId: builtinMetricId(1) },
+  { key: "bodyFat", label: "K\xF6rperfettanteil", metricId: builtinMetricId(2) },
+  { key: "fatMass", label: "K\xF6rperfettmasse", metricId: builtinMetricId(25) },
+  { key: "lean", label: "Magermasse", metricId: builtinMetricId(29) },
+  { key: "subcutaneous", label: "Subkutane Fettmasse", metricId: builtinMetricId(26) },
+  { key: "visceral", label: "Viszerales Fettindex", metricId: builtinMetricId(28) },
+  { key: "ag", label: "A/G-Verh\xE4ltnis", metricId: builtinMetricId(38), factor: 0.01 },
+  { key: "skeletalMuscle", label: "Rate an Skelettmuskel", metricId: builtinMetricId(3) },
+  { key: "skeleton", label: "Skelettmasse", metricId: builtinMetricId(39) },
+  { key: "water", label: "K\xF6rperwasser", metricId: builtinMetricId(32) },
+  { key: "bmr", label: "BMR (Grundumsatz)", metricId: GRUNDUMSATZ_METRIC_ID },
+  { key: "metabolicAge", label: "Stoffwechselalter", metricId: builtinMetricId(37) },
+  {
+    key: "heartRate",
+    label: "Herzfrequenz",
+    metricId: null,
+    skip: "Puls beim Wiegen \u2013 wird nicht als Ruhepuls \xFCbernommen"
+  },
+  { key: "cellMass", label: "Zellmasse des K\xF6rpers", metricId: builtinMetricId(36) }
+];
+function normalizeLabel(text) {
+  return text.toLowerCase().replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ß/g, "ss").replace(/ı/g, "i").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z]/g, "");
+}
+function editDistance(a, b) {
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let diag = prev[0] ?? 0;
+    prev[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const up = prev[j] ?? 0;
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      prev[j] = Math.min(up + 1, (prev[j - 1] ?? 0) + 1, diag + cost);
+      diag = up;
+    }
+  }
+  return prev[b.length] ?? 0;
+}
+var NORMALIZED = SCALE_FIELDS.map((f) => ({ field: f, norm: normalizeLabel(f.label) }));
+function fieldOfRow(row) {
+  if (/\d{2,}/.test(row)) return null;
+  const text = normalizeLabel(row);
+  if (text.length < 3) return null;
+  let best = null;
+  for (const { field, norm: norm2 } of NORMALIZED) {
+    if (text.length > norm2.length + 4) continue;
+    const score = 1 - editDistance(text, norm2) / Math.max(text.length, norm2.length);
+    if (!best || score > best.score) best = { field, score };
+  }
+  return best && best.score >= 0.7 ? best.field : null;
+}
+var NUMBER2 = /\d+(?:[.,]\d+)?/g;
+function numbersIn(row) {
+  return [...row.matchAll(NUMBER2)].map((m) => ({
+    value: Number(m[0].replace(",", ".")),
+    text: m[0]
+  }));
+}
+var ARROW = /[>›»?’]+/;
+function valuesOfRow(row) {
+  const arrow = ARROW.exec(row);
+  if (arrow) {
+    const left = numbersIn(row.slice(0, arrow.index));
+    const right = numbersIn(row.slice(arrow.index + arrow[0].length));
+    const current = right[0] ?? null;
+    if (current) return { previous: left[0]?.value ?? null, current: current.value };
+  }
+  const nums = numbersIn(row);
+  if (nums.length >= 2) return { previous: nums[0]?.value ?? null, current: nums[1]?.value ?? 0 };
+  return nums[0] ? { previous: null, current: nums[0].value } : null;
+}
+function readScaleRows(rows) {
+  const found = /* @__PURE__ */ new Map();
+  for (let i = 0; i < rows.length; i++) {
+    const field = fieldOfRow(rows[i] ?? "");
+    if (!field || found.has(field.key)) continue;
+    for (let j = i + 1; j < Math.min(rows.length, i + 4); j++) {
+      const row = rows[j] ?? "";
+      if (fieldOfRow(row)) break;
+      const v = valuesOfRow(row);
+      if (v) {
+        found.set(field.key, { value: v.current, previous: v.previous, raw: row });
+        break;
+      }
+    }
+  }
+  return SCALE_FIELDS.map((field) => {
+    const f = found.get(field.key);
+    return {
+      field,
+      imageValue: f?.value ?? null,
+      previousValue: f?.previous ?? null,
+      raw: f?.raw ?? null
+    };
+  });
+}
+var inRange3 = (v, m) => (m.minValue === null || v >= m.minValue) && (m.maxValue === null || v <= m.maxValue);
+var round = (v, decimals) => {
+  const f = 10 ** decimals;
+  return Math.round(v * f) / f;
+};
+var de = (v) => v === null ? "\u2026" : String(round(v, 3)).replace(".", ",");
+function scaleValues(readings, metrics) {
+  const byId = new Map(metrics.map((m) => [m.id, m]));
+  return readings.map(({ field, imageValue, previousValue }) => {
+    if (!field.metricId) return { field, metric: null, value: null, note: field.skip ?? null, ok: false };
+    const metric = byId.get(field.metricId) ?? null;
+    if (imageValue === null) {
+      return { field, metric, value: null, note: "im Bild nicht erkannt", ok: false };
+    }
+    if (!metric) {
+      return {
+        field,
+        metric: null,
+        value: null,
+        note: "Messgr\xF6\xDFe fehlt bzw. ist ausgeblendet",
+        ok: false
+      };
+    }
+    let v = imageValue * (field.factor ?? 1);
+    let note = null;
+    if (!inRange3(v, metric)) {
+      const fixed = [10, 100].map((d) => v / d).find((x) => inRange3(x, metric));
+      if (fixed !== void 0 && Number.isInteger(imageValue)) {
+        v = fixed;
+        note = "Komma erg\xE4nzt \u2013 bitte pr\xFCfen";
+      }
+    }
+    v = round(v, metric.decimals);
+    const before = previousValue === null ? null : previousValue * (field.factor ?? 1);
+    if (before !== null && before > 0 && Math.abs(v - before) / before > 0.5) {
+      return {
+        field,
+        metric,
+        value: v,
+        note: `weicht stark vom vorherigen Wert (${de(before)}) ab \u2013 bitte pr\xFCfen`,
+        ok: false
+      };
+    }
+    if (!inRange3(v, metric)) {
+      return {
+        field,
+        metric,
+        value: v,
+        note: `au\xDFerhalb ${de(metric.minValue)}\u2013${de(metric.maxValue)} ${metric.unit} \u2013 bitte pr\xFCfen`,
+        ok: false
+      };
+    }
+    return { field, metric, value: v, note, ok: true };
+  });
+}
+function prepareGray(rgba) {
+  const n = rgba.length / 4;
+  const g = new Uint8ClampedArray(n);
+  let sum = 0;
+  for (let i = 0, j = 0; j < n; i += 4, j++) {
+    const v = 0.299 * (rgba[i] ?? 0) + 0.587 * (rgba[i + 1] ?? 0) + 0.114 * (rgba[i + 2] ?? 0);
+    g[j] = v;
+    sum += v;
+  }
+  if (sum / Math.max(1, n) < 128) for (let j = 0; j < n; j++) g[j] = 255 - (g[j] ?? 0);
+  const hist = new Uint32Array(256);
+  for (const v of g) hist[v] = (hist[v] ?? 0) + 1;
+  const cut = n * 0.02;
+  let lo = 0;
+  let hi = 255;
+  for (let s = 0; lo < 255 && s + (hist[lo] ?? 0) < cut; lo++) s += hist[lo] ?? 0;
+  for (let s = 0; hi > 0 && s + (hist[hi] ?? 0) < cut; hi--) s += hist[hi] ?? 0;
+  if (hi - lo < 30) return g;
+  const f = 255 / (hi - lo);
+  const out = new Uint8ClampedArray(n);
+  for (let j = 0; j < n; j++) out[j] = ((g[j] ?? 0) - lo) * f;
+  return out;
+}
+function sliceRanges(gray, w, h, maxHeight = 2400) {
+  if (h <= maxHeight) return [[0, h]];
+  const busy = new Float64Array(h);
+  for (let y = 0; y < h; y++) {
+    let s = 0;
+    const row = y * w;
+    for (let x = 1; x < w; x++) s += Math.abs((gray[row + x] ?? 0) - (gray[row + x - 1] ?? 0));
+    busy[y] = s / w;
+  }
+  const out = [];
+  let start = 0;
+  while (h - start > maxHeight) {
+    const target = start + maxHeight;
+    const from = Math.max(start + Math.round(maxHeight / 2), target - 400);
+    let best = target;
+    let bestBusy = Infinity;
+    for (let y = target; y >= from; y--) {
+      const b = busy[y] ?? 0;
+      if (b < bestBusy) {
+        bestBusy = b;
+        best = y;
+        if (b === 0) break;
+      }
+    }
+    out.push([start, best]);
+    start = best;
+  }
+  out.push([start, h]);
+  return out;
+}
 export {
   ANS_INFO,
   ANS_MAX,
@@ -10746,6 +10973,7 @@ export {
   roundKcal,
   scaleNutrients,
   scaleRecipeItems,
+  scaleScan_exports as scaleScan,
   setMealNames,
   sleep_exports as sleep,
   stats_exports as stats,

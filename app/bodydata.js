@@ -29,7 +29,7 @@ const ANS_IDS = [18, 19, 20, 21, 22].map(builtinMetricId);
 /** Teilüberschriften wie am PC (domain/bodyLayout.ts). */
 export const SUBSECTIONS = {
   composition: [
-    { label: "Kennzahlen", ids: [23, 37].map(builtinMetricId) },
+    { label: "Kennzahlen", ids: [23, 37, 42, 43].map(builtinMetricId) },
     { label: "Fett", ids: [2, 25, 26, 27, 28, 38, 40, 41].map(builtinMetricId) },
     { label: "Muskulatur & Magermasse", ids: [3, 24, 39, 29, 30, 36].map(builtinMetricId) },
     { label: "Körperwasser", ids: [32, 33, 34].map(builtinMetricId) },

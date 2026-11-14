@@ -652,3 +652,14 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .hrt-check__item input { width: 22px; height: 22px; flex: none; margin-top: 2px; }
 .hrt-check .row-actions input[type=text], .hrt-check__list input[type=text] { flex: 1 1 180px; min-height: 44px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
 .linkbtn.danger { color: var(--danger); }
+
+/* Body & Longevity → Aus Bild übernehmen (1.12.0) */
+.scale-scan label.btn { cursor: pointer; }
+.scale-scan label.btn.is-busy { opacity: .6; }
+.scale-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.scale-list > li { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); padding: 6px 0; }
+.scale-list > li.is-muted { opacity: .65; }
+.scale-list__check { display: flex; gap: 10px; align-items: flex-start; flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.scale-list__check input { width: 22px; height: 22px; flex: none; margin-top: 2px; }
+.scale-list .entry-row__input { flex: 0 0 auto; }
+.scale-list .entry-row__input input { width: 6.5rem; text-align: right; }

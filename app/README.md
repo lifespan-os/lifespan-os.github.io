@@ -281,3 +281,9 @@ Fassung laden.
 - Regeln wie `repo/hrt.rs` (`superdata.js`, mit Tests); Formular- und Rechenlogik aus `src/domain/hrt.ts`, `hormoneLevel.ts`, `doseCalc.ts`, `hrtChecklist.ts` (in `pcdomain.js`).
 - Änderungen gehen mit der Datei „LIFESPAN Körperwerte …“ an den PC (`hrt_entry`, `hrt_product`, Einstellung `ui.hrt_checklist` und Löschvermerke).
 - Weiterhin nur am PC: Protokoll, Auswertung und Substanzen (PEDs, Medikamente, Peptide).
+
+## Version 1.12.0 (14.11.2026): Körperwerte aus dem Waagen-Screenshot
+
+- **Body & Longevity → Werte erfassen → „Aus Bild übernehmen“:** Screenshot der Waagen-Auswertung (Hume) wählen. Die Texterkennung (offline) liest je Kachel den aktuellen (rechten) Wert; eine Vorschau zeigt Name im Bild → Körperwert und den Wert zum Prüfen, Ändern oder Abwählen. „Ins Formular übernehmen“ trägt die Werte für den gewählten Tag ein und setzt die Messmethode „Hume …“, gespeichert wird mit „Werte speichern“.
+- Zuordnung und Prüfung wie am PC (`src/domain/scaleScan.ts` in `pcdomain.js`): unscharfe Namen, Wert rechts vom Pfeil, A/G in Prozent → Verhältnis, Herzfrequenz wird nicht übernommen; Werte außerhalb des Bereichs oder mit starker Abweichung zum vorherigen Wert sind abgewählt und markiert.
+- Neue Körperwerte „Grundumsatz (BMR)“ und „Gesundheitspunktzahl“ (unter „Kennzahlen“) gibt es ab der Desktop-Version 1.0.122; am Handy erscheinen sie nach dem nächsten Export.

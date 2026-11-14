@@ -28,7 +28,7 @@ const ICONS = {
  */
 export const SECTIONS = [
   { id: "overview", label: "Overview", view: "home", views: ["home"] },
-  { id: "checklists", label: "Checklisten", view: "todos", views: ["todos"] },
+  { id: "checklists", label: "Checklisten", view: "todos", views: ["todos", "checklist-edit"] },
   {
     id: "training",
     label: "Training",

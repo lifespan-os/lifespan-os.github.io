@@ -334,3 +334,17 @@ Fassung laden.
     internationale Referenzwerte mit Balken für den letzten Wert, Wirkstoffspiegel-Verknüpfung;
     anlegen, bearbeiten, archivieren, eigene ohne Werte löschen (Regeln wie `lab.rs`).
 - `lab_analyte` geht jetzt mit „Körperwerte … senden“ an den PC (Abgleich über ID bzw. Namen).
+
+## Version 1.15.0 (14.11.2026): Checklisten vollständig – Wochen-/Monatsübersicht und Bibliothek
+
+- **Wochen-/Monatsübersicht** wie `ScheduleOverview.tsx` (anfangs zugeklappt): je Tag geplantes
+  Training (Termine der Pläne), erfasste Einheiten, To-dos (abhaken, ändern, löschen, neu je Tag),
+  Alarme (nächste Hormongabe, wenn „Secret Protocols“ am PC an ist) und Hinweise Restday/Krank
+  (setzen, ändern, entfernen – `training_day_status` wie `day_status.rs`). Im Monat optional auch
+  Tage ohne Termine. Tägliche Erinnerungen bleiben eine Einstellung des PCs.
+- **Checklisten-Bibliothek** wie `ChecklistLibrary.tsx`: Checklisten anlegen, bearbeiten (Punkte
+  sortieren, entfernen, mehrere Zeilen auf einmal hinzufügen), abhaken, Haken zurücksetzen, löschen,
+  als To-dos des gewählten Tages übernehmen, als PDF oder Excel teilen; Import aus Excel (.xlsx),
+  CSV, Text/Markdown oder eingefügtem Text aus Apple Notizen (Regeln wie `checklist.rs`).
+- Neue Datei `checklistdata.js` (mit Tests); `checklist` und `checklist_item` kommen jetzt mit der
+  Exportdatei und gehen mit „Körperwerte … senden“ an den PC.

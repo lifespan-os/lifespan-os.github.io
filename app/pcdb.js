@@ -64,6 +64,8 @@ export const KEEP_TABLES = [
   "lifetime_record",
   "protocol_substance",
   "protocol_entry",
+  "checklist",
+  "checklist_item",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */

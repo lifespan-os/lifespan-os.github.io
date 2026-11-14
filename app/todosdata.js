@@ -149,6 +149,23 @@ export function carryOver(catalog, local, from, to, { uuid, now = new Date() }) 
   return added;
 }
 
+/**
+ * Punkte einer Checkliste als To-dos eines Tages wie `add_from_checklist` (Texte, die es an dem
+ * Tag schon gibt, werden übersprungen). `items` = Punkte der Checkliste. Rückgabe: Anzahl neu.
+ */
+export function addFromChecklist(catalog, local, date, checklistId, items, onlyOpen, { uuid, now = new Date() }) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? "")) throw new Error("Bitte ein gültiges Datum wählen.");
+  const existing = new Set(todosFor(catalog, local, date).map((t) => t.text.toLowerCase()));
+  let added = 0;
+  for (const it of items) {
+    if (onlyOpen && it.done) continue;
+    if (existing.has(it.text.toLowerCase())) continue;
+    insert(catalog, local, date, it.text, { uuid, now, checklistId });
+    added += 1;
+  }
+  return added;
+}
+
 export function unsentTodos(local) {
   if (!local) return 0;
   const l = todosState(local);

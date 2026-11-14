@@ -138,8 +138,8 @@ function drinkText(drink) {
   return `${drink.amountMl} ml ${drink.label} (${drink.time})`;
 }
 function waterSummary(day) {
-  const n = day.glasses.length;
-  const glasses = `${n} ${n === 1 ? "Glas" : "Gl\xE4ser"}`;
+  const n2 = day.glasses.length;
+  const glasses = `${n2} ${n2 === 1 ? "Glas" : "Gl\xE4ser"}`;
   const ml = drinksMl(day);
   return ml > 0 ? `${glasses} + ${ml} ml aus Koffein-Getr\xE4nken` : glasses;
 }
@@ -200,9 +200,9 @@ function energyGoalView(totals, goalKcal) {
   };
 }
 var MACROS = [
-  { key: "protein", label: "Protein", actual: (n) => n.proteinG },
-  { key: "carbs", label: "Kohlenhydrate", actual: (n) => n.carbsG },
-  { key: "fat", label: "Fett", actual: (n) => n.fatG }
+  { key: "protein", label: "Protein", actual: (n2) => n2.proteinG },
+  { key: "carbs", label: "Kohlenhydrate", actual: (n2) => n2.carbsG },
+  { key: "fat", label: "Fett", actual: (n2) => n2.fatG }
 ];
 function macroGoalRows(totals, goals) {
   const goalOf = {
@@ -441,12 +441,12 @@ function addNutrients(a, b) {
 function sumNutrients(list) {
   return list.reduce(addNutrients, ZERO);
 }
-function scaleNutrients(n, factor) {
+function scaleNutrients(n2, factor) {
   return {
-    energyKcal: n.energyKcal * factor,
-    proteinG: n.proteinG * factor,
-    carbsG: n.carbsG * factor,
-    fatG: n.fatG * factor
+    energyKcal: n2.energyKcal * factor,
+    proteinG: n2.proteinG * factor,
+    carbsG: n2.carbsG * factor,
+    fatG: n2.fatG * factor
   };
 }
 function amountFromPortions(portions, portionAmount) {
@@ -634,12 +634,12 @@ function groupedValues(catalog, entry) {
   return catalog.groups.map((g) => ({
     key: g.key,
     label: g.label,
-    items: catalog.nutrients.filter((n) => n.group === g.key && entry.values[n.key] !== void 0).map((def) => ({ def, value: entry.values[def.key] }))
+    items: catalog.nutrients.filter((n2) => n2.group === g.key && entry.values[n2.key] !== void 0).map((def) => ({ def, value: entry.values[def.key] }))
   })).filter((g) => g.items.length > 0);
 }
 function microValues(catalog, sources) {
   const macros = new Set(
-    catalog.nutrients.filter((n) => n.group === MACRO_GROUP).map((n) => n.key)
+    catalog.nutrients.filter((n2) => n2.group === MACRO_GROUP).map((n2) => n2.key)
   );
   const out = {};
   for (const values of sources) {
@@ -1389,8 +1389,8 @@ function isRange(v) {
 function isGroupValues(v) {
   return typeof v === "object" && !("min" in v);
 }
-function fmt(n) {
-  return String(n).replace(".", ",");
+function fmt(n2) {
+  return String(n2).replace(".", ",");
 }
 function dgeReference(key, group, age = null) {
   const entry = DGE[key];
@@ -1666,12 +1666,12 @@ function comparePeriods(points, a, b, minCount = 2) {
   const sb = rangeStats(points, b.from, b.to);
   if (sa.count < minCount || sb.count < minCount) {
     const few = sa.count < minCount ? "im ersten Zeitraum" : "im zweiten Zeitraum";
-    const n = Math.min(sa.count, sb.count);
+    const n2 = Math.min(sa.count, sb.count);
     return {
       a: sa,
       b: sb,
       difference: null,
-      reason: n === 0 ? `Kein Vergleich m\xF6glich: ${few} gibt es keine Werte.` : `Kein Vergleich m\xF6glich: ${few} gibt es nur ${n} ${n === 1 ? "Wert" : "Werte"} (mindestens ${minCount} n\xF6tig).`
+      reason: n2 === 0 ? `Kein Vergleich m\xF6glich: ${few} gibt es keine Werte.` : `Kein Vergleich m\xF6glich: ${few} gibt es nur ${n2} ${n2 === 1 ? "Wert" : "Werte"} (mindestens ${minCount} n\xF6tig).`
     };
   }
   return { a: sa, b: sb, difference: sb.mean - sa.mean, reason: null };
@@ -1693,9 +1693,9 @@ function presetRanges(preset, today) {
 }
 function dailySeries(points, from, to) {
   const byDate = new Map(points.map((p) => [p.date, p.value]));
-  const n = daysBetween(from, to);
+  const n2 = daysBetween(from, to);
   const out = [];
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < n2; i++) {
     const date = shiftDays(from, i);
     out.push({ date, value: byDate.get(date) ?? null });
   }
@@ -1793,6 +1793,15 @@ var WEEKDAY_LABELS = {
   5: "Freitag",
   6: "Samstag",
   7: "Sonntag"
+};
+var WEEKDAY_SHORT = {
+  1: "Mo",
+  2: "Di",
+  3: "Mi",
+  4: "Do",
+  5: "Fr",
+  6: "Sa",
+  7: "So"
 };
 function isoWeekday(iso2) {
   const [y, m, d] = iso2.split("-").map(Number);
@@ -5650,8 +5659,8 @@ function comboHint(exerciseName, machineName) {
 }
 function nameHint(exerciseName, machineNames = []) {
   let name = (exerciseName ?? "").toLowerCase();
-  const names = machineNames.map((n) => n.trim().toLowerCase()).filter((n) => n.length > 0).sort((a, b) => b.length - a.length);
-  for (const n of names) name = name.split(n).join(" ");
+  const names = machineNames.map((n2) => n2.trim().toLowerCase()).filter((n2) => n2.length > 0).sort((a, b) => b.length - a.length);
+  for (const n2 of names) name = name.split(n2).join(" ");
   return name.trim();
 }
 function machineNamesOf(m) {
@@ -6048,7 +6057,7 @@ function muscleMapData(log, exercises, machines, include, focus = NO_FOCUS) {
     volumeKg,
     totalSets,
     setsWithoutMuscle,
-    unmapped: [...unmapped.entries()].map(([term, n]) => ({ term, sets: n })).sort((a, b) => b.sets - a.sets || a.term.localeCompare(b.term, "de"))
+    unmapped: [...unmapped.entries()].map(([term, n2]) => ({ term, sets: n2 })).sort((a, b) => b.sets - a.sets || a.term.localeCompare(b.term, "de"))
   };
 }
 function muscleMapForRange(log, exercises, machines, from, to, focus = NO_FOCUS) {
@@ -6216,7 +6225,7 @@ var BEAT_INTERVAL_METRIC_ID = "00000000-0000-7000-8000-000000000021";
 var ANS_STATUS_METRIC_ID = "00000000-0000-7000-8000-000000000022";
 
 // src/domain/bodyLayout.ts
-var builtinMetricId = (n) => `00000000-0000-7000-8000-${String(n).padStart(12, "0")}`;
+var builtinMetricId = (n2) => `00000000-0000-7000-8000-${String(n2).padStart(12, "0")}`;
 var ANS_METRIC_IDS = [
   RESTING_HR_METRIC_ID,
   HRV_METRIC_ID,
@@ -6314,10 +6323,10 @@ function dominantMethod(values) {
   }
   let best = null;
   let max = 0;
-  for (const [k, n] of counts) {
-    if (n > max) {
+  for (const [k, n2] of counts) {
+    if (n2 > max) {
       best = k;
-      max = n;
+      max = n2;
     }
   }
   return best;
@@ -6780,14 +6789,14 @@ function metricSeries(measurements, metricId) {
 }
 function pearson(xs, ys) {
   if (xs.length !== ys.length) throw new Error("Beide Reihen m\xFCssen gleich lang sein.");
-  const n = xs.length;
-  if (n < 2) return null;
-  const mx = xs.reduce((a, b) => a + b, 0) / n;
-  const my = ys.reduce((a, b) => a + b, 0) / n;
+  const n2 = xs.length;
+  if (n2 < 2) return null;
+  const mx = xs.reduce((a, b) => a + b, 0) / n2;
+  const my = ys.reduce((a, b) => a + b, 0) / n2;
   let sxy = 0;
   let sxx = 0;
   let syy = 0;
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < n2; i++) {
     const dx = xs[i] - mx;
     const dy = ys[i] - my;
     sxy += dx * dy;
@@ -6805,12 +6814,12 @@ function pairByDate(x, y, lagDays = 0) {
   });
 }
 function describeAssociation(pairs, wording) {
-  const n = pairs.length;
-  if (n < MIN_PAIRS) {
+  const n2 = pairs.length;
+  if (n2 < MIN_PAIRS) {
     return {
-      n,
+      n: n2,
       r: null,
-      text: `Noch zu wenige gemeinsame Tage f\xFCr eine Aussage (${n} von mindestens ${MIN_PAIRS}).`
+      text: `Noch zu wenige gemeinsame Tage f\xFCr eine Aussage (${n2} von mindestens ${MIN_PAIRS}).`
     };
   }
   const r2 = pearson(
@@ -6818,19 +6827,19 @@ function describeAssociation(pairs, wording) {
     pairs.map((p) => p.y)
   );
   if (r2 === null) {
-    return { n, r: r2, text: `Die Werte schwanken zu wenig f\xFCr eine Aussage (${n} Tage).` };
+    return { n: n2, r: r2, text: `Die Werte schwanken zu wenig f\xFCr eine Aussage (${n2} Tage).` };
   }
-  const rText = `r = ${formatNumber(r2, 2)}, ${n} Tage`;
+  const rText = `r = ${formatNumber(r2, 2)}, ${n2} Tage`;
   if (Math.abs(r2) < MIN_ABS_R) {
     return {
-      n,
+      n: n2,
       r: r2,
       text: `Zwischen ${wording.pair} ist in deinen Daten kein deutlicher Zusammenhang erkennbar (${rText}).`
     };
   }
   const direction = r2 > 0 ? wording.higher : wording.lower;
   return {
-    n,
+    n: n2,
     r: r2,
     text: `${wording.x} ging in deinen Daten tendenziell mit ${direction} einher (${rText}). Das ist eine Beobachtung, kein Nachweis einer Ursache.`
   };
@@ -6851,8 +6860,8 @@ function afterTrainingComparison(loads, values) {
   };
 }
 var inRange = (date, from, to) => date >= from && date <= to;
-function countLabel(n, total, one, many) {
-  return `${n} von ${total} ${total === 1 ? one : many}`;
+function countLabel(n2, total, one, many) {
+  return `${n2} von ${total} ${total === 1 ? one : many}`;
 }
 function weekValue(label, points, week, prev, opts) {
   const min = opts.minCount ?? MIN_WEEK_VALUES;
@@ -6898,12 +6907,12 @@ function weeklySummary(data, weekFrom) {
   const nights = weekValue("Schlafdauer (Mittel)", sleepSeries(data.sleep), week, prev, {
     format: formatDuration,
     formatDiff: signedMinutes,
-    basis: (n) => countLabel(n, 7, "Nacht", "N\xE4chten") + " erfasst"
+    basis: (n2) => countLabel(n2, 7, "Nacht", "N\xE4chten") + " erfasst"
   });
   const quality = weekValue("Schlafqualit\xE4t (Mittel)", sleepQualitySeries(data.sleep), week, prev, {
     format: (v) => `${formatNumber(v, 1)} / 10`,
     formatDiff: signedPoints,
-    basis: (n) => `${n} ${n === 1 ? "Angabe" : "Angaben"}`
+    basis: (n2) => `${n2} ${n2 === 1 ? "Angabe" : "Angaben"}`
   });
   sections.push({ area: "sleep", title: "Schlaf", values: [nights.item, quality.item] });
   if (nights.count === 0) gaps.push("Schlaf: in dieser Woche keine Nacht erfasst.");
@@ -6920,7 +6929,7 @@ function weeklySummary(data, weekFrom) {
     {
       format: (v) => `${formatNumber(v, 1)} / 10`,
       formatDiff: signedPoints,
-      basis: (n) => countLabel(n, 7, "Tag", "Tagen")
+      basis: (n2) => countLabel(n2, 7, "Tag", "Tagen")
     }
   );
   const fatigue = weekValue(
@@ -6931,7 +6940,7 @@ function weeklySummary(data, weekFrom) {
     {
       format: (v) => `${formatNumber(v, 1)} / 10`,
       formatDiff: signedPoints,
-      basis: (n) => countLabel(n, 7, "Tag", "Tagen")
+      basis: (n2) => countLabel(n2, 7, "Tag", "Tagen")
     }
   );
   const soreness = weekValue(
@@ -6942,13 +6951,13 @@ function weeklySummary(data, weekFrom) {
     {
       format: (v) => `${formatNumber(v, 1)} / 10`,
       formatDiff: signedPoints,
-      basis: (n) => countLabel(n, 7, "Tag", "Tagen")
+      basis: (n2) => countLabel(n2, 7, "Tag", "Tagen")
     }
   );
   const stress = weekValue("Stress (Mittel)", recoverySeries(data.recovery, "stress"), week, prev, {
     format: (v) => `${formatNumber(v, 1)} / 10`,
     formatDiff: signedPoints,
-    basis: (n) => countLabel(n, 7, "Tag", "Tagen")
+    basis: (n2) => countLabel(n2, 7, "Tag", "Tagen")
   });
   const hr = weekValue(
     "Ruhepuls (Mittel)",
@@ -6958,7 +6967,7 @@ function weeklySummary(data, weekFrom) {
     {
       format: (v) => `${formatNumber(v, 0)} bpm`,
       formatDiff: (d) => `${formatSigned(d, 1)} bpm`,
-      basis: (n) => `${n} ${n === 1 ? "Messung" : "Messungen"}`
+      basis: (n2) => `${n2} ${n2 === 1 ? "Messung" : "Messungen"}`
     }
   );
   const hrv = weekValue(
@@ -6969,7 +6978,7 @@ function weeklySummary(data, weekFrom) {
     {
       format: (v) => `${formatNumber(v, 1)} ms`,
       formatDiff: (d) => `${formatSigned(d, 1)} ms`,
-      basis: (n) => `${n} ${n === 1 ? "Messung" : "Messungen"}`
+      basis: (n2) => `${n2} ${n2 === 1 ? "Messung" : "Messungen"}`
     }
   );
   sections.push({
@@ -7041,7 +7050,7 @@ function weeklySummary(data, weekFrom) {
     {
       format: (v) => `${formatNumber(v, 0)} kcal`,
       formatDiff: (d) => `${formatSigned(d, 0)} kcal`,
-      basis: (n) => countLabel(n, 7, "Tag", "Tagen") + " erfasst"
+      basis: (n2) => countLabel(n2, 7, "Tag", "Tagen") + " erfasst"
     }
   );
   const protein = weekValue(
@@ -7052,7 +7061,7 @@ function weeklySummary(data, weekFrom) {
     {
       format: (v) => `${formatNumber(v, 1)} g`,
       formatDiff: (d) => `${formatSigned(d, 1)} g`,
-      basis: (n) => countLabel(n, 7, "Tag", "Tagen") + " erfasst"
+      basis: (n2) => countLabel(n2, 7, "Tag", "Tagen") + " erfasst"
     }
   );
   if (data.goal?.energyKcal != null && kcal2.mean !== null) {
@@ -7067,7 +7076,7 @@ function weeklySummary(data, weekFrom) {
     {
       format: (v) => `${formatNumber(v, 0)} kcal`,
       formatDiff: (d) => `${formatSigned(d, 0)} kcal`,
-      basis: (n) => countLabel(n, 7, "Tag", "Tagen") + " berechenbar"
+      basis: (n2) => countLabel(n2, 7, "Tag", "Tagen") + " berechenbar"
     }
   );
   const intakeByDate = new Map(kcalDays.map((d) => [d.date, d.energyKcal]));
@@ -7075,7 +7084,7 @@ function weeklySummary(data, weekFrom) {
   const balance = weekValue("Bilanz (Aufnahme \u2212 Verbrauch, Mittel)", balancePoints, week, prev, {
     format: (v) => `${formatSigned(v, 0)} kcal`,
     formatDiff: (d) => `${formatSigned(d, 0)} kcal`,
-    basis: (n) => countLabel(n, 7, "Tag", "Tagen") + " mit Ern\xE4hrung und Verbrauch"
+    basis: (n2) => countLabel(n2, 7, "Tag", "Tagen") + " mit Ern\xE4hrung und Verbrauch"
   });
   const palValue = weekValue(
     "PAL (Mittel)",
@@ -7085,7 +7094,7 @@ function weeklySummary(data, weekFrom) {
     {
       format: (v) => formatNumber(v, 2),
       formatDiff: (d) => formatSigned(d, 2),
-      basis: (n) => countLabel(n, 7, "Tag", "Tagen")
+      basis: (n2) => countLabel(n2, 7, "Tag", "Tagen")
     }
   );
   sections.push({
@@ -7111,7 +7120,7 @@ function weeklySummary(data, weekFrom) {
     {
       format: (v) => formatNumber(v, 0),
       formatDiff: (d) => formatSigned(d, 0),
-      basis: (n) => countLabel(n, 7, "Tag", "Tagen") + " erfasst"
+      basis: (n2) => countLabel(n2, 7, "Tag", "Tagen") + " erfasst"
     }
   );
   const neatMinutes = weekValue(
@@ -7122,7 +7131,7 @@ function weeklySummary(data, weekFrom) {
     {
       format: formatDuration,
       formatDiff: signedMinutes,
-      basis: (n) => countLabel(n, 7, "Tag", "Tagen") + " erfasst"
+      basis: (n2) => countLabel(n2, 7, "Tag", "Tagen") + " erfasst"
     }
   );
   if (data.goal?.steps != null && steps.mean !== null) {
@@ -7148,7 +7157,7 @@ function weeklySummary(data, weekFrom) {
     {
       format: (v) => `${formatNumber(v, 1)} kg`,
       formatDiff: (d) => `${formatSigned(d, 1)} kg`,
-      basis: (n) => `${n} ${n === 1 ? "Messung" : "Messungen"}`,
+      basis: (n2) => `${n2} ${n2 === 1 ? "Messung" : "Messungen"}`,
       minCount: 2
     }
   );
@@ -7182,14 +7191,14 @@ function weeklySummary(data, weekFrom) {
     sections,
     observations,
     gaps,
-    lifestyleNotes: data.lifestyle.filter((n) => inRange(n.date, week.from, week.to))
+    lifestyleNotes: data.lifestyle.filter((n2) => inRange(n2.date, week.from, week.to))
   };
 }
 
 // src/domain/insightsCoverage.ts
 var COVERAGE_DAYS = 28;
 var WEEKS = COVERAGE_DAYS / 7;
-var days = (n) => `${formatNumber(n, 0)} ${n === 1 ? "Tag" : "Tagen"}`;
+var days = (n2) => `${formatNumber(n2, 0)} ${n2 === 1 ? "Tag" : "Tagen"}`;
 function distinctDays(dates, from, to) {
   return new Set(dates.filter((d) => d >= from && d <= to)).size;
 }
@@ -7264,7 +7273,7 @@ function coverage(data, today) {
       "nutrition",
       "Ern\xE4hrung (Tagebuch)",
       distinctDays(
-        data.nutrition.map((n) => n.date),
+        data.nutrition.map((n2) => n2.date),
         from,
         today
       ),
@@ -7296,7 +7305,7 @@ function coverage(data, today) {
       "steps",
       "Schritte",
       distinctDays(
-        (data.neat ?? []).filter((n) => n.steps !== null).map((n) => n.date),
+        (data.neat ?? []).filter((n2) => n2.steps !== null).map((n2) => n2.date),
         from,
         today
       ),
@@ -7613,7 +7622,7 @@ function parseDurationInput(text) {
 }
 function napMinutesByDate(naps) {
   const map = /* @__PURE__ */ new Map();
-  for (const n of naps) map.set(n.date, (map.get(n.date) ?? 0) + n.durationMin);
+  for (const n2 of naps) map.set(n2.date, (map.get(n2.date) ?? 0) + n2.durationMin);
   return map;
 }
 function sleepWithNaps(log, napsByDate) {
@@ -7623,7 +7632,7 @@ function sleepEntryRows(logs, naps) {
   const nights = /* @__PURE__ */ new Map();
   for (const l of logs) if (!nights.has(l.date)) nights.set(l.date, l);
   const napsByDate = /* @__PURE__ */ new Map();
-  for (const n of naps) napsByDate.set(n.date, [...napsByDate.get(n.date) ?? [], n]);
+  for (const n2 of naps) napsByDate.set(n2.date, [...napsByDate.get(n2.date) ?? [], n2]);
   const dates = [.../* @__PURE__ */ new Set([...nights.keys(), ...napsByDate.keys()])].sort(
     (a, b) => b.localeCompare(a)
   );
@@ -7771,12 +7780,29 @@ function addDays(date, days2) {
   const t = new Date(Date.UTC(y, m - 1, d + days2));
   return iso(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate());
 }
-function shiftMonth(month, n) {
+function shiftMonth(month, n2) {
   const y = Number(month.slice(0, 4));
-  const m = Number(month.slice(5, 7)) - 1 + n;
+  const m = Number(month.slice(5, 7)) - 1 + n2;
   const year = y + Math.floor(m / 12);
   const mm = (m % 12 + 12) % 12;
   return `${String(year).padStart(4, "0")}-${String(mm + 1).padStart(2, "0")}`;
+}
+var MONTHS2 = [
+  "Januar",
+  "Februar",
+  "M\xE4rz",
+  "April",
+  "Mai",
+  "Juni",
+  "Juli",
+  "August",
+  "September",
+  "Oktober",
+  "November",
+  "Dezember"
+];
+function monthLabel(month) {
+  return `${MONTHS2[Number(month.slice(5, 7)) - 1] ?? ""} ${month.slice(0, 4)}`;
 }
 function repeatDates(start, end, repeat) {
   if (end < start) return [];
@@ -8124,12 +8150,12 @@ function weekGoalsFromInput(input) {
   const read = (key, max, text) => {
     const t = (input[key] ?? "").trim();
     if (t === "") return null;
-    const n = Number(t);
-    if (!/^\d+$/.test(t) || n < 1 || n > max) {
+    const n2 = Number(t);
+    if (!/^\d+$/.test(t) || n2 < 1 || n2 > max) {
       errors[key] = `Bitte eine ganze Zahl von 1 bis ${max} ${text} angeben.`;
       return null;
     }
-    return n;
+    return n2;
   };
   const sleepText = (input.sleepHours ?? "").trim();
   let sleepMin = null;
@@ -8186,7 +8212,7 @@ function weeklyGoals(input) {
   });
   const protein = proteinTarget(data.goal, input.weightKg);
   if (protein !== null && protein > 0) {
-    const met = data.nutrition.filter((n) => inWeek2(n.date) && n.proteinG >= protein).length;
+    const met = data.nutrition.filter((n2) => inWeek2(n2.date) && n2.proteinG >= protein).length;
     const proteinDays = own.proteinDays ?? elapsed;
     out.push({
       key: "protein",
@@ -8244,7 +8270,7 @@ function streaks(input) {
   };
   const protein = proteinTarget(goal, input.weightKg);
   if (protein !== null && protein > 0) {
-    const byDate = new Map(data.nutrition.map((n) => [n.date, n.proteinG]));
+    const byDate = new Map(data.nutrition.map((n2) => [n2.date, n2.proteinG]));
     add(
       "protein",
       "Proteinziel",
@@ -8279,7 +8305,7 @@ function streaks(input) {
   }
   const steps = goal?.steps ?? null;
   if (steps !== null && steps > 0) {
-    const byDate = new Map((data.neat ?? []).map((n) => [n.date, n.steps ?? 0]));
+    const byDate = new Map((data.neat ?? []).map((n2) => [n2.date, n2.steps ?? 0]));
     add(
       "steps",
       "Schrittziel",
@@ -8948,7 +8974,7 @@ function normalizeName(text) {
 }
 var BY_NAME = /* @__PURE__ */ new Map();
 for (const s of SUBSTANCES) {
-  for (const n of [s.name, ...s.aliases]) BY_NAME.set(normalizeName(n), s);
+  for (const n2 of [s.name, ...s.aliases]) BY_NAME.set(normalizeName(n2), s);
 }
 function findSubstance(hormone) {
   return BY_NAME.get(normalizeName(hormone)) ?? null;
@@ -9119,9 +9145,9 @@ function fitCalibration(pairs) {
   if (p.length === 0) return null;
   const only = p[0];
   if (p.length === 1 && only) return { factor: only.measured / only.model, basal: 0, count: 1 };
-  const n = p.length;
-  const mx = p.reduce((s, x) => s + x.model, 0) / n;
-  const my = p.reduce((s, x) => s + x.measured, 0) / n;
+  const n2 = p.length;
+  const mx = p.reduce((s, x) => s + x.model, 0) / n2;
+  const my = p.reduce((s, x) => s + x.measured, 0) / n2;
   const sxx = p.reduce((s, x) => s + (x.model - mx) ** 2, 0);
   const sxy = p.reduce((s, x) => s + (x.model - mx) * (x.measured - my), 0);
   let factor = sxx > 0 ? sxy / sxx : my / mx;
@@ -9130,7 +9156,7 @@ function fitCalibration(pairs) {
     basal = 0;
     factor = p.reduce((s, x) => s + x.model * x.measured, 0) / p.reduce((s, x) => s + x.model * x.model, 0);
   }
-  return { factor, basal, count: n };
+  return { factor, basal, count: n2 };
 }
 
 // src/domain/lab.ts
@@ -9224,8 +9250,8 @@ function toNumber(text) {
       return Number(t.replace(/\./g, "").replace(",", "."));
     return null;
   }
-  const n = Number(t.replace(",", "."));
-  return Number.isFinite(n) ? n : null;
+  const n2 = Number(t.replace(",", "."));
+  return Number.isFinite(n2) ? n2 : null;
 }
 function parseLabValue(text) {
   const t = text.trim().replace(/≤/g, "<").replace(/≥/g, ">");
@@ -9289,11 +9315,11 @@ function mainUnit(points) {
   const counts = /* @__PURE__ */ new Map();
   for (const p of points) counts.set(p.unit, (counts.get(p.unit) ?? 0) + 1);
   let best = "";
-  let n = -1;
+  let n2 = -1;
   for (const [unit, c] of counts) {
-    if (c > n) {
+    if (c > n2) {
       best = unit;
-      n = c;
+      n2 = c;
     }
   }
   return best;
@@ -9360,7 +9386,7 @@ function calibrateLevel(events, measurand, draws, nowMs) {
 }
 var draftCounter = 0;
 var newDraftKey = () => `r${Date.now().toString(36)}-${(draftCounter++).toString(36)}`;
-var rangeText = (n) => n === null ? "" : formatLabNumber(n).replace(/\./g, "");
+var rangeText = (n2) => n2 === null ? "" : formatLabNumber(n2).replace(/\./g, "");
 function emptyResultDraft(analyte) {
   return {
     key: newDraftKey(),
@@ -9398,8 +9424,8 @@ function drawToDraft(draw) {
 }
 var optNumber = (text) => {
   if (text.trim() === "") return null;
-  const n = parseDecimal(text);
-  return Number.isFinite(n) ? n : "invalid";
+  const n2 = parseDecimal(text);
+  return Number.isFinite(n2) ? n2 : "invalid";
 };
 function draftToInput(draft) {
   const errors = {};
@@ -9453,7 +9479,7 @@ function draftToInput(draft) {
 // src/domain/labReference.ts
 var REFERENCE_SOURCE = "AKH Wien";
 var REFERENCE_URL = "https://www.akhwien.at/default.aspx?pid=3986";
-var id = (n) => `00000000-0000-7000-8000-000000000${n}`;
+var id = (n2) => `00000000-0000-7000-8000-000000000${n2}`;
 var ADULT = { ageMin: 20 };
 var AKH_REFERENCES = {
   // Testosteron (gesamt)
@@ -9990,8 +10016,8 @@ function lifetimeDraftToInput(d, existing) {
   };
 }
 function findRecord(records, category, name) {
-  const n = name.toLowerCase();
-  return records.find((r2) => r2.category === category && r2.name.toLowerCase() === n);
+  const n2 = name.toLowerCase();
+  return records.find((r2) => r2.category === category && r2.name.toLowerCase() === n2);
 }
 function kellShort(value) {
   const m = /\((Kell-(?:positiv|negativ))\)/.exec(value);
@@ -11097,26 +11123,26 @@ function checkConsistency(values) {
   return values;
 }
 function prepareGray(rgba) {
-  const n = rgba.length / 4;
-  const g = new Uint8ClampedArray(n);
+  const n2 = rgba.length / 4;
+  const g = new Uint8ClampedArray(n2);
   let sum = 0;
-  for (let i = 0, j = 0; j < n; i += 4, j++) {
+  for (let i = 0, j = 0; j < n2; i += 4, j++) {
     const v = 0.299 * (rgba[i] ?? 0) + 0.587 * (rgba[i + 1] ?? 0) + 0.114 * (rgba[i + 2] ?? 0);
     g[j] = v;
     sum += v;
   }
-  if (sum / Math.max(1, n) < 128) for (let j = 0; j < n; j++) g[j] = 255 - (g[j] ?? 0);
+  if (sum / Math.max(1, n2) < 128) for (let j = 0; j < n2; j++) g[j] = 255 - (g[j] ?? 0);
   const hist = new Uint32Array(256);
   for (const v of g) hist[v] = (hist[v] ?? 0) + 1;
-  const cut = n * 0.02;
+  const cut = n2 * 0.02;
   let lo = 0;
   let hi = 255;
   for (let s = 0; lo < 255 && s + (hist[lo] ?? 0) < cut; lo++) s += hist[lo] ?? 0;
   for (let s = 0; hi > 0 && s + (hist[hi] ?? 0) < cut; hi--) s += hist[hi] ?? 0;
   if (hi - lo < 30) return g;
   const f = 255 / (hi - lo);
-  const out = new Uint8ClampedArray(n);
-  for (let j = 0; j < n; j++) out[j] = ((g[j] ?? 0) - lo) * f;
+  const out = new Uint8ClampedArray(n2);
+  for (let j = 0; j < n2; j++) out[j] = ((g[j] ?? 0) - lo) * f;
   return out;
 }
 function sliceRanges(gray, w, h, maxHeight = 2400) {
@@ -11221,11 +11247,11 @@ function findPdfImage(bytes) {
 function pixelsToRgba(raw, width, height, bitsPerComponent) {
   const bytesPer = bitsPerComponent === 16 ? 2 : bitsPerComponent === 8 ? 1 : 0;
   if (!bytesPer) return null;
-  const n = width * height;
-  const channels = raw.length / (n * bytesPer);
+  const n2 = width * height;
+  const channels = raw.length / (n2 * bytesPer);
   if (channels !== 1 && channels !== 3) return null;
-  const out = new Uint8ClampedArray(n * 4);
-  for (let i = 0; i < n; i++) {
+  const out = new Uint8ClampedArray(n2 * 4);
+  for (let i = 0; i < n2; i++) {
     for (let c = 0; c < 3; c++) {
       const src = (i * channels + (channels === 1 ? 0 : c)) * bytesPer;
       out[i * 4 + c] = raw[src] ?? 0;
@@ -11240,7 +11266,7 @@ function visibleValues(values) {
 }
 
 // src/domain/bodyComposition.ts
-var builtin = (n) => `00000000-0000-7000-8000-${String(n).padStart(12, "0")}`;
+var builtin = (n2) => `00000000-0000-7000-8000-${String(n2).padStart(12, "0")}`;
 var SKELETAL_MUSCLE_MASS_METRIC_ID = builtin(3);
 var BMI_METRIC_ID = builtin(23);
 var SUBCUTANEOUS_FAT_MASS_METRIC_ID = builtin(26);
@@ -11467,6 +11493,12 @@ function buildDoctorReport(input) {
 var fmtStat = (row, v) => formatNumber(v, row.decimals);
 
 // src/domain/pdf.ts
+var PAGE_W = 595;
+var PAGE_H = 842;
+var MARGIN = 50;
+var LINE = 15;
+var ITEM_SIZE = 11;
+var WRAP_CHARS = 84;
 var WIN_ANSI_EXTRA = {
   "\u20AC": 128,
   "\u201A": 130,
@@ -11515,6 +11547,137 @@ function pdfText(text) {
     out += c === "\\" || c === "(" || c === ")" ? `\\${c}` : c;
   }
   return out;
+}
+function wrapText(text, width = WRAP_CHARS) {
+  const words = text.replace(/\s+/g, " ").trim().split(" ");
+  const lines = [];
+  let line = "";
+  for (let word of words) {
+    while ([...word].length > width) {
+      if (line) {
+        lines.push(line);
+        line = "";
+      }
+      lines.push([...word].slice(0, width).join(""));
+      word = [...word].slice(width).join("");
+    }
+    if (!line) line = word;
+    else if ([...line].length + 1 + [...word].length <= width) line += ` ${word}`;
+    else {
+      lines.push(line);
+      line = word;
+    }
+  }
+  if (line || lines.length === 0) lines.push(line);
+  return lines;
+}
+var n = (v) => (Math.round(v * 100) / 100).toString();
+function checklistPdf(doc) {
+  const pages = [];
+  let ops = [];
+  let y = PAGE_H - MARGIN;
+  const text = (x, yy, font, size, value, gray = 0) => ops.push(
+    `${n(gray)} g BT /${font} ${size} Tf ${n(x)} ${n(yy)} Td (${pdfText(value)}) Tj ET 0 g`
+  );
+  const header2 = (first) => {
+    if (first) {
+      for (const line of wrapText(doc.title, 50)) {
+        y -= 18;
+        text(MARGIN, y, "F2", 16, line);
+      }
+      if (doc.subtitle) {
+        y -= 16;
+        text(MARGIN, y, "F1", 10, doc.subtitle, 0.4);
+      }
+      y -= 10;
+      ops.push(`0.8 G 0.5 w ${MARGIN} ${n(y)} m ${PAGE_W - MARGIN} ${n(y)} l S 0 G`);
+      y -= 8;
+    } else {
+      y -= 12;
+      text(MARGIN, y, "F1", 9, doc.title, 0.4);
+      y -= 12;
+    }
+  };
+  const newPage = () => {
+    pages.push(ops);
+    ops = [];
+    y = PAGE_H - MARGIN;
+    header2(false);
+  };
+  header2(true);
+  if (doc.items.length === 0) {
+    y -= LINE;
+    text(MARGIN, y, "F1", ITEM_SIZE, "Keine Punkte.", 0.4);
+  }
+  for (const item2 of doc.items) {
+    const lines = wrapText(item2.text);
+    const height = lines.length * LINE + 5;
+    if (y - height < MARGIN + 20) newPage();
+    y -= LINE;
+    const bx = MARGIN;
+    const by = y - 2;
+    ops.push(`0.3 G 0.8 w ${bx} ${n(by)} 10 10 re S 0 G`);
+    if (item2.done) {
+      ops.push(
+        `0.1 0.45 0.25 RG 1.4 w ${n(bx + 2)} ${n(by + 5)} m ${n(bx + 4.3)} ${n(by + 2.4)} l ${n(bx + 8.4)} ${n(by + 8.2)} l S 0 G`
+      );
+    }
+    lines.forEach((line, i) => {
+      if (i > 0) y -= LINE;
+      text(MARGIN + 18, y, "F1", ITEM_SIZE, line, item2.done ? 0.45 : 0);
+    });
+    y -= 5;
+  }
+  pages.push(ops);
+  const total = pages.length;
+  const contents = pages.map((p, i) => {
+    const foot = [
+      `0.5 g BT /F1 8 Tf ${MARGIN} 30 Td (${pdfText(doc.footer ?? "")}) Tj ET`,
+      `BT /F1 8 Tf ${PAGE_W - MARGIN - 50} 30 Td (${pdfText(`Seite ${i + 1} von ${total}`)}) Tj ET 0 g`
+    ];
+    return [...p, ...foot].join("\n");
+  });
+  const objects = [];
+  objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+  const kids = contents.map((_, i) => `${5 + i * 2} 0 R`).join(" ");
+  objects[2] = `<< /Type /Pages /Kids [${kids}] /Count ${total} >>`;
+  objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+  objects[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
+  contents.forEach((c, i) => {
+    const pageId = 5 + i * 2;
+    objects[pageId] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${pageId + 1} 0 R >>`;
+    objects[pageId + 1] = `<< /Length ${c.length} >>
+stream
+${c}
+endstream`;
+  });
+  let out = "%PDF-1.4\n%\xE2\xE3\xCF\xD3\n";
+  const offsets = [];
+  for (let id3 = 1; id3 < objects.length; id3++) {
+    offsets[id3] = out.length;
+    out += `${id3} 0 obj
+${objects[id3]}
+endobj
+`;
+  }
+  const xref = out.length;
+  out += `xref
+0 ${objects.length}
+0000000000 65535 f 
+`;
+  for (let id3 = 1; id3 < objects.length; id3++) {
+    out += `${String(offsets[id3]).padStart(10, "0")} 00000 n 
+`;
+  }
+  out += `trailer
+<< /Size ${objects.length} /Root 1 0 R >>
+startxref
+${xref}
+%%EOF
+`;
+  const bytes = new Uint8Array(out.length);
+  for (let i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 255;
+  return bytes;
 }
 
 // src/domain/pdfFontMetrics.ts
@@ -12157,7 +12320,7 @@ var BOTTOM = A4_H - 52;
 var INK = hex("#14233B");
 var MUTED = hex("#55657C");
 var SUBTLE = hex("#7A889D");
-var LINE = hex("#DCE3EC");
+var LINE2 = hex("#DCE3EC");
 var SOFT = hex("#F5F7FA");
 var NAVY = hex("#0B1F3A");
 var DANGER = hex("#B42318");
@@ -12263,7 +12426,7 @@ var Layout = class {
           }
         );
       });
-      this.page.line(M, this.y + rowH, M + CONTENT_W, this.y + rowH, LINE, 0.4);
+      this.page.line(M, this.y + rowH, M + CONTENT_W, this.y + rowH, LINE2, 0.4);
       this.y += rowH;
     }
     this.y += 6;
@@ -12314,7 +12477,7 @@ function glance(l, r2) {
   l.ensure(52);
   items.forEach(([label, value], i) => {
     const x = M + i * (w + gap);
-    l.page.rect(x, l.y, w, 44, { fill: SOFT, stroke: LINE, radius: 4 });
+    l.page.rect(x, l.y, w, 44, { fill: SOFT, stroke: LINE2, radius: 4 });
     l.page.text(x + 8, l.y + 15, fit(label, w - 16, 7.5), { size: 7.5, color: MUTED });
     l.page.text(x + 8, l.y + 33, fit(value, w - 16, 10.5, true), {
       size: 10.5,
@@ -12462,9 +12625,9 @@ function trainingSleep(l, r2) {
   );
 }
 function footers(doc) {
-  const n = doc.pages.length;
+  const n2 = doc.pages.length;
   doc.pages.forEach((p, i) => {
-    p.line(M, A4_H - 36, A4_W - M, A4_H - 36, LINE, 0.5);
+    p.line(M, A4_H - 36, A4_W - M, A4_H - 36, LINE2, 0.5);
     p.text(
       M,
       A4_H - 24,
@@ -12474,7 +12637,7 @@ function footers(doc) {
         color: SUBTLE
       }
     );
-    p.text(A4_W - M, A4_H - 24, `Seite ${i + 1} von ${n}`, {
+    p.text(A4_W - M, A4_H - 24, `Seite ${i + 1} von ${n2}`, {
       size: 7,
       color: SUBTLE,
       align: "right"
@@ -12521,19 +12684,19 @@ var clean = (s) => s.replace(/\s+/g, " ").trim().replace(/:$/, "");
 function parseDateCell(text) {
   const t = clean(text);
   if (t === "") return null;
-  const pad = (n) => String(n).padStart(2, "0");
+  const pad2 = (n2) => String(n2).padStart(2, "0");
   const make = (y, m2, d) => {
     const dt = new Date(Date.UTC(y, m2 - 1, d));
     if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m2 - 1 || dt.getUTCDate() !== d)
       return null;
-    return `${y}-${pad(m2)}-${pad(d)}`;
+    return `${y}-${pad2(m2)}-${pad2(d)}`;
   };
   const timeOf = (rest) => {
     const m2 = /^(\d{1,2}):(\d{2})/.exec((rest ?? "").trim());
     if (!m2) return null;
     const h = Number(m2[1]);
     const min = Number(m2[2]);
-    return h < 24 && min < 60 ? `${pad(h)}:${pad(min)}` : null;
+    return h < 24 && min < 60 ? `${pad2(h)}:${pad2(min)}` : null;
   };
   let m = /^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](.*))?$/.exec(t);
   if (m) {
@@ -12551,11 +12714,11 @@ function parseDateCell(text) {
     if (serial < 2e4 || serial > 8e4) return null;
     const ms = Math.round((serial - 25569) * 864e5);
     const dt = new Date(ms);
-    const date = `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
+    const date = `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`;
     const minutes = dt.getUTCHours() * 60 + dt.getUTCMinutes();
     return {
       date,
-      time: minutes > 0 ? `${pad(dt.getUTCHours())}:${pad(dt.getUTCMinutes())}` : null
+      time: minutes > 0 ? `${pad2(dt.getUTCHours())}:${pad2(dt.getUTCMinutes())}` : null
     };
   }
   return null;
@@ -12563,15 +12726,15 @@ function parseDateCell(text) {
 function parseTimeCell(text) {
   const t = clean(text);
   const m = /^(\d{1,2}):(\d{2})/.exec(t);
-  const pad = (n) => String(n).padStart(2, "0");
+  const pad2 = (n2) => String(n2).padStart(2, "0");
   if (m) {
     const h = Number(m[1]);
     const min = Number(m[2]);
-    return h < 24 && min < 60 ? `${pad(h)}:${pad(min)}` : null;
+    return h < 24 && min < 60 ? `${pad2(h)}:${pad2(min)}` : null;
   }
   if (/^0?\.\d+$/.test(t)) {
     const minutes = Math.round(Number(t) * 1440);
-    return minutes > 0 && minutes < 1440 ? `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}` : null;
+    return minutes > 0 && minutes < 1440 ? `${pad2(Math.floor(minutes / 60))}:${pad2(minutes % 60)}` : null;
   }
   return null;
 }
@@ -12781,12 +12944,12 @@ var ALIASES = {
 };
 var normalizeName2 = (s) => clean(s).toLowerCase().replace(/\s*,\s*/g, ", ").replace(/\s+/g, " ");
 function matchAnalyte(name, analytes) {
-  const n = normalizeName2(name);
-  const byName = analytes.find((a) => normalizeName2(a.name) === n);
+  const n2 = normalizeName2(name);
+  const byName = analytes.find((a) => normalizeName2(a.name) === n2);
   if (byName) return byName;
   for (const a of analytes) {
     const aliases = ALIASES[normalizeName2(a.name)] ?? [];
-    if (aliases.includes(n)) return a;
+    if (aliases.includes(n2)) return a;
   }
   return null;
 }
@@ -12831,7 +12994,7 @@ __export(labReferenceIntl_exports, {
   placeOnBar: () => placeOnBar
 });
 var INTL_SOURCE = "Tabelle \u201EBlutbild und Hormone \u2013 Referenzbereiche international\u201C, Recherche 10.11.2026";
-var id2 = (n) => `00000000-0000-7000-8000-000000000${n}`;
+var id2 = (n2) => `00000000-0000-7000-8000-000000000${n2}`;
 var ADULT2 = { ageMin: 18 };
 var INTL_REFERENCES = {
   // Testosteron (gesamt): Männer < 50 J. 8–34,7 nmol/l, Frauen 0,21–2,98 nmol/l (÷ 3,467)
@@ -13055,7 +13218,50 @@ function placeOnBar(value, comparator, range) {
   };
 }
 
+// src/domain/checklistRules.ts
+var TEXT_MAX = 300;
+var SOURCE_LABEL = {
+  own: "Eigene Liste",
+  excel: "Aus Excel",
+  notes: "Aus Apple Notizen",
+  text: "Aus Text"
+};
+
 // src/domain/checklistImport.ts
+var DONE_MARK = /^(?:[-*+]\s*)?(?:\[[xX✓✔]\]|☑|☒|✓|✔|✅|✔️)\s*/u;
+var OPEN_MARK = /^(?:[-*+]\s*)?(?:\[\s?\]|☐|◻|□|○|◯|⬜)\s*/u;
+var BULLET = /^(?:[-*+•·◦▪▫‣–—]|\d{1,3}[.)])\s+/u;
+function clip(text, notes) {
+  if ([...text].length <= TEXT_MAX) return text;
+  notes.push(`Ein Punkt war l\xE4nger als ${TEXT_MAX} Zeichen und wurde gek\xFCrzt.`);
+  return [...text].slice(0, TEXT_MAX).join("");
+}
+function parseChecklistText(text, fallbackName) {
+  const notes = [];
+  const lines = text.replace(/\r\n?/g, "\n").split("\n").map((l) => l.replace(/\u00a0/g, " ").trim()).filter((l) => l !== "");
+  const parsed = lines.map((line) => {
+    const heading = /^#{1,6}\s+(.*)$/.exec(line);
+    if (heading) return { text: heading[1].trim(), done: false, marked: false, heading: true };
+    let m = DONE_MARK.exec(line);
+    if (m)
+      return { text: line.slice(m[0].length).trim(), done: true, marked: true, heading: false };
+    m = OPEN_MARK.exec(line);
+    if (m)
+      return { text: line.slice(m[0].length).trim(), done: false, marked: true, heading: false };
+    m = BULLET.exec(line);
+    if (m)
+      return { text: line.slice(m[0].length).trim(), done: false, marked: true, heading: false };
+    return { text: line, done: false, marked: false, heading: false };
+  });
+  let name = fallbackName.trim();
+  const first = parsed[0];
+  if (first && (first.heading || !first.marked && parsed.slice(1).some((p) => p.marked))) {
+    name = first.text;
+    parsed.shift();
+  }
+  const items = parsed.filter((p) => p.text !== "" && !p.heading).map((p) => ({ text: clip(p.text, notes), done: p.done }));
+  return { name: name || "Importierte Checkliste", items, notes };
+}
 function parseCsv(text) {
   const clean2 = text.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
   const firstLine = clean2.split("\n")[0] ?? "";
@@ -13090,6 +13296,59 @@ function parseCsv(text) {
   }
   return rows;
 }
+var TEXT_HEADER = /^(aufgabe|aufgaben|to-?dos?|tasks?|punkt|punkte|eintrag|einträge|item|items|beschreibung|titel|bezeichnung|was|checkliste)$/i;
+var DONE_HEADER = /^(erledigt|done|status|check|checked|abgehakt|fertig)$/i;
+var DONE_VALUE = /^(x|✓|✔|✔️|☑|☒|✅|true|wahr|ja|yes|j|y|1|erledigt|done|fertig|ok)$/iu;
+var OPEN_VALUE = /^(|false|falsch|nein|no|n|0|offen|open|☐|□|-)$/iu;
+var isNumeric = (v) => /^-?\d+(?:[.,]\d+)?$/.test(v.trim());
+function rowsToChecklist(rows, name) {
+  const notes = [];
+  const nonEmpty = rows.filter((r2) => r2.some((c) => c.trim() !== ""));
+  if (nonEmpty.length === 0) return { name, items: [], notes: ["Die Tabelle ist leer."] };
+  const width = Math.max(...nonEmpty.map((r2) => r2.length));
+  const header2 = nonEmpty[0].map((c) => c.trim());
+  let textCol = header2.findIndex((h) => TEXT_HEADER.test(h));
+  let doneCol = header2.findIndex((h) => DONE_HEADER.test(h));
+  const hasHeader = textCol >= 0 || doneCol >= 0;
+  const body = hasHeader ? nonEmpty.slice(1) : nonEmpty;
+  const column = (c) => body.map((r2) => (r2[c] ?? "").trim());
+  if (doneCol < 0) {
+    for (let c = 0; c < width; c++) {
+      if (c === textCol) continue;
+      const values = column(c);
+      if (values.some((v) => DONE_VALUE.test(v)) && values.every((v) => DONE_VALUE.test(v) || OPEN_VALUE.test(v))) {
+        doneCol = c;
+        break;
+      }
+    }
+  }
+  if (textCol < 0) {
+    let best = -1;
+    let bestCount = 0;
+    for (let c = 0; c < width; c++) {
+      if (c === doneCol) continue;
+      const n2 = column(c).filter((v) => v !== "" && !isNumeric(v)).length;
+      if (n2 > bestCount) {
+        best = c;
+        bestCount = n2;
+      }
+    }
+    textCol = best;
+  }
+  if (textCol < 0) return { name, items: [], notes: ["Es wurde keine Spalte mit Text gefunden."] };
+  const items = [];
+  for (const r2 of body) {
+    const text = (r2[textCol] ?? "").trim();
+    if (text === "") continue;
+    items.push({
+      text: clip(text, notes),
+      done: doneCol >= 0 && DONE_VALUE.test((r2[doneCol] ?? "").trim())
+    });
+  }
+  if (hasHeader)
+    notes.push(`Kopfzeile erkannt: Aufgaben aus Spalte \u201E${header2[textCol] || textCol + 1}\u201C.`);
+  return { name, items, notes };
+}
 
 // src/domain/zip.ts
 var SIG_LOCAL = 67324752;
@@ -13114,7 +13373,7 @@ async function readZip(bytes, inflateRaw) {
   const count = u16(bytes, end + 10);
   let p = u32(bytes, end + 16);
   const entries = [];
-  for (let n = 0; n < count; n++) {
+  for (let n2 = 0; n2 < count; n2++) {
     if (u32(bytes, p) !== SIG_CENTRAL) throw new Error("Die Excel-Datei ist besch\xE4digt.");
     const method = u16(bytes, p + 10);
     const compressedSize = u32(bytes, p + 20);
@@ -13134,6 +13393,80 @@ async function readZip(bytes, inflateRaw) {
   }
   return entries;
 }
+var crcTable = null;
+function crc32(data) {
+  if (!crcTable) {
+    crcTable = new Uint32Array(256);
+    for (let n2 = 0; n2 < 256; n2++) {
+      let c = n2;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 3988292384 ^ c >>> 1 : c >>> 1;
+      crcTable[n2] = c >>> 0;
+    }
+  }
+  let crc = 4294967295;
+  for (const byte of data) crc = crcTable[(crc ^ byte) & 255] ^ crc >>> 8;
+  return (crc ^ 4294967295) >>> 0;
+}
+function writeZip(entries) {
+  const enc = new TextEncoder();
+  const parts2 = [];
+  const central = [];
+  let offset = 0;
+  const dosTime = 0;
+  const dosDate = 0 << 9 | 1 << 5 | 1;
+  for (const e of entries) {
+    const name = enc.encode(e.name);
+    const crc = crc32(e.data);
+    const local = new Uint8Array(30 + name.length);
+    const lv = new DataView(local.buffer);
+    lv.setUint32(0, SIG_LOCAL, true);
+    lv.setUint16(4, 20, true);
+    lv.setUint16(6, 2048, true);
+    lv.setUint16(8, 0, true);
+    lv.setUint16(10, dosTime, true);
+    lv.setUint16(12, dosDate, true);
+    lv.setUint32(14, crc, true);
+    lv.setUint32(18, e.data.length, true);
+    lv.setUint32(22, e.data.length, true);
+    lv.setUint16(26, name.length, true);
+    lv.setUint16(28, 0, true);
+    local.set(name, 30);
+    parts2.push(local, e.data);
+    const c = new Uint8Array(46 + name.length);
+    const cv = new DataView(c.buffer);
+    cv.setUint32(0, SIG_CENTRAL, true);
+    cv.setUint16(4, 20, true);
+    cv.setUint16(6, 20, true);
+    cv.setUint16(8, 2048, true);
+    cv.setUint16(10, 0, true);
+    cv.setUint16(12, dosTime, true);
+    cv.setUint16(14, dosDate, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, e.data.length, true);
+    cv.setUint32(24, e.data.length, true);
+    cv.setUint16(28, name.length, true);
+    cv.setUint32(42, offset, true);
+    c.set(name, 46);
+    central.push(c);
+    offset += local.length + e.data.length;
+  }
+  const centralSize = central.reduce((s, c) => s + c.length, 0);
+  const end = new Uint8Array(22);
+  const ev = new DataView(end.buffer);
+  ev.setUint32(0, SIG_END, true);
+  ev.setUint16(8, entries.length, true);
+  ev.setUint16(10, entries.length, true);
+  ev.setUint32(12, centralSize, true);
+  ev.setUint32(16, offset, true);
+  const all = [...parts2, ...central, end];
+  const out = new Uint8Array(all.reduce((s, a) => s + a.length, 0));
+  let o = 0;
+  for (const a of all) {
+    out.set(a, o);
+    o += a.length;
+  }
+  return out;
+}
 
 // src/domain/xlsx.ts
 var ENTITIES = {
@@ -13150,6 +13483,9 @@ function decodeXml(text) {
     return ENTITIES[e] ?? "";
   });
 }
+function encodeXml(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "");
+}
 function texts(xml) {
   let out = "";
   for (const m of xml.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)) out += decodeXml(m[1] ?? "");
@@ -13161,14 +13497,24 @@ function attr(tag, name) {
 }
 function columnIndex(ref) {
   const letters = /^[A-Z]+/.exec(ref.toUpperCase())?.[0] ?? "A";
-  let n = 0;
-  for (const ch of letters) n = n * 26 + (ch.charCodeAt(0) - 64);
-  return n - 1;
+  let n2 = 0;
+  for (const ch of letters) n2 = n2 * 26 + (ch.charCodeAt(0) - 64);
+  return n2 - 1;
+}
+function columnName(index) {
+  let n2 = index + 1;
+  let s = "";
+  while (n2 > 0) {
+    const r2 = (n2 - 1) % 26;
+    s = String.fromCharCode(65 + r2) + s;
+    n2 = Math.floor((n2 - 1) / 26);
+  }
+  return s;
 }
 function numberText(v) {
-  const n = Number(v);
-  if (!Number.isFinite(n)) return v;
-  return String(Number.isInteger(n) ? n : Number(n.toPrecision(12)));
+  const n2 = Number(v);
+  if (!Number.isFinite(n2)) return v;
+  return String(Number.isInteger(n2) ? n2 : Number(n2.toPrecision(12)));
 }
 async function readXlsx(bytes, inflateRaw) {
   const entries = await readZip(bytes, inflateRaw);
@@ -13225,11 +13571,252 @@ async function readXlsx(bytes, inflateRaw) {
   }
   return { name: sheetName, rows };
 }
+function safeSheetName(name) {
+  const clean2 = name.replace(/[:\\/?*[\]]/g, " ").trim().slice(0, 31).trim();
+  return clean2 || "Tabelle1";
+}
+function writeXlsx(table) {
+  const enc = new TextEncoder();
+  const cell2 = (col, row, value, style) => value === "" ? "" : `<c r="${columnName(col)}${row}" t="inlineStr"${style ? ` s="${style}"` : ""}><is><t xml:space="preserve">${encodeXml(value)}</t></is></c>`;
+  const allRows = [table.header, ...table.rows];
+  const sheetRows = allRows.map(
+    (r2, i) => `<row r="${i + 1}">${r2.map((v, c) => cell2(c, i + 1, v, i === 0 ? 1 : 0)).join("")}</row>`
+  ).join("");
+  const cols = (table.widths ?? []).map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("");
+  const files = {
+    "[Content_Types].xml": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',
+    "_rels/.rels": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+    "xl/workbook.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${encodeXml(safeSheetName(table.sheetName))}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+    "xl/_rels/workbook.xml.rels": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
+    "xl/styles.xml": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Standard" xfId="0" builtinId="0"/></cellStyles></styleSheet>',
+    "xl/worksheets/sheet1.xml": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' + (cols ? `<cols>${cols}</cols>` : "") + `<sheetData>${sheetRows}</sheetData></worksheet>`
+  };
+  return writeZip(Object.entries(files).map(([name, xml]) => ({ name, data: enc.encode(xml) })));
+}
 
 // src/lib/files.ts
 async function browserInflateRaw(data) {
   const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
   return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+function fileStem(name) {
+  const base = name.split(/[\\/]/).pop() ?? name;
+  const dot = base.lastIndexOf(".");
+  return (dot > 0 ? base.slice(0, dot) : base).trim();
+}
+
+// src/domain/schedule.ts
+var schedule_exports = {};
+__export(schedule_exports, {
+  SCHEDULE_KIND_LABELS: () => SCHEDULE_KIND_LABELS,
+  buildSchedule: () => buildSchedule,
+  dayLabel: () => dayLabel,
+  periodDays: () => periodDays,
+  periodLabel: () => periodLabel,
+  periodRange: () => periodRange,
+  plannedTrainings: () => plannedTrainings,
+  scheduleCounts: () => scheduleCounts,
+  shiftPeriod: () => shiftPeriod
+});
+var SCHEDULE_KIND_LABELS = {
+  note: "Hinweis",
+  training: "Training geplant",
+  workout: "Training erfasst",
+  alarm: "Alarm",
+  todo: "To-do"
+};
+var pad = (n2) => String(n2).padStart(2, "0");
+function addDays2(date, days2) {
+  const [y, m, d] = date.split("-").map(Number);
+  const t = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + days2));
+  return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`;
+}
+function periodRange(date, mode) {
+  if (mode === "week") {
+    const from = addDays2(date, 1 - isoWeekday(date));
+    return { from, to: addDays2(from, 6) };
+  }
+  const y = Number(date.slice(0, 4));
+  const m = Number(date.slice(5, 7));
+  return { from: `${date.slice(0, 7)}-01`, to: `${date.slice(0, 7)}-${pad(daysInMonth(y, m))}` };
+}
+function periodDays(date, mode) {
+  const { from, to } = periodRange(date, mode);
+  const out = [];
+  for (let d = from; d <= to; d = addDays2(d, 1)) out.push(d);
+  return out;
+}
+function shiftPeriod(date, mode, step) {
+  if (mode === "week") return addDays2(periodRange(date, "week").from, 7 * step);
+  const y = Number(date.slice(0, 4));
+  const m = Number(date.slice(5, 7)) - 1 + step;
+  const year = y + Math.floor(m / 12);
+  const month = (m % 12 + 12) % 12;
+  return `${year}-${pad(month + 1)}-01`;
+}
+function periodLabel(date, mode) {
+  if (mode === "month") return monthLabel(date.slice(0, 7));
+  const { from, to } = periodRange(date, "week");
+  const short = (d) => `${d.slice(8, 10)}.${d.slice(5, 7)}.`;
+  return `${short(from)}\u2013${short(to)}${to.slice(0, 4)}`;
+}
+function dayLabel(date) {
+  return `${WEEKDAY_SHORT[isoWeekday(date)] ?? ""}, ${date.slice(8, 10)}.${date.slice(5, 7)}.`;
+}
+function plannedTrainings(plans, days2) {
+  const out = [];
+  for (const plan of plans) {
+    if (plan.archived) continue;
+    for (const day of plan.days) {
+      for (const [i, slot] of (day.slots ?? []).entries()) {
+        for (const date of days2) {
+          const hit = slot.weekday !== null ? slot.weekday === isoWeekday(date) : slot.date === date;
+          if (!hit) continue;
+          out.push({
+            key: `plan:${plan.id}:${day.id}:${i}:${date}`,
+            date,
+            kind: "training",
+            time: slot.time,
+            title: day.name,
+            detail: plan.name,
+            done: false
+          });
+        }
+      }
+    }
+  }
+  return out;
+}
+var KIND_ORDER = {
+  note: 0,
+  training: 1,
+  workout: 2,
+  alarm: 3,
+  todo: 4
+};
+var STATUS_TITLE = {
+  rest: "Restday",
+  sick: "Krank"
+};
+function buildSchedule(input) {
+  const inRange4 = new Set(input.days);
+  const items = [];
+  for (const s of input.dayStatus) {
+    if (!inRange4.has(s.date)) continue;
+    items.push({
+      key: `status:${s.date}`,
+      date: s.date,
+      kind: "note",
+      time: null,
+      title: STATUS_TITLE[s.kind],
+      detail: null,
+      done: false,
+      status: s.kind
+    });
+  }
+  items.push(...plannedTrainings(input.plans, input.days));
+  for (const w of input.workouts) {
+    if (!inRange4.has(w.date)) continue;
+    items.push({
+      key: `workout:${w.id}`,
+      date: w.date,
+      kind: "workout",
+      time: w.startTime,
+      title: w.title,
+      detail: w.status === "active" ? "l\xE4uft" : null,
+      done: w.status === "done"
+    });
+  }
+  for (const due of input.hrtDue) {
+    if (!inRange4.has(due.next)) continue;
+    items.push({
+      key: `hrt:${due.hormone}:${due.next}`,
+      date: due.next,
+      kind: "alarm",
+      time: null,
+      title: `Hormongabe: ${due.hormone}`,
+      detail: `alle ${due.intervalDays} Tage, zuletzt ${due.last.slice(8, 10)}.${due.last.slice(5, 7)}.`,
+      done: false
+    });
+  }
+  for (const t of input.todos) {
+    if (!inRange4.has(t.date)) continue;
+    items.push({
+      key: `todo:${t.id}`,
+      date: t.date,
+      kind: "todo",
+      time: null,
+      title: t.text,
+      detail: t.checklistName,
+      done: t.done,
+      todo: t
+    });
+  }
+  const byDay = new Map(input.days.map((d) => [d, []]));
+  for (const item2 of items) byDay.get(item2.date)?.push(item2);
+  return input.days.map((date) => ({
+    date,
+    items: (byDay.get(date) ?? []).sort(
+      (a, b) => (a.time === null ? 1 : 0) - (b.time === null ? 1 : 0) || (a.time ?? "").localeCompare(b.time ?? "") || KIND_ORDER[a.kind] - KIND_ORDER[b.kind]
+    )
+  }));
+}
+function scheduleCounts(days2) {
+  const all = days2.flatMap((d) => d.items);
+  const todos = all.filter((i) => i.kind === "todo");
+  return {
+    trainings: all.filter((i) => i.kind === "training" || i.kind === "workout").length,
+    todosOpen: todos.filter((t) => !t.done).length,
+    todos: todos.length,
+    alarms: all.filter((i) => i.kind === "alarm").length,
+    notes: all.filter((i) => i.kind === "note").length
+  };
+}
+
+// src/domain/reminders.ts
+var HRT_INTERVAL_SAMPLES = 4;
+var isoDiff = (a, b) => Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 864e5);
+function nextHrtDoses(entries) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const e of entries) {
+    if (e.status !== "taken") continue;
+    const key = e.hormone.trim().toLowerCase();
+    const g = groups.get(key) ?? { hormone: e.hormone.trim(), dates: /* @__PURE__ */ new Set() };
+    g.dates.add(e.date);
+    groups.set(key, g);
+  }
+  const out = [];
+  for (const g of groups.values()) {
+    const dates = [...g.dates].sort();
+    if (dates.length < 2) continue;
+    const gaps = [];
+    for (let i = 1; i < dates.length; i++) gaps.push(isoDiff(dates[i - 1], dates[i]));
+    const recent = gaps.slice(-HRT_INTERVAL_SAMPLES).sort((a, b) => a - b);
+    const mid = Math.floor(recent.length / 2);
+    const median = recent.length % 2 === 1 ? recent[mid] : Math.round((recent[mid - 1] + recent[mid]) / 2);
+    if (median < 1) continue;
+    const last = dates[dates.length - 1];
+    out.push({ hormone: g.hormone, last, intervalDays: median, next: shiftDays(last, median) });
+  }
+  return out.sort((a, b) => a.next.localeCompare(b.next) || a.hormone.localeCompare(b.hormone));
+}
+
+// src/domain/checklistExport.ts
+var XLSX_HEADER = ["Erledigt", "Aufgabe"];
+function progressText(items) {
+  const done = items.filter((i) => i.done).length;
+  return `${done} von ${items.length} erledigt`;
+}
+function checklistToXlsx(title, items) {
+  return writeXlsx({
+    sheetName: title,
+    header: [...XLSX_HEADER],
+    rows: items.map((i) => [i.done ? "\u2713" : "", i.text]),
+    widths: [10, 80]
+  });
+}
+function checklistToPdf(title, items, subtitle) {
+  return checklistPdf({ title, subtitle, items, footer: "LIFESPAN OS" });
 }
 export {
   AKH_REFERENCES,
@@ -13259,6 +13846,7 @@ export {
   REPEAT_LABEL,
   ROUTE_LABELS,
   SCALE_MODE_LABELS,
+  SOURCE_LABEL,
   ZERO,
   acwr,
   addDaysIso,
@@ -13270,6 +13858,8 @@ export {
   associationItem,
   browserInflateRaw,
   buildFocusIndex,
+  checklistToPdf,
+  checklistToXlsx,
   countAfterClick,
   coverage,
   dailyAssociations,
@@ -13303,6 +13893,7 @@ export {
   energyGoalView,
   exportReminderState,
   fastNutrients,
+  fileStem,
   formatAmount,
   formatDate,
   formatDuration,
@@ -13346,9 +13937,11 @@ export {
   muscleLevels,
   muscleMapForRange,
   neat_exports as neat,
+  nextHrtDoses,
   nutrientPercents,
   nutrientsFor,
   optionalOf,
+  parseChecklistText,
   parseCsv,
   parseDecimal,
   parseIsoDate,
@@ -13358,6 +13951,7 @@ export {
   percentText,
   portionsFromAmount,
   previousMean,
+  progressText,
   protocol_exports as protocol,
   readXlsx,
   recovery_exports as recovery,
@@ -13366,9 +13960,11 @@ export {
   roundAmount,
   roundGrams,
   roundKcal,
+  rowsToChecklist,
   scaleNutrients,
   scaleRecipeItems,
   scaleScan_exports as scaleScan,
+  schedule_exports as schedule,
   setMealNames,
   sleep_exports as sleep,
   stats_exports as stats,

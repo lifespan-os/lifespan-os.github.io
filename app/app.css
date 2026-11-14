@@ -686,3 +686,27 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .lab-bar__marker { position: absolute; top: 50%; width: 12px; height: 12px; border: 2px solid var(--surface); border-radius: 50%; transform: translate(-50%, -50%); background: var(--fg); }
 .lab-bar__marker--normal { background: var(--ok); }
 .lab-bar__marker--low, .lab-bar__marker--high { background: var(--danger); }
+
+/* Checklisten 1.15.0: Wochen-/Monatsübersicht und Bibliothek */
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.schedule__nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 10px 0; }
+.schedule__days { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.schedule__day { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; }
+.schedule__day.is-today { border-color: var(--orange); }
+.schedule__day.is-selected { background: rgba(31, 111, 209, .05); }
+.schedule__day-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.schedule__day-tools { display: flex; gap: 6px; align-items: center; }
+.schedule__day-tools select { min-height: 34px; font-size: .82rem; max-width: 9.5rem; }
+.schedule__items { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+.schedule__item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; font-size: .92rem; }
+.schedule__item.is-done .schedule__text { color: var(--muted); text-decoration: line-through; }
+.schedule__item.is-alarm .schedule__text { color: var(--danger); }
+.schedule__icon { width: 32px; text-align: center; }
+.schedule__text { min-width: 0; overflow-wrap: anywhere; }
+.schedule__actions { display: flex; gap: 4px; }
+.schedule__actions select { min-height: 34px; font-size: .82rem; }
+.schedule__edit { display: flex; gap: 6px; margin-top: 6px; grid-column: 1 / -1; }
+.schedule__edit input { flex: 1; min-width: 0; }
+.check-edit { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 6px; }
+.check-edit li { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center; }
+.check-edit li .row-actions { grid-column: 2; margin: 0; }

@@ -933,6 +933,7 @@ function showSheet(title, body, closeAct, { grid = true } = {}) {
 function foldTabs() {
   document.body.classList.remove("sheet-open");
   sheetRoot.replaceChildren();
+  S.subMenu = null;
   let shown = false;
   const menu = (host, key, title, items) => {
     if (!items.length) return;
@@ -951,7 +952,10 @@ function foldTabs() {
   };
   for (const nav of app.querySelectorAll("nav.tabs")) {
     const key = nav.getAttribute("aria-label") || "tabs";
-    menu(nav, key, key, [...nav.querySelectorAll(".tab")]);
+    const tabs = [...nav.querySelectorAll(".tab")];
+    // Untermenü der Seite: Knopf mit zwei Punkten unten in der Leiste (1.32.0)
+    if (!S.subMenu && tabs.length) S.subMenu = { key, label: (tabs.find((t) => t.classList.contains("active")) ?? tabs[0]).textContent.trim(), open: Boolean(S.tabsOpen?.[key]) };
+    menu(nav, key, key, tabs);
   }
   for (const group of app.querySelectorAll("[data-sheet]")) {
     const title = group.dataset.sheet;
@@ -995,8 +999,10 @@ function renderNav() {
   const bar = !NO_TABBAR.has(S.view) && !app.querySelector(".bottom");
   navRoot.innerHTML =
     drawerHtml({ view: S.view, arg: S.arg, open: S.menuOpen, esc, back: S.logEdit?.back ?? null }) +
-    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen), slots: S.prefs.barSlots }) + quickSheetHtml(Boolean(S.quickOpen)) : "");
+    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen), slots: S.prefs.barSlots, sub: S.subMenu }) + quickSheetHtml(Boolean(S.quickOpen)) : "");
   document.body.classList.toggle("has-tabbar", bar);
+  // Mit Knopf unten entfällt der Reiter-Knopf oben links
+  document.body.classList.toggle("has-submenu", Boolean(bar && S.subMenu));
   document.body.classList.toggle("menu-open", Boolean(S.menuOpen || (bar && S.quickOpen)));
 }
 
@@ -1056,6 +1062,11 @@ navRoot.addEventListener("click", (ev) => {
     return renderNav();
   }
   if (el.dataset.act === "quick-go") return quickGo(el.dataset.arg);
+  // Untermenü-Knopf (1.32.0): Fach mit den Reitern der Seite
+  if (el.dataset.act === "tabs-fold") {
+    S.quickOpen = false;
+    return actions["tabs-fold"](el);
+  }
   if (el.dataset.act === "tabbar-go") {
     S.menuOpen = false;
     S.quickOpen = false;

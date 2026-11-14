@@ -1118,3 +1118,17 @@ body.sheet-open { overflow: hidden; }
 .bsheet__panel .bsheet__content { margin: 0; color: var(--ink, #0b2a4a); }
 .bsheet__panel .bsheet__content .wo-head { display: none; }
 [data-sheet].tabs--fold, nav.tabs.tabs--fold { display: flex; padding: 2px 0; margin: 0 0 10px; }
+
+/* Untermenü-Knopf unten (1.32.0): zwei runde Knöpfe in der Mitte – „+“ Schnell erfassen und „:“ Untermenü */
+.tabbar.tabbar--sub { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr); }
+.tabbar__fabs { justify-self: center; display: flex; gap: 8px; padding: 0 2px; }
+.tabbar__fabs .tabbar__quick { width: 56px; height: 56px; margin-top: -28px; border-radius: 28px; }
+.tabbar__sub svg { width: 24px; height: 24px; }
+.tabbar__sub[aria-expanded="true"] { box-shadow: 0 0 0 3px #f7b65e, 0 6px 16px rgba(243, 154, 34, .35); }
+body.has-submenu nav.tabs.tabs--fold { display: none; }
+@media (max-width: 350px) { .tabbar__fabs .tabbar__quick { width: 50px; height: 50px; margin-top: -24px; } .tabbar__fabs { gap: 4px; } }
+.bls-source { overflow-wrap: anywhere; }
+.card { min-width: 0; }
+.card p, .card li, .card dd { overflow-wrap: anywhere; }
+.card h3 { overflow-wrap: anywhere; hyphens: auto; }
+.card > * { min-width: 0; }

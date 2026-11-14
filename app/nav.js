@@ -22,6 +22,8 @@ const ICONS = {
   menu: svg('<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>'),
   more: svg('<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>'),
   plus: svg('<path d="M12 5v14"/><path d="M5 12h14"/>'),
+  // Untermenü (1.32.0): zwei Punkte
+  sub: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="12" cy="7" r="2.6"/><circle cx="12" cy="17" r="2.6"/></svg>',
   water: svg('<path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/>'),
   coffee: svg('<path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h2a2 2 0 0 1 0 4h-2"/><path d="M8 3v3M12 3v3"/>'),
 };
@@ -103,7 +105,11 @@ export function barSlots(pref) {
 
 const SHORT = { "Body & Longevity": "Body", "iCoach.me": "iCoach", Checklisten: "Checklisten" };
 
-export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = DEFAULT_BAR_SLOTS }) {
+/**
+ * `sub` = Untermenü der Seite { key, label, open } (1.32.0): zweiter runder Knopf neben „+“ mit zwei
+ * Punkten; er öffnet die Reiter-Auswahl als Fach von unten (statt des Knopfs oben links).
+ */
+export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = DEFAULT_BAR_SLOTS, sub = null }) {
   const current = sectionOf(view, arg, back);
   const [left, right] = barSlots(slots);
   const sec = (id) => SECTIONS.find((s) => s.id === id);
@@ -116,10 +122,13 @@ export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = 
   ];
   const main = ["overview", left, right];
   let marked = false;
-  return `<nav class="tabbar" aria-label="Hauptbereiche">${items
+  return `<nav class="tabbar${sub ? " tabbar--sub" : ""}" aria-label="Hauptbereiche">${items
     .map((b) => {
-      if (b.id === "quick")
-        return `<button class="tabbar__quick" data-act="quick-open" aria-label="Schnell erfassen" aria-expanded="${quickOpen}">${ICONS.plus}</button>`;
+      if (b.id === "quick") {
+        const quick = `<button class="tabbar__quick" data-act="quick-open" aria-label="Schnell erfassen" aria-expanded="${quickOpen}">${ICONS.plus}</button>`;
+        if (!sub) return quick;
+        return `<span class="tabbar__fabs">${quick}<button class="tabbar__quick tabbar__sub" data-act="tabs-fold" data-arg="${escAttr(sub.key)}" aria-label="Untermenü: ${escAttr(sub.label)}" aria-haspopup="dialog" aria-expanded="${Boolean(sub.open)}">${ICONS.sub}</button></span>`;
+      }
       // Gleicher Bereich auf zwei Plätzen: nur der erste wird markiert
       const active = !marked && (b.id === "more" ? !main.includes(current) : b.id === current);
       if (active) marked = true;
@@ -128,6 +137,8 @@ export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = 
     })
     .join("")}</nav>`;
 }
+
+const escAttr = (v) => String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 
 /** Schnell erfassen: die häufigsten Einträge mit einem Tipp. */
 export const QUICK = [

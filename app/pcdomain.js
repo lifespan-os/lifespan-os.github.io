@@ -10631,6 +10631,7 @@ var scaleScan_exports = {};
 __export(scaleScan_exports, {
   GRUNDUMSATZ_METRIC_ID: () => GRUNDUMSATZ_METRIC_ID,
   HEALTH_SCORE_METRIC_ID: () => HEALTH_SCORE_METRIC_ID,
+  HIDDEN_FIELDS: () => HIDDEN_FIELDS,
   MAX_CHANGE: () => MAX_CHANGE,
   SCALE_FIELDS: () => SCALE_FIELDS,
   SCORE_WIDTHS: () => SCORE_WIDTHS,
@@ -10649,6 +10650,7 @@ __export(scaleScan_exports, {
   scaleValues: () => scaleValues,
   sliceRanges: () => sliceRanges,
   valuesOfRow: () => valuesOfRow,
+  visibleValues: () => visibleValues,
   withScore: () => withScore
 });
 var GRUNDUMSATZ_METRIC_ID = builtinMetricId(42);
@@ -11062,6 +11064,76 @@ function pixelsToRgba(raw, width, height, bitsPerComponent) {
   }
   return out;
 }
+var HIDDEN_FIELDS = /* @__PURE__ */ new Set(["score", "bmr", "heartRate"]);
+function visibleValues(values) {
+  return values.filter((v) => !HIDDEN_FIELDS.has(v.field.key));
+}
+
+// src/domain/bodyComposition.ts
+var builtin = (n) => `00000000-0000-7000-8000-${String(n).padStart(12, "0")}`;
+var SKELETAL_MUSCLE_MASS_METRIC_ID = builtin(3);
+var BMI_METRIC_ID = builtin(23);
+var SUBCUTANEOUS_FAT_MASS_METRIC_ID = builtin(26);
+var SUBCUTANEOUS_FAT_SHARE_METRIC_ID = builtin(27);
+var LEAN_MASS_METRIC_ID = builtin(29);
+var LEAN_MASS_SHARE_METRIC_ID = builtin(30);
+var SKELETAL_MUSCLE_SHARE_METRIC_ID = builtin(24);
+var AG_RATIO_ID = builtin(38);
+var SKELETAL_MASS_METRIC_ID = builtin(39);
+var ANDROID_FAT_METRIC_ID = builtin(40);
+var GYNOID_FAT_METRIC_ID = builtin(41);
+var positive2 = (text) => {
+  const v = parseDecimal(text ?? "");
+  return Number.isFinite(v) && v > 0 ? v : null;
+};
+var round2 = (v, decimals) => {
+  const f = 10 ** decimals;
+  return Math.round(v * f) / f;
+};
+var de2 = (v, decimals) => v.toLocaleString("de-DE", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+function derivedComposition(values, weightFallbackKg, heightCm = null) {
+  const out = {};
+  const sameDay = positive2(values[WEIGHT_METRIC_ID]);
+  const weight = sameDay ?? (weightFallbackKg !== null && weightFallbackKg > 0 ? weightFallbackKg : null);
+  const smm = positive2(values[SKELETAL_MUSCLE_MASS_METRIC_ID]);
+  if (smm !== null && weight !== null) {
+    out[SKELETAL_MUSCLE_SHARE_METRIC_ID] = {
+      value: round2(smm / weight * 100, 1),
+      note: `Berechnet: ${de2(smm, 1)} kg Skelettmuskelmasse \xF7 ${de2(weight, 1)} kg K\xF6rpergewicht${sameDay === null ? " (zuletzt erfasst)" : ""}`
+    };
+  }
+  const fallback = sameDay === null ? " (zuletzt erfasst)" : "";
+  const lean = positive2(values[LEAN_MASS_METRIC_ID]);
+  if (lean !== null && weight !== null) {
+    out[LEAN_MASS_SHARE_METRIC_ID] = {
+      value: round2(lean / weight * 100, 1),
+      note: `Berechnet: ${de2(lean, 1)} kg Magermasse \xF7 ${de2(weight, 1)} kg K\xF6rpergewicht${fallback}`
+    };
+  }
+  const subcutaneous = positive2(values[SUBCUTANEOUS_FAT_MASS_METRIC_ID]);
+  if (subcutaneous !== null && weight !== null) {
+    out[SUBCUTANEOUS_FAT_SHARE_METRIC_ID] = {
+      value: round2(subcutaneous / weight * 100, 1),
+      note: `Berechnet: ${de2(subcutaneous, 1)} kg subkutane Fettmasse \xF7 ${de2(weight, 1)} kg K\xF6rpergewicht${fallback}`
+    };
+  }
+  if (weight !== null && heightCm !== null && heightCm > 0) {
+    const m = heightCm / 100;
+    out[BMI_METRIC_ID] = {
+      value: round2(weight / (m * m), 1),
+      note: `Berechnet: ${de2(weight, 1)} kg K\xF6rpergewicht${fallback} \xF7 (${de2(m, 2)} m K\xF6rpergr\xF6\xDFe)\xB2`
+    };
+  }
+  const android = positive2(values[ANDROID_FAT_METRIC_ID]);
+  const gynoid = positive2(values[GYNOID_FAT_METRIC_ID]);
+  if (android !== null && gynoid !== null) {
+    out[AG_RATIO_ID] = {
+      value: round2(android / gynoid, 2),
+      note: `Berechnet: ${de2(android, 2)} kg Android \xF7 ${de2(gynoid, 2)} kg Gynoid`
+    };
+  }
+  return out;
+}
 export {
   ANS_INFO,
   ANS_MAX,
@@ -11109,6 +11181,7 @@ export {
   daySlots,
   dayStatus,
   defaultRepeatEnd,
+  derivedComposition,
   describeAcwr,
   describeGoalProgress,
   describeMacroGoals,

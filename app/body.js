@@ -248,8 +248,8 @@ function scaleCard() {
   const sc = S().scale ?? null;
   const rows = sc?.rows ?? null;
   return `<section class="card scale-scan"><h3>Aus Bild übernehmen</h3>
-    <p class="muted small">Screenshot der Waagen-Auswertung (Hume) wählen – als Bild oder als PDF („ganze Seite“). Übernommen wird je Kachel der aktuelle (rechte) Wert für den oben gewählten Tag; Herzfrequenz bleibt außen vor. Gespeichert wird erst mit „Werte speichern“.</p>
-    <label class="btn block ${sc?.busy ? "is-busy" : ""}">${sc?.busy ? "Wird gelesen …" : "Screenshot wählen"}<input type="file" accept="image/*,application/pdf,.pdf" data-scale="file" hidden ${sc?.busy ? "disabled" : ""}></label>
+    <p class="muted small">PDF der Waagen-Auswertung (Hume, „ganze Seite“) oder einen Screenshot wählen. Übernommen wird je Kachel der aktuelle (rechte) Wert für den oben gewählten Tag; Gesundheitspunktzahl, BMR und Herzfrequenz bleiben außen vor. Magermasse in Prozent, Unterhautfettanteil und BMI rechnet die App selbst. Gespeichert wird erst mit „Werte speichern“.</p>
+    <label class="btn block ${sc?.busy ? "is-busy" : ""}">${sc?.busy ? "Wird gelesen …" : "PDF einfügen"}<input type="file" accept="image/*,application/pdf,.pdf" data-scale="file" hidden ${sc?.busy ? "disabled" : ""}></label>
     <p class="muted small" id="scale-status" role="status">${esc(sc?.status ?? "")}</p>
     ${
       rows
@@ -350,28 +350,8 @@ async function readScale(file) {
       );
       results.push(D.scaleScan.scaleValues(D.scaleScan.readScaleRows(rows), bounds));
     }
-    // Gesundheitspunktzahl (große Zahl im Tacho) zusätzlich aus dem Kopfbereich
-    const head = D.scaleScan.headerCrop(w0, h0);
-    const scorePasses = [];
-    for (const tw of D.scaleScan.SCORE_WIDTHS) {
-      const th = Math.round((head.h * tw) / head.w);
-      const hc = document.createElement("canvas");
-      hc.width = tw;
-      hc.height = th;
-      const hctx = hc.getContext("2d", { willReadFrequently: true });
-      hctx.imageSmoothingQuality = "high";
-      hctx.drawImage(img, head.x, head.y, head.w, head.h, 0, 0, tw, th);
-      const data = hctx.getImageData(0, 0, tw, th);
-      const g = D.scaleScan.prepareGray(data.data);
-      for (let i = 0, j = 0; j < g.length; i += 4, j++) data.data[i] = data.data[i + 1] = data.data[i + 2] = g[j];
-      hctx.putImageData(data, 0, 0);
-      const rows = await recognizeRows([hc], (text) => {
-        const el = document.getElementById("scale-status");
-        if (el) el.textContent = `Gesundheitspunktzahl: ${text}`;
-      }, "11");
-      scorePasses.push(D.scaleScan.scaleValues(D.scaleScan.readScaleRows(rows), bounds));
-    }
-    const vals = D.scaleScan.withScore(D.scaleScan.combinePasses(results), scorePasses);
+    // Gesundheitspunktzahl, BMR und Herzfrequenz erscheinen nicht (Festlegung 14.11.2026)
+    const vals = D.scaleScan.visibleValues(D.scaleScan.combinePasses(results));
     const found = vals.filter((v) => v.value !== null).length;
     st.scale = {
       busy: false,
@@ -395,6 +375,29 @@ async function readScale(file) {
   X.rerender();
 }
 
+/**
+ * Berechnete Felder wie am PC (derivedComposition): Anteil Skelettmuskulatur, A/G-Verhältnis,
+ * Magermasse in Prozent, Unterhautfettanteil und BMI (Körpergröße laut Profil vom PC).
+ * Körpergewicht: Wert des Tages, sonst der zuletzt erfasste bis zu diesem Tag.
+ */
+function derivedFor(d) {
+  const weights = B.allValues(X.S.catalog, S().local).get(B.WEIGHT_METRIC_ID) ?? [];
+  const last = weights.find((v) => v.row.date <= d.date);
+  const height = X.S.catalog?.pc?.profile?.[0]?.height_cm ?? null;
+  return D.derivedComposition(d.values, last ? Number(last.row.value) : null, height ? Number(height) : null);
+}
+
+/** Nach dem Verlassen eines Felds neu zeichnen (berechnete Felder), Fokus bleibt erhalten. */
+function rerenderKeepFocus() {
+  setTimeout(() => {
+    const el = document.activeElement;
+    const id = el?.dataset?.id;
+    const kind = el?.dataset?.bd;
+    X.rerender();
+    if (id && kind) document.querySelector(`[data-bd="${kind}"][data-id="${id}"]`)?.focus();
+  }, 0);
+}
+
 /** Messmethode mit „Hume“ für einen Bereich: bisher verwendet, sonst aus den Settings vom PC. */
 function humeMethod(category) {
   const used = B.methodsInCategory(X.S.catalog, S().local, category).find((m) => /hume/i.test(m));
@@ -415,6 +418,7 @@ export function viewBodyEntry() {
   const d = st.day;
   const all = B.allValues(X.S.catalog, st.local);
   const sections = B.metricSections(metrics());
+  const derived = derivedFor(d);
   const wd = WEEKDAYS[new Date(`${d.date}T12:00:00`).getDay()];
   return `${X.header("Werte erfassen", { back: "body" })}<main class="wrap body-entry">
     <section class="card day-nav">
@@ -444,11 +448,13 @@ export function viewBodyEntry() {
               .map((m) => {
                 const last = (all.get(m.id) ?? []).find((v) => v.row.date < d.date);
                 const hint = B.metricHint(m);
+                const calc = derived[m.id];
                 return `<label class="entry-row" ${hint ? `title="${esc(hint)}"` : ""}>
                   <span class="entry-row__name">${esc(m.name)}${hint ? ` <span class="info" aria-hidden="true">ⓘ</span>` : ""}
                     ${last ? `<span class="muted small">zuletzt ${fmtNum(last.row.value, m.decimals)} (${fmtShort(last.row.date)})</span>` : ""}</span>
                   <span class="entry-row__input"><input type="text" inputmode="decimal" enterkeyhint="next" data-bd="value" data-id="${esc(m.id)}"
-                    value="${esc(d.values[m.id] ?? "")}" ${d.errors[m.id] ? 'aria-invalid="true"' : ""} aria-label="${esc(m.name)}"><span class="unit">${esc(m.unit)}</span></span>
+                    value="${esc(calc ? fmtNum(calc.value, m.decimals ?? 1) : (d.values[m.id] ?? ""))}" ${calc ? "disabled" : ""} ${d.errors[m.id] ? 'aria-invalid="true"' : ""} aria-label="${esc(m.name)}"><span class="unit">${esc(m.unit)}</span></span>
+                  ${calc ? `<span class="muted small entry-row__err">${esc(calc.note)}</span>` : ""}
                   ${d.errors[m.id] ? `<span class="err small entry-row__err">${esc(d.errors[m.id])}</span>` : ""}
                 </label>`;
               })
@@ -504,6 +510,10 @@ export const bodyActions = {
   "body-day-save": async () => {
     const st = S();
     const d = st.day;
+    // Berechnete Felder mit speichern
+    for (const [id, v] of Object.entries(derivedFor(d))) {
+      if (metricById(id)) d.values[id] = String(v.value).replace(".", ",");
+    }
     const r = B.saveDay(X.S.catalog, st.local, d, { uuid: () => X.uuid(), now: new Date() });
     if (Object.keys(r.errors).length) {
       d.errors = r.errors;
@@ -619,6 +629,11 @@ export function bodyChange(el) {
     return true;
   }
   if (el.dataset.scaleVal) return bodyInput(el);
+  if (el.dataset.bd === "value" && S()?.day) {
+    bodyInput(el);
+    rerenderKeepFocus();
+    return true;
+  }
   if (el.dataset.bd === "date") {
     if (el.value && el.value <= today()) S().day = B.dayForm(X.S.catalog, S().local, el.value);
     X.rerender();

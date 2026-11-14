@@ -300,3 +300,9 @@ Fassung laden.
 - Drei Durchgänge der Texterkennung, die Mehrheit zählt; die Gesundheitspunktzahl wird zusätzlich aus dem Kopfbereich gelesen.
 - Als Ziffer gelesene Einheiten werden abgeschnitten („86.0kg“ → „86.09“ → 86,0), als Ziffer gelesene Pfeile/Symbole korrigiert („5 › 5 ⇆“ → „256“ → 5); Korrekturen werden nur vorausgewählt, wenn ein zweiter Durchgang sie bestätigt.
 - Getestet mit der Original-PDF: alle 12 vorausgewählten Werte stimmen (Gewicht 86,0, Fett 10,3 %, Fettmasse 8,8, Magermasse 73,6, Subkutan 7,7, Viszeral 5, A/G 1,13, Skelettmuskel 51,9, Skelettmasse 11,1, Wasser 67,9 %, Zellmasse 52,8); BMR 1935 und Punktzahl 774 werden gelesen, sobald die Messgrößen vom PC (1.0.122) da sind.
+
+## Version 1.12.3 (14.11.2026): „PDF einfügen“ und berechnete Körperwerte
+
+- Der Knopf heißt „PDF einfügen“ (Bilder gehen weiterhin).
+- Gesundheitspunktzahl, BMR und Herzfrequenz erscheinen in der Vorschau nicht und werden nicht übernommen.
+- „Werte erfassen“ rechnet wie am PC selbst: Magermasse in Prozent (Magermasse ÷ Gewicht), Unterhautfettanteil (subkutane Fettmasse ÷ Gewicht), BMI (Gewicht ÷ Körpergröße² laut Profil) sowie Anteil Skelettmuskulatur und A/G-Verhältnis (aus Android/Gynoid). Berechnete Felder sind gesperrt, zeigen die Rechnung und werden mit gespeichert.

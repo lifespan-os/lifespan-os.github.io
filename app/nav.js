@@ -43,7 +43,7 @@ export const SECTIONS = [
   { id: "superhuman", label: "Superhuman", view: "super", views: ["super", "hrt-edit", "protocol-edit", "substance-edit"] },
   { id: "insights", label: "Insights", view: "insights", views: ["insights"] },
   { id: "icoach", label: "iCoach.me", view: "icoach", views: ["icoach"] },
-  { id: "settings", label: "Settings", view: "settings", views: ["settings", "send", "help"] },
+  { id: "settings", label: "Settings", view: "settings", views: ["settings", "send", "pending", "help"] },
 ];
 
 export const icon = (name) => ICONS[name] ?? "";

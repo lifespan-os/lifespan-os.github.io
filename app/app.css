@@ -862,3 +862,19 @@ input[type="date"], input[type="time"] { min-width: 0; max-width: 100%; }
 .guide-list dt { font-weight: 650; font-size: .88rem; }
 .guide-list dd { margin: 0; }
 .linkbtn.danger { color: var(--danger); }
+
+/* ---------------------------------------------------------------- Offene Daten (1.18.0) */
+.pending-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.pending-item { padding: 10px 0; border-top: 1px solid var(--line); }
+.pending-item:first-child { border-top: 0; }
+.pending-item__head { display: flex; gap: 8px; align-items: flex-start; justify-content: space-between; }
+.pending-item__main { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.pending-item .row-actions { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; }
+.pending-details { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--surface-2); }
+.pending-fields { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 4px 12px; margin: 0; font-size: .9em; }
+.pending-fields dt { color: var(--muted); }
+.pending-fields dd { margin: 0; overflow-wrap: anywhere; }
+.pending-parts { margin: 6px 0 0; padding-left: 18px; font-size: .9em; }
+.pending-parts li { margin: 3px 0; overflow-wrap: anywhere; }
+.tag.tag--new { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+.tag.tag--del { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }

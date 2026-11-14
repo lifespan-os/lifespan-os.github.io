@@ -418,3 +418,17 @@ Fassung laden.
   mit Tests). Änderungen gehen mit „Körperwerte … senden“ an den PC.
 - Für Pläne und Check-Ins braucht es eine neue Exportdatei vom PC (Tabellen `training_plan*`,
   `checkin_photo`); pcdomain.js enthält jetzt die Trainingslogik der Desktop-App.
+
+### Version 1.18.0 (14.11.2026): Offene Daten vor dem Senden
+
+- Settings → „Offene Daten ansehen und bearbeiten“ (auch unter „An den PC senden“): alles, was am
+  Handy erfasst oder geändert und noch nicht am PC ist, nach Bereichen (Training, Nutrition,
+  Checklisten, Sleep & Recovery, Body & Longevity, Health, Superhuman, Koffein).
+- Je Eintrag: **Ansehen** (alle Felder lesbar, Verweise als Namen), **Bearbeiten** (öffnet den
+  Eintrag im jeweiligen Bereich mit dessen Prüfungen), **Verwerfen** (dann gilt wieder der Stand vom
+  PC) bzw. bei Löschungen **Löschen zurücknehmen**.
+- Zusammengehöriges erscheint als ein Eintrag (Plan mit Tagen/Übungen/Sätzen, Blutabnahme mit Werten,
+  Checkliste mit Punkten). Neu angelegte Einträge, die noch anderswo verwendet werden (z. B. eine neue
+  Übung in einem offenen Plan), lassen sich erst verwerfen, wenn das verwendende verworfen ist.
+- Ernährung: Verweis auf „Vor dem Senden prüfen“ (Menge, Tag, Mahlzeit direkt ändern).
+- Neue Datei `pending.js` mit Tests (`pending.test.mjs`).

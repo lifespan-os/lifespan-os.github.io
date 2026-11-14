@@ -26,6 +26,7 @@ import { initTraining, trainingActions, trainingChange, trainingInput, viewTrain
 import { initTrainingStats } from "./trainingstats.js";
 import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
 import * as TR from "./trainingdata.js";
+import * as PD from "./pending.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -105,7 +106,7 @@ const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWa
 const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + TR.unsentTrain(S.train);
 
 function go(view, arg = null) {
-  if (view === "food-review" && S.view !== "food-review") S.reviewFrom = S.view === "send" ? "send" : S.view === "food" ? "food" : "home";
+  if (view === "food-review" && S.view !== "food-review") S.reviewFrom = S.view === "send" ? "send" : S.view === "pending" ? "pending" : S.view === "food" ? "food" : "home";
   if (view !== S.view && view !== "detail") S.trainNotice = null;
   S.view = view;
   S.arg = arg;
@@ -225,6 +226,7 @@ function viewSettings() {
     <section class="card">
       <div class="wo-head"><h3>An den PC senden</h3><span class="tag">${total} offen</span></div>
       <p class="muted small">Trainings, Lebensmittel und Körperwerte als Dateien für den Import am PC (Settings → Daten importieren → „Abgleichen“).</p>
+      <button class="btn block" data-go="pending" ${total ? "" : "disabled"}>${total ? "Offene Daten ansehen und bearbeiten" : "Keine offenen Daten"}</button>
       <button class="btn block" data-go="send">An den PC senden</button>
     </section>
     <section class="card">
@@ -620,6 +622,7 @@ function viewSend() {
   return `${header("An den PC senden", { back: "home" })}<main class="wrap">
     <section class="card">
       <h3>${ready.length ? `${ready.join(" und ")} bereit` : "Alles übertragen"}</h3>
+      ${ready.length ? `<button class="btn block" data-go="pending">Vorher offene Daten ansehen und bearbeiten</button>` : ""}
       <ol class="steps small">
         <li>Auf <b>„Trainings senden“</b> bzw. <b>„Lebensmittel senden“</b> tippen und die Datei in <b>Google Drive</b> sichern („In Drive sichern“ bzw. „In Dateien sichern“ → Google Drive).</li>
         <li>Am PC in LIFESPAN OS: <b>Settings → Daten importieren → Exportdatei auswählen …</b> und die Datei aus Google Drive wählen.</li>
@@ -642,6 +645,90 @@ function viewSend() {
         : ""
     }
     <div id="send-result"></div>
+  </main>`;
+}
+
+/**
+ * Offene Daten (1.18.0): alles, was noch nicht am PC ist – je Bereich, mit Details, Sprung zum
+ * Bearbeiten im jeweiligen Bereich und „Verwerfen“ (dann gilt wieder der Stand vom PC).
+ */
+function viewPending() {
+  const items = PD.pendingItems(S);
+  const wos = unsent();
+  const foodN = S.food ? N.unsentCount(S.food.local) : 0;
+  const total = wos.length + foodN + items.length;
+  const ex = exById();
+  const open = S.pendingOpen;
+  const detailsHtml = (it) =>
+    `<div class="pending-details">
+      ${it.fields.length ? `<dl class="pending-fields">${it.fields.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : ""}
+      ${
+        it.details.length
+          ? `<ul class="pending-parts">${it.details
+              .map(
+                (d) => `<li><b>${esc(d.label)}${d.op === "del" ? " – wird gelöscht" : ""}:</b> ${esc(d.title)}${
+                  d.fields.length ? `<span class="muted small"> · ${d.fields.map(([k, v]) => `${esc(k)} ${esc(v)}`).join(" · ")}</span>` : ""
+                }</li>`,
+              )
+              .join("")}</ul>`
+          : ""
+      }
+      ${!it.fields.length && !it.details.length ? `<p class="muted small">${it.status === "Löschung" ? "Wird am PC gelöscht." : "Keine weiteren Angaben."}</p>` : ""}
+    </div>`;
+  const itemHtml = (it) => `<li class="pending-item">
+      <div class="pending-item__head">
+        <span class="pending-item__main"><b>${esc(it.title)}</b>
+          <span class="muted small">${esc([it.label, it.date ? fmtDate(it.date) : "", ...it.parts].filter(Boolean).join(" · "))}</span></span>
+        <span class="tag ${it.status === "Löschung" ? "tag--del" : it.status === "Neu" ? "tag--new" : ""}">${esc(it.status)}</span>
+      </div>
+      ${open === it.key ? detailsHtml(it) : ""}
+      <div class="row-actions">
+        <button class="linkbtn" data-act="pending-toggle" data-arg="${esc(it.key)}" aria-expanded="${open === it.key}">${open === it.key ? "Weniger" : "Ansehen"}</button>
+        ${it.edit ? `<button class="linkbtn" data-act="pending-edit" data-arg="${esc(it.key)}">Bearbeiten</button>` : ""}
+        <button class="linkbtn danger" data-act="pending-discard" data-arg="${esc(it.key)}">${it.status === "Löschung" ? "Löschen zurücknehmen" : "Verwerfen"}</button>
+      </div></li>`;
+  const byArea = new Map();
+  for (const it of items) {
+    if (!byArea.has(it.area)) byArea.set(it.area, []);
+    byArea.get(it.area).push(it);
+  }
+  const woHtml = (w) => {
+    const sets = w.exercises.reduce((a, e) => a + e.sets.length, 0);
+    const names = w.exercises.map((e) => ex.get(e.exerciseId)?.name).filter(Boolean);
+    return `<li class="pending-item">
+      <div class="pending-item__head">
+        <span class="pending-item__main"><b>${esc(w.title)}</b>
+          <span class="muted small">${esc([`Training`, fmtDate(w.date), `${w.exercises.length} Übungen`, `${sets} Sätze`, w.durationMin ? `${w.durationMin} min` : ""].filter(Boolean).join(" · "))}</span>
+          ${names.length ? `<span class="muted small">${esc(names.slice(0, 6).join(", "))}${names.length > 6 ? " …" : ""}</span>` : ""}</span>
+        <span class="tag ${w.extra ? "" : "tag--new"}">${w.extra ? "Geändert" : "Neu"}</span>
+      </div>
+      <div class="row-actions">
+        <button class="linkbtn" data-go="detail" data-arg="${esc(w.id)}">Ansehen und bearbeiten</button>
+        <button class="linkbtn danger" data-act="pending-wo-discard" data-arg="${esc(w.id)}">Verwerfen</button>
+      </div></li>`;
+  };
+  const areaCards = PD.AREAS.map(([area, label]) => {
+    const list = byArea.get(area) ?? [];
+    const extraWo = area === "training" ? wos : [];
+    const extraFood = area === "nutrition" ? foodN : 0;
+    if (!list.length && !extraWo.length && !extraFood) return "";
+    const count = list.length + extraWo.length + extraFood;
+    return `<section class="card"><div class="wo-head"><h3>${esc(label)}</h3><span class="tag">${count} offen</span></div>
+      ${
+        extraFood
+          ? `<p class="muted small">${extraFood} ${extraFood === 1 ? "Ernährungseintrag" : "Ernährungseinträge"} (Mahlzeiten, Lebensmittel, Rezepte, Strichcodes).</p>
+             <button class="btn block" data-go="food-review">Ernährung prüfen und bearbeiten</button>`
+          : ""
+      }
+      ${extraWo.length || list.length ? `<ul class="pending-list">${extraWo.map(woHtml).join("")}${list.map(itemHtml).join("")}</ul>` : ""}
+    </section>`;
+  }).join("");
+  return `${header("Offene Daten", { back: "settings" })}<main class="wrap">
+    <section class="card">
+      <p class="small">Alles, was du am Handy erfasst oder geändert hast und noch nicht an den PC gesendet ist. <b>Bearbeiten</b> öffnet den Eintrag im jeweiligen Bereich. <b>Verwerfen</b> nimmt die Änderung am Handy zurück – dann gilt wieder der Stand vom PC.</p>
+      ${total ? `<button class="btn primary block" data-go="send">An den PC senden</button>` : `<p class="empty">Alles übertragen – keine offenen Daten.</p>`}
+    </section>
+    ${areaCards}
   </main>`;
 }
 
@@ -736,6 +823,7 @@ const VIEWS = {
   machine: viewMachine,
   finish: viewFinish,
   send: viewSend,
+  pending: viewPending,
   detail: viewDetail,
   help: viewHelp,
 };
@@ -1129,6 +1217,47 @@ const actions = {
     S.workouts = S.workouts.filter((w) => w.id !== el.dataset.arg);
     await saveNow();
     go("home");
+  },
+  "pending-toggle": (el) => {
+    S.pendingOpen = S.pendingOpen === el.dataset.arg ? null : el.dataset.arg;
+    render();
+  },
+  "pending-edit": (el) => {
+    const it = PD.pendingItems(S).find((x) => x.key === el.dataset.arg);
+    if (!it?.edit) return;
+    const t = it.edit;
+    Object.assign(S, t.set ?? {});
+    S.trainNotice = null;
+    S.view = t.view;
+    S.arg = t.viewArg ?? null;
+    const fn = t.act ? actions[t.act] : null;
+    if (fn) fn({ dataset: { arg: t.arg }, closest: () => null });
+    render();
+    window.scrollTo(0, 0);
+  },
+  "pending-discard": async (el) => {
+    const all = PD.pendingItems(S);
+    const it = all.find((x) => x.key === el.dataset.arg);
+    if (!it) return;
+    if (!confirmTwice(el, it.status === "Löschung" ? "Nochmal tippen: wiederherstellen" : "Nochmal tippen: verwerfen")) return;
+    let stores;
+    try {
+      stores = PD.discardItem(S, it, all);
+    } catch (e) {
+      return toast(e.message, true);
+    }
+    for (const name of stores) await store.set(name, name === "body" ? S.body.local : S[name]);
+    if (stores.includes("train")) refreshCatalog();
+    S.pendingOpen = null;
+    toast(it.status === "Löschung" ? `„${it.title}“ wiederhergestellt` : `„${it.title}“ verworfen`);
+    render();
+  },
+  "pending-wo-discard": async (el) => {
+    if (!confirmTwice(el, "Nochmal tippen: Training verwerfen")) return;
+    S.workouts = S.workouts.filter((w) => w.id !== el.dataset.arg);
+    await saveNow();
+    toast("Training verworfen");
+    render();
   },
   "menu-open": () => setMenu(true),
   "menu-go": (el) => {

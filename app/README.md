@@ -466,3 +466,10 @@ Fassung laden.
 
 - Das Menü (☰ oben oder „Mehr“ unten) fährt jetzt als Fach von unten hoch: alle Bereiche als Kacheln in
   drei Reihen (vier je Reihe, auf kleinen Handys drei) – mit dem Daumen gut erreichbar; ✕ zum Schließen.
+
+### Version 1.23.0 (14.11.2026): Alle Menüs von unten
+
+- Die Reiter-Auswahl der Bereiche (Training, Nutrition, Health, Superhuman, iCoach.me) öffnet sich jetzt
+  ebenfalls als Fach von unten: Bereichsname mit ✕, Reiter als große Kacheln in zwei Spalten, der aktive
+  orange umrandet; Schließen auch per Tipp auf den abgedunkelten Hintergrund. Damit bauen sich Hauptmenü,
+  „Schnell erfassen“ und Reiter-Auswahl einheitlich von unten auf.

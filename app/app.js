@@ -843,6 +843,7 @@ function render() {
  * `nav.tabs` (Training, Nutrition, Health, Superhuman, iCoach.me); offen/zu bleibt je Bereich.
  */
 function foldTabs() {
+  document.body.classList.remove("sheet-open");
   for (const nav of app.querySelectorAll("nav.tabs")) {
     const key = nav.getAttribute("aria-label") || "tabs";
     const tabs = [...nav.querySelectorAll(".tab")];
@@ -863,8 +864,20 @@ function foldTabs() {
     toggle.setAttribute("aria-expanded", String(open));
     toggle.setAttribute("aria-controls", list.id);
     toggle.title = open ? "Auswahl zuklappen" : "Weitere Bereiche anzeigen";
-    toggle.innerHTML = `<span class="tabs__chevron" aria-hidden="true">${open ? "▾" : "▸"}</span><span class="tabs__current">${esc(active.textContent.trim())}</span>`;
-    nav.replaceChildren(toggle, list);
+    toggle.innerHTML = `<span class="tabs__chevron" aria-hidden="true">${open ? "▴" : "▸"}</span><span class="tabs__current">${esc(active.textContent.trim())}</span>`;
+    // Auswahl als Fach von unten (1.23.0) – wie das Hauptmenü, gut mit dem Daumen erreichbar
+    list.setAttribute("role", "dialog");
+    list.setAttribute("aria-label", `${key}: Bereich wählen`);
+    const head = document.createElement("div");
+    head.className = "tabs__sheet-head";
+    head.innerHTML = `<b>${esc(key)}</b><button type="button" class="tabs__close" data-act="tabs-fold" data-arg="${esc(key)}" aria-label="Auswahl schließen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg></button>`;
+    list.prepend(head);
+    const backdrop = document.createElement("div");
+    backdrop.className = "tabs__backdrop";
+    backdrop.dataset.act = "tabs-fold";
+    backdrop.dataset.arg = key;
+    nav.replaceChildren(toggle, backdrop, list);
+    document.body.classList.toggle("sheet-open", open);
   }
 }
 

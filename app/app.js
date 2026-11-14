@@ -34,6 +34,10 @@ const toastEl = document.getElementById("toast");
 
 const S = {
   catalog: null,
+  accountId: "", // Konten (1.25.0): "" = Hauptkonto
+  accounts: [],
+  mainAccountName: null,
+  accountForm: null,
   localExercises: [],
   workouts: [], // abgeschlossene Trainings vom Handy
   active: null, // laufendes Training
@@ -149,6 +153,11 @@ function viewSetup() {
       </ol>
       ${fileButton("Exportdatei laden")}
     </section>
+    <section class="card">
+      <h3>Ohne PC starten</h3>
+      <p class="muted small">Kein PC? Lege ein Konto direkt am Handy an. Maschinen (mit Muskelgruppen), Lebensmittel und Übungsbibliothek sind dabei; später kannst du alles an den PC übertragen.</p>
+      <button class="btn blue block" data-go="account-new">Neues Konto anlegen</button>
+    </section>
     <p class="muted small">Tipp fürs iPhone: Tippe in Safari auf „Teilen“ → „Zum Home-Bildschirm“. Nur so bleiben deine Daten dauerhaft gespeichert.</p>
   </main>`;
 }
@@ -215,8 +224,9 @@ function viewSettings() {
   const c = S.catalog;
   const total = unsent().length + unsentFood() + unsentBodyCount();
   return `${header("Settings")}<main class="wrap">
+    ${accountsCard()}
     <section class="card">
-      <h3>Daten vom PC</h3>
+      <h3>${c.startpaket ? "Grunddaten" : "Daten vom PC"}</h3>
       <p class="muted small">Stand: ${fmtDateTime(c.exportedAt)} · ${c.machines.length.toLocaleString("de-DE")} Maschinen · ${c.exercises.length} Übungen · ${c.plans.length} Pläne</p>
       ${fileButton("Neue Exportdatei laden")}
     </section>
@@ -834,12 +844,13 @@ const VIEWS = {
   finish: viewFinish,
   send: viewSend,
   pending: viewPending,
+  "account-new": viewAccountNew,
   detail: viewDetail,
   help: viewHelp,
 };
 
 function render() {
-  if (!S.catalog && S.view !== "help") S.view = "setup";
+  if (!S.catalog && S.view !== "help" && S.view !== "account-new") S.view = "setup";
   app.innerHTML = (VIEWS[S.view] || viewHome)();
   foldTabs();
   renderNav();
@@ -1374,6 +1385,41 @@ const actions = {
     toast("Training verworfen");
     render();
   },
+  "account-new": () => {
+    S.accountForm = null;
+    go("account-new");
+  },
+  "account-create": async () => {
+    const val = (id) => document.getElementById(id)?.value ?? "";
+    const f = { name: val("acc-name"), sex: val("acc-sex"), birthDate: val("acc-birth"), heightCm: val("acc-height"), error: null, busy: true };
+    S.accountForm = f;
+    render();
+    try {
+      const reload = await createAccount(f);
+      S.accountForm = null;
+      if (reload) {
+        toast(`Konto „${f.name.trim()}“ angelegt`);
+        setTimeout(() => location.reload(), 600);
+        return;
+      }
+      toast(`Konto „${f.name.trim()}“ angelegt`);
+      go("home");
+    } catch (e) {
+      S.accountForm = { ...f, busy: false, error: e.message };
+      render();
+    }
+  },
+  "account-switch": (el) => switchAccount(el.dataset.arg),
+  "account-delete": async (el) => {
+    const id = el.dataset.arg;
+    const name = accountName(id);
+    if (!confirmTwice(el, "Nochmal tippen: endgültig löschen")) return;
+    await store.clearAccount(id);
+    S.accounts = S.accounts.filter((a) => a.id !== id);
+    await store.setGlobal("accounts", S.accounts);
+    toast(`Konto „${name}“ mit allen Daten gelöscht`);
+    render();
+  },
   "bar-reset": async () => {
     delete S.prefs.barSlots;
     await saveNow();
@@ -1605,6 +1651,17 @@ async function loadFile(file) {
     toast("Datei wird gelesen …");
     const text = await file.text();
     const catalog = C.parseExport(text);
+    await applyCatalog(catalog);
+    toast(`Geladen: ${catalog.machines.length.toLocaleString("de-DE")} Maschinen, ${catalog.plans.length} Pläne, ${catalog.nutrition.foods.length.toLocaleString("de-DE")} Lebensmittel`);
+    go("home");
+  } catch (e) {
+    toast(e.message || "Die Datei konnte nicht gelesen werden.", true);
+  }
+}
+
+/** Neue Grunddaten übernehmen (PC-Export oder Startpaket eines Kontos am Handy). */
+async function applyCatalog(catalog) {
+  {
     S.localExercises = C.keepLocalExercises(catalog, S.localExercises, [...S.workouts, ...(S.active ? [S.active] : [])]);
     S.catalogRaw = catalog;
     await store.set("catalog", catalog);
@@ -1630,11 +1687,110 @@ async function loadFile(file) {
     S.super = SD.pruneSuper(catalog, S.super);
     await store.set("super", S.super);
     await saveNow();
-    toast(`Geladen: ${catalog.machines.length.toLocaleString("de-DE")} Maschinen, ${catalog.plans.length} Pläne, ${catalog.nutrition.foods.length.toLocaleString("de-DE")} Lebensmittel`);
-    go("home");
-  } catch (e) {
-    toast(e.message || "Die Datei konnte nicht gelesen werden.", true);
   }
+}
+
+// ------------------------------------------------------------------ Konten (1.25.0)
+
+/** Name des aktiven Kontos: Profil (vom PC oder am Handy angelegt), sonst „Hauptkonto“. */
+function accountName(id = S.accountId) {
+  if (id === S.accountId && S.catalog?.pc?.profile?.[0]?.name) return S.catalog.pc.profile[0].name;
+  if (!id) return S.mainAccountName || "Hauptkonto";
+  return S.accounts.find((a) => a.id === id)?.name ?? "Konto";
+}
+
+/** Startpaket laden (Maschinen, Lebensmittel, Übungsbibliothek – wie ein neuer Benutzer am PC). */
+async function loadStartPackage() {
+  const res = await fetch("startpaket.json");
+  if (!res.ok) throw new Error("Die Grunddaten konnten nicht geladen werden. Bitte mit Internet erneut versuchen.");
+  return res.json();
+}
+
+/**
+ * Konto am Handy anlegen. Ohne Daten auf diesem Gerät (Startbildschirm) wird das aktuelle Konto
+ * eingerichtet; sonst entsteht ein weiteres Konto mit eigenem Speicher und die App startet neu.
+ */
+async function createAccount(input) {
+  const start = await loadStartPackage();
+  const catalog = C.parseExport(C.accountDoc(start, input));
+  const iso = new Date().toISOString();
+  if (!S.catalog) {
+    await applyCatalog(catalog);
+    if (S.accountId) {
+      S.accounts = S.accounts.map((a) => (a.id === S.accountId ? { ...a, name: catalog.pc.profile[0].name } : a));
+      await store.setGlobal("accounts", S.accounts);
+    } else {
+      S.mainAccountName = catalog.pc.profile[0].name;
+      await store.setGlobal("mainName", S.mainAccountName);
+    }
+    await store.persist();
+    refreshCatalog();
+    return false;
+  }
+  const id = `k${Date.now().toString(36)}`;
+  S.accounts = [...S.accounts, { id, name: catalog.pc.profile[0].name, createdAt: iso }];
+  await store.setGlobal("accounts", S.accounts);
+  if (!S.mainAccountName && !S.accountId) {
+    S.mainAccountName = accountName("");
+    await store.setGlobal("mainName", S.mainAccountName);
+  }
+  store.useAccount(id);
+  await store.set("catalog", catalog);
+  await store.setGlobal("activeAccount", id);
+  await store.persist();
+  return true;
+}
+
+async function switchAccount(id) {
+  if (S.active) return toast("Erst das laufende Training beenden.", true);
+  await saveNow();
+  await store.setGlobal("activeAccount", id);
+  location.reload();
+}
+
+function viewAccountNew() {
+  const f = S.accountForm ?? { name: "", sex: "", birthDate: "", heightCm: "", error: null, busy: false };
+  return `${header("Neues Konto", { back: S.catalog ? "settings" : "setup" })}<main class="wrap">
+    <section class="card">
+      <h3>Konto am Handy</h3>
+      <p class="muted small">Für jemanden ohne PC: Alles bleibt auf diesem Gerät. Mit dabei sind die Maschinendatenbank (mit Muskelgruppen, ohne Bilder), die Lebensmitteldatenbank und die Übungsbibliothek – wie bei einem neuen Benutzer am PC. Später überträgst du alles mit „An den PC senden“.</p>
+      <div class="field"><label for="acc-name">Name</label><input id="acc-name" type="text" autocomplete="off" maxlength="80" value="${esc(f.name)}"></div>
+      <div class="grid2">
+        <div class="field"><label for="acc-sex">Geschlecht</label><select id="acc-sex"><option value="">wählen …</option>
+          <option value="female" ${f.sex === "female" ? "selected" : ""}>weiblich</option><option value="male" ${f.sex === "male" ? "selected" : ""}>männlich</option></select></div>
+        <div class="field"><label for="acc-height">Größe (cm)</label><input id="acc-height" type="text" inputmode="decimal" value="${esc(f.heightCm)}" placeholder="z. B. 172"></div>
+      </div>
+      <div class="field"><label for="acc-birth">Geburtsdatum</label><input id="acc-birth" type="date" value="${esc(f.birthDate)}"></div>
+      <p class="muted small">Geschlecht, Alter und Größe braucht die App für Energiebedarf und Referenzwerte.</p>
+      ${f.error ? `<p class="field-error">${esc(f.error)}</p>` : ""}
+      <button class="btn primary block" data-act="account-create" ${f.busy ? "disabled" : ""}>${f.busy ? "Wird eingerichtet …" : "Konto anlegen"}</button>
+    </section>
+    ${S.catalog ? `<p class="muted small">Das neue Konto bekommt einen eigenen Speicher. Dein bisheriges Konto bleibt unverändert; wechseln kannst du jederzeit unter Settings → Konten.</p>` : ""}
+  </main>`;
+}
+
+/** Settings-Karte „Konten“. */
+function accountsCard() {
+  const list = [{ id: "", name: accountName("") }, ...S.accounts];
+  return `<section class="card">
+    <div class="wo-head"><h3>Konten</h3><span class="tag">${list.length}</span></div>
+    <p class="small">Angemeldet: <b>${esc(accountName())}</b> · ${S.catalog?.startpaket ? "Konto am Handy" : "Daten vom PC"}</p>
+    ${
+      list.length > 1
+        ? `<ul class="account-list">${list
+            .filter((a) => a.id !== S.accountId)
+            .map(
+              (a) => `<li><span>${esc(a.id === "" ? accountName("") : a.name)}<small class="muted">${a.id === "" ? "Hauptkonto" : "Konto am Handy"}</small></span>
+                <span class="row-actions"><button class="btn sm" data-act="account-switch" data-arg="${esc(a.id)}">Wechseln</button>${
+                  a.id ? `<button class="btn sm ghost danger" data-act="account-delete" data-arg="${esc(a.id)}">Löschen</button>` : ""
+                }</span></li>`,
+            )
+            .join("")}</ul>`
+        : ""
+    }
+    <button class="btn block" data-act="account-new">Neues Konto anlegen</button>
+    <p class="muted small" id="persist-note">Alle Daten liegen nur auf diesem Gerät.</p>
+  </section>`;
 }
 
 // ------------------------------------------------------------------ Pausentimer
@@ -1833,6 +1989,12 @@ initFood({
 async function boot() {
   fixSafeTop();
   try {
+    // Konten (1.25.0): aktives Konto wählt den Speicherbereich
+    S.accounts = (await store.getGlobal("accounts")) || [];
+    S.mainAccountName = (await store.getGlobal("mainName")) || null;
+    const activeId = (await store.getGlobal("activeAccount")) || "";
+    S.accountId = activeId && S.accounts.some((a) => a.id === activeId) ? activeId : "";
+    store.useAccount(S.accountId);
     S.catalogRaw = await store.get("catalog");
     S.train = TR.trainState(await store.get("train"));
     S.localExercises = (await store.get("localExercises")) || [];
@@ -1854,7 +2016,10 @@ async function boot() {
     app.innerHTML = `<p class="boot">Der Gerätespeicher ist nicht verfügbar (${esc(e.message)}). Im privaten Modus funktioniert LIFESPAN OS Mobil nicht.</p>`;
     return;
   }
-  store.persist();
+  store.persist().then(async () => {
+    const ok = await navigator.storage?.persisted?.().catch(() => false);
+    S.persisted = Boolean(ok);
+  });
   S.view = S.catalog ? (S.active ? "workout" : "home") : "setup";
   render();
   if (S.active) wakeLock(true);

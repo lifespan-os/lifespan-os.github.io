@@ -1061,3 +1061,11 @@ body:not(.has-tabbar) .rest { bottom: calc(76px + env(safe-area-inset-bottom)); 
 .tabs--fold .tabs__list .tab.active { background: rgba(243, 154, 34, .16); color: #f7b65e; box-shadow: inset 0 0 0 2px var(--orange); }
 .tabs--fold .tabs__list .tab:not(.active):hover { background: rgba(255, 255, 255, .12); }
 body.sheet-open { overflow: hidden; }
+
+/* Konten (1.25.0) */
+.account-list { list-style: none; margin: 8px 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.account-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border: 1px solid var(--line, #cfdce7); border-radius: 12px; }
+.account-list li > span:first-child { display: flex; flex-direction: column; min-width: 0; font-weight: 600; }
+.account-list small { font-weight: 400; }
+.account-list .row-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.field-error { color: #b42318; font-weight: 600; margin: 4px 0 10px; }

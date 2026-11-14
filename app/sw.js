@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar. Speichert nur die App-Dateien,
 // niemals Trainingsdaten (die liegen in IndexedDB auf dem Gerät).
-const VERSION = "lifespan-mobil-1.24.0";
+const VERSION = "lifespan-mobil-1.25.0";
 const FILES = [
   "./",
   "index.html",
@@ -58,6 +58,8 @@ const OCR_FILES = [
   "vendor/ocr/tesseract-core-lstm.wasm.js",
   "vendor/ocr/tesseract-core-simd-lstm.wasm.js",
   "vendor/ocr/deu.traineddata.gz",
+  // Grunddaten für „Konto am Handy“ (1.25.0, ca. 0,3 MB komprimiert)
+  "startpaket.json",
 ];
 
 self.addEventListener("install", (ev) => {

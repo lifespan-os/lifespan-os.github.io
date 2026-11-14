@@ -9,7 +9,7 @@ import { pcFromRows } from "./pcdb.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.24.0";
+export const MOBILE_VERSION = "1.25.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -183,13 +183,55 @@ const byPosition = (a, b) => (a.position ?? 0) - (b.position ?? 0);
  * Liest eine Exportdatei der Desktop-App und behält nur, was die Handy-App braucht.
  * Wirft Error mit deutscher Meldung, wenn die Datei nicht passt.
  */
+/**
+ * Kompakte Tabellen (Startpaket, 1.25.0: `{ c: Spalten, r: Zeilen }`) in Zeilenobjekte wie im
+ * PC-Export umwandeln. Gibt zusätzlich die Spalten jeder Tabelle zurück – auch leerer.
+ */
+export function expandCompact(doc) {
+  if (!doc?.compact) return { doc, columns: {} };
+  const tables = {};
+  const columns = {};
+  for (const [name, t] of Object.entries(doc.tables ?? {})) {
+    columns[name] = t.c;
+    tables[name] = t.r.map((row) => Object.fromEntries(t.c.map((c, i) => [c, row[i]])));
+  }
+  return { doc: { ...doc, compact: false, tables }, columns };
+}
+
+/**
+ * Neues Konto am Handy (1.25.0): Startpaket plus Profil (wie die Tabelle `profile` am PC).
+ * `input` = { name, sex: "male"|"female", birthDate: "JJJJ-MM-TT", heightCm }.
+ */
+export function accountDoc(startDoc, input, now = new Date()) {
+  const name = String(input.name ?? "").trim();
+  if (!name) throw new Error("Bitte einen Namen eingeben.");
+  if (name.length > 80) throw new Error("Der Name darf höchstens 80 Zeichen haben.");
+  if (!["male", "female"].includes(input.sex)) throw new Error("Bitte das Geschlecht wählen.");
+  const bd = String(input.birthDate ?? "");
+  const year = Number(bd.slice(0, 4));
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(bd) || year < 1900 || year > now.getFullYear()) throw new Error("Bitte ein gültiges Geburtsdatum eingeben.");
+  const h = Number(String(input.heightCm ?? "").replace(",", "."));
+  if (!(h >= 100 && h <= 250)) throw new Error("Größe bitte in cm zwischen 100 und 250 eingeben.");
+  const { doc } = expandCompact(startDoc);
+  const iso = isoNow(now);
+  const profile = { id: 1, name, height_cm: Math.round(h * 10) / 10, birth_year: year, updated_at: iso, birth_date: bd, sex: input.sex, life_phase: null };
+  const keepColumns = startDoc?.compact ? Object.fromEntries(Object.entries(startDoc.tables).map(([k, t]) => [k, t.c])) : {};
+  return { ...doc, exportedAt: iso, columns: keepColumns, tables: { ...doc.tables, profile: [profile] } };
+}
+
 export function parseExport(text) {
   let doc;
-  try {
-    doc = JSON.parse(text);
-  } catch {
-    throw new Error("Die Datei ist keine gültige JSON-Datei.");
+  if (text && typeof text === "object") doc = text;
+  else {
+    try {
+      doc = JSON.parse(text);
+    } catch {
+      throw new Error("Die Datei ist keine gültige JSON-Datei.");
+    }
   }
+  const expanded = expandCompact(doc);
+  doc = expanded.doc;
+  const knownColumns = { ...(doc.columns ?? {}), ...expanded.columns };
   if (!doc || doc.format !== FORMAT_NAME) {
     throw new Error("Das ist keine Exportdatei von LIFESPAN OS (performance-os-export.json).");
   }
@@ -202,7 +244,7 @@ export function parseExport(text) {
   const rows = (name) => (Array.isArray(t[name]) ? t[name] : []);
 
   // Spalten je Tabelle merken: die Rückgabedatei darf nur bekannte Spalten enthalten
-  const columns = {};
+  const columns = { ...knownColumns };
   for (const [name, list] of Object.entries(t)) {
     if (Array.isArray(list) && list.length) columns[name] = Object.keys(list[0]);
   }
@@ -221,6 +263,8 @@ export function parseExport(text) {
     appVersion: doc.appVersion ?? null,
     exportedAt: doc.exportedAt ?? null,
     loadedAt: isoNow(),
+    /** Konto am Handy (1.25.0): Angaben zum Startpaket, sonst null (Daten vom PC) */
+    startpaket: doc.startpaket ?? null,
     columns,
     machines,
     exercises,

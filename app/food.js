@@ -1,5 +1,6 @@
 // LIFESPAN OS Mobil – Oberfläche „Ernährung“: Etikett scannen, Lebensmittel speichern und
 // tracken, Gerichte zusammenstellen. Logik in nutrition.js und label.js, Texterkennung in ocr.js.
+import { blsResultsHtml } from "./blsui.js";
 import * as N from "./nutrition.js";
 import * as L from "./label.js";
 import { nutritionTabs } from "./diary.js";
@@ -65,12 +66,14 @@ function foodItem(f, act) {
 
 export function foodResults(query, act) {
   const list = N.searchFoods(X.S.catalog, F().local, query, 25);
+  // BLS 4.0 (1.30.0): falls heruntergeladen, Treffer darunter
+  const bls = blsResultsHtml(query, act);
   if (!list.length) {
     return query.trim()
-      ? `<p class="empty">Nichts gefunden. Scanne das Etikett, um das Lebensmittel anzulegen.</p>`
+      ? `${bls ? "" : `<p class="empty">Nichts gefunden. Scanne das Etikett, um das Lebensmittel anzulegen.</p>`}${bls}`
       : `<p class="empty muted small">Name, Marke oder Strichcode eingeben.</p>`;
   }
-  return list.map((f) => foodItem(f, act)).join("");
+  return list.map((f) => foodItem(f, act)).join("") + bls;
 }
 
 // ------------------------------------------------------------------ Ansicht „Ernährung“

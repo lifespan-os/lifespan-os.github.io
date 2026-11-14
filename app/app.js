@@ -14,6 +14,7 @@ import { initVendor, vendorActions, vendorChange, viewVendor } from "./vendorui.
 import { initGoals, goalActions, goalChange, viewGoals } from "./goalsui.js";
 import * as GL from "./goals.js";
 import * as AX from "./accountexport.js";
+import { blsActions, blsBoot, blsCard, blsChange, blsInput, initBls, viewBls } from "./blsui.js";
 import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewDayNav } from "./overview.js";
 import { initLogs, logsActions, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
@@ -235,6 +236,7 @@ function viewSettings() {
       <p class="muted small">Energie (fest oder dynamisch aus dem Verbrauch), Makros, Schlaf, Gewicht, Schritte und Wasser – wie am PC.</p>
       <button class="btn block" data-act="goals-open">Tagesziele festlegen</button>
     </section>
+    ${blsCard()}
     <section class="card">
       <h3>Herstellerpakete</h3>
       <p class="muted small">Lebensmittel und Supplements von Herstellern (PEAK, GymBeam, IronMaxx, #sinob, Proteini.si …) mit einem Tipp installieren – wie am PC.</p>
@@ -863,6 +865,7 @@ const VIEWS = {
   "supp-intake": viewSuppIntake,
   vendor: viewVendor,
   goals: viewGoals,
+  bls: viewBls,
   detail: viewDetail,
   help: viewHelp,
 };
@@ -1131,6 +1134,7 @@ const actions = {
   ...diaryActions,
   ...vendorActions,
   ...goalActions,
+  ...blsActions,
   ...overviewActions,
   ...logsActions,
   ...insightsActions,
@@ -1639,6 +1643,7 @@ app.addEventListener("input", (ev) => {
   const el = ev.target;
   if (foodInput(el)) return;
   if (diaryInput(el)) return;
+  if (blsInput(el)) return;
   if (bodyInput(el)) return;
   if (logsInput(el)) return;
   if (todoInput(el)) return;
@@ -1714,6 +1719,7 @@ app.addEventListener("change", async (ev) => {
   if (diaryChange(el)) return;
   if (vendorChange(el)) return;
   if (goalChange(el)) return;
+  if (blsChange(el)) return;
   if (overviewChange(el)) return;
   if (logsChange(el)) return;
   if (todoChange(el)) return;
@@ -2052,6 +2058,7 @@ initBody(moduleCtx);
 initDiary(moduleCtx);
 initVendor(moduleCtx);
 initGoals(moduleCtx);
+initBls(moduleCtx);
 initOverview({ ...moduleCtx, S, today: todayIso });
 initLogs(moduleCtx);
 initInsights(moduleCtx);
@@ -2122,6 +2129,7 @@ async function boot() {
     S.water = (await store.get("water")) || P.emptyWaterLocal();
     S.supp = SP.normSupp(await store.get("supp"));
     S.goals = GL.normGoals(await store.get("goals"));
+    await blsBoot();
     S.logs = LG.logsState(await store.get("logs"));
     S.todos = TD.todosState(await store.get("todos"));
     S.checklists = CD.checklistState(await store.get("checklists"));

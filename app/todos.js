@@ -297,7 +297,7 @@ function libraryCard(date) {
       <span class="row-actions"><button class="btn sm" data-act="cl-import">Importieren</button><button class="btn sm primary" data-act="cl-new">+ Neue Checkliste</button></span></div>
     ${
       lists.length
-        ? `<div class="chip-row" role="tablist" aria-label="Checklisten">${lists
+        ? `<div class="chip-row" role="tablist" aria-label="Checklisten" data-sheet="Checklisten">${lists
             .map((c) => `<button class="chip ${selected?.id === c.id ? "on" : ""}" role="tab" aria-selected="${selected?.id === c.id}" data-act="cl-select" data-arg="${esc(c.id)}">${esc(c.name)} <span class="small">(${c.items.filter((i) => !i.done).length}/${c.items.length})</span></button>`)
             .join("")}</div>`
         : `<p class="muted">Noch keine Checklisten. Lege eine eigene an (z. B. Morgenroutine, Packliste) oder importiere eine aus Excel oder Apple Notizen.</p>`

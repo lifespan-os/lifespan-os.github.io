@@ -72,7 +72,7 @@ function evolveTab() {
   const open = D.COACH_MODULES.find((m) => m.id === S.icModule) ?? null;
   return `${
     open
-      ? `<section class="card icoach-module">
+      ? `<section class="card icoach-module" data-sheet-panel="${esc(open.title)}" data-close="ic-module|">
       <div class="wo-head"><h3>${esc(open.title)}</h3><button class="btn sm" data-act="ic-module" data-arg="">Schließen</button></div>
       <p class="muted small">${esc(open.description)}</p>
       <p class="muted small">Die Videos zu den Modulen liegen in einem Ordner auf dem PC und werden dort abgespielt (iCoach.me → Evolve).</p>
@@ -264,7 +264,7 @@ function magazineTab() {
   const chips = [["alle", "Alle"], ...M().MAGAZINE_CATEGORY_ORDER.map((c) => [c, M().MAGAZINE_CATEGORY_LABELS[c]])];
   return `<section class="card"><h3>Magazin</h3>
       <p class="muted small">Magazine und Reports von iCoach.Me und LIFESPAN OS als PDF – zu jedem Heft, worum es geht und was du daraus lernst.</p>
-      <div class="chip-row">${chips.map(([v, l]) => `<button class="chip ${v === filter ? "on" : ""}" data-act="ic-mag-filter" data-arg="${v}">${esc(l)}</button>`).join("")}</div>
+      <div class="chip-row" data-sheet="Kategorie">${chips.map(([v, l]) => `<button class="chip ${v === filter ? "on" : ""}" data-act="ic-mag-filter" data-arg="${v}">${esc(l)}</button>`).join("")}</div>
     </section>
     ${list
       .map(
@@ -401,9 +401,9 @@ export const icoachActions = {
     X.rerender();
   },
   "ic-module": (el) => {
+    // Modul öffnet sich als Fach von unten (1.31.0) – die Seite bleibt, wo sie ist
     X.S.icModule = el.dataset.arg || null;
     X.rerender();
-    window.scrollTo(0, 0);
   },
   "ic-ask-module": (el) => {
     const m = D.COACH_MODULES.find((x) => x.id === el.dataset.arg);

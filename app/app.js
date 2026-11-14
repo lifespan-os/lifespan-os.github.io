@@ -883,46 +883,88 @@ function render() {
 }
 
 /**
- * Reiter eines Bereichs (1.20.0) als auf- und zuklappbare Auswahl am linken Rand: zu sieht man nur
- * den gewählten Reiter (orange) mit Pfeil, aufgeklappt alle Reiter untereinander. Gilt für alle
- * `nav.tabs` (Training, Nutrition, Health, Superhuman, iCoach.me); offen/zu bleibt je Bereich.
+ * Alle Auswahlmenüs öffnen sich als Fach von unten (1.23.0, überall seit 1.31.0):
+ * - Reiter eines Bereichs (`nav.tabs`): oranger Knopf mit dem gewählten Reiter, Fach mit allen Reitern,
+ * - Auswahlgruppen mit `data-sheet="Titel"` (z. B. Kategorien, Checklisten): gleich wie Reiter,
+ * - Inhalte mit `data-sheet-panel="Titel"` und `data-close="aktion|arg"` (z. B. ein geöffnetes Modul).
+ * Das Fach liegt in `#sheet-root` direkt im Body – kein Eltern-Element (Kopf mit Schrägschnitt,
+ * Karten, Scrollbereiche) kann es abschneiden oder überdecken. Offen/zu je Schlüssel in `S.tabsOpen`.
  */
+const sheetRoot = document.createElement("div");
+sheetRoot.id = "sheet-root";
+document.body.appendChild(sheetRoot);
+
+const CLOSE_ICON = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg>`;
+
+function sheetToggle(key, label) {
+  const open = Boolean(S.tabsOpen?.[key]);
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "tabs__toggle";
+  toggle.dataset.act = "tabs-fold";
+  toggle.dataset.arg = key;
+  toggle.setAttribute("aria-expanded", String(open));
+  toggle.setAttribute("aria-haspopup", "dialog");
+  toggle.title = "Auswahl öffnen";
+  toggle.innerHTML = `<span class="tabs__chevron" aria-hidden="true">${open ? "▴" : "▸"}</span><span class="tabs__current">${esc(label)}</span>`;
+  return toggle;
+}
+
+/** Fach mit Kopf (Titel, ✕) und Inhalt in `#sheet-root` zeigen. `closeAct` = "aktion|arg". */
+function showSheet(title, body, closeAct, { grid = true } = {}) {
+  const [act, arg = ""] = closeAct.split("|");
+  const backdrop = document.createElement("div");
+  backdrop.className = "bsheet__backdrop";
+  backdrop.dataset.act = act;
+  backdrop.dataset.arg = arg;
+  const panel = document.createElement("div");
+  panel.className = `bsheet__panel${grid ? " bsheet__panel--grid" : ""}`;
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-modal", "true");
+  panel.setAttribute("aria-label", title);
+  const head = document.createElement("div");
+  head.className = "tabs__sheet-head";
+  head.innerHTML = `<b>${esc(title)}</b><button type="button" class="tabs__close" data-act="${esc(act)}" data-arg="${esc(arg)}" aria-label="Schließen">${CLOSE_ICON}</button>`;
+  panel.append(head, ...(Array.isArray(body) ? body : [body]));
+  sheetRoot.replaceChildren(backdrop, panel);
+  document.body.classList.add("sheet-open");
+}
+
 function foldTabs() {
   document.body.classList.remove("sheet-open");
+  sheetRoot.replaceChildren();
+  let shown = false;
+  const menu = (host, key, title, items) => {
+    if (!items.length) return;
+    const active = items.find((b) => b.matches(".active,.on,.is-active,[aria-pressed=true],[aria-selected=true],[aria-current=page]")) ?? null;
+    const toggle = sheetToggle(key, active ? active.textContent.trim() : title);
+    host.classList.add("tabs--fold");
+    host.replaceChildren(toggle);
+    if (!S.tabsOpen?.[key] || shown) return;
+    shown = true;
+    for (const b of items) {
+      b.classList.add("tab");
+      b.classList.toggle("active", b === active);
+      b.dataset.sheetKey = key;
+    }
+    showSheet(title, items, `tabs-fold|${key}`);
+  };
   for (const nav of app.querySelectorAll("nav.tabs")) {
     const key = nav.getAttribute("aria-label") || "tabs";
-    const tabs = [...nav.querySelectorAll(".tab")];
-    if (!tabs.length) continue;
-    const active = nav.querySelector(".tab.active") ?? tabs[0];
-    const open = Boolean(S.tabsOpen?.[key]);
-    nav.classList.add("tabs--fold");
-    nav.classList.toggle("is-open", open);
-    const list = document.createElement("div");
-    list.className = "tabs__list";
-    list.id = `tabs-${key.replace(/[^a-z0-9]/gi, "")}`;
-    list.append(...tabs);
-    const toggle = document.createElement("button");
-    toggle.type = "button";
-    toggle.className = "tabs__toggle";
-    toggle.dataset.act = "tabs-fold";
-    toggle.dataset.arg = key;
-    toggle.setAttribute("aria-expanded", String(open));
-    toggle.setAttribute("aria-controls", list.id);
-    toggle.title = open ? "Auswahl zuklappen" : "Weitere Bereiche anzeigen";
-    toggle.innerHTML = `<span class="tabs__chevron" aria-hidden="true">${open ? "▴" : "▸"}</span><span class="tabs__current">${esc(active.textContent.trim())}</span>`;
-    // Auswahl als Fach von unten (1.23.0) – wie das Hauptmenü, gut mit dem Daumen erreichbar
-    list.setAttribute("role", "dialog");
-    list.setAttribute("aria-label", `${key}: Bereich wählen`);
-    const head = document.createElement("div");
-    head.className = "tabs__sheet-head";
-    head.innerHTML = `<b>${esc(key)}</b><button type="button" class="tabs__close" data-act="tabs-fold" data-arg="${esc(key)}" aria-label="Auswahl schließen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"/><path d="M18 6L6 18"/></svg></button>`;
-    list.prepend(head);
-    const backdrop = document.createElement("div");
-    backdrop.className = "tabs__backdrop";
-    backdrop.dataset.act = "tabs-fold";
-    backdrop.dataset.arg = key;
-    nav.replaceChildren(toggle, backdrop, list);
-    document.body.classList.toggle("sheet-open", open);
+    menu(nav, key, key, [...nav.querySelectorAll(".tab")]);
+  }
+  for (const group of app.querySelectorAll("[data-sheet]")) {
+    const title = group.dataset.sheet;
+    menu(group, `sheet:${title}`, title, [...group.querySelectorAll("button")]);
+  }
+  // Geöffnete Inhalte (z. B. ein Modul) als Fach von unten
+  const panel = app.querySelector("[data-sheet-panel]");
+  if (panel && !shown) {
+    const title = panel.dataset.sheetPanel;
+    panel.removeAttribute("data-sheet-panel");
+    panel.remove();
+    panel.classList.add("bsheet__content");
+    showSheet(title, panel, panel.dataset.close || "tabs-fold|", { grid: false });
   }
 }
 
@@ -1625,14 +1667,21 @@ app.addEventListener("click", (ev) => {
   const el = ev.target.closest("[data-act],[data-go]");
   if (!el || el.disabled) return;
   unlockAudio();
-  // Reiter gewählt: Auswahl wieder zuklappen
-  const fold = el.classList.contains("tab") ? el.closest("nav.tabs--fold") : null;
-  if (fold) S.tabsOpen = { ...(S.tabsOpen ?? {}), [fold.getAttribute("aria-label") || "tabs"]: false };
+  // Eintrag im Fach gewählt: Fach schließen
+  if (el.dataset.sheetKey) S.tabsOpen = { ...(S.tabsOpen ?? {}), [el.dataset.sheetKey]: false };
   if (el.dataset.go) {
     return go(el.dataset.go, el.dataset.arg ?? null);
   }
   const fn = actions[el.dataset.act];
   if (fn) fn(el);
+});
+// Fächer von unten liegen außerhalb von #app: Klicks dort genauso behandeln
+sheetRoot.addEventListener("click", (ev) => {
+  const el = ev.target.closest("[data-act],[data-go]");
+  if (!el || el.disabled) return;
+  if (el.dataset.sheetKey) S.tabsOpen = { ...(S.tabsOpen ?? {}), [el.dataset.sheetKey]: false };
+  if (el.dataset.go) return go(el.dataset.go, el.dataset.arg ?? null);
+  actions[el.dataset.act]?.(el);
 });
 restEl.addEventListener("click", (ev) => {
   const el = ev.target.closest("[data-act]");

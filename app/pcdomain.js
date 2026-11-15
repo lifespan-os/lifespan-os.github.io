@@ -11996,6 +11996,15 @@ function valuesOfRow(row) {
     restText: row.slice((a.index ?? 0) + a[0].length)
   } : null;
 }
+function splitTile(v, row, next) {
+  if (v.previous !== null || !next.trim() || fieldOfRow(next)) return { v, raw: row };
+  const rest = next.replace(new RegExp(`^[\\s${ARROW.source.slice(1, -2)}]+`), "");
+  if (!/^\d/.test(rest)) return { v, raw: row };
+  const left = row.replace(new RegExp(`[\\s${ARROW.source.slice(1, -2)}]+$`), "");
+  const joined = `${left} > ${rest}`;
+  const w = valuesOfRow(joined);
+  return w && w.previous !== null ? { v: w, raw: joined } : { v, raw: row };
+}
 function readScaleRows(rows) {
   const found = /* @__PURE__ */ new Map();
   for (let i = 0; i < rows.length; i++) {
@@ -12006,7 +12015,7 @@ function readScaleRows(rows) {
       if (fieldOfRow(row)) break;
       const v = valuesOfRow(row);
       if (v) {
-        found.set(field.key, { v, raw: row });
+        found.set(field.key, splitTile(v, row, rows[j + 1] ?? ""));
         break;
       }
     }

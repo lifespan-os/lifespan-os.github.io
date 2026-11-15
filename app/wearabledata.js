@@ -1,6 +1,6 @@
-// LIFESPAN OS Mobil – Rechnungen für Heart und gemessene Nächte (1.43.0). Gebündelt aus
-// src/domain/wearable.ts und src/domain/wearableMore.ts des PCs (esbuild, ES2022) – dort ändern und
-// testen, dann neu erzeugen.
+// LIFESPAN OS Mobil – Rechnungen für Heart, gemessene Nächte und Blutzucker (1.44.0). Gebündelt aus
+// src/domain/wearable.ts, src/domain/wearableMore.ts und src/domain/glucose.ts des PCs (esbuild,
+// ES2022) – dort ändern und testen, dann neu erzeugen.
 // src/domain/wearable.ts
 function describeSync(r) {
   const parts = [
@@ -629,38 +629,434 @@ function bedtimeOffset(actual, preferred) {
   if (d < -720) d += 1440;
   return d;
 }
+function sleepRatingLabel(n) {
+  const labels = ["sehr schlecht", "schlecht", "okay", "gut", "sehr gut"];
+  return n != null && n >= 1 && n <= 5 ? labels[n - 1] ?? null : null;
+}
+function continuityClassLabel(n) {
+  const labels = [
+    "sehr zerst\xFCckelt",
+    "zerst\xFCckelt",
+    "eher durchgehend",
+    "durchgehend",
+    "sehr durchgehend"
+  ];
+  return n != null && n >= 1 && n <= 5 ? labels[n - 1] ?? null : null;
+}
+function stepSeries(json) {
+  return parseRows(json ?? null).flatMap((r) => {
+    const minute = numOrNull(r[0]);
+    const steps = numOrNull(r[1]);
+    return minute === null || steps === null || minute < 0 || minute >= 1440 ? [] : [{ minute, steps }];
+  });
+}
+var ACTIVITY_ZONE_LABEL = ["Schlaf", "sitzend", "leicht", "mittel", "intensiv"];
+function zoneSegments(json) {
+  const pts = parseRows(json ?? null).flatMap((r) => {
+    const m = numOrNull(r[0]);
+    const z = numOrNull(r[1]);
+    return m === null || z === null ? [] : [{ m, z }];
+  }).sort((a, b) => a.m - b.m);
+  return pts.map((p, i) => ({ from: p.m, to: pts[i + 1]?.m ?? 1440, zone: p.z }));
+}
+function dayTimeline(heart, steps) {
+  const hr = /* @__PURE__ */ new Map();
+  for (const [m, bpm] of heart) {
+    const k = Math.floor(m / 5) * 5;
+    const e = hr.get(k) ?? { sum: 0, n: 0 };
+    e.sum += bpm;
+    e.n += 1;
+    hr.set(k, e);
+  }
+  const st = /* @__PURE__ */ new Map();
+  for (const s of steps) {
+    const k = Math.floor(s.minute / 5) * 5;
+    st.set(k, (st.get(k) ?? 0) + s.steps);
+  }
+  const out = [];
+  for (let m = 0; m < 1440; m += 5) {
+    const h = hr.get(m);
+    out.push({
+      minute: m,
+      hr: h ? Math.round(h.sum / h.n) : null,
+      steps: st.has(m) ? st.get(m) : null
+    });
+  }
+  return out;
+}
+function signedText(value, digits) {
+  const rounded = Number(Math.abs(value).toFixed(digits));
+  const sign = rounded === 0 ? "\xB1" : value > 0 ? "+" : "\u2212";
+  return `${sign}${rounded.toLocaleString("de-DE", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
+}
+
+// src/domain/glucose.ts
+var MMOL_FACTOR = 18.016;
+var mmol = (mgDl) => mgDl / MMOL_FACTOR;
+function splitCsv(line, sep) {
+  const out = [];
+  let cur = "";
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (quoted) {
+      if (ch === '"' && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else if (ch === '"') quoted = false;
+      else cur += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === sep) {
+      out.push(cur.trim());
+      cur = "";
+    } else cur += ch;
+  }
+  out.push(cur.trim());
+  return out;
+}
+function sepOf(header) {
+  const commas = (header.match(/,/g) ?? []).length;
+  const semis = (header.match(/;/g) ?? []).length;
+  const tabs = (header.match(/\t/g) ?? []).length;
+  if (tabs > commas && tabs > semis) return "	";
+  return semis > commas ? ";" : ",";
+}
+var pad = (n) => String(n).padStart(2, "0");
+function normalizeTimestamp(raw, dayFirst = true) {
+  const v = raw.trim();
+  let m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{1,2}):(\d{2})/.exec(v);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}T${pad(+m[4])}:${m[5]}`;
+  m = /^(\d{1,2})([./-])(\d{1,2})[./-](\d{4})[ ,T]+(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?/.exec(
+    v
+  );
+  if (!m) return null;
+  const first = m[2] === "." ? true : dayFirst;
+  const day = first ? +m[1] : +m[3];
+  const month = first ? +m[3] : +m[1];
+  let hour = +m[5];
+  const ampm = m[7]?.toUpperCase();
+  if (ampm === "PM" && hour < 12) hour += 12;
+  if (ampm === "AM" && hour === 12) hour = 0;
+  if (day < 1 || day > 31 || month < 1 || month > 12 || hour > 23 || +m[6] > 59) return null;
+  return `${m[4]}-${pad(month)}-${pad(day)}T${pad(hour)}:${m[6]}`;
+}
+function numberOf(raw) {
+  if (raw === void 0) return null;
+  const t = raw.trim().replace(",", ".");
+  if (!/^-?\d+(\.\d+)?$/.test(t)) return null;
+  const n = Number(t);
+  return Number.isFinite(n) ? n : null;
+}
+var lower = (s) => s.toLowerCase();
+function makeReading(at, value, unitMmol, source, kind) {
+  const mg = unitMmol ? value * MMOL_FACTOR : value;
+  if (!(mg >= 10 && mg <= 700)) return null;
+  return {
+    id: null,
+    measuredAt: at,
+    mgDl: Math.round(mg * 10) / 10,
+    source,
+    kind,
+    notes: null
+  };
+}
+function parseLibre(lines, headerIndex) {
+  const header = lines[headerIndex];
+  const sep = sepOf(header);
+  const cols = splitCsv(header, sep).map(lower);
+  const find = (...words) => cols.findIndex((c) => words.every((w) => c.includes(w)));
+  const tsCol = Math.max(find("zeitstempel"), find("timestamp"));
+  const typeCol = Math.max(find("aufzeichnungstyp"), find("record type"));
+  const histCol = Math.max(find("verlauf"), find("historic glucose"));
+  const scanCol = Math.max(find("scan"), -1);
+  const stripCol = Math.max(find("teststreifen", "glukose"), find("strip glucose"));
+  const unitMmol = (cols[histCol] ?? cols[scanCol] ?? "").includes("mmol");
+  const device = splitCsv(lines[headerIndex + 1] ?? "", sep)[0] || "FreeStyle Libre";
+  let dayFirst = true;
+  for (const l of lines.slice(headerIndex + 1, headerIndex + 400)) {
+    const ts = splitCsv(l, sep)[tsCol] ?? "";
+    const m = /^(\d{1,2})-(\d{1,2})-\d{4}/.exec(ts);
+    if (m && +m[2] > 12) {
+      dayFirst = false;
+      break;
+    }
+    if (m && +m[1] > 12) break;
+  }
+  const readings = [];
+  let skipped = 0;
+  for (const line of lines.slice(headerIndex + 1)) {
+    if (!line.trim()) continue;
+    const f = splitCsv(line, sep);
+    const at = normalizeTimestamp(f[tsCol] ?? "", dayFirst);
+    const type = f[typeCol]?.trim();
+    const pick = (col, kind) => {
+      const v = numberOf(f[col]);
+      if (at && v !== null) {
+        const r = makeReading(at, v, unitMmol, device, kind);
+        if (r) {
+          readings.push(r);
+          return true;
+        }
+      }
+      return false;
+    };
+    let used = false;
+    if (type === "0" || type === void 0) used = pick(histCol, "cgm");
+    if (type === "1") used = pick(scanCol, "scan");
+    if (type === "2" && stripCol >= 0) used = pick(stripCol, "manual");
+    if (!used) skipped++;
+  }
+  return {
+    format: "libre",
+    source: device.slice(0, 40),
+    readings,
+    skipped,
+    notes: unitMmol ? ["Werte in mmol/l \u2013 umgerechnet in mg/dl (\xD7 18,016)."] : []
+  };
+}
+function parseDexcom(lines, headerIndex) {
+  const sep = sepOf(lines[headerIndex]);
+  const cols = splitCsv(lines[headerIndex], sep).map(lower);
+  const tsCol = cols.findIndex((c) => c.includes("zeitstempel") || c.includes("timestamp"));
+  const typeCol = cols.findIndex((c) => c.includes("ereignistyp") || c.includes("event type"));
+  const valCol = cols.findIndex(
+    (c) => (c.includes("glukosewert") || c.includes("glucose value")) && !c.includes("rate")
+  );
+  const unitMmol = (cols[valCol] ?? "").includes("mmol");
+  const readings = [];
+  let skipped = 0;
+  let outOfRange = 0;
+  for (const line of lines.slice(headerIndex + 1)) {
+    if (!line.trim()) continue;
+    const f = splitCsv(line, sep);
+    const type = lower(f[typeCol] ?? "");
+    const at = normalizeTimestamp(f[tsCol] ?? "");
+    const v = numberOf(f[valCol]);
+    if (!at || type && type !== "egv" && !type.includes("kalibr") && type !== "calibration") {
+      skipped++;
+      continue;
+    }
+    if (v === null) {
+      if (/low|niedrig|high|hoch/i.test(f[valCol] ?? "")) outOfRange++;
+      skipped++;
+      continue;
+    }
+    const r = makeReading(at, v, unitMmol, "Dexcom", type === "egv" ? "cgm" : "manual");
+    if (r) readings.push(r);
+    else skipped++;
+  }
+  const notes = [];
+  if (outOfRange > 0)
+    notes.push(
+      `${outOfRange} Werte au\xDFerhalb des Messbereichs (\u201ENiedrig\u201C/\u201EHoch\u201C) ohne Zahl \u2013 nicht \xFCbernommen.`
+    );
+  if (unitMmol) notes.push("Werte in mmol/l \u2013 umgerechnet in mg/dl (\xD7 18,016).");
+  return { format: "dexcom", source: "Dexcom", readings, skipped, notes };
+}
+function parseGeneric(lines, headerIndex) {
+  const sep = sepOf(lines[headerIndex]);
+  const cols = splitCsv(lines[headerIndex], sep).map(lower);
+  const dateCol = cols.findIndex((c) => /datum|date|zeitpunkt|zeitstempel|timestamp/.test(c));
+  const timeCol = cols.findIndex((c) => /uhrzeit|^zeit$|^time$/.test(c));
+  const valCol = cols.findIndex((c) => /blutzucker|glukose|glucose|bz/.test(c));
+  if (dateCol < 0 || valCol < 0) return null;
+  const unitMmol = (cols[valCol] ?? "").includes("mmol");
+  const readings = [];
+  let skipped = 0;
+  for (const line of lines.slice(headerIndex + 1)) {
+    if (!line.trim()) continue;
+    const f = splitCsv(line, sep);
+    const raw = timeCol >= 0 ? `${f[dateCol] ?? ""} ${f[timeCol] ?? ""}` : f[dateCol] ?? "";
+    const at = normalizeTimestamp(raw);
+    const v = numberOf(f[valCol]);
+    const r = at && v !== null ? makeReading(at, v, unitMmol || v < 35 && v > 1, "CSV-Import", "manual") : null;
+    if (r) readings.push(r);
+    else skipped++;
+  }
+  return { format: "csv", source: "CSV-Import", readings, skipped, notes: [] };
+}
+function parseGlucoseFile(text) {
+  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/);
+  for (let i = 0; i < Math.min(lines.length, 20); i++) {
+    const l = lower(lines[i] ?? "");
+    if ((l.includes("ger\xE4tezeitstempel") || l.includes("device timestamp")) && (l.includes("aufzeichnungstyp") || l.includes("record type"))) {
+      return parseLibre(lines, i);
+    }
+    if ((l.includes("zeitstempel (") || l.includes("timestamp (")) && (l.includes("glukosewert") || l.includes("glucose value"))) {
+      return parseDexcom(lines, i);
+    }
+  }
+  for (let i = 0; i < Math.min(lines.length, 5); i++) {
+    const g = parseGeneric(lines, i);
+    if (g && g.readings.length > 0) return g;
+  }
+  return null;
+}
+var RANGES = [
+  { key: "veryLow", label: "unter 54", max: 54 },
+  { key: "low", label: "54\u201369", max: 70 },
+  { key: "inRange", label: "70\u2013180", max: 181 },
+  { key: "high", label: "181\u2013250", max: 251 },
+  { key: "veryHigh", label: "\xFCber 250", max: Infinity }
+];
+function glucoseStats(readings) {
+  const values = readings.map((r) => r.mgDl);
+  const n = values.length;
+  const ranges = Object.fromEntries(RANGES.map((r) => [r.key, 0]));
+  if (n === 0) {
+    return {
+      count: 0,
+      days: 0,
+      mean: null,
+      sd: null,
+      cv: null,
+      gmi: null,
+      min: null,
+      max: null,
+      ranges
+    };
+  }
+  const mean2 = values.reduce((a, b) => a + b, 0) / n;
+  const sd = n > 1 ? Math.sqrt(values.reduce((a, b) => a + (b - mean2) ** 2, 0) / (n - 1)) : null;
+  for (const v of values) {
+    const r = RANGES.find((x) => v < x.max);
+    ranges[r.key] += 100 / n;
+  }
+  const days = new Set(readings.map((r) => r.measuredAt.slice(0, 10))).size;
+  return {
+    count: n,
+    days,
+    mean: mean2,
+    sd,
+    cv: sd !== null && mean2 > 0 ? sd / mean2 * 100 : null,
+    gmi: days >= 10 ? 3.31 + 0.02392 * mean2 : null,
+    min: Math.min(...values),
+    max: Math.max(...values),
+    ranges
+  };
+}
+var minuteOfReading = (r) => Number(r.measuredAt.slice(11, 13)) * 60 + Number(r.measuredAt.slice(14, 16));
+function dayReadings(readings, date) {
+  const order = { cgm: 0, scan: 1, manual: 2 };
+  return readings.filter((r) => r.measuredAt.startsWith(date)).sort((a, b) => a.measuredAt.localeCompare(b.measuredAt) || order[a.kind] - order[b.kind]);
+}
+function mealResponse(day, meal) {
+  const m = Number(meal.time.slice(0, 2)) * 60 + Number(meal.time.slice(3, 5));
+  const withMin = day.map((r) => ({ t: minuteOfReading(r), v: r.mgDl }));
+  const before = [...withMin].reverse().find((p) => p.t <= m && p.t >= m - 20)?.v ?? null;
+  const after = withMin.filter((p) => p.t > m && p.t <= m + 180);
+  let peak = null;
+  for (const p of after) if (!peak || p.v > peak.v) peak = p;
+  const two = withMin.find((p) => p.t >= m + 110 && p.t <= m + 130)?.v ?? null;
+  return {
+    time: meal.time.slice(0, 5),
+    label: meal.label,
+    before,
+    peak: peak?.v ?? null,
+    peakAfterMin: peak ? peak.t - m : null,
+    rise: before !== null && peak ? peak.v - before : null,
+    after2h: two
+  };
+}
+function nightStats(readings) {
+  const byDay = /* @__PURE__ */ new Map();
+  for (const r of readings) {
+    if (minuteOfReading(r) >= 360) continue;
+    const d = r.measuredAt.slice(0, 10);
+    byDay.set(d, [...byDay.get(d) ?? [], r.mgDl]);
+  }
+  return [...byDay.entries()].filter(([, v]) => v.length >= 6).map(([date, v]) => ({
+    date,
+    mean: v.reduce((a, b) => a + b, 0) / v.length,
+    min: Math.min(...v),
+    count: v.length
+  })).sort((a, b) => a.date.localeCompare(b.date));
+}
+function quantile(sorted, q) {
+  const pos = (sorted.length - 1) * q;
+  const lo = Math.floor(pos);
+  const hi = Math.ceil(pos);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
+}
+function dailyProfile(readings) {
+  const byHour = Array.from({ length: 24 }, () => []);
+  for (const r of readings) byHour[Math.floor(minuteOfReading(r) / 60)]?.push(r.mgDl);
+  return byHour.flatMap((v, h) => {
+    if (v.length < 3) return [];
+    const s = [...v].sort((a, b) => a - b);
+    return [
+      {
+        minute: h * 60,
+        p10: quantile(s, 0.1),
+        p25: quantile(s, 0.25),
+        median: quantile(s, 0.5),
+        p75: quantile(s, 0.75),
+        p90: quantile(s, 0.9),
+        count: v.length
+      }
+    ];
+  });
+}
+function dailyMeans(readings) {
+  const byDay = /* @__PURE__ */ new Map();
+  for (const r of readings) {
+    const d = r.measuredAt.slice(0, 10);
+    byDay.set(d, [...byDay.get(d) ?? [], r.mgDl]);
+  }
+  return [...byDay.entries()].map(([date, v]) => ({ date, value: v.reduce((a, b) => a + b, 0) / v.length })).sort((a, b) => a.date.localeCompare(b.date));
+}
 export {
+  ACTIVITY_ZONE_LABEL,
+  MMOL_FACTOR,
+  RANGES,
   STAGE_LABEL,
   bedMinute,
   bedtimeOffset,
   biosensingOf,
   clockOf,
+  continuityClassLabel,
+  dailyMeans,
+  dailyProfile,
+  dayReadings,
   daySources,
+  dayTimeline,
   describeSync,
   detailSamples,
   energyCompare,
   exerciseHr,
   exerciseZones,
+  glucoseStats,
   hypnogramSegments,
   loadSeries,
   localClock,
+  mealResponse,
   mean,
   measuredSleepMin,
   minuteOf,
+  minuteOfReading,
+  mmol,
   nightAssociations,
   nightLowestHr,
   nightSeries,
+  nightStats,
   nightTargets,
+  normalizeTimestamp,
+  parseGlucoseFile,
   phaseShares,
   polarDayLabels,
   polarLabel,
   recentVsBaseline,
   rechargeStatusLabel,
   recoveryToday,
+  signedText,
+  sleepRatingLabel,
+  splitCsv,
   sportLabel,
   spread,
   stageOf,
+  stepSeries,
   supplementComparisons,
   usualLabel,
-  zoneMinutes
+  zoneMinutes,
+  zoneSegments
 };

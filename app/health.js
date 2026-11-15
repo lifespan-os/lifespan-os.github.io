@@ -11,6 +11,7 @@ import { buildDb, today } from "./diary.js";
 import * as O from "./pcoverview.js";
 import * as SD from "./superdata.js";
 import { hasWearable, heartTabHtml } from "./heart.js";
+import { glucoseTabHtml } from "./glucose.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -26,6 +27,7 @@ const TABS = [
   ["draws", "Blutabnahmen"],
   ["trend", "Verlauf"],
   ["heart", "Heart"],
+  ["glucose", "Blutzucker"],
   ["report", "Arztbericht"],
   ["lifetime", "Once in a Lifetime"],
   ["import", "Import"],
@@ -75,6 +77,18 @@ function analyteOptions(analytes, value, keepId = "") {
 
 export function viewHealth() {
   const S = X.S;
+  const nav = (active) =>
+    `<nav class="tabs" aria-label="Health">${TABS.map(
+      ([v, l]) => `<button class="tab ${v === active ? "active" : ""}" data-act="health-tab" data-arg="${v}" ${v === active ? 'aria-current="page"' : ""}>${l}</button>`,
+    ).join("")}</nav>`;
+  // Blutzucker (1.44.0) braucht wie Heart keine Laborwerte
+  if (S.healthTab === "glucose" && S.catalog?.pc) {
+    return `${X.header("Health")}<main class="wrap">
+    <p class="muted small">Blutzucker von Sensor (z. B. FreeStyle Libre, Dexcom), Scans und eigenen Messungen: Zeit im Zielbereich, Tagesverlauf mit Mahlzeiten, Tagesprofil und Nächte.</p>
+    ${nav("glucose")}
+    ${glucoseTabHtml(S.catalog, S.glucoseView ?? {})}
+  </main>`;
+  }
   // Heart (1.42.0) braucht keine Laborwerte
   if ((S.healthTab === "heart" || (!S.catalog?.pc?.lab_analyte?.length && hasWearable(S.catalog))) && S.catalog?.pc) {
     S.healthTab = "heart";
@@ -940,8 +954,15 @@ export function healthInput(el) {
 /** Auswahlfelder; true = behandelt. */
 export function healthChange(el) {
   const S = X.S;
+  if (el.dataset?.glucose) {
+    const v = el.dataset.glucose === "days" ? Number(el.value) : el.value;
+    S.glucoseView = { ...(S.glucoseView ?? {}), [el.dataset.glucose]: v };
+    X.rerender();
+    return true;
+  }
   if (el.dataset?.heart) {
-    const v = el.dataset.heart === "days" ? Number(el.value) : el.value;
+    // Ebenen des Zeitstrahls (1.44.0): angehakt = sichtbar
+    const v = el.type === "checkbox" ? !el.checked : el.dataset.heart === "days" ? Number(el.value) : el.value;
     S.heartView = { ...(S.heartView ?? {}), [el.dataset.heart]: v };
     X.rerender();
     return true;

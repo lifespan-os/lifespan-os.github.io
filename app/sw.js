@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar. Speichert nur die App-Dateien,
 // niemals Trainingsdaten (die liegen in IndexedDB auf dem Gerät).
-const VERSION = "lifespan-mobil-1.43.0";
+const VERSION = "lifespan-mobil-1.44.0";
 const FILES = [
   "./",
   "index.html",
@@ -31,6 +31,7 @@ const FILES = [
   "icoach.js",
   "health.js",
   "heart.js",
+  "glucose.js",
   "wearabledata.js",
   "healthdata.js",
   "super.js",
@@ -59,6 +60,12 @@ const FILES = [
   "icons/figur.png",
   "icons/icon-512.png",
   "icons/apple-touch-icon.png",
+  // Klänge des Pausentimers wie am PC (1.44.0)
+  "sounds/yeah-buddy.mp3",
+  "sounds/light-weight-baby.mp3",
+  "sounds/do-you-even-lift.mp3",
+  "sounds/i-can-do-this-all-day.mp3",
+  "sounds/skinny.mp3",
 ];
 
 // Texterkennung (Tesseract.js mit deutschen Sprachdaten, ca. 6 MB): wird mitgespeichert, damit der

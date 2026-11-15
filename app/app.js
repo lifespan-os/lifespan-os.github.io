@@ -2072,8 +2072,64 @@ function unlockAudio() {
   try {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") audioCtx.resume();
+    loadRestSounds();
   } catch {
     /* ohne Ton */
+  }
+}
+
+// Klänge wie am PC (RestTimerBar.tsx, seit 1.44.0 auch am Handy): reihum, gemerkt im Gerät. Über
+// Web Audio abgespielt, damit sie auf dem iPhone nach dem ersten Antippen auch ohne Tippen am Ende
+// der Pause laufen – nur solange die App geöffnet ist (Web-Apps dürfen im Hintergrund keinen Ton
+// abspielen). Fehlt ein Klang, kommt der Signalton.
+const REST_SOUNDS = ["yeah-buddy", "light-weight-baby", "do-you-even-lift", "i-can-do-this-all-day", "skinny"].map((n) => `sounds/${n}.mp3`);
+const REST_SOUND_KEY = "lifespan.restTimer.lastSound";
+let restBuffers = null;
+function loadRestSounds() {
+  if (restBuffers || !audioCtx) return;
+  restBuffers = REST_SOUNDS.map(() => null);
+  REST_SOUNDS.forEach((src, i) => {
+    fetch(src)
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
+      .then((data) => new Promise((ok, fail) => audioCtx.decodeAudioData(data, ok, fail)))
+      .then((buffer) => {
+        restBuffers[i] = buffer;
+      })
+      .catch(() => {
+        /* dieser Klang fehlt – dann Signalton */
+      });
+  });
+}
+function nextSoundIndex(last, count) {
+  if (count <= 0) return -1;
+  if (last === null || !Number.isInteger(last) || last < 0 || last >= count) return 0;
+  return (last + 1) % count;
+}
+function restSignal() {
+  let last = null;
+  try {
+    const raw = localStorage.getItem(REST_SOUND_KEY);
+    last = raw === null ? null : Number(raw);
+  } catch {
+    last = null;
+  }
+  const index = nextSoundIndex(last, REST_SOUNDS.length);
+  try {
+    localStorage.setItem(REST_SOUND_KEY, String(index));
+  } catch {
+    /* ohne Merken */
+  }
+  const buffer = restBuffers?.[index] ?? null;
+  if (!buffer || !audioCtx) return beep();
+  try {
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const src = audioCtx.createBufferSource();
+    src.buffer = buffer;
+    src.connect(audioCtx.destination);
+    src.start();
+    navigator.vibrate?.([200, 100, 200]);
+  } catch {
+    beep();
   }
 }
 function beep() {
@@ -2119,7 +2175,7 @@ function renderRest() {
   const over = left <= 0;
   if (over && !S.rest.beeped) {
     S.rest.beeped = true;
-    beep();
+    restSignal();
   }
   if (left < -60) return stopRest();
   restEl.hidden = false;

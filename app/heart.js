@@ -1,4 +1,4 @@
-// LIFESPAN OS Mobil – Health → Heart und Sleep → Gemessene Nächte (1.42.0, erweitert 1.43.0), gleiche
+// LIFESPAN OS Mobil – Health → Heart und Sleep → Gemessene Nächte (1.42.0, erweitert 1.43.0 und 1.44.0), gleiche
 // Inhalte und Rechnungen wie am PC (HeartTab.tsx, MeasuredSleepCard.tsx, RecoveryTodayCard.tsx,
 // BiosensingCard.tsx, WatchLoadCard.tsx, WatchAssociationsCard.tsx; Rechnungen in wearabledata.js aus
 // src/domain/wearable.ts und wearableMore.ts). Daten aus dem PC-Export: heart_rate_day, wearable_sleep,
@@ -77,7 +77,8 @@ function contextOf(catalog) {
   return [...days.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
 }
 
-const signed = (v, d = 0) => (v === null || v === undefined ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : "±"}${D.formatNumber(Math.abs(v), d)}`);
+// Seit 1.44.0 „±0“ statt „−0“, wenn der gerundete Unterschied null ist
+const signed = (v, d = 0) => (v === null || v === undefined ? "–" : W.signedText(v, d));
 
 /** Gemessene Erholung der letzten Nacht gegen den eigenen Durchschnitt (wie RecoveryTodayCard). */
 export function recoveryTodayHtml(w, day) {
@@ -137,6 +138,7 @@ function exerciseItem(e) {
     e.muscleLoad != null && `Muskelbelastung ${num(e.muscleLoad)}`,
     e.distanceM != null && e.distanceM > 0 && `${num(e.distanceM / 1000, 2)} km`,
     e.calories != null && `${num(e.calories)} kcal`,
+    e.rrRmssd != null && `HRV im Training (RMSSD) ${num(e.rrRmssd)} ms`,
     e.workoutId && "als Trainingseinheit übernommen",
   ].filter(Boolean);
   return `<li><details class="watch-ex"><summary class="meal-item"><span><b>${esc(W.sportLabel(e.sport, e.detailedSport))}</b><br><span class="muted small">${esc(D.formatDate(e.date))}${e.startTime && e.startTime.length >= 16 ? `, ${esc(e.startTime.slice(11, 16))} Uhr` : ""} · ${dur(e.durationS != null ? e.durationS / 60 : null)}</span></span><span class="muted small">Ø ${num(e.hrAvg)} / max ${num(e.hrMax)}</span></summary>
@@ -228,32 +230,64 @@ export function hasWearable(catalog) {
 
 function compare(r, unit, digits = 0) {
   if (r.recent === null) return `<p class="muted small">In den letzten 7 Tagen keine Werte.</p>`;
-  const sign = r.difference > 0 ? "+" : r.difference < 0 ? "−" : "±";
   return `<p class="muted small">Letzte 7 Tage: Ø ${num(r.recent, digits)} ${unit} (${r.recentCount} Werte)${
     r.baseline !== null ? ` · 28 Tage davor: Ø ${num(r.baseline, digits)} ${unit} (${r.baselineCount} Werte)` : ""
-  }${r.difference !== null ? ` · Unterschied ${sign}${num(Math.abs(r.difference), digits)} ${unit}` : ""}. Vergleich nur mit deinem eigenen Verlauf (ab 3 Werten je Zeitraum).</p>`;
+  }${r.difference !== null ? ` · Unterschied ${signed(r.difference, digits)} ${unit}` : ""}. Vergleich nur mit deinem eigenen Verlauf (ab 3 Werten je Zeitraum).</p>`;
 }
 
-/** Herzfrequenz eines Tages als Linie über 24 Stunden. */
-function daySvg(samples) {
-  const pts = [...samples].sort((a, b) => a[0] - b[0]);
-  if (pts.length < 2) return "";
+/**
+ * Herzfrequenz und Schritte eines Tages auf einem 24-Stunden-Zeitstrahl (wie DayTimelineChart am PC,
+ * seit 1.44.0): Schritte als Säulen je 5 Minuten (rechte Achse), Herzfrequenz als Linie (linke Achse).
+ * `hide` = { hr, steps } blendet Ebenen aus.
+ */
+function timelineSvg(samples, stepSamples, hide = {}) {
+  const rows_ = W.dayTimeline(samples ?? [], W.stepSeries(stepSamples ?? null));
+  const hrPts = rows_.filter((p) => p.hr !== null);
+  const stepPts = rows_.filter((p) => p.steps !== null && p.steps > 0);
+  const showHr = !hide.hr && hrPts.length >= 2;
+  const showSteps = !hide.steps && stepPts.length > 0;
+  if (!showHr && !showSteps) return "";
   const Wd = 340;
-  const H = 170;
+  const H = 180;
   const L = 34;
-  const R = 6;
+  const R = showSteps ? 34 : 6;
   const T = 8;
   const B = 20;
-  let lo = Math.min(...pts.map((p) => p[1])) - 5;
-  let hi = Math.max(...pts.map((p) => p[1])) + 5;
-  if (hi === lo) hi += 1;
   const x = (m) => L + (m / 1440) * (Wd - L - R);
+  let lo = showHr ? Math.min(...hrPts.map((p) => p.hr)) - 5 : 0;
+  let hi = showHr ? Math.max(...hrPts.map((p) => p.hr)) + 5 : 1;
+  if (hi === lo) hi += 1;
   const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
-  const line = pts.map(([m, v]) => `${x(m).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
-  const ticks = [lo + 5, Math.round((lo + hi) / 2), hi - 5];
-  return `<svg class="pc-chart" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="Herzfrequenz über den Tag">
+  const maxSteps = Math.max(1, ...stepPts.map((p) => p.steps));
+  const ys = (v) => T + (1 - v / maxSteps) * (H - T - B);
+  const barW = Math.max(1, ((Wd - L - R) / 288) * 0.8);
+  const bars = showSteps
+    ? stepPts
+        .map((p) => `<rect x="${x(p.minute).toFixed(1)}" y="${ys(p.steps).toFixed(1)}" width="${barW.toFixed(2)}" height="${(H - B - ys(p.steps)).toFixed(1)}" fill="${COLOR.nutrition}" fill-opacity="0.6"><title>${W.clockOf(p.minute)} · ${num(p.steps)} Schritte</title></rect>`)
+        .join("")
+    : "";
+  // Linie mit Lücken, wo länger als 15 Minuten kein Wert vorliegt
+  const parts = [];
+  let cur = [];
+  let prev = null;
+  for (const p of hrPts) {
+    if (prev !== null && p.minute - prev > 15 && cur.length) {
+      parts.push(cur);
+      cur = [];
+    }
+    cur.push(`${x(p.minute).toFixed(1)},${y(p.hr).toFixed(1)}`);
+    prev = p.minute;
+  }
+  if (cur.length) parts.push(cur);
+  const line = showHr
+    ? parts.map((pp) => `<polyline points="${pp.join(" ")}" fill="none" stroke="${COLOR.body}" stroke-width="1.5" stroke-linejoin="round"/>`).join("")
+    : "";
+  const ticks = showHr ? [lo + 5, Math.round((lo + hi) / 2), hi - 5] : [];
+  const stepTicks = showSteps ? [0, Math.round(maxSteps / 2), maxSteps] : [];
+  return `<svg class="pc-chart" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="Herzfrequenz und Schritte über den Tag">
     ${ticks.map((v) => `<line x1="${L}" x2="${Wd - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="grid"/><text x="${L - 4}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end">${num(v)}</text>`).join("")}
-    <polyline points="${line}" fill="none" stroke="${COLOR.body}" stroke-width="1.5" stroke-linejoin="round"/>
+    ${stepTicks.map((v) => `<text x="${Wd - R + 4}" y="${(ys(v) + 3).toFixed(1)}" text-anchor="start">${num(v)}</text>`).join("")}
+    ${bars}${line}
     ${[0, 360, 720, 1080, 1440].map((m) => `<text x="${x(m).toFixed(1)}" y="${H - 5}" text-anchor="${m === 0 ? "start" : m === 1440 ? "end" : "middle"}">${String(m / 60).padStart(2, "0")}:00</text>`).join("")}
   </svg>`;
 }
@@ -268,7 +302,7 @@ export function heartTabHtml(catalog, state = {}) {
     return `<section class="card"><div class="empty-state"><p><strong>Noch keine Herzdaten</strong></p><p class="muted small">Verbinde deine Polar-Uhr am PC unter Settings → Polar und synchronisiere. Nach dem nächsten Export erscheinen hier Tagesverlauf, Ruhepuls, HRV und die Zeit in deinen Trainingszonen.</p></div></section>`;
   }
   const inPeriod = (list) => list.filter((x) => x.date >= from && x.date <= t);
-  const lastDay = w.heart.length ? w.heart[w.heart.length - 1].date : t;
+  const lastDay = [w.heart.at(-1)?.date, w.days.filter((d) => d.stepSamples).at(-1)?.date].filter(Boolean).sort().at(-1) ?? t;
   const day = state.day ?? lastDay;
   const hd = w.heart.find((h) => h.date === day) ?? null;
   let zones = [];
@@ -286,7 +320,16 @@ export function heartTabHtml(catalog, state = {}) {
   const hrvSeries = inPeriod(hrv).filter((p) => p.value !== null);
   const recovery = [...inPeriod(w.recovery)].reverse();
   const exercises = [...inPeriod(w.exercises)].reverse();
-  const dayOptions = [...w.heart].reverse().slice(0, 60);
+  const stepDays = w.days.filter((d) => d.stepSamples);
+  const dayOptions = [
+    ...new Set([...w.heart.map((h) => h.date), ...stepDays.map((d) => d.date)]),
+  ]
+    .sort()
+    .reverse()
+    .slice(0, 60);
+  const stepSamples = stepDays.find((d) => d.date === day)?.stepSamples ?? null;
+  const hide = { hr: !!state.hideHr, steps: !!state.hideSteps };
+  const hasSteps = W.stepSeries(stepSamples).length > 0;
 
   return `${recoveryTodayHtml(w, t)}<section class="card logs-toolbar">
       <label class="field logs-select"><span>Zeitraum</span><select data-heart="days">${[
@@ -296,13 +339,22 @@ export function heartTabHtml(catalog, state = {}) {
         [365, "1 Jahr"],
       ].map(([v, l]) => `<option value="${v}" ${v === days ? "selected" : ""}>${l}</option>`).join("")}</select></label>
     </section>
-    <section class="card"><div class="wo-head"><h3>Herzfrequenz am Tag</h3></div>
-      ${dayOptions.length ? `<label class="field"><span>Tag</span><select data-heart="day">${dayOptions.map((h) => `<option value="${h.date}" ${h.date === day ? "selected" : ""}>${esc(D.formatDate(h.date))}</option>`).join("")}</select></label>` : ""}
+    <section class="card"><div class="wo-head"><h3>Herzfrequenz und Schritte am Tag</h3></div>
+      ${dayOptions.length ? `<label class="field"><span>Tag</span><select data-heart="day">${dayOptions.map((d) => `<option value="${d}" ${d === day ? "selected" : ""}>${esc(D.formatDate(d))}</option>`).join("")}</select></label>` : ""}
       ${
         hd
-          ? `<div class="stat"><div><b>${num(hd.minBpm)} /min</b><span>Minimum</span></div><div><b>${num(hd.avgBpm)} /min</b><span>Mittel</span></div><div><b>${num(hd.maxBpm)} /min</b><span>Maximum</span></div><div><b>${num(hd.sampleCount)}</b><span>Messwerte</span></div></div>
-        ${daySvg(hd.samples)}`
+          ? `<div class="stat"><div><b>${num(hd.minBpm)} /min</b><span>Minimum</span></div><div><b>${num(hd.avgBpm)} /min</b><span>Mittel</span></div><div><b>${num(hd.maxBpm)} /min</b><span>Maximum</span></div><div><b>${num(hd.sampleCount)}</b><span>Messwerte</span></div></div>`
           : `<p class="muted">Für diesen Tag gibt es keine Herzfrequenz-Werte.</p>`
+      }
+      ${
+        hd || hasSteps
+          ? `<div class="heart-layers">
+          <label class="toggle"><input type="checkbox" data-heart="hideHr" ${hide.hr ? "" : "checked"} ${hd ? "" : "disabled"}> <span style="color:${COLOR.body}">━</span> Herzfrequenz</label>
+          <label class="toggle"><input type="checkbox" data-heart="hideSteps" ${hide.steps ? "" : "checked"} ${hasSteps ? "" : "disabled"}> <span style="color:${COLOR.nutrition}">■</span> Schritte je 5 Minuten</label>
+        </div>
+        ${timelineSvg(hd?.samples ?? [], stepSamples, hide)}
+        ${hasSteps ? "" : `<p class="muted small">Schritte über den Tag gibt es ab der Synchronisierung mit PC-Version 1.0.130 (Polar) oder aus dem Apple-Health-Export.</p>`}`
+          : ""
       }
       ${
         zm
@@ -313,7 +365,7 @@ export function heartTabHtml(catalog, state = {}) {
             : `<p class="muted small">Für die Zonen fehlen maximale Herzfrequenz oder Ruhepuls (Body &amp; Longevity → Vitalwerte am PC).</p>`
           : ""
       }
-      ${note("Jeder Messwert der Uhr steht für die Zeit bis zum nächsten (Polar: 5 Minuten). Optische Messung am Handgelenk – geeignet für Verläufe, nicht für einzelne Werte.")}
+      ${note("Jeder Messwert der Uhr steht für die Zeit bis zum nächsten (Polar: 5 Minuten). Schritte: Summe je 5 Minuten. Optische Messung am Handgelenk – geeignet für Verläufe, nicht für einzelne Werte.")}
     </section>
     <section class="card"><div class="wo-head"><h3>Niedrigste Herzfrequenz der Nacht</h3></div>
       ${lowSeries.length > 1 ? trendSvg(lowSeries, { color: COLOR.body, decimals: 0, height: 160, label: "Niedrigste Herzfrequenz je Nacht" }) : `<p class="muted small">Für einen Verlauf werden mindestens zwei Nächte benötigt.</p>`}
@@ -417,6 +469,28 @@ function nightDetailHtml(n, w) {
       <div><b>${num(n.continuity, 1)}</b><span>Kontinuität (1–5)</span></div>
       <div><b>${n.cycles ?? "–"}</b><span>Schlafzyklen</span></div>
     </div>
+    ${
+      n.groupDurationScore != null || n.groupSolidityScore != null || n.groupRegenerationScore != null
+        ? `<div class="stat">
+      <div><b>${num(n.groupDurationScore)}</b><span>Schlafmenge (Teilwert)</span></div>
+      <div><b>${num(n.groupSolidityScore)}</b><span>Stabilität (Teilwert)</span></div>
+      <div><b>${num(n.groupRegenerationScore)}</b><span>Erholung (Teilwert)</span></div>
+    </div>`
+        : ""
+    }
+    ${(() => {
+      const sleptMin = W.measuredSleepMin(n);
+      const lines = [
+        (n.shortInterruptionS != null || n.longInterruptionS != null) &&
+          `Unterbrechungen: kurz (unter 90 s) ${n.shortInterruptionS != null ? dur(n.shortInterruptionS / 60) : "–"}, lang ${n.longInterruptionS != null ? dur(n.longInterruptionS / 60) : "–"}`,
+        n.sleepGoalS > 0 &&
+          `Schlafziel bei Polar ${dur(n.sleepGoalS / 60)}${sleptMin !== null ? ` – gemessen ${dur(sleptMin)} (${num((sleptMin * 60 * 100) / n.sleepGoalS)} % des Ziels)` : ""}`,
+        W.continuityClassLabel(n.continuityClass) && `Kontinuität laut Polar: ${esc(W.continuityClassLabel(n.continuityClass))}`,
+        W.sleepRatingLabel(n.sleepRating) && `Deine Bewertung der Nacht bei Polar: ${esc(W.sleepRatingLabel(n.sleepRating))}`,
+        n.deviceId && `Gerät: ${esc(n.deviceId)}`,
+      ].filter(Boolean);
+      return lines.length ? `<ul class="list">${lines.map((l) => `<li class="muted small">${l}</li>`).join("")}</ul>` : "";
+    })()}
     ${charge ? `<p class="muted small">Sleep Charge laut Polar: <strong>${esc(charge)}</strong>${skin?.value != null ? ` · Hauttemperatur ${num(skin.value, 1)} °C` : ""}</p>` : skin?.value != null ? `<p class="muted small">Hauttemperatur ${num(skin.value, 1)} °C</p>` : ""}
     ${
       segs.length && total > 0
@@ -426,4 +500,82 @@ function nightDetailHtml(n, w) {
         : ""
     }
     ${swLines.length ? `<h4 class="logs-sub">SleepWise (Polar)</h4><ul class="list">${swLines.map((l) => `<li class="muted small">${l}</li>`).join("")}</ul>` : ""}`;
+}
+
+// ------------------------------------------------------------------ Herzfrequenz einer Trainingseinheit (1.44.0)
+
+const minuteOfClock = (t) => {
+  const m = /^(\d{2}):(\d{2})/.exec(t ?? "");
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+};
+
+/** UTC-Zeitstempel → { date, minute } in Ortszeit */
+function localOf(ts) {
+  const d = new Date(ts ?? "");
+  if (Number.isNaN(d.getTime())) return null;
+  const p = (n) => String(n).padStart(2, "0");
+  return { date: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`, minute: d.getHours() * 60 + d.getMinutes() };
+}
+
+/**
+ * Herzfrequenz einer Einheit wie `repo/workout_heart.rs` am PC: zuerst ein Training der Uhr, das in
+ * diese Einheit übernommen wurde oder zur selben Zeit begann (± 20 Minuten), sonst der Ausschnitt der
+ * ganztägigen Herzfrequenz. `w` = { id, date, startTime, durationMin }; Beginn/Ende der Aufzeichnung
+ * kommen aus `workout` des PC-Exports.
+ */
+export function workoutHeartOf(catalog, w) {
+  const row = (catalog?.pc?.workout ?? []).find((x) => x.id === w.id) ?? {};
+  let date = w.date;
+  let start = null;
+  let end = null;
+  const s = localOf(row.started_at);
+  const e = localOf(row.finished_at);
+  if (s && e && s.date === e.date && e.minute > s.minute) {
+    date = s.date;
+    start = s.minute;
+    end = e.minute;
+  } else {
+    start = minuteOfClock(w.startTime ?? row.start_time);
+    const d = w.durationMin ?? row.duration_min;
+    if (start === null || d == null) return null;
+    end = Math.min(1440, start + d);
+  }
+  const clock = (m) => W.clockOf(m);
+  const data = wearableOf(catalog);
+  const exercises = data.exercises.filter((x) => x.date === date);
+  const exStart = (x) => minuteOfClock(x.startTime?.split("T")[1]);
+  const linked = exercises.find((x) => x.workoutId === w.id) ?? exercises.find((x) => exStart(x) !== null && Math.abs(exStart(x) - start) <= 20);
+  if (linked) {
+    const points = W.exerciseHr(linked.hrSamples);
+    if (points.length || linked.hrAvg != null) {
+      return { kind: "exercise", label: `Training der Uhr (${linked.source})`, start: clock(exStart(linked) ?? start), points, hrAvg: linked.hrAvg, hrMax: linked.hrMax, rrRmssd: linked.rrRmssd ?? null };
+    }
+  }
+  const byMin = new Map();
+  const sources = [];
+  for (const d of data.heart.filter((h) => h.date === date)) {
+    let used = false;
+    for (const [m, bpm] of d.samples) {
+      if (m >= start && m <= end) {
+        const v = byMin.get(m) ?? [0, 0];
+        byMin.set(m, [v[0] + bpm, v[1] + 1]);
+        used = true;
+      }
+    }
+    if (used) sources.push(d.source);
+  }
+  if (!byMin.size) return null;
+  const points = [...byMin.entries()].sort((a, b) => a[0] - b[0]).map(([m, [sum, n]]) => ({ second: (m - start) * 60, bpm: Math.round(sum / n) }));
+  const avg = points.reduce((a, p) => a + p.bpm, 0) / points.length;
+  return { kind: "day", label: `Ganztägige Herzfrequenz (${sources.join(", ")})`, start: clock(start), points, hrAvg: Math.round(avg * 10) / 10, hrMax: Math.max(...points.map((p) => p.bpm)), rrRmssd: null };
+}
+
+export function workoutHeartHtml(h) {
+  if (!h) return `<p class="muted small">Für diese Einheit gibt es keine Herzfrequenz der Uhr (Startzeit und Dauer nötig).</p>`;
+  return `<div class="workout-heart">
+    <p class="small"><b>Herzfrequenz</b> · ${esc(h.label)} · ab ${esc(h.start)} Uhr</p>
+    ${exerciseSvg(h.points)}
+    <p class="muted small">Ø ${num(h.hrAvg)} /min · max ${num(h.hrMax)} /min${h.rrRmssd != null ? ` · HRV im Training (RMSSD) ${num(h.rrRmssd)} ms` : ""}</p>
+    ${h.kind === "day" ? `<p class="muted small">Aus den ganztägigen Werten der Uhr (Polar: alle 5 Minuten) – für einen genauen Verlauf das Training auf der Uhr starten.</p>` : ""}
+  </div>`;
 }

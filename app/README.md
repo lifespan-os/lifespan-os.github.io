@@ -624,6 +624,24 @@ Fassung laden.
 - Overview: großer Kopf mit den heute gegessenen kcal, Tagesbedarf, offenen kcal und Protein/KH/Fett
   (gleiche Rechnung wie die Karte Ernährung, `overviewHero` in overview.js), die Figur groß rechts daneben.
 
+### Version 1.44.0 (15.11.2026): Blutzucker, Tageszeitstrahl, Puls je Einheit, Pausenklänge
+
+- Health → neuer Reiter „Blutzucker“ (`glucose.js`, Daten `glucose_reading` aus dem PC-Export, Schema 58):
+  Mittelwert, Zeit im Bereich 70–180 mg/dl mit allen Konsens-Bereichen, Schwankung (CV), GMI ab 10 Tagen,
+  Tagesverlauf mit Mahlzeiten aus dem Tagebuch und Anstieg danach, Tagesprofil (Median, 25–75 %, 10–90 %),
+  Mittelwert je Tag und Nächte 00–06 Uhr. Import (LibreView, Dexcom Clarity, CSV, Apple Health) am PC.
+- Health → Heart: Herzfrequenz und Schritte auf einem 24-Stunden-Zeitstrahl, Ebenen einzeln abschaltbar
+  (`timelineSvg` in heart.js, Schritte aus `wearable_day.step_samples`). „±0“ statt „−0“ bei „Gemessene
+  Erholung“ (`signedText`).
+- Sleep → Gemessene Nächte: alle Schlafwerte von Polar im Detail (Teilwerte, kurze/lange Unterbrechungen,
+  Schlafziel, eigene Bewertung, Kontinuitätsklasse, Gerät). Trainings der Uhr zeigen die HRV im Training,
+  wenn das Gerät Schlag-zu-Schlag-Abstände liefert.
+- Training → Einheiten: „♥ Puls“ klappt die Herzfrequenz einer abgeschlossenen Einheit auf (wie
+  `workout_heart.rs` am PC: Training der Uhr, sonst Ausschnitt der ganztägigen Werte).
+- Pausentimer: dieselben Klänge wie am PC (`sounds/`, reihum, Signalton als Ersatz) über Web Audio. Auf
+  dem iPhone nur, solange die App geöffnet ist – Web-Apps dürfen im Hintergrund keinen Ton abspielen.
+- wearabledata.js enthält jetzt auch `src/domain/glucose.ts`.
+
 ### Version 1.43.0 (15.11.2026): Mehr Polar-Daten (Polar Loop und Uhren)
 
 - Health → Heart: **Gemessene Erholung heute** (`recoveryTodayHtml`: HRV, Ø und niedrigste Herzfrequenz der

@@ -81,6 +81,8 @@ export const KEEP_TABLES = [
   "wearable_day",
   "wearable_sleepwise",
   "wearable_biosensing",
+  // seit 1.44.0 (Schema 58): Health → Blutzucker
+  "glucose_reading",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */

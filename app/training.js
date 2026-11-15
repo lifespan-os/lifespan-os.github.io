@@ -12,6 +12,7 @@ import * as TR from "./trainingdata.js";
 import * as CD from "./checklistdata.js";
 import { buildDb, today } from "./diary.js";
 import { barTrendSvg, COLOR } from "./pcview.js";
+import { hasWearable, workoutHeartHtml, workoutHeartOf } from "./heart.js";
 import { energyHtml, stepGoalBar } from "./overview.js";
 import { statsActions, viewCardioTab, viewProgressTab, viewReviewTab, statsChange } from "./trainingstats.js";
 import { dbActions, dbChange, dbInput, viewCheckinsTab, viewDatabaseTab } from "./trainingdb.js";
@@ -184,7 +185,9 @@ function workoutsTab() {
           return `<li class="train-row"><span class="train-row__date">${fmtDate(w.date)}${w.startTime ? `<span class="muted small">${esc(w.startTime)} Uhr</span>` : ""}</span>
             <span class="train-row__main"><strong>${esc(w.title)}</strong>${w.status === "active" ? ' <span class="status-pill status-pill--active">läuft</span>' : ""}
               <span class="muted small">${w.exerciseCount} ${w.exerciseCount === 1 ? "Übung" : "Übungen"} · ${w.setCount} Arbeitssätze · ${w.volumeKg > 0 ? `${F(w.volumeKg)} kg` : "–"} · ${w.durationMin !== null ? `${w.durationMin} min` : "–"}</span></span>
-            <button class="linkbtn" data-act="train-open" data-arg="${esc(w.id)}">Öffnen</button></li>`;
+            <span class="train-row__acts">${w.status === "done" && hasWearable(S.catalog) ? `<button class="linkbtn" data-act="train-heart" data-arg="${esc(w.id)}" aria-expanded="${S.trainHeart === w.id}">♥ Puls</button>` : ""}<button class="linkbtn" data-act="train-open" data-arg="${esc(w.id)}">Öffnen</button></span></li>${
+              S.trainHeart === w.id ? `<li class="train-heart">${workoutHeartHtml(workoutHeartOf(S.catalog, w))}</li>` : ""
+            }`;
         })
         .join("")}</ul>`
     : `<div class="empty-state"><p><strong>Noch keine Einheiten</strong></p><p class="muted small">Starte dein erstes Training mit „Training starten“${dayOptions.length ? ", starte einen Trainingstag aus deinem Plan" : ""} oder trage eine frühere Einheit mit „Nachtragen“ ein.</p></div>`;
@@ -646,6 +649,11 @@ export const trainingActions = {
   "train-backfill": () => X.startBackfill(today()),
   "train-cardio": () => X.startCardio(X.S.trainCardio),
   "train-open": (el) => X.openWorkout(el.dataset.arg),
+  // Herzfrequenz der Einheit ein-/ausklappen (1.44.0)
+  "train-heart": (el) => {
+    X.S.trainHeart = X.S.trainHeart === el.dataset.arg ? null : el.dataset.arg;
+    X.rerender();
+  },
   "train-day": async (el) => {
     try {
       await applyDay(today(), el.dataset.arg || null);

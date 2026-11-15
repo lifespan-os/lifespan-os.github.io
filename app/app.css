@@ -1194,3 +1194,10 @@ body.has-submenu [data-sheet].tabs--fold { display: none; }
 .watch-ex summary { list-style: none; cursor: pointer; }
 .watch-ex summary::-webkit-details-marker { display: none; }
 .watch-ex[open] summary { margin-bottom: 6px; }
+
+/* 1.44.0: Puls je Einheit, Ebenen des Tageszeitstrahls */
+.train-row__acts { flex: 0 0 auto; align-self: center; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.train-heart { list-style: none; padding: 0 0 10px; }
+.glucose-rise { white-space: nowrap; }
+.workout-heart { display: grid; gap: 6px; margin-top: 4px; }
+.heart-layers { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 8px 0 4px; }

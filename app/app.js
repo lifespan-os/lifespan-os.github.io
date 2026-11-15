@@ -930,14 +930,22 @@ function showSheet(title, body, closeAct, { grid = true } = {}) {
   document.body.classList.add("sheet-open");
 }
 
+const ACTIVE_SEL = ".active,.on,.is-active,[aria-pressed=true],[aria-selected=true],[aria-current=page]";
+let jumpTargets = [];
+
+/** Überschrift einer Karte ohne das orange „/“. */
+const headingText = (h) => h.textContent.replace(/^\s*\/\s*/, "").replace(/\s+/g, " ").trim();
+
 function foldTabs() {
   document.body.classList.remove("sheet-open");
   sheetRoot.replaceChildren();
   S.subMenu = null;
   let shown = false;
+  const groups = [];
   const menu = (host, key, title, items) => {
     if (!items.length) return;
-    const active = items.find((b) => b.matches(".active,.on,.is-active,[aria-pressed=true],[aria-selected=true],[aria-current=page]")) ?? null;
+    const active = items.find((b) => b.matches(ACTIVE_SEL)) ?? null;
+    groups.push({ key, title, items, active });
     const toggle = sheetToggle(key, active ? active.textContent.trim() : title);
     host.classList.add("tabs--fold");
     host.replaceChildren(toggle);
@@ -952,15 +960,60 @@ function foldTabs() {
   };
   for (const nav of app.querySelectorAll("nav.tabs")) {
     const key = nav.getAttribute("aria-label") || "tabs";
-    const tabs = [...nav.querySelectorAll(".tab")];
-    // Untermenü der Seite: Knopf mit zwei Punkten unten in der Leiste (1.32.0)
-    if (!S.subMenu && tabs.length) S.subMenu = { key, label: (tabs.find((t) => t.classList.contains("active")) ?? tabs[0]).textContent.trim(), open: Boolean(S.tabsOpen?.[key]) };
-    menu(nav, key, key, tabs);
+    menu(nav, key, key, [...nav.querySelectorAll(".tab")]);
   }
   for (const group of app.querySelectorAll("[data-sheet]")) {
     const title = group.dataset.sheet;
     menu(group, `sheet:${title}`, title, [...group.querySelectorAll("button")]);
   }
+
+  // Untermenü der Seite (1.32.0, für alle Seiten seit 1.33.0): Knopf mit zwei Punkten unten in der Leiste.
+  // Enthält alle Auswahlmenüs der Seite (Reiter, Kategorien, Checklisten …); ohne solche die Abschnitte
+  // der Seite zum Hinspringen.
+  jumpTargets = [];
+  if (!groups.length) {
+    const heads = [...app.querySelectorAll("main .card h3, main .card h2, main > h2")].filter((h) => headingText(h) && h.offsetParent !== null);
+    if (heads.length >= 2) {
+      jumpTargets = heads;
+      const items = heads.map((h, i) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.dataset.act = "sheet-jump";
+        b.dataset.arg = String(i);
+        b.textContent = headingText(h);
+        return b;
+      });
+      groups.push({ key: "page", title: "Abschnitte", items, active: null, jump: true });
+    }
+  }
+  if (groups.length) {
+    const first = groups[0];
+    S.subMenu = { key: "page", label: first.jump ? "Abschnitte" : first.active?.textContent.trim() || first.title, open: Boolean(S.tabsOpen?.page) };
+  }
+  if (S.tabsOpen?.page && !shown && groups.length) {
+    shown = true;
+    const body = [];
+    for (const g of groups) {
+      if (groups.length > 1) {
+        const h = document.createElement("p");
+        h.className = "bsheet__group";
+        h.textContent = g.title;
+        body.push(h);
+      }
+      const grid = document.createElement("div");
+      grid.className = "bsheet__grid";
+      for (const b of g.items) {
+        b.classList.add("tab");
+        b.classList.toggle("active", b === g.active);
+        b.dataset.sheetKey = "page";
+        grid.append(b);
+      }
+      body.push(grid);
+    }
+    const title = groups[0].jump ? "Abschnitte" : groups[0].title;
+    showSheet(title.startsWith("sheet:") ? title.slice(6) : title, body, "tabs-fold|page", { grid: false });
+  }
+
   // Geöffnete Inhalte (z. B. ein Modul) als Fach von unten
   const panel = app.querySelector("[data-sheet-panel]");
   if (panel && !shown) {
@@ -1509,6 +1562,18 @@ const actions = {
     await saveNow();
     toast("Untere Leiste: Training und Nutrition");
     render();
+  },
+  // Untermenü „Abschnitte“: zur Überschrift springen (1.33.0)
+  "sheet-jump": (el) => {
+    const h = jumpTargets[Number(el.dataset.arg)];
+    S.tabsOpen = { ...(S.tabsOpen ?? {}), page: false };
+    foldTabs();
+    renderNav();
+    const card = h?.closest(".card") ?? h;
+    if (card) {
+      const top = card.getBoundingClientRect().top + window.scrollY - 12;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
   },
   "tabs-fold": (el) => {
     const key = el.dataset.arg;

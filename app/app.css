@@ -1132,3 +1132,10 @@ body.has-submenu nav.tabs.tabs--fold { display: none; }
 .card p, .card li, .card dd { overflow-wrap: anywhere; }
 .card h3 { overflow-wrap: anywhere; hyphens: auto; }
 .card > * { min-width: 0; }
+
+/* 1.33.0: Knöpfe weiter auseinander; Untermenü aller Seiten (Gruppen im Fach) */
+.tabbar__fabs { gap: 22px; padding: 0 6px; }
+@media (max-width: 350px) { .tabbar__fabs { gap: 12px; padding: 0 2px; } }
+body.has-submenu [data-sheet].tabs--fold { display: none; }
+.bsheet__group { margin: 6px 2px 0; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--on-navy-muted); }
+.bsheet__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }

@@ -15155,6 +15155,40 @@ var MAGAZINE_CATEGORY_ORDER = [
 ];
 var MAGAZINES = [
   {
+    id: "soja-oestrogen",
+    title: "Macht Soja dich weiblich?",
+    series: "iCoach.Me Magazin · Hormone",
+    category: "gesundheit",
+    pages: 3,
+    issued: "November 2026",
+    summary:
+      "Tofu, Sojadrink, Edamame – und sofort die Sorge vor Östrogen. Das Heft zeigt, was Isoflavone aus Soja wirklich sind, was die größte Auswertung bei Männern (41 Studien) ergab und ob Soja unter einer Testosteron-Therapie die Aromatisierung bremst.",
+    learn: [
+      "Warum Isoflavone Östrogen nur ähneln und am Rezeptor 100- bis 10.000-mal schwächer wirken als Estradiol",
+      "Was die Meta-Analyse von Reed et al. (2021) bei Testosteron, freiem Testosteron und Östradiol fand",
+      "Mythos-Check: Männerbrüste, Fruchtbarkeit, Brustkrebs, Kapseln und Schilddrüse",
+      "Warum Soja unter TRT als Proteinquelle in Ordnung ist, aber kein Mittel gegen hohes Östradiol",
+    ],
+    bytes: 495601,
+  },
+  {
+    id: "lebensmittel-kalorie",
+    title: "Vom Lebensmittel zur Kalorie",
+    series: "iCoach.Me Magazin · Ernährung · Ausgabe 01",
+    category: "ernaehrung",
+    pages: 4,
+    issued: "November 2026",
+    summary:
+      "Die Kalorie war zuerst eine physikalische Wärmeeinheit. Das Heft zeigt in vier Stationen, wie aus einem Lebensmittel die Zahl auf dem Etikett wird – vom Bombenkalorimeter bis zu den Atwater-Faktoren 4 · 4 · 9.",
+    learn: [
+      "Was eine Kilokalorie ist und wie das Bombenkalorimeter den Brutto-Brennwert misst",
+      "Warum die Energie in den Ausscheidungen abgezogen wird und wie Atwaters Respirationskammer am Menschen maß",
+      "Woher die Durchschnittswerte 4 kcal/g für Kohlenhydrate und Protein und 9 kcal/g für Fett stammen",
+      "Wie Wilbur Olin Atwater und Max Rubner die Nahrungskalorie geprägt haben",
+    ],
+    bytes: 723531,
+  },
+  {
     id: "brutto-netto",
     title: "Brutto vs. Netto: Welche Kalorie z\xE4hlt?",
     series: "iCoach.Me Magazin \xB7 Ern\xE4hrung",

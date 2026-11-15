@@ -106,8 +106,9 @@ export function barSlots(pref) {
 const SHORT = { "Body & Longevity": "Body", "iCoach.me": "iCoach", Checklisten: "Checklisten" };
 
 /**
- * `sub` = Untermenü der Seite { key, label, open } (1.32.0): zweiter runder Knopf neben „+“ mit zwei
- * Punkten; er öffnet die Reiter-Auswahl als Fach von unten (statt des Knopfs oben links).
+ * Untere Leiste (1.34.0): vier Hauptpunkte gleich breit (Overview, zwei frei wählbare Bereiche, Mehr).
+ * Die runden Knöpfe schweben mit ihrer Mitte auf der Oberkante der Leiste: „+“ (Schnell erfassen) zwischen
+ * Punkt 1 und 2, „:“ (Untermenü der Seite, `sub` = { key, label, open }) zwischen Punkt 3 und 4.
  */
 export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = DEFAULT_BAR_SLOTS, sub = null }) {
   const current = sectionOf(view, arg, back);
@@ -116,26 +117,25 @@ export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = 
   const items = [
     { id: "overview", label: "Overview", icon: "overview" },
     { id: left, label: SHORT[sec(left).label] ?? sec(left).label, icon: left },
-    { id: "quick" },
     { id: right, label: SHORT[sec(right).label] ?? sec(right).label, icon: right },
     { id: "more", label: "Mehr", icon: "more" },
   ];
   const main = ["overview", left, right];
   let marked = false;
-  return `<nav class="tabbar${sub ? " tabbar--sub" : ""}" aria-label="Hauptbereiche">${items
+  const buttons = items
     .map((b) => {
-      if (b.id === "quick") {
-        const quick = `<button class="tabbar__quick" data-act="quick-open" aria-label="Schnell erfassen" aria-expanded="${quickOpen}">${ICONS.plus}</button>`;
-        if (!sub) return quick;
-        return `<span class="tabbar__fabs">${quick}<button class="tabbar__quick tabbar__sub" data-act="tabs-fold" data-arg="${escAttr(sub.key)}" aria-label="Untermenü: ${escAttr(sub.label)}" aria-haspopup="dialog" aria-expanded="${Boolean(sub.open)}">${ICONS.sub}</button></span>`;
-      }
       // Gleicher Bereich auf zwei Plätzen: nur der erste wird markiert
       const active = !marked && (b.id === "more" ? !main.includes(current) : b.id === current);
       if (active) marked = true;
       const act = b.id === "more" ? `data-act="menu-open-bar"` : `data-act="tabbar-go" data-arg="${b.id}"`;
       return `<button class="tabbar__item ${active ? "active" : ""}" ${act} ${active ? 'aria-current="page"' : ""}>${ICONS[b.icon] ?? ""}<span>${b.label}</span></button>`;
     })
-    .join("")}</nav>`;
+    .join("");
+  const quick = `<button class="tabbar__quick tabbar__fab tabbar__fab--a" data-act="quick-open" aria-label="Schnell erfassen" aria-expanded="${quickOpen}">${ICONS.plus}</button>`;
+  const subBtn = sub
+    ? `<button class="tabbar__quick tabbar__sub tabbar__fab tabbar__fab--b" data-act="tabs-fold" data-arg="${escAttr(sub.key)}" aria-label="Untermenü: ${escAttr(sub.label)}" aria-haspopup="dialog" aria-expanded="${Boolean(sub.open)}">${ICONS.sub}</button>`
+    : "";
+  return `<nav class="tabbar tabbar--float${sub ? " tabbar--sub" : ""}" aria-label="Hauptbereiche"><div class="tabbar__grid">${buttons}${quick}${subBtn}</div></nav>`;
 }
 
 const escAttr = (v) => String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");

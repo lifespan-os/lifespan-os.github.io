@@ -1139,3 +1139,13 @@ body.has-submenu nav.tabs.tabs--fold { display: none; }
 body.has-submenu [data-sheet].tabs--fold { display: none; }
 .bsheet__group { margin: 6px 2px 0; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--on-navy-muted); }
 .bsheet__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+/* 1.34.0: Leiste mit vier gleich breiten Hauptpunkten; runde Knöpfe mit der Mitte auf der Oberkante –
+   „+“ zwischen Punkt 1 und 2, „:“ zwischen Punkt 3 und 4 */
+.tabbar.tabbar--float { display: block; }
+.tabbar__grid { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; }
+.tabbar .tabbar__fab { position: absolute; top: -8px; margin: 0; width: 56px; height: 56px; border-radius: 28px; transform: translate(-50%, -50%); z-index: 1; }
+.tabbar .tabbar__fab--a { left: 25%; }
+.tabbar .tabbar__fab--b { left: 75%; }
+.tabbar__sub[aria-expanded="true"] svg { transform: none; }
+@media (max-width: 350px) { .tabbar .tabbar__fab { width: 50px; height: 50px; border-radius: 25px; } }

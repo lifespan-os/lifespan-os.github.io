@@ -2,6 +2,16 @@
  "format": "lifespan-os-paketliste",
  "packages": [
   {
+   "key": "foodtastic",
+   "manufacturer": "Foodtastic",
+   "title": "Foodtastic – Power Cakes, Vital Sirups, Erythrit",
+   "version": "2026.11.15",
+   "file": "Foodtastic.json",
+   "foods": 34,
+   "supplements": 21,
+   "bytes": 35070
+  },
+  {
    "key": "gymbeam-shop",
    "manufacturer": "GymBeam",
    "title": "GymBeam-Shop – Lebensmittel, Protein und Sportnahrung",

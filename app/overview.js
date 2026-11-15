@@ -797,6 +797,31 @@ export function overviewDayNav(date, today) {
   </section>`;
 }
 
+/**
+ * Kopf der Overview (1.38.0, Entwurf „APP 1“): gegessene kcal des Tages groß, Tagesbedarf, offene kcal
+ * und Makros (gleiche Rechnung wie die Karte Ernährung).
+ */
+export function overviewHero(db, catalog, date, today) {
+  const { data } = overviewData(db, catalog, date);
+  const goal = data.goal ? D.withProteinFromWeight(data.goal, data.stepEnergyToday.weightKg) : null;
+  const n = data.nutritionToday;
+  const need = D.dailyNeed(goal, data.stepEnergyToday.kcal, data.energyToday);
+  const macros = goal ? D.dayMacroGoals(goal, need, data.energyToday) : null;
+  const kcal = n?.energyKcal ?? 0;
+  const target = need?.total ?? null;
+  const dayText = new Date(`${date}T12:00:00`).toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  const open = target !== null ? target - kcal : null;
+  const share = target ? Math.max(0, Math.min(1, kcal / target)) : 0;
+  const macro = (val, goalG, label) =>
+    `<span class="hero__macro"><b>${F(val ?? 0, val && val < 100 ? 1 : 0)}</b> <span>${goalG != null ? `/ ${F(goalG)} g ` : "g "}${label}</span></span>`;
+  return `<div class="hero">
+    <span class="hero__date">${esc(date === today ? "Heute" : dayText)}${open !== null ? ` · ${open >= 0 ? `noch ${F(open)} kcal offen` : `${F(-open)} kcal über Bedarf`}` : ""}</span>
+    <div class="hero__kcal"><span class="hero__num">${F(kcal)}</span><span class="hero__goal">${target !== null ? `/ ${F(target)} kcal` : "kcal"}</span></div>
+    ${target !== null ? `<div class="hero__bar" role="img" aria-label="${esc(`${F(kcal)} von ${F(target)} kcal`)}"><span style="flex-grow:${share}"></span><span style="flex-grow:${1 - share}"></span></div>` : ""}
+    <div class="hero__macros">${macro(n?.proteinG, macros?.proteinG, "P")}${macro(n?.carbsG, macros?.carbsG, "KH")}${macro(n?.fatG, macros?.fatG, "F")}</div>
+  </div>`;
+}
+
 /** Alle Karten der Overview in der Anordnung vom PC (ausgeblendete fehlen, leere ans Ende). */
 export function overviewCardsHtml(db, catalog, date, today) {
   const { data, week, widgets } = overviewData(db, catalog, date);

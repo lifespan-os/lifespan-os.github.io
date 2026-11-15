@@ -1165,3 +1165,25 @@ body.has-submenu [data-sheet].tabs--fold { display: none; }
 .tabbar .tabbar__item svg { width: 26px; height: 26px; }
 .tabbar .tabbar__item span { font-size: .8rem; line-height: 1.15; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 360px) { .tabbar .tabbar__item span { font-size: .74rem; } .tabbar .tabbar__item svg { width: 25px; height: 25px; } }
+
+/* 1.38.0 (Entwurf „APP 1“): Figur aus dem Logo statt der Streifen im Kopf; großer Kopf der Overview */
+.top::before { top: calc(var(--safe-top) + 6px); right: 16px; width: 38px; height: 60px; opacity: 1;
+  background: url("icons/figur.png") center / contain no-repeat; transform: rotate(10deg); transform-origin: 50% 60%; }
+.top::after { display: none; }
+.top .wrap { padding-right: 52px; }
+.top--hero { padding-bottom: 34px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 42px), 0 100%); }
+.top--hero::before { top: calc(var(--safe-top) + 62px); right: 14px; width: 96px; height: 152px; }
+.top--hero .wrap { padding-right: 0; }
+.top--hero .top__hero { display: block; min-height: 0; padding-right: 108px; position: relative; z-index: 1; }
+.hero { display: flex; flex-direction: column; gap: 2px; color: #fff; }
+.hero__date { font-size: .8rem; color: var(--on-navy-muted); }
+.hero__kcal { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.hero__num { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 4.6rem; line-height: .95; }
+.hero__goal { font-family: var(--display); font-weight: 700; font-size: 1.3rem; color: #f7b65e; }
+.hero__bar { display: flex; gap: 6px; margin-top: 8px; max-width: 240px; }
+.hero__bar span { height: 8px; border-radius: 4px; background: #1c4268; flex-basis: 0; min-width: 6px; }
+.hero__bar span:first-child { background: var(--orange); }
+.hero__macros { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; font-size: .8rem; }
+.hero__macro b { font-family: var(--display); font-size: 1.25rem; }
+.hero__macro span { color: var(--on-navy-muted); }
+@media (max-width: 350px) { .hero__num { font-size: 3.8rem; } .top--hero .top__hero { padding-right: 84px; } .top--hero::before { width: 76px; height: 120px; } }

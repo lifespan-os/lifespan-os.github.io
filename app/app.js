@@ -15,7 +15,7 @@ import { initGoals, goalActions, goalChange, viewGoals } from "./goalsui.js";
 import * as GL from "./goals.js";
 import * as AX from "./accountexport.js";
 import { blsActions, blsBoot, blsCard, blsChange, blsInput, initBls, viewBls } from "./blsui.js";
-import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewDayNav } from "./overview.js";
+import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewDayNav, overviewHero } from "./overview.js";
 import { initLogs, logsActions, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
 import { initInsights, insightsActions, viewInsights } from "./insightsview.js";
@@ -138,12 +138,12 @@ function header(title, { back = null, sub = "" } = {}) {
   </div></header>`;
 }
 
-function brandHeader() {
-  return `<header class="top"><div class="wrap">
+function brandHeader(hero = "") {
+  return `<header class="top${hero ? " top--hero" : ""}"><div class="wrap">
     ${menuButton()}
     <div class="brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b><small class="brand__date">${esc(new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" }))}</small></div></div>
     ${S.catalog ? "" : `<button class="back" data-go="help">Hilfe</button>`}
-  </div></header>`;
+  </div>${hero ? `<div class="wrap top__hero">${hero}</div>` : ""}</header>`;
 }
 
 function viewSetup() {
@@ -185,17 +185,24 @@ function viewHome() {
   const today = todayIso();
   const date = S.ovDate && S.ovDate < today ? S.ovDate : today;
   let cards;
+  let hero = "";
   if (!c.pc) {
     cards = `<section class="card"><p class="warn">Für die Overview wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Settings „Neue Exportdatei laden“.</p></section>`;
   } else {
     try {
-      cards = `${overviewDayNav(date, today)}${overviewCardsHtml(buildDb(), c, date, today)}`;
+      const db = buildDb();
+      cards = `${overviewDayNav(date, today)}${overviewCardsHtml(db, c, date, today)}`;
+      try {
+        hero = overviewHero(db, c, date, today);
+      } catch (e) {
+        console.error(e);
+      }
     } catch (e) {
       console.error(e);
       cards = `<section class="card"><p class="warn">Die Overview konnte nicht berechnet werden: ${esc(e.message)}</p></section>`;
     }
   }
-  return `${brandHeader()}<main class="wrap">
+  return `${brandHeader(hero)}<main class="wrap">
     ${
       a
         ? a.editOf

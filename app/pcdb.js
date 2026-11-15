@@ -77,6 +77,10 @@ export const KEEP_TABLES = [
   "wearable_sleep",
   "wearable_recovery",
   "wearable_exercise",
+  // seit 1.43.0 (Schema 57): Belastung, SleepWise, Temperatur/SpO2/EKG
+  "wearable_day",
+  "wearable_sleepwise",
+  "wearable_biosensing",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */
@@ -91,7 +95,7 @@ export function pcFromRows(rows) {
   for (const name of KEEP_TABLES) pc[name] = rows(name);
   pc.settings = rows("settings").filter((s) => KEEP_SETTINGS(s.key));
   // Originalantworten des Anbieters braucht das Handy nicht (Dateigröße)
-  for (const name of ["wearable_sleep", "wearable_recovery", "wearable_exercise"]) {
+  for (const name of ["wearable_sleep", "wearable_recovery", "wearable_exercise", "wearable_day", "wearable_sleepwise"]) {
     pc[name] = pc[name].map(({ raw_json, ...rest }) => rest);
   }
   const used = new Set([

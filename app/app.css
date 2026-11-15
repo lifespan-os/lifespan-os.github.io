@@ -1191,3 +1191,6 @@ body.has-submenu [data-sheet].tabs--fold { display: none; }
 .hero__macro b { font-family: var(--display); font-size: 1.25rem; }
 .hero__macro span { color: var(--on-navy-muted); }
 @media (max-width: 350px) { .hero__num { font-size: 3.8rem; } .top--hero .top__hero { padding-right: 84px; } .top--hero::before { width: 76px; height: 120px; } }
+.watch-ex summary { list-style: none; cursor: pointer; }
+.watch-ex summary::-webkit-details-marker { display: none; }
+.watch-ex[open] summary { margin-bottom: 6px; }

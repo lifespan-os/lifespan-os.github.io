@@ -624,6 +624,23 @@ Fassung laden.
 - Overview: großer Kopf mit den heute gegessenen kcal, Tagesbedarf, offenen kcal und Protein/KH/Fett
   (gleiche Rechnung wie die Karte Ernährung, `overviewHero` in overview.js), die Figur groß rechts daneben.
 
+### Version 1.43.0 (15.11.2026): Mehr Polar-Daten (Polar Loop und Uhren)
+
+- Health → Heart: **Gemessene Erholung heute** (`recoveryTodayHtml`: HRV, Ø und niedrigste Herzfrequenz der
+  Nacht, gemessener Schlaf, Atemfrequenz, Hauttemperatur gegen den eigenen Ø der 28 Tage davor, ab 5 Tagen;
+  Einstufungen nur „laut Polar“), Trainings der Uhr zum Aufklappen mit Herzfrequenz-Verlauf, Zeit in den Zonen
+  und Belastung, **Belastung laut Uhr** (Cardio Load, Strain, Tolerance, Verhältnis), **Temperatur, SpO2 und
+  EKG** (nur Uhren mit Elixir-Sensoren, sonst Hinweis) und **Tag und folgende Nacht** (Koffein, letzte
+  Mahlzeit, Belastung, Supplements gegen HRV, niedrigste HF, Schlafwert, Schlafdauer der Nacht danach).
+- Sleep → Gemessene Nächte: Schlafwert je Nacht, **letzte Nacht im Detail** (Schlafverlauf als Leiste,
+  Kontinuität, Zyklen, Sleep Charge, SleepWise: Wachheit, Schlafträgheit, bevorzugtes Schlaffenster).
+- Daten aus dem PC-Export ab 1.0.129 (Schema 57): zusätzlich `wearable_day`, `wearable_sleepwise`,
+  `wearable_biosensing` in `KEEP_TABLES` (ohne `raw_json`); Tageskontext aus `caffeine_intake`, `meal`,
+  `supplement_intake` (`contextOf` in heart.js, wie `wearable_data::day_context` am PC).
+- `wearabledata.js` ist jetzt ein Bündel aus `src/domain/wearable.ts` und `src/domain/wearableMore.ts` des PCs
+  (esbuild, ES2022, Einstieg `export * from "./wearable"; export * from "./wearableMore";`). Übernehmen eines
+  Uhr-Trainings ins Training und der Verbrauchsvergleich Uhr/App gibt es nur am PC.
+
 ### Version 1.42.0 (15.11.2026): Health → Heart, gemessene Nächte (Polar)
 
 - Health → neuer Reiter **Heart** (`heart.js`, `heartTabHtml`): Herzfrequenz am Tag (Kennzahlen, Verlauf über

@@ -72,6 +72,11 @@ export const KEEP_TABLES = [
   "checklist",
   "checklist_item",
   "vendor_package",
+  // Uhr/Ring (Schema 56, 1.42.0): Health → Heart, Sleep → Gemessene Nächte
+  "heart_rate_day",
+  "wearable_sleep",
+  "wearable_recovery",
+  "wearable_exercise",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */
@@ -85,6 +90,10 @@ export function pcFromRows(rows) {
   const pc = {};
   for (const name of KEEP_TABLES) pc[name] = rows(name);
   pc.settings = rows("settings").filter((s) => KEEP_SETTINGS(s.key));
+  // Originalantworten des Anbieters braucht das Handy nicht (Dateigröße)
+  for (const name of ["wearable_sleep", "wearable_recovery", "wearable_exercise"]) {
+    pc[name] = pc[name].map(({ raw_json, ...rest }) => rest);
+  }
   const used = new Set([
     ...rows("supplement_intake_item").map((i) => i.supplement_id),
     ...rows("supplement_stack_item").map((i) => i.supplement_id),

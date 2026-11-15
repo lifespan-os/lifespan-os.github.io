@@ -12,6 +12,7 @@ import * as L from "./logsdata.js";
 import * as BD from "./bodydata.js";
 import { barTrendSvg, COLOR, trendSvg } from "./pcview.js";
 import { buildDb, today } from "./diary.js";
+import { measuredSleepHtml } from "./heart.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -165,6 +166,8 @@ export function viewSleep() {
     out += phasesCard(logs);
     out += trendsCard(db, t, goal?.sleepMin ?? null);
   }
+  // Gemessene Nächte der Uhr (1.42.0, wie MeasuredSleepCard am PC)
+  out += measuredSleepHtml(S.catalog, from, t, logs);
   if (logs.length || naps.length) out += entriesCard(logs, naps, napMin);
   return `${out}</main>`;
 }

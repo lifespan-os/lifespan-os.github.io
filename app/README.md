@@ -624,6 +624,20 @@ Fassung laden.
 - Overview: großer Kopf mit den heute gegessenen kcal, Tagesbedarf, offenen kcal und Protein/KH/Fett
   (gleiche Rechnung wie die Karte Ernährung, `overviewHero` in overview.js), die Figur groß rechts daneben.
 
+### Version 1.42.0 (15.11.2026): Health → Heart, gemessene Nächte (Polar)
+
+- Health → neuer Reiter **Heart** (`heart.js`, `heartTabHtml`): Herzfrequenz am Tag (Kennzahlen, Verlauf über
+  24 Stunden, Zeit in den Trainingszonen mit den Zonen wie in Training → Cardio, `heartOn`), niedrigste
+  Herzfrequenz der Nacht und HRV (RMSSD, Nightly Recharge) mit Vergleich „letzte 7 Tage gegen 28 Tage davor“
+  (ab 3 Werten je Zeitraum), nächtliche Erholung, Trainings der Uhr. Ohne Laborwerte öffnet Health direkt Heart.
+- Sleep → Karte **Gemessene Nächte (Uhr)** (`measuredSleepHtml`): Ø gemessener Schlaf, Tief-/REM-Anteil,
+  Schwankung der Einschlafzeit, Ø niedrigste Herzfrequenz, Vergleich mit der eigenen Angabe, Liste je Nacht.
+- Daten aus dem PC-Export (ab 1.0.128, Schema 56): `heart_rate_day`, `wearable_sleep`, `wearable_recovery`,
+  `wearable_exercise` in `KEEP_TABLES` (pcdb.js), ohne `raw_json`. Am PC kommen sie über Settings → Polar.
+- Rechnungen in `wearabledata.js`, erzeugt aus `src/domain/wearable.ts` des PCs (dort testen; neu erzeugen mit
+  `tsc --target es2022 --module esnext wearable.ts`). Import des Polar-Datenexports direkt am Handy (Weg 2)
+  folgt, sobald eine echte Exportdatei vorliegt.
+
 ### Version 1.41.0 (15.11.2026): Feste Leisten, keine Vergrößerung, direkte Links, Check-In schnell
 
 - Kopf und untere Leiste bleiben stehen: kein Überziehen beim Scrollen (`overscroll-behavior: none` auf html

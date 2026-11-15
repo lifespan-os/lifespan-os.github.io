@@ -1149,3 +1149,13 @@ body.has-submenu [data-sheet].tabs--fold { display: none; }
 .tabbar .tabbar__fab--b { left: 75%; }
 .tabbar__sub[aria-expanded="true"] svg { transform: none; }
 @media (max-width: 350px) { .tabbar .tabbar__fab { width: 50px; height: 50px; border-radius: 25px; } }
+
+/* 1.35.0: Knöpfe weiß mit orangem Rand; Menüpunkte und Knöpfe weiter vom Seitenrand weg */
+.tabbar__grid { --bar-pad: clamp(14px, 7vw, 48px); padding: 0 var(--bar-pad); }
+.tabbar .tabbar__fab--a { left: calc(var(--bar-pad) + (100% - 2 * var(--bar-pad)) / 4); }
+.tabbar .tabbar__fab--b { left: calc(var(--bar-pad) + (100% - 2 * var(--bar-pad)) * 3 / 4); }
+.tabbar .tabbar__fab { background: #fff; color: var(--orange); border: 3px solid var(--orange); box-shadow: 0 4px 14px rgba(11, 42, 74, .28); }
+.tabbar .tabbar__fab svg { stroke: var(--orange); }
+.tabbar .tabbar__sub svg { fill: var(--orange); stroke: none; }
+.tabbar .tabbar__fab:active { background: #fff4e6; }
+.tabbar .tabbar__fab[aria-expanded="true"] { box-shadow: 0 0 0 3px rgba(243, 154, 34, .35), 0 4px 14px rgba(11, 42, 74, .28); }

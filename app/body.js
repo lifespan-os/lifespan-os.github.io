@@ -8,6 +8,45 @@ let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwic
 
 export function initBody(ctx) {
   X = ctx;
+  // Bereich verlassen (z. B. von Umfänge zu Vitalwerte): ungespeicherte Werte sofort sichern (1.40.0)
+  document.addEventListener("focusout", (ev) => {
+    const from = ev.target?.closest?.(".body-entry section[id^='be-']");
+    if (!from || !S()?.day?.dirty) return;
+    const to = ev.relatedTarget;
+    if (to instanceof Node && from.contains(to)) return;
+    setTimeout(() => {
+      if (autoSave()) rerenderKeepFocus();
+    }, 0);
+  });
+}
+
+/**
+ * Speichert die Tageserfassung ohne die Ansicht zu wechseln, sofern etwas geändert wurde.
+ * Rückgabe: true, wenn gespeichert wurde (dann ist das Formular neu vorbelegt).
+ */
+function autoSave() {
+  const st = S();
+  const d = st?.day;
+  if (!d?.dirty) return false;
+  for (const [id, v] of Object.entries(derivedFor(d))) {
+    if (metricById(id)) d.values[id] = String(v.value).replace(".", ",");
+  }
+  const r = B.saveDay(X.S.catalog, st.local, d, { uuid: () => X.uuid(), now: new Date() });
+  if (Object.keys(r.errors).length) {
+    d.errors = r.errors;
+    X.toast(`Nicht gespeichert: bitte ${Object.keys(r.errors).length === 1 ? "einen Wert" : `${Object.keys(r.errors).length} Werte`} prüfen.`, true);
+    return true;
+  }
+  void persist();
+  st.day = B.dayForm(X.S.catalog, st.local, d.date);
+  const parts = [r.saved ? `${r.saved} ${r.saved === 1 ? "Wert" : "Werte"} gespeichert` : "", r.removed ? `${r.removed} entfernt` : ""].filter(Boolean);
+  if (parts.length) X.toast(parts.join(", "));
+  return true;
+}
+
+/** Aufruf beim Verlassen der Ansicht „Werte erfassen“: Geändertes sichern. */
+export function bodyLeave() {
+  autoSave();
 }
 
 export function bodyState(local) {
@@ -248,7 +287,7 @@ function scaleCard() {
   const sc = S().scale ?? null;
   const rows = sc?.rows ?? null;
   return `<section class="card scale-scan"><h3>Aus Bild übernehmen</h3>
-    <p class="muted small">PDF der Waagen-Auswertung (Hume, „ganze Seite“) oder einen Screenshot wählen. Übernommen wird je Kachel der aktuelle (rechte) Wert für den oben gewählten Tag; Gesundheitspunktzahl, BMR und Herzfrequenz bleiben außen vor. Magermasse in Prozent, Unterhautfettanteil und BMI rechnet die App selbst. Gespeichert wird erst mit „Werte speichern“.</p>
+    <p class="muted small">PDF der Waagen-Auswertung (Hume, „ganze Seite“) oder einen Screenshot wählen. Übernommen wird je Kachel der aktuelle (rechte) Wert für den oben gewählten Tag; Gesundheitspunktzahl, BMR und Herzfrequenz bleiben außen vor. Magermasse in Prozent, Unterhautfettanteil und BMI rechnet die App selbst. Die übernommenen Werte werden sofort gespeichert.</p>
     <label class="btn block ${sc?.busy ? "is-busy" : ""}">${sc?.busy ? "Wird gelesen …" : "PDF einfügen"}<input type="file" accept="image/*,application/pdf,.pdf" data-scale="file" hidden ${sc?.busy ? "disabled" : ""}></label>
     <p class="muted small" id="scale-status" role="status">${esc(sc?.status ?? "")}</p>
     ${
@@ -262,7 +301,7 @@ function scaleCard() {
         </li>`,
             )
             .join("")}</ul>
-      <div class="row-actions"><button class="btn primary" data-act="scale-apply">Ins Formular übernehmen</button><button class="btn" data-act="scale-discard">Verwerfen</button></div>`
+      <div class="row-actions"><button class="btn primary" data-act="scale-apply">Übernehmen und speichern</button><button class="btn" data-act="scale-discard">Verwerfen</button></div>`
         : ""
     }
   </section>`;
@@ -465,7 +504,7 @@ export function viewBodyEntry() {
       })
       .join("")}
     <div class="entry-save"><button class="btn primary block" data-act="body-day-save">Werte speichern</button></div>
-    <p class="muted small">Messmethode und Uhrzeit gelten für alle Werte ihres Bereichs. Ein geleertes Feld entfernt einen noch nicht gesendeten Wert dieses Tages; Werte vom PC bleiben bestehen.</p>
+    <p class="muted small">Gespeichert wird auch automatisch, sobald du einen Bereich verlässt, den Tag wechselst oder die Ansicht schließt. Messmethode und Uhrzeit gelten für alle Werte ihres Bereichs. Ein geleertes Feld entfernt einen noch nicht gesendeten Wert dieses Tages; Werte vom PC bleiben bestehen.</p>
   </main>`;
 }
 
@@ -492,7 +531,12 @@ export const bodyActions = {
       }
       if (d.date === today() && !d.times[cat]) d.times[cat] = nowTime();
     }
-    st.scale = { busy: false, status: `${picked.length} ${picked.length === 1 ? "Wert" : "Werte"} übernommen – bitte prüfen und mit „Werte speichern“ speichern.`, rows: null };
+    // Sofort sichern (1.40.0)
+    d.dirty = picked.length > 0;
+    autoSave();
+    const ok = !Object.keys(S().day.errors).length;
+    const n = `${picked.length} ${picked.length === 1 ? "Wert" : "Werte"} übernommen`;
+    st.scale = { busy: false, status: ok ? `${n} und gespeichert.` : `${n}, aber noch nicht gespeichert – bitte die markierten Felder prüfen.`, rows: null };
     X.rerender();
   },
   "body-jump": (el) => document.getElementById(el.dataset.arg)?.scrollIntoView({ block: "start", behavior: "smooth" }),
@@ -501,9 +545,10 @@ export const bodyActions = {
     X.go("body-entry");
   },
   "body-day-shift": (el) => {
+    autoSave();
     const d = S().day;
     const next = shiftDate(d.date, Number(el.dataset.arg));
-    if (next > today()) return;
+    if (next > today() || Object.keys(d.errors).length) return X.rerender();
     S().day = B.dayForm(X.S.catalog, S().local, next);
     X.rerender();
   },
@@ -599,6 +644,7 @@ export function bodyInput(el) {
   if (el.dataset.scale || el.dataset.scaleUse) return true;
   const d = S()?.day;
   if (el.dataset.bd && d) {
+    if (el.dataset.bd !== "date") d.dirty = true;
     if (el.dataset.bd === "value") {
       d.values[el.dataset.id] = el.value;
       if (d.errors[el.dataset.id]) {
@@ -635,7 +681,8 @@ export function bodyChange(el) {
     return true;
   }
   if (el.dataset.bd === "date") {
-    if (el.value && el.value <= today()) S().day = B.dayForm(X.S.catalog, S().local, el.value);
+    autoSave();
+    if (el.value && el.value <= today() && !Object.keys(S().day.errors).length) S().day = B.dayForm(X.S.catalog, S().local, el.value);
     X.rerender();
     return true;
   }

@@ -3,7 +3,7 @@ import * as C from "./core.js";
 import * as store from "./store.js";
 import * as N from "./nutrition.js";
 import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, viewFood, viewFoodReview } from "./food.js";
-import { bodyActions, bodyChange, bodyInput, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
+import { bodyActions, bodyChange, bodyInput, bodyLeave, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
 import * as BD from "./bodydata.js";
 import { SECTIONS, barChoices, barSlots, drawerHtml, icon, pcOnlyHtml, quickSheetHtml, tabbarHtml } from "./nav.js";
 import { focusInfo, machineNamesOf } from "./focusinfo.js";
@@ -116,6 +116,8 @@ const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWa
 const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + TR.unsentTrain(S.train) + GL.unsentGoals(S.goals);
 
 function go(view, arg = null) {
+  // „Werte erfassen“ verlassen: Geändertes sofort sichern (1.40.0)
+  if (S.view === "body-entry" && view !== "body-entry") bodyLeave();
   if (view === "food-review" && S.view !== "food-review") S.reviewFrom = S.view === "send" ? "send" : S.view === "pending" ? "pending" : S.view === "food" ? "food" : "home";
   if (view !== S.view && view !== "detail") S.trainNotice = null;
   S.view = view;
@@ -2137,7 +2139,11 @@ async function wakeLock(on) {
 }
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && S.active) wakeLock(true);
-  if (document.visibilityState === "hidden") saveNow();
+  if (document.visibilityState === "hidden") {
+    // App in den Hintergrund: offene Körperwerte sichern (1.40.0)
+    if (S.view === "body-entry") bodyLeave();
+    saveNow();
+  }
 });
 
 // ------------------------------------------------------------------ Start

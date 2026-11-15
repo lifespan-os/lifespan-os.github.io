@@ -479,3 +479,161 @@ Fassung laden.
 - Settings → „Untere Leiste“: Die beiden Plätze links und rechts vom „+“ sind frei wählbar (alle Bereiche
   mit Handy-Ansicht, jede Kombination, auch zweimal derselbe). Overview und „Mehr“ bleiben fest.
   „Standard“ setzt Training und Nutrition zurück. Gespeichert in den Einstellungen am Gerät (`prefs.barSlots`).
+
+### Version 1.25.0 (14.11.2026): Konto ohne PC
+
+- Neues Konto direkt am Handy anlegen – für jemanden ohne PC: auf dem Startbildschirm („Ohne PC starten“)
+  oder unter Settings → Konten → „Neues Konto anlegen“. Abgefragt werden Name, Geschlecht, Geburtsdatum
+  und Größe (wie das Profil am PC).
+- Das Konto startet mit dem Startpaket `startpaket.json` (wie ein neuer Benutzer am PC): Maschinendatenbank
+  mit Muskelgruppen (ohne Bilder), Lebensmitteldatenbank, Übungsbibliothek und Sportarten. Erzeugt wird es
+  am PC mit `scripts\tools\handy\startpaket-erzeugen.py` (alle Migrationen, Startdaten; optional
+  Muskelfokus aus einem PC-Export und `--mit-supplements`). Kompaktes Format (Spalten + Zeilen), ca. 0,3 MB
+  komprimiert, offline im Service Worker gespeichert.
+- Mehrere Konten auf einem Gerät: jedes Konto hat einen eigenen Speicherbereich (store.js `useAccount`,
+  Schlüssel-Präfix je Konto; das bisherige Konto bleibt unverändert als Hauptkonto). Wechseln und Löschen
+  (zweimal tippen) unter Settings → Konten. Die App bittet den Browser um dauerhaften Speicher.
+- core.js: `expandCompact`, `accountDoc`; `parseExport` nimmt auch Objekte und kompakte Dateien.
+- Folgt: Supplement-Erfassung am Handy, Herstellerpakete importieren, „Alles an den PC senden“ und am PC
+  „Als neuen Benutzer anlegen“.
+
+### Version 1.26.0 (14.11.2026): Supplements am Handy erfassen
+
+- Nutrition → Tagebuch → Supplements: „Supplements eintragen“ und Tipp auf einen Eintrag zum Bearbeiten –
+  wie der Einnahme-Editor am PC: Einnahme (Mahlzeit des Tages, nüchtern, unabhängig; eine noch leere
+  Standardmahlzeit wird angelegt), Uhrzeit, Stack übernehmen, Supplements suchen (Name, Hersteller) mit
+  Startmenge (Tagesdosis bzw. 1), Mengen ändern, entfernen, Notizen; „Vom Tag entfernen“.
+  Einnahmen vom PC lassen sich ebenfalls ändern oder entfernen (Löschvermerk für den Abgleich).
+- Mikronährstoffe und Tagessumme rechnen die am Handy erfassten Supplements sofort mit.
+- Gesendet wird mit „Lebensmittel senden“ (`supplement_intake`, `supplement_intake_item`, Löschvermerke;
+  beim Konto am Handy auch die verwendeten Supplements mit Nährwerten). Offene Daten zeigen die Einträge.
+- Aus der PC-Exportdatei behält die App jetzt alle nicht archivierten Supplements mit Nährwerten (bisher
+  nur verwendete) und die eigenen Nährstofffelder vollständig (Gruppe, eingebaut – eigene Felder fehlten
+  bisher in den Mikronährstoffen).
+- Startpaket mit Supplement-Datenbank (3.849 Supplements, `--mit-supplements`); Nährwerte schlank ohne
+  IDs/Zeitstempel (Spaltenliste `a` im kompakten Format), ca. 0,65 MB komprimiert.
+- Neue Datei supplements.js (+ supplements.test.mjs).
+
+### Version 1.27.0 (14.11.2026): Herstellerpakete am Handy
+
+- Settings → Herstellerpakete: Pakete aus der Liste der App (PEAK, GymBeam, IronMaxx, #sinob, Proteini.si –
+  Ordner `pakete/` mit `index.json`) oder eine Paketdatei wählen. Vorschau wie am PC (neu / schon vorhanden,
+  neue Nährstofffelder, ausgelassene Werte bei anderer Einheit, übersprungene Einträge mit Grund), dann
+  „Installieren“. Gleiche Regeln wie `vendor_package.rs`: vorhandene Einträge (gleiche ID, Lebensmittel
+  gleicher Name + Marke, Supplements gleicher Name) bleiben, eine neuere Version ergänzt nur Neues.
+- Neue Lebensmittel stehen sofort im Tracker, neue Supplements bei „Supplements eintragen“. Alles geht mit
+  „Lebensmittel senden“ an den PC (`food`, `supplement`, `supplement_value`, `nutrient_field`,
+  `vendor_package`, `vendor_package_item`) – das Paket zählt dabei als ein Eintrag. Noch nicht gesendete
+  Pakete lassen sich zurücknehmen (schon verwendete Einträge bleiben).
+- Neue Dateien vendor.js (+ vendor.test.mjs) und vendorui.js; Paketliste erzeugen mit
+  `scripts\tools\handy\pakete-fuers-handy.py` (kopiert daten\Hersteller-Pakete nach mobile\pakete).
+
+### Version 1.28.0 (14.11.2026): Tagesziele am Handy
+
+- Settings → Tagesziele (auch aus Nutrition: „Tagesziele festlegen“ / „Trinkziel festlegen“): Aufbau und
+  Prüfregeln wie am PC (GoalsPanel, `goals::save`): Gültig ab, Kalorienziel fest oder dynamisch aus dem
+  Gesamtverbrauch (Defizit/Halten/Überschuss in kcal oder % des Verbrauchs), Protein in g, g je kg oder %,
+  Kohlenhydrate und Fett in g oder %, Schlaf, Zielgewicht, Schritte, Trinkziel, Kalibrierung. Neuer
+  Zielstand übernimmt den zuletzt gültigen; bisherige Zielstände bearbeiten oder löschen.
+- Tagessumme, Wasserhaushalt, Overview und Streaks nutzen die Ziele sofort. Gesendet wird mit „Körperwerte …
+  & Tagesziele senden“ (`daily_goal`, Löschvermerke); Offene Daten unter „Settings – Tagesziele“.
+- Neue Dateien goals.js (+ goals.test.mjs) und goalsui.js.
+
+### Version 1.29.0 (14.11.2026): Ganzes Konto an den PC
+
+- Settings → Konten → „Ganzes Konto an den PC“ (nur bei einem Konto am Handy): eine vollständige Exportdatei
+  „LIFESPAN Konto <Name> <Datum>.json“ im Format der Desktop-App – Grunddaten des Startpakets, Profil und alles
+  am Handy Erfasste (Trainings, Ernährung, Supplements, Herstellerpakete, Wasser, Körperwerte, Schlaf,
+  Checklisten, Health, Superhuman, Koffein, Training-Daten, Tagesziele). Löschvermerke sind angewendet,
+  Einträge gelöschter Eltern entfallen.
+- Am PC ohne neue Desktop-Version: neuer Benutzer (Settings → Benutzer → „Neuen Benutzer anlegen“, wechseln)
+  und Daten importieren → „Ersetzen“; bestehender Benutzer → „Abgleichen (zweites Gerät)“.
+- Danach „Alles als übertragen markieren“ (`mark-sent` mit `all`).
+- Neue Datei accountexport.js (+ accountexport.test.mjs); Datei gegen den Importablauf des PCs geprüft
+  (Migrationen bis zum Schemastand, alle Zeilen, Fremdschlüssel, Integrität).
+
+### Version 1.30.0 (14.11.2026): BLS 4.0 als optionaler Download
+
+- Settings → „BLS 4.0 (Bundeslebensmittelschlüssel)“ → „BLS herunterladen“ (ca. 2 MB, auf dem Gerät ca. 8 MB,
+  einmal je Gerät für alle Konten; „Vom Gerät entfernen“). Gleiche Datei wie am PC (`bls/bls_4_0.json`,
+  7.140 Lebensmittel, 138 Nährstoffe, Max Rubner-Institut 2025, CC BY 4.0).
+- Die Lebensmittelsuche (Tracker und Gerichte) zeigt BLS-Treffer unter den eigenen Lebensmitteln; ein Tipp
+  übernimmt das Lebensmittel wie am PC (`blsFoodInput`: Marke „BLS 4.0“, je 100 g, Kennzeichen → 0 mit Notiz,
+  keine Angabe bleibt leer) und wählt es zum Eintragen. „BLS durchsuchen“ zeigt alle Nährstoffe je Gruppe.
+- Neue Dateien bls.js (+ bls.test.mjs) und blsui.js. Übernommene Lebensmittel gehen wie eigene an den PC.
+
+### Version 1.31.0 (14.11.2026): Alle Menüs von unten
+
+- Alle Auswahlmenüs öffnen sich einheitlich als Fach von unten – jetzt in einem eigenen Bereich direkt im
+  Body (`#sheet-root`), sodass kein Element der Seite (schräg geschnittener Kopf, Karten, Scrollbereiche,
+  untere Leiste) das Fach abschneiden oder überdecken kann. Hintergrund antippen oder ✕ schließt.
+- Reiter aller Bereiche (Training, Nutrition, Health, Superhuman, iCoach.me), Auswahlgruppen mit
+  `data-sheet` (Magazin-Kategorien, Checklisten) und geöffnete Inhalte mit `data-sheet-panel` (iCoach.me-Module:
+  Tipp auf ein Modul öffnet es von unten, die Seite bleibt an ihrer Stelle).
+- app.js: `foldTabs()` neu mit `showSheet()`/`sheetToggle()`; Klicks im Fach über `sheetRoot`.
+
+### Version 1.32.0 (14.11.2026): Untermenü-Knopf unten
+
+- In der unteren Leiste stehen jetzt zwei runde Knöpfe im Stil von „Schnell erfassen“: „+“ öffnet wie bisher
+  Schnell erfassen, der Knopf mit zwei Punkten öffnet das Untermenü der Seite (die Reiter von Training,
+  Nutrition, Health, Superhuman, iCoach.me) als Fach von unten. Der Reiter-Knopf oben links entfällt dann.
+  Seiten ohne Untermenü zeigen nur „+“. Ohne untere Leiste (z. B. laufendes Training) bleibt der Knopf oben.
+- nav.js: `tabbarHtml({ …, sub })`, Symbol `ICONS.sub`; app.js: `S.subMenu` aus `foldTabs()`, Klasse
+  `has-submenu` am Body.
+- Behoben: Die Settings-Seite war seit 1.30.0 breiter als der Bildschirm (langes Wort in der BLS-Überschrift);
+  Überschriften und Texte in Karten brechen jetzt um.
+
+### Version 1.33.0 (15.11.2026): Untermenü auf allen Seiten
+
+- „+“ und „:“ in der unteren Leiste stehen weiter auseinander.
+- Der Knopf mit zwei Punkten gibt es jetzt auf allen Seiten: Er öffnet alle Auswahlmenüs der Seite in einem
+  Fach (Reiter, dazu z. B. Magazin-Kategorien oder Checklisten-Auswahl als eigene Gruppe). Seiten ohne
+  Auswahlmenü (Overview, Checklisten, Schlaf, Recovery, Body & Longevity, Insights, Settings) zeigen die
+  Abschnitte der Seite – ein Tipp springt zum Abschnitt. Die Auswahlknöpfe oben in der Seite entfallen dann.
+- app.js: `foldTabs()` sammelt alle Gruppen, Schlüssel „page“; Aktion `sheet-jump`.
+
+### Version 1.34.0 (15.11.2026): Runde Knöpfe auf der Oberkante der Leiste
+
+- Die untere Leiste hat wieder vier gleich breite Hauptpunkte (Overview, zwei frei wählbare Bereiche, Mehr).
+- Die runden Knöpfe schweben mit ihrer Mitte auf der Oberkante der Leiste: „+“ (Schnell erfassen) zwischen
+  dem ersten und zweiten Punkt, „:“ (Untermenü) zwischen dem dritten und vierten.
+- nav.js: `tabbarHtml` mit `.tabbar__grid` (4 Spalten) und `.tabbar__fab--a/--b` (absolut, 25 % / 75 %).
+
+### Version 1.35.0 (15.11.2026): Weiße Knöpfe, Leiste eingerückt
+
+- Die runden Knöpfe „+“ und „:“ sind weiß mit orangem Rand und orangem Zeichen.
+- Menüpunkte und Knöpfe der unteren Leiste haben mehr Abstand zum Seitenrand (`--bar-pad`, 7 % der Breite,
+  14–48 px); die Knöpfe bleiben genau zwischen Punkt 1/2 und 3/4.
+
+### Version 1.36.0 (15.11.2026): Größere Hauptpunkte
+
+- Symbole (26 statt 22 px) und Schrift (0,8 statt 0,7 rem) der vier Hauptpunkte in der unteren Leiste sind
+  größer; Höhe und Anordnung der Leiste bleiben gleich. Zu lange Namen enden mit „…“.
+
+### Version 1.37.0 (15.11.2026): Waagen-PDF – Kachel auf zwei Zeilen
+
+- Behoben: Las die Texterkennung eine Kachel der Waagen-Auswertung als zwei Zeilen („10.3 %“ und „› 10.4 %“),
+  wurde der vorherige Wert übernommen (Körperfettanteil 10,3 statt 10,4). Jetzt gilt bei nur einer Zahl in der
+  Wertzeile die Folgezeile mit Pfeil bzw. Zahl als aktueller Wert (`splitTile` in scaleScan, gleich am PC in
+  src/domain/scaleScan.ts mit Test).
+
+### Version 1.38.0 (15.11.2026): Neuer Kopf mit Figur (Entwurf „APP 1“)
+
+- Im Navy-Kopf aller Seiten steht statt des orangen und türkisen Streifens die Figur aus dem Logo (Hand mit
+  Flamme), um 10° gekippt (`icons/figur.png`, freigestellt aus der Grafik des Nutzers).
+- Overview: großer Kopf mit den heute gegessenen kcal, Tagesbedarf, offenen kcal und Protein/KH/Fett
+  (gleiche Rechnung wie die Karte Ernährung, `overviewHero` in overview.js), die Figur groß rechts daneben.
+
+### Version 1.40.0 (15.11.2026): Körperwerte sofort sichern
+
+- Body & Longevity → Werte erfassen: „Übernehmen und speichern“ (Aus Bild übernehmen) speichert die
+  übernommenen Werte sofort. Geänderte Werte werden außerdem automatisch gespeichert, wenn ein Bereich
+  verlassen wird (Fokus wechselt z. B. von Umfänge zu Vitalwerte), beim Tageswechsel, beim Verlassen der
+  Ansicht (`bodyLeave()` in `go()`) und wenn die App in den Hintergrund geht. Merker `day.dirty`,
+  Speichern über `autoSave()` in body.js (wie „Werte speichern“, ohne die Ansicht zu wechseln).
+
+### Version 1.39.0 (15.11.2026): Zwei neue Magazine
+
+- iCoach.me → Magazin: „Vom Lebensmittel zur Kalorie“ (Ernährung) und „Macht Soja dich weiblich?“ (Gesundheit &
+  Werte) – gleiche Einträge wie am PC (`MAGAZINES` in pcdomain.js), Titelbilder in `icoach/magazin/`, PDFs
+  (verkleinert, 1240 px, JPEG 60) unter `/media/icoach/magazin/`.

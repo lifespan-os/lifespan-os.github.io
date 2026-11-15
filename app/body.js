@@ -44,6 +44,13 @@ function autoSave() {
   return true;
 }
 
+/** „Werte erfassen“ für heute öffnen, optional direkt beim Bereich (z. B. „circumference“). */
+export function bodyOpenEntry(category = null) {
+  if (!S().day || S().day.date !== today() || !S().day.dirty) S().day = B.dayForm(X.S.catalog, S().local, today());
+  X.go("body-entry");
+  if (category) requestAnimationFrame(() => document.getElementById(`be-${category}`)?.scrollIntoView({ block: "start" }));
+}
+
 /** Aufruf beim Verlassen der Ansicht „Werte erfassen“: Geändertes sichern. */
 export function bodyLeave() {
   autoSave();

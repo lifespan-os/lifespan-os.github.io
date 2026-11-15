@@ -25,6 +25,10 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 17px; line-height: 1.45; }
 body { padding: 0 0 calc(env(safe-area-inset-bottom) + 96px); min-height: 100vh; overscroll-behavior-y: none; }
+/* Grundansicht (1.40.0): kein Überziehen nach oben/unten (Kopf und untere Leiste bleiben stehen), keine
+   seitliche Verschiebung; Sprungziele landen unter dem fest stehenden Kopf (--head-h misst app.js) */
+html { overscroll-behavior: none; overflow-x: clip; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: calc(var(--head-h, 90px) + 8px); }
+body { overscroll-behavior: none; overflow-x: clip; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }

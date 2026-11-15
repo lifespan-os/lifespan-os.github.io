@@ -624,6 +624,21 @@ Fassung laden.
 - Overview: großer Kopf mit den heute gegessenen kcal, Tagesbedarf, offenen kcal und Protein/KH/Fett
   (gleiche Rechnung wie die Karte Ernährung, `overviewHero` in overview.js), die Figur groß rechts daneben.
 
+### Version 1.41.0 (15.11.2026): Feste Leisten, keine Vergrößerung, direkte Links, Check-In schnell
+
+- Kopf und untere Leiste bleiben stehen: kein Überziehen beim Scrollen (`overscroll-behavior: none` auf html
+  und body), keine seitliche Verschiebung (`overflow-x: clip`).
+- Keine Vergrößerung beim Antippen eines Felds (`maximum-scale=1` im Viewport) – nach einer Eingabe ist das
+  nächste Feld direkt antippbar. Nach dem Schließen der Tastatur rastet die Ansicht wieder ein
+  (`settleViewport()` in app.js, ersetzt `resetZoom()`).
+- Sprungziele landen unter dem Kopf: `--head-h` (gemessen in `measureHead()`), `scroll-padding-top` auf html;
+  „Abschnitte“ im Untermenü nutzen `scrollIntoView`.
+- Links in der Übersicht führen direkt zum Ziel: Erinnerung Check-In-Fotos → Training → Check-Ins;
+  Gewicht, Umfänge, Griffkraft, VO2max → Body → Werte erfassen beim passenden Bereich
+  (`REMINDER_TARGET` in overview.js, `data-tab="entry:<Bereich>"`, `bodyOpenEntry()` in body.js).
+- Schnell erfassen: neuer Eintrag „Check-In-Foto“ (Training → Check-Ins, Foto aufnehmen oder wählen);
+  „Gewicht & Körperwerte“ öffnet direkt „Werte erfassen“.
+
 ### Version 1.40.0 (15.11.2026): Körperwerte sofort sichern
 
 - Body & Longevity → Werte erfassen: „Übernehmen und speichern“ (Aus Bild übernehmen) speichert die

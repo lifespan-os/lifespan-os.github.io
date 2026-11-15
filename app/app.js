@@ -3,7 +3,7 @@ import * as C from "./core.js";
 import * as store from "./store.js";
 import * as N from "./nutrition.js";
 import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, viewFood, viewFoodReview } from "./food.js";
-import { bodyActions, bodyChange, bodyInput, bodyLeave, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
+import { bodyActions, bodyChange, bodyInput, bodyLeave, bodyOpenEntry, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
 import * as BD from "./bodydata.js";
 import { SECTIONS, barChoices, barSlots, drawerHtml, icon, pcOnlyHtml, quickSheetHtml, tabbarHtml } from "./nav.js";
 import { focusInfo, machineNamesOf } from "./focusinfo.js";
@@ -884,6 +884,7 @@ function render() {
   app.innerHTML = (VIEWS[S.view] || viewHome)();
   foldTabs();
   renderNav();
+  measureHead();
   if (S.view === "picker") {
     const q = document.getElementById("q");
     q?.focus();
@@ -1088,6 +1089,11 @@ function quickGo(id) {
     return go("diary");
   }
   if (id === "training") S.trainTab = "workouts";
+  if (id === "checkin") {
+    S.trainTab = "checkins";
+    return go("training");
+  }
+  if (id === "body") return bodyOpenEntry(null);
   if (id === "caffeine") S.icTab = "widgets";
   if (id === "todo") S.todoDate = t;
   const view = { body: "body", training: "training", sleep: "sleep", recovery: "recovery", todo: "todos", caffeine: "icoach" }[id];
@@ -1154,25 +1160,37 @@ document.addEventListener("keydown", (ev) => {
 });
 
 /**
- * iOS vergrößert beim Tippen in ein Feld und bleibt danach vergrößert. Nach dem Bestätigen eines
- * Wertes (Feld verlassen, Satz abhaken) wieder auf die optimale Breite zurück (1.4.1): kurz
- * „maximum-scale=1“ setzen, dann wieder freigeben (Zoomen mit zwei Fingern bleibt möglich).
+ * Grundansicht (1.40.0): Die App vergrößert nie (index.html: „maximum-scale=1“ – iOS zoomt beim
+ * Antippen eines Felds nicht mehr hinein, das nächste Feld ist direkt antippbar). Nach dem Schließen
+ * der Tastatur bzw. dem Verlassen eines Felds rastet die Ansicht wieder ein: keine seitliche
+ * Verschiebung, Kopf und untere Leiste an ihrem Platz (iOS lässt sonst manchmal einen Versatz stehen).
  */
-const viewportMeta = document.querySelector('meta[name="viewport"]');
-const VIEWPORT = viewportMeta?.getAttribute("content") ?? "width=device-width, initial-scale=1, viewport-fit=cover";
-function resetZoom() {
-  if (!viewportMeta || !/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
-  if ((window.visualViewport?.scale ?? 1) <= 1.01) return;
-  viewportMeta.setAttribute("content", `${VIEWPORT}, maximum-scale=1`);
-  setTimeout(() => viewportMeta.setAttribute("content", VIEWPORT), 350);
+const isField = (el) => el?.matches?.("input, textarea, select");
+function settleViewport() {
+  if (isField(document.activeElement)) return;
+  const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  window.scrollTo(0, Math.min(window.scrollY, max));
 }
-// Wert bestätigt (Feld verlassen bzw. „Fertig“): Zoom zurück, sofern kein anderes Feld folgt
 document.addEventListener("focusout", (ev) => {
-  if (!ev.target.matches?.("input, textarea, select")) return;
-  setTimeout(() => {
-    if (!document.activeElement?.matches?.("input, textarea, select")) resetZoom();
-  }, 60);
+  if (!isField(ev.target)) return;
+  setTimeout(settleViewport, 80);
 });
+{
+  // Tastatur zu: sichtbare Höhe wächst wieder auf die volle Höhe
+  let lastH = window.visualViewport?.height ?? window.innerHeight;
+  window.visualViewport?.addEventListener("resize", () => {
+    const h = window.visualViewport.height;
+    if (h > lastH + 80) setTimeout(settleViewport, 50);
+    lastH = h;
+  });
+}
+
+/** Höhe des Kopfs als CSS-Variable – Sprungziele landen darunter statt dahinter (1.40.0). */
+function measureHead() {
+  const h = document.querySelector(".top")?.offsetHeight ?? 0;
+  document.documentElement.style.setProperty("--head-h", `${h}px`);
+}
+window.addEventListener("resize", measureHead);
 
 function rerenderKeepScroll() {
   const y = window.scrollY;
@@ -1579,10 +1597,8 @@ const actions = {
     foldTabs();
     renderNav();
     const card = h?.closest(".card") ?? h;
-    if (card) {
-      const top = card.getBoundingClientRect().top + window.scrollY - 12;
-      window.scrollTo({ top, behavior: "smooth" });
-    }
+    // scroll-padding-top (Höhe des Kopfs) sorgt dafür, dass die Karte unter dem Kopf beginnt
+    card?.scrollIntoView({ block: "start", behavior: "smooth" });
   },
   "tabs-fold": (el) => {
     const key = el.dataset.arg;
@@ -1594,6 +1610,8 @@ const actions = {
     S.menuOpen = false;
     // Links auf einen Reiter (wie #/training?tab=neat am PC); aus dem Menü immer der erste Reiter
     if (el.dataset.arg === "training") S.trainTab = el.dataset.tab ?? (el.closest(".drawer") ? "workouts" : S.trainTab ?? "workouts");
+    // Body: direkt „Werte erfassen“, auf Wunsch beim Bereich (z. B. „entry:circumference“, 1.40.0)
+    if (el.dataset.arg === "body" && el.dataset.tab?.startsWith("entry")) return bodyOpenEntry(el.dataset.tab.split(":")[1] ?? null);
     const sec = SECTIONS.find((x) => x.id === el.dataset.arg);
     return sec?.view ? go(sec.view) : go("pc-only", el.dataset.arg);
   },

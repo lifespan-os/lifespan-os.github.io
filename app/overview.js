@@ -33,6 +33,14 @@ const metric = (label, value, unit = "", display = false) =>
 const row = (...items) => `<div class="metric-row">${items.filter(Boolean).join("")}</div>`;
 const note = (text) => (text ? `<p class="card__note">${text}</p>` : "");
 const link = (section, label, tab = null) => `<button class="linkbtn" data-act="menu-go" data-arg="${section}"${tab ? ` data-tab="${tab}"` : ""}>${esc(label)}</button>`;
+/** Erinnerung → direkt zum passenden Reiter bzw. Bereich (1.40.0). */
+const REMINDER_TARGET = {
+  weight: "entry:weight",
+  circumference: "entry:circumference",
+  grip: "entry:fitness",
+  vo2max: "entry:fitness",
+  checkin: "checkins",
+};
 const missing = (text, section, action, tab = null) => `<p class="muted">${esc(text)} ${link(section, action, tab)}</p>`;
 
 function ring(share, label) {
@@ -321,7 +329,7 @@ function dashboardCards(data, w, isToday) {
       none
         ? `<p class="muted">Keine Messung fällig – alles im Rhythmus.</p>`
         : `<ul class="reminders">${due
-            .map((d) => `<li>${link(d.where, d.label)}<span class="muted small">${esc(d.text)}</span></li>`)
+            .map((d) => `<li>${link(d.where, d.label, REMINDER_TARGET[d.key] ?? null)}<span class="muted small">${esc(d.text)}</span></li>`)
             .join("")}${exportText ? `<li><strong>Datenexport (am PC)</strong><span class="muted small">${esc(exportText)}</span></li>` : ""}</ul>`
     }
     ${note(
@@ -483,7 +491,7 @@ export function energyHtml(energy) {
   const cal = D.energy.describeCalibration(energy);
   if (total === null) {
     return `<p class="muted">Für den Gesamtverbrauch fehlt noch: ${esc(energy.missing.join(", "))}.</p>
-      ${note(`${link("body", "Gewicht erfassen")} · Profil am PC unter Settings`)}`;
+      ${note(`${link("body", "Gewicht erfassen", "entry:weight")} · Profil am PC unter Settings`)}`;
   }
   return `${row(
     metric(energy.calibratedTotalKcal !== null ? "Gesamtverbrauch (kalibriert)" : "Gesamtverbrauch (berechnet)", F(total), "kcal", true),
@@ -746,7 +754,7 @@ function liveCards(data, week, widgets, isToday) {
               })}<ul class="legend"><li><span class="swatch" style="background:${COLOR.body}"></span>Messwert</li><li><span class="swatch" style="background:${COLOR.ink}"></span>Gewichtstrend (Mittel der letzten 7 Tage)</li></ul>`
             : ""
         }`
-      : missing("In den letzten 30 Tagen kein Gewicht erfasst.", "body", "Gewicht erfassen"),
+      : missing("In den letzten 30 Tagen kein Gewicht erfasst.", "body", "Gewicht erfassen", "entry:weight"),
     { area: "body", wide: true },
   );
 

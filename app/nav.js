@@ -24,6 +24,7 @@ const ICONS = {
   plus: svg('<path d="M12 5v14"/><path d="M5 12h14"/>'),
   // Untermenü (1.32.0): zwei Punkte
   sub: '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="12" cy="7" r="2.6"/><circle cx="12" cy="17" r="2.6"/></svg>',
+  camera: svg('<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>'),
   water: svg('<path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/>'),
   coffee: svg('<path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h2a2 2 0 0 1 0 4h-2"/><path d="M8 3v3M12 3v3"/>'),
 };
@@ -145,6 +146,7 @@ export const QUICK = [
   { id: "meal", label: "Mahlzeit", icon: "nutrition" },
   { id: "water", label: "Wasser", icon: "water" },
   { id: "body", label: "Gewicht & Körperwerte", icon: "body" },
+  { id: "checkin", label: "Check-In-Foto", icon: "camera" },
   { id: "training", label: "Training", icon: "training" },
   { id: "sleep", label: "Schlaf", icon: "sleep" },
   { id: "recovery", label: "Recovery", icon: "recovery" },

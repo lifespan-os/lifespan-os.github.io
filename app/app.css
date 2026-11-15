@@ -1159,3 +1159,9 @@ body.has-submenu [data-sheet].tabs--fold { display: none; }
 .tabbar .tabbar__sub svg { fill: var(--orange); stroke: none; }
 .tabbar .tabbar__fab:active { background: #fff4e6; }
 .tabbar .tabbar__fab[aria-expanded="true"] { box-shadow: 0 0 0 3px rgba(243, 154, 34, .35), 0 4px 14px rgba(11, 42, 74, .28); }
+
+/* 1.36.0: Hauptpunkte der unteren Leiste etwas größer (Höhe und Anordnung unverändert) */
+.tabbar .tabbar__item { gap: 1px; padding: 3px 0; }
+.tabbar .tabbar__item svg { width: 26px; height: 26px; }
+.tabbar .tabbar__item span { font-size: .8rem; line-height: 1.15; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 360px) { .tabbar .tabbar__item span { font-size: .74rem; } .tabbar .tabbar__item svg { width: 25px; height: 25px; } }

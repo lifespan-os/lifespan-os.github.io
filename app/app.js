@@ -11,6 +11,7 @@ import * as P from "./pcdb.js";
 import { buildDb, diaryActions, diaryChange, diaryInput, initDiary, today as todayIso, viewDiary, viewNutritionHistory, viewSuppIntake } from "./diary.js";
 import * as SP from "./supplements.js";
 import { initVendor, vendorActions, vendorChange, viewVendor } from "./vendorui.js";
+import { catalogActions, catalogCard, catalogChange, initCatalog } from "./catalogui.js";
 import { initGoals, goalActions, goalChange, viewGoals } from "./goalsui.js";
 import * as GL from "./goals.js";
 import * as AX from "./accountexport.js";
@@ -34,6 +35,7 @@ import { initTrainingStats } from "./trainingstats.js";
 import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
 import * as TR from "./trainingdata.js";
 import * as PD from "./pending.js";
+import * as HX from "./hyrox.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -308,6 +310,7 @@ function viewTransfer() {
       <p class="muted small">Lebensmittel und Supplements von Herstellern (PEAK, GymBeam, IronMaxx, #sinob, Proteini.si …) mit einem Tipp installieren – wie am PC.</p>
       <button class="btn block" data-act="vendor-open">Herstellerpakete</button>
     </section>
+    ${catalogCard()}
     ${blsCard()}
     <section class="card">
       <h3>Blutzucker-Dateien</h3>
@@ -377,8 +380,10 @@ function viewWorkout() {
     <div class="wo-head"><span class="muted small">${w.exercises.length} Übungen · ${C.fmtNum(C.volumeKg(w), 0)} kg Volumen</span>${
       edit ? `<span class="tag">${w.backfill ? "Nachtragen" : "Bearbeitung"}</span>` : `<span class="clock" data-clock>${fmtSec((Date.now() - new Date(w.startedAt)) / 1000)}</span>`
     }</div>
+    ${w.competition ? competitionCard(w.competition) : ""}
     ${w.exercises.map((we, i) => exerciseCard(we, i, exs, machines)).join("")}
     <button class="btn block" data-go="picker">+ Übung oder Maschine hinzufügen</button>
+    ${w.competition ? "" : `<button class="btn ghost block" data-act="comp-add">HYROX-Wettkampf-Angaben hinzufügen</button>`}
     <button class="btn danger block" data-act="discard">${w.backfill ? "Verwerfen" : edit ? "Änderungen verwerfen" : "Training verwerfen"}</button>
   </main>
   <div class="bottom"><div class="inner"><button class="btn primary" data-go="finish">${w.backfill ? "Weiter zum Speichern" : edit ? "Änderungen speichern" : "Training beenden"}</button></div></div>`;
@@ -409,10 +414,98 @@ function setFocus(w, id) {
   S.exOpen = {};
 }
 
+/**
+ * HYROX-Wettkampf (1.46.0): Frauen/Männer, Wettkampfklasse (Division), Ort, Altersklasse,
+ * Endzeit und Platzierung gesamt und in der Altersklasse – wie am PC.
+ */
+function competitionCard(c) {
+  const sex = c.sex ?? HX.divisionSex(c.division);
+  const num = (v) => (v === null || v === undefined ? "" : String(v));
+  const field = (id, label, value, attrs, cls = "field") =>
+    `<div class="${cls}"><label for="${id}">${label}</label><input id="${id}" type="text" ${attrs} value="${esc(value)}"></div>`;
+  return `<section class="card competition" aria-label="Wettkampf-Angaben">
+    <h3>HYROX-Wettkampf</h3>
+    <div class="chips" role="group" aria-label="Wettkampf">
+      <button class="chip${sex === "women" ? " on" : ""}" data-act="comp-sex" data-arg="women" aria-pressed="${sex === "women"}">Wettkampf Frauen</button>
+      <button class="chip${sex === "men" ? " on" : ""}" data-act="comp-sex" data-arg="men" aria-pressed="${sex === "men"}">Wettkampf Männer</button>
+    </div>
+    <div class="comp-grid">
+      <div class="field wide"><label for="comp-division">Wettkampfklasse (Division)</label>
+        <select id="comp-division" data-cfield="division">
+          <option value="">–</option>
+          ${HX.divisionsFor(sex).map((d) => `<option value="${d.value}"${c.division === d.value ? " selected" : ""}>${esc(d.label)}</option>`).join("")}
+        </select></div>
+      ${field("comp-location", "Ort", c.location ?? "", 'maxlength="120" placeholder="z. B. Wien" data-cfield="location"')}
+      <div class="field"><label for="comp-age">Altersklasse</label>
+        <select id="comp-age" data-cfield="ageGroup">
+          <option value="">–</option>
+          ${HX.HYROX_AGE_GROUPS.map((a) => `<option value="${a}"${c.ageGroup === a ? " selected" : ""}>${a}</option>`).join("")}
+          ${c.ageGroup && !HX.HYROX_AGE_GROUPS.includes(c.ageGroup) ? `<option value="${esc(c.ageGroup)}" selected>${esc(c.ageGroup)}</option>` : ""}
+        </select></div>
+      ${field("comp-finish", "Endzeit", c.finishText ?? HX.formatFinishTime(c.finishSeconds), 'inputmode="numeric" placeholder="h:mm:ss" data-cfield="finish"', "field wide")}
+      ${field("comp-rank", "Platz gesamt", num(c.rank), 'inputmode="numeric" placeholder="–" data-cfield="rank"')}
+      ${field("comp-field", "von", num(c.field), 'inputmode="numeric" placeholder="–" data-cfield="field"')}
+      ${field("comp-rank-age", "Platz AK", num(c.rankAge), 'inputmode="numeric" placeholder="–" data-cfield="rankAge"')}
+      ${field("comp-field-age", "von", num(c.fieldAge), 'inputmode="numeric" placeholder="–" data-cfield="fieldAge"')}
+    </div>
+    <p class="muted small">Beim Wechsel der Klasse werden die Stationsgewichte laut Regelwerk eingetragen; sie bleiben änderbar.</p>
+    <button class="btn sm ghost" data-act="comp-remove">Wettkampf-Angaben entfernen</button>
+  </section>`;
+}
+
+/** Stationsgewichte und -notizen der Einheit an eine Klasse anpassen (ohne Gewichte: unverändert). */
+function applyDivisionWeights(w, division) {
+  if (!HX.weightsForDivision(division)) return;
+  for (const we of w.exercises) {
+    if (!HX.HYROX_WEIGHTED.has(we.exerciseId)) continue;
+    const load = HX.loadFor(we.exerciseId, division);
+    if (!load) continue;
+    for (const s of we.sets) {
+      s.weightKg = load.weightKg;
+      if (load.notes) s.notes = load.notes;
+    }
+  }
+}
+
+/** Vorlage gewählt: alle 16 Abschnitte mit vorbelegten Werten anlegen. */
+function addHyrox(template) {
+  const w = S.active;
+  const all = C.allExercises(S.catalog, S.localExercises);
+  const { found, missing } = HX.matchStations(all);
+  const iso = new Date().toISOString();
+  for (const station of missing) {
+    const id = all.some((e) => e.id === station.exerciseId) ? C.uuidv7() : station.exerciseId;
+    const ex = HX.stationExercise(station, id, iso);
+    S.localExercises.push(ex);
+    found.set(station.key, ex);
+  }
+  const race = template !== "simulation";
+  const division = race && !w.planDayId ? HX.defaultDivision(template) : null;
+  let first = null;
+  for (const seg of HX.hyroxSegments(division)) {
+    const ex = found.get(seg.station.key);
+    const we = C.workoutExercise({ exerciseId: ex.id });
+    const set = C.newSet({ distanceM: seg.distanceM, reps: seg.reps, weightKg: seg.weightKg });
+    set.notes = seg.notes;
+    we.sets = [set];
+    we.restSeconds = null;
+    w.exercises.push(we);
+    first ??= we;
+  }
+  if (!w.title.trim() || w.title === "Freies Training" || w.title === "Training") {
+    w.title = race ? "HYROX-Wettkampf" : "HYROX-Simulation";
+  }
+  if (division && !w.competition) {
+    w.competition = { ...HX.emptyCompetition(division), sex: template };
+  }
+  return first;
+}
+
 function exerciseCard(we, i, exs, machines) {
   const ex = exs.get(we.exerciseId);
   const { name, nr, m } = exLabel(ex, machines);
   const cardio = ex?.category === "cardio";
+  const weighted = cardio && HX.HYROX_WEIGHTED.has(we.exerciseId);
   const last = C.lastSessionFor(S.catalog, S.workouts, we.exerciseId, S.active.id);
   const st = we.settings || C.emptySettings();
   const open = isOpen(S.active, we);
@@ -452,9 +545,9 @@ function exerciseCard(we, i, exs, machines) {
       <summary>Notiz zur Übung${we.notes ? "" : " (optional)"}</summary>
       <textarea id="note-${we.id}" rows="2" maxlength="500" placeholder="z. B. Sitz zu tief, nächstes Mal mehr Gewicht" data-we="${we.id}" data-field="notes">${esc(we.notes ?? "")}</textarea>
     </details>
-    <div class="set-head${cardio ? " cardio" : ""}"><span>#</span>${cardio ? "<span>Minuten</span><span>km</span>" : "<span>kg</span><span>Wdh.</span><span>RPE</span>"}<span>✓</span></div>
+    <div class="set-head${cardio ? " cardio" : ""}${weighted ? " kg" : ""}"><span>#</span>${cardio ? `<span>Minuten</span><span>km</span>${weighted ? "<span>kg</span>" : ""}` : "<span>kg</span><span>Wdh.</span><span>RPE</span>"}<span>✓</span></div>
     <div class="sets">
-      ${we.sets.map((s, si) => setRow(we, s, si, cardio, cardio ? [] : C.visibleProfiles(we, ex))).join("")}
+      ${we.sets.map((s, si) => setRow(we, s, si, cardio, cardio ? [] : C.visibleProfiles(we, ex), weighted)).join("")}
     </div>
     <div class="ex-foot">
       <button class="btn sm" data-act="add-set" data-we="${we.id}">+ Satz</button>
@@ -477,19 +570,24 @@ function profilePicker(we, ex) {
   </details>`;
 }
 
-function setRow(we, s, si, cardio, profiles = []) {
+function setRow(we, s, si, cardio, profiles = [], weighted = false) {
   const id = `${we.id}-${s.id}`;
   const warmIdx = we.sets.slice(0, si + 1).filter((x) => !x.isWarmup).length;
   const idx = s.isWarmup ? `<span class="idx w">W</span>` : `<span class="idx">${warmIdx}</span>`;
   const inputs = cardio
     ? `<input id="d-${id}" type="text" inputmode="decimal" placeholder="min" value="${s.durationSeconds ? C.fmtNum(s.durationSeconds / 60) : ""}" data-we="${we.id}" data-set="${s.id}" data-f="durationMin" aria-label="Dauer in Minuten">
-       <input id="k-${id}" type="text" inputmode="decimal" placeholder="km" value="${s.distanceM !== null ? C.fmtNum(s.distanceM / 1000, 3) : ""}" data-we="${we.id}" data-set="${s.id}" data-f="distanceKm" aria-label="Strecke in km">`
+       <input id="k-${id}" type="text" inputmode="decimal" placeholder="km" value="${s.distanceM !== null ? C.fmtNum(s.distanceM / 1000, 3) : ""}" data-we="${we.id}" data-set="${s.id}" data-f="distanceKm" aria-label="Strecke in km">${
+         weighted
+           ? `<input id="w-${id}" type="text" inputmode="decimal" placeholder="kg" value="${C.fmtNum(s.weightKg)}" data-we="${we.id}" data-set="${s.id}" data-f="weightKg" aria-label="Gewicht in kg">`
+           : ""
+       }`
     : `<input id="w-${id}" type="text" inputmode="decimal" placeholder="kg" value="${C.fmtNum(C.profileTotal(s.rp) ?? s.weightKg)}" data-we="${we.id}" data-set="${s.id}" data-f="weightKg" aria-label="Gewicht in kg"${C.profileTotal(s.rp) !== null ? ' readonly class="sum" title="Summe der Profilgewichte"' : ""}>
        <input id="r-${id}" type="text" inputmode="numeric" placeholder="Wdh." value="${s.reps ?? ""}" data-we="${we.id}" data-set="${s.id}" data-f="reps" aria-label="Wiederholungen">
        <input id="p-${id}" class="rpe" type="text" inputmode="decimal" placeholder="–" value="${C.fmtNum(s.rpe, 1)}" data-we="${we.id}" data-set="${s.id}" data-f="rpe" aria-label="RPE">`;
-  return `<div class="set${cardio ? " cardio" : ""}${s.isDone ? " done" : ""}">${idx}${inputs}
+  return `<div class="set${cardio ? " cardio" : ""}${cardio && weighted ? " kg" : ""}${s.isDone ? " done" : ""}">${idx}${inputs}
       <button class="check${s.isDone ? " on" : ""}" data-act="toggle-done" data-we="${we.id}" data-set="${s.id}" aria-label="Satz abhaken" aria-pressed="${s.isDone}">✓</button>
     </div>
+    ${s.notes ? `<p class="set-note muted small">${esc(s.notes)}</p>` : ""}
     ${
       profiles.length
         ? `<div class="rp-grid">${profiles
@@ -812,6 +910,21 @@ function viewPending() {
   </main>`;
 }
 
+/** „HYROX · Männer Open · Wien · AK 30-34 · 1:28:12 · Platz 120. von 1.500 · AK 12. von 210“ */
+function competitionText(c) {
+  return [
+    "HYROX",
+    c.division ? HX.divisionLabel(c.division) : null,
+    c.location,
+    c.ageGroup ? `AK ${c.ageGroup}` : null,
+    c.finishSeconds ? HX.formatFinishTime(c.finishSeconds) : null,
+    c.rank ? `Platz ${HX.placementText(c.rank, c.field)}` : null,
+    c.rankAge ? `AK ${HX.placementText(c.rankAge, c.fieldAge)}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 function viewDetail() {
   const own = S.workouts.find((x) => x.id === S.arg);
   const w = own ?? pcWorkout(S.arg);
@@ -831,7 +944,7 @@ function viewDetail() {
       <div><b>${w.durationMin ?? "–"}</b><span>Minuten</span></div>
       <div><b>${w.perceivedExertion ?? "–"}</b><span>Anstrengung</span></div>
       <div><b>${C.fmtNum(C.volumeKg(w), 0)}</b><span>kg Volumen</span></div>
-    </div>${w.notes ? `<p class="small">${esc(w.notes)}</p>` : ""}
+    </div>${w.competition ? `<p class="small"><b>${esc(competitionText(w.competition))}</b></p>` : ""}${w.notes ? `<p class="small">${esc(w.notes)}</p>` : ""}
     <p class="muted small">${!own ? "Einheit vom PC." : w.exported ? "An den PC gesendet." : "Noch nicht an den PC gesendet."}</p></section>
     ${w.exercises
       .map((we) => {
@@ -840,7 +953,7 @@ function viewDetail() {
           <p class="small">${we.sets
             .map((s) =>
               s.durationSeconds !== null || s.distanceM !== null
-                ? `${s.isWarmup ? "W " : ""}${s.durationSeconds !== null ? `${Math.round(s.durationSeconds / 60)} min` : "–"}${s.distanceM !== null ? ` · ${C.fmtNum(s.distanceM / 1000)} km` : ""}${s.rpe ? ` @${C.fmtNum(s.rpe, 1)}` : ""}`
+                ? `${s.isWarmup ? "W " : ""}${s.durationSeconds !== null ? `${Math.round(s.durationSeconds / 60)} min` : "–"}${s.distanceM !== null ? ` · ${C.fmtNum(s.distanceM / 1000)} km` : ""}${s.weightKg !== null ? ` · ${C.fmtNum(s.weightKg)} kg` : ""}${s.rpe ? ` @${C.fmtNum(s.rpe, 1)}` : ""}`
                 : `${s.isWarmup ? "W " : ""}${s.reps ?? "–"} × ${s.weightKg !== null ? C.fmtNum(s.weightKg) + " kg" : "–"}${s.rpe ? ` @${C.fmtNum(s.rpe, 1)}` : ""}${s.isFailure ? " (Fail)" : ""}`,
             )
             .map(esc)
@@ -1287,6 +1400,16 @@ async function startWorkout(title, planDay = null) {
 }
 
 function addExercise(exerciseId) {
+  const template = HX.hyroxTemplate(exerciseId);
+  if (template) {
+    const first = addHyrox(template);
+    setFocus(S.active, first.id);
+    saveSoon();
+    S.query = "";
+    go("workout");
+    requestAnimationFrame(() => document.getElementById(`ex-${first.id}`)?.scrollIntoView({ block: "start", behavior: "smooth" }));
+    return;
+  }
   const last = C.lastSessionFor(S.catalog, S.workouts, exerciseId, S.active.id);
   const we = C.workoutExercise({ exerciseId, last });
   S.active.exercises.push(we);
@@ -1301,6 +1424,7 @@ const actions = {
   ...foodActions,
   ...diaryActions,
   ...vendorActions,
+  ...catalogActions,
   ...goalActions,
   ...blsActions,
   ...overviewActions,
@@ -1313,6 +1437,27 @@ const actions = {
   ...bodyActions,
   ...trainingActions,
   "start-free": () => startWorkout("Freies Training"),
+  "comp-add": () => {
+    S.active.competition = { ...HX.emptyCompetition(null), sex: "women" };
+    saveSoon();
+    rerenderKeepScroll();
+  },
+  "comp-remove": () => {
+    S.active.competition = null;
+    saveSoon();
+    rerenderKeepScroll();
+  },
+  "comp-sex": (el) => {
+    const c = S.active?.competition;
+    if (!c) return;
+    c.sex = el.dataset.arg;
+    if (c.division && !HX.divisionsFor(c.sex).some((d) => d.value === c.division)) {
+      c.division = HX.defaultDivision(c.sex);
+      applyDivisionWeights(S.active, c.division);
+    }
+    saveSoon();
+    rerenderKeepScroll();
+  },
   "start-plan": (el) => {
     for (const p of S.catalog.plans) {
       const d = p.days.find((x) => x.row.id === el.dataset.arg);
@@ -1895,6 +2040,22 @@ app.addEventListener("input", (ev) => {
     saveSoon();
     return;
   }
+  if (el.dataset.cfield && S.active?.competition) {
+    const c = S.active.competition;
+    const f = el.dataset.cfield;
+    if (f === "location") c.location = el.value.trim() || null;
+    else if (f === "finish") {
+      c.finishText = el.value;
+      c.finishSeconds = HX.parseFinishTime(el.value);
+      el.setAttribute("aria-invalid", Number.isNaN(c.finishSeconds) ? "true" : "false");
+    } else if (["rank", "field", "rankAge", "fieldAge"].includes(f)) {
+      const v = C.parseNum(el.value.replace(/\./g, ""));
+      c[f] = v === null ? null : Number.isNaN(v) ? NaN : v;
+      el.setAttribute("aria-invalid", Number.isNaN(c[f]) ? "true" : "false");
+    }
+    saveSoon();
+    return;
+  }
   if (el.dataset.wfield) {
     const f = el.dataset.wfield;
     S.active[f] = f === "title" ? el.value : f === "durationMin" ? C.parseNum(el.value) : el.value.trim() || null;
@@ -1908,6 +2069,7 @@ app.addEventListener("change", async (ev) => {
   if (bodyChange(el)) return;
   if (diaryChange(el)) return;
   if (vendorChange(el)) return;
+  if (catalogChange(el)) return;
   if (goalChange(el)) return;
   if (blsChange(el)) return;
   if (overviewChange(el)) return;
@@ -1917,6 +2079,19 @@ app.addEventListener("change", async (ev) => {
   if (healthChange(el)) return;
   if (superChange(el)) return;
   if (trainingChange(el)) return;
+  if (el.dataset?.cfield && S.active?.competition) {
+    const c = S.active.competition;
+    if (el.dataset.cfield === "division") {
+      c.division = el.value || null;
+      applyDivisionWeights(S.active, c.division);
+      saveSoon();
+      return rerenderKeepScroll();
+    }
+    if (el.dataset.cfield === "ageGroup") {
+      c.ageGroup = el.value || null;
+      return saveSoon();
+    }
+  }
   if (el.dataset?.bar !== undefined && el.dataset?.bar !== null && el.matches?.("[data-bar]")) {
     const slots = [...barSlots(S.prefs.barSlots)];
     slots[Number(el.dataset.bar)] = el.value;
@@ -2303,6 +2478,7 @@ const moduleCtx = {
 initBody(moduleCtx);
 initDiary(moduleCtx);
 initVendor(moduleCtx);
+initCatalog(moduleCtx);
 initGoals(moduleCtx);
 initBls(moduleCtx);
 initOverview({ ...moduleCtx, S, today: todayIso });

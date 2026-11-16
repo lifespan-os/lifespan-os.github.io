@@ -1232,3 +1232,18 @@ body.has-submenu [data-sheet].tabs--fold { display: none; }
 .drawer__transfer { flex: none; display: inline-flex; align-items: center; gap: 5px; height: 44px; padding: 0 10px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 12px; background: rgba(255, 255, 255, .12); color: #fff; font: inherit; font-size: .76rem; font-weight: 700; white-space: nowrap; }
 .drawer__transfer svg { width: 17px; height: 17px; }
 .drawer__transfer.active { border-color: var(--orange); color: var(--orange); }
+
+/* HYROX (1.46.0): Gewicht bei Stationen mit Schlitten, Kettlebells, Sandsack; Wettkampf-Angaben */
+.set.cardio.kg, .set-head.cardio.kg { grid-template-columns: 30px 1fr 1fr 1fr 52px; }
+.set-note { margin: -4px 14px 6px 52px; }
+.competition h3 { margin: 0 0 8px; }
+.competition .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.competition .comp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.competition .comp-grid .wide { grid-column: 1 / -1; }
+.competition .comp-grid input, .competition .comp-grid select { min-height: 44px; font-size: 1rem; }
+.competition input[aria-invalid="true"] { border-color: var(--danger); }
+
+/* Import/Export → Lebensmittel- und Supplementdatenbank (1.46.0) */
+.catalog-block { padding-top: 10px; border-top: 1px solid var(--line); margin-top: 10px; }
+.catalog-block h4 { margin: 0; font-size: .95rem; }
+.catalog-preview { margin-top: 10px; padding: 10px; border-radius: 10px; background: var(--surface-2); }

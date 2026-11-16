@@ -6,10 +6,11 @@ import { nutritionFromRows } from "./nutrition.js";
 import { bodyFromRows } from "./bodydata.js";
 import { focusFromRows } from "./focusinfo.js";
 import { pcFromRows } from "./pcdb.js";
+import { checkCompetition, competitionColumns, competitionFromRow } from "./hyrox.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.45.6";
+export const MOBILE_VERSION = "1.46.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -644,6 +645,7 @@ export function checkWorkout(w, { keepUnticked = false } = {}) {
   if (w.perceivedExertion !== null && (w.perceivedExertion < 1 || w.perceivedExertion > 10)) {
     errors.push("Anstrengung muss zwischen 1 und 10 liegen.");
   }
+  errors.push(...checkCompetition(w.competition ?? null));
   return [...new Set(errors)];
 }
 
@@ -745,6 +747,7 @@ export function workoutFromPc(w, wexRows, setsByWex) {
     updatedAt: w.updated_at,
     exported: true,
     fromPc: true,
+    competition: competitionFromRow(w),
     extra: { ...w },
     exercises: [...wexRows]
       .sort(byPosition)
@@ -851,6 +854,7 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
       status: "done",
       started_at: w.startedAt,
       finished_at: w.finishedAt,
+      ...competitionColumns(w.competition ?? null),
     });
 
     w.exercises.forEach((we, wi) => {

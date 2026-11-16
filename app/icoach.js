@@ -353,22 +353,31 @@ function widgetsTab() {
   const e = f.errors ?? {};
   const fmg = C().formatMg;
   const pending = CF.unsentCaffeine(S.caffeine);
-  return `<section class="card">
+  const drinkText = (d) => (d.portionMl === null ? `${d.label} (mg selbst eintragen)` : `${d.label} · ${d.portionMl} ml · ${d.portionMg} mg`);
+  const hint = e.amount ? `<p class="field-error">${esc(e.amount)}</p>` : !free && preview.ok ? `<p class="cf-hint">entspricht <strong>${esc(fmg(preview.intake.mg))} mg</strong> Koffein</p>` : "";
+  return `<section class="card cf-card">
     <div class="wo-head"><h3>Koffein</h3><span class="tag">Modellrechnung</span></div>
     <p class="muted small">Zeitstrahl über 24 Stunden: wie viel Koffein zur Einschlafzeit noch im Körper ist.</p>
-    <div class="lab-row__grid">
-      <div class="field ${bedOk ? "" : "has-error"}"><label for="cf-bed">Einschlafzeit</label><input id="cf-bed" type="time" data-cf="bedtime" value="${esc(f.bedtime)}">${bedOk ? "" : `<p class="field-error">Uhrzeit als HH:MM eingeben.</p>`}</div>
-      <div class="field ${hlMsg ? "has-error" : ""}"><label for="cf-hl">Halbwertszeit</label><div class="input-row"><input id="cf-hl" type="text" inputmode="decimal" data-cf="halfLife" value="${esc(f.halfLife)}"><span class="unit">h</span></div>${hlMsg ? `<p class="field-error">${esc(hlMsg)}</p>` : `<p class="muted small">Durchschnitt etwa 5 Stunden</p>`}</div>
+    <div class="cf-block">
+      <h4 class="cf-block__title">Dein Abbau</h4>
+      <div class="cf-pair">
+        <div class="field ${bedOk ? "" : "has-error"}"><label for="cf-bed">Einschlafzeit</label><input id="cf-bed" class="cf-input" type="time" data-cf="bedtime" value="${esc(f.bedtime)}">${bedOk ? "" : `<p class="field-error">Uhrzeit als HH:MM eingeben.</p>`}</div>
+        <div class="field ${hlMsg ? "has-error" : ""}"><label for="cf-hl">Halbwertszeit</label><div class="cf-suffix"><input id="cf-hl" class="cf-input" type="text" inputmode="decimal" data-cf="halfLife" value="${esc(f.halfLife)}"><span aria-hidden="true">h</span></div>${hlMsg ? `<p class="field-error">${esc(hlMsg)}</p>` : ""}</div>
+      </div>
+      ${hlMsg ? "" : `<p class="cf-hint">Halbwertszeit im Durchschnitt etwa 5 Stunden, individuell sehr verschieden.</p>`}
     </div>
-    <div class="field ${e.drinkId ? "has-error" : ""}"><label for="cf-drink">Getränk</label><select id="cf-drink" data-cf="drinkId">${C()
-      .CAFFEINE_DRINKS.map((d) => `<option value="${esc(d.id)}" ${d.id === f.drinkId ? "selected" : ""}>${esc(d.portionMl === null ? `${d.label} (mg frei eintragen)` : `${d.label} · ${d.portionMl} ml · ${d.portionMg} mg`)}</option>`)
-      .join("")}</select></div>
-    <div class="lab-row__grid">
-      <div class="field ${e.time ? "has-error" : ""}"><label for="cf-time">Uhrzeit</label><input id="cf-time" type="time" data-cf="time" value="${esc(f.time)}">${e.time ? `<p class="field-error">${esc(e.time)}</p>` : ""}</div>
-      <div class="field ${e.amount ? "has-error" : ""}"><label for="cf-amount">${free ? "Koffein" : "Menge"}</label><div class="input-row"><input id="cf-amount" type="text" inputmode="decimal" data-cf="amount" value="${esc(f.amount)}" ${free ? 'placeholder="z. B. 200"' : ""}><span class="unit">${free ? "mg" : "ml"}</span></div>
-        ${e.amount ? `<p class="field-error">${esc(e.amount)}</p>` : !free && preview.ok ? `<p class="muted small">entspricht ${esc(fmg(preview.intake.mg))} mg Koffein</p>` : ""}</div>
+    <div class="cf-block">
+      <h4 class="cf-block__title">Neue Einnahme</h4>
+      <div class="field ${e.drinkId ? "has-error" : ""}"><label for="cf-drink">Getränk</label><select id="cf-drink" class="cf-input" data-cf="drinkId">${C()
+        .CAFFEINE_DRINKS.map((d) => `<option value="${esc(d.id)}" ${d.id === f.drinkId ? "selected" : ""}>${esc(drinkText(d))}</option>`)
+        .join("")}</select></div>
+      <div class="cf-pair">
+        <div class="field ${e.time ? "has-error" : ""}"><label for="cf-time">Uhrzeit</label><input id="cf-time" class="cf-input" type="time" data-cf="time" value="${esc(f.time)}">${e.time ? `<p class="field-error">${esc(e.time)}</p>` : ""}</div>
+        <div class="field ${e.amount ? "has-error" : ""}"><label for="cf-amount">${free ? "Koffein" : "Menge"}</label><div class="cf-suffix"><input id="cf-amount" class="cf-input" type="text" inputmode="decimal" data-cf="amount" value="${esc(f.amount)}" ${free ? 'placeholder="z. B. 200"' : ""}><span aria-hidden="true">${free ? "mg" : "ml"}</span></div></div>
+      </div>
+      ${hint}
+      <button class="btn primary block" data-act="cf-add">Eintragen</button>
     </div>
-    <button class="btn primary block" data-act="cf-add">Eintragen</button>
     ${pending ? `<p class="muted small">${pending} ${pending === 1 ? "Änderung" : "Änderungen"} beim Koffein noch nicht am PC · <button class="linkbtn" data-go="send">An den PC senden</button></p>` : ""}
   </section>
   ${

@@ -1201,3 +1201,20 @@ body.has-submenu [data-sheet].tabs--fold { display: none; }
 .glucose-rise { white-space: nowrap; }
 .workout-heart { display: grid; gap: 6px; margin-top: 4px; }
 .heart-layers { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 8px 0 4px; }
+
+/* Koffein-Widget (1.45.4): zwei klar getrennte Blöcke, gleich hohe Felder, Einheit im Feld */
+.cf-card { gap: 14px; }
+.cf-block { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+.cf-block__title { margin: 0; font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cf-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: start; }
+.cf-pair > .field { min-width: 0; }
+.cf-card .cf-input { display: block; width: 100%; min-width: 0; max-width: 100%; height: 48px; min-height: 48px; margin: 0; }
+/* iOS: Uhrzeitfeld sonst breiter und höher als die Spalte, Text mittig */
+.cf-card input[type="time"].cf-input { -webkit-appearance: none; appearance: none; text-align: left; line-height: 1.2; }
+.cf-card input[type="time"].cf-input::-webkit-date-and-time-value { text-align: left; margin: 0; }
+.cf-suffix { position: relative; min-width: 0; }
+.cf-suffix .cf-input { padding-right: 2.6em; }
+.cf-suffix > span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .9rem; pointer-events: none; }
+.cf-hint { margin: -2px 0 0; font-size: .84rem; color: var(--muted); }
+.cf-hint strong { color: var(--fg); }
+.cf-card .btn.block { margin-top: 2px; }

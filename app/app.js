@@ -1647,19 +1647,16 @@ function mergeTables(a, b) {
 
 /**
  * Tabellen für „Lebensmittel senden“: Ernährung, Wasser und Supplement-Einnahmen (1.26.0). Eine
- * Einnahme zu einer am Handy angelegten, noch leeren Mahlzeit nimmt diese Mahlzeit mit.
+ * Einnahme nimmt ihre Mahlzeit und ihren Stack mit, wenn sie sonst fehlen würden.
  */
 function foodTables(all) {
   const out = mergeTables(mergeTables(N.nutritionTables(S.catalog, S.food.local, { all }), P.waterTables(S.water, { all })), SP.suppTables(S.supp, buildDb(), { all, withSupplements: Boolean(S.catalog?.startpaket) }));
-  const meals = new Set((out.meal ?? []).map((m) => m.id));
-  for (const i of out.supplement_intake ?? []) {
-    const m = i.meal_id ? S.food.local.meals[i.meal_id] : null;
-    if (m && !m.fromPc && !meals.has(m.row.id)) {
-      out.meal = [...(out.meal ?? []), { ...m.row }];
-      meals.add(m.row.id);
-    }
-  }
-  return out;
+  // Verwendeter Stack (vom PC) und Mahlzeit gehen mit – sonst lehnt der PC die Datei ab (1.45.1)
+  const pcMeals = S.catalog?.pc?.meal ?? [];
+  return SP.withIntakeParents(out, {
+    stacks: S.catalog?.pc?.supplement_stack ?? [],
+    mealOf: (id) => S.food.local.meals[id]?.row ?? pcMeals.find((m) => m.id === id) ?? null,
+  });
 }
 
 /** Tabellen für „Körperwerte … senden“: Körperwerte, Schlaf, To-dos, Health, Superhuman, Checklisten, Koffein, Training am Handy, Ziele. */

@@ -356,6 +356,37 @@ export function suppTables(local, db, { all = false, withSupplements = false, no
   return out;
 }
 
+/**
+ * Einnahmen verweisen auf Stack und Mahlzeit; der PC prüft die Datei vollständig (Fremdschlüssel).
+ * Fehlt der verwendete Stack (kommt vom PC) oder die Mahlzeit in der Datei, wird sie aus den
+ * mitgegebenen Zeilen ergänzt. Beim Abgleich am PC gewinnt ohnehin der neuere Stand.
+ * `stacks` = Zeilen von supplement_stack, `mealOf(id)` = Zeile der Mahlzeit oder null.
+ */
+export function withIntakeParents(tables, { stacks = [], mealOf = () => null } = {}) {
+  const intakes = tables.supplement_intake ?? [];
+  if (!intakes.length) return tables;
+  const out = { ...tables };
+  const haveStacks = new Set((out.supplement_stack ?? []).map((r) => r.id));
+  const haveMeals = new Set((out.meal ?? []).map((r) => r.id));
+  for (const i of intakes) {
+    if (i.stack_id && !haveStacks.has(i.stack_id)) {
+      const row = stacks.find((s) => s.id === i.stack_id);
+      if (row) {
+        out.supplement_stack = [...(out.supplement_stack ?? []), { ...row }];
+        haveStacks.add(row.id);
+      }
+    }
+    if (i.meal_id && !haveMeals.has(i.meal_id)) {
+      const row = mealOf(i.meal_id);
+      if (row) {
+        out.meal = [...(out.meal ?? []), { ...row }];
+        haveMeals.add(row.id);
+      }
+    }
+  }
+  return out;
+}
+
 /** Feste ID je Supplement und Nährstoff (der PC gleicht ohnehin über Supplement + Nährstoff ab). */
 export function valueId(supplementId, nutrient) {
   let h1 = 0x811c9dc5;

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Hersteller-Pakete für LIFESPAN OS: Lebensmittel und Supplements von Herstellern und Shops – du wählst selbst, welche du installierst.">
+<link rel="icon" type="image/png" href="app/icons/icon-192.png">
+<title>Hersteller-Pakete · LIFESPAN OS</title>
+<style>
+/* Gleiche Farben wie die Startseite (bewusst nur helles Theme, wie index.html). Keine externen Schriften. */
+:root {
+  --bg: #fbfbfd;
+  --surface: #ffffff;
+  --surface-2: #f1f4f9;
+  --line: #e2e7ef;
+  --fg: #0a1a30;
+  --muted: #5b6a80;
+  --navy: #0f3d7a;
+  --blue: #1b80c4;
+  --orange: #f28a1a;
+  --f-body: "Inter", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --f-display: "Inter Display", "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+a { color: var(--blue); }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+.wrap { max-width: 960px; margin-inline: auto; padding-inline: max(16px, env(safe-area-inset-left, 0px)); }
+header.site { position: sticky; top: 0; z-index: 2; background: rgba(251,251,253,.85); backdrop-filter: saturate(180%) blur(18px); -webkit-backdrop-filter: saturate(180%) blur(18px); border-bottom: 1px solid rgba(10,26,48,.07); }
+header.site .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand img { width: 30px; height: 30px; border-radius: 7px; }
+.brand span { font-family: var(--f-display); font-weight: 800; font-size: 1.05rem; color: var(--navy); }
+header.site nav a { font-size: .9rem; color: var(--muted); text-decoration: none; }
+h1 { font-family: var(--f-display); font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.05; letter-spacing: -0.03em; margin: 48px 0 14px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 62ch; margin: 0 0 12px; }
+.steps { margin: 28px 0; padding: 18px 20px; background: var(--surface-2); border-radius: 16px; }
+.steps ol { margin: 0; padding-left: 1.2em; }
+.steps li + li { margin-top: 4px; }
+.list { list-style: none; margin: 0 0 56px; padding: 0; display: grid; gap: 12px; }
+.pkg { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; align-items: center; padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+.pkg h2 { margin: 0; font-family: var(--f-display); font-size: 1.12rem; letter-spacing: -0.01em; }
+.pkg p { margin: 0; color: var(--muted); font-size: .92rem; }
+.pkg .meta { font-variant-numeric: tabular-nums; }
+.dl { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: var(--blue); color: #fff; font-weight: 600; font-size: .95rem; text-decoration: none; white-space: nowrap; min-height: 44px; }
+.dl:hover { background: #166ca6; }
+.dl svg { width: 16px; height: 16px; }
+.note { color: var(--muted); font-size: .9rem; margin: 0 0 40px; }
+footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--muted); font-size: .85rem; }
+@media (max-width: 600px) {
+  .pkg { grid-template-columns: 1fr; }
+  .dl { justify-content: center; }
+}
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="app/icons/icon-192.png" alt="" width="30" height="30"><span>LIFESPAN OS</span></a>
+    <nav><a href="./#download">Zum Download der App</a></nav>
+  </div>
+</header>
+<main class="wrap">
+  <h1>Hersteller-Pakete</h1>
+  <p class="lead">LIFESPAN OS bringt nur allgemeine Lebensmittel mit (BLS 4.0). Produkte von Herstellern und Shops gibt es hier als Pakete – du entscheidest selbst, welche in deine Datenbanken kommen. Ein Paket lässt sich jederzeit wieder entfernen.</p>
+  <div class="steps">
+    <ol>
+      <li><b>PC:</b> Paket herunterladen, in LIFESPAN OS unter <b>Import/Export → Hersteller-Pakete</b> auf „Paket installieren …“ klicken und die Datei wählen.</li>
+      <li><b>Handy-App:</b> Import/Export → Herstellerpakete – dort stehen alle Pakete direkt zur Auswahl.</li>
+      <li>Vorhandene Einträge bleiben unverändert; beim Entfernen werden bereits verwendete Einträge nur archiviert, damit dein Tagebuch stimmt.</li>
+    </ol>
+  </div>
+  <ul class="list" id="list" aria-live="polite">
+    <li class="note">Paketliste wird geladen …</li>
+  </ul>
+  <p class="note">Alle Werte stammen aus den Nährwerttabellen der Produktseiten der jeweiligen Hersteller bzw. Shops (Stand siehe Paket). Markennamen gehören den jeweiligen Herstellern; LIFESPAN OS steht in keiner Verbindung zu ihnen.</p>
+</main>
+<footer>
+  <div class="wrap">© 2026 LIFESPAN OS · Non-Profit-Projekt · <a href="./#impressum">Impressum</a> · <a href="./#datenschutz">Datenschutz</a></div>
+</footer>
+<script>
+(function () {
+  var list = document.getElementById("list");
+  var icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6 11l6 6 6-6M4 21h16"/></svg>';
+  var esc = function (v) { return String(v == null ? "" : v).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var num = function (n) { return Number(n || 0).toLocaleString("de-DE"); };
+  var size = function (b) { return b >= 1048576 ? (b / 1048576).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB"; };
+  var stand = function (v) { var m = /^(\d{4})\.(\d{2})\.(\d{2})$/.exec(v || ""); return m ? m[3] + "." + m[2] + "." + m[1] : esc(v); };
+  fetch("app/pakete/index.json", { cache: "no-cache" })
+    .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+    .then(function (d) {
+      var p = (d.packages || []).slice().sort(function (a, b) { return a.manufacturer.replace(/^#/, "").localeCompare(b.manufacturer.replace(/^#/, ""), "de"); });
+      list.innerHTML = p.map(function (x) {
+        return '<li class="pkg"><div><h2>' + esc(x.manufacturer) + '</h2><p>' + esc(x.title) + '</p>' +
+          '<p class="meta">' + num(x.foods) + ' Lebensmittel · ' + num(x.supplements) + ' Supplements · Stand ' + stand(x.version) + ' · ' + size(x.bytes) + '</p></div>' +
+          '<a class="dl" href="app/pakete/' + encodeURIComponent(x.file) + '" download="' + esc(x.file) + '">' + icon + 'Herunterladen</a></li>';
+      }).join("");
+    })
+    .catch(function () {
+      list.innerHTML = '<li class="note">Die Paketliste konnte nicht geladen werden. Bitte später erneut versuchen.</li>';
+    });
+})();
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@ import * as O from "./pcoverview.js";
 import * as D from "./pcdomain.js";
 import { barTrendSvg, COLOR, dayChartHtml, esc, trendSvg } from "./pcview.js";
 import { REGIONS } from "./musclemap/regions.js";
+import { stepsDayHtml } from "./heart.js";
 
 let X = null; // { S, buildDb, rerender, today }
 
@@ -834,7 +835,12 @@ export function overviewHero(db, catalog, date, today) {
 export function overviewCardsHtml(db, catalog, date, today) {
   const { data, week, widgets } = overviewData(db, catalog, date);
   const layout = D.parseLayout(db.settings.get(D.OVERVIEW_LAYOUT_KEY) ?? null);
-  const cards = D.arrange(liveCards(data, week, widgets, date === today), layout);
+  const live = liveCards(data, week, widgets, date === today);
+  // Schritte über den Tag mit Median (1.45.5, wie am PC); nur mit Schrittverlauf der Uhr
+  const now = new Date();
+  const steps = stepsDayHtml(catalog, date, date === today ? now.getHours() * 60 + now.getMinutes() : 1440);
+  if (steps) live.push({ id: "wearable-steps", empty: false, node: steps });
+  const cards = D.arrange(live, layout);
   return `<div class="ov-grid">${cards.map((c) => (c.empty && layout.emptyLast ? `<div class="overview-card--empty">${c.node}</div>` : c.node)).join("")}</div>`;
 }
 

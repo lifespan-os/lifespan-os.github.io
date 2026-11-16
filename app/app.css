@@ -1218,3 +1218,10 @@ body.has-submenu [data-sheet].tabs--fold { display: none; }
 .cf-hint { margin: -2px 0 0; font-size: .84rem; color: var(--muted); }
 .cf-hint strong { color: var(--fg); }
 .cf-card .btn.block { margin-top: 2px; }
+
+/* Tageswahl der Overview (1.45.5): iOS-Datumsfeld bleibt in seiner Spalte (ragte über „›“) */
+.day-nav > * { min-width: 0; }
+.day-nav__date input[type="date"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; min-width: 0; max-width: 100%; height: 48px; text-align: center; line-height: 1.2; }
+.day-nav__date input[type="date"]::-webkit-date-and-time-value { text-align: center; margin: 0; }
+/* Schritte über den Tag: Strich für „jetzt“ */
+.pc-chart .steps-now { stroke: var(--muted); stroke-dasharray: 2 3; }

@@ -13,6 +13,7 @@ import * as BD from "./bodydata.js";
 import { barTrendSvg, COLOR, trendSvg } from "./pcview.js";
 import { buildDb, today } from "./diary.js";
 import { measuredSleepHtml } from "./heart.js";
+import { sleepCaffeineHtml } from "./icoach.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -168,6 +169,8 @@ export function viewSleep() {
   }
   // Gemessene Nächte der Uhr (1.42.0, wie MeasuredSleepCard am PC)
   out += measuredSleepHtml(S.catalog, from, t, logs);
+  // Koffein vor dem Schlafen (1.45.5, wie SleepCaffeineCard am PC)
+  out += sleepCaffeineHtml(logs, t);
   if (logs.length || naps.length) out += entriesCard(logs, naps, napMin);
   return `${out}</main>`;
 }

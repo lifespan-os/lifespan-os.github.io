@@ -301,6 +301,55 @@ const defaultAmount = (id) => {
   return ml === null || ml === undefined ? "" : String(ml);
 };
 
+/**
+ * Einnahmen eines Tages für den Zeitstrahl: gespeicherte Portionen plus Koffein aus Nutrition
+ * (Supplemente, Mahlzeiten, Fasttracking) wie am PC – auch für Sleep (1.45.5).
+ */
+export function caffeineIntakesOn(date) {
+  const S = X.S;
+  let nutritionDay = { date, intakes: [], meals: [], fast: null };
+  try {
+    const db = buildDb();
+    nutritionDay = { date, intakes: P.intakesOn(db, date), meals: P.mealDay(db, date).meals, fast: P.fastDay(db, date) };
+  } catch {
+    // ohne Daten vom PC nur die gespeicherten Portionen
+  }
+  return CF.dayIntakes(CF.intakesOn(S.catalog, S.caffeine, date), nutritionDay);
+}
+
+/**
+ * Sleep → „Koffein vor dem Schlafen“ (1.45.5, wie SleepCaffeineCard am PC): Zeitstrahl aus dem
+ * Widget für den Abend vor der letzten erfassten Nacht. Einschlafzeit = Zubettgehen plus
+ * Einschlafdauer, ohne Eintrag 22:00 Uhr; Halbwertszeit 5 Stunden. `logs` neueste zuerst.
+ */
+export function sleepCaffeineHtml(logs, todayIso) {
+  const log = logs[0] ?? null;
+  const night = log?.date ?? todayIso;
+  const evening = D.addDaysIso(night, -1);
+  const bed = log ? CF.fallAsleepClock(log.bedTime, Number(log.sleepLatencyMin)) : null;
+  const bedtime = bed ?? C().DEFAULT_BEDTIME;
+  const intakes = caffeineIntakesOn(evening);
+  const t = C().caffeineTimeline(
+    intakes.map((i) => ({ id: i.id, drinkId: i.drinkId, time: i.time, mg: i.mg, ml: i.ml, label: i.label, source: i.source, timeEstimated: i.timeEstimated })),
+    bedtime,
+    C().DEFAULT_HALF_LIFE_H,
+  );
+  const fmg = C().formatMg;
+  const body = intakes.length
+    ? `<div class="level-metrics">
+      <div><span class="muted small">Koffein im Körper beim Einschlafen (${esc(bedtime)} Uhr)</span><strong class="level-big">${esc(fmg(t.bedtimeMg))} mg</strong></div>
+      <div><span class="muted small">Aufgenommen am ${esc(D.formatDate(evening))}</span><strong>${esc(fmg(t.totalMg))} mg</strong></div>
+      ${t.bedtimeShare !== null ? `<div><span class="muted small">davon beim Einschlafen noch vorhanden</span><strong>${esc(D.formatNumber(t.bedtimeShare * 100, 0))} %</strong></div>` : ""}
+      ${t.clearedOffset !== null ? `<div><span class="muted small">vollständig abgebaut (höchstens ${C().CLEARED_BELOW_MG} mg)</span><strong>${esc(C().formatDayTime(t.clearedOffset).replace(/^./, (c) => c.toUpperCase()))}</strong></div>` : ""}
+    </div>
+    ${caffeineChart(t)}`
+    : `<p class="muted">Am ${esc(D.formatDate(evening))} ist kein Koffein eingetragen – weder im Koffein-Widget noch unter Nutrition (Supplemente, Mahlzeiten, Fasttracking).</p>`;
+  return `<section class="card card--sleep"><div class="wo-head"><h3>Koffein vor dem Schlafen</h3><span class="tag">${log ? `Nacht zum ${esc(D.formatDate(night))}` : "Letzte Nacht"}</span></div>
+    ${body}
+    <p class="muted small">Zeitstrahl wie im Koffein-Widget (iCoach.me → Widgets): vollständige Aufnahme zur eingetragenen Uhrzeit, Abbau mit fester Halbwertszeit von ${C().DEFAULT_HALF_LIFE_H} Stunden. Einschlafzeit aus dem Schlafeintrag (Zubettgehen plus Einschlafdauer)${bed ? "" : `, ohne Eintrag ${C().DEFAULT_BEDTIME} Uhr`}. Vereinfachte Modellrechnung, keine Messung.</p>
+  </section>`;
+}
+
 function caffeineChart(t) {
   const W = 340;
   const H = 170;
@@ -330,15 +379,7 @@ function widgetsTab() {
   const S = X.S;
   const f = caffeineForm();
   const date = today();
-  // Gespeicherte Portionen plus Koffein aus Nutrition (Supplemente, Mahlzeiten, Fasttracking) wie am PC
-  let nutritionDay = { date, intakes: [], meals: [], fast: null };
-  try {
-    const db = buildDb();
-    nutritionDay = { date, intakes: P.intakesOn(db, date), meals: P.mealDay(db, date).meals, fast: P.fastDay(db, date) };
-  } catch {
-    // ohne Daten vom PC nur die gespeicherten Portionen
-  }
-  const intakes = CF.dayIntakes(CF.intakesOn(S.catalog, S.caffeine, date), nutritionDay);
+  const intakes = caffeineIntakesOn(date);
   const hl = D.parseDecimal(f.halfLife);
   const hlMsg = C().halfLifeError(hl);
   const bedOk = C().parseClock(f.bedtime) !== null;

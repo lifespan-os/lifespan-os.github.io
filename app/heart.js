@@ -292,6 +292,57 @@ function timelineSvg(samples, stepSamples, hide = {}) {
   </svg>`;
 }
 
+/**
+ * Übersicht → „Schritte über den Tag“ (1.45.5, wie StepsDayCard am PC): bis zu jeder Uhrzeit
+ * gesammelte Schritte neben dem Median derselben Uhrzeit an den bisherigen Tagen mit Schrittverlauf
+ * (bis 28 Tage zurück). `nowMinute` = jetzt (heute) bzw. 1440. Ohne Schrittverlauf leer.
+ */
+export function stepsDayHtml(catalog, day, nowMinute = 1440) {
+  const w = wearableOf(catalog);
+  const from = D.addDaysIso(day, -28);
+  const todayRow = w.days.find((d) => d.date === day && d.stepSamples);
+  const past = w.days.filter((d) => d.date < day && d.date >= from).map((d) => d.stepSamples);
+  const c = W.stepDayCompare(todayRow?.stepSamples, past, nowMinute);
+  if (!c) return "";
+  const isToday = nowMinute < 1440;
+  const until = c.nowMinute >= 1440 ? "bis 24:00 Uhr" : `bis ${W.clockOf(c.nowMinute)} Uhr`;
+  const Wd = 340;
+  const H = 170;
+  const L = 40;
+  const R = 8;
+  const T = 8;
+  const B = 20;
+  const max = Math.max(100, ...c.points.map((p) => Math.max(p.today ?? 0, p.median ?? 0)));
+  const nice = [500, 1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000, 12000, 15000, 20000, 25000, 30000, 40000, 50000].find((v) => v >= max) ?? Math.ceil(max / 10000) * 10000;
+  const x = (m) => L + (m / 1440) * (Wd - L - R);
+  const y = (v) => T + (1 - v / nice) * (H - T - B);
+  const path = (key) =>
+    c.points
+      .filter((p) => p[key] !== null)
+      .map((p, k) => `${k ? "L" : "M"}${x(p.minute).toFixed(1)},${y(p[key]).toFixed(1)}`)
+      .join(" ");
+  const med = path("median");
+  const tod = path("today");
+  const diff = c.todayNow !== null && c.medianNow !== null && c.medianNow > 0 ? c.todayNow - c.medianNow : null;
+  const label = isToday ? "Heute" : "An diesem Tag";
+  return `<section class="card ov-card card--training" data-card="wearable-steps"><div class="wo-head"><h3>Schritte über den Tag</h3><span class="tag">${isToday ? "Heute" : esc(D.formatDate(day))}</span></div>
+    <div class="level-metrics">
+      <div><span class="muted small">${label} ${until}</span><strong class="level-big">${num(c.todayNow)}</strong></div>
+      <div><span class="muted small">Median ${until} (${c.days} Tage)</span><strong>${num(c.medianNow)}</strong></div>
+      ${diff !== null ? `<div><span class="muted small">Unterschied zum Median</span><strong>${diff > 0 ? "+" : diff < 0 ? "−" : "±"}${num(Math.abs(diff))}</strong></div>` : ""}
+    </div>
+    <svg class="pc-chart" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="Gesammelte Schritte ${until} neben dem Median der bisherigen Tage">
+      ${[0, nice / 2, nice].map((v) => `<line x1="${L}" x2="${Wd - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="grid"/><text x="${L - 4}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end">${num(v)}</text>`).join("")}
+      ${isToday ? `<line x1="${x(c.nowMinute).toFixed(1)}" x2="${x(c.nowMinute).toFixed(1)}" y1="${T}" y2="${H - B}" class="steps-now"/>` : ""}
+      ${med ? `<path d="${med}" fill="none" stroke="${COLOR.ink}" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="5 4"/>` : ""}
+      ${tod ? `<path d="${tod}" fill="none" stroke="${COLOR.training}" stroke-width="2.5" stroke-linejoin="round"/>` : ""}
+      ${[0, 360, 720, 1080, 1440].map((m) => `<text x="${x(m).toFixed(1)}" y="${H - 5}" text-anchor="${m === 0 ? "start" : m === 1440 ? "end" : "middle"}">${String(m / 60).padStart(2, "0")}:00</text>`).join("")}
+    </svg>
+    <ul class="legend"><li><span class="swatch" style="background:${COLOR.training}"></span>${label} gesammelt</li><li><span class="swatch" style="background:${COLOR.ink};opacity:.55"></span>Median derselben Uhrzeit</li></ul>
+    <p class="muted small">Gemessene Schritte deiner Uhr im 5-Minuten-Raster. Median = mittlerer Wert der bisherigen Tage mit Schrittverlauf (bis 28 Tage zurück, ab ${W.MIN_STEP_DAYS} Tagen) zur selben Uhrzeit – Vergleich mit dir selbst, keine Bewertung.</p>
+  </section>`;
+}
+
 /** Health → Heart. `state` = { days, day } aus dem App-Zustand. */
 export function heartTabHtml(catalog, state = {}) {
   const t = today();

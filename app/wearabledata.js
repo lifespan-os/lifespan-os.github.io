@@ -1,5 +1,5 @@
-// LIFESPAN OS Mobil – Rechnungen für Heart, gemessene Nächte und Blutzucker (1.45.0). Gebündelt aus
-// src/domain/wearable.ts, src/domain/wearableMore.ts und src/domain/glucose.ts des PCs (esbuild,
+// LIFESPAN OS Mobil – Rechnungen für Heart, gemessene Nächte, Schritte über den Tag und Blutzucker (1.45.5).
+// Gebündelt aus src/domain/wearable.ts, src/domain/wearableMore.ts und src/domain/glucose.ts des PCs (esbuild,
 // ES2022) – dort ändern und testen, dann neu erzeugen.
 // src/domain/wearable.ts
 function describeSync(r) {
@@ -650,6 +650,50 @@ function stepSeries(json) {
     return minute === null || steps === null || minute < 0 || minute >= 1440 ? [] : [{ minute, steps }];
   });
 }
+var STEP_SLOTS = 288;
+var MIN_STEP_DAYS = 3;
+function cumulativeSteps(series) {
+  const slots = new Array(STEP_SLOTS).fill(0);
+  for (const s of series) {
+    const i = Math.floor(s.minute / 5);
+    if (i >= 0 && i < STEP_SLOTS) slots[i] = (slots[i] ?? 0) + s.steps;
+  }
+  let sum = 0;
+  return slots.map((v) => sum += v);
+}
+function medianOf(values) {
+  if (values.length === 0) return null;
+  const v = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(v.length / 2);
+  return v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
+}
+function stepDayCompare(todaySamples, pastSamples, nowMinute = 1440) {
+  const todaySeries = stepSeries(todaySamples);
+  const past = pastSamples.map(stepSeries).filter((s) => s.length > 0).map(cumulativeSteps);
+  if (todaySeries.length === 0 && past.length < MIN_STEP_DAYS) return null;
+  const today = todaySeries.length > 0 ? cumulativeSteps(todaySeries) : null;
+  const now = Math.max(0, Math.min(1440, Math.floor(nowMinute / 5) * 5));
+  const withMedian = past.length >= MIN_STEP_DAYS;
+  const points = [
+    { minute: 0, today: today ? 0 : null, median: withMedian ? 0 : null }
+  ];
+  for (let i = 0; i < STEP_SLOTS; i++) {
+    const minute = (i + 1) * 5;
+    points.push({
+      minute,
+      today: today && minute <= now ? today[i] : null,
+      median: withMedian ? medianOf(past.map((c) => c[i])) : null
+    });
+  }
+  const at = points.find((p) => p.minute === now) ?? points[0];
+  return {
+    points,
+    nowMinute: now,
+    todayNow: at?.today ?? null,
+    medianNow: at?.median ?? null,
+    days: past.length
+  };
+}
 var ACTIVITY_ZONE_LABEL = ["Schlaf", "sitzend", "leicht", "mittel", "intensiv"];
 function zoneSegments(json) {
   const pts = parseRows(json ?? null).flatMap((r) => {
@@ -1136,22 +1180,31 @@ function sleepGlucoseRows(readings, sleep) {
 function dayMeanBySleep(rows) {
   const v = (f) => rows.filter((r) => f(r) && r.dayMean !== null).map((r) => r.dayMean);
   return [
-    groupMean("N\xE4chte unter 7 Std.", v((r) => r.sleepMin < 420)),
-    groupMean("N\xE4chte ab 7 Std.", v((r) => r.sleepMin >= 420))
+    groupMean(
+      "N\xE4chte unter 7 Std.",
+      v((r) => r.sleepMin < 420)
+    ),
+    groupMean(
+      "N\xE4chte ab 7 Std.",
+      v((r) => r.sleepMin >= 420)
+    )
   ];
 }
 export {
   ACTIVITY_ZONE_LABEL,
   CARB_GROUPS,
   MIN_GROUP,
+  MIN_STEP_DAYS,
   MMOL_FACTOR,
   RANGES,
   STAGE_LABEL,
+  STEP_SLOTS,
   bedMinute,
   bedtimeOffset,
   biosensingOf,
   clockOf,
   continuityClassLabel,
+  cumulativeSteps,
   dailyMeans,
   dailyProfile,
   dayMeanBySleep,
@@ -1196,6 +1249,7 @@ export {
   sportLabel,
   spread,
   stageOf,
+  stepDayCompare,
   stepSeries,
   supplementComparisons,
   usualLabel,

@@ -109,6 +109,15 @@ export function nutritionIntakes(day, linkedIds = new Set()) {
   return out;
 }
 
+/** Einschlafzeit wie `fallAsleepClock` am PC (caffeine.ts): Zubettgehen plus Einschlafdauer, „HH:MM“. */
+export function fallAsleepClock(bedTime, latencyMin) {
+  const m = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(String(bedTime ?? "").trim());
+  if (!m) return null;
+  const lat = Number.isFinite(latencyMin) && latencyMin > 0 ? latencyMin : 0;
+  const t = (Number(m[1]) * 60 + Number(m[2]) + Math.round(lat)) % 1440;
+  return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+}
+
 /** Gespeicherte Einnahmen plus Koffein aus Nutrition, nach Uhrzeit wie am PC. */
 export function dayIntakes(stored, day) {
   const linked = new Set(stored.map((i) => i.supplementIntakeId).filter(Boolean));

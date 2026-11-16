@@ -10,8 +10,10 @@ import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
 import * as O from "./pcoverview.js";
 import * as SD from "./superdata.js";
-import { hasWearable, heartTabHtml } from "./heart.js";
+import { hasWearable, heartTabHtml, wearableOf } from "./heart.js";
 import { glucoseTabHtml } from "./glucose.js";
+import * as W from "./wearabledata.js";
+import * as GLD from "./glucosedata.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -86,7 +88,7 @@ export function viewHealth() {
     return `${X.header("Health")}<main class="wrap">
     <p class="muted small">Blutzucker von Sensor (z. B. FreeStyle Libre, Dexcom), Scans und eigenen Messungen: Zeit im Zielbereich, Tagesverlauf mit Mahlzeiten, Tagesprofil und Nächte.</p>
     ${nav("glucose")}
-    ${glucoseTabHtml(S.catalog, S.glucoseView ?? {})}
+    ${glucoseTabHtml(S.catalog, S.glucoseView ?? {}, S.glucose)}
   </main>`;
   }
   // Heart (1.42.0) braucht keine Laborwerte
@@ -431,7 +433,10 @@ function buildReport(analytes, draws) {
   if (r.from > r.to) throw new Error("Der Beginn liegt nach dem Ende.");
   const data = O.doctorReportData(buildDb(), r.from, r.to);
   const hrt = r.withHrt && secretOn() ? SD.hrtEntriesOf(X.S.catalog, X.S.super) : null;
-  return D.doctorReport.buildDoctorReport({ from: r.from, to: r.to, data, draws, analytes, hrt, profile: profileOf(), today: today() });
+  // Messungen der Uhr und Blutzucker (1.45.0)
+  const w = wearableOf(X.S.catalog);
+  const wearable = { sleep: w.sleep, recovery: w.recovery, glucose: GLD.allReadings(X.S.catalog, X.S.glucose) };
+  return D.doctorReport.buildDoctorReport({ from: r.from, to: r.to, data, draws, analytes, hrt, profile: profileOf(), today: today(), wearable });
 }
 
 function reportTab({ analytes, draws }) {
@@ -443,7 +448,7 @@ function reportTab({ analytes, draws }) {
   void draws;
   return `<section class="card">
       <h3>Bericht für den Arzttermin</h3>
-      <p class="muted small">Knapp und tabellarisch: Laborwerte mit Referenzbereich und Vorwert, Vitalwerte, Gewicht und Körper${secret ? ", auf Wunsch Hormontherapie mit Wirkstoffspiegel" : ""}, Training und Schlaf im gewählten Zeitraum. Das PDF entsteht hier auf dem Handy und verlässt es nur, wenn du es weitergibst.</p>
+      <p class="muted small">Knapp und tabellarisch: Laborwerte mit Referenzbereich und Vorwert, Vitalwerte, Gewicht und Körper, Messungen der Uhr und Blutzucker${secret ? ", auf Wunsch Hormontherapie mit Wirkstoffspiegel" : ""}, Training und Schlaf im gewählten Zeitraum. Das PDF entsteht hier auf dem Handy und verlässt es nur, wenn du es weitergibst.</p>
       <div class="lab-row__grid">
         <div class="field"><label for="doc-from">Von</label><input id="doc-from" type="date" data-doc="from" value="${esc(r.from)}"></div>
         <div class="field"><label for="doc-to">Bis</label><input id="doc-to" type="date" data-doc="to" value="${esc(r.to)}"></div>
@@ -460,6 +465,7 @@ function reportTab({ analytes, draws }) {
       <ul class="plain-list small">
         <li>${rep.drawCount} ${rep.drawCount === 1 ? "Blutabnahme" : "Blutabnahmen"}, ${rep.labs.length} Laborwerte, davon ${rep.flagged.length} außerhalb des Referenzbereichs</li>
         <li>${rep.vitals.length} Vitalwerte, ${rep.body.length} Körperwerte mit Messungen im Zeitraum</li>
+        ${(rep.measured?.length || rep.glucose) ? `<li>${rep.measured?.length ? `${rep.measured.length} Messungen der Uhr` : ""}${rep.measured?.length && rep.glucose ? " · " : ""}${rep.glucose ? `Blutzucker: ${rep.glucose.count} Werte, ${D.formatNumber(rep.glucose.ranges.inRange, 0)} % im Bereich 70–180 mg/dl` : ""}</li>` : ""}
         <li>Training: ${rep.training.sessions} Einheiten (${esc(D.formatNumber(rep.training.perWeek, 1))} je Woche) · Schlaf: ${rep.sleep.meanMinutes === null ? "keine Einträge" : `Ø ${esc(D.formatDuration(Math.round(rep.sleep.meanMinutes)))}`}</li>
         ${rep.hrt ? `<li>Hormontherapie: ${rep.hrt.rows.length} ${rep.hrt.rows.length === 1 ? "Präparat" : "Präparate"} mit Gaben im Zeitraum</li>` : ""}
       </ul>
@@ -718,6 +724,13 @@ function analytesTab({ analytes, draws }) {
 }
 
 export const healthActions = {
+  "glucose-add": () =>
+    saveGlucose(() => {
+      const at = document.getElementById("gl-at")?.value ?? "";
+      const mg = Number(String(document.getElementById("gl-mg")?.value ?? "").replace(",", "."));
+      GLD.addManual(X.S.catalog, X.S.glucose, { measuredAt: at.slice(0, 16), mgDl: mg }, opts());
+    }),
+  "glucose-del": (el) => saveGlucose(() => GLD.deleteReading(X.S.catalog, X.S.glucose, el.dataset.arg)),
   "health-tab": (el) => {
     X.S.healthTab = el.dataset.arg;
     X.S.lifeEdit = null;
@@ -952,8 +965,45 @@ export function healthInput(el) {
 }
 
 /** Auswahlfelder; true = behandelt. */
+/** Blutzuckerdatei am Handy einlesen (1.45.0). */
+async function readGlucoseFile(file) {
+  const S = X.S;
+  const view = (S.glucoseView = { ...(S.glucoseView ?? {}) });
+  try {
+    const parsed = W.parseGlucoseFile(await file.text());
+    if (!parsed) throw new Error("Die Datei wurde nicht erkannt – erwartet: LibreView, Dexcom Clarity oder eine Tabelle mit Datum, Uhrzeit und Blutzucker.");
+    if (!S.glucose) S.glucose = GLD.emptyGlucoseLocal();
+    const rep = GLD.importReadings(S.catalog, S.glucose, parsed.readings, opts());
+    await X.store.set("glucose", S.glucose);
+    view.message = { text: `„${file.name}“: ${rep.new} neu, ${rep.updated} geändert, ${rep.skipped} übersprungen.${parsed.notes?.length ? ` ${parsed.notes.join(" ")}` : ""}` };
+  } catch (e) {
+    view.message = { text: e.message, error: true };
+  }
+  X.rerender();
+}
+
+async function saveGlucose(fn) {
+  const S = X.S;
+  if (!S.glucose) S.glucose = GLD.emptyGlucoseLocal();
+  try {
+    fn();
+    await X.store.set("glucose", S.glucose);
+    S.glucoseView = { ...(S.glucoseView ?? {}), message: null };
+    X.toast("Gespeichert.");
+  } catch (e) {
+    X.toast(e.message, true);
+  }
+  X.rerender();
+}
+
 export function healthChange(el) {
   const S = X.S;
+  if (el.dataset?.glucoseFile) {
+    const file = el.files?.[0];
+    el.value = "";
+    if (file) readGlucoseFile(file);
+    return true;
+  }
   if (el.dataset?.glucose) {
     const v = el.dataset.glucose === "days" ? Number(el.value) : el.value;
     S.glucoseView = { ...(S.glucoseView ?? {}), [el.dataset.glucose]: v };

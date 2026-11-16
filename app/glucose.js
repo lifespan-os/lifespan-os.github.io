@@ -1,4 +1,4 @@
-// LIFESPAN OS Mobil – Health → Blutzucker (1.44.0), gleiche Inhalte und Rechnungen wie am PC
+// LIFESPAN OS Mobil – Health → Blutzucker (1.44.0, Import am Handy seit 1.45.0), wie am PC
 // (GlucoseTab.tsx; Rechnungen in wearabledata.js aus src/domain/glucose.ts). Daten aus dem PC-Export:
 // glucose_reading (am PC aus LibreView, Dexcom Clarity, eigener CSV, Apple Health oder selbst
 // eingetragen); Mahlzeiten des Tages aus meal. Nur Messwerte und Rechnungen, keine Bewertung.
@@ -7,6 +7,8 @@ import * as D from "./pcdomain.js";
 import * as W from "./wearabledata.js";
 import * as N from "./nutrition.js";
 import { today } from "./diary.js";
+import { minutesBetween } from "./logsdata.js";
+import * as GLD from "./glucosedata.js";
 import { COLOR, esc, trendSvg } from "./pcview.js";
 
 const DAY_MS = 86400000;
@@ -18,15 +20,36 @@ const note = (t) => `<p class="card__note">${t}</p>`;
 const RANGE_COLOR = { veryLow: "#B3261E", low: "#E46962", inRange: "#2E7D32", high: "#E0A100", veryHigh: "#B36200" };
 const KIND_LABEL = { cgm: "Sensor", scan: "Scan", manual: "Messung" };
 
-export function readingsOf(catalog) {
-  return (catalog?.pc?.glucose_reading ?? [])
-    .filter((r) => typeof r.measured_at === "string" && typeof r.mg_dl === "number")
-    .map((r) => ({ id: r.id, measuredAt: r.measured_at, mgDl: r.mg_dl, source: r.source, kind: r.kind, notes: r.notes ?? null }))
-    .sort((a, b) => a.measuredAt.localeCompare(b.measuredAt));
+/** Werte vom PC und vom Handy (`local` = Ablage aus glucosedata.js). */
+export function readingsOf(catalog, local = null) {
+  return GLD.allReadings(catalog, local);
 }
 
-export function hasGlucose(catalog) {
-  return (catalog?.pc?.glucose_reading ?? []).length > 0;
+export function hasGlucose(catalog, local = null) {
+  return readingsOf(catalog, local).length > 0;
+}
+
+/** Datei einlesen und eigene Messung eintragen (1.45.0). */
+function ownHtml(catalog, local, state) {
+  const mine = Object.values(GLD.glucoseState(local).rows)
+    .map((e) => e.row)
+    .sort((a, b) => b.measured_at.localeCompare(a.measured_at));
+  const manual = mine.filter((r) => r.kind === "manual").slice(0, 10);
+  const fromFiles = mine.length - mine.filter((r) => r.kind === "manual").length;
+  const msg = state.message;
+  return `<section class="card"><div class="wo-head"><h3>Werte erfassen</h3></div>
+    <label class="btn block">Datei einlesen (LibreView, Dexcom Clarity, CSV) …<input type="file" data-glucose-file="1" accept=".csv,.txt,text/csv,text/plain" hidden></label>
+    ${msg ? `<p class="${msg.error ? "field-error" : "small"}">${esc(msg.text)}</p>` : ""}
+    <label class="field"><span>Zeitpunkt der Messung</span><input type="datetime-local" id="gl-at" value="${esc(state.at ?? `${today()}T${new Date().toTimeString().slice(0, 5)}`)}"></label>
+    <label class="field"><span>Blutzucker in mg/dl</span><input type="number" id="gl-mg" inputmode="decimal" min="10" max="700" step="1" value=""></label>
+    <button class="btn primary block" data-act="glucose-add">Messung speichern</button>
+    ${
+      manual.length
+        ? `<ul class="list">${manual.map((r) => `<li class="meal-item"><span><b>${esc(D.formatDate(r.date))}, ${esc(r.measured_at.slice(11))}</b><br><span class="muted small">${esc(r.source)}</span></span><span><strong>${num(Number(r.mg_dl))}</strong> <button class="linkbtn" data-act="glucose-del" data-arg="${esc(r.id)}">Löschen</button></span></li>`).join("")}</ul>`
+        : ""
+    }
+    <p class="muted small">${fromFiles ? `${num(fromFiles)} Werte aus Dateien am Handy. ` : ""}${GLD.unsentGlucose(local) ? `${num(GLD.unsentGlucose(local))} noch nicht an den PC gesendet – mit „Körperwerte … senden“.` : "Alles am Handy Erfasste ist beim PC."}</p>
+  </section>`;
 }
 
 /** Werte eines Tages über 24 Stunden mit Zielbereich 70–180 und Mahlzeiten. */
@@ -93,11 +116,58 @@ function mealsOf(catalog, day) {
     .sort((a, b) => a.time.localeCompare(b.time));
 }
 
+/**
+ * Blutzucker und Alltag (1.45.0, wie GlucoseInsightsCard am PC): Anstieg nach Mahlzeiten nach
+ * Kohlenhydraten (aus meal + meal_item + Lebensmitteln des Exports), Training und Schlaf.
+ */
+function contextHtml(catalog, readings) {
+  const pc = catalog?.pc ?? {};
+  const days = new Set(readings.map((r) => r.measuredAt.slice(0, 10)));
+  const foods = N.allFoods(catalog, N.emptyLocal());
+  const items = new Map();
+  for (const it of pc.meal_item ?? []) items.set(it.meal_id, [...(items.get(it.meal_id) ?? []), it]);
+  const meals = (pc.meal ?? [])
+    .filter((m) => days.has(m.date) && m.time && items.has(m.id))
+    .map((m) => {
+      const n = N.sumNutrients(
+        (items.get(m.id) ?? []).map((it) => foods.get(it.food_id)).map((f, i) => (f ? N.nutrientsFor(f, items.get(m.id)[i].amount) : null)).filter(Boolean),
+      );
+      return { date: m.date, time: String(m.time).slice(0, 5), label: m.name || N.mealLabel(m.meal_type), carbsG: n.carbs, energyKcal: n.kcal };
+    });
+  const mealRows = W.mealGlucoseRows(readings, meals);
+  const workouts = W.workoutGlucoseRows(
+    readings,
+    (pc.workout ?? [])
+      .filter((w) => w.status === "done" && w.start_time && w.duration_min && days.has(w.date))
+      .map((w) => ({ date: w.date, startTime: String(w.start_time).slice(0, 5), durationMin: w.duration_min, title: w.title ?? "Training" })),
+  );
+  const sleep = W.sleepGlucoseRows(
+    readings,
+    (pc.sleep_log ?? [])
+      .filter((s) => days.has(s.date) && s.bed_time && s.wake_time)
+      .map((s) => ({ date: s.date, durationMin: Math.max(0, (minutesBetween(s.bed_time, s.wake_time) ?? 0) - (s.sleep_latency_min ?? 0) - (s.awake_min ?? 0)) })),
+  );
+  if (!mealRows.length && !workouts.length && !sleep.length) return "";
+  const mg = (v) => (v === null || v === undefined ? "–" : num(v));
+  const groups = (list, unit, signed) =>
+    `<ul class="list">${list.map((g) => `<li class="muted small">${esc(g.label)}: ${g.mean !== null ? `<strong>Ø ${signed ? W.signedText(g.mean, 0) : num(g.mean)} ${unit}</strong>` : "zu wenige Werte"} (${g.count})</li>`).join("")}</ul>`;
+  return `<section class="card"><div class="wo-head"><h3>Blutzucker und Alltag</h3></div>
+    ${mealRows.length ? `<h4 class="logs-sub">Anstieg nach Mahlzeiten nach Kohlenhydraten</h4>${groups(W.riseByCarbs(mealRows), "mg/dl", true)}` : ""}
+    ${
+      workouts.length
+        ? `<h4 class="logs-sub">Training</h4><ul class="list">${[...workouts].reverse().slice(0, 8).map((w) => `<li class="meal-item"><span><b>${esc(D.formatDate(w.date))}, ${esc(w.startTime)} · ${esc(w.title)}</b><br><span class="muted small">vorher ${mg(w.before)} · während ${mg(w.during)} · danach ${mg(w.after)} mg/dl</span></span><strong class="glucose-rise">min ${mg(w.min)}</strong></li>`).join("")}</ul>`
+        : ""
+    }
+    ${sleep.length ? `<h4 class="logs-sub">Schlaf und Blutzucker</h4>${groups(W.dayMeanBySleep(sleep), "mg/dl am Tag", false)}` : ""}
+    ${note(`Mahlzeiten mit Uhrzeit (vorher = bis 20 min davor, höchster Wert in 3 Std.), Training mit Startzeit und Dauer (1 Std. vorher, während, 2 Std. danach), Schlaf mit Tagesmittel 06–24 Uhr. Gruppenmittel ab ${W.MIN_GROUP} Werten, in Klammern die Anzahl. Gegenüberstellungen, keine Ursachen.`)}
+  </section>`;
+}
+
 /** Health → Blutzucker. `state` = { days, day } aus dem App-Zustand. */
-export function glucoseTabHtml(catalog, state = {}) {
-  const all = readingsOf(catalog);
+export function glucoseTabHtml(catalog, state = {}, local = null) {
+  const all = readingsOf(catalog, local);
   if (!all.length) {
-    return `<section class="card"><div class="empty-state"><p><strong>Noch keine Blutzuckerwerte</strong></p><p class="muted small">Am PC unter Health → Blutzucker eine Datei aus LibreView (FreeStyle Libre), Dexcom Clarity oder eine eigene Tabelle importieren – oder den Apple-Health-Export unter Settings → Geräte-Import wählen. Nach dem nächsten Export erscheinen die Werte hier.</p></div></section>`;
+    return `<section class="card"><div class="empty-state"><p><strong>Noch keine Blutzuckerwerte</strong></p><p class="muted small">Lies hier eine Datei aus LibreView (FreeStyle Libre), Dexcom Clarity oder eine eigene Tabelle ein oder trage eine Messung ein. Am PC geht das unter Health → Blutzucker, auch mit dem Apple-Health-Export.</p></div></section>${ownHtml(catalog, local, state)}`;
   }
   const t = today();
   const days = state.days ?? 14;
@@ -168,5 +238,7 @@ export function glucoseTabHtml(catalog, state = {}) {
             .join("")}</ul>${note("Nur Nächte mit mindestens 6 Werten.")}</section>`
         : ""
     }
-    <p class="muted small">Quellen: ${esc([...new Set(all.map((r) => r.source))].join(", "))}. Import und eigene Messungen am PC (Health → Blutzucker).</p>`;
+    ${contextHtml(catalog, period)}
+    ${ownHtml(catalog, local, state)}
+    <p class="muted small">Quellen: ${esc([...new Set(all.map((r) => r.source))].join(", "))}.</p>`;
 }

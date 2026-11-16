@@ -27,6 +27,7 @@ import { initSuper, superActions, superChange, superInput, viewSuper, viewHrtEdi
 import * as SD from "./superdata.js";
 import * as CD from "./checklistdata.js";
 import * as CF from "./caffeinedata.js";
+import * as GLD from "./glucosedata.js";
 import { icoachActions, icoachChange, icoachInput, initICoach, viewICoach } from "./icoach.js";
 import { initTraining, trainingActions, trainingChange, trainingInput, viewTrainingSection, persistTrain, setNotice as trainSetNotice, failed as trainFailed } from "./training.js";
 import { initTrainingStats } from "./trainingstats.js";
@@ -113,7 +114,7 @@ const machineById = () => new Map(S.catalog.machines.map((m) => [m.id, m]));
 const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported);
 const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWater(S.water) + SP.unsentSupp(S.supp);
 // Körperwerte plus Schlaf und Regeneration (gehen zusammen in die Datei „Körperwerte“, 1.7.0)
-const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + TR.unsentTrain(S.train) + GL.unsentGoals(S.goals);
+const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + GLD.unsentGlucose(S.glucose) + TR.unsentTrain(S.train) + GL.unsentGoals(S.goals);
 
 function go(view, arg = null) {
   // „Werte erfassen“ verlassen: Geändertes sofort sichern (1.40.0)
@@ -682,12 +683,12 @@ function viewSend() {
       ${body ? `<button class="btn primary block" data-act="send" data-arg="body">Körperwerte, Schlaf, Regeneration, To-dos, Training, Health, Superhuman &amp; Tagesziele senden (${body})</button>` : ""}
     </section>
     ${
-      all.length || Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length || Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || (Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length || Object.keys(TR.trainTables(S.train, { all: true })).length)
+      all.length || Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length || Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || (Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length || Object.keys(GLD.glucoseTables(S.glucose, { all: true })).length || Object.keys(TR.trainTables(S.train, { all: true })).length)
         ? `<section class="card"><h3>Alles vom Handy</h3>
             <p class="muted small">Falls eine Datei verloren ging: Du kannst alle ${all.length} Trainings und die Ernährungseinträge noch einmal senden. Am PC entstehen dabei keine doppelten Einträge.</p>
             ${all.length ? `<button class="btn block" data-act="send" data-arg="training|all">Alle Trainings erneut senden</button>` : ""}
             ${Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length ? `<button class="btn block" data-act="send" data-arg="food|all">Alle Ernährungseinträge erneut senden</button>` : ""}
-            ${Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || (Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length || Object.keys(TR.trainTables(S.train, { all: true })).length) ? `<button class="btn block" data-act="send" data-arg="body|all">Alle Körperwerte, Schlaf, Regeneration, To-dos, Checklisten, Health, Superhuman &amp; Koffein erneut senden</button>` : ""}</section>`
+            ${Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || (Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length || Object.keys(GLD.glucoseTables(S.glucose, { all: true })).length || Object.keys(TR.trainTables(S.train, { all: true })).length) ? `<button class="btn block" data-act="send" data-arg="body|all">Alle Körperwerte, Schlaf, Regeneration, To-dos, Checklisten, Health, Superhuman &amp; Koffein erneut senden</button>` : ""}</section>`
         : ""
     }
     <div id="send-result"></div>
@@ -1468,6 +1469,8 @@ const actions = {
       await store.set("checklists", S.checklists);
       CF.markCaffeineSent(S.caffeine);
       await store.set("caffeine", S.caffeine);
+      GLD.markGlucoseSent(S.glucose);
+      await store.set("glucose", S.glucose);
       HD.markHealthSent(S.health);
       await store.set("health", S.health);
       SD.markSuperSent(S.super);
@@ -1661,7 +1664,7 @@ function foodTables(all) {
 
 /** Tabellen für „Körperwerte … senden“: Körperwerte, Schlaf, To-dos, Health, Superhuman, Checklisten, Koffein, Training am Handy, Ziele. */
 function bodyPartTables(all) {
-  return mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), CF.caffeineTables(S.caffeine, { all })), mergeTables(TR.trainTables(S.train, { all }), GL.goalTables(S.goals, { all })))))));
+  return mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), mergeTables(CF.caffeineTables(S.caffeine, { all }), GLD.glucoseTables(S.glucose, { all }))), mergeTables(TR.trainTables(S.train, { all }), GL.goalTables(S.goals, { all })))))));
 }
 
 /**
@@ -1947,6 +1950,8 @@ async function applyCatalog(catalog) {
     await store.set("checklists", S.checklists);
     S.caffeine = CF.pruneCaffeine(catalog, S.caffeine);
     await store.set("caffeine", S.caffeine);
+    S.glucose = GLD.pruneGlucose(catalog, S.glucose);
+    await store.set("glucose", S.glucose);
     S.health = HD.pruneHealth(catalog, S.health);
     await store.set("health", S.health);
     S.super = SD.pruneSuper(catalog, S.super);
@@ -2346,6 +2351,7 @@ async function boot() {
     S.todos = TD.todosState(await store.get("todos"));
     S.checklists = CD.checklistState(await store.get("checklists"));
     S.caffeine = CF.caffeineState(await store.get("caffeine"));
+    S.glucose = GLD.glucoseState(await store.get("glucose"));
     S.health = HD.healthState(await store.get("health"));
     S.super = SD.superState(await store.get("super"));
     delete S.prefs.topOffset; // Einstellung aus 1.1.7 entfällt

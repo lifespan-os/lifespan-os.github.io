@@ -624,6 +624,20 @@ Fassung laden.
 - Overview: großer Kopf mit den heute gegessenen kcal, Tagesbedarf, offenen kcal und Protein/KH/Fett
   (gleiche Rechnung wie die Karte Ernährung, `overviewHero` in overview.js), die Figur groß rechts daneben.
 
+### Version 1.45.0 (16.11.2026): Atemfrequenz, Blutzucker am Handy, Zonen, Arztbericht
+
+- Health → Heart: Karte „Atemfrequenz in der Nacht“ (Verlauf, letzte 7 Tage gegen die 28 davor). Sleep →
+  Nacht im Detail: Verläufe von Herzfrequenz, HRV und Atemfrequenz über die Nacht (`nightLineSvg`, Daten
+  `wearable_recovery.hrv_samples/breathing_samples`, Schema 59).
+- Health → Blutzucker: Dateien (LibreView, Dexcom Clarity, eigene CSV) direkt am Handy einlesen und eigene
+  Messungen eintragen (`glucosedata.js` + Test, Speicher „glucose“). Gehen mit „Körperwerte … senden“ an den
+  PC; dort zählt derselbe Messwert über Quelle + Zeitpunkt + Art (keine Doppelten). Neue Karte „Blutzucker
+  und Alltag“: Anstieg nach Mahlzeiten nach Kohlenhydraten, Training (vorher/während/danach), Schlaf.
+- Training → „♥ Puls“ zeigt die Zeit je Herzfrequenzzone (Zonen der Uhr, sonst eigene Zonen).
+- Arztbericht: mit Messungen der Uhr und Blutzucker, sobald pcdomain.js neu erzeugt ist (doctorReport.ts).
+- Kompakte „Für Handy exportieren“-Datei vom PC (Export\Handy, `compact: true`) wird wie jede Exportdatei
+  geladen (`expandCompact`).
+
 ### Version 1.44.0 (15.11.2026): Blutzucker, Tageszeitstrahl, Puls je Einheit, Pausenklänge
 
 - Health → neuer Reiter „Blutzucker“ (`glucose.js`, Daten `glucose_reading` aus dem PC-Export, Schema 58):

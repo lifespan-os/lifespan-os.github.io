@@ -9,7 +9,7 @@ import { pcFromRows } from "./pcdb.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.44.0";
+export const MOBILE_VERSION = "1.45.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 

@@ -1,4 +1,4 @@
-// LIFESPAN OS Mobil – Rechnungen für Heart, gemessene Nächte und Blutzucker (1.44.0). Gebündelt aus
+// LIFESPAN OS Mobil – Rechnungen für Heart, gemessene Nächte und Blutzucker (1.45.0). Gebündelt aus
 // src/domain/wearable.ts, src/domain/wearableMore.ts und src/domain/glucose.ts des PCs (esbuild,
 // ES2022) – dort ändern und testen, dann neu erzeugen.
 // src/domain/wearable.ts
@@ -81,8 +81,8 @@ function bedMinute(s) {
 }
 function spread(values) {
   if (values.length < 3) return null;
-  const avg = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance = values.reduce((a, b) => a + (b - avg) ** 2, 0) / (values.length - 1);
+  const avg2 = values.reduce((a, b) => a + b, 0) / values.length;
+  const variance = values.reduce((a, b) => a + (b - avg2) ** 2, 0) / (values.length - 1);
   return Math.sqrt(variance);
 }
 function recentVsBaseline(points, today) {
@@ -689,6 +689,50 @@ function signedText(value, digits) {
   const sign = rounded === 0 ? "\xB1" : value > 0 ? "+" : "\u2212";
   return `${sign}${rounded.toLocaleString("de-DE", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
 }
+function secondsInZones(points, zones, capS = 15) {
+  const byZone = [0, 0, 0, 0, 0];
+  let below = 0;
+  let total = 0;
+  if (!zones.length) return { byZone, below, total };
+  const sorted = [...points].sort((a, b) => a[0] - b[0]);
+  const gaps = sorted.slice(1).map((p, i) => p[0] - sorted[i][0]).filter((g) => g > 0);
+  const usual = gaps.length ? [...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)] : 1;
+  const ordered = [...zones].sort((a, b) => b.from - a.from);
+  sorted.forEach(([second, bpm], i) => {
+    const next = sorted[i + 1];
+    const step = Math.min(capS, next ? Math.max(0, next[0] - second) : usual);
+    total += step;
+    const z = ordered.find((x) => bpm >= x.from);
+    if (z && z.zone >= 1 && z.zone <= 5) byZone[z.zone - 1] = (byZone[z.zone - 1] ?? 0) + step;
+    else below += step;
+  });
+  return { byZone, below, total };
+}
+function zoneWeeks(items, zones) {
+  const monday = (iso) => {
+    const t = Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10));
+    const wd = (new Date(t).getUTCDay() + 6) % 7;
+    return new Date(t - wd * 864e5).toISOString().slice(0, 10);
+  };
+  const weeks = /* @__PURE__ */ new Map();
+  for (const it of items) {
+    const watch = exerciseZones(it.heart.zones);
+    let secs = null;
+    if (watch.length) {
+      secs = [0, 0, 0, 0, 0];
+      for (const z of watch) if (z.zone >= 1 && z.zone <= 5) secs[z.zone - 1] += z.seconds;
+    } else if (zones.length && it.heart.points.length > 1) {
+      secs = secondsInZones(it.heart.points, zones, it.heart.kind === "day" ? 900 : 15).byZone;
+    }
+    if (!secs) continue;
+    const key = monday(it.date);
+    const w = weeks.get(key) ?? { week: key, minutes: [0, 0, 0, 0, 0], units: 0 };
+    secs.forEach((s, i) => w.minutes[i] = (w.minutes[i] ?? 0) + s / 60);
+    w.units += 1;
+    weeks.set(key, w);
+  }
+  return [...weeks.values()].sort((a, b) => a.week.localeCompare(b.week));
+}
 
 // src/domain/glucose.ts
 var MMOL_FACTOR = 18.016;
@@ -1005,8 +1049,101 @@ function dailyMeans(readings) {
   }
   return [...byDay.entries()].map(([date, v]) => ({ date, value: v.reduce((a, b) => a + b, 0) / v.length })).sort((a, b) => a.date.localeCompare(b.date));
 }
+var MIN_GROUP = 3;
+function mealGlucoseRows(readings, meals) {
+  const byDay = /* @__PURE__ */ new Map();
+  for (const r of readings) {
+    const d = r.measuredAt.slice(0, 10);
+    byDay.set(d, [...byDay.get(d) ?? [], r]);
+  }
+  const out = [];
+  for (const m of meals) {
+    if (!/^\d{2}:\d{2}/.test(m.time)) continue;
+    const day = byDay.get(m.date);
+    if (!day) continue;
+    const sorted = [...day].sort((a, b) => a.measuredAt.localeCompare(b.measuredAt));
+    const res = mealResponse(sorted, m);
+    if (res.rise === null) continue;
+    out.push({ ...res, date: m.date, carbsG: m.carbsG, energyKcal: m.energyKcal });
+  }
+  return out.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+}
+var groupMean = (label, values) => ({
+  label,
+  count: values.length,
+  mean: values.length >= MIN_GROUP ? values.reduce((a, b) => a + b, 0) / values.length : null
+});
+var CARB_GROUPS = [
+  { label: "unter 20 g", from: 0, to: 20 },
+  { label: "20\u201349 g", from: 20, to: 50 },
+  { label: "50\u201379 g", from: 50, to: 80 },
+  { label: "ab 80 g", from: 80, to: Infinity }
+];
+function riseByCarbs(rows) {
+  return CARB_GROUPS.map(
+    (g) => groupMean(
+      g.label,
+      rows.filter((r) => r.carbsG >= g.from && r.carbsG < g.to).map((r) => r.rise)
+    )
+  );
+}
+var avg = (v) => v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+function workoutGlucoseRows(readings, workouts) {
+  const out = [];
+  for (const w of workouts) {
+    if (!/^\d{2}:\d{2}/.test(w.startTime) || !(w.durationMin > 0)) continue;
+    const s = Number(w.startTime.slice(0, 2)) * 60 + Number(w.startTime.slice(3, 5));
+    const e = s + w.durationMin;
+    const day = readings.filter((r) => r.measuredAt.startsWith(w.date));
+    if (!day.length) continue;
+    const pts = day.map((r) => ({ t: minuteOfReading(r), v: r.mgDl }));
+    const pick = (a, b) => pts.filter((p) => p.t >= a && p.t < b).map((p) => p.v);
+    const during = pick(s, e);
+    const after = pick(e, e + 120);
+    const before = pick(s - 60, s);
+    if (!during.length && !after.length) continue;
+    const both = [...during, ...after];
+    out.push({
+      date: w.date,
+      startTime: w.startTime.slice(0, 5),
+      title: w.title,
+      before: avg(before),
+      during: avg(during),
+      after: avg(after),
+      min: both.length ? Math.min(...both) : null
+    });
+  }
+  return out.sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
+}
+function sleepGlucoseRows(readings, sleep) {
+  const nights = new Map(nightStats(readings).map((n) => [n.date, n]));
+  const out = [];
+  for (const s of sleep) {
+    if (!(s.durationMin > 0)) continue;
+    const day = readings.filter((r) => r.measuredAt.startsWith(s.date) && minuteOfReading(r) >= 360).map((r) => r.mgDl);
+    const n = nights.get(s.date);
+    if (!n && day.length < 6) continue;
+    out.push({
+      date: s.date,
+      sleepMin: s.durationMin,
+      nightMean: n?.mean ?? null,
+      nightMin: n?.min ?? null,
+      dayMean: day.length >= 6 ? avg(day) : null
+    });
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+function dayMeanBySleep(rows) {
+  const v = (f) => rows.filter((r) => f(r) && r.dayMean !== null).map((r) => r.dayMean);
+  return [
+    groupMean("N\xE4chte unter 7 Std.", v((r) => r.sleepMin < 420)),
+    groupMean("N\xE4chte ab 7 Std.", v((r) => r.sleepMin >= 420))
+  ];
+}
 export {
   ACTIVITY_ZONE_LABEL,
+  CARB_GROUPS,
+  MIN_GROUP,
   MMOL_FACTOR,
   RANGES,
   STAGE_LABEL,
@@ -1017,6 +1154,7 @@ export {
   continuityClassLabel,
   dailyMeans,
   dailyProfile,
+  dayMeanBySleep,
   dayReadings,
   daySources,
   dayTimeline,
@@ -1029,6 +1167,7 @@ export {
   hypnogramSegments,
   loadSeries,
   localClock,
+  mealGlucoseRows,
   mealResponse,
   mean,
   measuredSleepMin,
@@ -1048,7 +1187,10 @@ export {
   recentVsBaseline,
   rechargeStatusLabel,
   recoveryToday,
+  riseByCarbs,
+  secondsInZones,
   signedText,
+  sleepGlucoseRows,
   sleepRatingLabel,
   splitCsv,
   sportLabel,
@@ -1057,6 +1199,8 @@ export {
   stepSeries,
   supplementComparisons,
   usualLabel,
+  workoutGlucoseRows,
   zoneMinutes,
-  zoneSegments
+  zoneSegments,
+  zoneWeeks
 };

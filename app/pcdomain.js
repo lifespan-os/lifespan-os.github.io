@@ -8711,7 +8711,9 @@ function dayStatus(overview, supplementIntakes) {
       optional: false,
       value: weight ? `${formatNumber(weight.value, 1)} kg` : null,
       section: "body",
-      where: "Body & Longevity \u2192 Erfassen"
+      where: "Body & Longevity \u2192 Erfassen",
+      tab: "entry",
+      anchor: "body-group-weight"
     },
     {
       key: "sleep",
@@ -8720,7 +8722,9 @@ function dayStatus(overview, supplementIntakes) {
       optional: false,
       value: sleep ? formatDuration(sleep.sleepMin) : null,
       section: "sleep",
-      where: "Sleep \u2192 Nacht erfassen"
+      where: "Sleep \u2192 Nacht erfassen",
+      tab: null,
+      anchor: "sleep-editor-title"
     },
     {
       key: "sleepPhases",
@@ -8729,7 +8733,9 @@ function dayStatus(overview, supplementIntakes) {
       optional: true,
       value: phases ? formatDuration(phases.totalMin) : null,
       section: "sleep",
-      where: "Sleep \u2192 Nacht bearbeiten"
+      where: "Sleep \u2192 Nacht bearbeiten",
+      tab: null,
+      anchor: "sleep-editor-title"
     },
     {
       key: "hrv",
@@ -8738,7 +8744,9 @@ function dayStatus(overview, supplementIntakes) {
       optional: false,
       value: hrv ? `${formatNumber(hrv.value, 0)} ms` : null,
       section: "recovery",
-      where: "Recovery"
+      where: "Recovery",
+      tab: null,
+      anchor: "vitals-editor-title"
     },
     {
       key: "restingHr",
@@ -8747,7 +8755,9 @@ function dayStatus(overview, supplementIntakes) {
       optional: false,
       value: hr ? `${formatNumber(hr.value, 0)} bpm` : null,
       section: "recovery",
-      where: "Recovery"
+      where: "Recovery",
+      tab: null,
+      anchor: "vitals-editor-title"
     },
     {
       key: "recovery",
@@ -8756,7 +8766,9 @@ function dayStatus(overview, supplementIntakes) {
       optional: false,
       value: overview.recoveryToday?.readiness != null ? `${overview.recoveryToday.readiness} / 10` : null,
       section: "recovery",
-      where: "Recovery"
+      where: "Recovery",
+      tab: null,
+      anchor: "recovery-editor-title"
     },
     {
       key: "steps",
@@ -8765,7 +8777,9 @@ function dayStatus(overview, supplementIntakes) {
       optional: false,
       value: neat?.steps != null ? formatNumber(neat.steps, 0) : null,
       section: "training",
-      where: "Training \u2192 NEAT"
+      where: "Training \u2192 NEAT",
+      tab: "neat",
+      anchor: "neat-title"
     },
     {
       key: "nutrition",
@@ -8774,7 +8788,9 @@ function dayStatus(overview, supplementIntakes) {
       optional: false,
       value: ate && food ? `${formatNumber(food.energyKcal, 0)} kcal` : null,
       section: "nutrition",
-      where: "Nutrition \u2192 Tagebuch"
+      where: "Nutrition \u2192 Tagebuch",
+      tab: "diary",
+      anchor: "meals-title"
     },
     {
       key: "supplements",
@@ -8783,7 +8799,9 @@ function dayStatus(overview, supplementIntakes) {
       optional: true,
       value: supplementIntakes > 0 ? `${supplementIntakes}\xD7 eingenommen` : null,
       section: "nutrition",
-      where: "Nutrition \u2192 Tagebuch"
+      where: "Nutrition \u2192 Tagebuch",
+      tab: "diary",
+      anchor: "supplements-title"
     },
     {
       key: "training",
@@ -8792,7 +8810,9 @@ function dayStatus(overview, supplementIntakes) {
       optional: true,
       value: workouts.length > 0 ? workouts.map((w) => w.title).join(", ") : null,
       section: "training",
-      where: "Training \u2192 Einheiten"
+      where: "Training \u2192 Einheiten",
+      tab: "workouts",
+      anchor: "workouts-title"
     }
   ];
   const required = rows.filter((r2) => !r2.optional);
@@ -9372,19 +9392,66 @@ function streaks(input) {
   return out;
 }
 var REMINDER_RULES = [
-  { key: "weight", label: "Gewicht", days: 7, evenIfNever: true, where: "body" },
-  { key: "circumference", label: "K\xF6rperumf\xE4nge", days: 7, evenIfNever: true, where: "body" },
-  { key: "checkin", label: "Check-In-Fotos", days: 28, evenIfNever: true, where: "training" },
+  {
+    key: "weight",
+    label: "Gewicht",
+    days: 7,
+    evenIfNever: true,
+    where: "body",
+    tab: "entry",
+    anchor: "body-group-weight"
+  },
+  {
+    key: "circumference",
+    label: "K\xF6rperumf\xE4nge",
+    days: 7,
+    evenIfNever: true,
+    where: "body",
+    tab: "entry",
+    anchor: "body-group-circumference"
+  },
+  {
+    key: "checkin",
+    label: "Check-In-Fotos",
+    days: 28,
+    evenIfNever: true,
+    where: "training",
+    tab: "checkins",
+    anchor: "checkin-new-title"
+  },
   {
     key: "hrv",
     label: "HRV / Ruhepuls (ANS-Werte)",
     days: 7,
     evenIfNever: false,
-    where: "recovery"
+    where: "recovery",
+    anchor: "vitals-editor-title"
   },
-  { key: "grip", label: "Griffkraft", days: 30, evenIfNever: false, where: "body" },
-  { key: "vo2max", label: "VO2max", days: 90, evenIfNever: false, where: "body" }
+  {
+    key: "grip",
+    label: "Griffkraft",
+    days: 30,
+    evenIfNever: false,
+    where: "body",
+    tab: "entry",
+    anchor: "grip-title"
+  },
+  {
+    key: "vo2max",
+    label: "VO2max",
+    days: 90,
+    evenIfNever: false,
+    where: "body",
+    tab: "entry",
+    anchor: "body-group-fitness"
+  }
 ];
+function linkOf(rule) {
+  return {
+    ...rule.tab ? { tab: rule.tab } : {},
+    ...rule.anchor ? { anchor: rule.anchor } : {}
+  };
+}
 function dueReminders(dashboard, today) {
   const byKey = new Map(dashboard.lastDates.map((l) => [l.key, l.date]));
   const out = [];
@@ -9397,6 +9464,7 @@ function dueReminders(dashboard, today) {
           label: rule.label,
           text: "noch nie erfasst",
           where: rule.where,
+          ...linkOf(rule),
           daysSince: null
         });
       continue;
@@ -9408,6 +9476,7 @@ function dueReminders(dashboard, today) {
         label: rule.label,
         text: `zuletzt vor ${since} ${since === 1 ? "Tag" : "Tagen"} (empfohlen alle ${rule.days} Tage)`,
         where: rule.where,
+        ...linkOf(rule),
         daysSince: since
       });
     }
@@ -11901,7 +11970,13 @@ var SCALE_FIELDS = [
   { key: "lean", label: "Magermasse", metricId: builtinMetricId(29) },
   { key: "subcutaneous", label: "Subkutane Fettmasse", metricId: builtinMetricId(26) },
   { key: "visceral", label: "Viszerales Fettindex", metricId: builtinMetricId(28) },
-  { key: "ag", label: "A/G-Verh\xE4ltnis", metricId: builtinMetricId(38), factor: 0.01, truncate: true },
+  {
+    key: "ag",
+    label: "A/G-Verh\xE4ltnis",
+    metricId: builtinMetricId(38),
+    factor: 0.01,
+    truncate: true
+  },
   { key: "skeletalMuscle", label: "Rate an Skelettmuskel", metricId: builtinMetricId(3) },
   { key: "skeleton", label: "Skelettmasse", metricId: builtinMetricId(39) },
   { key: "water", label: "K\xF6rperwasser", metricId: builtinMetricId(32) },
@@ -12053,7 +12128,8 @@ function nearReading(text, previous, withDecimal) {
     for (let j = i + 1; j <= digits.length; j++) {
       const part = digits.slice(i, j);
       const options = [Number(part)];
-      if (withDecimal && part.length > 1) options.push(Number(`${part.slice(0, -1)}.${part.slice(-1)}`));
+      if (withDecimal && part.length > 1)
+        options.push(Number(`${part.slice(0, -1)}.${part.slice(-1)}`));
       for (const v of options) {
         if (Math.abs(v - previous) / previous > MAX_CHANGE) continue;
         if (best === null || Math.abs(v - previous) < Math.abs(best - previous)) best = v;
@@ -12072,7 +12148,8 @@ function scaleValues(readings, metrics) {
   const values = readings.map((reading) => {
     const { field } = reading;
     let { imageValue, previousValue } = reading;
-    if (!field.metricId) return { field, metric: null, value: null, note: field.skip ?? null, ok: false };
+    if (!field.metricId)
+      return { field, metric: null, value: null, note: field.skip ?? null, ok: false };
     const metric = byId.get(field.metricId) ?? null;
     if (imageValue === null) {
       return { field, metric, value: null, note: "im Bild nicht erkannt", ok: false };
@@ -12104,7 +12181,11 @@ function scaleValues(readings, metrics) {
     v = field.truncate ? truncate(v, metric.decimals) : round(v, metric.decimals);
     const before = previousValue === null ? null : previousValue * (field.factor ?? 1);
     if (before !== null && before > 0 && Math.abs(v - before) / before > MAX_CHANGE && reading.currentText) {
-      const near = field.factor ? null : nearReading(reading.restText ?? reading.currentText, before, Boolean(reading.previousHasDecimal));
+      const near = field.factor ? null : nearReading(
+        reading.restText ?? reading.currentText,
+        before,
+        Boolean(reading.previousHasDecimal)
+      );
       if (near !== null && inRange3(near, metric)) {
         return {
           field,
@@ -12388,6 +12469,88 @@ __export(doctorReport_exports, {
   buildDoctorReport: () => buildDoctorReport,
   fmtStat: () => fmtStat
 });
+
+// src/domain/glucose.ts
+var RANGES = [
+  { key: "veryLow", label: "unter 54", max: 54 },
+  { key: "low", label: "54\u201369", max: 70 },
+  { key: "inRange", label: "70\u2013180", max: 181 },
+  { key: "high", label: "181\u2013250", max: 251 },
+  { key: "veryHigh", label: "\xFCber 250", max: Infinity }
+];
+function glucoseStats(readings) {
+  const values = readings.map((r2) => r2.mgDl);
+  const n2 = values.length;
+  const ranges = Object.fromEntries(RANGES.map((r2) => [r2.key, 0]));
+  if (n2 === 0) {
+    return {
+      count: 0,
+      days: 0,
+      mean: null,
+      sd: null,
+      cv: null,
+      gmi: null,
+      min: null,
+      max: null,
+      ranges
+    };
+  }
+  const mean3 = values.reduce((a, b) => a + b, 0) / n2;
+  const sd2 = n2 > 1 ? Math.sqrt(values.reduce((a, b) => a + (b - mean3) ** 2, 0) / (n2 - 1)) : null;
+  for (const v of values) {
+    const r2 = RANGES.find((x) => v < x.max);
+    ranges[r2.key] += 100 / n2;
+  }
+  const days2 = new Set(readings.map((r2) => r2.measuredAt.slice(0, 10))).size;
+  return {
+    count: n2,
+    days: days2,
+    mean: mean3,
+    sd: sd2,
+    cv: sd2 !== null && mean3 > 0 ? sd2 / mean3 * 100 : null,
+    gmi: days2 >= 10 ? 3.31 + 0.02392 * mean3 : null,
+    min: Math.min(...values),
+    max: Math.max(...values),
+    ranges
+  };
+}
+
+// src/domain/wearable.ts
+function minuteOf(clock2) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(clock2.trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  return h < 24 && min < 60 ? h * 60 + min : null;
+}
+function nightSeries(json) {
+  if (!json) return [];
+  let obj;
+  try {
+    obj = JSON.parse(json);
+  } catch {
+    return [];
+  }
+  if (!obj || typeof obj !== "object") return [];
+  const out = [];
+  for (const [k, v] of Object.entries(obj)) {
+    const minute = minuteOf(k);
+    if (minute === null || typeof v !== "number" || !Number.isFinite(v)) continue;
+    out.push({ minute, value: v });
+  }
+  const order = (m) => m >= 12 * 60 ? m - 1440 : m;
+  return out.sort((a, b) => order(a.minute) - order(b.minute));
+}
+function nightLowestHr(s) {
+  const values = nightSeries(s.hrSamples).map((p) => p.value).filter((v) => v >= 25 && v <= 250);
+  return values.length ? Math.min(...values) : null;
+}
+function measuredSleepMin(s) {
+  const parts2 = [s.lightS, s.deepS, s.remS, s.unrecognizedS].filter((x) => x !== null);
+  return parts2.length ? Math.round(parts2.reduce((a, b) => a + b, 0) / 60) : null;
+}
+
+// src/domain/doctorReport.ts
 var isoDays = (from, to) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 864e5) + 1;
 function stat(label, unit, decimals, values) {
   if (values.length === 0) return null;
@@ -12482,6 +12645,38 @@ function hrtRows(entries, from, to) {
   }
   return rows.sort((a, b) => a.hormone.localeCompare(b.hormone, "de"));
 }
+function measuredRows(w, from, to) {
+  if (!w) return [];
+  const inRange4 = (list) => list.filter((x) => x.date >= from && x.date <= to);
+  const pick = (list, f) => inRange4(list).flatMap((x) => {
+    const v = f(x);
+    return v === null || !Number.isFinite(v) ? [] : [{ date: x.date, value: v }];
+  });
+  return [
+    stat("Niedrigste Herzfrequenz der Nacht", "/min", 0, pick(w.sleep, nightLowestHr)),
+    stat(
+      "HRV der Nacht (RMSSD)",
+      "ms",
+      0,
+      pick(w.recovery, (r2) => r2.hrvMs)
+    ),
+    stat(
+      "Atemfrequenz der Nacht",
+      "/min",
+      1,
+      pick(w.recovery, (r2) => r2.breathingAvg)
+    ),
+    stat(
+      "Schlafdauer gemessen",
+      "Std.",
+      1,
+      pick(w.sleep, (s) => {
+        const m = measuredSleepMin(s);
+        return m === null ? null : m / 60;
+      })
+    )
+  ].filter((r2) => r2 !== null);
+}
 function buildDoctorReport(input) {
   const { from, to, data, profile } = input;
   const labs = labRows(input.draws, input.analytes, from, to);
@@ -12538,7 +12733,16 @@ function buildDoctorReport(input) {
     sleep: {
       nights: sleep.length,
       meanMinutes: sleep.length > 0 ? sleep.reduce((s, x) => s + x.value, 0) / sleep.length : null
-    }
+    },
+    measured: measuredRows(input.wearable, from, to),
+    glucose: (() => {
+      const g = (input.wearable?.glucose ?? []).filter((r2) => {
+        const d = r2.measuredAt.slice(0, 10);
+        return d >= from && d <= to;
+      });
+      if (!g.length) return null;
+      return { ...glucoseStats(g), sources: [...new Set(g.map((r2) => r2.source))].sort() };
+    })()
   };
 }
 var fmtStat = (row, v) => formatNumber(v, row.decimals);
@@ -13675,6 +13879,59 @@ function trainingSleep(l, r2) {
     ]
   );
 }
+function measuredSection(l, r2) {
+  if (r2.measured.length > 0) {
+    l.heading("Messungen der Uhr");
+    l.table(STAT_COLUMNS, r2.measured.map(statCells));
+    l.note("Optische Messung am Handgelenk (z. B. Polar); je Nacht ein Wert.");
+  }
+  const g = r2.glucose;
+  if (!g || g.mean === null) return;
+  l.heading("Blutzucker");
+  const pct = (v) => `${formatNumber(v, 0)} %`;
+  l.table(
+    [
+      { label: "Angabe", width: 180 },
+      { label: "Wert im Zeitraum", width: 320 }
+    ],
+    [
+      [
+        { text: "Mittelwert" },
+        {
+          text: `${formatNumber(g.mean, 0)} mg/dl (${formatNumber(g.mean / 18.016, 1)} mmol/l)`,
+          bold: true
+        }
+      ],
+      [{ text: "Zeit im Bereich 70\u2013180 mg/dl" }, { text: pct(g.ranges.inRange), bold: true }],
+      [
+        { text: "unter 54 / 54\u201369 mg/dl" },
+        { text: `${pct(g.ranges.veryLow)} / ${pct(g.ranges.low)}` }
+      ],
+      [
+        { text: "181\u2013250 / \xFCber 250 mg/dl" },
+        { text: `${pct(g.ranges.high)} / ${pct(g.ranges.veryHigh)}` }
+      ],
+      [{ text: "Schwankung (Variationskoeffizient)" }, { text: g.cv === null ? "\u2013" : pct(g.cv) }],
+      [
+        { text: "GMI" },
+        {
+          text: g.gmi === null ? "\u2013 (erst ab 10 Tagen mit Werten)" : `${formatNumber(g.gmi, 1)} %`
+        }
+      ],
+      [
+        { text: "Niedrigster / h\xF6chster Wert" },
+        { text: `${formatNumber(g.min ?? 0, 0)} / ${formatNumber(g.max ?? 0, 0)} mg/dl` }
+      ],
+      [
+        { text: "Werte" },
+        { text: `${g.count} an ${g.days} Tagen \xB7 ${g.sources.join(", ")}`, color: MUTED }
+      ]
+    ]
+  );
+  l.note(
+    "Bereiche nach dem internationalen Konsens f\xFCr Sensorwerte; GMI = 3,31 + 0,02392 \xD7 Mittelwert in mg/dl."
+  );
+}
 function footers(doc) {
   const n2 = doc.pages.length;
   doc.pages.forEach((p, i) => {
@@ -13702,6 +13959,7 @@ function doctorReportToPdf(r2, createdAt) {
   labSections(l, r2);
   statSection(l, "Vitalwerte", r2.vitals, "Keine Vitalwerte im Zeitraum.");
   statSection(l, "Gewicht und K\xF6rper", r2.body, "Keine K\xF6rperwerte im Zeitraum.");
+  measuredSection(l, r2);
   hrtSection(l, r2);
   trainingSleep(l, r2);
   footers(l.doc);
@@ -15157,36 +15415,34 @@ var MAGAZINES = [
   {
     id: "soja-oestrogen",
     title: "Macht Soja dich weiblich?",
-    series: "iCoach.Me Magazin · Hormone",
+    series: "iCoach.Me Magazin \xB7 Hormone",
     category: "gesundheit",
     pages: 3,
     issued: "November 2026",
-    summary:
-      "Tofu, Sojadrink, Edamame – und sofort die Sorge vor Östrogen. Das Heft zeigt, was Isoflavone aus Soja wirklich sind, was die größte Auswertung bei Männern (41 Studien) ergab und ob Soja unter einer Testosteron-Therapie die Aromatisierung bremst.",
+    summary: "Tofu, Sojadrink, Edamame \u2013 und sofort die Sorge vor \xD6strogen. Das Heft zeigt, was Isoflavone aus Soja wirklich sind, was die gr\xF6\xDFte Auswertung bei M\xE4nnern (41 Studien) ergab und ob Soja unter einer Testosteron-Therapie die Aromatisierung bremst.",
     learn: [
-      "Warum Isoflavone Östrogen nur ähneln und am Rezeptor 100- bis 10.000-mal schwächer wirken als Estradiol",
-      "Was die Meta-Analyse von Reed et al. (2021) bei Testosteron, freiem Testosteron und Östradiol fand",
-      "Mythos-Check: Männerbrüste, Fruchtbarkeit, Brustkrebs, Kapseln und Schilddrüse",
-      "Warum Soja unter TRT als Proteinquelle in Ordnung ist, aber kein Mittel gegen hohes Östradiol",
+      "Warum Isoflavone \xD6strogen nur \xE4hneln und am Rezeptor 100- bis 10.000-mal schw\xE4cher wirken als Estradiol",
+      "Was die Meta-Analyse von Reed et al. (2021) bei Testosteron, freiem Testosteron und \xD6stradiol fand",
+      "Mythos-Check: M\xE4nnerbr\xFCste, Fruchtbarkeit, Brustkrebs, Kapseln und Schilddr\xFCse",
+      "Warum Soja unter TRT als Proteinquelle in Ordnung ist, aber kein Mittel gegen hohes \xD6stradiol"
     ],
-    bytes: 495601,
+    bytes: 495601
   },
   {
     id: "lebensmittel-kalorie",
     title: "Vom Lebensmittel zur Kalorie",
-    series: "iCoach.Me Magazin · Ernährung · Ausgabe 01",
+    series: "iCoach.Me Magazin \xB7 Ern\xE4hrung \xB7 Ausgabe 01",
     category: "ernaehrung",
     pages: 4,
     issued: "November 2026",
-    summary:
-      "Die Kalorie war zuerst eine physikalische Wärmeeinheit. Das Heft zeigt in vier Stationen, wie aus einem Lebensmittel die Zahl auf dem Etikett wird – vom Bombenkalorimeter bis zu den Atwater-Faktoren 4 · 4 · 9.",
+    summary: "Die Kalorie war zuerst eine physikalische W\xE4rmeeinheit. Das Heft zeigt in vier Stationen, wie aus einem Lebensmittel die Zahl auf dem Etikett wird \u2013 vom Bombenkalorimeter bis zu den Atwater-Faktoren 4 \xB7 4 \xB7 9.",
     learn: [
       "Was eine Kilokalorie ist und wie das Bombenkalorimeter den Brutto-Brennwert misst",
-      "Warum die Energie in den Ausscheidungen abgezogen wird und wie Atwaters Respirationskammer am Menschen maß",
-      "Woher die Durchschnittswerte 4 kcal/g für Kohlenhydrate und Protein und 9 kcal/g für Fett stammen",
-      "Wie Wilbur Olin Atwater und Max Rubner die Nahrungskalorie geprägt haben",
+      "Warum die Energie in den Ausscheidungen abgezogen wird und wie Atwaters Respirationskammer am Menschen ma\xDF",
+      "Woher die Durchschnittswerte 4 kcal/g f\xFCr Kohlenhydrate und Protein und 9 kcal/g f\xFCr Fett stammen",
+      "Wie Wilbur Olin Atwater und Max Rubner die Nahrungskalorie gepr\xE4gt haben"
     ],
-    bytes: 723531,
+    bytes: 723531
   },
   {
     id: "brutto-netto",

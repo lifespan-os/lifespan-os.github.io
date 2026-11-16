@@ -318,6 +318,8 @@ export function heartTabHtml(catalog, state = {}) {
   const hrv = w.recovery.map((r) => ({ date: r.date, value: r.hrvMs }));
   const lowSeries = inPeriod(nightLow).filter((p) => p.value !== null);
   const hrvSeries = inPeriod(hrv).filter((p) => p.value !== null);
+  const breath = w.recovery.map((r) => ({ date: r.date, value: r.breathingAvg ?? null }));
+  const breathSeries = inPeriod(breath).filter((p) => p.value !== null);
   const recovery = [...inPeriod(w.recovery)].reverse();
   const exercises = [...inPeriod(w.exercises)].reverse();
   const stepDays = w.days.filter((d) => d.stepSamples);
@@ -376,6 +378,15 @@ export function heartTabHtml(catalog, state = {}) {
       ${compare(W.recentVsBaseline(hrv, t), "ms")}
       ${note("HRV aus Polar Nightly Recharge. Werte verschiedener Geräte sind nicht direkt vergleichbar – aussagekräftig ist dein eigener Verlauf.")}
     </section>
+    ${
+      breathSeries.length
+        ? `<section class="card"><div class="wo-head"><h3>Atemfrequenz in der Nacht</h3></div>
+      ${breathSeries.length > 1 ? trendSvg(breathSeries, { color: COLOR.sleep, decimals: 1, height: 160, label: "Atemfrequenz je Nacht" }) : `<p class="muted small">Für einen Verlauf werden mindestens zwei Nächte benötigt.</p>`}
+      ${compare(W.recentVsBaseline(breath, t), "/min", 1)}
+      ${note("Atemzüge pro Minute aus Polar Nightly Recharge. Den Verlauf einer Nacht zeigt Sleep → Gemessene Nächte.")}
+    </section>`
+        : ""
+    }
     ${
       recovery.length
         ? `<section class="card"><div class="wo-head"><h3>Nächtliche Erholung</h3></div><ul class="list">${recovery
@@ -441,8 +452,35 @@ const STAGE_COLOR = { wake: "#7A889D", rem: "#2F86B8", light: "#A39BE3", deep: "
 const evening = (m) => ((m % 1440) + 1440) % 1440;
 
 /** Letzte Nacht im Detail: Schlafverlauf, Werte von Polar, SleepWise (wie MeasuredSleepCard am PC). */
+/** Verlauf eines Werts über die Nacht ({"HH:MM": Wert}), wie NightLine am PC (1.45.0). */
+function nightLineSvg(json, { color, label, unit, digits = 0 }) {
+  const pts = W.nightSeries(json ?? null).map((p) => ({ t: p.minute >= 720 ? p.minute - 1440 : p.minute, v: p.value }));
+  if (pts.length < 2) return "";
+  const Wd = 340;
+  const H = 130;
+  const L = 34;
+  const R = 6;
+  const T = 8;
+  const B = 20;
+  const t0 = pts[0].t;
+  const t1 = pts[pts.length - 1].t;
+  const x = (t) => L + ((t - t0) / Math.max(1, t1 - t0)) * (Wd - L - R);
+  const lo = Math.min(...pts.map((p) => p.v)) - (digits ? 1 : 3);
+  const hi = Math.max(...pts.map((p) => p.v)) + (digits ? 1 : 3);
+  const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const ticks = [lo, (lo + hi) / 2, hi];
+  const clock = (t) => W.clockOf(evening(t) % 1440);
+  return `<p class="small"><b>${esc(label)}</b> <span class="muted">(${unit}) · ${num(Math.min(...pts.map((p) => p.v)), digits)}–${num(Math.max(...pts.map((p) => p.v)), digits)}</span></p><svg class="pc-chart" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="${esc(label)}">
+    ${ticks.map((v) => `<line x1="${L}" x2="${Wd - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="grid"/><text x="${L - 4}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end">${num(v)}</text>`).join("")}
+    <polyline points="${pts.map((p) => `${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(" ")}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"><title>${esc(label)} (${unit})</title></polyline>
+    <text x="${L}" y="${H - 5}" text-anchor="start">${clock(t0)}</text>
+    <text x="${Wd - R}" y="${H - 5}" text-anchor="end">${clock(t1)}</text>
+  </svg>`;
+}
+
 function nightDetailHtml(n, w) {
   if (!n) return "";
+  const rec = w.recovery.find((r) => r.date === n.date && r.source === n.source);
   const segs = W.hypnogramSegments(n);
   const total = segs.reduce((a, x) => a + (x.to - x.from), 0);
   const sw = w.sleepwise.find((x) => x.date === n.date);
@@ -499,6 +537,9 @@ function nightDetailHtml(n, w) {
             .join("")}</div><p class="muted small">${["deep", "light", "rem", "wake"].map((k) => `<span style="color:${STAGE_COLOR[k]}">■</span> ${W.STAGE_LABEL[k]}`).join(" · ")} · ${W.clockOf(evening(Math.round(segs[0].from)))}–${W.clockOf(evening(Math.round(segs[segs.length - 1].to)))} Uhr</p>`
         : ""
     }
+    ${nightLineSvg(n.hrSamples, { color: COLOR.sleep, label: "Herzfrequenz in der Nacht", unit: "/min" })}
+    ${nightLineSvg(rec?.hrvSamples, { color: COLOR.recovery, label: "HRV in der Nacht", unit: "ms" })}
+    ${nightLineSvg(rec?.breathingSamples, { color: COLOR.body, label: "Atemfrequenz in der Nacht", unit: "/min", digits: 1 })}
     ${swLines.length ? `<h4 class="logs-sub">SleepWise (Polar)</h4><ul class="list">${swLines.map((l) => `<li class="muted small">${l}</li>`).join("")}</ul>` : ""}`;
 }
 
@@ -548,7 +589,7 @@ export function workoutHeartOf(catalog, w) {
   if (linked) {
     const points = W.exerciseHr(linked.hrSamples);
     if (points.length || linked.hrAvg != null) {
-      return { kind: "exercise", label: `Training der Uhr (${linked.source})`, start: clock(exStart(linked) ?? start), points, hrAvg: linked.hrAvg, hrMax: linked.hrMax, rrRmssd: linked.rrRmssd ?? null };
+      return { kind: "exercise", label: `Training der Uhr (${linked.source})`, start: clock(exStart(linked) ?? start), points, hrAvg: linked.hrAvg, hrMax: linked.hrMax, rrRmssd: linked.rrRmssd ?? null, zones: linked.zones ?? null };
     }
   }
   const byMin = new Map();
@@ -567,7 +608,30 @@ export function workoutHeartOf(catalog, w) {
   if (!byMin.size) return null;
   const points = [...byMin.entries()].sort((a, b) => a[0] - b[0]).map(([m, [sum, n]]) => ({ second: (m - start) * 60, bpm: Math.round(sum / n) }));
   const avg = points.reduce((a, p) => a + p.bpm, 0) / points.length;
-  return { kind: "day", label: `Ganztägige Herzfrequenz (${sources.join(", ")})`, start: clock(start), points, hrAvg: Math.round(avg * 10) / 10, hrMax: Math.max(...points.map((p) => p.bpm)), rrRmssd: null };
+  return { kind: "day", label: `Ganztägige Herzfrequenz (${sources.join(", ")})`, start: clock(start), points, hrAvg: Math.round(avg * 10) / 10, hrMax: Math.max(...points.map((p) => p.bpm)), rrRmssd: null, zones: null };
+}
+
+/** Zeit je Zone: Zonen der Uhr, sonst Rechnung mit den eigenen Zonen (1.45.0, wie am PC). */
+function workoutZonesLine(h) {
+  const mmss = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, "0")}`;
+  const watch = W.exerciseZones(h.zones ?? null);
+  if (watch.length) {
+    const total = watch.reduce((a, z) => a + z.seconds, 0);
+    return total > 0 ? `<p class="muted small">Zonen laut Uhr: ${watch.map((z) => `Zone ${z.zone} ${mmss(z.seconds)}`).join(" · ")}</p>` : "";
+  }
+  let own = [];
+  try {
+    own = heartOn(buildDb(), today())
+      .zones.filter((z) => z.effective)
+      .map((z) => ({ zone: z.zone, from: z.effective.from }));
+  } catch {
+    own = [];
+  }
+  if (!own.length || h.points.length < 2) return "";
+  const c = W.secondsInZones(h.points.map((p) => [p.second, p.bpm]), own, h.kind === "day" ? 900 : 15);
+  if (!c.total) return "";
+  const parts = c.byZone.map((sec, i) => ({ zone: i + 1, sec })).filter((z) => z.sec > 0);
+  return `<p class="muted small">Zonen nach deinen Einstellungen: ${parts.length ? parts.map((z) => `Zone ${z.zone} ${mmss(z.sec)} (${num((z.sec / c.total) * 100)} %)`).join(" · ") : "keine Zeit in den Zonen"}${c.below > 0 ? ` · unter Zone 1 ${mmss(c.below)}` : ""}</p>`;
 }
 
 export function workoutHeartHtml(h) {
@@ -576,6 +640,7 @@ export function workoutHeartHtml(h) {
     <p class="small"><b>Herzfrequenz</b> · ${esc(h.label)} · ab ${esc(h.start)} Uhr</p>
     ${exerciseSvg(h.points)}
     <p class="muted small">Ø ${num(h.hrAvg)} /min · max ${num(h.hrMax)} /min${h.rrRmssd != null ? ` · HRV im Training (RMSSD) ${num(h.rrRmssd)} ms` : ""}</p>
+    ${workoutZonesLine(h)}
     ${h.kind === "day" ? `<p class="muted small">Aus den ganztägigen Werten der Uhr (Polar: alle 5 Minuten) – für einen genauen Verlauf das Training auf der Uhr starten.</p>` : ""}
   </div>`;
 }

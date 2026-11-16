@@ -103,7 +103,7 @@ export function viewHealth() {
   </main>`;
   }
   if (!S.catalog?.pc?.lab_analyte?.length) {
-    return `${X.header("Health")}<main class="wrap"><section class="card"><p class="warn">Für Health fehlen noch Daten: Bitte am PC (ab Version 1.0.121) einen neuen Export erstellen und hier unter Settings „Neue Exportdatei laden“.</p></section></main>`;
+    return `${X.header("Health")}<main class="wrap"><section class="card"><p class="warn">Für Health fehlen noch Daten: Bitte am PC (ab Version 1.0.121) einen neuen Export erstellen und hier unter Import/Export „Neue Exportdatei laden“.</p></section></main>`;
   }
   const tab = S.healthTab ?? "draws";
   const pending = H.unsentHealth(S.health);

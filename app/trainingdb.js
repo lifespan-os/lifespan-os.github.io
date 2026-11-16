@@ -422,7 +422,7 @@ const dataUrl = (mime, data) => `data:${mime};base64,${data}`;
 export function viewCheckinsTab() {
   const S = X.S;
   if (!TR.hasTable(S.catalogRaw, "checkin_photo") && !S.train?.rows?.checkin_photo) {
-    return `<section class="card"><p class="warn">Für die Check-Ins wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Settings „Neue Exportdatei laden“.</p></section>`;
+    return `<section class="card"><p class="warn">Für die Check-Ins wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Import/Export „Neue Exportdatei laden“.</p></section>`;
   }
   const C = D.checkin;
   const all = TR.checkinsOf(S.catalogRaw, S.train);

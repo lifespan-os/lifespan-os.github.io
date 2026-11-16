@@ -350,7 +350,7 @@ export function heartTabHtml(catalog, state = {}) {
   const from = shift(t, -(days - 1));
   const w = wearableOf(catalog);
   if (w.heart.length + w.sleep.length + w.recovery.length === 0) {
-    return `<section class="card"><div class="empty-state"><p><strong>Noch keine Herzdaten</strong></p><p class="muted small">Verbinde deine Polar-Uhr am PC unter Settings → Polar und synchronisiere. Nach dem nächsten Export erscheinen hier Tagesverlauf, Ruhepuls, HRV und die Zeit in deinen Trainingszonen.</p></div></section>`;
+    return `<section class="card"><div class="empty-state"><p><strong>Noch keine Herzdaten</strong></p><p class="muted small">Verbinde deine Polar-Uhr am PC unter Import/Export → Polar und synchronisiere. Nach dem nächsten Export erscheinen hier Tagesverlauf, Ruhepuls, HRV und die Zeit in deinen Trainingszonen.</p></div></section>`;
   }
   const inPeriod = (list) => list.filter((x) => x.date >= from && x.date <= t);
   const lastDay = [w.heart.at(-1)?.date, w.days.filter((d) => d.stepSamples).at(-1)?.date].filter(Boolean).sort().at(-1) ?? t;
@@ -455,7 +455,7 @@ export function heartTabHtml(catalog, state = {}) {
     ${loadHtml(w, from)}
     ${biosensingHtml(inPeriod(w.biosensing))}
     ${associationsHtml(w)}
-    <p class="muted small">Quelle: Polar (am PC unter Settings → Polar). Nur Messwerte und Rechnungen, keine medizinische Bewertung.</p>`;
+    <p class="muted small">Quelle: Polar (am PC unter Import/Export → Polar). Nur Messwerte und Rechnungen, keine medizinische Bewertung.</p>`;
 }
 
 /** Sleep → Gemessene Nächte (nur wenn im Zeitraum vorhanden). `logs` = eigene Nächte wie am PC. */

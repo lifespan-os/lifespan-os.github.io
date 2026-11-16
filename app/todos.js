@@ -128,7 +128,7 @@ const unsent = (id) => {
 
 export function viewTodos() {
   const S = X.S;
-  if (!S.catalog?.pc) return `${X.header("Checklisten")}<main class="wrap"><section class="card"><p class="warn">Für die Checklisten fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Settings „Neue Exportdatei laden“.</p></section></main>`;
+  if (!S.catalog?.pc) return `${X.header("Checklisten")}<main class="wrap"><section class="card"><p class="warn">Für die Checklisten fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Import/Export „Neue Exportdatei laden“.</p></section></main>`;
   const date = dateOf();
   const t = today();
   const wd = WEEKDAYS[new Date(`${date}T12:00:00`).getDay()];

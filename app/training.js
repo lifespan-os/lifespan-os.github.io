@@ -414,7 +414,7 @@ function plansHaveData() {
 function plansTab() {
   const S = X.S;
   if (!plansHaveData()) {
-    return `<section class="card"><p class="warn">Für die Pläne wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Settings „Neue Exportdatei laden“.</p></section>`;
+    return `<section class="card"><p class="warn">Für die Pläne wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Import/Export „Neue Exportdatei laden“.</p></section>`;
   }
   if (S.trainPlanEdit) return planEditor();
   const plans = TR.plansOf(S.catalogRaw, S.train, S.catalog.exercises);

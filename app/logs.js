@@ -126,7 +126,7 @@ const isLocal = (kind, id) => {
 
 export function viewSleep() {
   const S = X.S;
-  if (!S.catalog?.pc) return `${X.header("Sleep")}<main class="wrap"><section class="card"><p class="warn">Für Sleep wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Settings „Neue Exportdatei laden“.</p></section></main>`;
+  if (!S.catalog?.pc) return `${X.header("Sleep")}<main class="wrap"><section class="card"><p class="warn">Für Sleep wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Import/Export „Neue Exportdatei laden“.</p></section></main>`;
   const days = S.sleepDays ?? 30;
   const t = today();
   const from = shift(t, -(days - 1));
@@ -474,7 +474,7 @@ export function viewLogEdit() {
 
 export function viewRecovery() {
   const S = X.S;
-  if (!S.catalog?.pc) return `${X.header("Recovery")}<main class="wrap"><section class="card"><p class="warn">Für Recovery wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Settings „Neue Exportdatei laden“.</p></section></main>`;
+  if (!S.catalog?.pc) return `${X.header("Recovery")}<main class="wrap"><section class="card"><p class="warn">Für Recovery wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Import/Export „Neue Exportdatei laden“.</p></section></main>`;
   const days = S.recoveryDays ?? 30;
   const scale = S.recoveryScale ?? "readiness";
   const t = today();

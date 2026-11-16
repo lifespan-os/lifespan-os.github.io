@@ -141,7 +141,7 @@ export function viewBody() {
   const st = S();
   const head = X.header("Body & Longevity", { back: "home" });
   if (!X.S.catalog?.body) {
-    return `${head}<main class="wrap"><section class="card"><p class="small">Für die Körperwerte bitte einmal eine neue Exportdatei vom PC laden (Settings → Export am PC, dann hier „Neue Exportdatei laden“).</p></section></main>`;
+    return `${head}<main class="wrap"><section class="card"><p class="small">Für die Körperwerte bitte einmal eine neue Exportdatei vom PC laden (am PC Import/Export → „Für die Handy-App exportieren“, dann hier unter Import/Export „Neue Exportdatei laden“).</p></section></main>`;
   }
   const all = B.allValues(X.S.catalog, st.local);
   const withData = metrics().filter((m) => all.get(m.id)?.length);

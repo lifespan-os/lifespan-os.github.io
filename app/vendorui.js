@@ -1,4 +1,4 @@
-// LIFESPAN OS Mobil – Settings → Herstellerpakete (1.27.0): Pakete aus der Liste der App oder als
+// LIFESPAN OS Mobil – Import/Export → Herstellerpakete (1.27.0, seit 1.45.6 unter Import/Export): Pakete aus der Liste der App oder als
 // Datei installieren (Vorschau wie am PC), installierte Pakete ansehen, noch nicht gesendete zurücknehmen.
 
 import * as V from "./vendor.js";
@@ -42,7 +42,7 @@ export function viewVendor() {
   const plan = S.vendorPlan;
   const installed = installedList();
   const byKey = new Map(installed.map((p) => [p.key, p]));
-  return `${X.header("Pakete", { back: "settings" })}<main class="wrap">
+  return `${X.header("Pakete", { back: "transfer" })}<main class="wrap">
     ${plan ? previewCard(plan) : ""}
     <section class="card">
       <h3>Paket installieren</h3>

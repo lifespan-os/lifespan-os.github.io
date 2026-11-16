@@ -190,7 +190,7 @@ function viewHome() {
   let cards;
   let hero = "";
   if (!c.pc) {
-    cards = `<section class="card"><p class="warn">Für die Overview wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Settings „Neue Exportdatei laden“.</p></section>`;
+    cards = `<section class="card"><p class="warn">Für die Overview wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Import/Export „Neue Exportdatei laden“.</p></section>`;
   } else {
     try {
       const db = buildDb();
@@ -237,8 +237,6 @@ function viewHome() {
 
 /** Settings (wie am PC): Daten vom PC, an den PC senden, Hilfe. */
 function viewSettings() {
-  const c = S.catalog;
-  const total = unsent().length + unsentFood() + unsentBodyCount();
   return `${header("Settings")}<main class="wrap">
     ${accountsCard()}
     <section class="card">
@@ -246,22 +244,10 @@ function viewSettings() {
       <p class="muted small">Energie (fest oder dynamisch aus dem Verbrauch), Makros, Schlaf, Gewicht, Schritte und Wasser – wie am PC.</p>
       <button class="btn block" data-act="goals-open">Tagesziele festlegen</button>
     </section>
-    ${blsCard()}
     <section class="card">
-      <h3>Herstellerpakete</h3>
-      <p class="muted small">Lebensmittel und Supplements von Herstellern (PEAK, GymBeam, IronMaxx, #sinob, Proteini.si …) mit einem Tipp installieren – wie am PC.</p>
-      <button class="btn block" data-act="vendor-open">Herstellerpakete</button>
-    </section>
-    <section class="card">
-      <h3>${c.startpaket ? "Grunddaten" : "Daten vom PC"}</h3>
-      <p class="muted small">Stand: ${fmtDateTime(c.exportedAt)} · ${c.machines.length.toLocaleString("de-DE")} Maschinen · ${c.exercises.length} Übungen · ${c.plans.length} Pläne</p>
-      ${fileButton("Neue Exportdatei laden")}
-    </section>
-    <section class="card">
-      <div class="wo-head"><h3>An den PC senden</h3><span class="tag">${total} offen</span></div>
-      <p class="muted small">Trainings, Lebensmittel und Körperwerte als Dateien für den Import am PC (Settings → Daten importieren → „Abgleichen“).</p>
-      <button class="btn block" data-go="pending" ${total ? "" : "disabled"}>${total ? "Offene Daten ansehen und bearbeiten" : "Keine offenen Daten"}</button>
-      <button class="btn block" data-go="send">An den PC senden</button>
+      <h3>Datenaustausch</h3>
+      <p class="muted small">An den PC senden, neue Exportdatei vom PC laden, Herstellerpakete und BLS 4.0 stehen unter <b>Import/Export</b> – oben im Menü neben dem Schließen-Knopf.</p>
+      <button class="btn block" data-go="transfer">Zu Import/Export</button>
     </section>
     <section class="card">
       <h3>Untere Leiste</h3>
@@ -280,6 +266,53 @@ function viewSettings() {
       <h3>Hilfe</h3>
       <p class="muted small">Version ${esc(C.MOBILE_VERSION)} · Bedienung, Datenschutz und Datenaustausch.</p>
       <button class="btn block" data-go="help">Hilfe öffnen</button>
+    </section>
+  </main>`;
+}
+
+/**
+ * Import/Export (1.45.6): alles zum Datenaustausch an einer Stelle (vorher unter Settings) – An den PC
+ * senden, Exportdatei vom PC laden, ganzes Konto an den PC, Herstellerpakete, BLS 4.0 und der Weg zu
+ * den Blutzucker-Dateien. Erreichbar über den Knopf im Menükopf.
+ */
+function viewTransfer() {
+  const c = S.catalog;
+  if (!c) return `${header("Import/Export")}<main class="wrap"><section class="card"><h3>Daten vom PC</h3>${fileButton("Exportdatei laden")}</section></main>`;
+  const total = unsent().length + unsentFood() + unsentBodyCount();
+  return `${header("Import/Export")}<main class="wrap">
+    <p class="muted small">Alle Daten bleiben auf diesem Gerät. Dateien verlassen es nur, wenn du sie selbst weitergibst (z. B. über Google Drive an den PC).</p>
+    <section class="card">
+      <div class="wo-head"><h3>An den PC senden</h3><span class="tag">${total} offen</span></div>
+      <p class="muted small">Trainings, Lebensmittel und Körperwerte als Dateien für den Import am PC (Import/Export → Daten importieren → „Abgleichen“).</p>
+      <button class="btn block" data-go="pending" ${total ? "" : "disabled"}>${total ? "Offene Daten ansehen und bearbeiten" : "Keine offenen Daten"}</button>
+      <button class="btn primary block" data-go="send">An den PC senden</button>
+    </section>
+    <section class="card">
+      <h3>${c.startpaket ? "Grunddaten" : "Daten vom PC"}</h3>
+      <p class="muted small">Stand: ${fmtDateTime(c.exportedAt)} · ${c.machines.length.toLocaleString("de-DE")} Maschinen · ${c.exercises.length} Übungen · ${c.plans.length} Pläne</p>
+      ${fileButton("Neue Exportdatei laden")}
+      <p class="muted small">Am PC unter Import/Export entweder <b>„Für die Handy-App exportieren“</b> (kleiner, lädt schneller – keine Sicherung) oder den vollständigen Export „Daten exportieren“ wählen. Beide Dateien lassen sich hier laden.</p>
+    </section>
+    ${
+      c.startpaket
+        ? `<section class="card">
+      <h3>Ganzes Konto an den PC</h3>
+      <p class="muted small">Eine Datei mit allem, was in diesem Konto steht – am PC als neuer Benutzer („Ersetzen“) oder zum Abgleich mit einem bestehenden Benutzer.</p>
+      <button class="btn primary block" data-act="account-export">Ganzes Konto an den PC</button>
+      <div id="account-result"></div>
+    </section>`
+        : ""
+    }
+    <section class="card">
+      <h3>Herstellerpakete</h3>
+      <p class="muted small">Lebensmittel und Supplements von Herstellern (PEAK, GymBeam, IronMaxx, #sinob, Proteini.si …) mit einem Tipp installieren – wie am PC.</p>
+      <button class="btn block" data-act="vendor-open">Herstellerpakete</button>
+    </section>
+    ${blsCard()}
+    <section class="card">
+      <h3>Blutzucker-Dateien</h3>
+      <p class="muted small">Dateien von LibreView, Dexcom Clarity oder eine eigene CSV liest du unter Health → Blutzucker ein. Die Werte gehen mit „Körperwerte … senden“ an den PC.</p>
+      <button class="btn block" data-act="transfer-glucose">Zu Health → Blutzucker</button>
     </section>
   </main>`;
 }
@@ -666,13 +699,13 @@ function viewSend() {
     food ? `${food} Ernährungseinträge` : "",
     body ? `${body} Körperwerte, Schlaf-, Regenerations-, To-do- und Trainingseinträge` : "",
   ].filter(Boolean);
-  return `${header("An den PC senden", { back: "home" })}<main class="wrap">
+  return `${header("An den PC senden", { back: "transfer" })}<main class="wrap">
     <section class="card">
       <h3>${ready.length ? `${ready.join(" und ")} bereit` : "Alles übertragen"}</h3>
       ${ready.length ? `<button class="btn block" data-go="pending">Vorher offene Daten ansehen und bearbeiten</button>` : ""}
       <ol class="steps small">
         <li>Auf <b>„Trainings senden“</b> bzw. <b>„Lebensmittel senden“</b> tippen und die Datei in <b>Google Drive</b> sichern („In Drive sichern“ bzw. „In Dateien sichern“ → Google Drive).</li>
-        <li>Am PC in LIFESPAN OS: <b>Settings → Daten importieren → Exportdatei auswählen …</b> und die Datei aus Google Drive wählen.</li>
+        <li>Am PC in LIFESPAN OS: <b>Import/Export → Daten importieren → Exportdatei auswählen …</b> und die Datei aus Google Drive wählen.</li>
         <li>Als Art <b>„Abgleichen (zweites Gerät)“</b> wählen und bestätigen.</li>
       </ol>
       <p class="warn">Bitte nie „Ersetzen“ wählen: Dann würden am PC alle anderen Daten gelöscht. „Abgleichen“ ist sicher, vorher legt die App automatisch ein Backup an.</p>
@@ -770,7 +803,7 @@ function viewPending() {
       ${extraWo.length || list.length ? `<ul class="pending-list">${extraWo.map(woHtml).join("")}${list.map(itemHtml).join("")}</ul>` : ""}
     </section>`;
   }).join("");
-  return `${header("Offene Daten", { back: "settings" })}<main class="wrap">
+  return `${header("Offene Daten", { back: "transfer" })}<main class="wrap">
     <section class="card">
       <p class="small">Alles, was du am Handy erfasst oder geändert hast und noch nicht an den PC gesendet ist. <b>Bearbeiten</b> öffnet den Eintrag im jeweiligen Bereich. <b>Verwerfen</b> nimmt die Änderung am Handy zurück – dann gilt wieder der Stand vom PC.</p>
       ${total ? `<button class="btn primary block" data-go="send">An den PC senden</button>` : `<p class="empty">Alles übertragen – keine offenen Daten.</p>`}
@@ -863,6 +896,7 @@ const VIEWS = {
   home: viewHome,
   training: viewTrainingSection,
   settings: viewSettings,
+  transfer: viewTransfer,
   "pc-only": viewPcOnly,
   plans: viewPlans,
   workout: viewWorkout,
@@ -1587,6 +1621,10 @@ const actions = {
     toast(`Konto „${name}“ mit allen Daten gelöscht`);
     render();
   },
+  "transfer-glucose": () => {
+    S.healthTab = "glucose";
+    return go("health");
+  },
   "bar-reset": async () => {
     delete S.prefs.barSlots;
     await saveNow();
@@ -1706,8 +1744,8 @@ async function exportAccount(el) {
     ${shared ? `<p class="small">„${esc(name)}“ weitergegeben (${rows.toLocaleString("de-DE")} Einträge).</p>` : `<p class="small">Die Datei ist bereit (${rows.toLocaleString("de-DE")} Einträge). Tippe darauf und sichere sie in Google Drive:</p>
       <a class="btn blue block" href="${URL.createObjectURL(blob)}" download="${esc(name)}">${esc(name)}</a>`}
     <ol class="steps small">
-      <li><b>Neuer Benutzer am PC:</b> LIFESPAN OS → Settings → Benutzer → neuen Benutzer anlegen und zu ihm wechseln. Dann Settings → Daten importieren → die Datei wählen → <b>„Ersetzen“</b>.</li>
-      <li><b>Bestehender Benutzer:</b> Settings → Daten importieren → die Datei wählen → <b>„Abgleichen (zweites Gerät)“</b>.</li>
+      <li><b>Neuer Benutzer am PC:</b> LIFESPAN OS → Settings → Benutzer → neuen Benutzer anlegen und zu ihm wechseln. Dann Import/Export → Daten importieren → die Datei wählen → <b>„Ersetzen“</b>.</li>
+      <li><b>Bestehender Benutzer:</b> Import/Export → Daten importieren → die Datei wählen → <b>„Abgleichen (zweites Gerät)“</b>.</li>
     </ol>
     <p class="small">Danach kannst du alles als übertragen markieren – die Daten bleiben am Handy, „An den PC senden“ zeigt dann nur noch Neues.</p>
     <button class="btn primary block" data-act="mark-sent" data-arg="all">Alles als übertragen markieren</button>
@@ -2055,13 +2093,7 @@ function accountsCard() {
             .join("")}</ul>`
         : ""
     }
-    ${
-      S.catalog?.startpaket
-        ? `<button class="btn primary block" data-act="account-export">Ganzes Konto an den PC</button>
-          <p class="muted small">Eine Datei mit allem, was in diesem Konto steht – am PC als neuer Benutzer („Ersetzen“) oder zum Abgleich mit einem bestehenden Benutzer.</p>
-          <div id="account-result"></div>`
-        : ""
-    }
+    ${S.catalog?.startpaket ? `<p class="muted small">Das ganze Konto an den PC bringen: Import/Export → „Ganzes Konto an den PC“.</p>` : ""}
     <button class="btn block" data-act="account-new">Neues Konto anlegen</button>
     <p class="muted small" id="persist-note">Alle Daten liegen nur auf diesem Gerät.</p>
   </section>`;

@@ -78,11 +78,11 @@ export function blsCard() {
 
 export function viewBls() {
   const S = X.S;
-  if (!S.blsInfo) return `${X.header("BLS 4.0", { back: "settings" })}<main class="wrap"><section class="card"><p>Der BLS ist auf diesem Gerät nicht gespeichert.</p></section>${blsCard()}</main>`;
+  if (!S.blsInfo) return `${X.header("BLS 4.0", { back: "transfer" })}<main class="wrap"><section class="card"><p>Der BLS ist auf diesem Gerät nicht gespeichert.</p></section>${blsCard()}</main>`;
   const b = ensureBls();
   const q = S.blsQuery ?? "";
   const f = b && S.blsCode ? B.foodByCode(b, S.blsCode) : null;
-  return `${X.header("BLS 4.0", { back: "settings" })}<main class="wrap">
+  return `${X.header("BLS 4.0", { back: "transfer" })}<main class="wrap">
     <section class="card">
       <div class="field"><label for="bls-q">Lebensmittel suchen</label>
         <input id="bls-q" type="search" autocomplete="off" data-bls="q" value="${esc(q)}" placeholder="z. B. Haferflocken, Apfel, Lachs"></div>
@@ -176,7 +176,7 @@ export const blsActions = {
     S.bls = null;
     S.blsInfo = null;
     X.toast("BLS vom Gerät entfernt. Schon übernommene Lebensmittel bleiben.");
-    if (S.view === "bls") X.go("settings");
+    if (S.view === "bls") X.go("transfer");
     else X.rerender();
   },
   "bls-open": () => X.go("bls"),

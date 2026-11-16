@@ -1225,3 +1225,10 @@ body.has-submenu [data-sheet].tabs--fold { display: none; }
 .day-nav__date input[type="date"]::-webkit-date-and-time-value { text-align: center; margin: 0; }
 /* Schritte über den Tag: Strich für „jetzt“ */
 .pc-chart .steps-now { stroke: var(--muted); stroke-dasharray: 2 3; }
+
+/* Menükopf (1.45.6): Knopf „Import/Export“ neben dem Schließen-Knopf */
+.drawer__brand > div { min-width: 0; overflow: hidden; }
+.drawer__brand b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drawer__transfer { flex: none; display: inline-flex; align-items: center; gap: 5px; height: 44px; padding: 0 10px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 12px; background: rgba(255, 255, 255, .12); color: #fff; font: inherit; font-size: .76rem; font-weight: 700; white-space: nowrap; }
+.drawer__transfer svg { width: 17px; height: 17px; }
+.drawer__transfer.active { border-color: var(--orange); color: var(--orange); }

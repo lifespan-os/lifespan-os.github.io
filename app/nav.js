@@ -17,6 +17,7 @@ const ICONS = {
   superhuman: svg('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'),
   insights: svg('<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/>'),
   icoach: svg('<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/>'),
+  transfer: svg('<path d="M7 4l-4 4 4 4"/><path d="M3 8h13"/><path d="M17 12l4 4-4 4"/><path d="M21 16H8"/>'),
   settings: svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
   info: svg('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>'),
   menu: svg('<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>'),
@@ -50,7 +51,9 @@ export const SECTIONS = [
   { id: "superhuman", label: "Superhuman", view: "super", views: ["super", "hrt-edit", "protocol-edit", "substance-edit"] },
   { id: "insights", label: "Insights", view: "insights", views: ["insights"] },
   { id: "icoach", label: "iCoach.me", view: "icoach", views: ["icoach"] },
-  { id: "settings", label: "Settings", view: "settings", views: ["settings", "send", "pending", "help"] },
+  { id: "settings", label: "Settings", view: "settings", views: ["settings", "help"] },
+  // Import/Export (1.45.6): Knopf im Menükopf, nicht in der Liste der Bereiche
+  { id: "transfer", label: "Import/Export", view: "transfer", views: ["transfer", "send", "pending", "vendor", "bls"], header: true },
 ];
 
 export const icon = (name) => ICONS[name] ?? "";
@@ -68,9 +71,10 @@ export function drawerHtml({ view, arg, open, esc, back = null }) {
   return `<div class="drawer-backdrop ${open ? "open" : ""}" data-act="menu-close"></div>
   <nav class="drawer ${open ? "open" : ""}" aria-label="Hauptmenü" ${open ? "" : 'aria-hidden="true" inert'}>
     <div class="drawer__brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b><small>Alle Bereiche</small></div>
+      <button class="drawer__transfer ${current === "transfer" ? "active" : ""}" data-act="menu-go" data-arg="transfer" ${current === "transfer" ? 'aria-current="page"' : ""}>${icon("transfer")}<span>Import/Export</span></button>
       <button class="drawer__close" data-act="menu-close" aria-label="Menü schließen">${svg('<path d="M6 6l12 12"/><path d="M18 6L6 18"/>')}</button></div>
     <ul>
-      ${SECTIONS.map(
+      ${SECTIONS.filter((s) => !s.header).map(
         (s) => `<li><button class="drawer__item ${s.id === current ? "active" : ""} ${s.view ? "" : "pc-only"}" data-act="menu-go" data-arg="${s.id}" ${s.id === current ? 'aria-current="page"' : ""}>
           ${icon(s.id)}<span>${esc(s.label)}</span>${s.view ? "" : `<small>PC</small>`}</button></li>`,
       ).join("")}
@@ -96,7 +100,7 @@ export function pcOnlyHtml(id, esc) {
 export const DEFAULT_BAR_SLOTS = ["training", "nutrition"];
 
 /** Bereiche, die auf einen Platz der Leiste passen (alle mit Handy-Ansicht). */
-export const barChoices = () => SECTIONS.filter((s) => s.view).map((s) => ({ id: s.id, label: s.label }));
+export const barChoices = () => SECTIONS.filter((s) => s.view && !s.header).map((s) => ({ id: s.id, label: s.label }));
 
 /** Gespeicherte Wahl prüfen: unbekannte Bereiche fallen auf den Standard zurück. */
 export function barSlots(pref) {

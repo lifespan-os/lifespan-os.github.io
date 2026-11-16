@@ -119,7 +119,7 @@ export function viewDiary() {
   const S = X.S;
   if (!S.catalog?.pc) {
     return `${X.header("Nutrition")}<main class="wrap">${nutritionTabs("diary")}
-      <section class="card"><p class="warn">Für das Tagebuch wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Settings „Neue Exportdatei laden“.</p></section></main>`;
+      <section class="card"><p class="warn">Für das Tagebuch wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Import/Export „Neue Exportdatei laden“.</p></section></main>`;
   }
   if (!S.diaryDate) S.diaryDate = today();
   const date = S.diaryDate;

@@ -81,7 +81,7 @@ const products = () => SD.productsOf(X.S.catalog, X.S.super);
 export function viewSuper() {
   const S = X.S;
   if (!S.catalog?.pc) {
-    return `${X.header("Superhuman")}<main class="wrap"><section class="card"><p class="warn">Für Superhuman fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Settings „Neue Exportdatei laden“.</p></section></main>`;
+    return `${X.header("Superhuman")}<main class="wrap"><section class="card"><p class="warn">Für Superhuman fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Import/Export „Neue Exportdatei laden“.</p></section></main>`;
   }
   const tab = S.superTab ?? "log";
   const pending = SD.unsentSuper(S.super);

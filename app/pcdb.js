@@ -381,6 +381,7 @@ export function intakesOn(db, date) {
         notes: i.notes ?? null,
         items,
         nutrients,
+        createdAt: i.created_at ?? "",
       };
     });
 }

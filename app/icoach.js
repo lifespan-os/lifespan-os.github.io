@@ -7,7 +7,8 @@
 
 import * as D from "./pcdomain.js";
 import * as CF from "./caffeinedata.js";
-import { today } from "./diary.js";
+import { buildDb, today } from "./diary.js";
+import * as P from "./pcdb.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -329,12 +330,20 @@ function widgetsTab() {
   const S = X.S;
   const f = caffeineForm();
   const date = today();
-  const intakes = CF.intakesOn(S.catalog, S.caffeine, date);
+  // Gespeicherte Portionen plus Koffein aus Nutrition (Supplemente, Mahlzeiten, Fasttracking) wie am PC
+  let nutritionDay = { date, intakes: [], meals: [], fast: null };
+  try {
+    const db = buildDb();
+    nutritionDay = { date, intakes: P.intakesOn(db, date), meals: P.mealDay(db, date).meals, fast: P.fastDay(db, date) };
+  } catch {
+    // ohne Daten vom PC nur die gespeicherten Portionen
+  }
+  const intakes = CF.dayIntakes(CF.intakesOn(S.catalog, S.caffeine, date), nutritionDay);
   const hl = D.parseDecimal(f.halfLife);
   const hlMsg = C().halfLifeError(hl);
   const bedOk = C().parseClock(f.bedtime) !== null;
   const t = C().caffeineTimeline(
-    intakes.map((i) => ({ id: i.id, drinkId: i.drinkId, time: i.time, mg: i.mg, ml: i.ml, label: i.label })),
+    intakes.map((i) => ({ id: i.id, drinkId: i.drinkId, time: i.time, mg: i.mg, ml: i.ml, label: i.label, source: i.source, timeEstimated: i.timeEstimated })),
     bedOk ? f.bedtime : C().DEFAULT_BEDTIME,
     hlMsg === null ? hl : C().DEFAULT_HALF_LIFE_H,
   );
@@ -375,11 +384,11 @@ function widgetsTab() {
     ${caffeineChart(t)}
     <ul class="lab-results">${t.intakes
       .map(
-        (i) => `<li><span><strong>${esc(i.time)}</strong> ${esc(i.label)}<br><span class="muted small">${i.ml === null ? "" : `${D.formatNumber(i.ml, 0)} ml · `}${esc(fmg(i.mg))} mg · Rest um ${esc(f.bedtime)}: ${esc(fmg(i.atBedtimeMg))} mg</span></span>
-        <button class="btn sm danger" data-act="cf-delete" data-arg="${esc(i.id)}" aria-label="Entfernen">✕</button></li>`,
+        (i) => `<li><span><strong>${esc(i.time)}</strong>${i.timeEstimated ? ` <span class="muted small">(angenommen)</span>` : ""} ${esc(i.label)}<br><span class="muted small">${i.ml === null ? "" : `${D.formatNumber(i.ml, 0)} ml · `}${esc(fmg(i.mg))} mg · Rest um ${esc(f.bedtime)}: ${esc(fmg(i.atBedtimeMg))} mg${C().isEditableIntake(i) ? "" : ` · aus ${esc(C().CAFFEINE_SOURCE_LABELS[i.source] ?? i.source)}`}</span></span>
+        ${C().isEditableIntake(i) ? `<button class="btn sm danger" data-act="cf-delete" data-arg="${esc(i.id)}" aria-label="Entfernen">✕</button>` : ""}</li>`,
       )
       .join("")}</ul>
-    <p class="muted small">Vereinfachte Modellrechnung (vollständige Aufnahme, Abbau mit fester Halbwertszeit) – keine Messung. Koffein aus Nutrition (Supplemente, Mahlzeiten, Fasttracking) zeigt der Zeitstrahl am PC.</p>
+    <p class="muted small">Vereinfachte Modellrechnung (vollständige Aufnahme, Abbau mit fester Halbwertszeit) – keine Messung. Koffein aus Nutrition (Supplemente mit dem Nährstoff Koffein, direkt eingetragene Nährwerte einer Mahlzeit, Fasttracking) zählt mit und wird dort bearbeitet; ohne Uhrzeit gilt eine angenommene.</p>
   </section>`
       : `<section class="card"><p class="muted">Noch keine Einnahme heute. Wähle Getränk, Uhrzeit und Menge und tippe auf „Eintragen“.</p></section>`
   }`;

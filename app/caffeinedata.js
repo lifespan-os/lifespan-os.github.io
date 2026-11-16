@@ -40,7 +40,81 @@ export function intakesOn(catalog, local, date) {
       ml: r.ml === null || r.ml === undefined ? null : Number(r.ml),
       mg: Number(r.mg),
       linked: !!r.supplement_intake_id,
+      supplementIntakeId: r.supplement_intake_id ?? null,
+      source: "calculator",
+      timeEstimated: false,
+      createdAt: r.created_at ?? "",
     }));
+}
+
+// ------------------------------------------------------------------ Koffein aus Nutrition (1.45.3)
+
+/** Nährstoff-Schlüssel wie `caffeine::NUTRIENT` */
+export const CAFFEINE_NUTRIENT = "caffeine";
+
+/** Angenommene Uhrzeit ohne Eintrag wie `caffeine::assumed_time`. */
+export function assumedTime(kind) {
+  return { fasted: "07:30", breakfast: "08:00", lunch: "12:30", snack: "15:30", dinner: "19:00", other: "12:00" }[kind] ?? "08:00";
+}
+
+const MEAL_LABELS = { breakfast: "Frühstück", lunch: "Mittagessen", dinner: "Abendessen", snack: "Snack" };
+
+/** Koffein (mg) in Nährwerten wie `caffeine::caffeine_mg`: nur Werte über 0, eine Nachkommastelle. */
+export function caffeineMg(values) {
+  const mg = Number(values?.[CAFFEINE_NUTRIENT]);
+  return Number.isFinite(mg) && mg > 0 ? round(mg, 1) : null;
+}
+
+/**
+ * Koffein aus Nutrition eines Tages wie `caffeine::list_with_nutrition` (nur lesen):
+ * Supplement-Einnahmen mit dem Nährstoff „Koffein“, direkt eingetragene Nährwerte einer Mahlzeit,
+ * Fasttracking des Tages. Einträge der Schnellerfassung am PC (`supplement_intake_id`) zählen nur
+ * einmal. `day` = { intakes, meals, fast } aus pcdb.js (`intakesOn`, `mealDay(...).meals`, `fastDay`).
+ */
+export function nutritionIntakes(day, linkedIds = new Set()) {
+  const out = [];
+  const meals = day.meals ?? [];
+  const derived = (id, time, fallback, label, mg, source, createdAt) => ({
+    id,
+    date: day.date,
+    time: time ?? fallback,
+    timeEstimated: !time,
+    drinkId: source,
+    label,
+    ml: null,
+    mg,
+    linked: false,
+    supplementIntakeId: null,
+    source,
+    createdAt: createdAt ?? "",
+  });
+  for (const i of day.intakes ?? []) {
+    if (linkedIds.has(i.id)) continue;
+    const mg = caffeineMg(i.nutrients);
+    if (mg === null) continue;
+    const meal = i.mealId ? meals.find((m) => m.id === i.mealId) : null;
+    const time = i.time ?? meal?.time ?? null;
+    const fallback = i.timing === "meal" && meal ? assumedTime(meal.mealType) : assumedTime(i.timing);
+    out.push(derived(i.id, time, fallback, i.name, mg, "supplement", i.createdAt));
+  }
+  for (const m of meals) {
+    const mg = caffeineMg(m.values);
+    if (mg === null) continue;
+    out.push(derived(m.id, m.time ?? null, assumedTime(m.mealType), m.name ?? MEAL_LABELS[m.mealType] ?? "Mahlzeit", mg, "meal", m.createdAt));
+  }
+  if (day.fast) {
+    const mg = caffeineMg(day.fast.values);
+    if (mg !== null) out.push(derived(day.fast.id, null, assumedTime("day"), "Fasttracking (Tag)", mg, "fasttracking", ""));
+  }
+  return out;
+}
+
+/** Gespeicherte Einnahmen plus Koffein aus Nutrition, nach Uhrzeit wie am PC. */
+export function dayIntakes(stored, day) {
+  const linked = new Set(stored.map((i) => i.supplementIntakeId).filter(Boolean));
+  return [...stored, ...nutritionIntakes(day, linked)].sort(
+    (a, b) => String(a.time).localeCompare(String(b.time)) || String(a.createdAt).localeCompare(String(b.createdAt)),
+  );
 }
 
 const round = (v, d) => Math.round(v * 10 ** d) / 10 ** d;

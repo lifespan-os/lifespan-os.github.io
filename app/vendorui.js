@@ -78,7 +78,7 @@ export function viewVendor() {
               .join("")}</ul>`
           : `<p class="muted small">Noch keine Herstellerpakete installiert.</p>`
       }
-      <p class="card__note">Ein am PC installiertes Paket kommt mit der nächsten Exportdatei vom PC. Entfernen geht am PC (Settings → Herstellerpakete).</p>
+      <p class="card__note">Ein am PC installiertes Paket kommt mit der nächsten Exportdatei vom PC. Entfernen geht am PC (Import/Export → Hersteller-Pakete).</p>
     </section>
   </main>`;
 }

@@ -2,64 +2,124 @@
  "format": "lifespan-os-paketliste",
  "packages": [
   {
+   "key": "bodylab24",
+   "manufacturer": "Bodylab24",
+   "title": "Bodylab24-Shop – Lebensmittel und Supplements (viele Marken)",
+   "version": "2026.11.16",
+   "file": "Bodylab24.json",
+   "foods": 522,
+   "supplements": 1495,
+   "bytes": 2279192
+  },
+  {
+   "key": "esn",
+   "manufacturer": "ESN",
+   "title": "ESN – Lebensmittel und Supplements",
+   "version": "2026.11.16",
+   "file": "ESN.json",
+   "foods": 176,
+   "supplements": 180,
+   "bytes": 416171
+  },
+  {
    "key": "foodtastic",
    "manufacturer": "Foodtastic",
    "title": "Foodtastic – Power Cakes, Vital Sirups, Erythrit",
-   "version": "2026.11.15",
+   "version": "2026.11.16",
    "file": "Foodtastic.json",
    "foods": 34,
    "supplements": 21,
-   "bytes": 35070
+   "bytes": 36129
   },
   {
    "key": "gymbeam-shop",
    "manufacturer": "GymBeam",
-   "title": "GymBeam-Shop – Lebensmittel, Protein und Sportnahrung",
-   "version": "2026.11.05",
+   "title": "GymBeam-Shop – Lebensmittel, Protein und Sportnahrung (viele Marken)",
+   "version": "2026.11.16",
    "file": "GymBeam-Shop.json",
    "foods": 1059,
-   "supplements": 1433,
-   "bytes": 1296366
+   "supplements": 1416,
+   "bytes": 1340618
   },
   {
    "key": "ironmaxx",
    "manufacturer": "IronMaxx",
    "title": "IronMaxx – Lebensmittel und Supplements",
-   "version": "2026.11.12",
+   "version": "2026.11.16",
    "file": "IronMaxx.json",
    "foods": 286,
-   "supplements": 109,
-   "bytes": 232842
+   "supplements": 100,
+   "bytes": 237262
+  },
+  {
+   "key": "more-nutrition",
+   "manufacturer": "More Nutrition",
+   "title": "More Nutrition – Lebensmittel und Supplements",
+   "version": "2026.11.16",
+   "file": "More-Nutrition.json",
+   "foods": 248,
+   "supplements": 36,
+   "bytes": 248885
   },
   {
    "key": "peak-performance",
    "manufacturer": "PEAK",
    "title": "PEAK Performance – Lebensmittel und Supplements",
-   "version": "2026.11.05",
+   "version": "2026.11.16",
    "file": "PEAK-Performance.json",
    "foods": 33,
    "supplements": 142,
-   "bytes": 152047
+   "bytes": 155670
   },
   {
    "key": "proteini-si",
    "manufacturer": "Proteini.si",
    "title": "Proteini.si – Lebensmittel und Supplements (viele Marken)",
-   "version": "2026.11.14",
+   "version": "2026.11.16",
    "file": "Proteini.json",
    "foods": 694,
-   "supplements": 780,
-   "bytes": 927868
+   "supplements": 766,
+   "bytes": 948902
+  },
+  {
+   "key": "ruehl24",
+   "manufacturer": "Rühl24",
+   "title": "Rühl24 – Rühls Bestes, Lebensmittel und Supplements",
+   "version": "2026.11.16",
+   "file": "Ruehl24.json",
+   "foods": 56,
+   "supplements": 53,
+   "bytes": 108551
   },
   {
    "key": "sinob",
    "manufacturer": "#sinob",
    "title": "#sinob – Lebensmittel und Supplements",
-   "version": "2026.11.12",
+   "version": "2026.11.16",
    "file": "SINOB.json",
    "foods": 98,
    "supplements": 39,
-   "bytes": 88283
+   "bytes": 91089
+  },
+  {
+   "key": "vast-sports",
+   "manufacturer": "VAST Sports",
+   "title": "VAST Sports – Lebensmittel und Supplements",
+   "version": "2026.11.16",
+   "file": "VAST-Sports.json",
+   "foods": 41,
+   "supplements": 63,
+   "bytes": 118082
+  },
+  {
+   "key": "vitaminversand24",
+   "manufacturer": "Vitaminversand24",
+   "title": "Vitaminversand24 – Supplements (viele Marken)",
+   "version": "2026.11.16",
+   "file": "Vitaminversand24.json",
+   "foods": 31,
+   "supplements": 321,
+   "bytes": 314154
   }
  ]
 }

@@ -8,6 +8,7 @@ import * as BD from "./bodydata.js";
 import { SECTIONS, barChoices, barSlots, drawerHtml, icon, pcOnlyHtml, quickSheetHtml, tabbarHtml } from "./nav.js";
 import { focusInfo, machineNamesOf } from "./focusinfo.js";
 import * as P from "./pcdb.js";
+import * as PDOM from "./pcdomain.js";
 import { buildDb, diaryActions, diaryChange, diaryInput, initDiary, today as todayIso, viewDiary, viewNutritionHistory, viewSuppIntake } from "./diary.js";
 import * as SP from "./supplements.js";
 import { initVendor, vendorActions, vendorChange, viewVendor } from "./vendorui.js";
@@ -29,7 +30,8 @@ import * as SD from "./superdata.js";
 import * as CD from "./checklistdata.js";
 import * as CF from "./caffeinedata.js";
 import * as GLD from "./glucosedata.js";
-import { icoachActions, icoachChange, icoachInput, initICoach, viewICoach } from "./icoach.js";
+import { caffeineSettings, icoachActions, icoachChange, icoachInput, initICoach, viewICoach } from "./icoach.js";
+import { pcSettingsHtml } from "./settingsview.js";
 import { initTraining, trainingActions, trainingChange, trainingInput, viewTrainingSection, persistTrain, setNotice as trainSetNotice, failed as trainFailed } from "./training.js";
 import { initTrainingStats } from "./trainingstats.js";
 import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
@@ -264,6 +266,14 @@ function viewSettings() {
       })()}
       <button class="btn sm ghost" data-act="bar-reset">Standard (Training, Nutrition)</button>
     </section>
+    ${(() => {
+      if (!S.catalog?.pc) return "";
+      try {
+        return pcSettingsHtml(buildDb(), esc, caffeineSettings());
+      } catch {
+        return "";
+      }
+    })()}
     <section class="card">
       <h3>Hilfe</h3>
       <p class="muted small">Version ${esc(C.MOBILE_VERSION)} · Bedienung, Datenschutz und Datenaustausch.</p>
@@ -281,42 +291,51 @@ function viewTransfer() {
   const c = S.catalog;
   if (!c) return `${header("Import/Export")}<main class="wrap"><section class="card"><h3>Daten vom PC</h3>${fileButton("Exportdatei laden")}</section></main>`;
   const total = unsent().length + unsentFood() + unsentBodyCount();
-  return `${header("Import/Export")}<main class="wrap">
-    <p class="muted small">Alle Daten bleiben auf diesem Gerät. Dateien verlassen es nur, wenn du sie selbst weitergibst (z. B. über Google Drive an den PC).</p>
-    <section class="card">
+  // Reihenfolge und ausgeblendete Karten wie am PC (Import/Export → Seite anpassen, 1.47.0);
+  // Karten ohne Gegenstück am PC folgen ihrem Vorgänger
+  const cards = [
+    { id: "import", node: `<section class="card">
       <div class="wo-head"><h3>An den PC senden</h3><span class="tag">${total} offen</span></div>
       <p class="muted small">Trainings, Lebensmittel und Körperwerte als Dateien für den Import am PC (Import/Export → Daten importieren → „Abgleichen“).</p>
       <button class="btn block" data-go="pending" ${total ? "" : "disabled"}>${total ? "Offene Daten ansehen und bearbeiten" : "Keine offenen Daten"}</button>
       <button class="btn primary block" data-go="send">An den PC senden</button>
-    </section>
-    <section class="card">
+    </section>` },
+    { id: "phone", node: `<section class="card">
       <h3>${c.startpaket ? "Grunddaten" : "Daten vom PC"}</h3>
       <p class="muted small">Stand: ${fmtDateTime(c.exportedAt)} · ${c.machines.length.toLocaleString("de-DE")} Maschinen · ${c.exercises.length} Übungen · ${c.plans.length} Pläne</p>
       ${fileButton("Neue Exportdatei laden")}
       <p class="muted small">Am PC unter Import/Export entweder <b>„Für die Handy-App exportieren“</b> (kleiner, lädt schneller – keine Sicherung) oder den vollständigen Export „Daten exportieren“ wählen. Beide Dateien lassen sich hier laden.</p>
-    </section>
-    ${
-      c.startpaket
+    </section>` },
+    { id: "account", node: c.startpaket
         ? `<section class="card">
       <h3>Ganzes Konto an den PC</h3>
       <p class="muted small">Eine Datei mit allem, was in diesem Konto steht – am PC als neuer Benutzer („Ersetzen“) oder zum Abgleich mit einem bestehenden Benutzer.</p>
       <button class="btn primary block" data-act="account-export">Ganzes Konto an den PC</button>
       <div id="account-result"></div>
     </section>`
-        : ""
-    }
-    <section class="card">
+        : "" },
+    { id: "vendor", node: `<section class="card">
       <h3>Herstellerpakete</h3>
       <p class="muted small">Lebensmittel und Supplements von Herstellern (PEAK, GymBeam, IronMaxx, #sinob, Proteini.si …) mit einem Tipp installieren – wie am PC.</p>
       <button class="btn block" data-act="vendor-open">Herstellerpakete</button>
-    </section>
-    ${catalogCard()}
-    ${blsCard()}
-    <section class="card">
+    </section>` },
+    { id: "catalog", node: catalogCard() },
+    { id: "bls", node: blsCard() },
+    { id: "glucose", node: `<section class="card">
       <h3>Blutzucker-Dateien</h3>
       <p class="muted small">Dateien von LibreView, Dexcom Clarity oder eine eigene CSV liest du unter Health → Blutzucker ein. Die Werte gehen mit „Körperwerte … senden“ an den PC.</p>
       <button class="btn block" data-act="transfer-glucose">Zu Health → Blutzucker</button>
-    </section>
+    </section>` },
+  ];
+  let layout = PDOM.parseLayout(null);
+  try {
+    layout = PDOM.parseLayout(buildDb().settings.get("ui.transfer_layout"));
+  } catch {
+    // ohne Daten vom PC: feste Reihenfolge
+  }
+  return `${header("Import/Export")}<main class="wrap">
+    <p class="muted small">Alle Daten bleiben auf diesem Gerät. Dateien verlassen es nur, wenn du sie selbst weitergibst (z. B. über Google Drive an den PC).</p>
+    ${PDOM.arrange(cards, { ...layout, emptyLast: false }).map((x) => x.node).join("")}
   </main>`;
 }
 
@@ -2556,6 +2575,8 @@ async function boot() {
     S.todos = TD.todosState(await store.get("todos"));
     S.checklists = CD.checklistState(await store.get("checklists"));
     S.caffeine = CF.caffeineState(await store.get("caffeine"));
+    S.caffeineSettings = (await store.get("caffeineSettings")) ?? null; // 1.47.0: Einschlafzeit, Halbwertszeit
+    S.weekAck = (await store.get("weekReview")) ?? null; // 1.47.0: quittierte To-dos im Wochenabschluss
     S.glucose = GLD.glucoseState(await store.get("glucose"));
     S.health = HD.healthState(await store.get("health"));
     S.super = SD.superState(await store.get("super"));

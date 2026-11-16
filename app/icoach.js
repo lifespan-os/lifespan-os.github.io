@@ -287,11 +287,39 @@ function magazineTab() {
 
 // ------------------------------------------------------------------ Widgets: Koffein
 
+/**
+ * Einschlafzeit und Halbwertszeit des Widgets (1.47.0): am Handy gespeichert, sonst die am PC
+ * gespeicherten (`ui.caffeine` aus dem Export), sonst 22:00 Uhr und 5 Stunden.
+ */
+export function caffeineSettings() {
+  const S = X.S;
+  if (S.caffeineSettings) return C().parseCaffeineSettings(JSON.stringify(S.caffeineSettings));
+  let raw = null;
+  try {
+    raw = buildDb().settings.get(C().CAFFEINE_SETTINGS_KEY) ?? null;
+  } catch {
+    raw = null;
+  }
+  return C().parseCaffeineSettings(raw);
+}
+
+async function saveCaffeineSettings(f) {
+  const hl = D.parseDecimal(f.halfLife);
+  if (C().parseClock(f.bedtime) === null || C().halfLifeError(hl) !== null) return;
+  X.S.caffeineSettings = { bedtime: f.bedtime, halfLifeH: hl };
+  try {
+    await X.store.set("caffeineSettings", X.S.caffeineSettings);
+  } catch (e) {
+    X.toast("Speichern auf dem Gerät fehlgeschlagen: " + e.message, true);
+  }
+}
+
 function caffeineForm() {
   const S = X.S;
   if (!S.cf) {
     const d = new Date();
-    S.cf = { bedtime: C().DEFAULT_BEDTIME, halfLife: String(C().DEFAULT_HALF_LIFE_H), drinkId: "filter", time: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`, amount: "200", errors: {} };
+    const saved = caffeineSettings();
+    S.cf = { bedtime: saved.bedtime, halfLife: String(saved.halfLifeH).replace(".", ","), drinkId: "filter", time: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`, amount: "200", errors: {} };
   }
   return S.cf;
 }
@@ -327,12 +355,13 @@ export function sleepCaffeineHtml(logs, todayIso) {
   const night = log?.date ?? todayIso;
   const evening = D.addDaysIso(night, -1);
   const bed = log ? CF.fallAsleepClock(log.bedTime, Number(log.sleepLatencyMin)) : null;
-  const bedtime = bed ?? C().DEFAULT_BEDTIME;
+  const saved = caffeineSettings();
+  const bedtime = bed ?? saved.bedtime;
   const intakes = caffeineIntakesOn(evening);
   const t = C().caffeineTimeline(
     intakes.map((i) => ({ id: i.id, drinkId: i.drinkId, time: i.time, mg: i.mg, ml: i.ml, label: i.label, source: i.source, timeEstimated: i.timeEstimated })),
     bedtime,
-    C().DEFAULT_HALF_LIFE_H,
+    saved.halfLifeH,
   );
   const fmg = C().formatMg;
   const body = intakes.length
@@ -346,7 +375,7 @@ export function sleepCaffeineHtml(logs, todayIso) {
     : `<p class="muted">Am ${esc(D.formatDate(evening))} ist kein Koffein eingetragen – weder im Koffein-Widget noch unter Nutrition (Supplemente, Mahlzeiten, Fasttracking).</p>`;
   return `<section class="card card--sleep"><div class="wo-head"><h3>Koffein vor dem Schlafen</h3><span class="tag">${log ? `Nacht zum ${esc(D.formatDate(night))}` : "Letzte Nacht"}</span></div>
     ${body}
-    <p class="muted small">Zeitstrahl wie im Koffein-Widget (iCoach.me → Widgets): vollständige Aufnahme zur eingetragenen Uhrzeit, Abbau mit fester Halbwertszeit von ${C().DEFAULT_HALF_LIFE_H} Stunden. Einschlafzeit aus dem Schlafeintrag (Zubettgehen plus Einschlafdauer)${bed ? "" : `, ohne Eintrag ${C().DEFAULT_BEDTIME} Uhr`}. Vereinfachte Modellrechnung, keine Messung.</p>
+    <p class="muted small">Zeitstrahl wie im Koffein-Widget (iCoach.me → Widgets): vollständige Aufnahme zur eingetragenen Uhrzeit, Abbau mit fester Halbwertszeit von ${esc(D.formatNumber(saved.halfLifeH, saved.halfLifeH % 1 === 0 ? 0 : 1))} Stunden (im Widget einstellbar). Einschlafzeit aus dem Schlafeintrag (Zubettgehen plus Einschlafdauer)${bed ? "" : `, ohne Eintrag ${esc(saved.bedtime)} Uhr (Einschlafzeit im Widget)`}. Vereinfachte Modellrechnung, keine Messung.</p>
   </section>`;
 }
 
@@ -579,6 +608,7 @@ export function icoachChange(el) {
       f.amount = defaultAmount(el.value);
       f.errors = {};
     }
+    if (k === "bedtime" || k === "halfLife") saveCaffeineSettings(f);
     const id = document.activeElement?.id;
     setTimeout(() => {
       X.rerender();

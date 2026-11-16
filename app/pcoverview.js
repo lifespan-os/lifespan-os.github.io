@@ -5,6 +5,7 @@
 // pcdomain.js (= src/domain) unverändert darauf laufen. Reine Logik, mit Tests.
 
 import * as P from "./pcdb.js";
+import { competitionFromRow } from "./hyrox.js";
 
 export const RESTING_HR_METRIC_ID = "00000000-0000-7000-8000-000000000018";
 export const HRV_METRIC_ID = "00000000-0000-7000-8000-000000000019";
@@ -185,6 +186,8 @@ export function workoutSummary(db, w) {
     exerciseCount: wex.length,
     setCount: sets,
     volumeKg: volume,
+    // HYROX-Wettkampf für die Anzeige in Listen (1.47.0, wie am PC)
+    competition: competitionFromRow(w),
   };
 }
 

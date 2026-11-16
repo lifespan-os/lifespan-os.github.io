@@ -13,12 +13,54 @@ import * as BD from "./bodydata.js";
 import { barTrendSvg, COLOR, trendSvg } from "./pcview.js";
 import { buildDb, today } from "./diary.js";
 import { measuredSleepHtml } from "./heart.js";
-import { sleepCaffeineHtml } from "./icoach.js";
+import { caffeineIntakesOn, caffeineSettings, sleepCaffeineHtml } from "./icoach.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
 export function initLogs(ctx) {
   X = ctx;
+  document.addEventListener("pointermove", nightHover);
+  document.addEventListener("pointerdown", nightHover);
+}
+
+/**
+ * Werte einer Nachtgrafik beim Antippen oder Überfahren (1.47.0, wie der Tooltip am PC): nächster
+ * Messpunkt zur Fingerposition, darunter Uhrzeit, Wert und ggf. Koffein.
+ */
+function nightHover(e) {
+  const svg = e.target?.closest?.(".night-hover");
+  if (!svg) return;
+  const box = svg.getBoundingClientRect();
+  if (!box.width) return;
+  const vbX = ((e.clientX - box.left) / box.width) * Number(svg.dataset.w);
+  const l = Number(svg.dataset.l);
+  const r = Number(svg.dataset.r);
+  const t0 = Number(svg.dataset.t0);
+  const t1 = Number(svg.dataset.t1);
+  const t = t0 + ((Math.min(r, Math.max(l, vbX)) - l) / Math.max(1, r - l)) * (t1 - t0);
+  const pts = String(svg.dataset.pts ?? "")
+    .split(";")
+    .map((p) => p.split("|").map(Number));
+  let best = pts[0];
+  for (const p of pts) if (Math.abs(p[0] - t) < Math.abs(best[0] - t)) best = p;
+  if (!best) return;
+  const [label, unit, digits, ovLabel, ovUnit] = String(svg.dataset.meta ?? "").split("|");
+  const x = l + ((best[0] - t0) / Math.max(1, t1 - t0)) * (r - l);
+  const cursor = svg.querySelector(".night-hover__cursor");
+  if (cursor) {
+    cursor.setAttribute("x1", x.toFixed(1));
+    cursor.setAttribute("x2", x.toFixed(1));
+    cursor.setAttribute("visibility", "visible");
+  }
+  const m = ((best[0] % 1440) + 1440) % 1440;
+  const hh = String(Math.floor(m / 60)).padStart(2, "0");
+  const mm = String(Math.round(m % 60)).padStart(2, "0");
+  const out = svg.nextElementSibling;
+  if (out?.classList.contains("night-hover__readout")) {
+    out.textContent = `${hh}:${mm} Uhr · ${label}: ${D.formatNumber(best[1], Number(digits) || 0)} ${unit}${
+      ovLabel && best.length > 2 ? ` · ${ovLabel}: ${D.caffeine.formatMg(best[2])} ${ovUnit}` : ""
+    }`;
+  }
 }
 
 const esc = (v) => X.esc(v);
@@ -55,6 +97,18 @@ function card(title, meta, body, area = "") {
   return `<section class="card ${area ? `ov-card card--${area}` : ""}"><div class="wo-head"><h3>${esc(title)}</h3>${meta ? `<span class="tag">${esc(meta)}</span>` : ""}</div>${body}</section>`;
 }
 const note = (t) => (t ? `<p class="card__note">${t}</p>` : "");
+
+/** Karten in der Anordnung vom PC (1.47.0: Sleep/Recovery → Seite anpassen, `ui.*_layout`). */
+function arranged(db, key, cards) {
+  const layout = D.parseLayout(db.settings.get(key));
+  return D.arrange(cards, { ...layout, emptyLast: false })
+    .map((c) => c.node)
+    .join("");
+}
+
+/** Liste mit höchstens 10 sichtbaren Einträgen, Rest per Bildlauf (1.47.0, wie am PC). */
+const tenRows = (html, count) =>
+  `<div class="list logs-list ${count > 10 ? "logs-list--rows" : ""}">${html}</div>${count > 10 ? `<p class="muted small">${count} Einträge – die neuesten 10 sind zu sehen, ältere per Bildlauf.</p>` : ""}`;
 
 function select(attr, value, options, label) {
   return `<label class="field logs-select"><span>${esc(label)}</span><select data-logs="${attr}">${options
@@ -154,24 +208,35 @@ export function viewSleep() {
       </div>
       ${open ? `<p class="muted small">${open} ${open === 1 ? "Änderung" : "Änderungen"} bei Schlaf/Regeneration noch nicht am PC · <button class="linkbtn" data-go="send">An den PC senden</button></p>` : ""}
     </section>`;
+  const cards = [];
   if (!logs.length) {
     out += card("Keine Einträge in diesem Zeitraum", "", `<p class="muted">Erfasse eine Nacht mit „Nacht erfassen“. Als Datum gilt der Tag des Aufwachens.</p>`, "sleep");
   } else {
-    out += card(
+    cards.push({ id: "duration", node: card(
       "Schlafdauer je Nacht",
       `Mittel: ${avg !== null ? dur(avg) : "–"}${goal?.sleepMin != null ? ` · Ziel: ${dur(goal.sleepMin)}` : ""}`,
       `${barTrendSvg(chart, { color: COLOR.sleep, format: dur, height: 200, label: "Schlafdauer je Nacht im gewählten Zeitraum", ticks: [0, 240, 480, 720], tickFormat: (v) => `${v / 60} h` })}
       ${note(`Schlafdauer = Zeit im Bett minus Einschlafdauer und Wachzeit (soweit angegeben), plus Nickerchen desselben Tages.${hasNaps ? " Tage mit Nickerchen sind in der Liste aufgeschlüsselt." : ""}`)}`,
       "sleep",
-    );
-    out += phasesCard(logs);
-    out += trendsCard(db, t, goal?.sleepMin ?? null);
+    ) });
+    cards.push({ id: "phases", node: phasesCard(logs) });
+    cards.push({ id: "trends", node: trendsCard(db, t, goal?.sleepMin ?? null) });
   }
   // Gemessene Nächte der Uhr (1.42.0, wie MeasuredSleepCard am PC)
-  out += measuredSleepHtml(S.catalog, from, t, logs);
+  // Koffein in der Herzfrequenz-Grafik der Nacht (1.47.0, wie am PC)
+  cards.push({ id: "measured", node: measuredSleepHtml(S.catalog, from, t, logs, {
+    show: !!S.nightCaffeine,
+    levels: (n, ts) => {
+      const evening = caffeineIntakesOn(D.addDaysIso(n.date, -1));
+      const night = caffeineIntakesOn(n.date);
+      if (!evening.length && !night.length) return null;
+      return D.caffeine.nightCaffeineLevels(evening, night, ts, caffeineSettings().halfLifeH);
+    },
+  }) });
   // Koffein vor dem Schlafen (1.45.5, wie SleepCaffeineCard am PC)
-  out += sleepCaffeineHtml(logs, t);
-  if (logs.length || naps.length) out += entriesCard(logs, naps, napMin);
+  cards.push({ id: "caffeine", node: sleepCaffeineHtml(logs, t) });
+  if (logs.length || naps.length) cards.push({ id: "entries", node: entriesCard(logs, naps, napMin) });
+  out += arranged(db, "ui.sleep_layout", cards);
   return `${out}</main>`;
 }
 
@@ -503,21 +568,23 @@ export function viewRecovery() {
       </div>
       ${open ? `<p class="muted small">${open} ${open === 1 ? "Änderung" : "Änderungen"} noch nicht am PC · <button class="linkbtn" data-go="send">An den PC senden</button></p>` : ""}
     </section>`;
+  const cards = [];
   if (!logs.length) {
     out += card("Keine Einschätzungen in diesem Zeitraum", "", `<p class="muted">Schätze täglich ein, wie erholt, müde, verkatert oder gestresst du dich fühlst. Es wird nichts berechnet oder bewertet.</p>`, "recovery");
   } else {
-    out += card(
+    cards.push({ id: "selfrating", node: card(
       "Selbsteinschätzung",
       "",
       `${select("recovery-scale", scale, D.recovery.RECOVERY_SCALES.map((x) => [x.key, x.label]), "Skala")}
       ${chart.length > 1 ? trendSvg(chart, { color: COLOR.recovery, decimals: 0, height: 180, label: `Verlauf ${s.label}`, domain: [s.min, s.max] }) : `<p class="muted">Für „${esc(s.label)}“ ${chart.length === 1 ? "gibt es erst einen Wert" : "gibt es keine Werte"} in diesem Zeitraum.</p>`}
       ${note(`Skala ${s.min} bis ${s.max}: ${esc(D.recovery.scaleHint(scale))}`)}`,
       "recovery",
-    );
-    out += comparisonCard(data, scale, days);
+    ) });
+    cards.push({ id: "compare", node: comparisonCard(data, scale, days) });
   }
-  out += vitalsCard(data);
-  if (logs.length) out += recoveryListCard(logs, data);
+  cards.push({ id: "vitals", node: vitalsCard(data) });
+  if (logs.length) cards.push({ id: "list", node: recoveryListCard(logs, data) });
+  out += arranged(db, "ui.recovery_layout", cards);
   return `${out}</main>`;
 }
 
@@ -572,12 +639,15 @@ function vitalsCard(data) {
         if (series.length < 2) return "";
         return `<h4 class="logs-sub">${esc(v.label)}</h4>${trendSvg(series, { color: COLOR.recovery, decimals: v.decimals, height: 150, label: `Verlauf ${v.label}`, ...(v.id === ANS_STATUS ? { domain: [D.ANS_MIN, D.ANS_MAX] } : {}) })}`;
       }).join("")}
-      <div class="list logs-list">${rows
-        .map(
-          (m) => `<button class="item" data-act="vitals-edit" data-arg="${esc(m.date)}"><span class="main"><b>${esc(m.metricName)}: ${esc(m.metricId === ANS_STATUS ? signed(m.value) : `${F(m.value, m.decimals)} ${m.unit}`)}</b>
+      ${tenRows(
+        rows
+          .map(
+            (m) => `<button class="item" data-act="vitals-edit" data-arg="${esc(m.date)}"><span class="main"><b>${esc(m.metricName)}: ${esc(m.metricId === ANS_STATUS ? signed(m.value) : `${F(m.value, m.decimals)} ${m.unit}`)}</b>
             <span class="muted small">${esc(D.formatDate(m.date))}${m.method ? ` · ${esc(m.method)}` : ""}</span></span><span class="tag">Bearbeiten</span></button>`,
-        )
-        .join("")}</div>`;
+          )
+          .join(""),
+        rows.length,
+      )}`;
   }
   return card(D.ANS_TITLE, "manuell erfasste Messwerte", `${body}${note("Einzelne Messwerte schwanken stark und werden nicht bewertet. Die App stellt keine Diagnosen und gibt keine medizinischen Empfehlungen.")}`, "recovery");
 }
@@ -587,7 +657,7 @@ function recoveryListCard(logs, data) {
   return card(
     "Einschätzungen",
     "",
-    `<div class="list logs-list">${logs
+    tenRows(logs
       .map((l) => {
         const hr = vital(l.date, VITALS[0].id);
         const hrv = vital(l.date, VITALS[1].id);
@@ -599,7 +669,7 @@ function recoveryListCard(logs, data) {
           ${l.notes ? `<span class="muted small">${esc(l.notes)}</span>` : ""}</span>
           <span class="tag">${st || "Bearbeiten"}</span></button>`;
       })
-      .join("")}</div>`,
+      .join(""), logs.length),
   );
 }
 
@@ -625,6 +695,10 @@ function vitalsDraft(date) {
 }
 
 export const logsActions = {
+  "night-caffeine": () => {
+    X.S.nightCaffeine = !X.S.nightCaffeine;
+    X.rerender();
+  },
   "sleep-new": () => {
     const db = buildDb();
     const t = today();

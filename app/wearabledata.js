@@ -1,4 +1,4 @@
-// LIFESPAN OS Mobil – Rechnungen für Heart, gemessene Nächte, Schritte über den Tag und Blutzucker (1.45.5).
+// LIFESPAN OS Mobil – Rechnungen für Heart, gemessene Nächte, Schritte über den Tag und Blutzucker (1.47.0).
 // Gebündelt aus src/domain/wearable.ts, src/domain/wearableMore.ts und src/domain/glucose.ts des PCs (esbuild,
 // ES2022) – dort ändern und testen, dann neu erzeugen.
 // src/domain/wearable.ts
@@ -17,6 +17,8 @@ function describeSync(r) {
     added.push(`${r.sleepLogCompleted}\xD7 Schlafphasen zu eigenen N\xE4chten erg\xE4nzt`);
   if (r.hrvNew > 0) added.push(`${r.hrvNew}\xD7 HRV in Body & Longevity`);
   if (r.stepsNew > 0) added.push(`${r.stepsNew}\xD7 Schritte in der Alltagsbewegung`);
+  if (r.stepsUpdated > 0)
+    added.push(`${r.stepsUpdated}\xD7 Schritte in der Alltagsbewegung aktualisiert`);
   return `Abgerufen (${formatShort(r.from)}\u2013${formatShort(r.to)}): ${parts.join(", ")}.${added.length ? ` Erg\xE4nzt: ${added.join(", ")}.` : ""}`;
 }
 function formatShort(iso) {

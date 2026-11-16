@@ -404,6 +404,10 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 /* Diagramme */
 .pc-chart { width: 100%; height: auto; display: block; }
 .pc-chart .grid { stroke: var(--line); stroke-width: 1; }
+.night-hover { touch-action: pan-y; cursor: crosshair; }
+/* Listen mit höchstens 10 sichtbaren Einträgen (Recovery, 1.47.0) */
+.logs-list--rows { max-height: 34rem; overflow-y: auto; overscroll-behavior: contain; }
+.night-hover__cursor { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 2; }
 .pc-chart text { font-size: 9px; fill: var(--muted); }
 .day-chart { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
 .day-chart__ring { position: relative; flex: none; width: 132px; height: 132px; margin: 0; }
@@ -882,6 +886,7 @@ input[type="date"], input[type="time"] { min-width: 0; max-width: 100%; }
 .pending-parts li { margin: 3px 0; overflow-wrap: anywhere; }
 .tag.tag--new { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
 .tag.tag--del { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
+.tag.tag--ok { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
 
 /* ---------------------------------------------------------------- Auswahl in Mahlzeiten (1.19.0) */
 .meal-items li .meal-pick { flex: 0 0 auto; width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
@@ -1247,3 +1252,10 @@ body.has-submenu [data-sheet].tabs--fold { display: none; }
 .catalog-block { padding-top: 10px; border-top: 1px solid var(--line); margin-top: 10px; }
 .catalog-block h4 { margin: 0; font-size: .95rem; }
 .catalog-preview { margin-top: 10px; padding: 10px; border-radius: 10px; background: var(--surface-2); }
+
+/* Checklisten (1.47.0): Pfeile neben „To-dos am …“, Wochenabschluss am Sonntag */
+.todos-head { gap: 6px; align-items: center; flex-wrap: nowrap; }
+.todos-head h3 { flex: 1; min-width: 0; }
+.todo-item.week-review__item { grid-template-columns: 1fr; }
+.week-review__actions { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+.train-row__comp { display: block; color: var(--muted); }

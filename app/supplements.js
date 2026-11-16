@@ -104,7 +104,7 @@ export function stackChoices(pc) {
  */
 export function timingOptions(slots) {
   return [
-    ...slots.map((s) => ({ value: s.meal ? `meal:${s.meal.id}` : `slot:${s.ref.mealType}`, label: s.title })),
+    ...slots.map((s) => ({ value: s.meal ? `meal:${s.meal.id}` : `slot:${s.ref.name ? `x:${s.ref.name}` : s.ref.mealType}`, label: s.title })),
     { value: "fasted", label: FASTED_LABEL },
     { value: "independent", label: INDEPENDENT_LABEL },
   ];

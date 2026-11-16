@@ -56,7 +56,26 @@ async function persist() {
 }
 
 const mealOptions = (value) =>
-  N.MEAL_TYPES.map((m) => `<option value="${m.value}" ${m.value === value ? "selected" : ""}>${esc(m.label)}</option>`).join("");
+  N.mealChoices(value).map((m) => `<option value="${esc(m.value)}" ${m.value === value ? "selected" : ""}>${esc(m.label)}</option>`).join("");
+
+/**
+ * Uhrzeit beim Eintragen (1.47.0, wie am PC): keine feste Vorgabe. Hat die Mahlzeit noch keine
+ * Uhrzeit und ist das Feld leer, erscheint vor dem Eintragen ein Hinweis mit Sprung ins Feld.
+ */
+function timeFieldHtml(kind, date, mealKey) {
+  const s = F();
+  const id = kind === "dish" ? "fd-time" : "ft-time";
+  const known = N.mealTimeFor(X.S.catalog, s.local, date, mealKey);
+  const value = kind === "dish" ? s.dishTime : s.time;
+  return `<div class="field"><label for="${id}">Uhrzeit</label><input id="${id}" type="time" data-${kind === "dish" ? "fd" : "ft"}="${kind === "dish" ? "dishTime" : "time"}" value="${esc(value ?? "")}">
+      ${known ? `<span class="muted small">Die Mahlzeit hat schon ${esc(known)} Uhr.</span>` : `<button type="button" class="btn sm ghost" data-act="food-time-now" data-arg="${kind}">Jetzt</button>`}</div>`;
+}
+
+function timeHintHtml(kind) {
+  if (F().askTime !== kind) return "";
+  return `<div class="warn" role="alert"><p class="small">Noch keine Uhrzeit eingetragen. Mit Uhrzeit lässt sich die Mahlzeit im Tagesverlauf genauer auswerten.</p>
+    <div class="row"><button class="btn sm primary" data-act="food-time-focus" data-arg="${kind}">Uhrzeit eintragen</button><button class="btn sm" data-act="food-time-skip" data-arg="${kind}">Ohne Uhrzeit eintragen</button></div></div>`;
+}
 
 function foodItem(f, act) {
   const portion = f.portion_amount ? ` · ${esc(f.portion_name)} ${num(f.portion_amount)} ${f.basis_unit}` : "";
@@ -150,8 +169,10 @@ function trackCard() {
       <div class="field"><label for="ft-amount">Menge</label><input id="ft-amount" type="text" inputmode="decimal" data-ft="amount" value="${esc(s.amount)}" autocomplete="off"></div>
       <div class="field"><label for="ft-unit">Einheit</label><select id="ft-unit" data-ft="unit"><option value="base" ${s.unit === "base" ? "selected" : ""}>${f.basis_unit}</option>${portion}</select></div>
       <div class="field wide"><label for="ft-meal">Mahlzeit (${esc(trackDayLabel())})</label><select id="ft-meal" data-ft="mealType">${mealOptions(s.mealType)}</select></div>
+      ${timeFieldHtml("track", trackDate(), s.mealType)}
     </div>
     <p class="small" id="track-preview">${esc(trackPreview())}</p>
+    ${timeHintHtml("track")}
     <div class="row">
       <button class="btn primary" data-act="food-track">Eintragen</button>
       <button class="btn" data-act="food-to-dish">Zum Gericht</button>
@@ -167,7 +188,7 @@ function dayCard() {
   return `<section class="card"><div class="wo-head"><h3>Heute am Handy eingetragen</h3><span class="tag">${Math.round(total.kcal)} kcal</span></div>
     ${day
       .map(
-        (d) => `<div class="meal-block"><p class="small"><b>${esc(N.mealLabel(d.meal.row.meal_type))}</b> · ${esc(N.describeNutrients(d.total))}</p>
+        (d) => `<div class="meal-block"><p class="small"><b>${esc(d.meal.row.name || N.mealLabel(d.meal.row.meal_type))}</b> · ${esc(N.describeNutrients(d.total))}</p>
         ${d.items
           .map(
             (i) => `<div class="meal-item"><span>${esc(i.food ? i.food.name : "?")} <span class="muted">${num(i.amount)} ${i.food?.basis_unit ?? ""}</span></span>
@@ -283,7 +304,7 @@ export function viewFoodReview() {
         <label class="rv-f"><span class="muted small">Menge (${it.food?.basis_unit ?? "g"})</span>
           <input type="text" inputmode="decimal" data-rv="amount" data-meal="${esc(m.row.id)}" data-item="${esc(it.id)}" value="${esc(num(it.amount))}" aria-label="Menge"></label>
         <label class="rv-f"><span class="muted small">Mahlzeit</span>
-          <select data-rv="mealType" data-meal="${esc(m.row.id)}" data-item="${esc(it.id)}" aria-label="Mahlzeit">${mealOptions(m.row.meal_type)}</select></label>
+          <select data-rv="mealType" data-meal="${esc(m.row.id)}" data-item="${esc(it.id)}" aria-label="Mahlzeit">${mealOptions(N.mealKeyOf(m.row))}</select></label>
         <label class="rv-f"><span class="muted small">Tag</span>
           <input type="date" data-rv="date" data-meal="${esc(m.row.id)}" data-item="${esc(it.id)}" value="${esc(m.row.date)}" max="${today()}" aria-label="Tag"></label>
         <button class="btn sm ghost" data-act="rv-remove" data-arg="${esc(m.row.id)}|${esc(it.id)}" >Löschen</button>
@@ -304,7 +325,7 @@ export function viewFoodReview() {
           <span class="tag">${Math.round(N.sumNutrients(d.meals.map((m) => m.total)).kcal)} kcal</span></div>
           ${d.meals
             .map(
-              (m) => `<div class="meal-block"><p class="small"><b>${esc(N.mealLabel(m.meal.row.meal_type))}</b> · ${esc(N.describeNutrients(m.total))}</p>
+              (m) => `<div class="meal-block"><p class="small"><b>${esc(m.meal.row.name || N.mealLabel(m.meal.row.meal_type))}</b> · ${esc(N.describeNutrients(m.total))}</p>
               ${m.items.map((it) => itemRow(m.meal, it)).join("")}</div>`,
             )
             .join("")}</section>`,
@@ -425,7 +446,9 @@ export function viewDish() {
       <div class="nf-grid">
         <div class="field"><label for="fd-eaten">Davon gegessen (Portionen)</label><input id="fd-eaten" type="text" inputmode="decimal" data-fd="eaten" value="${esc(s.eaten)}"></div>
         <div class="field"><label for="fd-meal">Mahlzeit (heute)</label><select id="fd-meal" data-fd="dishMeal">${mealOptions(s.dishMeal)}</select></div>
+        ${timeFieldHtml("dish", trackDate(), s.dishMeal)}
       </div>
+      ${timeHintHtml("dish")}
       <button class="btn block" data-act="dish-track" ${dish.items.length ? "" : "disabled"}>Ins Tagebuch eintragen</button>
       <button class="btn danger block" data-act="dish-clear" ${dish.items.length || dish.name ? "" : "disabled"}>Gericht leeren</button>
     </section>
@@ -564,9 +587,16 @@ function trackDayLabel() {
   return d === today() ? "heute" : `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
 }
 
-async function track(items, mealType, label) {
+async function track(items, mealType, label, { time = "", kind = "track", skipTime = false, date = trackDate() } = {}) {
+  const s = F();
+  if (!time && !skipTime && !N.mealTimeFor(X.S.catalog, s.local, date, mealType)) {
+    s.askTime = kind;
+    X.rerender();
+    return false;
+  }
+  s.askTime = null;
   try {
-    N.addToMeal(X.S.catalog, F().local, { date: trackDate(), mealType, items }, { uuid: () => X.uuid(), now: new Date() });
+    N.addToMeal(X.S.catalog, F().local, { date, mealType, items, time: time || null }, { uuid: () => X.uuid(), now: new Date() });
     await persist();
     X.toast(`Eingetragen: ${label} bei ${N.mealLabel(mealType)}${trackDate() === today() ? "" : ` (${trackDayLabel()})`}`);
     // Aus dem Tagebuch gekommen: zurück zum Tag
@@ -693,11 +723,26 @@ export const foodActions = {
     s.status = "";
     X.rerender();
   },
-  "food-track": async () => {
+  "food-time-now": (el) => {
+    const d = new Date();
+    const t = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+    if (el.dataset.arg === "dish") F().dishTime = t;
+    else F().time = t;
+    F().askTime = null;
+    X.rerender();
+  },
+  "food-time-focus": (el) => {
+    F().askTime = null;
+    X.rerender();
+    document.getElementById(el.dataset.arg === "dish" ? "fd-time" : "ft-time")?.focus();
+  },
+  "food-time-skip": (el) => (el.dataset.arg === "dish" ? foodActions["dish-track"](el, true) : foodActions["food-track"](el, true)),
+  "food-track": async (_el, skipTime = false) => {
     const s = F();
     const amount = N.amountOf(s.selected, s.amount, s.unit);
     if (!amount) return X.toast("Bitte eine Menge eingeben.", true);
-    if (await track([{ foodId: s.selected.id, amount }], s.mealType, `${num(amount)} ${s.selected.basis_unit} ${s.selected.name}`)) {
+    if (await track([{ foodId: s.selected.id, amount }], s.mealType, `${num(amount)} ${s.selected.basis_unit} ${s.selected.name}`, { time: s.time, skipTime })) {
+      s.time = "";
       s.selected = null;
       s.scan = null;
       s.text = "";
@@ -743,11 +788,11 @@ export const foodActions = {
       X.toast(e.message, true);
     }
   },
-  "dish-track": async () => {
+  "dish-track": async (_el, skipTime = false) => {
     const s = F();
     try {
       const items = N.dishPortionItems(X.S.catalog, s.local, s.local.dish, s.eaten);
-      await track(items, s.dishMeal, `${s.eaten} Portion(en) ${s.local.dish.name.trim() || "Gericht"}`);
+      if (await track(items, s.dishMeal, `${s.eaten} Portion(en) ${s.local.dish.name.trim() || "Gericht"}`, { time: s.dishTime, kind: "dish", skipTime })) s.dishTime = "";
     } catch (e) {
       X.toast(e.message, true);
     }

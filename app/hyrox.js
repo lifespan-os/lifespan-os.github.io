@@ -215,6 +215,20 @@ export function placementText(rank, field) {
   return field === null || field === undefined ? `${f(rank)}.` : `${f(rank)}. von ${f(field)}`;
 }
 
+/** Kurzbeschreibung für Listen wie `describeCompetition` am PC (1.47.0), z. B. „HYROX · Männer Open · Wien · 1:28:12“. */
+export function describeCompetition(c) {
+  if (!c) return null;
+  return [
+    "HYROX",
+    c.division ? divisionLabel(c.division) : null,
+    c.location,
+    c.finishSeconds ? formatFinishTime(c.finishSeconds) : null,
+    c.rank ? `Platz ${placementText(c.rank, c.field)}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 /** Neue, leere Wettkampf-Angaben. */
 export function emptyCompetition(division) {
   return { kind: "hyrox", division, location: null, ageGroup: null, rank: null, field: null, rankAge: null, fieldAge: null, finishSeconds: null };

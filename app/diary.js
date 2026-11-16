@@ -59,13 +59,8 @@ export function buildDb() {
     supp: SP.phoneSupp(S.supp),
     goals: GL.phoneGoals(S.goals),
   });
-  // Eigene Namen der Standardmahlzeiten wie am PC (Settings → meal_name.*)
-  const names = {};
-  for (const t of ["breakfast", "lunch", "snack", "dinner"]) {
-    const n = db.settings.get(`meal_name.${t}`);
-    if (n) names[t] = n;
-  }
-  D.setMealNames(names);
+  // Mahlzeitenliste wie am PC (Settings → Mahlzeiten: meal_name.*, meal_hidden, meal_extra)
+  D.setMealList(N.setMealConfig(db.settings));
   return db;
 }
 
@@ -323,7 +318,7 @@ function mealsCard(slots, fast, date) {
     const picked = new Set(X.S.mealPick?.[pk] ?? []);
     const act = X.S.mealAct?.pk === pk ? X.S.mealAct : null;
     // Wie am PC: gefüllte Mahlzeiten anfangs zugeklappt, leere aufgeklappt; Wahl bleibt je Mahlzeit
-    const key = slot.ref.mealType;
+    const key = slot.ref.name ? N.extraKey(slot.ref.name) : slot.ref.mealType;
     const expanded = X.S.mealOpen?.[key] ?? !has;
     return `<div class="meal-slot ${has ? "" : "is-empty"} ${expanded ? "" : "meal-slot--collapsed"}">
       <div class="meal-slot__head"><button type="button" class="meal-slot__toggle" data-act="meal-toggle" data-arg="${esc(key)}|${expanded ? 0 : 1}" aria-expanded="${expanded}" title="${expanded ? "Zuklappen" : "Aufklappen"}"><span class="meal-slot__chevron" aria-hidden="true">${expanded ? "▾" : "▸"}</span><b>${esc(slot.title)}</b>${m?.time ? ` <span class="muted small">${esc(m.time)}</span>` : ""}</button>
@@ -349,7 +344,7 @@ function mealsCard(slots, fast, date) {
       }
       ${m && Object.keys(m.values ?? {}).length ? `<p class="muted small">Mit Fasttracking-Werten an dieser Mahlzeit.</p>` : ""}
       ${m && m.items.length ? pickBarHtml(pk, picked.size, act) : ""}
-      <button class="btn sm" data-act="diary-add" data-arg="${esc(slot.ref.mealType)}">+ Lebensmittel eintragen</button>`
+      <button class="btn sm" data-act="diary-add" data-arg="${esc(key)}">+ Lebensmittel eintragen</button>`
       }
     </div>`;
   };

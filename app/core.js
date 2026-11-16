@@ -10,7 +10,7 @@ import { checkCompetition, competitionColumns, competitionFromRow } from "./hyro
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.46.1";
+export const MOBILE_VERSION = "1.47.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 

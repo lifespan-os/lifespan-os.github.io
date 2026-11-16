@@ -80,7 +80,7 @@ function todosCard(date) {
   const editing = S.todoEdit;
   const rows = list
     .map((t, i) => {
-      if (editing?.id === t.id) {
+      if (editing?.id === t.id && editing.where !== "review") {
         return `<li class="todo-item is-editing"><input type="text" data-todo="edit" value="${esc(editing.text)}" maxlength="${T.TEXT_MAX_CHARS}" aria-label="Aufgabe">
           <div class="todo-item__actions"><button class="btn sm primary" data-act="todo-edit-save">Speichern</button><button class="btn sm" data-act="todo-edit-cancel">Abbrechen</button></div></li>`;
       }
@@ -95,7 +95,7 @@ function todosCard(date) {
     })
     .join("");
   const repeating = add.when === "daily" || add.when === "weekly" || add.when === "monthly";
-  return `<section class="card"><div class="wo-head"><h3>To-dos</h3><span class="tag">${list.length ? `${open} offen von ${list.length}` : "keine"}</span></div>
+  return `<section class="card"><div class="wo-head todos-head"><button class="btn sm" data-act="todo-shift" data-arg="-1" aria-label="To-dos vom Vortag">‹</button><h3>To-dos am ${esc(D.formatWeekdayDate(date))}</h3><button class="btn sm" data-act="todo-shift" data-arg="1" aria-label="To-dos vom Folgetag">›</button><span class="tag">${list.length ? `${open} offen von ${list.length}` : "keine"}</span></div>
     ${list.length ? `<ul class="todo-list">${rows}</ul>` : `<p class="muted">Für diesen Tag sind keine To-dos eingetragen.</p>`}
     <div class="todo-add">
       <input type="text" data-todo="text" value="${esc(add.text)}" placeholder="Neue Aufgabe" maxlength="${T.TEXT_MAX_CHARS}" aria-label="Neue Aufgabe">
@@ -121,6 +121,48 @@ function todosCard(date) {
     <p class="card__note">Antippen eines To-dos ändert den Text. Eigene Checklisten anlegen und als To-dos übernehmen geht bisher am PC.</p></section>`;
 }
 
+// ------------------------------------------------------------------ Wochenabschluss am Sonntag (1.47.0, WeekReviewCard.tsx)
+
+/** Quittierte To-dos der Woche: am Handy gespeicherte plus die vom PC (`ui.week_review`). */
+function weekAck(from) {
+  const own = X.S.weekAck?.week === from ? X.S.weekAck.ids : [];
+  const pcRaw = (X.S.catalog?.pc?.settings ?? []).find((s) => s.key === D.weekReview.WEEK_REVIEW_KEY)?.value ?? null;
+  return [...new Set([...D.weekReview.parseWeekAck(pcRaw, from), ...own])];
+}
+
+function weekReviewCard(date) {
+  const S = X.S;
+  const { from, to } = D.weekReview.reviewWeek(date);
+  const lists = new Map(CD.checklistsOf(S.catalog, S.checklists).map((c) => [c.id, c.name]));
+  const todos = T.allTodos(S.catalog, S.todos).map((t) => ({ id: t.id, date: t.date, text: t.text, done: !!Number(t.done), checklistName: t.checklist_id ? (lists.get(t.checklist_id) ?? null) : null }));
+  const r = D.weekReview.weekReview(todos, date, weekAck(from));
+  const kw = D.trends.isoWeek(from).week;
+  const editing = S.todoEdit?.where === "review" ? S.todoEdit : null;
+  const items = r.open
+    .map((t) => {
+      if (editing?.id === t.id) {
+        return `<li class="todo-item is-editing"><input type="text" data-todo="edit" value="${esc(editing.text)}" maxlength="${T.TEXT_MAX_CHARS}" aria-label="Aufgabe am ${esc(D.formatWeekdayDate(t.date))}">
+          <div class="todo-item__actions"><button class="btn sm primary" data-act="todo-edit-save">Speichern</button><button class="btn sm" data-act="todo-edit-cancel">Abbrechen</button></div></li>`;
+      }
+      return `<li class="todo-item week-review__item"><span class="todo-item__text"><span class="muted small">${esc(D.formatWeekdayDate(t.date))}</span><br>${esc(t.text)}${t.checklistName ? ` <span class="muted small">· aus „${esc(t.checklistName)}“</span>` : ""}</span>
+        <span class="week-review__actions">
+          <button class="btn sm primary" data-act="todo-toggle" data-arg="${esc(t.id)}">Abhaken</button>
+          <button class="btn sm" data-act="review-edit" data-arg="${esc(t.id)}">Bearbeiten</button>
+          <button class="btn sm" data-act="review-ack" data-arg="${esc(t.id)}" title="Bleibt offen, erscheint im Wochenabschluss aber nicht mehr">Quittieren</button>
+          <button class="btn sm danger" data-act="todo-delete" data-arg="${esc(t.id)}">Löschen</button>
+        </span></li>`;
+    })
+    .join("");
+  return `<section class="card"><div class="wo-head"><h3>Wochenabschluss KW ${kw}</h3><span class="tag">${r.done} von ${r.total} erledigt</span></div>
+    <p class="muted small">${esc(D.formatDate(from))}–${esc(D.formatDate(to))}${r.open.length ? " · Offene Punkte der Woche abhaken, bearbeiten, löschen oder quittieren (bleibt offen, erscheint hier aber nicht mehr)." : ""}</p>
+    ${
+      r.open.length
+        ? `<ul class="todo-list">${items}</ul>`
+        : `<p class="muted">${r.total === 0 ? "In dieser Woche waren keine To-dos eingetragen." : "Keine offenen Punkte mehr in dieser Woche."}${r.acknowledged ? ` ${r.acknowledged} offene ${r.acknowledged === 1 ? "Punkt ist" : "Punkte sind"} quittiert.` : ""}</p>`
+    }
+  </section>`;
+}
+
 const unsent = (id) => {
   const e = X.S.todos.rows[id];
   return e && !e.sent;
@@ -137,7 +179,7 @@ export function viewTodos() {
     <p class="muted small">To-dos für den Tag, eigene Checklisten und Importe aus Excel oder Apple Notizen – dazu ein Überblick, welche Werte heute noch einzutragen sind.</p>
     <section class="card day-nav">
       <button class="btn sm" data-act="todo-shift" data-arg="-1" aria-label="Vortag">‹</button>
-      <label class="day-nav__date"><span class="muted small">${date === t ? "Heute" : `${wd} ${D.formatDate(date)}`}</span>
+      <label class="day-nav__date"><span class="muted small">${date === t ? `Heute · ${esc(D.weekdayName(date))}` : esc(D.formatWeekdayDate(date))}</span>
         <input type="date" data-todo="date" value="${esc(date)}" aria-label="Tag"></label>
       <button class="btn sm" data-act="todo-shift" data-arg="1" aria-label="Folgetag">›</button>
     </section>
@@ -146,6 +188,7 @@ export function viewTodos() {
     ${pending ? `<p class="muted small">${pending} ${pending === 1 ? "Änderung" : "Änderungen"} an To-dos und Checklisten noch nicht am PC · <button class="linkbtn" data-go="send">An den PC senden</button></p>` : ""}
     ${dayStatusCard(date)}
     ${todosCard(date)}
+    ${D.weekReview.isWeekReviewDay(date) ? weekReviewCard(date) : ""}
     ${libraryCard(date)}
   </main>`;
 }
@@ -466,6 +509,26 @@ export const todoActions = {
   "todo-move": (el) => {
     const [id, step] = el.dataset.arg.split("|");
     change(() => T.moveTodo(X.S.catalog, X.S.todos, id, Number(step)));
+  },
+  "review-edit": (el) => {
+    const S = X.S;
+    const t = T.allTodos(S.catalog, S.todos).find((x) => x.id === el.dataset.arg);
+    if (!t) return;
+    S.todoEdit = { id: t.id, text: t.text, where: "review" };
+    X.rerender();
+    requestAnimationFrame(() => document.querySelector("[data-todo=edit]")?.focus());
+  },
+  "review-ack": async (el) => {
+    const S = X.S;
+    const { from } = D.weekReview.reviewWeek(dateOf());
+    S.weekAck = { week: from, ids: [...weekAck(from), el.dataset.arg] };
+    try {
+      await X.store.set("weekReview", S.weekAck);
+    } catch (e) {
+      X.toast("Speichern auf dem Gerät fehlgeschlagen: " + e.message, true);
+    }
+    X.toast("Quittiert – bleibt offen.");
+    X.rerender();
   },
   "todo-delete": (el) => {
     if (!X.confirmTwice(el, "Löschen?")) return;

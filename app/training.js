@@ -9,6 +9,7 @@ import * as D from "./pcdomain.js";
 import * as P from "./pcdb.js";
 import * as O from "./pcoverview.js";
 import * as TR from "./trainingdata.js";
+import * as HX from "./hyrox.js";
 import * as CD from "./checklistdata.js";
 import { buildDb, today } from "./diary.js";
 import { barTrendSvg, COLOR } from "./pcview.js";
@@ -183,7 +184,7 @@ function workoutsTab() {
           }
           const w = row.workout;
           return `<li class="train-row"><span class="train-row__date">${fmtDate(w.date)}${w.startTime ? `<span class="muted small">${esc(w.startTime)} Uhr</span>` : ""}</span>
-            <span class="train-row__main"><strong>${esc(w.title)}</strong>${w.status === "active" ? ' <span class="status-pill status-pill--active">läuft</span>' : ""}
+            <span class="train-row__main"><strong>${esc(w.title)}</strong>${w.status === "active" ? ' <span class="status-pill status-pill--active">läuft</span>' : ""}${w.competition ? `<span class="small train-row__comp">${esc(HX.describeCompetition(w.competition))}</span>` : ""}
               <span class="muted small">${w.exerciseCount} ${w.exerciseCount === 1 ? "Übung" : "Übungen"} · ${w.setCount} Arbeitssätze · ${w.volumeKg > 0 ? `${F(w.volumeKg)} kg` : "–"} · ${w.durationMin !== null ? `${w.durationMin} min` : "–"}</span></span>
             <span class="train-row__acts">${w.status === "done" && hasWearable(S.catalog) ? `<button class="linkbtn" data-act="train-heart" data-arg="${esc(w.id)}" aria-expanded="${S.trainHeart === w.id}">♥ Puls</button>` : ""}<button class="linkbtn" data-act="train-open" data-arg="${esc(w.id)}">Öffnen</button></span></li>${
               S.trainHeart === w.id ? `<li class="train-heart">${workoutHeartHtml(workoutHeartOf(S.catalog, w))}</li>` : ""

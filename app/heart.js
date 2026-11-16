@@ -459,7 +459,7 @@ export function heartTabHtml(catalog, state = {}) {
 }
 
 /** Sleep → Gemessene Nächte (nur wenn im Zeitraum vorhanden). `logs` = eigene Nächte wie am PC. */
-export function measuredSleepHtml(catalog, from, to, logs) {
+export function measuredSleepHtml(catalog, from, to, logs, caffeine = null) {
   const nights = wearableOf(catalog)
     .sleep.filter((s) => s.date >= from && s.date <= to)
     .reverse();
@@ -494,7 +494,7 @@ export function measuredSleepHtml(catalog, from, to, logs) {
         return `<li class="meal-item"><span><b>${esc(D.formatDate(n.date))}</b><br><span class="muted small">Tief ${min(n.deepS)} · REM ${min(n.remS)} · Leicht ${min(n.lightS)} · Unterbr. ${min(n.interruptionS)}${low !== null ? ` · min. HF ${low}` : ""}${n.sleepScore != null ? ` · Schlafwert ${num(n.sleepScore)}` : ""}</span></span><span><strong>${dur(W.measuredSleepMin(n))}</strong>${o && o.method !== n.source ? `<br><span class="muted small">eigene ${dur(o.sleepMin)}</span>` : ""}</span></li>`;
       })
       .join("")}</ul>
-    ${nightDetailHtml(nights[0], wearableOf(catalog))}
+    ${nightDetailHtml(nights[0], wearableOf(catalog), caffeine)}
     ${note("Gemessen von der Uhr (Polar, am PC synchronisiert). Wearables erkennen Schlaf und Wach recht gut, Schlafphasen nur mäßig genau – aussagekräftig ist der Verlauf über viele Nächte. Schwankung der Einschlafzeit = Standardabweichung (ab 3 Nächten).")}
   </section>`;
 }
@@ -504,13 +504,17 @@ const evening = (m) => ((m % 1440) + 1440) % 1440;
 
 /** Letzte Nacht im Detail: Schlafverlauf, Werte von Polar, SleepWise (wie MeasuredSleepCard am PC). */
 /** Verlauf eines Werts über die Nacht ({"HH:MM": Wert}), wie NightLine am PC (1.45.0). */
-function nightLineSvg(json, { color, label, unit, digits = 0 }) {
+/**
+ * `overlay` (1.47.0): zweite Linie mit eigener Skala rechts, z. B. Koffein – { values (zu den
+ * Zeitpunkten der Werte), color, unit, label }. Werte erscheinen beim Antippen/Überfahren.
+ */
+export function nightLineSvg(json, { color, label, unit, digits = 0, overlay = null }) {
   const pts = W.nightSeries(json ?? null).map((p) => ({ t: p.minute >= 720 ? p.minute - 1440 : p.minute, v: p.value }));
   if (pts.length < 2) return "";
   const Wd = 340;
   const H = 130;
   const L = 34;
-  const R = 6;
+  const R = overlay ? 34 : 6;
   const T = 8;
   const B = 20;
   const t0 = pts[0].t;
@@ -521,15 +525,31 @@ function nightLineSvg(json, { color, label, unit, digits = 0 }) {
   const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
   const ticks = [lo, (lo + hi) / 2, hi];
   const clock = (t) => W.clockOf(evening(t) % 1440);
-  return `<p class="small"><b>${esc(label)}</b> <span class="muted">(${unit}) · ${num(Math.min(...pts.map((p) => p.v)), digits)}–${num(Math.max(...pts.map((p) => p.v)), digits)}</span></p><svg class="pc-chart" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="${esc(label)}">
+  const ov = overlay ? overlay.values.map((v) => (Number.isFinite(v) ? v : 0)) : null;
+  const ovHi = ov ? Math.max(10, Math.ceil(Math.max(...ov) / 10) * 10) : 1;
+  const yo = (v) => T + (1 - v / ovHi) * (H - T - B);
+  // Werte fürs Antippen: Minute|Wert|Koffein je Punkt (siehe logs.js nightHover)
+  const data = pts.map((p, i) => `${p.t}|${p.v}${ov ? `|${Math.round(ov[i] * 10) / 10}` : ""}`).join(";");
+  const meta = `${esc(label)}|${esc(unit)}|${digits}${overlay ? `|${esc(overlay.label)}|${esc(overlay.unit)}` : ""}`;
+  return `<p class="small"><b>${esc(label)}</b> <span class="muted">(${unit}) · ${num(Math.min(...pts.map((p) => p.v)), digits)}–${num(Math.max(...pts.map((p) => p.v)), digits)}</span>${
+    overlay ? ` <span style="color:${overlay.color}">┅</span> <span class="muted">${esc(overlay.label)} (${esc(overlay.unit)}, Skala rechts)</span>` : ""
+  }</p><svg class="pc-chart night-hover" viewBox="0 0 ${Wd} ${H}" role="img" aria-label="${esc(label)}" data-l="${L}" data-r="${Wd - R}" data-w="${Wd}" data-t0="${t0}" data-t1="${t1}" data-pts="${data}" data-meta="${meta}">
     ${ticks.map((v) => `<line x1="${L}" x2="${Wd - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="grid"/><text x="${L - 4}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end">${num(v)}</text>`).join("")}
+    ${ov ? [0, ovHi / 2, ovHi].map((v) => `<text x="${Wd - R + 4}" y="${(yo(v) + 3).toFixed(1)}" text-anchor="start" style="fill:${overlay.color}">${num(v)}</text>`).join("") : ""}
     <polyline points="${pts.map((p) => `${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(" ")}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"><title>${esc(label)} (${unit})</title></polyline>
+    ${ov ? `<polyline points="${pts.map((p, i) => `${x(p.t).toFixed(1)},${yo(ov[i]).toFixed(1)}`).join(" ")}" fill="none" stroke="${overlay.color}" stroke-width="1.5" stroke-dasharray="6 4" stroke-linejoin="round"><title>${esc(overlay.label)} (${esc(overlay.unit)})</title></polyline>` : ""}
+    <line class="night-hover__cursor" x1="0" x2="0" y1="${T}" y2="${H - B}" visibility="hidden"/>
     <text x="${L}" y="${H - 5}" text-anchor="start">${clock(t0)}</text>
     <text x="${Wd - R}" y="${H - 5}" text-anchor="end">${clock(t1)}</text>
-  </svg>`;
+  </svg><p class="muted small night-hover__readout" aria-live="polite">Für Werte auf die Linie tippen.</p>`;
 }
 
-function nightDetailHtml(n, w) {
+/**
+ * `caffeine` (1.47.0): { show, levels(n, ts) → mg je Zeitpunkt oder null ohne Koffein } –
+ * Koffein über der Nacht in der Herzfrequenz-Grafik (wie am PC, gleiche Rechnung wie „Koffein vor
+ * dem Schlafen“).
+ */
+function nightDetailHtml(n, w, caffeine = null) {
   if (!n) return "";
   const rec = w.recovery.find((r) => r.date === n.date && r.source === n.source);
   const segs = W.hypnogramSegments(n);
@@ -588,7 +608,21 @@ function nightDetailHtml(n, w) {
             .join("")}</div><p class="muted small">${["deep", "light", "rem", "wake"].map((k) => `<span style="color:${STAGE_COLOR[k]}">■</span> ${W.STAGE_LABEL[k]}`).join(" · ")} · ${W.clockOf(evening(Math.round(segs[0].from)))}–${W.clockOf(evening(Math.round(segs[segs.length - 1].to)))} Uhr</p>`
         : ""
     }
-    ${nightLineSvg(n.hrSamples, { color: COLOR.sleep, label: "Herzfrequenz in der Nacht", unit: "/min" })}
+    ${(() => {
+      if (!caffeine) return nightLineSvg(n.hrSamples, { color: COLOR.sleep, label: "Herzfrequenz in der Nacht", unit: "/min" });
+      const ts = W.nightSeries(n.hrSamples ?? null).map((p) => (p.minute >= 720 ? p.minute - 1440 : p.minute));
+      if (ts.length < 2) return "";
+      const values = caffeine.levels(n, ts);
+      const toggle = `<div class="row"><button class="btn sm ${caffeine.show ? "primary" : ""}" data-act="night-caffeine" aria-pressed="${caffeine.show}">${caffeine.show ? "Koffein ausblenden" : "Koffein anzeigen"}</button>${
+        values === null ? `<span class="muted small">Am Vorabend und in der Nacht ist kein Koffein eingetragen.</span>` : ""
+      }</div>`;
+      return `${toggle}${nightLineSvg(n.hrSamples, {
+        color: COLOR.sleep,
+        label: "Herzfrequenz in der Nacht",
+        unit: "/min",
+        overlay: caffeine.show && values ? { values, color: COLOR.caffeine, unit: "mg", label: "Koffein (Modellrechnung)" } : null,
+      })}`;
+    })()}
     ${nightLineSvg(rec?.hrvSamples, { color: COLOR.recovery, label: "HRV in der Nacht", unit: "ms" })}
     ${nightLineSvg(rec?.breathingSamples, { color: COLOR.body, label: "Atemfrequenz in der Nacht", unit: "/min", digits: 1 })}
     ${swLines.length ? `<h4 class="logs-sub">SleepWise (Polar)</h4><ul class="list">${swLines.map((l) => `<li class="muted small">${l}</li>`).join("")}</ul>` : ""}`;

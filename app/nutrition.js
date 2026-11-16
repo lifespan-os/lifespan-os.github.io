@@ -27,14 +27,73 @@ export const MEAL_TYPES = [
   { value: "dinner", label: "Abendessen" },
   { value: "other", label: "Sonstiges" },
 ];
-export const mealLabel = (t) => MEAL_TYPES.find((m) => m.value === t)?.label ?? t;
+
+// Mahlzeitenliste wie am PC (Settings → Mahlzeiten, 1.47.0): eigene Namen der Standardmahlzeiten,
+// abgewählte Standardmahlzeiten und eigene Mahlzeiten. Eine eigene Mahlzeit hat den Schlüssel
+// „x:<Name>“ (Mahlzeit `other` mit diesem Namen).
+let mealConfig = { names: {}, hidden: [], extras: [] };
+
+/** Aus den Einstellungen vom PC (`meal_name.*`, `meal_hidden`, `meal_extra`). */
+export function setMealConfig(settings) {
+  const list = (key) => {
+    try {
+      const v = JSON.parse(settings.get(key) ?? "[]");
+      return Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()) : [];
+    } catch {
+      return [];
+    }
+  };
+  const names = {};
+  for (const t of ["breakfast", "lunch", "snack", "dinner"]) {
+    const n = settings.get(`meal_name.${t}`);
+    if (n) names[t] = n;
+  }
+  mealConfig = { names, hidden: list("meal_hidden"), extras: list("meal_extra") };
+  return mealConfig;
+}
+
+export const getMealConfig = () => mealConfig;
+const EXTRA = "x:";
+export const extraKey = (name) => EXTRA + name;
+
+/** Schlüssel → Mahlzeitart und Name (`null` = Standardmahlzeit ohne eigenen Namen). */
+export function parseMealKey(key) {
+  const k = String(key ?? "");
+  if (k.startsWith(EXTRA) && k.length > EXTRA.length) return { type: "other", name: k.slice(EXTRA.length) };
+  return { type: k, name: null };
+}
+
+/** Schlüssel einer gespeicherten Mahlzeit (eigene Mahlzeit der Liste → „x:<Name>“). */
+export const mealKeyOf = (row) => (row.meal_type === "other" && row.name && mealConfig.extras.includes(row.name) ? extraKey(row.name) : row.meal_type);
+
+export const mealLabel = (t) => {
+  const { type, name } = parseMealKey(t);
+  if (name) return name;
+  return mealConfig.names[type] ?? MEAL_TYPES.find((m) => m.value === type)?.label ?? type;
+};
+
+/**
+ * Auswahl der Mahlzeiten wie am PC: Standardmahlzeiten (ohne abgewählte), eigene Mahlzeiten der
+ * Liste, „Sonstiges“. `current` bleibt immer wählbar.
+ */
+export function mealChoices(current) {
+  const out = MEAL_TYPES.filter((m) => m.value !== "other" && (!mealConfig.hidden.includes(m.value) || m.value === current)).map((m) => m.value);
+  for (const n of mealConfig.extras) out.push(extraKey(n));
+  out.push("other");
+  if (current && !out.includes(current)) out.push(current);
+  return out.map((value) => ({ value, label: mealLabel(value) }));
+}
+
+const validKey = (key) => {
+  const { type, name } = parseMealKey(key);
+  return name !== null || MEAL_TYPES.some((m) => m.value === type);
+};
 
 /** Vorschlag nach Uhrzeit (wie die Desktop-App). */
 export function suggestMealType(hour) {
-  if (hour < 10) return "breakfast";
-  if (hour < 14) return "lunch";
-  if (hour >= 17 && hour < 22) return "dinner";
-  return "snack";
+  const t = hour < 10 ? "breakfast" : hour < 14 ? "lunch" : hour >= 17 && hour < 22 ? "dinner" : "snack";
+  // Abgewählte Standardmahlzeit (Settings → Mahlzeiten): erste Mahlzeit der Liste
+  return mealConfig.hidden.includes(t) ? mealChoices()[0].value : t;
 }
 
 export const BARCODE_PREFIX = "strichcode.";
@@ -297,20 +356,19 @@ export const describeNutrients = (n) =>
  * Tag, kommen sie dazu; sonst wird eine Mahlzeit vom PC (aus dem Export) weiterverwendet oder eine
  * neue angelegt. `items` = [{ foodId, amount }] in g/ml.
  */
-export function addToMeal(catalog, local, { date, mealType, items }, { uuid, now = new Date() }) {
+export function addToMeal(catalog, local, { date, mealType, items, time }, { uuid, now = new Date() }) {
   if (!items.length) throw new Error("Keine Lebensmittel zum Eintragen.");
+  if (!validKey(mealType)) throw new Error("Unbekannte Mahlzeit.");
   for (const it of items) {
     if (!(it.amount > 0 && it.amount <= 10000)) throw new Error("Menge muss zwischen 0 und 10.000 g/ml liegen.");
   }
+  if (time !== undefined && time !== null && time !== "" && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw new Error("Bitte eine gültige Uhrzeit eingeben (HH:MM).");
   const iso = now.toISOString();
-  let meal = Object.values(local.meals).find((m) => m.row.date === date && m.row.meal_type === mealType && m.row.name === null);
-  if (!meal) {
-    const pc = (catalog.nutrition?.meals ?? []).find((m) => m.date === date && m.meal_type === mealType && (m.name ?? null) === null);
-    const row = pc
-      ? { ...pc }
-      : { id: uuid(), date, meal_type: mealType, time: localTime(now), notes: null, created_at: iso, updated_at: iso, name: null };
-    meal = { row, items: [], fromPc: Boolean(pc) };
-    local.meals[row.id] = meal;
+  const meal = mealFor(catalog, local, date, mealType, { uuid, now, time });
+  // Uhrzeit nur ergänzen, wenn die Mahlzeit noch keine hat (gespeicherte Uhrzeit bleibt)
+  if (time && !meal.row.time) {
+    meal.row.time = time;
+    meal.row.updated_at = iso;
   }
   for (const it of items) {
     meal.items.push({
@@ -328,23 +386,38 @@ export function addToMeal(catalog, local, { date, mealType, items }, { uuid, now
   return meal;
 }
 
-/** Mahlzeit am Handy für Tag und Platz finden oder anlegen (wie `addToMeal`). */
-function mealFor(catalog, local, date, mealType, { uuid, now }) {
-  let meal = Object.values(local.meals).find((m) => m.row.date === date && m.row.meal_type === mealType && m.row.name === null);
+/**
+ * Mahlzeit am Handy für Tag und Platz (Schlüssel, siehe `parseMealKey`) finden oder anlegen.
+ * `time`: Uhrzeit einer neuen Mahlzeit (`undefined` = jetzt, leer = ohne Uhrzeit).
+ */
+function mealFor(catalog, local, date, mealKey, { uuid, now, time }) {
+  const { type, name } = parseMealKey(mealKey);
+  const same = (t, n) => t === type && (n ?? null) === name;
+  let meal = Object.values(local.meals).find((m) => m.row.date === date && same(m.row.meal_type, m.row.name));
   if (meal) return meal;
   const iso = now.toISOString();
-  const pc = (catalog.nutrition?.meals ?? []).find((m) => m.date === date && m.meal_type === mealType && (m.name ?? null) === null);
+  const pc = (catalog.nutrition?.meals ?? []).find((m) => m.date === date && same(m.meal_type, m.name));
   const row = pc
     ? { ...pc }
-    : { id: uuid(), date, meal_type: mealType, time: localTime(now), notes: null, created_at: iso, updated_at: iso, name: null };
+    : { id: uuid(), date, meal_type: type, time: time === undefined ? localTime(now) : time || null, notes: null, created_at: iso, updated_at: iso, name };
   meal = { row, items: [], fromPc: Boolean(pc) };
   local.meals[row.id] = meal;
   return meal;
 }
 
+/** Uhrzeit der vorhandenen Mahlzeit eines Platzes (am Handy oder vom PC), sonst null (1.47.0). */
+export function mealTimeFor(catalog, local, date, mealKey) {
+  const { type, name } = parseMealKey(mealKey);
+  const same = (t, n) => t === type && (n ?? null) === name;
+  const own = Object.values(local.meals).find((m) => m.row.date === date && same(m.row.meal_type, m.row.name));
+  if (own) return own.row.time || null;
+  const pc = (catalog.nutrition?.meals ?? []).find((m) => m.date === date && same(m.meal_type, m.name));
+  return pc?.time || null;
+}
+
 /** Mahlzeit eines Tages (Standardart, ohne eigenen Namen) holen oder leer anlegen; gibt ihre ID zurück (1.26.0). */
 export function ensureMeal(catalog, local, date, mealType, opts) {
-  if (!MEAL_TYPES.some((t) => t.value === mealType)) throw new Error("Unbekannte Mahlzeit.");
+  if (!validKey(mealType)) throw new Error("Unbekannte Mahlzeit.");
   return mealFor(catalog, local, date, mealType, { uuid: opts.uuid, now: opts.now ?? new Date() }).row.id;
 }
 
@@ -386,12 +459,12 @@ export function updateItem(catalog, local, mealId, itemId, { amount, date, mealT
   if (!(a > 0 && a <= 10000)) throw new Error("Menge muss zwischen 0 und 10.000 g/ml liegen.");
   const d = date ?? meal.row.date;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || Number.isNaN(new Date(`${d}T12:00:00`).getTime())) throw new Error("Bitte ein gültiges Datum wählen.");
-  const t = mealType ?? meal.row.meal_type;
-  if (!MEAL_TYPES.some((m) => m.value === t)) throw new Error("Unbekannte Mahlzeit.");
+  const t = mealType ?? mealKeyOf(meal.row);
+  if (!validKey(t)) throw new Error("Unbekannte Mahlzeit.");
   const iso = now.toISOString();
   item.amount = Math.round(a * 10) / 10;
   item.updated_at = iso;
-  if (d === meal.row.date && t === meal.row.meal_type) {
+  if (d === meal.row.date && t === mealKeyOf(meal.row)) {
     meal.sent = false;
     return meal;
   }

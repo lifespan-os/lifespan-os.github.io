@@ -19,6 +19,7 @@ export const COLOR = {
   fat: "#1E7A72",
   water: "#1F6E9C",
   waterSoft: "#D6ECF8",
+  caffeine: "#7A4A21",
   danger: "#B42318",
   success: "#1D7048",
 };

@@ -325,7 +325,15 @@ export function suppTables(local, db, { all = false, withSupplements = false, no
     if (links.length) out.vendor_package_item = links;
   }
   const sendIds = new Set(ownSupps.map((e) => e.row.id));
-  if (withSupplements && items.length) for (const i of items) if (db.supplements.has(i.supplement_id)) sendIds.add(i.supplement_id);
+  // Verwendete Supplements gehen immer mit – der PC prüft die Datei vollständig (Fremdschlüssel,
+  // 1.45.2). Nährwerte nur für eigene bzw. bei einem Konto vom Handy; vom PC stammende Supplements
+  // bleiben beim Abgleich unverändert (gleicher oder neuerer Stand am PC).
+  const withValues = new Set(sendIds);
+  for (const i of items) {
+    if (!db.supplements.has(i.supplement_id)) continue;
+    sendIds.add(i.supplement_id);
+    if (withSupplements) withValues.add(i.supplement_id);
+  }
   if (sendIds.size) {
     const iso = now.toISOString();
     const used = [...sendIds].map((id) => db.supplements.get(id)).filter(Boolean);
@@ -343,6 +351,7 @@ export function suppTables(local, db, { all = false, withSupplements = false, no
     }));
     const values = [];
     for (const s of used) {
+      if (!withValues.has(s.id)) continue;
       for (const v of db.supValues.get(s.id) ?? []) {
         values.push({ id: v.id ?? valueId(s.id, v.nutrient), supplement_id: s.id, nutrient: v.nutrient, amount: v.amount, created_at: s.created_at ?? iso, updated_at: s.updated_at ?? iso });
       }

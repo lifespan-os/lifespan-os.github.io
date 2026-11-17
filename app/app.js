@@ -21,7 +21,7 @@ import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overv
 import { initLogs, logsActions, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
 import { initInsights, insightsActions, viewInsights } from "./insightsview.js";
-import { initWeeklyReports, weeklyReportsActions } from "./weeklyreports.js";
+import { initWeeklyReports, weeklyReportNoticeHtml, weeklyReportsActions } from "./weeklyreports.js";
 import { initTodos, todoActions, todoChange, todoInput, viewChecklistEdit, viewTodos } from "./todos.js";
 import * as TD from "./todosdata.js";
 import { initHealth, healthActions, healthChange, healthInput, viewHealth, viewLabEdit } from "./health.js";
@@ -2319,9 +2319,11 @@ function remindersCardHtml() {
   }
   const open = unsent().length + unsentFood() + unsentBodyCount();
   const sendDays = DP.sendReminder(S.prefs, open, S.prefs.lastSentAt ?? null, S.catalog?.exportedAt ?? null);
-  if (!due.length && sendDays === null) return "";
+  // Neuer Weekly Report vom PC (1.51.0)
+  const wr = weeklyReportNoticeHtml();
+  if (!due.length && sendDays === null && !wr) return "";
   const label = { weigh: "Gewicht eintragen", supplements: "Supplements eintragen", hrt: "Zu Superhuman" };
-  return `<section class="card hl ov-reminders"><h3>Erinnerungen</h3><ul class="list">${due
+  return `<section class="card hl ov-reminders"><h3>Erinnerungen</h3><ul class="list">${wr}${due
     .map((n) => `<li class="meal-item"><span><b>${esc(n.title)}</b><br><span class="muted small">${esc(n.body)}</span></span><button class="btn sm" data-act="rem-go" data-arg="${esc(n.kind)}">${esc(label[n.kind] ?? "Öffnen")}</button></li>`)
     .join("")}${
     sendDays !== null
@@ -2696,7 +2698,7 @@ initBls(moduleCtx);
 initOverview({ ...moduleCtx, S, today: todayIso });
 initLogs(moduleCtx);
 initInsights(moduleCtx);
-initWeeklyReports(moduleCtx);
+initWeeklyReports({ ...moduleCtx, saveSoon: () => saveSoon() });
 initTodos(moduleCtx);
 initICoach(moduleCtx);
 initHealth(moduleCtx);

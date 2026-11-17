@@ -124,10 +124,50 @@ async function sharePdf(report) {
   }
 }
 
+// ------------------------------------------------------------------ Hinweis „neuer Bericht“ (1.51.0)
+
+/**
+ * Neuester Bericht, wenn er noch nicht angesehen wurde (`prefs.wrSeen` = Wochenbeginn des zuletzt
+ * gesehenen). Erscheint auf der Overview, sobald eine Exportdatei mit einem neuen Montagsbericht
+ * geladen ist.
+ */
+export function unseenReport(S) {
+  const newest = reportsOf(S.catalog)[0];
+  if (!newest) return null;
+  const seen = S.prefs?.wrSeen ?? "";
+  return newest.row.week_start > seen ? newest : null;
+}
+
+function markSeen(weekStart) {
+  const S = X.S;
+  if ((S.prefs.wrSeen ?? "") >= weekStart) return;
+  S.prefs.wrSeen = weekStart;
+  X.saveSoon?.();
+}
+
+/** Zeile für die Karte „Erinnerungen“ der Overview (leer ohne neuen Bericht). */
+export function weeklyReportNoticeHtml() {
+  const found = unseenReport(X.S);
+  if (!found) return "";
+  const { row, report } = found;
+  return `<li class="meal-item"><span><b>Neuer Weekly Report: KW ${report.week}/${report.year}</b><br><span class="muted small">${X.esc(D.weeklyRangeText(row.week_start, row.week_end))} – vom PC erstellt.</span></span><span class="row-actions"><button class="btn sm" data-act="wr-new" data-arg="${X.esc(row.week_start)}">Lesen</button><button class="btn sm ghost" data-act="wr-seen" data-arg="${X.esc(row.week_start)}" aria-label="Hinweis ausblenden">✕</button></span></li>`;
+}
+
 export const weeklyReportsActions = {
   "wr-read": (el) => {
     const st = state();
     st.open = st.open === el.dataset.arg ? null : el.dataset.arg;
+    if (st.open) markSeen(st.open);
+    X.rerender();
+  },
+  "wr-new": (el) => {
+    const st = state();
+    st.open = el.dataset.arg;
+    markSeen(el.dataset.arg);
+    X.go("insights");
+  },
+  "wr-seen": (el) => {
+    markSeen(el.dataset.arg);
     X.rerender();
   },
   "wr-all": () => {

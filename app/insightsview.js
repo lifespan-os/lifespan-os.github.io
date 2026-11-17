@@ -8,6 +8,7 @@ import { arrangeCards } from "./layoutedit.js";
 import * as O from "./pcoverview.js";
 import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
+import { weeklyReportsCard } from "./weeklyreports.js";
 
 let X = null; // { S, esc, header, rerender }
 
@@ -214,6 +215,8 @@ export function viewInsights() {
   const kw = D.trends.isoWeek(week).week;
 
   const cards = [];
+  // Weekly Reports (1.49.0): standardmäßig ganz oben, wie am PC
+  cards.push({ id: "weekly-reports", node: weeklyReportsCard(card) });
   if (hasAny) {
     cards.push({
       id: "observations",
@@ -259,6 +262,7 @@ export function viewInsights() {
   cards.push({ id: "coverage", node: coverageCard(longData, t) });
 
   const arranged = arrangeCards(db, D.INSIGHTS_LAYOUT_KEY, cards);
+  const layout = D.parseLayout(db.settings.get(D.INSIGHTS_LAYOUT_KEY) ?? null);
   return `${X.header("Insights")}<main class="wrap">
     <p class="muted small">Wochenrückblick und vorsichtige Beobachtungen – ausschließlich aus deinen tatsächlich erfassten Daten. Die Auswertungen beschreiben nur deine Einträge. Sie sind keine Diagnose, treffen keine Aussagen über biologisches Alter und ersetzen keine ärztliche Beratung.</p>
     <section class="card day-nav">
@@ -267,9 +271,9 @@ export function viewInsights() {
         ${week !== currentWeek ? `<button class="linkbtn" data-act="ins-week" data-arg="0">Diese Woche</button>` : ""}</div>
       <button class="btn sm" data-act="ins-week" data-arg="7" aria-label="Nächste Woche" ${week >= currentWeek ? "disabled" : ""}>›</button>
     </section>
-    ${hasAny ? "" : `<section class="card"><h3>Keine Daten in dieser und der Vorwoche</h3><p class="muted">Sobald du Schlaf, Regeneration, Training, Ernährung oder Körperwerte erfasst, entsteht hier ein Wochenrückblick. Es werden keine Werte geschätzt oder ergänzt.</p></section>`}
     <div class="ov-grid">${arranged.map((c) => (c.empty && layout.emptyLast ? `<div class="overview-card--empty">${c.node}</div>` : c.node)).join("")}</div>
-    <p class="muted small ov-source">Koffein und Schlaf, Hormongaben und der Datenauszug (PDF) gibt es bisher nur am PC.</p>
+    ${hasAny ? "" : `<section class="card"><h3>Keine Daten in dieser und der Vorwoche</h3><p class="muted">Sobald du Schlaf, Regeneration, Training, Ernährung oder Körperwerte erfasst, entsteht hier ein Wochenrückblick. Es werden keine Werte geschätzt oder ergänzt.</p></section>`}
+    <p class="muted small ov-source">Koffein und Schlaf, Hormongaben und der Datenauszug (PDF) gibt es bisher nur am PC. Die Weekly Reports erstellt der PC.</p>
   </main>`;
 }
 

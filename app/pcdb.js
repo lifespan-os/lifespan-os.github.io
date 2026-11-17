@@ -83,6 +83,8 @@ export const KEEP_TABLES = [
   "wearable_biosensing",
   // seit 1.44.0 (Schema 58): Health → Blutzucker
   "glucose_reading",
+  // seit 1.49.0 (Schema 62): Insights → Weekly Reports
+  "weekly_report",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */

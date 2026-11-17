@@ -205,7 +205,7 @@ function energyGoalView(totals2, goalKcal) {
   const other = consumed - parts2.reduce((s, p) => s + p.kcal, 0);
   if (other > 0.5) parts2.push({ key: "other", kcal: other });
   const base = Math.max(goalKcal, consumed);
-  const segments = parts2.filter((p) => p.kcal > 0).map((p) => ({ ...p, percent: base > 0 ? p.kcal / base * 100 : 0 }));
+  const segments2 = parts2.filter((p) => p.kcal > 0).map((p) => ({ ...p, percent: base > 0 ? p.kcal / base * 100 : 0 }));
   const diff = Math.round(goalKcal - consumed);
   const balance = diff > 0 ? { kind: "deficit", kcal: diff } : diff < 0 ? { kind: "surplus", kcal: -diff } : { kind: "exact" };
   return {
@@ -213,7 +213,7 @@ function energyGoalView(totals2, goalKcal) {
     consumed,
     percentOfGoal: goalKcal > 0 ? consumed / goalKcal * 100 : 0,
     balance,
-    segments,
+    segments: segments2,
     goalMarkerPercent: base > 0 ? goalKcal / base * 100 : 100
   };
 }
@@ -456,8 +456,8 @@ function addNutrients(a, b) {
     fatG: a.fatG + b.fatG
   };
 }
-function sumNutrients(list) {
-  return list.reduce(addNutrients, ZERO);
+function sumNutrients(list2) {
+  return list2.reduce(addNutrients, ZERO);
 }
 function scaleNutrients(n2, factor) {
   return {
@@ -562,9 +562,9 @@ var FormParser = class {
     this.fail(field, message);
   }
   /** Optionale Kommazahl. */
-  decimal(field, text) {
-    if (text.trim() === "") return null;
-    const value = parseDecimal(text);
+  decimal(field, text2) {
+    if (text2.trim() === "") return null;
+    const value = parseDecimal(text2);
     if (Number.isNaN(value)) {
       this.fail(field, "Bitte eine Zahl eingeben, z. B. 80 oder 80,5.");
       return null;
@@ -572,29 +572,29 @@ var FormParser = class {
     return value;
   }
   /** Pflicht-Kommazahl. */
-  requiredDecimal(field, text, label) {
-    if (text.trim() === "") {
+  requiredDecimal(field, text2, label) {
+    if (text2.trim() === "") {
       this.fail(field, `Bitte ${label} eingeben.`);
       return 0;
     }
-    return this.decimal(field, text) ?? 0;
+    return this.decimal(field, text2) ?? 0;
   }
   /** Optionale ganze Zahl. */
-  integer(field, text) {
-    if (text.trim() === "") return null;
-    const value = parseInteger(text);
+  integer(field, text2) {
+    if (text2.trim() === "") return null;
+    const value = parseInteger(text2);
     if (Number.isNaN(value)) {
       this.fail(field, "Bitte eine ganze Zahl eingeben.");
       return null;
     }
     return value;
   }
-  requiredInteger(field, text, label) {
-    if (text.trim() === "") {
+  requiredInteger(field, text2, label) {
+    if (text2.trim() === "") {
       this.fail(field, `Bitte ${label} eingeben.`);
       return 0;
     }
-    return this.integer(field, text) ?? 0;
+    return this.integer(field, text2) ?? 0;
   }
   /** Pflichtauswahl (z. B. Übung, Lebensmittel). */
   required(field, value, message) {
@@ -602,13 +602,13 @@ var FormParser = class {
     return value;
   }
   /** Dauer in Minuten (Kommazahl) → Sekunden. */
-  minutesToSeconds(field, text) {
-    const minutes = this.decimal(field, text);
+  minutesToSeconds(field, text2) {
+    const minutes = this.decimal(field, text2);
     return minutes === null ? null : Math.round(minutes * 60);
   }
   /** Strecke in km (Kommazahl) → Meter. */
-  kmToMeters(field, text) {
-    const km = this.decimal(field, text);
+  kmToMeters(field, text2) {
+    const km = this.decimal(field, text2);
     return km === null ? null : Math.round(km * 1e3 * 10) / 10;
   }
 };
@@ -661,8 +661,8 @@ function groupedValues(catalog, entry) {
     items: catalog.nutrients.filter((n2) => n2.group === g.key && entry.values[n2.key] !== void 0).map((def) => ({ def, value: entry.values[def.key] }))
   })).filter((g) => g.items.length > 0);
 }
-function normalizeSearch(text) {
-  return text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss").replace(/[-–/()]/g, " ").replace(/\s+/g, " ").trim();
+function normalizeSearch(text2) {
+  return text2.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss").replace(/[-–/()]/g, " ").replace(/\s+/g, " ").trim();
 }
 function microValues(catalog, sources) {
   const macros = new Set(
@@ -729,8 +729,8 @@ var LIFESTYLE_CATEGORIES = [
   { value: "stress", label: "Stress & Entspannung" },
   { value: "other", label: "Sonstiges" }
 ];
-function labelOf(list, value) {
-  return list.find((item2) => item2.value === value)?.label ?? value;
+function labelOf(list2, value) {
+  return list2.find((item2) => item2.value === value)?.label ?? value;
 }
 var exerciseCategoryLabel = (v) => labelOf(EXERCISE_CATEGORIES, v);
 var customMealNames = {};
@@ -743,10 +743,10 @@ function setMealNames(names) {
   mealListVersion += 1;
   listeners.forEach((l) => l());
 }
-function setMealList(list) {
-  hiddenMealTypes = [...list.hidden];
-  extraMealNames = [...list.extras];
-  setMealNames(list.names);
+function setMealList(list2) {
+  hiddenMealTypes = [...list2.hidden];
+  extraMealNames = [...list2.extras];
+  setMealNames(list2.names);
 }
 function getMealListVersion() {
   return mealListVersion;
@@ -1078,11 +1078,11 @@ function describeSet(set) {
     parts2.push(`${formatNumber(set.powerW, 0)} W`);
   if (set.hrAvg !== null && set.hrAvg !== void 0) parts2.push(`\xD8 Puls ${set.hrAvg}`);
   const profiles = describeProfiles(set);
-  let text = parts2.join(" \xB7 ");
-  if (profiles) text = text ? `${text} (${profiles})` : profiles;
-  if (set.isUnilateral === true) text = `${text} \xB7 unilateral`;
-  if (set.isFailure === true) text = `${text} \xB7 Fail`;
-  return set.isWarmup ? `Aufw. ${text}` : text;
+  let text2 = parts2.join(" \xB7 ");
+  if (profiles) text2 = text2 ? `${text2} (${profiles})` : profiles;
+  if (set.isUnilateral === true) text2 = `${text2} \xB7 unilateral`;
+  if (set.isFailure === true) text2 = `${text2} \xB7 Fail`;
+  return set.isWarmup ? `Aufw. ${text2}` : text2;
 }
 function describeSets(sets2) {
   return sets2.map(describeSet).join("  |  ");
@@ -1248,9 +1248,9 @@ function profileRecords(log) {
 function newRecordsInWorkout(workoutId, fullLog) {
   const byExercise = /* @__PURE__ */ new Map();
   for (const s of fullLog) {
-    const list = byExercise.get(s.exerciseId) ?? [];
-    list.push(s);
-    byExercise.set(s.exerciseId, list);
+    const list2 = byExercise.get(s.exerciseId) ?? [];
+    list2.push(s);
+    byExercise.set(s.exerciseId, list2);
   }
   const result = [];
   for (const [exerciseId, entries] of byExercise) {
@@ -1397,8 +1397,8 @@ var HYROX_DIVISIONS = [
 function divisionSex(value) {
   return HYROX_DIVISIONS.find((d) => d.value === value)?.sex === "men" ? "men" : "women";
 }
-function parseFinishTime(text) {
-  const t = text.trim();
+function parseFinishTime(text2) {
+  const t = text2.trim();
   if (t === "") return null;
   const parts2 = t.split(":");
   if (parts2.length < 2 || parts2.length > 3 || parts2.some((p) => !/^\d{1,2}$/.test(p))) return NaN;
@@ -1501,8 +1501,8 @@ function formatDuration2(seconds) {
   const rest = String(s % 60).padStart(2, "0");
   return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${rest}` : `${m}:${rest}`;
 }
-function parseDuration(text) {
-  const t = text.trim();
+function parseDuration(text2) {
+  const t = text2.trim();
   if (t === "") return null;
   if (t.includes(":")) {
     const parts2 = t.split(":");
@@ -1818,8 +1818,8 @@ function parseProfile(p, f, rp) {
   }
   return weights;
 }
-function parseDurationField(p, field, text) {
-  const seconds = parseDuration(text);
+function parseDurationField(p, field, text2) {
+  const seconds = parseDuration(text2);
   if (seconds !== null && Number.isNaN(seconds)) {
     p.error(field, "Bitte Minuten (z. B. 32,5) oder m:ss bzw. h:mm:ss (z. B. 32:30) eingeben.");
     return null;
@@ -2061,8 +2061,8 @@ var SEX_OPTIONS = [
   { value: "female", label: "Weiblich" }
 ];
 var ISO_DATE2 = /^(\d{4})-(\d{2})-(\d{2})$/;
-function isRealDate(text) {
-  const m = ISO_DATE2.exec(text);
+function isRealDate(text2) {
+  const m = ISO_DATE2.exec(text2);
   if (!m) return false;
   const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
   const date = new Date(Date.UTC(y, mo - 1, d));
@@ -2879,8 +2879,8 @@ function exportReminderState(r2, today) {
   const daysSince = r2.lastExportAt ? Math.max(0, Math.round(dayNumber(today) - dayNumber(r2.lastExportAt))) : null;
   const old = daysSince === null || daysSince >= EXPORT_REMINDER_DAYS;
   const snoozed = r2.snoozedUntil !== null && today <= r2.snoozedUntil;
-  const text = daysSince === null ? "Du hast deine Daten noch nie exportiert." : daysSince === 0 ? "Letzter Export: heute." : `Letzter Export vor ${daysSince} ${daysSince === 1 ? "Tag" : "Tagen"}.`;
-  return { due: old && !snoozed, daysSince, text };
+  const text2 = daysSince === null ? "Du hast deine Daten noch nie exportiert." : daysSince === 0 ? "Letzter Export: heute." : `Letzter Export vor ${daysSince} ${daysSince === 1 ? "Tag" : "Tagen"}.`;
+  return { due: old && !snoozed, daysSince, text: text2 };
 }
 
 // src/domain/muscleMap.ts
@@ -6801,8 +6801,8 @@ var MACHINE_DEFAULT_WIDTH = /* @__PURE__ */ new Map([
   ["technogym-mn1p", "wide"],
   ["technogym-c94600-anvk", "wide"]
 ]);
-function gripWidthChoice(text) {
-  const t = (text ?? "").trim().toLowerCase();
+function gripWidthChoice(text2) {
+  const t = (text2 ?? "").trim().toLowerCase();
   if (t === "eng") return "narrow";
   if (t === "weit" || t === "breit") return "wide";
   return null;
@@ -7100,9 +7100,9 @@ var LEGACY_MUSCLES = {
   forearms: FOREARMS
 };
 var SECONDARY_FACTOR = 0.5;
-function splitMuscleText(text) {
-  if (!text) return [];
-  return text.split(/[,;/+]|\s+und\s+/i).map((t) => t.trim()).filter((t) => t.length > 0);
+function splitMuscleText(text2) {
+  if (!text2) return [];
+  return text2.split(/[,;/+]|\s+und\s+/i).map((t) => t.trim()).filter((t) => t.length > 0);
 }
 function muscleIdsForTerm(term) {
   return TERMS[term.trim().toLowerCase()] ?? null;
@@ -7143,13 +7143,13 @@ function focusFromInputs(inputs) {
   const entries = [];
   const errors = {};
   for (const m of MUSCLE_IDS) {
-    const text = (inputs[m] ?? "").trim();
-    if (text === "") continue;
-    if (!/^\d{1,3}$/.test(text) || Number(text) > 100) {
+    const text2 = (inputs[m] ?? "").trim();
+    if (text2 === "") continue;
+    if (!/^\d{1,3}$/.test(text2) || Number(text2) > 100) {
       errors[m] = "Ganze Zahl von 0 bis 100";
       continue;
     }
-    const percent = Number(text);
+    const percent = Number(text2);
     if (percent > 0) entries.push({ muscle: m, percent });
   }
   return Object.keys(errors).length > 0 ? { ok: false, errors } : { ok: true, entries };
@@ -7505,10 +7505,10 @@ var METRIC_INFO = {
 };
 
 // src/domain/methods.ts
-function methodChoices(list, current) {
+function methodChoices(list2, current) {
   const c = current?.trim() ?? "";
-  if (c === "" || list.some((m) => m.toLowerCase() === c.toLowerCase())) return [...list];
-  return [...list, c];
+  if (c === "" || list2.some((m) => m.toLowerCase() === c.toLowerCase())) return [...list2];
+  return [...list2, c];
 }
 function dominantMethod(values) {
   const counts = /* @__PURE__ */ new Map();
@@ -7835,9 +7835,9 @@ function trainingIssues(setLog, workouts, week) {
   }
   const exercisesOf = /* @__PURE__ */ new Map();
   for (const s of setLog) {
-    const list = exercisesOf.get(s.workoutId) ?? [];
-    if (!list.includes(s.exerciseId)) list.push(s.exerciseId);
-    exercisesOf.set(s.workoutId, list);
+    const list2 = exercisesOf.get(s.workoutId) ?? [];
+    if (!list2.includes(s.exerciseId)) list2.push(s.exerciseId);
+    exercisesOf.set(s.workoutId, list2);
   }
   const done = workouts.filter((w) => w.status === "done").map((w) => ({
     ...w,
@@ -7888,15 +7888,15 @@ function measurementIssues(measurements, categoryOf, week) {
   for (const m of measurements) {
     const cat = categoryOf(m.metricId);
     if (!cat || !STABLE_CATEGORIES.includes(cat)) continue;
-    const list = byMetric.get(m.metricId) ?? [];
-    list.push(m);
-    byMetric.set(m.metricId, list);
+    const list2 = byMetric.get(m.metricId) ?? [];
+    list2.push(m);
+    byMetric.set(m.metricId, list2);
   }
-  for (const list of byMetric.values()) {
-    list.sort((a, b) => `${a.date} ${a.time ?? ""}`.localeCompare(`${b.date} ${b.time ?? ""}`));
-    for (let i = 1; i < list.length; i++) {
-      const cur = list[i];
-      const prev = list[i - 1];
+  for (const list2 of byMetric.values()) {
+    list2.sort((a, b) => `${a.date} ${a.time ?? ""}`.localeCompare(`${b.date} ${b.time ?? ""}`));
+    for (let i = 1; i < list2.length; i++) {
+      const cur = list2[i];
+      const prev = list2[i - 1];
       if (!inWeek(cur.date, week)) continue;
       if (prev.value < MIN_JUMP_BASE) continue;
       const change = relativeChange(cur.value, prev.value);
@@ -8809,10 +8809,10 @@ function relativePerformanceSeries(workouts) {
     groups.set(k, [...groups.get(k) ?? [], w]);
   }
   const byDay = /* @__PURE__ */ new Map();
-  for (const list of groups.values()) {
-    if (list.length < MIN_SAME_TITLE) continue;
-    const mean3 = list.reduce((a, w) => a + w.volumeKg, 0) / list.length;
-    for (const w of list)
+  for (const list2 of groups.values()) {
+    if (list2.length < MIN_SAME_TITLE) continue;
+    const mean3 = list2.reduce((a, w) => a + w.volumeKg, 0) / list2.length;
+    for (const w of list2)
       byDay.set(w.date, [...byDay.get(w.date) ?? [], w.volumeKg / mean3 * 100]);
   }
   return [...byDay.entries()].map(([date, values]) => ({ date, value: values.reduce((a, b) => a + b, 0) / values.length })).sort((a, b) => a.date.localeCompare(b.date));
@@ -9012,14 +9012,14 @@ function phaseShares(values) {
 function totalSleepWithNaps(nightMin, napMinutes) {
   return (nightMin ?? 0) + napMinutes.reduce((a, b) => a + b, 0);
 }
-function parseDurationInput(text) {
-  const t = text.trim().toLowerCase();
+function parseDurationInput(text2) {
+  const t = text2.trim().toLowerCase();
   if (t === "") return null;
   if (/^\d+$/.test(t)) return Number(t);
   const colon = /^(\d+):([0-5]\d)$/.exec(t);
   if (colon) return Number(colon[1]) * 60 + Number(colon[2]);
-  const hm = /^(\d+)\s*h(?:\s*(\d+)\s*(?:m|min)?)?$/.exec(t);
-  if (hm) return Number(hm[1]) * 60 + Number(hm[2] ?? 0);
+  const hm2 = /^(\d+)\s*h(?:\s*(\d+)\s*(?:m|min)?)?$/.exec(t);
+  if (hm2) return Number(hm2[1]) * 60 + Number(hm2[2] ?? 0);
   return Number.NaN;
 }
 function napMinutesByDate(naps) {
@@ -9370,9 +9370,9 @@ function describeCardioEnergy(c) {
   const pace = cardioPace(c.kind, c.durationSeconds, c.distanceM);
   if (pace) parts2.push(pace);
   parts2.push(c.methods.map(cardioMethodLabel).join(" bzw. "));
-  let text = `${parts2.join(" \xB7 ")}: ${formatNumber(c.kcal, 0)} kcal`;
-  if (c.deviceKcal !== null) text += ` (Ger\xE4t: ${formatNumber(c.deviceKcal, 0)} kcal brutto)`;
-  return text;
+  let text2 = `${parts2.join(" \xB7 ")}: ${formatNumber(c.kcal, 0)} kcal`;
+  if (c.deviceKcal !== null) text2 += ` (Ger\xE4t: ${formatNumber(c.deviceKcal, 0)} kcal brutto)`;
+  return text2;
 }
 function describeTraining(t) {
   const effort = t.perceivedExertion !== null ? `Anstrengung ${t.perceivedExertion}/10` : "ohne Anstrengung";
@@ -9457,11 +9457,11 @@ function inRange2(date, from, to) {
 }
 function vitalFactor(data, today, metricId) {
   const from = shiftDays(today, -BASELINE_DAYS);
-  const list = data.measurements.filter((m) => m.metricId === metricId && m.date <= today).sort((a, b) => a.date.localeCompare(b.date));
-  const recent = list.filter((m) => m.date >= shiftDays(today, -RECENT_VITAL_DAYS)).at(-1);
+  const list2 = data.measurements.filter((m) => m.metricId === metricId && m.date <= today).sort((a, b) => a.date.localeCompare(b.date));
+  const recent = list2.filter((m) => m.date >= shiftDays(today, -RECENT_VITAL_DAYS)).at(-1);
   if (!recent)
     return { ok: false, reason: `keine Messung in den letzten ${RECENT_VITAL_DAYS} Tagen` };
-  const base = list.filter((m) => inRange2(m.date, from, shiftDays(today, -1)) && m !== recent).map((m) => m.value);
+  const base = list2.filter((m) => inRange2(m.date, from, shiftDays(today, -1)) && m !== recent).map((m) => m.value);
   if (base.length < 3) return { ok: false, reason: "weniger als 3 fr\xFChere Werte in 28 Tagen" };
   return { ok: true, value: recent.value, base: mean2(base), date: recent.date };
 }
@@ -9569,12 +9569,12 @@ function parseWeekGoals(raw) {
 }
 function weekGoalsFromInput(input) {
   const errors = {};
-  const read = (key, max, text) => {
+  const read = (key, max, text2) => {
     const t = (input[key] ?? "").trim();
     if (t === "") return null;
     const n2 = Number(t);
     if (!/^\d+$/.test(t) || n2 < 1 || n2 > max) {
-      errors[key] = `Bitte eine ganze Zahl von 1 bis ${max} ${text} angeben.`;
+      errors[key] = `Bitte eine ganze Zahl von 1 bis ${max} ${text2} angeben.`;
       return null;
     }
     return n2;
@@ -9874,7 +9874,7 @@ function sleepRegularity(sleep, today, days2 = 14) {
   const wakeSd = sd(wakes);
   const worst = Math.max(bedSd, wakeSd);
   const level = worst <= 30 ? "good" : worst <= 60 ? "caution" : "low";
-  const text = level === "good" ? "Regelm\xE4\xDFig \u2013 dein Schlafrhythmus ist stabil." : level === "caution" ? "Mittel \u2013 die Zeiten schwanken sp\xFCrbar." : "Unregelm\xE4\xDFig \u2013 feste Zeiten (auch am Wochenende) helfen oft mehr als l\xE4ngerer Schlaf.";
+  const text2 = level === "good" ? "Regelm\xE4\xDFig \u2013 dein Schlafrhythmus ist stabil." : level === "caution" ? "Mittel \u2013 die Zeiten schwanken sp\xFCrbar." : "Unregelm\xE4\xDFig \u2013 feste Zeiten (auch am Wochenende) helfen oft mehr als l\xE4ngerer Schlaf.";
   return {
     nights: beds.length,
     bedMean: formatClock3(mean2(beds)),
@@ -9882,15 +9882,15 @@ function sleepRegularity(sleep, today, days2 = 14) {
     bedSd,
     wakeSd,
     level,
-    text
+    text: text2
   };
 }
 function metricChange(measurements, metricId, today, days2 = 30) {
   const from = shiftDays(today, -(days2 - 1));
-  const list = measurements.filter((m) => m.metricId === metricId && inRange2(m.date, from, today)).sort((a, b) => a.date.localeCompare(b.date));
-  const last = list.at(-1);
+  const list2 = measurements.filter((m) => m.metricId === metricId && inRange2(m.date, from, today)).sort((a, b) => a.date.localeCompare(b.date));
+  const last = list2.at(-1);
   if (!last) return null;
-  const first = list[0];
+  const first = list2[0];
   const change = first && first !== last ? last.value - first.value : null;
   return {
     latest: last.value,
@@ -10485,8 +10485,8 @@ var SUBSTANCES = [
     note: null
   }
 ];
-function normalizeName(text) {
-  return text.toLocaleLowerCase("de").replace(/[()[\]{}.,;:/\\_-]+/g, " ").replace(/\s+/g, " ").trim();
+function normalizeName(text2) {
+  return text2.toLocaleLowerCase("de").replace(/[()[\]{}.,;:/\\_-]+/g, " ").replace(/\s+/g, " ").trim();
 }
 var BY_NAME = /* @__PURE__ */ new Map();
 for (const s of SUBSTANCES) {
@@ -10759,8 +10759,8 @@ function formatRange2(range) {
   return "";
 }
 var NUMBER = String.raw`-?\d+(?:[.,]\d+)?`;
-function toNumber(text) {
-  const t = text.trim().replace(/\s+/g, "");
+function toNumber(text2) {
+  const t = text2.trim().replace(/\s+/g, "");
   if (!new RegExp(`^${NUMBER}$`).test(t)) {
     if (/^-?\d{1,3}(?:\.\d{3})+,\d+$/.test(t))
       return Number(t.replace(/\./g, "").replace(",", "."));
@@ -10769,15 +10769,15 @@ function toNumber(text) {
   const n2 = Number(t.replace(",", "."));
   return Number.isFinite(n2) ? n2 : null;
 }
-function parseLabValue(text) {
-  const t = text.trim().replace(/≤/g, "<").replace(/≥/g, ">");
+function parseLabValue(text2) {
+  const t = text2.trim().replace(/≤/g, "<").replace(/≥/g, ">");
   const m = /^([<>])\s*=?\s*(.+)$/.exec(t);
   const comparator = m ? m[1] : null;
   const value = toNumber(m ? m[2] ?? "" : t);
   return value === null ? null : { value, comparator };
 }
-function parseRange(text) {
-  const t = text.trim().replace(/[–—]/g, "-").replace(/≤|<=/g, "<").replace(/≥|>=/g, ">");
+function parseRange(text2) {
+  const t = text2.trim().replace(/[–—]/g, "-").replace(/≤|<=/g, "<").replace(/≥|>=/g, ">");
   if (t === "") return { low: null, high: null };
   const both = new RegExp(`^(${NUMBER})\\s*(?:-|bis)\\s*(${NUMBER})$`, "i").exec(t);
   if (both) {
@@ -10938,9 +10938,9 @@ function drawToDraft(draw) {
     }))
   };
 }
-var optNumber = (text) => {
-  if (text.trim() === "") return null;
-  const n2 = parseDecimal(text);
+var optNumber = (text2) => {
+  if (text2.trim() === "") return null;
+  const n2 = parseDecimal(text2);
   return Number.isFinite(n2) ? n2 : "invalid";
 };
 function draftToInput2(draft) {
@@ -11858,9 +11858,9 @@ function hrtToDraft(e) {
     notes: e.notes ?? ""
   };
 }
-function optNumber2(text) {
-  if (text.trim() === "") return null;
-  const v = parseDecimal(text);
+function optNumber2(text2) {
+  if (text2.trim() === "") return null;
+  const v = parseDecimal(text2);
   return Number.isFinite(v) ? v : null;
 }
 function computedAmount(d) {
@@ -11997,8 +11997,8 @@ function summarizeHrt(entries, today) {
     groups.set(key, [...groups.get(key) ?? [], e]);
   }
   const out = [];
-  for (const list of groups.values()) {
-    const sorted = [...list].sort(
+  for (const list2 of groups.values()) {
+    const sorted = [...list2].sort(
       (a, b) => (a.date + (a.time ?? "")).localeCompare(b.date + (b.time ?? ""))
     );
     const taken = sorted.filter((e) => e.status === "taken");
@@ -12069,9 +12069,9 @@ function roundTo2(value, decimals) {
   const f = 10 ** decimals;
   return Math.round(value * f) / f;
 }
-function positive(text) {
-  if (text.trim() === "") return null;
-  const v = parseDecimal(text);
+function positive(text2) {
+  if (text2.trim() === "") return null;
+  const v = parseDecimal(text2);
   return Number.isFinite(v) && v > 0 ? v : null;
 }
 function totalConcentration(ingredients) {
@@ -12220,7 +12220,7 @@ var TEMPLATE = {
   ]
 };
 function templateItems(section) {
-  return TEMPLATE[section].map((text, i) => ({ id: `${section}-v${i + 1}`, text, done: false }));
+  return TEMPLATE[section].map((text2, i) => ({ id: `${section}-v${i + 1}`, text: text2, done: false }));
 }
 function defaultChecklist() {
   return {
@@ -12233,7 +12233,7 @@ function defaultChecklist() {
 }
 var TEMPLATE_TEXT = new Map(
   Object.keys(TEMPLATE).flatMap(
-    (section) => TEMPLATE[section].map((text, i) => [`${section}-v${i + 1}`, text])
+    (section) => TEMPLATE[section].map((text2, i) => [`${section}-v${i + 1}`, text2])
   )
 );
 function parseItems(value) {
@@ -12242,9 +12242,9 @@ function parseItems(value) {
   const seen = /* @__PURE__ */ new Set();
   for (const v of value) {
     if (!v || typeof v !== "object") continue;
-    const { id: id3, text, t, done, d } = v;
+    const { id: id3, text: text2, t, done, d } = v;
     if (typeof id3 !== "string" || !id3 || seen.has(id3)) continue;
-    const raw = typeof text === "string" ? text : typeof t === "string" ? t : TEMPLATE_TEXT.get(id3);
+    const raw = typeof text2 === "string" ? text2 : typeof t === "string" ? t : TEMPLATE_TEXT.get(id3);
     if (typeof raw !== "string") continue;
     const clean2 = raw.trim().slice(0, ITEM_MAX_LENGTH);
     if (!clean2) continue;
@@ -12270,10 +12270,10 @@ function parseChecklist(raw) {
   }
   return base;
 }
-function serializeChecklist(list) {
+function serializeChecklist(list2) {
   const out = {};
   for (const s of CHECKLIST_SECTIONS) {
-    out[s.id] = list[s.id].map((i) => ({
+    out[s.id] = list2[s.id].map((i) => ({
       id: i.id,
       ...TEMPLATE_TEXT.get(i.id) === i.text ? {} : { t: i.text },
       ...i.done ? { d: 1 } : {}
@@ -12282,57 +12282,57 @@ function serializeChecklist(list) {
   return JSON.stringify(out);
 }
 var CHECKLIST_STORAGE_MAX = 8e3;
-var update = (list, section, items) => ({
-  ...list,
+var update = (list2, section, items) => ({
+  ...list2,
   [section]: items
 });
-function addItem(list, section, text, id3) {
-  const clean2 = text.trim().slice(0, ITEM_MAX_LENGTH);
-  if (!clean2 || list[section].some((i) => i.id === id3)) return list;
-  return update(list, section, [...list[section], { id: id3, text: clean2, done: false }]);
+function addItem(list2, section, text2, id3) {
+  const clean2 = text2.trim().slice(0, ITEM_MAX_LENGTH);
+  if (!clean2 || list2[section].some((i) => i.id === id3)) return list2;
+  return update(list2, section, [...list2[section], { id: id3, text: clean2, done: false }]);
 }
-function editItem(list, section, id3, text) {
-  const clean2 = text.trim().slice(0, ITEM_MAX_LENGTH);
-  if (!clean2) return list;
+function editItem(list2, section, id3, text2) {
+  const clean2 = text2.trim().slice(0, ITEM_MAX_LENGTH);
+  if (!clean2) return list2;
   return update(
-    list,
+    list2,
     section,
-    list[section].map((i) => i.id === id3 ? { ...i, text: clean2 } : i)
+    list2[section].map((i) => i.id === id3 ? { ...i, text: clean2 } : i)
   );
 }
-function removeItem(list, section, id3) {
+function removeItem(list2, section, id3) {
   return update(
-    list,
+    list2,
     section,
-    list[section].filter((i) => i.id !== id3)
+    list2[section].filter((i) => i.id !== id3)
   );
 }
-function toggleItem(list, section, id3) {
+function toggleItem(list2, section, id3) {
   return update(
-    list,
+    list2,
     section,
-    list[section].map((i) => i.id === id3 ? { ...i, done: !i.done } : i)
+    list2[section].map((i) => i.id === id3 ? { ...i, done: !i.done } : i)
   );
 }
-function moveItem(list, section, id3, direction) {
-  const items = [...list[section]];
+function moveItem(list2, section, id3, direction) {
+  const items = [...list2[section]];
   const index = items.findIndex((i) => i.id === id3);
   const target = index + direction;
-  if (index < 0 || target < 0 || target >= items.length) return list;
+  if (index < 0 || target < 0 || target >= items.length) return list2;
   const [item2] = items.splice(index, 1);
   if (item2) items.splice(target, 0, item2);
-  return update(list, section, items);
+  return update(list2, section, items);
 }
-function resetTicks(list, section) {
-  const out = { ...list };
+function resetTicks(list2, section) {
+  const out = { ...list2 };
   for (const s of CHECKLIST_SECTIONS) {
     if (section && s.id !== section) continue;
-    out[s.id] = list[s.id].map((i) => i.done ? { ...i, done: false } : i);
+    out[s.id] = list2[s.id].map((i) => i.done ? { ...i, done: false } : i);
   }
   return out;
 }
-function restoreTemplate(list, section) {
-  return update(list, section, templateItems(section));
+function restoreTemplate(list2, section) {
+  return update(list2, section, templateItems(section));
 }
 function progress(items) {
   return { done: items.filter((i) => i.done).length, total: items.length };
@@ -12395,8 +12395,8 @@ var SCALE_FIELDS = [
   },
   { key: "cellMass", label: "Zellmasse des K\xF6rpers", metricId: builtinMetricId(36) }
 ];
-function normalizeLabel(text) {
-  return text.toLowerCase().replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ß/g, "ss").replace(/ı/g, "i").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z]/g, "");
+function normalizeLabel(text2) {
+  return text2.toLowerCase().replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ß/g, "ss").replace(/ı/g, "i").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z]/g, "");
 }
 function editDistance(a, b) {
   const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -12415,12 +12415,12 @@ function editDistance(a, b) {
 var NORMALIZED = SCALE_FIELDS.map((f) => ({ field: f, norm: normalizeLabel(f.label) }));
 function fieldOfRow(row) {
   if (/\d{2,}/.test(row)) return null;
-  const text = normalizeLabel(row);
-  if (text.length < 3) return null;
+  const text2 = normalizeLabel(row);
+  if (text2.length < 3) return null;
   let best = null;
   for (const { field, norm: norm3 } of NORMALIZED) {
-    if (text.length > norm3.length + 4) continue;
-    const score = 1 - editDistance(text, norm3) / Math.max(text.length, norm3.length);
+    if (text2.length > norm3.length + 4) continue;
+    const score = 1 - editDistance(text2, norm3) / Math.max(text2.length, norm3.length);
     if (!best || score > best.score) best = { field, score };
   }
   return best && best.score >= 0.7 ? best.field : null;
@@ -12520,14 +12520,14 @@ var round = (v, decimals) => {
   const f = 10 ** decimals;
   return Math.round(v * f) / f;
 };
-function cutDecimals(text, decimals) {
-  const m = /^(\d+)(?:[.,](\d+))?$/.exec(text.trim());
-  if (!m) return Number(text.replace(",", "."));
+function cutDecimals(text2, decimals) {
+  const m = /^(\d+)(?:[.,](\d+))?$/.exec(text2.trim());
+  if (!m) return Number(text2.replace(",", "."));
   const frac = (m[2] ?? "").slice(0, decimals);
   return Number(frac ? `${m[1]}.${frac}` : m[1]);
 }
-function nearReading(text, previous, withDecimal) {
-  const digits = text.replace(/\D/g, "");
+function nearReading(text2, previous, withDecimal) {
+  const digits = text2.replace(/\D/g, "");
   let best = null;
   for (let i = 0; i < digits.length; i++) {
     for (let j = i + 1; j <= digits.length; j++) {
@@ -12756,11 +12756,11 @@ var latin1 = (bytes) => {
   return s;
 };
 function findPdfImage(bytes) {
-  const text = latin1(bytes);
-  if (!text.startsWith("%PDF")) return null;
+  const text2 = latin1(bytes);
+  if (!text2.startsWith("%PDF")) return null;
   let best = null;
   const re = /<<((?:(?!>>\s*stream)[\s\S])*?\/Subtype\s*\/Image[\s\S]*?)>>\s*stream\r?\n/g;
-  for (let m = re.exec(text); m; m = re.exec(text)) {
+  for (let m = re.exec(text2); m; m = re.exec(text2)) {
     const dict = m[1] ?? "";
     const num3 = (key) => Number(new RegExp(`/${key}\\s+(\\d+)`).exec(dict)?.[1] ?? NaN);
     const width = num3("Width");
@@ -12771,10 +12771,10 @@ function findPdfImage(bytes) {
     if (filter !== "DCTDecode" && filter !== "FlateDecode") continue;
     if (filter === "FlateDecode" && /\/DecodeParms|\/Predictor/.test(dict)) continue;
     const start = m.index + m[0].length;
-    const end = text.indexOf("endstream", start);
+    const end = text2.indexOf("endstream", start);
     if (end < 0) continue;
     let stop = end;
-    while (stop > start && (text[stop - 1] === "\n" || text[stop - 1] === "\r")) stop--;
+    while (stop > start && (text2[stop - 1] === "\n" || text2[stop - 1] === "\r")) stop--;
     if (!best || width * height > best.width * best.height) {
       best = { width, height, bitsPerComponent, filter, data: bytes.slice(start, stop) };
     }
@@ -12815,8 +12815,8 @@ var AG_RATIO_ID = builtin(38);
 var SKELETAL_MASS_METRIC_ID = builtin(39);
 var ANDROID_FAT_METRIC_ID = builtin(40);
 var GYNOID_FAT_METRIC_ID = builtin(41);
-var positive2 = (text) => {
-  const v = parseDecimal(text ?? "");
+var positive2 = (text2) => {
+  const v = parseDecimal(text2 ?? "");
   return Number.isFinite(v) && v > 0 ? v : null;
 };
 var round2 = (v, decimals) => {
@@ -12975,8 +12975,8 @@ function stat(label, unit, decimals, values) {
 }
 function metricRows(measurements, metrics, categories, from, to) {
   const rows = [];
-  const list = [...metrics].filter((m) => categories.includes(m.category)).sort((a, b) => a.position - b.position);
-  for (const m of list) {
+  const list2 = [...metrics].filter((m) => categories.includes(m.category)).sort((a, b) => a.position - b.position);
+  for (const m of list2) {
     const values = measurements.filter((x) => x.metricId === m.id && x.date >= from && x.date <= to).map((x) => ({ date: x.date, value: x.value }));
     const row = stat(m.name, m.unit, m.decimals, values);
     if (row) rows.push(row);
@@ -13032,8 +13032,8 @@ function hrtRows(entries, from, to) {
     groups.set(k, [...groups.get(k) ?? [], e]);
   }
   const rows = [];
-  for (const list of groups.values()) {
-    const taken = list.filter((e) => e.status === "taken").sort((a, b) => a.date.localeCompare(b.date));
+  for (const list2 of groups.values()) {
+    const taken = list2.filter((e) => e.status === "taken").sort((a, b) => a.date.localeCompare(b.date));
     const first = taken[0];
     const last = taken[taken.length - 1];
     if (!first || !last) continue;
@@ -13045,15 +13045,15 @@ function hrtRows(entries, from, to) {
       intervalDays: taken.length >= 2 ? (isoDays(first.date, last.date) - 1) / (taken.length - 1) : null,
       first: first.date,
       last: last.date,
-      missed: list.length - taken.length
+      missed: list2.length - taken.length
     });
   }
   return rows.sort((a, b) => a.hormone.localeCompare(b.hormone, "de"));
 }
 function measuredRows(w, from, to) {
   if (!w) return [];
-  const inRange4 = (list) => list.filter((x) => x.date >= from && x.date <= to);
-  const pick = (list, f) => inRange4(list).flatMap((x) => {
+  const inRange4 = (list2) => list2.filter((x) => x.date >= from && x.date <= to);
+  const pick = (list2, f) => inRange4(list2).flatMap((x) => {
     const v = f(x);
     return v === null || !Number.isFinite(v) ? [] : [{ date: x.date, value: v }];
   });
@@ -13200,16 +13200,16 @@ function winAnsiByte(ch) {
   if (code >= 32 && code < 127 || code >= 160 && code <= 255) return code;
   return 63;
 }
-function pdfText(text) {
+function pdfText(text2) {
   let out = "";
-  for (const ch of text.replace(/\s+/g, " ")) {
+  for (const ch of text2.replace(/\s+/g, " ")) {
     const c = String.fromCharCode(winAnsiByte(ch));
     out += c === "\\" || c === "(" || c === ")" ? `\\${c}` : c;
   }
   return out;
 }
-function wrapText(text, width = WRAP_CHARS) {
-  const words = text.replace(/\s+/g, " ").trim().split(" ");
+function wrapText(text2, width = WRAP_CHARS) {
+  const words = text2.replace(/\s+/g, " ").trim().split(" ");
   const lines = [];
   let line = "";
   for (let word of words) {
@@ -13236,25 +13236,25 @@ function checklistPdf(doc) {
   const pages = [];
   let ops = [];
   let y = PAGE_H - MARGIN;
-  const text = (x, yy, font, size, value, gray = 0) => ops.push(
+  const text2 = (x, yy, font, size, value, gray = 0) => ops.push(
     `${n(gray)} g BT /${font} ${size} Tf ${n(x)} ${n(yy)} Td (${pdfText(value)}) Tj ET 0 g`
   );
   const header2 = (first) => {
     if (first) {
       for (const line of wrapText(doc.title, 50)) {
         y -= 18;
-        text(MARGIN, y, "F2", 16, line);
+        text2(MARGIN, y, "F2", 16, line);
       }
       if (doc.subtitle) {
         y -= 16;
-        text(MARGIN, y, "F1", 10, doc.subtitle, 0.4);
+        text2(MARGIN, y, "F1", 10, doc.subtitle, 0.4);
       }
       y -= 10;
       ops.push(`0.8 G 0.5 w ${MARGIN} ${n(y)} m ${PAGE_W - MARGIN} ${n(y)} l S 0 G`);
       y -= 8;
     } else {
       y -= 12;
-      text(MARGIN, y, "F1", 9, doc.title, 0.4);
+      text2(MARGIN, y, "F1", 9, doc.title, 0.4);
       y -= 12;
     }
   };
@@ -13267,7 +13267,7 @@ function checklistPdf(doc) {
   header2(true);
   if (doc.items.length === 0) {
     y -= LINE;
-    text(MARGIN, y, "F1", ITEM_SIZE, "Keine Punkte.", 0.4);
+    text2(MARGIN, y, "F1", ITEM_SIZE, "Keine Punkte.", 0.4);
   }
   for (const item2 of doc.items) {
     const lines = wrapText(item2.text);
@@ -13284,7 +13284,7 @@ function checklistPdf(doc) {
     }
     lines.forEach((line, i) => {
       if (i > 0) y -= LINE;
-      text(MARGIN + 18, y, "F1", ITEM_SIZE, line, item2.done ? 0.45 : 0);
+      text2(MARGIN + 18, y, "F1", ITEM_SIZE, line, item2.done ? 0.45 : 0);
     });
     y -= 5;
   }
@@ -13803,14 +13803,40 @@ function hex(color) {
 }
 var num2 = (v) => (Math.round(v * 100) / 100).toString();
 var rgb = (c) => c.map((x) => num2(x)).join(" ");
-function textWidth(text, size, bold = false) {
-  const table = bold ? HELVETICA_BOLD_WIDTHS : HELVETICA_WIDTHS;
+function textWidth(text2, size, bold = false) {
+  const table2 = bold ? HELVETICA_BOLD_WIDTHS : HELVETICA_WIDTHS;
   let w = 0;
-  for (const ch of text.replace(/\s+/g, " ")) {
+  for (const ch of text2.replace(/\s+/g, " ")) {
     const b = winAnsiByte(ch);
-    w += table[b - 32] ?? 556;
+    w += table2[b - 32] ?? 556;
   }
   return w * size / 1e3;
+}
+function wrapToWidth(text2, maxWidth, size, bold = false) {
+  const words = text2.replace(/\s+/g, " ").trim().split(" ");
+  const lines = [];
+  let line = "";
+  const fits = (t) => textWidth(t, size, bold) <= maxWidth;
+  for (let word of words) {
+    while (!fits(word) && [...word].length > 1) {
+      let cut = [...word].length - 1;
+      while (cut > 1 && !fits([...word].slice(0, cut).join(""))) cut--;
+      if (line) {
+        lines.push(line);
+        line = "";
+      }
+      lines.push([...word].slice(0, cut).join(""));
+      word = [...word].slice(cut).join("");
+    }
+    const next = line ? `${line} ${word}` : word;
+    if (fits(next)) line = next;
+    else {
+      if (line) lines.push(line);
+      line = word;
+    }
+  }
+  if (line || lines.length === 0) lines.push(line);
+  return lines;
 }
 function latin12(bytes) {
   let s = "";
@@ -13927,8 +13953,18 @@ var PdfDoc = class {
     objects[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
     objects[5] = `<< /Title (${pdfText(title)}) /Producer (LIFESPAN OS) >>`;
     const imageBase = 6 + this.pages.length * 2;
+    let maskId = imageBase + this.images.length;
     this.images.forEach((img, i) => {
-      objects[imageBase + i] = `<< /Type /XObject /Subtype /Image /Width ${img.width} /Height ${img.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length ${img.data.length} >>
+      let smask = "";
+      if (img.alpha) {
+        objects[maskId] = `<< /Type /XObject /Subtype /Image /Width ${img.width} /Height ${img.height} /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode /Length ${img.alpha.length} >>
+stream
+${latin12(img.alpha)}
+endstream`;
+        smask = ` /SMask ${maskId} 0 R`;
+        maskId += 1;
+      }
+      objects[imageBase + i] = `<< /Type /XObject /Subtype /Image /Width ${img.width} /Height ${img.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode${smask} /Length ${img.data.length} >>
 stream
 ${latin12(img.data)}
 endstream`;
@@ -13989,9 +14025,9 @@ var WHITE = [1, 1, 1];
 var tint = (c, amount) => [0, 1, 2].map((i) => c[i] + (1 - c[i]) * amount);
 var TITLE = "Bericht f\xFCr den Arzttermin";
 var PDF_MARKS = { low: "\u2013", high: "+", normal: "", none: "" };
-function fit(text, max, size, bold = false) {
-  if (textWidth(text, size, bold) <= max) return text;
-  let t = text;
+function fit(text2, max, size, bold = false) {
+  if (textWidth(text2, size, bold) <= max) return text2;
+  let t = text2;
   while (t.length > 1 && textWidth(`${t}\u2026`, size, bold) > max) t = t.slice(0, -1);
   return `${t.trimEnd()}\u2026`;
 }
@@ -14020,21 +14056,21 @@ var Layout = class {
     }
     return false;
   }
-  heading(text, color = ACCENT) {
+  heading(text2, color = ACCENT) {
     this.ensure(48);
     this.y += 10;
     this.page.rect(M, this.y, 4, 16, { fill: color, radius: 2 });
-    this.page.text(M + 12, this.y + 13, text, { size: 13, bold: true, color: INK });
+    this.page.text(M + 12, this.y + 13, text2, { size: 13, bold: true, color: INK });
     this.y += 26;
   }
-  note(text) {
+  note(text2) {
     this.ensure(14);
-    this.page.text(M, this.y + 9, fit(text, CONTENT_W, 8), { size: 8, color: MUTED });
+    this.page.text(M, this.y + 9, fit(text2, CONTENT_W, 8), { size: 8, color: MUTED });
     this.y += 14;
   }
-  subheading(text) {
+  subheading(text2) {
     this.ensure(30);
-    this.page.text(M, this.y + 12, text, { size: 9, bold: true, color: MUTED });
+    this.page.text(M, this.y + 12, text2, { size: 9, bold: true, color: MUTED });
     this.y += 18;
   }
   table(columns, rows) {
@@ -14047,7 +14083,7 @@ var Layout = class {
       xs.push(x);
       x += c.width * scale;
     }
-    const head = () => {
+    const head2 = () => {
       this.page.rect(M, this.y, CONTENT_W, rowH, { fill: SOFT });
       columns.forEach((c, i) => {
         const w = c.width * scale - 6;
@@ -14067,9 +14103,9 @@ var Layout = class {
       this.y += rowH;
     };
     this.ensure(rowH * 2);
-    head();
+    head2();
     for (const row of rows) {
-      if (this.ensure(rowH)) head();
+      if (this.ensure(rowH)) head2();
       row.forEach((cell2, i) => {
         const c = columns[i];
         const w = c.width * scale - 6;
@@ -14395,8 +14431,8 @@ var H = {
   lab: /^(labor|lab|praxis|einsender)$/i
 };
 var clean = (s) => s.replace(/\s+/g, " ").trim().replace(/:$/, "");
-function parseDateCell(text) {
-  const t = clean(text);
+function parseDateCell(text2) {
+  const t = clean(text2);
   if (t === "") return null;
   const pad3 = (n2) => String(n2).padStart(2, "0");
   const make = (y, m2, d) => {
@@ -14437,8 +14473,8 @@ function parseDateCell(text) {
   }
   return null;
 }
-function parseTimeCell(text) {
-  const t = clean(text);
+function parseTimeCell(text2) {
+  const t = clean(text2);
   const m = /^(\d{1,2}):(\d{2})/.exec(t);
   const pad3 = (n2) => String(n2).padStart(2, "0");
   if (m) {
@@ -14515,23 +14551,23 @@ function parseLabTable(rows, fallbackDate) {
       const name = cell2(row, c.name);
       const raw = cell2(row, c.value);
       if (name === "" && raw === "") return;
-      const text = `${name} ${raw}`.trim();
+      const text2 = `${name} ${raw}`.trim();
       if (name === "") {
-        result.skipped.push({ line, text, reason: "Parameter fehlt" });
+        result.skipped.push({ line, text: text2, reason: "Parameter fehlt" });
         return;
       }
       const when = dateOf(row);
       if (!when) {
         result.skipped.push({
           line,
-          text,
+          text: text2,
           reason: "Datum fehlt \u2013 bitte im Import ein Datum w\xE4hlen"
         });
         return;
       }
       const v = parseLabValue(raw);
       if (!v) {
-        result.skipped.push({ line, text, reason: raw === "" ? "Wert fehlt" : "kein Zahlenwert" });
+        result.skipped.push({ line, text: text2, reason: raw === "" ? "Wert fehlt" : "kein Zahlenwert" });
         return;
       }
       let refLow = null;
@@ -14945,14 +14981,14 @@ var SOURCE_LABEL = {
 var DONE_MARK = /^(?:[-*+]\s*)?(?:\[[xX✓✔]\]|☑|☒|✓|✔|✅|✔️)\s*/u;
 var OPEN_MARK = /^(?:[-*+]\s*)?(?:\[\s?\]|☐|◻|□|○|◯|⬜)\s*/u;
 var BULLET = /^(?:[-*+•·◦▪▫‣–—]|\d{1,3}[.)])\s+/u;
-function clip(text, notes) {
-  if ([...text].length <= TEXT_MAX) return text;
+function clip(text2, notes) {
+  if ([...text2].length <= TEXT_MAX) return text2;
   notes.push(`Ein Punkt war l\xE4nger als ${TEXT_MAX} Zeichen und wurde gek\xFCrzt.`);
-  return [...text].slice(0, TEXT_MAX).join("");
+  return [...text2].slice(0, TEXT_MAX).join("");
 }
-function parseChecklistText(text, fallbackName) {
+function parseChecklistText(text2, fallbackName) {
   const notes = [];
-  const lines = text.replace(/\r\n?/g, "\n").split("\n").map((l) => l.replace(/\u00a0/g, " ").trim()).filter((l) => l !== "");
+  const lines = text2.replace(/\r\n?/g, "\n").split("\n").map((l) => l.replace(/\u00a0/g, " ").trim()).filter((l) => l !== "");
   const parsed = lines.map((line) => {
     const heading = /^#{1,6}\s+(.*)$/.exec(line);
     if (heading) return { text: heading[1].trim(), done: false, marked: false, heading: true };
@@ -14976,8 +15012,8 @@ function parseChecklistText(text, fallbackName) {
   const items = parsed.filter((p) => p.text !== "" && !p.heading).map((p) => ({ text: clip(p.text, notes), done: p.done }));
   return { name: name || "Importierte Checkliste", items, notes };
 }
-function parseCsv(text) {
-  const clean2 = text.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
+function parseCsv(text2) {
+  const clean2 = text2.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
   const firstLine = clean2.split("\n")[0] ?? "";
   const count = (ch) => firstLine.split(ch).length - 1;
   const sep = [";", "	", ","].reduce((best, ch) => count(ch) > count(best) ? ch : best, ";");
@@ -15052,10 +15088,10 @@ function rowsToChecklist(rows, name) {
   if (textCol < 0) return { name, items: [], notes: ["Es wurde keine Spalte mit Text gefunden."] };
   const items = [];
   for (const r2 of body) {
-    const text = (r2[textCol] ?? "").trim();
-    if (text === "") continue;
+    const text2 = (r2[textCol] ?? "").trim();
+    if (text2 === "") continue;
     items.push({
-      text: clip(text, notes),
+      text: clip(text2, notes),
       done: doneCol >= 0 && DONE_VALUE.test((r2[doneCol] ?? "").trim())
     });
   }
@@ -15199,15 +15235,15 @@ var ENTITIES = {
   quot: '"',
   apos: "'"
 };
-function decodeXml(text) {
-  return text.replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g, (_, e) => {
+function decodeXml(text2) {
+  return text2.replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g, (_, e) => {
     if (e.startsWith("#x")) return String.fromCodePoint(parseInt(e.slice(2), 16));
     if (e.startsWith("#")) return String.fromCodePoint(parseInt(e.slice(1), 10));
     return ENTITIES[e] ?? "";
   });
 }
-function encodeXml(text) {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "");
+function encodeXml(text2) {
+  return text2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "");
 }
 function texts(xml) {
   let out = "";
@@ -15241,10 +15277,10 @@ function numberText(v) {
 }
 async function readXlsx(bytes, inflateRaw) {
   const entries = await readZip(bytes, inflateRaw);
-  const text = new TextDecoder("utf-8");
+  const text2 = new TextDecoder("utf-8");
   const file = (name) => {
     const e = entries.find((x) => x.name.toLowerCase() === name.toLowerCase());
-    return e ? text.decode(e.data) : null;
+    return e ? text2.decode(e.data) : null;
   };
   const workbook = file("xl/workbook.xml");
   if (!workbook) throw new Error("Die Datei ist keine Excel-Arbeitsmappe (.xlsx).");
@@ -15261,7 +15297,7 @@ async function readXlsx(bytes, inflateRaw) {
       }
     }
   }
-  const sheetXml = (sheetPath ? file(sheetPath) : null) ?? entries.filter((e) => /^xl\/worksheets\/[^/]+\.xml$/i.test(e.name)).sort((a, b) => a.name.localeCompare(b.name, void 0, { numeric: true })).map((e) => text.decode(e.data))[0] ?? null;
+  const sheetXml = (sheetPath ? file(sheetPath) : null) ?? entries.filter((e) => /^xl\/worksheets\/[^/]+\.xml$/i.test(e.name)).sort((a, b) => a.name.localeCompare(b.name, void 0, { numeric: true })).map((e) => text2.decode(e.data))[0] ?? null;
   if (!sheetXml) throw new Error("In der Excel-Datei wurde kein Tabellenblatt gefunden.");
   const shared = [];
   const sst = file("xl/sharedStrings.xml");
@@ -15298,18 +15334,18 @@ function safeSheetName(name) {
   const clean2 = name.replace(/[:\\/?*[\]]/g, " ").trim().slice(0, 31).trim();
   return clean2 || "Tabelle1";
 }
-function writeXlsx(table) {
+function writeXlsx(table2) {
   const enc = new TextEncoder();
   const cell2 = (col, row, value, style) => value === "" ? "" : `<c r="${columnName(col)}${row}" t="inlineStr"${style ? ` s="${style}"` : ""}><is><t xml:space="preserve">${encodeXml(value)}</t></is></c>`;
-  const allRows = [table.header, ...table.rows];
+  const allRows = [table2.header, ...table2.rows];
   const sheetRows = allRows.map(
     (r2, i) => `<row r="${i + 1}">${r2.map((v, c) => cell2(c, i + 1, v, i === 0 ? 1 : 0)).join("")}</row>`
   ).join("");
-  const cols = (table.widths ?? []).map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("");
+  const cols = (table2.widths ?? []).map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("");
   const files = {
     "[Content_Types].xml": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',
     "_rels/.rels": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
-    "xl/workbook.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${encodeXml(safeSheetName(table.sheetName))}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+    "xl/workbook.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${encodeXml(safeSheetName(table2.sheetName))}" sheetId="1" r:id="rId1"/></sheets></workbook>`,
     "xl/_rels/workbook.xml.rels": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
     "xl/styles.xml": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Standard" xfId="0" builtinId="0"/></cellStyles></styleSheet>',
     "xl/worksheets/sheet1.xml": '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' + (cols ? `<cols>${cols}</cols>` : "") + `<sheetData>${sheetRows}</sheetData></worksheet>`
@@ -15787,8 +15823,8 @@ function describePages(pages) {
   if (sorted.length === 1) return `Buch S. ${first}`;
   return contiguous ? `Buch S. ${first}\u2013${last}` : `Buch S. ${sorted.join(", ")}`;
 }
-function normalize(text) {
-  return text.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").normalize("NFD").replace(/[̀-ͯ]/g, "");
+function normalize(text2) {
+  return text2.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 function searchTerms(query) {
   return [
@@ -15823,24 +15859,24 @@ function searchFaq(questions, query) {
 function termPattern(term) {
   return term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ae/g, "(?:ae|\xE4)").replace(/oe/g, "(?:oe|\xF6)").replace(/ue/g, "(?:ue|\xFC)").replace(/ss/g, "(?:ss|\xDF)");
 }
-function highlight(text, query) {
+function highlight(text2, query) {
   const terms = searchTerms(query);
-  if (terms.length === 0 || text === "") return [{ text, hit: false }];
+  if (terms.length === 0 || text2 === "") return [{ text: text2, hit: false }];
   const re = new RegExp(
     terms.map(termPattern).sort((a, b) => b.length - a.length).join("|"),
     "giu"
   );
   const parts2 = [];
   let last = 0;
-  for (const m of text.matchAll(re)) {
+  for (const m of text2.matchAll(re)) {
     const start = m.index ?? 0;
     if (m[0] === "") continue;
-    if (start > last) parts2.push({ text: text.slice(last, start), hit: false });
+    if (start > last) parts2.push({ text: text2.slice(last, start), hit: false });
     parts2.push({ text: m[0], hit: true });
     last = start + m[0].length;
   }
-  if (last < text.length) parts2.push({ text: text.slice(last), hit: false });
-  return parts2.length ? parts2 : [{ text, hit: false }];
+  if (last < text2.length) parts2.push({ text: text2.slice(last), hit: false });
+  return parts2.length ? parts2 : [{ text: text2, hit: false }];
 }
 var BOOKS = {
   masterclass: {
@@ -16353,9 +16389,9 @@ function exercisesWithoutGroup(log, exercises, workoutIds) {
   }
   return [...byId.values()].sort((a, b) => b.sets - a.sets || a.name.localeCompare(b.name, "de"));
 }
-function namedExercises(list) {
-  const shown = list.slice(0, MAX_NAMED_EXERCISES).map((e) => `${e.name} (${e.sets} ${e.sets === 1 ? "Satz" : "S\xE4tze"})`);
-  const rest = list.length - shown.length;
+function namedExercises(list2) {
+  const shown = list2.slice(0, MAX_NAMED_EXERCISES).map((e) => `${e.name} (${e.sets} ${e.sets === 1 ? "Satz" : "S\xE4tze"})`);
+  const rest = list2.length - shown.length;
   return rest > 0 ? `${shown.join(", ")} und ${rest} weitere` : shown.join(", ");
 }
 var sets = (n2) => `${formatNumber(n2, 0)} ${n2 === 1 ? "Arbeitssatz" : "Arbeitss\xE4tzen"}`;
@@ -16584,39 +16620,39 @@ __export(cardioReport_exports, {
 });
 var WHO_MIN_MINUTES = 150;
 var WHO_MAX_MINUTES = 300;
-function filterSessions(list, from, kind) {
-  return list.filter(
+function filterSessions(list2, from, kind) {
+  return list2.filter(
     (s) => (from === null || s.date >= from) && (kind === null || s.kind === kind)
   );
 }
 function periodStart(today, weeks) {
   return weeks === null ? null : addDaysIso(today, -(weeks * 7 - 1));
 }
-function totals(list) {
-  const workouts = new Set(list.map((s) => s.workoutId));
+function totals(list2) {
+  const workouts = new Set(list2.map((s) => s.workoutId));
   return {
     sessions: workouts.size,
-    seconds: list.reduce((a, s) => a + s.durationSeconds, 0),
-    meters: list.reduce((a, s) => a + s.distanceM, 0),
-    kcal: list.reduce((a, s) => a + (s.kcal ?? 0), 0),
-    withoutKcal: list.filter((s) => s.kcal === null).length
+    seconds: list2.reduce((a, s) => a + s.durationSeconds, 0),
+    meters: list2.reduce((a, s) => a + s.distanceM, 0),
+    kcal: list2.reduce((a, s) => a + (s.kcal ?? 0), 0),
+    withoutKcal: list2.filter((s) => s.kcal === null).length
   };
 }
-function weeklyMinutes(list, today, weeks) {
+function weeklyMinutes(list2, today, weeks) {
   const last = weekStart(today);
   const starts = Array.from({ length: weeks }, (_, i) => addDaysIso(last, -7 * (weeks - 1 - i)));
   const sums = new Map(starts.map((d) => [d, 0]));
-  for (const s of list) {
+  for (const s of list2) {
     const w = weekStart(s.date);
     if (sums.has(w)) sums.set(w, (sums.get(w) ?? 0) + s.durationSeconds / 60);
   }
   return starts.map((d) => ({ date: d, value: Math.round(sums.get(d) ?? 0) }));
 }
-function zoneTotals(list) {
+function zoneTotals(list2) {
   const zones = [0, 0, 0, 0, 0];
   let below = 0;
   let without = 0;
-  for (const s of list) {
+  for (const s of list2) {
     s.zoneSeconds.forEach((v, i) => {
       zones[i] = (zones[i] ?? 0) + v;
     });
@@ -16641,10 +16677,10 @@ var POWER_KINDS = /* @__PURE__ */ new Set([
   "elliptical",
   "stairs"
 ]);
-function efficiencyTrend(list, kind) {
+function efficiencyTrend(list2, kind) {
   const power = POWER_KINDS.has(kind);
   const points = [];
-  for (const s of list) {
+  for (const s of list2) {
     if (s.kind !== kind || s.hrAvg === null || s.hrAvg <= 0 || s.durationSeconds <= 0) continue;
     if (power) {
       if (s.powerAvg === null) continue;
@@ -16657,12 +16693,12 @@ function efficiencyTrend(list, kind) {
   }
   return { unit: power ? "Watt je 100 Herzschl\xE4ge" : "Meter je Herzschlag", points };
 }
-function bestTrendKind(list) {
-  const kinds = [...new Set(list.map((s) => s.kind))];
+function bestTrendKind(list2) {
+  const kinds = [...new Set(list2.map((s) => s.kind))];
   let best = null;
   let count = 0;
   for (const k of kinds) {
-    const n2 = efficiencyTrend(list, k).points.length;
+    const n2 = efficiencyTrend(list2, k).points.length;
     if (n2 > count) {
       best = k;
       count = n2;
@@ -16670,12 +16706,12 @@ function bestTrendKind(list) {
   }
   return best;
 }
-function bests(list) {
+function bests(list2) {
   const rows = [];
-  const kinds = [...new Set(list.map((s) => s.kind))];
+  const kinds = [...new Set(list2.map((s) => s.kind))];
   const pick = (items, score) => items.reduce((b, s) => b === null || score(s) > score(b) ? s : b, null);
   for (const kind of kinds) {
-    const items = list.filter((s) => s.kind === kind);
+    const items = list2.filter((s) => s.kind === kind);
     const name = cardioKindLabel(kind);
     const far = pick(
       items.filter((s) => s.distanceM > 0),
@@ -16735,8 +16771,8 @@ function bests(list) {
   }
   return rows;
 }
-function kindsIn(list) {
-  return [...new Set(list.map((s) => s.kind))];
+function kindsIn(list2) {
+  return [...new Set(list2.map((s) => s.kind))];
 }
 
 // src/domain/heart.ts
@@ -16777,8 +16813,8 @@ function karvonen(max, resting) {
 function formatZone(z) {
   return z ? `${z.from}\u2013${z.to}` : "";
 }
-function parseZone(text) {
-  const t = text.trim();
+function parseZone(text2) {
+  const t = text2.trim();
   if (t === "") return null;
   const m = /^(\d{2,3})\s*(?:-|–|—|bis)\s*(\d{2,3})$/.exec(t);
   if (!m) return "invalid";
@@ -16805,8 +16841,8 @@ function heartPreview(p, draft) {
 function heartInput(draft) {
   const p = new FormParser();
   const max = p.integer("heartMax", draft.max);
-  const zones = draft.zones.map((text, i) => {
-    const z = parseZone(text);
+  const zones = draft.zones.map((text2, i) => {
+    const z = parseZone(text2);
     if (z === "invalid") {
       p.error(`heartZone${i + 1}`, "Bitte als \u201Evon-bis\u201C eingeben, z. B. 120-135.");
       return null;
@@ -16997,10 +17033,10 @@ function planDraftToInput(d, defaults = () => []) {
   const all = { ...p.errors, ...errors };
   return Object.keys(all).length === 0 ? { ok: true, input } : { ok: false, errors: all };
 }
-function move(list, index, direction) {
+function move(list2, index, direction) {
   const target = index + direction;
-  if (target < 0 || target >= list.length) return [...list];
-  const copy = [...list];
+  if (target < 0 || target >= list2.length) return [...list2];
+  const copy = [...list2];
   const [item2] = copy.splice(index, 1);
   if (item2 !== void 0) copy.splice(target, 0, item2);
   return copy;
@@ -17012,17 +17048,17 @@ function describeSetDraft(s) {
   if (s.duration.trim())
     parts2.push(`${s.duration.trim()}${s.duration.includes(":") ? "" : " min"}`);
   if (s.distance.trim()) parts2.push(`${s.distance.trim()} km`);
-  const text = parts2.join(" \xB7 ") || "Werte offen";
-  return s.isWarmup ? `${text} (Warm up)` : text;
+  const text2 = parts2.join(" \xB7 ") || "Werte offen";
+  return s.isWarmup ? `${text2} (Warm up)` : text2;
 }
 function describePlanSets(sets2) {
   if (sets2.length === 0) return "keine S\xE4tze";
   const groups = [];
   for (const s of sets2) {
-    const text = describeSetDraft(s);
+    const text2 = describeSetDraft(s);
     const lastGroup = groups.at(-1);
-    if (lastGroup && lastGroup.text === text) lastGroup.count += 1;
-    else groups.push({ text, count: 1 });
+    if (lastGroup && lastGroup.text === text2) lastGroup.count += 1;
+    else groups.push({ text: text2, count: 1 });
   }
   return groups.map(
     (g) => g.count === 1 ? g.text : g.text === "Werte offen" ? `${g.count} S\xE4tze, Werte offen` : `${g.count} \xD7 ${g.text}`
@@ -17193,12 +17229,12 @@ function fitSize(width, height, max) {
   };
 }
 var stamp = (c) => `${c.date}T${c.time ?? "00:00"}`;
-function chronological(list) {
-  return [...list].sort((a, b) => stamp(a).localeCompare(stamp(b)));
+function chronological(list2) {
+  return [...list2].sort((a, b) => stamp(a).localeCompare(stamp(b)));
 }
-function defaultPair(list) {
-  if (list.length < 2) return null;
-  const sorted = chronological(list);
+function defaultPair(list2) {
+  if (list2.length < 2) return null;
+  const sorted = chronological(list2);
   const after = sorted[sorted.length - 1];
   const same2 = sorted.filter((c) => c.pose === after.pose && c.id !== after.id);
   const before = same2[0] ?? sorted.find((c) => c.id !== after.id);
@@ -17258,17 +17294,17 @@ function sportPickerOptions(sports, exercises) {
   return out;
 }
 var EMPTY_SPORT_FILTER = { query: "", category: "" };
-function filterSports(list, filter) {
+function filterSports(list2, filter) {
   const words = normalizeSearch(filter.query).split(" ").filter(Boolean);
-  return list.filter((s) => {
+  return list2.filter((s) => {
     if (filter.category && s.category !== filter.category) return false;
     if (words.length === 0) return true;
     const hay = normalizeSearch(`${s.name} ${s.category} ${s.description ?? ""}`);
     return words.every((w) => hay.includes(w));
   });
 }
-function sportCategories(list) {
-  return [...new Set(list.map((s) => s.category))].sort((a, b) => a.localeCompare(b, "de"));
+function sportCategories(list2) {
+  return [...new Set(list2.map((s) => s.category))].sort((a, b) => a.localeCompare(b, "de"));
 }
 function sportImageSource(sport, builtIn) {
   if (sport.image) return sport.image;
@@ -17348,8 +17384,8 @@ function exerciseValue(e, key) {
       return e.usageCount;
   }
 }
-function sortExercises(list, key, direction) {
-  return [...list].sort(
+function sortExercises(list2, key, direction) {
+  return [...list2].sort(
     (a, b) => compareValues(exerciseValue(a, key), exerciseValue(b, key), direction) || compareValues(a.name, b.name, "asc")
   );
 }
@@ -17374,9 +17410,9 @@ function machineForm(m) {
     archived: m.archived
   };
 }
-function splitList(text, separators = /[,;\n]/) {
+function splitList(text2, separators = /[,;\n]/) {
   const out = [];
-  for (const part of text.split(separators)) {
+  for (const part of text2.split(separators)) {
     const v = part.trim();
     if (v && !out.includes(v)) out.push(v);
   }
@@ -17426,16 +17462,16 @@ function describeMerge(r2) {
   ];
   if (n2("join"))
     parts2.push(`${n2("join")} ${will(n2("join"))}an eine neue Maschine mit derselben Nummer geh\xE4ngt`);
-  const head = r2.applied ? "Zusammengef\xFChrt" : "Vorschau";
-  return `${head}: ${r2.items.length} Kraft\xFCbungen \u2013 ${parts2.join(", ")}. Der Trainingsverlauf aus ${sessions2} Einheiten ${r2.applied ? "geh\xF6rt jetzt" : "geh\xF6rt danach"} zur jeweiligen Maschine.`;
+  const head2 = r2.applied ? "Zusammengef\xFChrt" : "Vorschau";
+  return `${head2}: ${r2.items.length} Kraft\xFCbungen \u2013 ${parts2.join(", ")}. Der Trainingsverlauf aus ${sessions2} Einheiten ${r2.applied ? "geh\xF6rt jetzt" : "geh\xF6rt danach"} zur jeweiligen Maschine.`;
 }
 function machinePickerOptions(machines, exercises) {
   const byMachine = /* @__PURE__ */ new Map();
   for (const e of exercises) {
     if (!e.machineId || e.archived) continue;
-    const list = byMachine.get(e.machineId) ?? [];
-    list.push(e);
-    byMachine.set(e.machineId, list);
+    const list2 = byMachine.get(e.machineId) ?? [];
+    list2.push(e);
+    byMachine.set(e.machineId, list2);
   }
   const out = [];
   for (const m of machines) {
@@ -17495,21 +17531,21 @@ function haystack(m) {
     ].join(" ")
   );
 }
-function filterMachines(list, f) {
+function filterMachines(list2, f) {
   const words = norm2(f.query).split(/\s+/).filter(Boolean);
-  return list.filter((m) => {
+  return list2.filter((m) => {
     if (f.manufacturer && m.manufacturer !== f.manufacturer) return false;
     if (f.category && m.category !== f.category) return false;
     if (f.muscle === NO_MUSCLE && m.muscleGroups.length > 0) return false;
     if (f.muscle && f.muscle !== NO_MUSCLE && !m.muscleGroups.includes(f.muscle)) return false;
     if (words.length === 0) return true;
-    const text = haystack(m);
-    return words.every((w) => text.includes(w));
+    const text2 = haystack(m);
+    return words.every((w) => text2.includes(w));
   });
 }
-function distinct(list, pick) {
+function distinct(list2, pick) {
   const set = /* @__PURE__ */ new Set();
-  for (const m of list) {
+  for (const m of list2) {
     const v = pick(m);
     for (const x of Array.isArray(v) ? v : [v]) if (x) set.add(x);
   }
@@ -17527,16 +17563,16 @@ function describeImport(r2) {
   if (r2.updated) parts2.push(`${r2.updated} aktualisiert`);
   if (r2.unchanged) parts2.push(`${r2.unchanged} unver\xE4ndert`);
   if (r2.archived) parts2.push(`${r2.archived} nicht mehr enthalten (archiviert)`);
-  let text = `Import abgeschlossen: ${parts2.join(", ")}; ${r2.images} Bilder verkn\xFCpft.`;
+  let text2 = `Import abgeschlossen: ${parts2.join(", ")}; ${r2.images} Bilder verkn\xFCpft.`;
   if (r2.missingImages.length) {
     const shown = r2.missingImages.slice(0, 3).join("; ");
-    text += ` ${r2.missingImages.length} Bilder fehlen im Ordner (z. B. ${shown}${r2.missingImages.length > 3 ? " \u2026" : ""}).`;
+    text2 += ` ${r2.missingImages.length} Bilder fehlen im Ordner (z. B. ${shown}${r2.missingImages.length > 3 ? " \u2026" : ""}).`;
   }
   if (r2.skipped.length) {
     const shown = r2.skipped.slice(0, 3).join("; ");
-    text += ` Nicht \xFCbernommen (${r2.skipped.length}): ${shown}${r2.skipped.length > 3 ? " \u2026" : ""}`;
+    text2 += ` Nicht \xFCbernommen (${r2.skipped.length}): ${shown}${r2.skipped.length > 3 ? " \u2026" : ""}`;
   }
-  return text;
+  return text2;
 }
 var MACHINE_SORT_LABELS = {
   name: "Maschine",
@@ -17566,8 +17602,8 @@ function machineValue(m, key, usage) {
       return usage.get(m.id) ?? 0;
   }
 }
-function sortMachines(list, key, direction, usage = /* @__PURE__ */ new Map()) {
-  return [...list].sort(
+function sortMachines(list2, key, direction, usage = /* @__PURE__ */ new Map()) {
+  return [...list2].sort(
     (a, b) => compareValues(machineValue(a, key, usage), machineValue(b, key, usage), direction) || compareValues(a.manufacturer, b.manufacturer, "asc") || compareValues(a.displayName, b.displayName, "asc")
   );
 }
@@ -17610,6 +17646,1193 @@ function usageOf(index, exerciseIds) {
 }
 function usageText(u) {
   return u.count > 0 && u.last ? `${u.count}\xD7 benutzt \xB7 zuletzt ${formatDate(u.last)}` : "noch nicht benutzt";
+}
+
+// src/domain/weeklyReport.ts
+var WEEKLY_REPORT_VERSION = 1;
+var LATE_START = 20 * 60;
+var LATE_BED = 24 * 60;
+var LATE_BED_HIGH = LATE_BED + 60;
+var WR_AREAS = [
+  "Schlaf",
+  "Training",
+  "Erholung",
+  "Ern\xE4hrung",
+  "Gesundheit",
+  "Daten"
+];
+var dayMonth = (iso2) => `${iso2.slice(8, 10)}.${iso2.slice(5, 7)}.`;
+var rangeText2 = (from, to) => `${dayMonth(from)} \u2013 ${formatDate(to)}`;
+function lastCompletedWeek(today) {
+  return shiftDays(weekStart2(today), -7);
+}
+function parseWeeklyReport(json) {
+  if (!json) return null;
+  try {
+    const v = JSON.parse(json);
+    if (!v || typeof v !== "object" || typeof v.weekStart !== "string") return null;
+    if (typeof v.version !== "number" || v.version > WEEKLY_REPORT_VERSION) return null;
+    if (!Array.isArray(v.kpis) || !v.sleep || !v.training || !v.nutrition) return null;
+    return v;
+  } catch {
+    return null;
+  }
+}
+var weeklyReportFileName = (r2) => `LIFESPAN-OS_Wochenbericht_${r2.year}-KW${String(r2.week).padStart(2, "0")}.pdf`;
+var weeklyReportTitle = (r2) => `Wochenbericht KW ${r2.week} \xB7 ${rangeText2(r2.weekStart, r2.weekEnd)}`;
+
+// src/domain/weeklyReportCharts.ts
+var FONT = 7.5;
+function niceMax(v) {
+  if (v <= 0) return 1;
+  const p = 10 ** Math.floor(Math.log10(v));
+  for (const f of [1, 2, 2.5, 5, 10]) if (v <= f * p) return f * p;
+  return 10 * p;
+}
+function axis(min, max) {
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return { lo: 0, hi: 1, step: 0.25 };
+  if (max - min < 1e-9) {
+    min -= 1;
+    max += 1;
+  }
+  const step = niceMax((max - min) / 4);
+  const lo = Math.floor(min / step) * step;
+  let hi = Math.ceil(max / step) * step;
+  if (hi - lo < step * 2) hi = lo + step * 2;
+  return { lo, hi, step };
+}
+var text = (x, y, t, anchor = "middle", c = "muted", size = FONT, bold = false) => ({ k: "text", x, y, t, c, size, anchor, bold });
+function segments(points) {
+  const out = [];
+  let cur = [];
+  for (const p of points) {
+    if (p === null) {
+      if (cur.length) out.push(cur);
+      cur = [];
+    } else cur.push([p[0], p[1]]);
+  }
+  if (cur.length) out.push(cur);
+  return out;
+}
+function legend(shapes, x, y, items) {
+  let cx = x;
+  for (const [c, label, kind] of items) {
+    if (kind === "box") shapes.push({ k: "rect", x: cx, y: y - 6, w: 9, h: 6, c });
+    else {
+      shapes.push({ k: "line", x1: cx, y1: y - 3, x2: cx + 12, y2: y - 3, c, w: 1.6 });
+      shapes.push({ k: "dot", x: cx + 6, y: y - 3, r: 1.8, c });
+    }
+    shapes.push(text(cx + 14, y, label, "start", "ink"));
+    cx += 22 + label.length * 3.9;
+  }
+}
+function yGrid(shapes, a, box2, side, digits = 0, grid = true) {
+  for (let v = a.lo; v <= a.hi + a.step / 1e3; v += a.step) {
+    const y = box2.y + box2.h - (v - a.lo) / (a.hi - a.lo) * box2.h;
+    if (grid)
+      shapes.push({ k: "line", x1: box2.x, y1: y, x2: box2.x + box2.w, y2: y, c: "grid", w: 0.5 });
+    if (side === "left") shapes.push(text(box2.x - 4, y + 2.5, formatNumber(v, digits), "end"));
+    if (side === "right")
+      shapes.push(text(box2.x + box2.w + 4, y + 2.5, formatNumber(v, digits), "start"));
+  }
+}
+var hm = (min) => `${Math.floor(min / 60)}:${String(Math.round(min % 60)).padStart(2, "0")} h`;
+function sleepWindowChart(nights, width = 480) {
+  const rowH = 20;
+  const top = 8;
+  const left = 40;
+  const right = 44;
+  const shapes = [];
+  const h = top + Math.max(nights.length, 1) * rowH + 22;
+  if (nights.length === 0) {
+    shapes.push(text(width / 2, h / 2, "Keine Nacht erfasst", "middle"));
+    return { w: width, h, shapes };
+  }
+  let lo = Math.floor(Math.min(...nights.map((n2) => n2.bed)) / 120) * 120;
+  let hi = Math.ceil(Math.max(...nights.map((n2) => n2.wake)) / 120) * 120;
+  if (hi - lo < 480) hi = lo + 480;
+  if (hi - lo > 24 * 60) lo = hi - 24 * 60;
+  const plotW = width - left - right;
+  const x = (m) => left + (Math.min(Math.max(m, lo), hi) - lo) / (hi - lo) * plotW;
+  const bottom = top + nights.length * rowH;
+  for (let m = lo; m <= hi; m += 120) {
+    shapes.push({ k: "line", x1: x(m), y1: top, x2: x(m), y2: bottom, c: "grid", w: 0.5 });
+    shapes.push(text(x(m), bottom + 12, clock(m), "middle"));
+  }
+  shapes.push({ k: "line", x1: left, y1: bottom, x2: left + plotW, y2: bottom, c: "grid", w: 0.8 });
+  nights.forEach((n2, i) => {
+    const y = top + i * rowH;
+    shapes.push(text(left - 6, y + rowH / 2 + 2.5, dayMonth(n2.date), "end", "ink"));
+    const x1 = x(n2.bed);
+    const x2 = x(n2.wake);
+    shapes.push({ k: "rect", x: x1, y: y + 5, w: Math.max(x2 - x1, 1), h: rowH - 10, c: "blue" });
+    shapes.push(text(x2 + 4, y + rowH / 2 + 2.5, hm(n2.netMin), "start", "ink"));
+  });
+  return { w: width, h, shapes };
+}
+function hrvChart(hrv, rhr, width = 480) {
+  const h = 170;
+  const box2 = { x: 34, y: 22, w: width - 70, h: 112 };
+  const shapes = [];
+  const n2 = hrv.length;
+  const xAt = (i) => box2.x + (n2 <= 1 ? box2.w / 2 : i / (n2 - 1) * box2.w);
+  if (n2 >= 14) {
+    shapes.push({
+      k: "rect",
+      x: xAt(6.5),
+      y: box2.y,
+      w: xAt(13) + 6 - xAt(6.5),
+      h: box2.h,
+      c: "band"
+    });
+  }
+  const hv = hrv.flatMap((p) => p.value === null ? [] : [p.value]);
+  const rv = rhr.flatMap((p) => p.value === null ? [] : [p.value]);
+  if (hv.length + rv.length === 0) {
+    shapes.push(text(width / 2, h / 2, "Keine HRV- und Ruhepuls-Werte erfasst", "middle"));
+    return { w: width, h, shapes };
+  }
+  const a = axis(Math.min(...hv.length ? hv : [0]), Math.max(...hv.length ? hv : [1]));
+  const b = axis(Math.min(...rv.length ? rv : [0]), Math.max(...rv.length ? rv : [1]));
+  yGrid(shapes, a, box2, hv.length ? "left" : "none");
+  if (rv.length) yGrid(shapes, b, box2, "right", 0, false);
+  const yA = (v) => box2.y + box2.h - (v - a.lo) / (a.hi - a.lo) * box2.h;
+  const yB = (v) => box2.y + box2.h - (v - b.lo) / (b.hi - b.lo) * box2.h;
+  const draw = (pts, y, c) => {
+    const coords = pts.map((p, i) => p.value === null ? null : [xAt(i), y(p.value)]);
+    for (const s of segments(coords))
+      if (s.length > 1) shapes.push({ k: "poly", pts: s, c, w: 1.6 });
+    for (const p of coords) if (p) shapes.push({ k: "dot", x: p[0], y: p[1], r: 2.2, c });
+  };
+  if (hv.length) draw(hrv, yA, "blue");
+  if (rv.length) draw(rhr, yB, "orange");
+  hrv.forEach((p, i) => shapes.push(text(xAt(i), box2.y + box2.h + 12, dayMonth(p.date), "middle")));
+  if (hv.length) shapes.push(text(4, box2.y - 8, "HRV (ms)", "start"));
+  if (rv.length) shapes.push(text(width - 4, box2.y - 8, "Ruhepuls (bpm)", "end"));
+  legend(shapes, box2.x, h - 6, [
+    ...hv.length ? [["blue", "HRV (ms)", "line"]] : [],
+    ...rv.length ? [["orange", "Ruhepuls (bpm)", "line"]] : []
+  ]);
+  return { w: width, h, shapes };
+}
+function trainingChart(days2, width = 230) {
+  const h = 170;
+  const box2 = { x: 30, y: 26, w: width - 40, h: 110 };
+  const shapes = [];
+  const totals2 = days2.map((d) => d.strengthMin + d.cardioMin + d.otherMin);
+  const a = axis(0, Math.max(30, ...totals2));
+  yGrid(shapes, { ...a, lo: 0 }, box2, "left");
+  const slot = box2.w / Math.max(days2.length, 1);
+  const y = (v) => box2.y + box2.h - v / a.hi * box2.h;
+  days2.forEach((d, i) => {
+    const bx = box2.x + i * slot + slot * 0.2;
+    const bw = slot * 0.6;
+    let acc = 0;
+    for (const [v, c] of [
+      [d.strengthMin, "navy"],
+      [d.cardioMin, "orange"],
+      [d.otherMin, "gray"]
+    ]) {
+      if (v <= 0) continue;
+      shapes.push({ k: "rect", x: bx, y: y(acc + v), w: bw, h: y(acc) - y(acc + v), c });
+      acc += v;
+    }
+    if (d.sessions >= 2)
+      shapes.push(text(bx + bw / 2, y(acc) - 3, `${d.sessions}\xD7`, "middle", "ink"));
+    shapes.push(text(bx + bw / 2, box2.y + box2.h + 11, dayMonth(d.date), "middle"));
+  });
+  shapes.push(text(4, box2.y - 10, "Minuten", "start"));
+  legend(shapes, box2.x, h - 6, [
+    ["navy", "Kraft", "box"],
+    ["orange", "Cardio", "box"],
+    ["gray", "Sonstiges", "box"]
+  ]);
+  return { w: width, h, shapes };
+}
+function gripChart(points, weekStart4, width = 230) {
+  const h = 170;
+  const box2 = { x: 30, y: 26, w: width - 40, h: 110 };
+  const shapes = [];
+  if (points.length === 0) {
+    shapes.push(text(width / 2, h / 2, "Keine Griffkraft gemessen", "middle"));
+    return { w: width, h, shapes };
+  }
+  const all = points.flatMap((p) => [p.left, p.right]);
+  const a = axis(Math.min(...all), Math.max(...all));
+  const n2 = points.length;
+  const xAt = (i) => box2.x + (n2 <= 1 ? box2.w / 2 : i / (n2 - 1) * box2.w);
+  const first = points.findIndex((p) => p.date >= weekStart4);
+  if (first >= 0) {
+    const x0 = first === 0 ? box2.x : (xAt(first - 1) + xAt(first)) / 2;
+    shapes.push({ k: "rect", x: x0, y: box2.y, w: box2.x + box2.w - x0, h: box2.h, c: "band" });
+  }
+  yGrid(shapes, a, box2, "left");
+  const y = (v) => box2.y + box2.h - (v - a.lo) / (a.hi - a.lo) * box2.h;
+  for (const [key, c] of [
+    ["right", "blue"],
+    ["left", "gray"]
+  ]) {
+    const pts = points.map((p, i) => [xAt(i), y(p[key])]);
+    if (pts.length > 1) shapes.push({ k: "poly", pts, c, w: 1.6 });
+    for (const [px, py] of pts) shapes.push({ k: "dot", x: px, y: py, r: 2, c });
+  }
+  let lastX = -Infinity;
+  points.forEach((p, i) => {
+    const px = xAt(i);
+    if (px - lastX < 30) return;
+    shapes.push(text(px, box2.y + box2.h + 11, dayMonth(p.date), "middle"));
+    lastX = px;
+  });
+  shapes.push(text(4, box2.y - 10, "kg", "start"));
+  legend(shapes, box2.x, h - 6, [
+    ["blue", "Rechts", "line"],
+    ["gray", "Links", "line"]
+  ]);
+  return { w: width, h, shapes };
+}
+function energyChart(days2, weight, width = 480) {
+  const h = 180;
+  const box2 = { x: 36, y: 22, w: width - 76, h: 118 };
+  const shapes = [];
+  const kcals = days2.flatMap((d) => d.kcal === null ? [] : [d.kcal]);
+  const wv = weight.flatMap((p) => p.value === null ? [] : [p.value]);
+  const a = axis(0, Math.max(1e3, ...kcals));
+  const ax = { ...a, lo: 0 };
+  const slot = box2.w / Math.max(days2.length, 1);
+  if (days2.length >= 14)
+    shapes.push({ k: "rect", x: box2.x + 7 * slot, y: box2.y, w: 7 * slot, h: box2.h, c: "band" });
+  yGrid(shapes, ax, box2, "left");
+  const y = (v) => box2.y + box2.h - v / ax.hi * box2.h;
+  days2.forEach((d, i) => {
+    const bx = box2.x + i * slot + slot * 0.18;
+    if (d.kcal !== null)
+      shapes.push({
+        k: "rect",
+        x: bx,
+        y: y(d.kcal),
+        w: slot * 0.64,
+        h: y(0) - y(d.kcal),
+        c: i >= 7 || days2.length < 14 ? "blue" : "blueSoft"
+      });
+    shapes.push(text(bx + slot * 0.32, box2.y + box2.h + 11, dayMonth(d.date), "middle"));
+  });
+  if (wv.length) {
+    const b = axis(Math.min(...wv), Math.max(...wv));
+    yGrid(shapes, b, box2, "right", 0, false);
+    const yw = (v) => box2.y + box2.h - (v - b.lo) / (b.hi - b.lo) * box2.h;
+    const coords = weight.map(
+      (p, i) => p.value === null ? null : [box2.x + i * slot + slot / 2, yw(p.value)]
+    );
+    for (const s of segments(coords))
+      if (s.length > 1) shapes.push({ k: "poly", pts: s, c: "orange", w: 1.6 });
+    for (const p of coords) if (p) shapes.push({ k: "dot", x: p[0], y: p[1], r: 2.2, c: "orange" });
+    shapes.push(text(width - 4, box2.y - 8, "Gewicht (kg)", "end"));
+  }
+  shapes.push(text(4, box2.y - 8, "kcal", "start"));
+  legend(shapes, box2.x, h - 6, [
+    ["blue", "Aufnahme (kcal)", "box"],
+    ...wv.length ? [["orange", "Gewicht (kg)", "line"]] : []
+  ]);
+  return { w: width, h, shapes };
+}
+function macroChart(days2, width = 230) {
+  const h = 170;
+  const box2 = { x: 34, y: 26, w: width - 44, h: 110 };
+  const shapes = [];
+  const parts2 = (d) => [d.proteinG * 4, d.carbsG * 4, d.fatG * 9];
+  const totals2 = days2.map((d) => d.kcal === null ? 0 : parts2(d).reduce((x, y2) => x + y2, 0));
+  const a = axis(0, Math.max(1e3, ...totals2));
+  yGrid(shapes, { ...a, lo: 0 }, box2, "left");
+  const slot = box2.w / Math.max(days2.length, 1);
+  const y = (v) => box2.y + box2.h - v / a.hi * box2.h;
+  days2.forEach((d, i) => {
+    const bx = box2.x + i * slot + slot * 0.2;
+    if (d.kcal !== null) {
+      let acc = 0;
+      parts2(d).forEach((v, j) => {
+        if (v <= 0) return;
+        const c = j === 0 ? "protein" : j === 1 ? "carbs" : "fat";
+        shapes.push({ k: "rect", x: bx, y: y(acc + v), w: slot * 0.6, h: y(acc) - y(acc + v), c });
+        acc += v;
+      });
+    }
+    shapes.push(text(bx + slot * 0.3, box2.y + box2.h + 11, dayMonth(d.date), "middle"));
+  });
+  shapes.push(text(4, box2.y - 10, "kcal aus Makros", "start"));
+  legend(shapes, box2.x, h - 6, [
+    ["protein", "Eiwei\xDF", "box"],
+    ["carbs", "Kohlenhydrate", "box"],
+    ["fat", "Fett", "box"]
+  ]);
+  return { w: width, h, shapes };
+}
+
+// src/domain/weeklyReportHtml.ts
+var esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+var r1 = (v) => Math.round(v * 10) / 10;
+function chartSvg(chart, label) {
+  const parts2 = chart.shapes.map((s) => {
+    switch (s.k) {
+      case "rect":
+        return `<rect class="wr-f-${s.c}" x="${r1(s.x)}" y="${r1(s.y)}" width="${r1(s.w)}" height="${r1(s.h)}"/>`;
+      case "line":
+        return `<line class="wr-s-${s.c}" x1="${r1(s.x1)}" y1="${r1(s.y1)}" x2="${r1(s.x2)}" y2="${r1(s.y2)}" stroke-width="${s.w}"${s.dash ? ' stroke-dasharray="3 3"' : ""}/>`;
+      case "poly":
+        return `<polyline class="wr-s-${s.c}" fill="none" stroke-width="${s.w}" stroke-linejoin="round" stroke-linecap="round" points="${s.pts.map(([x, y]) => `${r1(x)},${r1(y)}`).join(" ")}"/>`;
+      case "dot":
+        return `<circle class="wr-f-${s.c}" cx="${r1(s.x)}" cy="${r1(s.y)}" r="${s.r}"/>`;
+      case "text":
+        return `<text class="wr-f-${s.c}" x="${r1(s.x)}" y="${r1(s.y)}" font-size="${s.size}" text-anchor="${s.anchor}"${s.bold ? ' font-weight="700"' : ""}>${esc(s.t)}</text>`;
+    }
+    return "";
+  });
+  return `<svg class="wr-chart" viewBox="0 0 ${chart.w} ${r1(chart.h)}" role="img" aria-label="${esc(label)}">${parts2.join("")}</svg>`;
+}
+var list = (items, cls = "wr-list") => items.length ? `<ul class="${cls}">${items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : "";
+var box = (title, body, kind = "") => `<div class="wr-box${kind ? ` wr-box--${kind}` : ""}"><h4>${esc(title)}</h4>${body}</div>`;
+var card = (title, body, note = "") => `<div class="wr-card"><h4>${esc(title)}</h4>${body}${note ? `<p class="wr-note">${esc(note)}</p>` : ""}</div>`;
+var head = (num3, title, sub) => `<div class="wr-head"><span class="wr-head__num">${num3}</span><div><h3>${esc(title)}</h3><p>${esc(sub)}</p></div></div>`;
+var table = (cols, rows, cls = "") => `<table class="wr-table${cls ? ` ${cls}` : ""}"><thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((r2) => `<tr>${r2.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+function tips(hints, areas) {
+  const own = hints.filter((h) => areas.includes(h.area));
+  if (own.length === 0) return `<p class="wr-muted">Keine Regel ausgel\xF6st \u2013 so weitermachen.</p>`;
+  return `<ol class="wr-olist">${own.map((h) => `<li><strong>${esc(h.title)}:</strong> ${esc(h.text)}</li>`).join("")}</ol>`;
+}
+var prioClass = (p) => p === "HOCH" ? "wr-prio wr-prio--high" : "wr-prio";
+function weeklyReportHtml(r2, opts) {
+  const kw = `KW ${r2.week}`;
+  const next = isoWeek(shiftDays(r2.weekStart, 7)).week;
+  const out = [];
+  const person = r2.person ? `Erstellt f\xFCr <strong>${esc(r2.person.name)}</strong>${r2.person.age !== null ? ` \xB7 ${r2.person.age} Jahre` : ""}${r2.person.heightCm ? ` \xB7 ${formatNumber(r2.person.heightCm, 0)} cm` : ""}` : "";
+  const stat2 = (label, value, unit) => `<div class="wr-stat"><span>${esc(label)}</span><strong>${esc(value)}</strong> <small>${esc(unit)}</small></div>`;
+  out.push(`<header class="wr-cover">
+<div class="wr-cover__logo"><img src="${esc(opts.logoUrl)}" alt="LIFESPAN OS"></div>
+<div class="wr-cover__band">
+<p class="wr-kicker">Wochenbericht \xB7 ${kw}</p>
+<h2>Fitness \xB7 Ern\xE4hrung \xB7 Schlaf &amp; Erholung</h2>
+<p class="wr-lead">Auswertung deiner LIFESPAN-OS-Daten vom ${esc(dayMonth(r2.weekStart))} bis ${esc(formatDate(r2.weekEnd))} \u2013 mit Vergleich zur Vorwoche und Hinweisen f\xFCr KW ${next}.</p>
+<div class="wr-stats">${stat2("Zeitraum", "7", "Tage")}${stat2("Einheiten", String(r2.stats.trainings), `/ ${formatNumber(r2.stats.trainingMin / 60, 1)} h`)}${stat2("Ern\xE4hrung erfasst", String(r2.stats.nutritionDays), "/ 7 Tage")}${stat2("Schlaf erfasst", String(r2.stats.sleepNights), "/ 7 N\xE4chte")}</div>
+<div class="wr-cover__foot"><span>${person}</span><span>Datenbasis <strong>${esc(rangeText2(r2.weekStart, r2.weekEnd))}</strong> \xB7 Vergleich ${esc(rangeText2(r2.prevStart, r2.prevEnd))}</span></div>
+</div>
+</header>`);
+  const kpis = r2.kpis.map(
+    (k) => `<div class="wr-kpi">${k.status ? `<i class="wr-dot wr-dot--${k.status}" title="${k.status === "reached" ? "Ziel erreicht" : "Ziel nicht erreicht"}"></i>` : ""}<span class="wr-kpi__label">${esc(k.label)}</span><strong>${esc(k.value)}</strong> <small>${esc(k.unit)}</small><span class="wr-kpi__sub">${esc(k.sub)}</span></div>`
+  ).join("");
+  const levers = r2.hints.slice(0, 4);
+  out.push(`<section class="wr-sec">${head("01", "Die Woche auf einen Blick", `Kennzahlen mit Vergleich zur Vorwoche (${rangeText2(r2.prevStart, r2.prevEnd)})`)}
+<div class="wr-kpis">${kpis}</div>
+<p class="wr-legend"><i class="wr-dot wr-dot--reached"></i> eigenes Ziel erreicht <i class="wr-dot wr-dot--missed"></i> eigenes Ziel nicht erreicht \xB7 ohne Punkt: kein Ziel hinterlegt</p>
+<div class="wr-cols">${box("Was sich verbessert hat", r2.better.length ? list(r2.better, "wr-list wr-list--good") : `<p class="wr-muted">Kein Vergleich mit Fortschritt m\xF6glich.</p>`)}${box("Was Aufmerksamkeit braucht", r2.attention.length ? list(r2.attention, "wr-list wr-list--warn") : `<p class="wr-muted">Keine Regel ausgel\xF6st.</p>`)}</div>
+${levers.length ? `<h4 class="wr-sub">Die ${levers.length === 1 ? "wichtigste Stellschraube" : `${levers.length} Hebel`} f\xFCr KW ${next}</h4><div class="wr-levers">${levers.map(
+    (h, i) => `<div class="wr-lever"><span class="wr-lever__num">${i + 1}</span><div><p class="wr-lever__title">${esc(h.title)} <span class="${prioClass(h.priority)}">${h.priority}</span></p><p>${esc(h.measure)}</p></div></div>`
+  ).join("")}</div>` : ""}
+</section>`);
+  out.push(`<section class="wr-sec">${head("02", "Schlaf & Erholung", "Schlaffenster, HRV, Ruhepuls und Selbsteinsch\xE4tzung")}
+${card("Schlaffenster pro Nacht", chartSvg(sleepWindowChart(r2.sleep.nights), "Schlaffenster pro Nacht"), r2.sleep.note)}
+${card(`HRV & Ruhepuls (hell hinterlegt: ${kw})`, chartSvg(hrvChart(r2.sleep.hrv, r2.sleep.rhr), "HRV und Ruhepuls"))}
+<div class="wr-cols">${box("Erkenntnisse", list(r2.sleep.insights), "insight")}${box("Empfehlungen", tips(r2.hints, ["Schlaf", "Erholung"]), "tip")}</div>
+</section>`);
+  out.push(`<section class="wr-sec">${head("03", "Training & Kraft", "Umfang, Progression und Belastungssignale")}
+<div class="wr-cols">${card("Trainingsminuten je Tag", chartSvg(trainingChart(r2.training.days), "Trainingsminuten je Tag"), r2.training.note)}${card(`Griffkraft (hell: ${kw})`, chartSvg(gripChart(r2.training.grip, r2.weekStart), "Griffkraft"))}</div>
+${r2.training.topSets.length ? `<h4 class="wr-sub">Top-S\xE4tze der Woche</h4>${table(
+    ["\xDCbung", "Vorwoche", kw, "Trend"],
+    r2.training.topSets.map((t) => [t.exercise, t.prev, t.cur, t.trend])
+  )}` : ""}
+<div class="wr-cols">${box("Erkenntnisse", list(r2.training.insights), "insight")}${box("Empfehlungen", tips(r2.hints, ["Training"]), "tip")}</div>
+</section>`);
+  out.push(`<section class="wr-sec">${head("04", "Ern\xE4hrung & K\xF6rper", "Energiebilanz, Makros und K\xF6rperzusammensetzung")}
+${card(`Energieaufnahme und K\xF6rpergewicht (dunkel: ${kw})`, chartSvg(energyChart(r2.nutrition.days, r2.nutrition.weight), "Energieaufnahme und K\xF6rpergewicht"), r2.nutrition.note)}
+<div class="wr-cols">${card("Makros je Tag (kcal)", chartSvg(macroChart(r2.nutrition.macros), "Makros je Tag"))}${card(
+    "K\xF6rper (Wochenmittel)",
+    r2.nutrition.body.length ? table(
+      ["Wert", "Vorwoche", kw],
+      r2.nutrition.body.map((b) => [b.label, b.prev, b.cur])
+    ) : `<p class="wr-muted">Keine K\xF6rpermesswerte in den beiden Wochen.</p>`
+  )}</div>
+<div class="wr-cols">${box("Erkenntnisse", list(r2.nutrition.insights), "insight")}${box("Empfehlungen", tips(r2.hints, ["Ern\xE4hrung"]), "tip")}</div>
+</section>`);
+  const sh = opts.showSuperhuman ? r2.superhuman : null;
+  const blocks = [];
+  if (r2.health) {
+    const parts2 = [];
+    if (r2.health.labs.length)
+      parts2.push(
+        table(
+          ["Laborwert", "Wert", "Referenz"],
+          r2.health.labs.map((l) => [
+            `${l.name} (${dayMonth(l.date)})`,
+            `${l.value}${l.outside ? " \xB7 au\xDFerhalb" : ""}`,
+            l.ref
+          ]),
+          "wr-table--small"
+        )
+      );
+    if (r2.health.glucose.length)
+      parts2.push(`<p><strong>Blutzucker:</strong> ${esc(r2.health.glucose.join(" "))}</p>`);
+    if (r2.health.vitals.length)
+      parts2.push(
+        table(
+          ["Vitalwert (Wochenmittel)", "Vorwoche", kw],
+          r2.health.vitals.map((v) => [v.label, v.prev, v.cur]),
+          "wr-table--small"
+        )
+      );
+    blocks.push(box("Gesundheitswerte", parts2.join("")));
+  }
+  if (sh) {
+    blocks.push(
+      box(
+        "Superhuman",
+        `${sh.hrt.length ? `<p class="wr-muted">HRT</p>${list(sh.hrt)}` : ""}${sh.protocol.length ? `<p class="wr-muted">Protokoll</p>${list(sh.protocol)}` : ""}`
+      )
+    );
+  }
+  blocks.push(
+    box(
+      "Supplemente",
+      r2.supplements.length ? list(r2.supplements) : `<p class="wr-muted">Keine Einnahmen erfasst.</p>`
+    )
+  );
+  const checks = opts.showSuperhuman ? r2.checks : r2.checks.filter((c) => c.area !== "HRT");
+  const fixes = opts.showSuperhuman ? r2.fixes : r2.fixes.filter((f) => !f.startsWith("Superhuman"));
+  out.push(`<section class="wr-sec">${head("05", sh ? "Gesundheit, Superhuman & Datenqualit\xE4t" : "Gesundheit, Supplemente & Datenqualit\xE4t", "Hinterlegte Werte \u2013 und was noch offen ist")}
+<div class="wr-cols">${blocks.join("")}</div>
+<h4 class="wr-sub">Datenpr\xFCfung ${kw}</h4>
+${checks.length ? `<table class="wr-table"><thead><tr><th>Bereich</th><th>Stand</th><th>Status</th></tr></thead><tbody>${checks.map(
+    (c) => `<tr><td>${esc(c.area)}</td><td>${esc(c.text)}</td><td><span class="wr-badge wr-badge--${c.status === "offen" ? "open" : "missing"}">${c.status}</span></td></tr>`
+  ).join("")}</tbody></table>` : `<p class="wr-muted">Keine Auff\xE4lligkeiten.</p>`}
+${fixes.length && checks.length ? box("So korrigierst du die offenen Punkte", `<ol class="wr-olist">${fixes.map((f) => `<li>${esc(f)}</li>`).join("")}</ol>`, "tip") : ""}
+</section>`);
+  const planRows = WR_AREAS.flatMap((area) => {
+    const own = r2.hints.filter((h) => h.area === area);
+    if (own.length === 0) return [];
+    return [
+      `<tr><th>${esc(area)}</th><td>${own.map((h) => `<span class="wr-check">${esc(h.measure)}</span>`).join("")}</td><td>${esc([...new Set(own.map((h) => h.metric))].join(" \xB7 "))}</td></tr>`
+    ];
+  });
+  out.push(`<section class="wr-sec">${head("06", `Plan f\xFCr KW ${next}`, rangeText2(shiftDays(r2.weekStart, 7), shiftDays(r2.weekEnd, 7)))}
+${planRows.length ? `<table class="wr-table wr-plan"><thead><tr><th>Bereich</th><th>Ma\xDFnahme</th><th>Messgr\xF6\xDFe in der App</th></tr></thead><tbody>${planRows.join("")}</tbody></table>` : `<p class="wr-muted">Keine Regel ausgel\xF6st \u2013 Kurs halten.</p>`}
+${r2.highlights.length ? `<div class="wr-highlights">${r2.highlights.map(
+    (h) => `<div class="wr-highlight"><span>${esc(h.label)}</span><strong>${esc(h.title)}</strong><small>${esc(h.text)}</small></div>`
+  ).join("")}</div>` : ""}
+<p class="wr-basis"><strong>Hinweis zur Datenbasis.</strong> ${esc(r2.basis)}</p>
+</section>`);
+  return `<article class="wr">${out.join("\n")}</article>`;
+}
+
+// src/domain/weeklyReportPdf.ts
+var WR_COLORS = {
+  navy: "#13305A",
+  ink: "#14233B",
+  muted: "#5B6B80",
+  line: "#DCE3EC",
+  blue: "#1E6FB8",
+  blueSoft: "#9CC3E6",
+  band: "#E8F1FA",
+  orange: "#F39A22",
+  orangeText: "#C46A00",
+  orangeSoft: "#FFF4E6",
+  gray: "#9AA5B4",
+  green: "#1D9A5B",
+  greenSoft: "#E3F4EA",
+  red: "#C0392B",
+  card: "#F6F8FB",
+  white: "#FFFFFF"
+};
+var C = Object.fromEntries(
+  Object.entries(WR_COLORS).map(([k, v]) => [k, hex(v)])
+);
+var PAINT = {
+  navy: C.navy,
+  blue: C.blue,
+  blueSoft: C.blueSoft,
+  orange: C.orange,
+  orangeSoft: C.orangeSoft,
+  gray: C.gray,
+  grid: C.line,
+  ink: C.ink,
+  muted: C.muted,
+  band: C.band,
+  protein: C.blue,
+  carbs: C.blueSoft,
+  fat: C.orange
+};
+var M2 = 40;
+var CW = A4_W - 2 * M2;
+var TOP = 70;
+var BOTTOM2 = A4_H - 52;
+var safe = (t) => t.replace(/≥/g, ">=").replace(/≤/g, "<=").replace(/→/g, "\xBB").replace(/\u202f/g, " ");
+var Writer = class {
+  constructor(r2, logo) {
+    __publicField(this, "r", r2);
+    __publicField(this, "doc", new PdfDoc());
+    __publicField(this, "page");
+    __publicField(this, "y", TOP);
+    __publicField(this, "logoName");
+    __publicField(this, "logoRatio");
+    this.logoName = logo ? this.doc.addImage(logo) : null;
+    this.logoRatio = logo ? logo.height / logo.width : 0.83;
+  }
+  logo(x, y, w) {
+    if (this.logoName) this.page.image(this.logoName, x, y, w, w * this.logoRatio);
+  }
+  // ------------------------------------------------------------ Seiten
+  cover() {
+    const r2 = this.r;
+    this.page = this.doc.addPage();
+    const p = this.page;
+    const bandY = 330;
+    if (this.logoName) this.logo((A4_W - 250) / 2, 50, 250);
+    else
+      p.text(A4_W / 2, 180, "LIFESPAN OS", {
+        size: 34,
+        bold: true,
+        color: C.navy,
+        align: "center"
+      });
+    p.rect(0, bandY, A4_W, A4_H - bandY, { fill: C.navy });
+    this.gradient(0, bandY, A4_W, 3);
+    let y = bandY + 50;
+    p.text(M2 + 10, y, safe(`WOCHENBERICHT \xB7 KW ${r2.week}`), {
+      size: 8.5,
+      bold: true,
+      color: C.orange
+    });
+    y += 34;
+    p.text(M2 + 10, y, "Fitness \xB7 Ern\xE4hrung \xB7 Schlaf", { size: 26, bold: true, color: C.white });
+    y += 30;
+    p.text(M2 + 10, y, "& Erholung", { size: 26, bold: true, color: C.white });
+    y += 24;
+    const next = isoWeek(shiftDays(r2.weekStart, 7)).week;
+    for (const line of wrapToWidth(
+      safe(
+        `Auswertung deiner LIFESPAN-OS-Daten vom ${dayMonth(r2.weekStart)} bis ${formatDate(r2.weekEnd)} \u2013 mit Vergleich zur Vorwoche und Hinweisen f\xFCr KW ${next}.`
+      ),
+      CW - 120,
+      10.5
+    )) {
+      p.text(M2 + 10, y, line, { size: 10.5, color: C.white });
+      y += 15;
+    }
+    y += 30;
+    const stats2 = [
+      ["ZEITRAUM", "7", "Tage"],
+      ["EINHEITEN", String(r2.stats.trainings), `/ ${formatNumber(r2.stats.trainingMin / 60, 1)} h`],
+      ["ERN\xC4HRUNG ERFASST", String(r2.stats.nutritionDays), "/ 7 Tage"],
+      ["SCHLAF ERFASST", String(r2.stats.sleepNights), "/ 7 N\xE4chte"]
+    ];
+    const colW = (CW - 20) / 4;
+    stats2.forEach(([label, value, unit], i) => {
+      const x = M2 + 10 + i * colW;
+      p.line(x, y, x + colW - 12, y, hex("#3A5680"), 0.6);
+      p.text(x, y + 14, label, { size: 6.5, color: hex("#A9C1DD") });
+      p.text(x, y + 34, value, { size: 16, bold: true, color: C.white });
+      p.text(x + textWidth(value, 16, true) + 4, y + 34, unit, { size: 8, color: hex("#C9DCEB") });
+    });
+    const footY = A4_H - 45;
+    p.line(M2 + 10, footY - 16, A4_W - M2 - 10, footY - 16, hex("#3A5680"), 0.6);
+    if (r2.person) {
+      const who = `Erstellt f\xFCr ${r2.person.name}${r2.person.age !== null ? ` \xB7 ${r2.person.age} Jahre` : ""}${r2.person.heightCm ? ` \xB7 ${formatNumber(r2.person.heightCm, 0)} cm` : ""}`;
+      p.text(M2 + 10, footY, safe(who), { size: 7.5, color: hex("#C9DCEB") });
+    }
+    p.text(
+      A4_W - M2 - 10,
+      footY,
+      safe(
+        `Datenbasis ${rangeText2(r2.weekStart, r2.weekEnd)} \xB7 Vergleich ${rangeText2(r2.prevStart, r2.prevEnd)}`
+      ),
+      { size: 7.5, color: hex("#C9DCEB"), align: "right" }
+    );
+  }
+  newPage() {
+    this.page = this.doc.addPage();
+    const p = this.page;
+    this.logo(M2, 16, 30);
+    p.text(M2 + (this.logoName ? 36 : 0), 36, "LIFESPAN OS", { size: 9, bold: true, color: C.navy });
+    p.text(A4_W - M2, 36, safe(weeklyReportTitle(this.r)), {
+      size: 7.5,
+      color: C.muted,
+      align: "right"
+    });
+    p.line(0, 50, A4_W, 50, C.line, 0.6);
+    this.y = TOP;
+  }
+  /** Verlaufslinie Blau → Orange. */
+  gradient(x, y, w, h) {
+    const steps = 40;
+    for (let i = 0; i < steps; i++) {
+      const t = i / (steps - 1);
+      const c = [0, 1, 2].map(
+        (k) => C.blue[k] + (C.orange[k] - C.blue[k]) * t
+      );
+      this.page.rect(x + w / steps * i, y, w / steps + 0.5, h, { fill: c });
+    }
+  }
+  footers() {
+    const total = this.doc.pages.length;
+    this.doc.pages.forEach((p, i) => {
+      if (i === 0) return;
+      const save = this.page;
+      this.page = p;
+      this.gradient(0, A4_H - 38, A4_W, 2);
+      p.text(M2, A4_H - 22, "LIFESPAN OS \xB7 Power to the People", { size: 7.5, color: C.muted });
+      p.text(A4_W - M2, A4_H - 22, `${i + 1}`, {
+        size: 8,
+        bold: true,
+        color: C.navy,
+        align: "right"
+      });
+      this.page = save;
+    });
+    void total;
+  }
+  ensure(h) {
+    if (this.y + h > BOTTOM2) this.newPage();
+  }
+  // ------------------------------------------------------------ Bausteine
+  section(num3, title, sub) {
+    this.newPage();
+    const p = this.page;
+    p.text(M2, this.y + 30, num3, { size: 32, bold: true, color: C.orange });
+    p.text(M2 + 56, this.y + 16, safe(title), { size: 18, bold: true, color: C.navy });
+    p.text(M2 + 56, this.y + 30, safe(sub), { size: 8.5, color: C.muted });
+    this.y += 50;
+  }
+  sub(title) {
+    this.ensure(30);
+    this.page.text(M2, this.y + 12, safe(title), { size: 10.5, bold: true, color: C.navy });
+    this.y += 22;
+  }
+  /** Höhe eines Textblocks. */
+  linesOf(text2, width, size, bold = false) {
+    return wrapToWidth(safe(text2), width, size, bold);
+  }
+  /** Aufzählung mit Punkten; Rückgabe: Höhe. `draw=false` misst nur. */
+  bullets(items, x, y, w, dot, draw, numbered = false) {
+    const size = 8.3;
+    const lh = 11.2;
+    let cy = y;
+    items.forEach((item2, i) => {
+      const lines = this.linesOf(item2, w - 14, size);
+      if (draw) {
+        if (numbered) this.page.text(x, cy + 8, `${i + 1}.`, { size, bold: true, color: C.ink });
+        else this.page.circle(x + 3, cy + 5.2, 2.6, dot);
+        lines.forEach((l, j) => this.page.text(x + 13, cy + 8 + j * lh, l, { size, color: C.ink }));
+      }
+      cy += lines.length * lh + 4;
+    });
+    return cy - y;
+  }
+  /** Kasten mit Titel und Aufzählung; Rückgabe: Höhe. */
+  boxHeight(items, w, numbered = false) {
+    return 30 + (items.length ? this.bullets(items, 0, 0, w - 24, C.blue, false, numbered) : 12) + 6;
+  }
+  box(x, y, w, h, title, items, kind, numbered = false, empty = "\u2013") {
+    const p = this.page;
+    const fill = kind === "insight" ? C.band : kind === "tip" ? C.orangeSoft : C.card;
+    p.rect(x, y, w, h, { fill, stroke: kind === "plain" ? C.line : void 0, radius: 6 });
+    if (kind !== "plain") p.rect(x, y, 3, h, { fill: kind === "insight" ? C.blue : C.orange });
+    p.text(x + 12, y + 19, safe(title), {
+      size: 10.5,
+      bold: true,
+      color: kind === "tip" ? C.orangeText : C.navy
+    });
+    if (items.length)
+      this.bullets(
+        items,
+        x + 12,
+        y + 28,
+        w - 24,
+        kind === "tip" ? C.orange : C.blue,
+        true,
+        numbered
+      );
+    else p.text(x + 12, y + 38, safe(empty), { size: 8.3, color: C.muted });
+  }
+  /** Zwei Kästen nebeneinander. */
+  boxes(left, right) {
+    const w = (CW - 12) / 2;
+    const h = Math.max(
+      this.boxHeight(left.items, w, left.numbered),
+      this.boxHeight(right.items, w, right.numbered)
+    );
+    this.ensure(h + 10);
+    this.box(M2, this.y, w, h, left.title, left.items, left.kind, left.numbered, left.empty);
+    this.box(
+      M2 + w + 12,
+      this.y,
+      w,
+      h,
+      right.title,
+      right.items,
+      right.kind,
+      right.numbered,
+      right.empty
+    );
+    this.y += h + 14;
+  }
+  /** Diagramm in einer Karte; `x`/`w` für halbe Breite. */
+  chartCard(title, chart, note, x = M2, w = CW, sideBySide = false) {
+    const inner = w - 24;
+    const scale = inner / chart.w;
+    const noteLines = note ? this.linesOf(note, inner, 7.3) : [];
+    const h = 32 + chart.h * scale + (noteLines.length ? noteLines.length * 9.5 + 8 : 6);
+    if (!sideBySide) this.ensure(h + 10);
+    const p = this.page;
+    const y = this.y;
+    p.rect(x, y, w, h, { stroke: C.line, width: 0.6, radius: 6, fill: C.white });
+    p.text(x + 12, y + 19, safe(title), { size: 10, bold: true, color: C.navy });
+    this.drawChart(chart, x + 12, y + 28, scale);
+    noteLines.forEach(
+      (l, i) => p.text(x + 12, y + 32 + chart.h * scale + 8 + i * 9.5, l, { size: 7.3, color: C.muted })
+    );
+    if (!sideBySide) this.y += h + 12;
+    return h;
+  }
+  drawChart(chart, ox, oy, s) {
+    const p = this.page;
+    for (const sh of chart.shapes) {
+      switch (sh.k) {
+        case "rect":
+          if (sh.h > 0 && sh.w > 0)
+            p.rect(ox + sh.x * s, oy + sh.y * s, sh.w * s, sh.h * s, { fill: PAINT[sh.c] });
+          break;
+        case "line":
+          p.line(
+            ox + sh.x1 * s,
+            oy + sh.y1 * s,
+            ox + sh.x2 * s,
+            oy + sh.y2 * s,
+            PAINT[sh.c],
+            sh.w * s,
+            sh.dash ? 2 : void 0
+          );
+          break;
+        case "poly":
+          p.polyline(
+            sh.pts.map(([x, y]) => [ox + x * s, oy + y * s]),
+            PAINT[sh.c],
+            sh.w * s
+          );
+          break;
+        case "dot":
+          p.circle(ox + sh.x * s, oy + sh.y * s, sh.r * s, PAINT[sh.c]);
+          break;
+        case "text":
+          p.text(ox + sh.x * s, oy + sh.y * s, safe(sh.t), {
+            size: sh.size * s,
+            bold: sh.bold,
+            color: PAINT[sh.c],
+            align: sh.anchor === "middle" ? "center" : sh.anchor === "end" ? "right" : "left"
+          });
+          break;
+      }
+    }
+  }
+  /** Tabelle mit Kopfzeile; `widths` als Anteile von `w`. */
+  table(cols, rows, widths, opts = {}) {
+    const x0 = opts.x ?? M2;
+    const w = opts.w ?? CW;
+    const size = 7.8;
+    const lh = 10;
+    const ws = widths.map((f) => f * w);
+    const headH = 20;
+    this.ensure(headH + 24);
+    const drawHead = () => {
+      let x = x0;
+      cols.forEach((c, i) => {
+        this.page.text(x + 4, this.y + 12, safe(c.toUpperCase()), {
+          size: 6.5,
+          bold: true,
+          color: C.muted
+        });
+        x += ws[i];
+      });
+      this.page.line(x0, this.y + headH - 2, x0 + w, this.y + headH - 2, C.navy, 1);
+      this.y += headH;
+    };
+    drawHead();
+    rows.forEach((row, ri) => {
+      const marks = [];
+      const cells = row.map((c, i) => {
+        const indent = opts.checkCol === i ? 11 : 0;
+        const out = [];
+        const starts = [];
+        for (const part of c.split("\n")) {
+          starts.push(out.length);
+          out.push(
+            ...this.linesOf(part, ws[i] - 8 - indent, size, opts.firstBold === true && i === 0)
+          );
+        }
+        marks[i] = starts;
+        return out;
+      });
+      const h = Math.max(...cells.map((l) => l.length)) * lh + 8;
+      if (this.y + h > BOTTOM2) {
+        this.newPage();
+        drawHead();
+      }
+      if (ri % 2 === 1) this.page.rect(x0, this.y, w, h, { fill: C.card });
+      let x = x0;
+      cells.forEach((lines, i) => {
+        if (opts.badgeCol === i) {
+          const t = row[i] ?? "";
+          const open = t === "offen";
+          const bw = textWidth(t, 6.8, true) + 10;
+          this.page.rect(x + 4, this.y + 4, bw, 11, {
+            fill: open ? hex("#FDECEA") : C.orangeSoft,
+            radius: 5.5
+          });
+          this.page.text(x + 9, this.y + 12, t, {
+            size: 6.8,
+            bold: true,
+            color: open ? C.red : C.orangeText
+          });
+        } else {
+          const indent = opts.checkCol === i ? 11 : 0;
+          if (opts.checkCol === i)
+            for (const j of marks[i] ?? [])
+              this.page.rect(x + 4, this.y + 4 + j * lh, 7, 7, {
+                stroke: C.blue,
+                width: 0.8,
+                radius: 1.5
+              });
+          lines.forEach(
+            (l, j) => this.page.text(x + 4 + indent, this.y + 11 + j * lh, l, {
+              size,
+              bold: opts.firstBold === true && i === 0,
+              color: C.ink
+            })
+          );
+        }
+        x += ws[i];
+      });
+      this.page.line(x0, this.y + h, x0 + w, this.y + h, C.line, 0.5);
+      this.y += h;
+    });
+    this.y += 12;
+  }
+  paragraph(text2, size = 8, color = C.muted) {
+    const lines = this.linesOf(text2, CW, size);
+    this.ensure(lines.length * (size + 3) + 6);
+    lines.forEach((l) => {
+      this.page.text(M2, this.y + size, l, { size, color });
+      this.y += size + 3;
+    });
+    this.y += 6;
+  }
+};
+function weeklyReportToPdf(r2, opts) {
+  const w = new Writer(r2, opts.logo);
+  const kw = `KW ${r2.week}`;
+  const next = isoWeek(shiftDays(r2.weekStart, 7)).week;
+  const tipsOf = (areas) => r2.hints.filter((h) => areas.includes(h.area)).map((h) => `${h.title}: ${h.text}`);
+  w.cover();
+  w.section(
+    "01",
+    "Die Woche auf einen Blick",
+    `Kennzahlen mit Vergleich zur Vorwoche (${rangeText2(r2.prevStart, r2.prevEnd)})`
+  );
+  {
+    const gap = 8;
+    const cw = (CW - 3 * gap) / 4;
+    const ch = 62;
+    r2.kpis.forEach((k, i) => {
+      const col = i % 4;
+      const row = Math.floor(i / 4);
+      const x = M2 + col * (cw + gap);
+      const y = w.y + row * (ch + gap);
+      const p2 = w.page;
+      p2.rect(x, y, cw, ch, { stroke: C.line, width: 0.6, radius: 6, fill: C.white });
+      p2.text(x + 9, y + 14, safe(k.label.toUpperCase()), { size: 6.3, bold: true, color: C.muted });
+      if (k.status) p2.circle(x + cw - 10, y + 11, 3, k.status === "reached" ? C.green : C.orange);
+      p2.text(x + 9, y + 36, safe(k.value), { size: 17, bold: true, color: C.navy });
+      if (k.unit)
+        p2.text(x + 12 + textWidth(safe(k.value), 17, true), y + 36, safe(k.unit), {
+          size: 8,
+          color: C.navy
+        });
+      w.linesOf(k.sub, cw - 16, 6.5).slice(0, 2).forEach((l, j) => p2.text(x + 9, y + 47 + j * 8, l, { size: 6.5, color: C.muted }));
+    });
+    w.y += Math.ceil(r2.kpis.length / 4) * (ch + gap) + 2;
+    const p = w.page;
+    p.circle(M2 + 3, w.y + 4, 3, C.green);
+    p.text(M2 + 10, w.y + 6.5, "eigenes Ziel erreicht", { size: 7, color: C.muted });
+    p.circle(M2 + 95, w.y + 4, 3, C.orange);
+    p.text(M2 + 102, w.y + 6.5, "eigenes Ziel nicht erreicht \xB7 ohne Punkt: kein Ziel hinterlegt", {
+      size: 7,
+      color: C.muted
+    });
+    w.y += 18;
+  }
+  {
+    const bw = (CW - 12) / 2;
+    const better2 = r2.better;
+    const attention = r2.attention;
+    const h = Math.max(w.boxHeight(better2, bw), w.boxHeight(attention, bw));
+    w.ensure(h + 10);
+    w.box(
+      M2,
+      w.y,
+      bw,
+      h,
+      "Was sich verbessert hat",
+      [],
+      "plain",
+      false,
+      better2.length ? "" : "Kein Vergleich mit Fortschritt m\xF6glich."
+    );
+    if (better2.length) w.bullets(better2, M2 + 12, w.y + 28, bw - 24, C.green, true);
+    w.box(
+      M2 + bw + 12,
+      w.y,
+      bw,
+      h,
+      "Was Aufmerksamkeit braucht",
+      [],
+      "plain",
+      false,
+      attention.length ? "" : "Keine Regel ausgel\xF6st."
+    );
+    if (attention.length) w.bullets(attention, M2 + bw + 24, w.y + 28, bw - 24, C.orange, true);
+    w.y += h + 16;
+  }
+  const levers = r2.hints.slice(0, 4);
+  if (levers.length) {
+    w.sub(
+      levers.length === 1 ? `Die wichtigste Stellschraube f\xFCr KW ${next}` : `Die ${levers.length} Hebel f\xFCr KW ${next}`
+    );
+    const lw = (CW - 12) / 2;
+    const heights = levers.map((h) => 30 + w.linesOf(h.measure, lw - 64, 8.3).length * 11);
+    for (let i = 0; i < levers.length; i += 2) {
+      const lh = Math.max(heights[i] ?? 0, heights[i + 1] ?? 0, 52);
+      w.ensure(lh + 10);
+      for (let j = i; j < Math.min(i + 2, levers.length); j++) {
+        const h = levers[j];
+        const x = M2 + (j - i) * (lw + 12);
+        const p = w.page;
+        p.rect(x, w.y, lw, lh, { stroke: C.line, width: 0.6, radius: 6, fill: C.white });
+        p.circle(x + 24, w.y + lh / 2, 13, C.navy);
+        p.text(x + 24, w.y + lh / 2 + 4.5, String(j + 1), {
+          size: 12,
+          bold: true,
+          color: C.white,
+          align: "center"
+        });
+        p.text(x + 46, w.y + 18, safe(h.title), { size: 10, bold: true, color: C.navy });
+        const tx = x + 52 + textWidth(safe(h.title), 10, true);
+        const high = h.priority === "HOCH";
+        p.rect(tx, w.y + 9, textWidth(h.priority, 6.5, true) + 10, 11, {
+          fill: high ? hex("#FDECEA") : C.orangeSoft,
+          radius: 3
+        });
+        p.text(tx + 5, w.y + 17, h.priority, {
+          size: 6.5,
+          bold: true,
+          color: high ? C.red : C.orangeText
+        });
+        w.linesOf(h.measure, lw - 64, 8.3).forEach(
+          (l, k) => p.text(x + 46, w.y + 32 + k * 11, l, { size: 8.3, color: C.ink })
+        );
+      }
+      w.y += lh + 10;
+    }
+  }
+  w.section("02", "Schlaf & Erholung", "Schlaffenster, HRV, Ruhepuls und Selbsteinsch\xE4tzung");
+  w.chartCard("Schlaffenster pro Nacht", sleepWindowChart(r2.sleep.nights), r2.sleep.note);
+  w.chartCard(`HRV & Ruhepuls (hell hinterlegt: ${kw})`, hrvChart(r2.sleep.hrv, r2.sleep.rhr), "");
+  w.boxes(
+    { title: "Erkenntnisse", items: r2.sleep.insights, kind: "insight" },
+    {
+      title: "Empfehlungen",
+      items: tipsOf(["Schlaf", "Erholung"]),
+      kind: "tip",
+      numbered: true,
+      empty: "Keine Regel ausgel\xF6st \u2013 so weitermachen."
+    }
+  );
+  w.section("03", "Training & Kraft", "Umfang, Progression und Belastungssignale");
+  {
+    const hw = (CW - 12) / 2;
+    const c1 = trainingChart(r2.training.days);
+    const c2 = gripChart(r2.training.grip, r2.weekStart);
+    const y0 = w.y;
+    const h1 = w.chartCard("Trainingsminuten je Tag", c1, r2.training.note, M2, hw, true);
+    const h2 = w.chartCard(`Griffkraft (hell: ${kw})`, c2, "", M2 + hw + 12, hw, true);
+    w.y = y0 + Math.max(h1, h2) + 14;
+  }
+  if (r2.training.topSets.length) {
+    w.sub("Top-S\xE4tze der Woche");
+    w.table(
+      ["\xDCbung", "Vorwoche", kw, "Trend"],
+      r2.training.topSets.map((t) => [t.exercise, t.prev, t.cur, t.trend]),
+      [0.27, 0.29, 0.32, 0.12]
+    );
+  }
+  w.boxes(
+    { title: "Erkenntnisse", items: r2.training.insights, kind: "insight" },
+    {
+      title: "Empfehlungen",
+      items: tipsOf(["Training"]),
+      kind: "tip",
+      numbered: true,
+      empty: "Keine Regel ausgel\xF6st \u2013 so weitermachen."
+    }
+  );
+  w.section("04", "Ern\xE4hrung & K\xF6rper", "Energiebilanz, Makros und K\xF6rperzusammensetzung");
+  w.chartCard(
+    `Energieaufnahme und K\xF6rpergewicht (dunkel: ${kw})`,
+    energyChart(r2.nutrition.days, r2.nutrition.weight),
+    r2.nutrition.note
+  );
+  {
+    const hw = (CW - 12) / 2;
+    const y0 = w.y;
+    const h1 = w.chartCard("Makros je Tag (kcal)", macroChart(r2.nutrition.macros), "", M2, hw, true);
+    const x = M2 + hw + 12;
+    const p = w.page;
+    const rows = r2.nutrition.body;
+    const th = 30 + 20 + rows.length * 18 + (rows.length ? 6 : 20);
+    const h = Math.max(h1, th);
+    p.rect(x, y0, hw, h, { stroke: C.line, width: 0.6, radius: 6, fill: C.white });
+    p.text(x + 12, y0 + 19, "K\xF6rper (Wochenmittel)", { size: 10, bold: true, color: C.navy });
+    if (rows.length) {
+      w.y = y0 + 28;
+      w.table(
+        ["Wert", "Vorwoche", kw],
+        rows.map((b) => [b.label, b.prev, b.cur]),
+        [0.44, 0.28, 0.28],
+        {
+          x: x + 8,
+          w: hw - 16
+        }
+      );
+    } else
+      p.text(x + 12, y0 + 40, "Keine K\xF6rpermesswerte in den beiden Wochen.", {
+        size: 8,
+        color: C.muted
+      });
+    w.y = y0 + h + 14;
+  }
+  w.boxes(
+    { title: "Erkenntnisse", items: r2.nutrition.insights, kind: "insight" },
+    {
+      title: "Empfehlungen",
+      items: tipsOf(["Ern\xE4hrung"]),
+      kind: "tip",
+      numbered: true,
+      empty: "Keine Regel ausgel\xF6st \u2013 so weitermachen."
+    }
+  );
+  const sh = opts.showSuperhuman ? r2.superhuman : null;
+  w.section(
+    "05",
+    sh ? "Gesundheit, Superhuman & Datenqualit\xE4t" : "Gesundheit, Supplemente & Datenqualit\xE4t",
+    "Hinterlegte Werte \u2013 und was noch offen ist"
+  );
+  {
+    const left = [];
+    if (r2.health) {
+      for (const l of r2.health.labs)
+        left.push(
+          `${l.name} (${dayMonth(l.date)}): ${l.value}${l.ref !== "\u2013" ? ` \xB7 Referenz ${l.ref}` : ""}${l.outside ? " \xB7 au\xDFerhalb" : ""}`
+        );
+      for (const g of r2.health.glucose) left.push(`Blutzucker: ${g}`);
+      for (const v of r2.health.vitals) left.push(`${v.label}: ${v.cur} (Vorwoche ${v.prev})`);
+    }
+    const right = [];
+    if (sh) {
+      for (const h of sh.hrt) right.push(`HRT ${h}`);
+      for (const pr of sh.protocol) right.push(pr);
+    }
+    if (left.length && right.length) {
+      w.boxes(
+        { title: "Gesundheitswerte", items: left, kind: "plain" },
+        { title: "Superhuman", items: right, kind: "plain" }
+      );
+      const items = r2.supplements.length ? r2.supplements : ["Keine Einnahmen erfasst."];
+      const h = w.boxHeight(items, CW);
+      w.ensure(h + 8);
+      w.box(M2, w.y, CW, h, "Supplemente", items, "plain");
+      w.y += h + 14;
+    } else {
+      const first = left.length ? { title: "Gesundheitswerte", items: left, kind: "plain" } : right.length ? { title: "Superhuman", items: right, kind: "plain" } : {
+        title: "Gesundheitswerte",
+        items: [],
+        kind: "plain",
+        empty: "Keine Werte hinterlegt."
+      };
+      w.boxes(first, {
+        title: "Supplemente",
+        items: r2.supplements,
+        kind: "plain",
+        empty: "Keine Einnahmen erfasst."
+      });
+    }
+  }
+  const checks = opts.showSuperhuman ? r2.checks : r2.checks.filter((c) => c.area !== "HRT");
+  const fixes = opts.showSuperhuman ? r2.fixes : r2.fixes.filter((f) => !f.startsWith("Superhuman"));
+  w.sub(`Datenpr\xFCfung ${kw}`);
+  if (checks.length) {
+    w.table(
+      ["Bereich", "Stand", "Status"],
+      checks.map((c) => [c.area, c.text, c.status]),
+      [0.18, 0.67, 0.15],
+      { badgeCol: 2 }
+    );
+    if (fixes.length) {
+      const h = w.boxHeight(fixes, CW, true);
+      w.ensure(h + 8);
+      w.box(M2, w.y, CW, h, "So korrigierst du die offenen Punkte", fixes, "tip", true);
+      w.y += h + 12;
+    }
+  } else w.paragraph("Keine Auff\xE4lligkeiten.");
+  w.section(
+    "06",
+    `Plan f\xFCr KW ${next}`,
+    rangeText2(shiftDays(r2.weekStart, 7), shiftDays(r2.weekEnd, 7))
+  );
+  const planRows = WR_AREAS.flatMap((area) => {
+    const own = r2.hints.filter((h) => h.area === area);
+    if (own.length === 0) return [];
+    return [
+      [
+        area,
+        own.map((h) => h.measure).join("\n"),
+        [...new Set(own.map((h) => h.metric))].join("\n")
+      ]
+    ];
+  });
+  if (planRows.length) {
+    w.table(["Bereich", "Ma\xDFnahme", "Messgr\xF6\xDFe in der App"], planRows, [0.15, 0.45, 0.4], {
+      firstBold: true,
+      checkCol: 1
+    });
+  } else w.paragraph("Keine Regel ausgel\xF6st \u2013 Kurs halten.");
+  if (r2.highlights.length) {
+    const n2 = r2.highlights.length;
+    const hw = (CW - (n2 - 1) * 10) / n2;
+    w.ensure(74);
+    r2.highlights.forEach((h, i) => {
+      const x = M2 + i * (hw + 10);
+      const p = w.page;
+      p.rect(x, w.y, hw, 66, { stroke: C.line, width: 0.6, radius: 6, fill: C.white });
+      p.text(x + 10, w.y + 15, safe(h.label.toUpperCase()), {
+        size: 6.3,
+        bold: true,
+        color: C.muted
+      });
+      const title = w.linesOf(h.title, hw - 20, 12, true)[0] ?? "";
+      p.text(x + 10, w.y + 33, title, { size: 12, bold: true, color: C.navy });
+      w.linesOf(h.text, hw - 20, 7).slice(0, 2).forEach((t, k) => p.text(x + 10, w.y + 46 + k * 9, t, { size: 7, color: C.muted }));
+    });
+    w.y += 80;
+  }
+  w.page.line(M2, w.y, M2 + CW, w.y, C.line, 0.6);
+  w.y += 8;
+  w.paragraph(`Hinweis zur Datenbasis. ${r2.basis}`, 7.5, C.ink);
+  w.footers();
+  return w.doc.toBytes(weeklyReportTitle(r2).replace(/–/g, "-"));
 }
 export {
   AKH_REFERENCES,
@@ -17737,6 +18960,7 @@ export {
   labImport_exports as labImport,
   labReferenceIntl_exports as labIntl,
   labels_exports as labelsAll,
+  lastCompletedWeek,
   legendLabels,
   lifestyleCategoryLabel,
   lifetime_exports as lifetime,
@@ -17768,6 +18992,7 @@ export {
   parseLayout,
   parseMuscleMapSettings,
   parseReminderSettings,
+  parseWeeklyReport,
   pendingKinds,
   perServing,
   percentText,
@@ -17819,6 +19044,11 @@ export {
   weekdayName,
   weeklyAnalysis,
   weeklyMuscleSets,
+  rangeText2 as weeklyRangeText,
+  weeklyReportFileName,
+  weeklyReportHtml,
+  weeklyReportTitle,
+  weeklyReportToPdf,
   withDayMacros,
   withDefaultRanges,
   withProteinFromWeight,

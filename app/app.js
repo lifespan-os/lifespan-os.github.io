@@ -21,6 +21,7 @@ import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overv
 import { initLogs, logsActions, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
 import { initInsights, insightsActions, viewInsights } from "./insightsview.js";
+import { initWeeklyReports, weeklyReportsActions } from "./weeklyreports.js";
 import { initTodos, todoActions, todoChange, todoInput, viewChecklistEdit, viewTodos } from "./todos.js";
 import * as TD from "./todosdata.js";
 import { initHealth, healthActions, healthChange, healthInput, viewHealth, viewLabEdit } from "./health.js";
@@ -1435,6 +1436,7 @@ const actions = {
   ...overviewActions,
   ...logsActions,
   ...insightsActions,
+  ...weeklyReportsActions,
   ...todoActions,
   ...icoachActions,
   ...healthActions,
@@ -2692,6 +2694,7 @@ initBls(moduleCtx);
 initOverview({ ...moduleCtx, S, today: todayIso });
 initLogs(moduleCtx);
 initInsights(moduleCtx);
+initWeeklyReports(moduleCtx);
 initTodos(moduleCtx);
 initICoach(moduleCtx);
 initHealth(moduleCtx);

@@ -4,6 +4,7 @@
 // in der Anordnung vom PC (Settings `ui.insights_layout`). Nur Ansicht; gerechnet mit den
 // Regeln aus pcdomain.js (= src/domain), Daten aus pcoverview.js (wie insights.rs).
 
+import { arrangeCards } from "./layoutedit.js";
 import * as O from "./pcoverview.js";
 import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
@@ -257,8 +258,7 @@ export function viewInsights() {
   cards.push({ id: "associations", node: associationsCard(longData, t) });
   cards.push({ id: "coverage", node: coverageCard(longData, t) });
 
-  const layout = D.parseLayout(db.settings.get(D.INSIGHTS_LAYOUT_KEY) ?? null);
-  const arranged = D.arrange(cards, layout);
+  const arranged = arrangeCards(db, D.INSIGHTS_LAYOUT_KEY, cards);
   return `${X.header("Insights")}<main class="wrap">
     <p class="muted small">Wochenrückblick und vorsichtige Beobachtungen – ausschließlich aus deinen tatsächlich erfassten Daten. Die Auswertungen beschreiben nur deine Einträge. Sie sind keine Diagnose, treffen keine Aussagen über biologisches Alter und ersetzen keine ärztliche Beratung.</p>
     <section class="card day-nav">

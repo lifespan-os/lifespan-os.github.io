@@ -3,6 +3,7 @@
 // recipe_item, settings), Prüfregeln wie die CHECK-Regeln der Migrationen.
 
 import { LABEL_KEYS, extrasNote, guessName, validBarcode } from "./label.js";
+import { appDay } from "./appday.js";
 
 const pad = (n) => String(n).padStart(2, "0");
 const localDate = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -723,4 +724,5 @@ export function pruneLocal(catalog, local, today = localDate()) {
   return local;
 }
 
-export { localDate as nutritionDate };
+/** „Heute“ für die Ernährung: mit dem Tageswechsel wie am PC (1.48.0). */
+export const nutritionDate = () => appDay();

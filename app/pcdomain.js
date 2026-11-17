@@ -58,6 +58,9 @@ function parseInteger(input) {
   const value = input.trim();
   return INTEGER.test(value) ? Number(value) : Number.NaN;
 }
+function formatForInput(value) {
+  return Number.isInteger(value) ? String(value) : formatNumber(value, 1);
+}
 function addDaysIso(iso2, days2) {
   const date = parseIsoDate(iso2);
   date.setDate(date.getDate() + days2);
@@ -2037,6 +2040,26 @@ function describeSupplements(items) {
 }
 
 // src/domain/profile.ts
+var NAME_MAX_CHARS = 60;
+var HEIGHT_MIN_CM = 100;
+var HEIGHT_MAX_CM = 250;
+var BIRTH_YEAR_MIN = 1900;
+var LIFE_PHASE_OPTIONS = [
+  { value: "", label: "Nicht zutreffend" },
+  { value: "pregnant_1", label: "Schwanger 1. Trimester" },
+  { value: "pregnant_2", label: "Schwanger 2. Trimester" },
+  { value: "pregnant_3", label: "Schwanger 3. Trimester" },
+  { value: "lactating", label: "Stillend" }
+];
+var LIFE_PHASES = ["pregnant_1", "pregnant_2", "pregnant_3", "lactating"];
+function isLifePhase(value) {
+  return typeof value === "string" && LIFE_PHASES.includes(value);
+}
+var SEX_OPTIONS = [
+  { value: "", label: "Keine Angabe" },
+  { value: "male", label: "M\xE4nnlich" },
+  { value: "female", label: "Weiblich" }
+];
 var ISO_DATE2 = /^(\d{4})-(\d{2})-(\d{2})$/;
 function isRealDate(text) {
   const m = ISO_DATE2.exec(text);
@@ -2044,6 +2067,60 @@ function isRealDate(text) {
   const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
   const date = new Date(Date.UTC(y, mo - 1, d));
   return date.getUTCFullYear() === y && date.getUTCMonth() === mo - 1 && date.getUTCDate() === d;
+}
+function validateProfile(draft, today) {
+  const errors = {};
+  const name = draft.name.trim();
+  if (name === "") {
+    errors.name = "Bitte einen Namen eingeben.";
+  } else if ([...name].length > NAME_MAX_CHARS) {
+    errors.name = `Der Name darf h\xF6chstens ${NAME_MAX_CHARS} Zeichen haben.`;
+  }
+  const height = parseDecimal(draft.height);
+  if (Number.isNaN(height)) {
+    errors.height = "Bitte die K\xF6rpergr\xF6\xDFe als Zahl in cm eingeben, z. B. 180 oder 180,5.";
+  } else if (height < HEIGHT_MIN_CM || height > HEIGHT_MAX_CM) {
+    errors.height = `Die K\xF6rpergr\xF6\xDFe muss zwischen ${HEIGHT_MIN_CM} und ${HEIGHT_MAX_CM} cm liegen.`;
+  }
+  const birthDate = draft.birthDate.trim();
+  if (birthDate === "") {
+    errors.birthDate = "Bitte das Geburtsdatum eingeben.";
+  } else if (!isRealDate(birthDate)) {
+    errors.birthDate = "Bitte ein g\xFCltiges Geburtsdatum eingeben.";
+  } else if (Number(birthDate.slice(0, 4)) < BIRTH_YEAR_MIN || birthDate > today) {
+    errors.birthDate = `Das Geburtsdatum muss zwischen dem 01.01.${BIRTH_YEAR_MIN} und heute liegen.`;
+  }
+  if (draft.sex !== "" && draft.sex !== "male" && draft.sex !== "female") {
+    errors.sex = "Bitte beim Geschlecht \u201Em\xE4nnlich\u201C oder \u201Eweiblich\u201C w\xE4hlen.";
+  }
+  if (draft.sex === "female" && draft.lifePhase !== "" && !isLifePhase(draft.lifePhase)) {
+    errors.lifePhase = "Bitte bei Schwangerschaft/Stillzeit einen der angebotenen Werte w\xE4hlen.";
+  }
+  if (Object.keys(errors).length > 0) {
+    return { ok: false, errors };
+  }
+  return {
+    ok: true,
+    value: {
+      name,
+      heightCm: Math.round(height * 10) / 10,
+      birthYear: Number(birthDate.slice(0, 4)),
+      birthDate,
+      sex: draft.sex === "" ? null : draft.sex,
+      // nur bei „weiblich“; sonst verworfen (wie im Rust-Kern)
+      lifePhase: draft.sex === "female" && draft.lifePhase !== "" ? draft.lifePhase : null
+    }
+  };
+}
+function profileToDraft2(profile) {
+  return {
+    name: profile.name,
+    height: formatForInput(profile.heightCm),
+    birthDate: profile.birthDate ?? "",
+    knownBirthYear: profile.birthYear,
+    sex: profile.sex ?? "",
+    lifePhase: profile.sex === "female" && isLifePhase(profile.lifePhase) ? profile.lifePhase : ""
+  };
 }
 function ageOn(birthDate, today) {
   if (!isRealDate(birthDate) || !isRealDate(today) || birthDate > today) return null;
@@ -14998,7 +15075,7 @@ function u32(b, o) {
   return (u16(b, o) | u16(b, o + 2) << 16) >>> 0;
 }
 var utf8 = new TextDecoder("utf-8");
-async function readZip(bytes, inflateRaw) {
+function listZip(bytes, what = "Excel-Datei") {
   let end = -1;
   for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 22 - 65535); i--) {
     if (u32(bytes, i) === SIG_END) {
@@ -15006,28 +15083,37 @@ async function readZip(bytes, inflateRaw) {
       break;
     }
   }
-  if (end < 0) throw new Error("Die Datei ist keine g\xFCltige Excel-Datei (kein ZIP-Archiv).");
+  if (end < 0) throw new Error(`Die Datei ist keine g\xFCltige ${what} (kein ZIP-Archiv).`);
   const count = u16(bytes, end + 10);
   let p = u32(bytes, end + 16);
   const entries = [];
   for (let n2 = 0; n2 < count; n2++) {
-    if (u32(bytes, p) !== SIG_CENTRAL) throw new Error("Die Excel-Datei ist besch\xE4digt.");
+    if (u32(bytes, p) !== SIG_CENTRAL) throw new Error(`Die ${what} ist besch\xE4digt.`);
     const method = u16(bytes, p + 10);
     const compressedSize = u32(bytes, p + 20);
+    const size = u32(bytes, p + 24);
     const nameLen = u16(bytes, p + 28);
     const extraLen = u16(bytes, p + 30);
     const commentLen = u16(bytes, p + 32);
     const localOffset = u32(bytes, p + 42);
     const name = utf8.decode(bytes.subarray(p + 46, p + 46 + nameLen));
     p += 46 + nameLen + extraLen + commentLen;
-    if (u32(bytes, localOffset) !== SIG_LOCAL) throw new Error("Die Excel-Datei ist besch\xE4digt.");
+    if (u32(bytes, localOffset) !== SIG_LOCAL) throw new Error(`Die ${what} ist besch\xE4digt.`);
     const start = localOffset + 30 + u16(bytes, localOffset + 26) + u16(bytes, localOffset + 28);
-    const raw = bytes.subarray(start, start + compressedSize);
     if (name.endsWith("/")) continue;
-    if (method === 0) entries.push({ name, data: raw });
-    else if (method === 8) entries.push({ name, data: await inflateRaw(raw) });
-    else throw new Error(`Nicht unterst\xFCtzte Kompression in \u201E${name}\u201C.`);
+    entries.push({ name, method, size, raw: bytes.subarray(start, start + compressedSize) });
   }
+  return entries;
+}
+async function unpackZipEntry(e, inflateRaw) {
+  if (e.method === 0) return e.raw;
+  if (e.method === 8) return inflateRaw(e.raw);
+  throw new Error(`Nicht unterst\xFCtzte Kompression in \u201E${e.name}\u201C.`);
+}
+async function readZip(bytes, inflateRaw) {
+  const entries = [];
+  for (const e of listZip(bytes))
+    entries.push({ name: e.name, data: await unpackZipEntry(e, inflateRaw) });
   return entries;
 }
 var crcTable = null;
@@ -15411,7 +15497,45 @@ function scheduleCounts(days2) {
 }
 
 // src/domain/reminders.ts
+var REMINDER_KINDS = ["weigh", "supplements", "hrt"];
+var REMINDER_LABELS = {
+  weigh: "Wiegen",
+  supplements: "Supplements",
+  hrt: "N\xE4chste Hormongabe"
+};
+var DEFAULT_REMINDERS = {
+  weigh: { on: false, time: "07:30" },
+  supplements: { on: false, time: "08:30" },
+  hrt: { on: false, time: "09:00" }
+};
 var HRT_INTERVAL_SAMPLES = 4;
+var TIME3 = /^([01]\d|2[0-3]):([0-5]\d)$/;
+function validTime(time) {
+  return TIME3.test(time.trim());
+}
+function parseReminderSettings(raw) {
+  const out = {
+    weigh: { ...DEFAULT_REMINDERS.weigh },
+    supplements: { ...DEFAULT_REMINDERS.supplements },
+    hrt: { ...DEFAULT_REMINDERS.hrt }
+  };
+  if (!raw) return out;
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    return out;
+  }
+  if (typeof data !== "object" || data === null) return out;
+  for (const kind of REMINDER_KINDS) {
+    const r2 = data[kind];
+    if (typeof r2 !== "object" || r2 === null) continue;
+    const { on, time } = r2;
+    if (typeof on === "boolean") out[kind].on = on;
+    if (typeof time === "string" && validTime(time)) out[kind].time = time.trim();
+  }
+  return out;
+}
 var isoDiff = (a, b) => Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 864e5);
 function nextHrtDoses(entries) {
   const groups = /* @__PURE__ */ new Map();
@@ -15436,6 +15560,54 @@ function nextHrtDoses(entries) {
     out.push({ hormone: g.hormone, last, intervalDays: median, next: shiftDays(last, median) });
   }
   return out.sort((a, b) => a.next.localeCompare(b.next) || a.hormone.localeCompare(b.hormone));
+}
+function pendingKinds(settings, today, time, shown, allowHrt) {
+  return REMINDER_KINDS.filter(
+    (k) => settings[k].on && (k !== "hrt" || allowHrt) && time >= settings[k].time && !shown.has(`${k}:${today}`)
+  );
+}
+function dueNotices(kinds, today, status) {
+  const out = [];
+  for (const kind of kinds) {
+    const key = `${kind}:${today}`;
+    if (kind === "weigh" && !status.weighed) {
+      out.push({
+        key,
+        kind,
+        title: "Wiegen",
+        body: "F\xFCr heute ist noch kein Gewicht eingetragen."
+      });
+    } else if (kind === "supplements" && !status.supplements) {
+      out.push({
+        key,
+        kind,
+        title: "Supplements",
+        body: "F\xFCr heute ist noch keine Einnahme eingetragen."
+      });
+    } else if (kind === "hrt" && status.hrtDue.length > 0) {
+      const names = status.hrtDue.map(
+        (d) => d.next < today ? `${d.hormone} (f\xE4llig seit ${formatShort(d.next)})` : d.hormone
+      );
+      out.push({
+        key,
+        kind,
+        title: "N\xE4chste Hormongabe",
+        body: `Laut bisherigem Abstand heute vorgesehen: ${names.join(", ")}.`
+      });
+    }
+  }
+  return out;
+}
+function hrtDueToday(entries, today) {
+  const takenToday = new Set(
+    entries.filter((e) => e.status === "taken" && e.date === today).map((e) => e.hormone.trim().toLowerCase())
+  );
+  return nextHrtDoses(entries).filter(
+    (d) => d.next <= today && !takenToday.has(d.hormone.toLowerCase())
+  );
+}
+function formatShort(iso2) {
+  return `${iso2.slice(8, 10)}.${iso2.slice(5, 7)}.`;
 }
 
 // src/domain/checklistExport.ts
@@ -17450,6 +17622,7 @@ export {
   COACH_MODULES,
   COVERAGE_DAYS,
   DEFAULT_LAYOUT,
+  DEFAULT_REMINDERS,
   DISPLAY_DECIMALS,
   FASTED_LABEL,
   GLASS_SIZES_ML,
@@ -17458,6 +17631,7 @@ export {
   INSIGHTS_LAYOUT_KEY,
   KCAL_PER_GRAM,
   LEVEL_NAMES,
+  LIFE_PHASE_OPTIONS,
   MACRO_KEYS,
   MAX_DATES,
   MUSCLE_LABELS,
@@ -17467,9 +17641,12 @@ export {
   OVERVIEW_LAYOUT_KEY,
   REFERENCE_SOURCE,
   REFERENCE_URL,
+  REMINDER_KINDS,
+  REMINDER_LABELS,
   REPEAT_LABEL,
   ROUTE_LABELS,
   SCALE_MODE_LABELS,
+  SEX_OPTIONS,
   SOURCE_LABEL,
   ZERO,
   acwr,
@@ -17519,6 +17696,7 @@ export {
   doseCalc_exports as doseCalc,
   drinkText,
   drinksMl,
+  dueNotices,
   duplicateHrtEntries,
   energy_exports as energy,
   energyGoalView,
@@ -17552,6 +17730,7 @@ export {
   hormoneLevel_exports as hormoneLevel,
   hrt_exports as hrt,
   hrtChecklist_exports as hrtChecklist,
+  hrtDueToday,
   hrtDuplicateHint,
   insights_exports as insights,
   lab_exports as lab,
@@ -17588,12 +17767,15 @@ export {
   parseIsoDate,
   parseLayout,
   parseMuscleMapSettings,
+  parseReminderSettings,
+  pendingKinds,
   perServing,
   percentText,
   planDraft_exports as planDraft,
   planSchedule_exports as planSchedule,
   portionsFromAmount,
   previousMean,
+  profileToDraft2 as profileToDraft,
   progressText,
   protocol_exports as protocol,
   readXlsx,
@@ -17628,6 +17810,8 @@ export {
   trainingReview_exports as trainingReview,
   trainingVolume_exports as trainingVolume,
   trends_exports as trends,
+  validTime,
+  validateProfile,
   waterGlasses,
   waterPercent,
   waterSummary,

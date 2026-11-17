@@ -5,7 +5,7 @@ import * as N from "./nutrition.js";
 import { foodActions, foodChange, foodInput, foodState, initFood, viewDish, viewFood, viewFoodReview } from "./food.js";
 import { bodyActions, bodyChange, bodyInput, bodyLeave, bodyOpenEntry, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
 import * as BD from "./bodydata.js";
-import { SECTIONS, barChoices, barSlots, drawerHtml, icon, pcOnlyHtml, quickSheetHtml, tabbarHtml } from "./nav.js";
+import { QUICK, SECTIONS, barChoices, barSlots, drawerHtml, icon, pcOnlyHtml, quickSheetHtml, setHiddenSections, tabbarHtml } from "./nav.js";
 import { focusInfo, machineNamesOf } from "./focusinfo.js";
 import * as P from "./pcdb.js";
 import * as PDOM from "./pcdomain.js";
@@ -31,7 +31,10 @@ import * as CD from "./checklistdata.js";
 import * as CF from "./caffeinedata.js";
 import * as GLD from "./glucosedata.js";
 import { caffeineSettings, icoachActions, icoachChange, icoachInput, initICoach, viewICoach } from "./icoach.js";
-import { pcSettingsHtml } from "./settingsview.js";
+import { initSettings, layoutActions, layoutChange, settingsActions, settingsChange, viewSettings } from "./settingsview.js";
+import { LAYOUT_PAGES, layoutEditing, setLayoutEditing } from "./layoutedit.js";
+import * as PS from "./pcsettings.js";
+import * as DP from "./devprefs.js";
 import { initTraining, trainingActions, trainingChange, trainingInput, viewTrainingSection, persistTrain, setNotice as trainSetNotice, failed as trainFailed } from "./training.js";
 import { initTrainingStats } from "./trainingstats.js";
 import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
@@ -52,7 +55,8 @@ const S = {
   localExercises: [],
   workouts: [], // abgeschlossene Trainings vom Handy
   active: null, // laufendes Training
-  prefs: { onlyNumbered: true, keepUnticked: false },
+  prefs: DP.normPrefs({ onlyNumbered: true, keepUnticked: false }),
+  pcsettings: PS.emptySync(), // Einstellungen für PC und Handy (1.48.0)
   view: "home",
   arg: null,
   query: "",
@@ -118,9 +122,12 @@ const machineById = () => new Map(S.catalog.machines.map((m) => [m.id, m]));
 const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported);
 const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWater(S.water) + SP.unsentSupp(S.supp);
 // Körperwerte plus Schlaf und Regeneration (gehen zusammen in die Datei „Körperwerte“, 1.7.0)
-const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + GLD.unsentGlucose(S.glucose) + TR.unsentTrain(S.train) + GL.unsentGoals(S.goals);
+const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + GLD.unsentGlucose(S.glucose) + TR.unsentTrain(S.train) + GL.unsentGoals(S.goals) + PS.unsentSync(S.pcsettings);
 
 function go(view, arg = null) {
+  // Seite anpassen (1.48.0): Bearbeiten endet, wenn eine andere Seite geöffnet wird
+  const editing = layoutEditing();
+  if (editing && LAYOUT_PAGES.find(([k]) => k === editing)?.[1] !== view) setLayoutEditing(null);
   // „Werte erfassen“ verlassen: Geändertes sofort sichern (1.40.0)
   if (S.view === "body-entry" && view !== "body-entry") bodyLeave();
   if (view === "food-review" && S.view !== "food-review") S.reviewFrom = S.view === "send" ? "send" : S.view === "pending" ? "pending" : S.view === "food" ? "food" : "home";
@@ -221,13 +228,14 @@ function viewHome() {
             <button class="btn primary block" data-go="workout">Weiter trainieren</button></section>`
         : ""
     }
+    ${date === today ? remindersCardHtml() : ""}
     ${
       offen
         ? `<section class="card"><div class="wo-head"><h3>An den PC senden</h3><span class="tag">${offen} offen</span></div>
             <p class="muted small">${[
               open.length ? (open.length === 1 ? "1 Training" : `${open.length} Trainings`) : "",
               unsentFood() ? `${unsentFood()} Ernährungseinträge` : "",
-              unsentBodyCount() ? `${unsentBodyCount()} Körperwerte, Schlaf-, Regenerations-, To-do- und Trainingseinträge` : "",
+              unsentBodyCount() ? `${unsentBodyCount()} Körperwerte, Schlaf-, Regenerations-, To-do-, Trainingseinträge und Einstellungen` : "",
             ]
               .filter(Boolean)
               .join(" und ")} noch nicht am PC.</p>
@@ -239,47 +247,15 @@ function viewHome() {
   </main>`;
 }
 
-/** Settings (wie am PC): Daten vom PC, an den PC senden, Hilfe. */
-function viewSettings() {
-  return `${header("Settings")}<main class="wrap">
-    ${accountsCard()}
-    <section class="card">
-      <h3>Tagesziele</h3>
-      <p class="muted small">Energie (fest oder dynamisch aus dem Verbrauch), Makros, Schlaf, Gewicht, Schritte und Wasser – wie am PC.</p>
-      <button class="btn block" data-act="goals-open">Tagesziele festlegen</button>
-    </section>
-    <section class="card">
-      <h3>Datenaustausch</h3>
-      <p class="muted small">An den PC senden, neue Exportdatei vom PC laden, Herstellerpakete und BLS 4.0 stehen unter <b>Import/Export</b> – oben im Menü neben dem Schließen-Knopf.</p>
-      <button class="btn block" data-go="transfer">Zu Import/Export</button>
-    </section>
-    <section class="card">
-      <h3>Untere Leiste</h3>
-      <p class="muted small">Welche zwei Bereiche neben dem „+“ stehen. Overview und „Mehr“ bleiben immer an ihrem Platz.</p>
-      ${(() => {
-        const slots = barSlots(S.prefs.barSlots);
-        const opts = (sel) => barChoices().map((c) => `<option value="${c.id}" ${c.id === sel ? "selected" : ""}>${esc(c.label)}</option>`).join("");
-        return `<div class="grid2">
-          <div class="field"><label for="bar-left">Links vom „+“</label><select id="bar-left" data-bar="0">${opts(slots[0])}</select></div>
-          <div class="field"><label for="bar-right">Rechts vom „+“</label><select id="bar-right" data-bar="1">${opts(slots[1])}</select></div>
-        </div>`;
-      })()}
-      <button class="btn sm ghost" data-act="bar-reset">Standard (Training, Nutrition)</button>
-    </section>
-    ${(() => {
-      if (!S.catalog?.pc) return "";
-      try {
-        return pcSettingsHtml(buildDb(), esc, caffeineSettings());
-      } catch {
-        return "";
-      }
-    })()}
-    <section class="card">
-      <h3>Hilfe</h3>
-      <p class="muted small">Version ${esc(C.MOBILE_VERSION)} · Bedienung, Datenschutz und Datenaustausch.</p>
-      <button class="btn block" data-go="help">Hilfe öffnen</button>
-    </section>
-  </main>`;
+/** Untere Leiste: welche zwei Bereiche neben dem „+“ stehen (Settings → Darstellung). */
+function barSlotsHtml() {
+  const slots = barSlots(S.prefs.barSlots);
+  const opts = (sel) => barChoices().map((c) => `<option value="${c.id}" ${c.id === sel ? "selected" : ""}>${esc(c.label)}</option>`).join("");
+  return `<div class="grid2">
+      <div class="field"><label for="bar-left">Links vom „+“</label><select id="bar-left" data-bar="0">${opts(slots[0])}</select></div>
+      <div class="field"><label for="bar-right">Rechts vom „+“</label><select id="bar-right" data-bar="1">${opts(slots[1])}</select></div>
+    </div>
+    <button class="btn sm ghost" data-act="bar-reset">Leiste: Standard (Training, Nutrition)</button>`;
 }
 
 /**
@@ -327,15 +303,15 @@ function viewTransfer() {
       <button class="btn block" data-act="transfer-glucose">Zu Health → Blutzucker</button>
     </section>` },
   ];
-  let layout = PDOM.parseLayout(null);
+  let arranged = cards;
   try {
-    layout = PDOM.parseLayout(buildDb().settings.get("ui.transfer_layout"));
+    arranged = arrangeCards(buildDb(), "ui.transfer_layout", cards, { emptyLast: false });
   } catch {
     // ohne Daten vom PC: feste Reihenfolge
   }
   return `${header("Import/Export")}<main class="wrap">
     <p class="muted small">Alle Daten bleiben auf diesem Gerät. Dateien verlassen es nur, wenn du sie selbst weitergibst (z. B. über Google Drive an den PC).</p>
-    ${PDOM.arrange(cards, { ...layout, emptyLast: false }).map((x) => x.node).join("")}
+    ${arranged.map((x) => x.node).join("")}
   </main>`;
 }
 
@@ -1048,6 +1024,7 @@ const VIEWS = {
 
 function render() {
   if (!S.catalog && S.view !== "help" && S.view !== "account-new") S.view = "setup";
+  syncSections();
   app.innerHTML = (VIEWS[S.view] || viewHome)();
   foldTabs();
   renderNav();
@@ -1229,7 +1206,7 @@ function renderNav() {
   const bar = !NO_TABBAR.has(S.view) && !app.querySelector(".bottom");
   navRoot.innerHTML =
     drawerHtml({ view: S.view, arg: S.arg, open: S.menuOpen, esc, back: S.logEdit?.back ?? null }) +
-    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen), slots: S.prefs.barSlots, sub: S.subMenu }) + quickSheetHtml(Boolean(S.quickOpen)) : "");
+    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen), slots: S.prefs.barSlots, sub: S.subMenu }) + quickSheetHtml(Boolean(S.quickOpen), DP.quickItems(QUICK, S.prefs.quick)) : "");
   document.body.classList.toggle("has-tabbar", bar);
   // Mit Knopf unten entfällt der Reiter-Knopf oben links
   document.body.classList.toggle("has-submenu", Boolean(bar && S.subMenu));
@@ -1445,6 +1422,15 @@ const actions = {
   ...vendorActions,
   ...catalogActions,
   ...goalActions,
+  ...settingsActions,
+  ...layoutActions,
+  "rem-go": (el) => {
+    const k = el.dataset.arg;
+    if (k === "weigh") return quickGo("body");
+    if (k === "hrt") return go("super");
+    S.diaryDate = todayIso();
+    return go("diary");
+  },
   ...blsActions,
   ...overviewActions,
   ...logsActions,
@@ -1651,44 +1637,17 @@ const actions = {
     sendFile(kind, scope === "all");
   },
   "mark-sent": async (el) => {
-    const [kind, idList = ""] = el.dataset.arg.split("|");
-    const ids = idList.split(",");
-    // „all“ (ganzes Konto, 1.29.0): alle Trainings und alle Bereiche
-    if (kind === "training") for (const w of S.workouts) if (ids.includes(w.id)) w.exported = true;
-    if (kind === "all") for (const w of S.workouts) if (w.status === "done") w.exported = true;
-    if ((kind === "body" || kind === "all") && S.body) {
-      BD.markBodySent(S.body.local);
-      await store.set("body", S.body.local);
-      LG.markLogsSent(S.logs);
-      await store.set("logs", S.logs);
-      TD.markTodosSent(S.todos);
-      await store.set("todos", S.todos);
-      CD.markChecklistsSent(S.checklists);
-      await store.set("checklists", S.checklists);
-      CF.markCaffeineSent(S.caffeine);
-      await store.set("caffeine", S.caffeine);
-      GLD.markGlucoseSent(S.glucose);
-      await store.set("glucose", S.glucose);
-      HD.markHealthSent(S.health);
-      await store.set("health", S.health);
-      SD.markSuperSent(S.super);
-      await store.set("super", S.super);
-      TR.markTrainSent(S.train);
-      await store.set("train", S.train);
-      GL.markGoalsSent(S.goals);
-      await store.set("goals", S.goals);
-    }
-    if ((kind === "food" || kind === "all") && S.food) {
-      N.markNutritionSent(S.food.local);
-      await store.set("nutrition", S.food.local);
-      P.markWaterSent(S.water);
-      await store.set("water", S.water);
-      SP.markSuppSent(S.supp);
-      await store.set("supp", S.supp);
-    }
-    await saveNow();
+    await markSent(el.dataset.arg);
     toast("Als übertragen markiert");
     go("home");
+  },
+  // Nach dem Senden automatisch markieren (Settings → Import/Export, 1.48.0): Tipp auf die Datei
+  "sent-auto": async (el) => {
+    if (!S.prefs.transfer.autoMark) return;
+    await markSent(el.dataset.arg);
+    const note = document.getElementById("send-auto-note");
+    if (note) note.textContent = "Als übertragen markiert.";
+    toast("Als übertragen markiert");
   },
   "edit-workout": async (el) => {
     if (S.active) {
@@ -1774,6 +1733,32 @@ const actions = {
     }
   },
   "account-switch": (el) => switchAccount(el.dataset.arg),
+  // Konto umbenennen (1.48.0): ein anderes Konto bekommt den Namen beim nächsten Wechsel auch im Profil
+  "account-rename-cancel": () => {
+    S.accRename = null;
+    rerenderKeepScroll();
+  },
+  "account-rename": (el) => {
+    S.accRename = el.dataset.arg;
+    rerenderKeepScroll();
+    setTimeout(() => document.getElementById("acc-rename")?.focus(), 0);
+  },
+  "account-rename-save": async (el) => {
+    const id = el.dataset.arg;
+    const name = (document.getElementById("acc-rename")?.value ?? "").trim();
+    if (!name || [...name].length > 60) return toast("Bitte einen Namen mit höchstens 60 Zeichen eingeben.", true);
+    if (id === "") {
+      S.mainAccountName = name;
+      await store.setGlobal("mainName", name);
+      await store.setGlobal("mainRename", name);
+    } else {
+      S.accounts = S.accounts.map((a) => (a.id === id ? { ...a, name, rename: name } : a));
+      await store.setGlobal("accounts", S.accounts);
+    }
+    S.accRename = null;
+    toast(`Umbenannt in „${name}“`);
+    render();
+  },
   "account-export": (el) => exportAccount(el),
   "account-delete": async (el) => {
     const id = el.dataset.arg;
@@ -1863,7 +1848,7 @@ function foodTables(all) {
 
 /** Tabellen für „Körperwerte … senden“: Körperwerte, Schlaf, To-dos, Health, Superhuman, Checklisten, Koffein, Training am Handy, Ziele. */
 function bodyPartTables(all) {
-  return mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), mergeTables(CF.caffeineTables(S.caffeine, { all }), GLD.glucoseTables(S.glucose, { all }))), mergeTables(TR.trainTables(S.train, { all }), GL.goalTables(S.goals, { all })))))));
+  return mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), mergeTables(CF.caffeineTables(S.caffeine, { all }), GLD.glucoseTables(S.glucose, { all }))), mergeTables(TR.trainTables(S.train, { all }), mergeTables(GL.goalTables(S.goals, { all }), PS.syncTables(S.pcsettings, { all }))))))));
 }
 
 /**
@@ -1917,6 +1902,49 @@ async function exportAccount(el) {
   result.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
+/** Gesendetes als übertragen markieren (`arg` „training|ids“, „food“, „body“ oder „all“). */
+async function markSent(arg) {
+  const [kind, idList = ""] = arg.split("|");
+  const ids = idList.split(",");
+  // „all“ (ganzes Konto, 1.29.0): alle Trainings und alle Bereiche
+  if (kind === "training") for (const w of S.workouts) if (ids.includes(w.id)) w.exported = true;
+  if (kind === "all") for (const w of S.workouts) if (w.status === "done") w.exported = true;
+  if ((kind === "body" || kind === "all") && S.body) {
+    BD.markBodySent(S.body.local);
+    await store.set("body", S.body.local);
+    LG.markLogsSent(S.logs);
+    await store.set("logs", S.logs);
+    TD.markTodosSent(S.todos);
+    await store.set("todos", S.todos);
+    CD.markChecklistsSent(S.checklists);
+    await store.set("checklists", S.checklists);
+    CF.markCaffeineSent(S.caffeine);
+    await store.set("caffeine", S.caffeine);
+    GLD.markGlucoseSent(S.glucose);
+    await store.set("glucose", S.glucose);
+    HD.markHealthSent(S.health);
+    await store.set("health", S.health);
+    SD.markSuperSent(S.super);
+    await store.set("super", S.super);
+    TR.markTrainSent(S.train);
+    await store.set("train", S.train);
+    GL.markGoalsSent(S.goals);
+    await store.set("goals", S.goals);
+    PS.markSyncSent(S.pcsettings);
+    await store.set("pcsettings", S.pcsettings);
+  }
+  if ((kind === "food" || kind === "all") && S.food) {
+    N.markNutritionSent(S.food.local);
+    await store.set("nutrition", S.food.local);
+    P.markWaterSent(S.water);
+    await store.set("water", S.water);
+    SP.markSuppSent(S.supp);
+    await store.set("supp", S.supp);
+  }
+  S.prefs.lastSentAt = new Date().toISOString();
+  await saveNow();
+}
+
 /**
  * Rückgabedatei erstellen (1.2.4): Trainings und Ernährung getrennt – `kind` „training“ oder „food“,
  * `all` = auch schon gesendete.
@@ -1953,16 +1981,22 @@ async function sendFile(kind, all) {
       if (e.name === "AbortError") return toast("Abgebrochen");
     }
   }
+  const auto = S.prefs.transfer.autoMark;
   if (!shared) {
     const url = URL.createObjectURL(blob);
     result.innerHTML = `<section class="card"><p class="small">Die Datei ist bereit. Tippe darauf und sichere sie in Google Drive:</p>
-      <a class="btn blue block" href="${url}" download="${esc(name)}">${esc(name)}</a></section>`;
+      <a class="btn blue block" href="${url}" download="${esc(name)}" ${auto ? `data-act="sent-auto" data-arg="${esc(arg)}"` : ""}>${esc(name)}</a>
+      ${auto ? `<p class="muted small" id="send-auto-note">Wird beim Tippen auf die Datei als übertragen markiert (Settings → Import/Export).</p>` : ""}</section>`;
+  } else if (auto) {
+    await markSent(arg);
   }
-  result.insertAdjacentHTML(
-    "beforeend",
-    `<section class="card"><p class="small">${shared ? `„${esc(name)}“ weitergegeben.` : ""} Sobald die Datei in Google Drive liegt:</p>
-     <button class="btn primary block" data-act="mark-sent" data-arg="${esc(arg)}">Als übertragen markieren</button></section>`,
-  );
+  if (!auto)
+    result.insertAdjacentHTML(
+      "beforeend",
+      `<section class="card"><p class="small">${shared ? `„${esc(name)}“ weitergegeben.` : ""} Sobald die Datei in Google Drive liegt:</p>
+       <button class="btn primary block" data-act="mark-sent" data-arg="${esc(arg)}">Als übertragen markieren</button></section>`,
+    );
+  else if (shared) result.innerHTML = `<section class="card"><p class="small">„${esc(name)}“ weitergegeben und als übertragen markiert.</p></section>`;
   result.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
@@ -2090,6 +2124,8 @@ app.addEventListener("change", async (ev) => {
   if (vendorChange(el)) return;
   if (catalogChange(el)) return;
   if (goalChange(el)) return;
+  if (settingsChange(el)) return;
+  if (layoutChange(el)) return;
   if (blsChange(el)) return;
   if (overviewChange(el)) return;
   if (logsChange(el)) return;
@@ -2171,6 +2207,8 @@ async function applyCatalog(catalog) {
     await store.set("supp", S.supp);
     S.goals = GL.pruneGoals(catalog, S.goals);
     await store.set("goals", S.goals);
+    S.pcsettings = PS.pruneSync(catalog, S.pcsettings);
+    await store.set("pcsettings", S.pcsettings);
     S.logs = LG.pruneLogs(catalog, S.logs);
     await store.set("logs", S.logs);
     S.todos = TD.pruneTodos(catalog, S.todos);
@@ -2189,11 +2227,112 @@ async function applyCatalog(catalog) {
   }
 }
 
+// ------------------------------------------------------------------ Einstellungen je Gerät (1.48.0)
+
+/** Design, Beschriftung der unteren Leiste und sichtbare Bereiche anwenden. */
+function applyPrefs() {
+  const sysDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
+  document.documentElement.dataset.theme = DP.resolvedTheme(S.prefs.theme, sysDark);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", document.documentElement.dataset.theme === "dark" ? "#0b1622" : "#0b2a4a");
+  document.body.classList.toggle("bar-icons", S.prefs.barLabels === "icons");
+  syncSections();
+  if (S.catalog) renderNav();
+}
+
+/** „Superhuman“ nur mit Secret Protocols (wie am PC). */
+function syncSections() {
+  const secret = !S.catalog || String(PS.effective(S.catalog, S.pcsettings, "secret_protocols")) === "1";
+  setHiddenSections(secret ? [] : ["superhuman"]);
+}
+window.matchMedia?.("(prefers-color-scheme: dark)")?.addEventListener?.("change", () => {
+  if (S.prefs.theme === "system") applyPrefs();
+});
+
+/** Benachrichtigung zeigen (wenn erlaubt), sonst Hinweis in der App. */
+async function notify(title, body) {
+  try {
+    if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+      const reg = await navigator.serviceWorker?.getRegistration?.();
+      if (reg?.showNotification) await reg.showNotification(title, { body, icon: "icons/icon-192.png", tag: title });
+      else new Notification(title, { body, icon: "icons/icon-192.png" });
+      return true;
+    }
+  } catch {
+    // weiter mit dem Hinweis in der App
+  }
+  toast(`${title}: ${body}`);
+  return false;
+}
+
+/** Fällige Erinnerungen (Settings → Erinnerungen) mit dem Stand der Daten. */
+function reminderState() {
+  if (!S.catalog) return { due: [], fresh: [] };
+  const db = buildDb();
+  const t = todayIso();
+  const secret = db.settings.get("secret_protocols") === "1";
+  let hrt = [];
+  if (secret && S.prefs.reminders.hrt.on) {
+    try {
+      hrt = SD.hrtEntriesOf(S.catalog, S.super);
+    } catch {
+      hrt = [];
+    }
+  }
+  return DP.remindersDue(S.prefs, t, C.localTime(new Date()), DP.reminderStatus(db, t, P.WEIGHT_METRIC_ID, hrt), secret);
+}
+
+async function checkReminders() {
+  let fresh = [];
+  try {
+    fresh = reminderState().fresh;
+  } catch {
+    return;
+  }
+  if (!fresh.length) return;
+  DP.markShown(S.prefs, fresh.map((n) => n.key), todayIso());
+  saveSoon();
+  for (const n of fresh) await notify(n.title, n.body);
+  if (S.view === "home") rerenderKeepScroll();
+}
+
+let reminderTimer = null;
+function startReminders() {
+  if (reminderTimer) return;
+  void checkReminders();
+  reminderTimer = setInterval(() => void checkReminders(), 60_000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) void checkReminders();
+  });
+}
+
+/** Overview: fällige Erinnerungen und Erinnerung ans Senden. */
+function remindersCardHtml() {
+  let due = [];
+  try {
+    due = reminderState().due;
+  } catch {
+    due = [];
+  }
+  const open = unsent().length + unsentFood() + unsentBodyCount();
+  const sendDays = DP.sendReminder(S.prefs, open, S.prefs.lastSentAt ?? null, S.catalog?.exportedAt ?? null);
+  if (!due.length && sendDays === null) return "";
+  const label = { weigh: "Gewicht eintragen", supplements: "Supplements eintragen", hrt: "Zu Superhuman" };
+  return `<section class="card hl ov-reminders"><h3>Erinnerungen</h3><ul class="list">${due
+    .map((n) => `<li class="meal-item"><span><b>${esc(n.title)}</b><br><span class="muted small">${esc(n.body)}</span></span><button class="btn sm" data-act="rem-go" data-arg="${esc(n.kind)}">${esc(label[n.kind] ?? "Öffnen")}</button></li>`)
+    .join("")}${
+    sendDays !== null
+      ? `<li class="meal-item"><span><b>An den PC senden</b><br><span class="muted small">Seit ${sendDays === 1 ? "1 Tag" : `${sendDays} Tagen`} nichts gesendet – ${open === 1 ? "1 Eintrag ist" : `${open} Einträge sind`} offen.</span></span><button class="btn sm" data-go="send">Senden</button></li>`
+      : ""
+  }</ul></section>`;
+}
+
 // ------------------------------------------------------------------ Konten (1.25.0)
 
 /** Name des aktiven Kontos: Profil (vom PC oder am Handy angelegt), sonst „Hauptkonto“. */
 function accountName(id = S.accountId) {
-  if (id === S.accountId && S.catalog?.pc?.profile?.[0]?.name) return S.catalog.pc.profile[0].name;
+  // Aktives Konto: Profilname (am Handy geändert gilt vor dem Stand vom PC, 1.48.0)
+  const own = id === S.accountId ? (PS.normSync(S.pcsettings).profile?.row?.name ?? S.catalog?.pc?.profile?.[0]?.name) : null;
+  if (own) return own;
   if (!id) return S.mainAccountName || "Hauptkonto";
   return S.accounts.find((a) => a.id === id)?.name ?? "Konto";
 }
@@ -2240,6 +2379,41 @@ async function createAccount(input) {
   return true;
 }
 
+/** Name des angemeldeten Kontos in der Kontenliste nachziehen (nach dem Speichern des Profils). */
+async function renameActiveAccount(name) {
+  if (S.accountId) {
+    S.accounts = S.accounts.map((a) => (a.id === S.accountId ? { ...a, name } : a));
+    await store.setGlobal("accounts", S.accounts);
+  } else {
+    S.mainAccountName = name;
+    await store.setGlobal("mainName", name);
+  }
+}
+
+/**
+ * Beim Start: Wurde dieses Konto umbenannt, während ein anderes angemeldet war, gilt der Name jetzt
+ * auch im Profil (geht mit „An den PC senden“ zum PC).
+ */
+async function applyPendingRename() {
+  const pending = S.accountId ? S.accounts.find((a) => a.id === S.accountId)?.rename : await store.getGlobal("mainRename");
+  if (!pending) return;
+  try {
+    const db = buildDb();
+    if (db.profile && db.profile.name !== pending) {
+      PS.setProfile(S.pcsettings, { ...db.profile, name: pending });
+      await store.set("pcsettings", S.pcsettings);
+    }
+  } catch {
+    // ohne Profil: nur der Name in der Liste
+  }
+  if (S.accountId) {
+    S.accounts = S.accounts.map((a) => (a.id === S.accountId ? { ...a, rename: undefined } : a));
+    await store.setGlobal("accounts", S.accounts);
+  } else {
+    await store.setGlobal("mainRename", null);
+  }
+}
+
 async function switchAccount(id) {
   if (S.active) return toast("Erst das laufende Training beenden.", true);
   await saveNow();
@@ -2274,13 +2448,18 @@ function accountsCard() {
   return `<section class="card">
     <div class="wo-head"><h3>Konten</h3><span class="tag">${list.length}</span></div>
     <p class="small">Angemeldet: <b>${esc(accountName())}</b> · ${S.catalog?.startpaket ? "Konto am Handy" : "Daten vom PC"}</p>
+    <p class="muted small">Den Namen des angemeldeten Kontos änderst du oben im Profil; andere Konten hier mit „Umbenennen“. Benutzer am PC sind eigene Datenbanken am PC.</p>
     ${
       list.length > 1
         ? `<ul class="account-list">${list
             .filter((a) => a.id !== S.accountId)
             .map(
-              (a) => `<li><span>${esc(a.id === "" ? accountName("") : a.name)}<small class="muted">${a.id === "" ? "Hauptkonto" : "Konto am Handy"}</small></span>
-                <span class="row-actions"><button class="btn sm" data-act="account-switch" data-arg="${esc(a.id)}">Wechseln</button>${
+              (a) =>
+                S.accRename === a.id
+                  ? `<li class="account-rename"><div class="field"><label for="acc-rename">Neuer Name</label><input id="acc-rename" type="text" maxlength="80" autocomplete="off" value="${esc(a.id === "" ? accountName("") : a.name)}"></div>
+                <span class="row-actions"><button class="btn sm primary" data-act="account-rename-save" data-arg="${esc(a.id)}">Speichern</button><button class="btn sm ghost" data-act="account-rename-cancel">Abbrechen</button></span></li>`
+                  : `<li><span>${esc(a.id === "" ? accountName("") : a.name)}<small class="muted">${a.id === "" ? "Hauptkonto" : "Konto am Handy"}</small></span>
+                <span class="row-actions"><button class="btn sm" data-act="account-switch" data-arg="${esc(a.id)}">Wechseln</button><button class="btn sm ghost" data-act="account-rename" data-arg="${esc(a.id)}">Umbenennen</button>${
                   a.id ? `<button class="btn sm ghost danger" data-act="account-delete" data-arg="${esc(a.id)}">Löschen</button>` : ""
                 }</span></li>`,
             )
@@ -2499,6 +2678,16 @@ initDiary(moduleCtx);
 initVendor(moduleCtx);
 initCatalog(moduleCtx);
 initGoals(moduleCtx);
+initSettings({
+  ...moduleCtx,
+  saveNow,
+  accountsCard,
+  applyPrefs,
+  notify,
+  renameActiveAccount,
+  barSlotsHtml,
+  version: C.MOBILE_VERSION,
+});
 initBls(moduleCtx);
 initOverview({ ...moduleCtx, S, today: todayIso });
 initLogs(moduleCtx);
@@ -2564,12 +2753,13 @@ async function boot() {
     S.localExercises = (await store.get("localExercises")) || [];
     S.workouts = (await store.get("workouts")) || [];
     S.active = await store.get("active");
-    S.prefs = { ...S.prefs, ...((await store.get("prefs")) || {}) };
+    S.prefs = DP.normPrefs({ ...S.prefs, ...((await store.get("prefs")) || {}) });
     S.food = foodState(await store.get("nutrition"));
     S.body = bodyState(await store.get("body"));
     S.water = (await store.get("water")) || P.emptyWaterLocal();
     S.supp = SP.normSupp(await store.get("supp"));
     S.goals = GL.normGoals(await store.get("goals"));
+    S.pcsettings = PS.normSync(await store.get("pcsettings"));
     await blsBoot();
     S.logs = LG.logsState(await store.get("logs"));
     S.todos = TD.todosState(await store.get("todos"));
@@ -2590,8 +2780,11 @@ async function boot() {
     const ok = await navigator.storage?.persisted?.().catch(() => false);
     S.persisted = Boolean(ok);
   });
+  if (S.catalog) await applyPendingRename();
+  applyPrefs();
   S.view = S.catalog ? (S.active ? "workout" : "home") : "setup";
   render();
+  startReminders();
   if (S.active) wakeLock(true);
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     navigator.serviceWorker.register("sw.js").catch(() => {});

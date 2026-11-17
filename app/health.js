@@ -5,6 +5,7 @@
 // Logik: healthdata.js (wie repo/lab.rs, repo/lifetime.rs). Änderungen gehen mit der Datei
 // „Körperwerte“ an den PC.
 
+import * as PS from "./pcsettings.js";
 import * as H from "./healthdata.js";
 import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
@@ -410,7 +411,7 @@ function nowLabel() {
 }
 
 /** Schalter „Secret Protocols“ vom PC (Einstellung `secret_protocols`). */
-const secretOn = () => (X.S.catalog?.pc?.settings ?? []).some((s) => s.key === "secret_protocols" && String(s.value) === "1");
+const secretOn = () => String(PS.effective(X.S.catalog, X.S.pcsettings, "secret_protocols")) === "1";
 
 function reportState() {
   const S = X.S;

@@ -58,6 +58,13 @@ export const SECTIONS = [
 
 export const icon = (name) => ICONS[name] ?? "";
 
+// Ausgeblendete Bereiche (1.48.0): „Superhuman“ nur mit Secret Protocols, wie am PC
+let hiddenSections = new Set();
+export function setHiddenSections(ids) {
+  hiddenSections = new Set(ids);
+}
+const shown = (s) => !hiddenSections.has(s.id);
+
 /** Bereich einer Ansicht (für die Markierung im Menü). */
 export function sectionOf(view, arg, back = null) {
   if (view === "pc-only") return arg;
@@ -74,7 +81,7 @@ export function drawerHtml({ view, arg, open, esc, back = null }) {
       <button class="drawer__transfer ${current === "transfer" ? "active" : ""}" data-act="menu-go" data-arg="transfer" ${current === "transfer" ? 'aria-current="page"' : ""}>${icon("transfer")}<span>Import/Export</span></button>
       <button class="drawer__close" data-act="menu-close" aria-label="Menü schließen">${svg('<path d="M6 6l12 12"/><path d="M18 6L6 18"/>')}</button></div>
     <ul>
-      ${SECTIONS.filter((s) => !s.header).map(
+      ${SECTIONS.filter((s) => !s.header && shown(s)).map(
         (s) => `<li><button class="drawer__item ${s.id === current ? "active" : ""} ${s.view ? "" : "pc-only"}" data-act="menu-go" data-arg="${s.id}" ${s.id === current ? 'aria-current="page"' : ""}>
           ${icon(s.id)}<span>${esc(s.label)}</span>${s.view ? "" : `<small>PC</small>`}</button></li>`,
       ).join("")}
@@ -100,7 +107,7 @@ export function pcOnlyHtml(id, esc) {
 export const DEFAULT_BAR_SLOTS = ["training", "nutrition"];
 
 /** Bereiche, die auf einen Platz der Leiste passen (alle mit Handy-Ansicht). */
-export const barChoices = () => SECTIONS.filter((s) => s.view && !s.header).map((s) => ({ id: s.id, label: s.label }));
+export const barChoices = () => SECTIONS.filter((s) => s.view && !s.header && shown(s)).map((s) => ({ id: s.id, label: s.label }));
 
 /** Gespeicherte Wahl prüfen: unbekannte Bereiche fallen auf den Standard zurück. */
 export function barSlots(pref) {
@@ -158,11 +165,12 @@ export const QUICK = [
   { id: "caffeine", label: "Koffein", icon: "coffee" },
 ];
 
-export function quickSheetHtml(open) {
+/** `items` = Einträge in gewählter Reihenfolge (Settings → Schnellerfassung, 1.48.0). */
+export function quickSheetHtml(open, items = QUICK) {
   return `<div class="quick-backdrop ${open ? "open" : ""}" data-act="quick-close"></div>
   <section class="quick-sheet ${open ? "open" : ""}" aria-label="Schnell erfassen" ${open ? "" : 'aria-hidden="true" inert'}>
     <h2 class="quick-sheet__title">Schnell erfassen</h2>
-    <div class="quick-sheet__grid">${QUICK.map(
+    <div class="quick-sheet__grid">${items.map(
       (q) => `<button class="quick-sheet__item" data-act="quick-go" data-arg="${q.id}">${ICONS[q.icon]}<span>${q.label}</span></button>`,
     ).join("")}</div>
     <button class="btn block" data-act="quick-close">Schließen</button>

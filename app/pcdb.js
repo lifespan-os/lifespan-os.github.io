@@ -206,6 +206,8 @@ export function makeDb(catalog, phone = {}) {
 
   const settings = new Map(t("settings").map((s) => [s.key, s.value]));
   for (const [k, v] of Object.entries(phone.settings ?? {})) settings.set(k, v);
+  // Am Handy gelöschte Einstellungen (1.48.0, z. B. alle Mahlzeiten wieder eingeblendet)
+  for (const k of phone.deletedSettings ?? []) settings.delete(k);
 
   return {
     foods,
@@ -227,7 +229,8 @@ export function makeDb(catalog, phone = {}) {
     caffeine: t("caffeine_intake"),
     // Tagesziele (1.28.0): Zielstände vom Handy ersetzen bzw. löschen die vom PC
     goals: merge(t("daily_goal"), phone.goals?.rows ?? [], new Set(phone.goals?.deleted ?? [])).sort((a, b) => cmp(b.valid_from, a.valid_from)),
-    profile: t("profile")[0] ?? null,
+    // Profil: am Handy geändert (1.48.0) gilt vor dem Stand vom PC
+    profile: phone.profile ?? t("profile")[0] ?? null,
     neatByDate: new Map(t("neat_day").map((d) => [d.date, d])),
     workouts,
     wexByWorkout: groupBy(wex, "workout_id"),

@@ -1259,3 +1259,65 @@ body.has-submenu [data-sheet].tabs--fold { display: none; }
 .todo-item.week-review__item { grid-template-columns: 1fr; }
 .week-review__actions { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
 .train-row__comp { display: block; color: var(--muted); }
+
+/* ================================================================ Settings am Handy (1.48.0) */
+.field-label { display: block; font-size: .84rem; color: var(--muted); margin-bottom: 4px; }
+.set-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.set-meal { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: end; }
+.set-meal .toggle { padding-bottom: 14px; }
+.set-meal .btn { margin-bottom: 4px; }
+.set-order, .set-rem { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.set-order:last-child, .set-rem:last-child { border-bottom: 0; }
+.set-order .row-actions { margin-top: 0; flex-wrap: nowrap; }
+.set-order .btn.sm { min-width: 44px; }
+.set-order.is-hidden .toggle span { opacity: .55; text-decoration: line-through; }
+.set-rem .toggle { color: var(--fg); align-items: flex-start; }
+.set-rem .toggle .small { color: var(--muted); }
+.set-rem input[type="time"] { width: 7.2em; flex: none; }
+.set-topic { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.set-topic summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+.set-topic[open] { display: grid; gap: 8px; }
+.account-rename { display: grid; gap: 6px; }
+.ov-reminders .list { margin: 0; }
+/* Untere Leiste nur mit Symbolen */
+body.bar-icons .tabbar__item span { display: none; }
+body.bar-icons .tabbar__item { min-height: 52px; }
+
+/* Dunkles Design (Settings → Darstellung, 1.48.0). Farben wie das Navy des Kopfs. */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #08131f;
+  --surface: #0f2133;
+  --surface-2: #16304a;
+  --line: #24425f;
+  --fg: #e6eef6;
+  --muted: #9db2c7;
+  --blue: #5fb4ec;
+  --cyan: #3ec3e3;
+  --orange-text: #f7b65e;
+  --ok: #46c486;
+  --danger: #ff7b72;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  --c-protein: #7f9ff0; --c-carbs: #e0a54a; --c-fat: #49b8ad; --c-nutrition: #e0a54a;
+  --c-water: #5db4e6; --c-water-soft: #12344c; --c-success: #46c486; --c-danger: #ff7b72;
+  --c-sunken: #0b1a29;
+}
+html[data-theme="dark"] .card, html[data-theme="dark"] .item, html[data-theme="dark"] .quick-sheet__item { border-color: var(--line); }
+html[data-theme="dark"] .card > h3::before, html[data-theme="dark"] .card .wo-head > h3::before, html[data-theme="dark"] .card__head > h3::before { color: var(--orange); }
+html[data-theme="dark"] .tab { background: var(--surface); border-color: var(--line); }
+html[data-theme="dark"] .tab.active { background: var(--fg); border-color: var(--fg); color: var(--bg); }
+html[data-theme="dark"] .segmented, html[data-theme="dark"] .segmented > button + button, html[data-theme="dark"] .muscle-map__swatch, html[data-theme="dark"] .status-icon--open { border-color: var(--line); }
+html[data-theme="dark"] .segmented > button.is-active { background: var(--surface-2); color: var(--fg); }
+html[data-theme="dark"] .balance--exact, html[data-theme="dark"] .day-pill--rest, html[data-theme="dark"] .day-status-banner--rest { background: #1b2f55; color: #b9cbf5; }
+html[data-theme="dark"] .quick-sheet__item:active { background: #3a2a14; }
+html[data-theme="dark"] .tabbar .tabbar__fab { background: var(--surface); }
+html[data-theme="dark"] .tabbar .tabbar__fab:active { background: #3a2a14; }
+html[data-theme="dark"] input[type="text"], html[data-theme="dark"] input[type="search"], html[data-theme="dark"] input[type="number"],
+html[data-theme="dark"] input[type="date"], html[data-theme="dark"] input[type="time"], html[data-theme="dark"] textarea, html[data-theme="dark"] select { background: var(--c-sunken); color: var(--fg); border-color: var(--line); }
+html[data-theme="dark"] .btn { background: var(--surface-2); border-color: var(--line); color: var(--fg); }
+html[data-theme="dark"] .btn.primary { background: var(--orange); border-color: var(--orange); color: var(--orange-ink); }
+html[data-theme="dark"] .btn.blue { background: #1c4268; border-color: #1c4268; color: #fff; }
+html[data-theme="dark"] .btn.ghost { background: transparent; }
+html[data-theme="dark"] .field-error { color: var(--danger); }
+html[data-theme="dark"] .card.hl { border-color: var(--orange); }
+html[data-theme="dark"] .btn.danger { color: var(--danger); background: transparent; }

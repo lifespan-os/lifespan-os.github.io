@@ -10,6 +10,8 @@
 // neu angelegter Eintrag verschwindet; ein Löschvermerk entfällt, der Eintrag ist wieder da.
 
 /** Ablagen der Bereiche: Teil im Zustand, Gruppen `{ schlüssel: tabelle }`, Tabelle der Löschvermerke ohne eigene Angabe. */
+import { settingLabel } from "./pcsettings.js";
+
 export const SOURCES = [
   { store: "logs", area: "sleep", maps: { sleep: "sleep_log", naps: "sleep_nap", recovery: "recovery_log" } },
   { store: "todos", area: "checklists", maps: { rows: "todo" }, delTable: "todo" },
@@ -34,7 +36,7 @@ export const AREAS = [
   ["health", "Health"],
   ["superhuman", "Superhuman"],
   ["icoach", "iCoach.me – Koffein"],
-  ["settings", "Settings – Tagesziele"],
+  ["settings", "Settings"],
 ];
 
 export const TABLE_LABELS = {
@@ -485,6 +487,20 @@ export function pendingItems(st) {
   const water = localOf(st, "water");
   if (water?.glass && !water.glass.sent)
     items.push({ key: "water|settings|glass", store: "water", area: "nutrition", table: "settings", id: "glass", title: `Glasgröße ${fmtNum(water.glass.ml / 1000)} l`, label: "Einstellung", date: null, status: "Geändert", parts: [], units: [], special: "water-glass", edit: { view: "diary" }, fields: [], details: [] });
+  // Einstellungen für PC und Handy (1.48.0): je Bereich ein Eintrag (Mahlzeiten zusammen), Profil
+  const pcs = localOf(st, "pcsettings");
+  if (pcs) {
+    const groups = new Map();
+    for (const [key, e] of Object.entries(pcs.settings ?? {})) {
+      if (e.sent) continue;
+      const label = settingLabel(key);
+      groups.set(label, [...(groups.get(label) ?? []), key]);
+    }
+    for (const [label, keys] of groups)
+      items.push({ key: `pcsettings|settings|${label}`, store: "pcsettings", area: "settings", table: "settings", id: label, title: label, label: "Einstellung", date: null, status: "Geändert", parts: [], units: [], special: "pc-setting", keys, edit: { view: "settings" }, fields: [], details: [] });
+    if (pcs.profile && !pcs.profile.sent)
+      items.push({ key: "pcsettings|profile|1", store: "pcsettings", area: "settings", table: "profile", id: "1", title: `Profil: ${pcs.profile.row.name}`, label: "Profil", date: null, status: "Geändert", parts: [], units: [], special: "pc-profile", edit: { view: "settings" }, fields: [], details: [] });
+  }
   return items.sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")) || a.title.localeCompare(b.title, "de"));
 }
 
@@ -523,6 +539,14 @@ export function discardItem(st, item, allItems = pendingItems(st)) {
   if (item.special === "water-glass") {
     localOf(st, "water").glass = null;
     return ["water"];
+  }
+  if (item.special === "pc-setting") {
+    for (const k of item.keys) delete localOf(st, "pcsettings").settings[k];
+    return ["pcsettings"];
+  }
+  if (item.special === "pc-profile") {
+    localOf(st, "pcsettings").profile = null;
+    return ["pcsettings"];
   }
   const user = usedElsewhere(st, item, allItems);
   if (user) throw new Error(`„${item.title}“ wird noch in ${user.label === "Training" || user.label === "Nutrition" ? user.title : `„${user.title}“ (${user.label})`} verwendet – zuerst das verwerfen.`);

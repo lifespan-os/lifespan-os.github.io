@@ -3,6 +3,7 @@
 // unter „Übersicht anpassen“ gewählt ist (Settings `ui.overview_layout`). Daten: pcoverview.js
 // (wie der Rust-Kern), Rechnung: pcdomain.js (= src/domain der Desktop-App).
 
+import { arrangeCards } from "./layoutedit.js";
 import * as P from "./pcdb.js";
 import * as O from "./pcoverview.js";
 import * as D from "./pcdomain.js";
@@ -840,7 +841,7 @@ export function overviewCardsHtml(db, catalog, date, today) {
   const now = new Date();
   const steps = stepsDayHtml(catalog, date, date === today ? now.getHours() * 60 + now.getMinutes() : 1440);
   if (steps) live.push({ id: "wearable-steps", empty: false, node: steps });
-  const cards = D.arrange(live, layout);
+  const cards = arrangeCards(db, D.OVERVIEW_LAYOUT_KEY, live);
   return `<div class="ov-grid">${cards.map((c) => (c.empty && layout.emptyLast ? `<div class="overview-card--empty">${c.node}</div>` : c.node)).join("")}</div>`;
 }
 

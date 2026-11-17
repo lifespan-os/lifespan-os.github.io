@@ -3,6 +3,7 @@
 
 import * as B from "./bodydata.js";
 import * as D from "./pcdomain.js";
+import { appDay } from "./appday.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -63,10 +64,7 @@ export function bodyState(local) {
 const S = () => X.S.body;
 const esc = (v) => X.esc(v);
 const pad = (n) => String(n).padStart(2, "0");
-const today = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-};
+const today = () => appDay();
 const fmtNum = (v, d = 1) =>
   v === null || v === undefined ? "–" : (Math.round(v * 10 ** d) / 10 ** d).toLocaleString("de-DE", { maximumFractionDigits: d });
 const fmtDate = (iso) => {

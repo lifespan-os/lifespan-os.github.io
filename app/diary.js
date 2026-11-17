@@ -4,6 +4,9 @@
 // src/domain). Wasser kann am Handy bearbeitet werden und geht mit der Ernährung an den PC.
 
 import * as P from "./pcdb.js";
+import * as C from "./core.js";
+import * as PS from "./pcsettings.js";
+import { arrangeCards } from "./layoutedit.js";
 import * as D from "./pcdomain.js";
 import * as N from "./nutrition.js";
 import * as SP from "./supplements.js";
@@ -20,10 +23,8 @@ export function initDiary(ctx) {
 
 const esc = (v) => X.esc(v);
 const pad = (n) => String(n).padStart(2, "0");
-export const today = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-};
+/** „Heute“ mit dem Tageswechsel wie am PC (1.48.0). */
+export const today = () => C.appDay();
 const nowTime = () => {
   const d = new Date();
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -41,6 +42,8 @@ export function buildDb() {
   const S = X.S;
   const food = S.food?.local;
   const water = P.phoneWater(S.water);
+  // Einstellungen und Profil, am Handy geändert (1.48.0)
+  const pcs = PS.phoneSettings(S.pcsettings);
   let workouts = {};
   try {
     workouts = X.buildReturnTables();
@@ -51,7 +54,9 @@ export function buildDb() {
     foods: food ? Object.values(food.foods).map((f) => [f.row.id, f.row]) : [],
     meals: food ? Object.values(food.meals) : [],
     water: water.water,
-    settings: water.settings,
+    settings: { ...water.settings, ...pcs.settings },
+    deletedSettings: pcs.deletedSettings,
+    profile: pcs.profile,
     body: Object.values(S.body?.local.entries ?? {}).map((e) => e.row),
     workouts,
     exercises: S.localExercises ?? [],
@@ -61,6 +66,8 @@ export function buildDb() {
   });
   // Mahlzeitenliste wie am PC (Settings → Mahlzeiten: meal_name.*, meal_hidden, meal_extra)
   D.setMealList(N.setMealConfig(db.settings));
+  // Tageswechsel wie am PC (ui.day_start, 1.48.0)
+  C.setDayStart(db.settings.get("ui.day_start") ?? null);
   return db;
 }
 
@@ -191,8 +198,7 @@ export function viewDiary() {
     { id: "meals", node: mealsCard(slots, fast, date) },
     { id: "supplements", node: supplementsCard(intakes, suppMacros, hasSuppMacros) },
   ];
-  const layout = D.parseLayout(db.settings.get("ui.diary_layout"));
-  const ordered = D.arrange(cards, layout).filter((c) => c.node);
+  const ordered = arrangeCards(db, "ui.diary_layout", cards).filter((c) => c.node);
 
   return `${X.header("Nutrition")}<main class="wrap diary">
     ${nutritionTabs("diary")}

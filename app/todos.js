@@ -6,6 +6,7 @@
 // Logik: todosdata.js und checklistdata.js (wie checklist.rs, day_status.rs). Änderungen gehen
 // mit der Datei „Körperwerte“ an den PC.
 
+import * as PS from "./pcsettings.js";
 import * as T from "./todosdata.js";
 import * as O from "./pcoverview.js";
 import * as P from "./pcdb.js";
@@ -213,7 +214,7 @@ const HRT_LOOKBACK_DAYS = 180;
 const KIND_ICON = { note: "ℹ", training: "🏋", workout: "✓", alarm: "⏰", todo: "☐" };
 
 /** Schalter „Secret Protocols“ vom PC (für die fällige Hormongabe als Alarm). */
-const secretOn = () => (X.S.catalog?.pc?.settings ?? []).some((s) => s.key === "secret_protocols" && String(s.value) === "1");
+const secretOn = () => String(PS.effective(X.S.catalog, X.S.pcsettings, "secret_protocols")) === "1";
 
 /** Pläne in der Form `TrainingPlan` (Tage mit Terminen) für `plannedTrainings`. */
 function plansWithSlots(db) {

@@ -7,10 +7,11 @@ import { bodyFromRows } from "./bodydata.js";
 import { focusFromRows } from "./focusinfo.js";
 import { pcFromRows } from "./pcdb.js";
 import { checkCompetition, competitionColumns, competitionFromRow } from "./hyrox.js";
+import { appDay } from "./appday.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.47.0";
+export const MOBILE_VERSION = "1.48.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -33,6 +34,8 @@ function cryptoRandom(n) {
 
 /** UTC, ISO 8601 mit Millisekunden, z. B. 2026-11-12T08:15:02.123Z */
 export const isoNow = (d = new Date()) => d.toISOString();
+
+export { setDayStart, dayStartMinutes, appDay } from "./appday.js";
 
 /** Kalendertag in Ortszeit: JJJJ-MM-TT */
 export function localDate(d = new Date()) {
@@ -571,7 +574,7 @@ export function newWorkout({ title, planDayId = null, now = new Date() }) {
   const ts = isoNow(now);
   return {
     id: uuidv7(now.getTime()),
-    date: localDate(now),
+    date: appDay(now),
     startTime: localTime(now),
     title: [...title].slice(0, 80).join("").trim() || "Training",
     planDayId,

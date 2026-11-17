@@ -5,6 +5,7 @@
 // Logik: logsdata.js (wie der Rust-Kern), Rechenregeln aus pcdomain.js (= src/domain).
 // Änderungen gehen mit „Körperwerte senden“ an den PC.
 
+import { arrangeCards } from "./layoutedit.js";
 import * as P from "./pcdb.js";
 import * as O from "./pcoverview.js";
 import * as D from "./pcdomain.js";
@@ -100,8 +101,7 @@ const note = (t) => (t ? `<p class="card__note">${t}</p>` : "");
 
 /** Karten in der Anordnung vom PC (1.47.0: Sleep/Recovery → Seite anpassen, `ui.*_layout`). */
 function arranged(db, key, cards) {
-  const layout = D.parseLayout(db.settings.get(key));
-  return D.arrange(cards, { ...layout, emptyLast: false })
+  return arrangeCards(db, key, cards, { emptyLast: false })
     .map((c) => c.node)
     .join("");
 }

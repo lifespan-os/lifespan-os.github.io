@@ -63,7 +63,7 @@ export function viewVendor() {
             : `<p class="muted small">${esc(S.vendorIndexError ?? "Keine Pakete in der Liste.")}</p>`
       }
       <label class="btn block" for="vendor-file">Paketdatei wählen …</label>
-      <input id="vendor-file" type="file" accept=".json,application/json" hidden>
+      <input id="vendor-file" type="file" hidden>
     </section>
     <section class="card">
       <h3>Installiert</h3>

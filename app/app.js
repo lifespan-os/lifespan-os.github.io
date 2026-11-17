@@ -183,9 +183,11 @@ function viewSetup() {
   </main>`;
 }
 
+// Ohne `accept` (1.50.0): Google Drive meldet JSON-Dateien in der iPhone-App „Dateien“ nicht als JSON,
+// iOS lehnt sie dann als „nicht unterstützter Dateityp“ ab. Den Inhalt prüft `C.parseExport`.
 function fileButton(label) {
   return `<label class="btn primary block" for="file-in">${esc(label)}</label>
-    <input id="file-in" type="file" accept=".json,application/json" hidden>`;
+    <input id="file-in" type="file" hidden>`;
 }
 
 /**

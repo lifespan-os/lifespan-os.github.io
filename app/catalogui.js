@@ -48,7 +48,7 @@ export function catalogCard() {
       <div class="row-actions">
         <button class="btn sm" data-act="catalog-export" data-arg="${kind}">Exportieren</button>
         <label class="btn sm" for="catalog-file-${kind}">Importieren …</label>
-        <input id="catalog-file-${kind}" type="file" accept=".json,application/json" hidden>
+        <input id="catalog-file-${kind}" type="file" hidden>
       </div>
       ${plan?.kind === kind ? previewHtml(plan) : ""}
       <div id="catalog-result-${kind}"></div>

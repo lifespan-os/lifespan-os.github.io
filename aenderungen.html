@@ -45,6 +45,10 @@ h1 { font-family: var(--f-display); font-size: clamp(2rem, 6vw, 3.2rem); line-he
 .ver ul { margin: 0; padding-left: 1.2em; }
 .ver li + li { margin-top: 4px; }
 .ver .tag { display: inline-block; margin-left: 8px; padding: 1px 10px; border-radius: 999px; background: var(--orange); color: #fff; font-size: .75rem; font-weight: 700; vertical-align: middle; }
+.ver figure { margin: 14px 0 4px; }
+.ver figure img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; }
+.ver figure.phone img { max-width: 300px; }
+.ver figcaption { color: var(--muted); font-size: .85rem; margin-top: 6px; }
 .note { color: var(--muted); font-size: .9rem; margin: 0 0 40px; }
 footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--muted); font-size: .85rem; }
 </style>
@@ -59,8 +63,55 @@ footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--m
 <main class="wrap">
   <h1>Neuigkeiten</h1>
   <p class="lead">Was in den letzten Versionen dazugekommen ist. Updates installierst du mit LIFESPAN-OS-Setup.exe – deine Daten bleiben erhalten.</p>
+  <section class="ver" id="v1.0.152">
+    <h2>Version 1.0.152<span class="tag">Neu</span></h2>
+    <p class="date">18.11.2026</p>
+    <ul>
+      <li><b>Handy-App 1.54.0:</b> Quick Fill zum Nachtragen fehlender Werte und des Schlafs, Empfehlungen zu deinen Hauptzielen, Ziele, Datenqualität mit „Erledigt“, Health → Termine und Nutrition → Planen.</li>
+      <li>Training: „HYROX-Wettkampf-Angaben“ erscheinen nur noch bei HYROX-Einheiten.</li>
+      <li>Insights → mögliche Zusammenhänge: Eiweiß und Muskelkater am Folgetag entfällt; Empfehlungen ohne Aufzählungspunkte.</li>
+    </ul>
+    <figure class="phone"><a href="media/neu/handy-quick-fill.jpg"><img src="media/neu/handy-quick-fill.jpg" alt="Handy-App: Werte nachtragen mit Zubettgehen und Aufstehen der letzten Nacht" width="585" height="650" loading="lazy"></a><figcaption>Handy-App 1.54.0: Quick Fill fragt die fehlende Nacht ab.</figcaption></figure>
+  </section>
+  <section class="ver" id="v1.0.151">
+    <h2>Version 1.0.151</h2>
+    <p class="date">18.11.2026</p>
+    <ul>
+      <li><b>Quick Fill mit Schlaf:</b> fehlt die letzte Nacht, fragt die App Zubettgehen und Aufstehen ab, sonst leere Angaben wie die Schlafqualität.</li>
+      <li><b>Insights → Datenqualität:</b> Hinweise lassen sich als erledigt bestätigen und verschwinden danach.</li>
+      <li>Settings und Import/Export: Die Sprungleiste zeigt beim Scrollen, wo du gerade bist.</li>
+      <li>Handy-App 1.53.0: kleinerer Kopf in der Overview mit Schritten zum Schrittziel.</li>
+    </ul>
+    <figure><a href="media/neu/datenqualitaet-erledigt.jpg"><img src="media/neu/datenqualitaet-erledigt.jpg" alt="Insights → Datenqualität mit „Erledigt“ je Hinweis" width="1371" height="260" loading="lazy"></a><figcaption>Datenqualität: jeden Hinweis einzeln oder alle auf einmal bestätigen.</figcaption></figure>
+  </section>
+  <section class="ver" id="v1.0.150">
+    <h2>Version 1.0.150</h2>
+    <p class="date">18.11.2026</p>
+    <ul>
+      <li>Austausch-Ordner wird wiedergefunden, wenn Google Drive für Windows „Meine Ablage“ an einen anderen Ort verlegt – mit „Diesen Ordner verwenden“.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.149">
+    <h2>Version 1.0.149</h2>
+    <p class="date">18.11.2026</p>
+    <ul>
+      <li><b>Quick Fill:</b> Werte, die kein Import liefert (z. B. intrazelluläres Wasser), sammelt die App – „Werte nachtragen“ oben fragt sie gesammelt ab.</li>
+      <li><b>Hauptziele</b> in Settings, z. B. Fettabbau, Muskelaufbau oder besserer Schlaf.</li>
+      <li><b>Insights → Empfehlungen zu deinen Hauptzielen:</b> aus „iCoach.Me – Die Masterclass“ zu deinen Werten der letzten 14 Tage, jeweils mit Buchstelle – nur mit deiner Einwilligung.</li>
+    </ul>
+    <figure><a href="media/neu/empfehlungen-hauptziele.jpg"><img src="media/neu/empfehlungen-hauptziele.jpg" alt="Insights → Empfehlungen zu deinen Hauptzielen mit Werten und Buchstelle" width="1377" height="388" loading="lazy"></a><figcaption>Empfehlungen mit deinen Werten und der Fundstelle in der Masterclass.</figcaption></figure>
+  </section>
+  <section class="ver" id="v1.0.148">
+    <h2>Version 1.0.148</h2>
+    <p class="date">18.11.2026</p>
+    <ul>
+      <li>Oberfläche aufgeräumt: schmaler Kopfbereich beim Scrollen, breitere Ansicht auf großen Bildschirmen, ruhigere Diagramme.</li>
+      <li>Training → Auswertung übersichtlicher; Sprungleiste in Settings und Import/Export.</li>
+      <li>Handy-App 1.52.0: Tabellen repariert, Overview-Karten zuklappbar, Schrift ohne Google Fonts.</li>
+    </ul>
+  </section>
   <section class="ver" id="v1.0.147">
-    <h2>Version 1.0.147<span class="tag">Neu</span></h2>
+    <h2>Version 1.0.147</h2>
     <p class="date">18.11.2026</p>
     <ul>
       <li><b>Nutrition → Planen:</b> Wochenplan aus deinen Vorlagen und Rezepten mit Nährwerten je Tag und Einkaufsliste mit Mengen (in die Zwischenablage oder als To-dos).</li>

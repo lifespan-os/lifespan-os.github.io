@@ -8864,18 +8864,6 @@ function dailyAssociations(data) {
       )
     },
     {
-      label: "Eiwei\xDF und Erholung am Folgetag",
-      association: describeAssociation(
-        pairByDate(protein, recoverySeries(data.recovery, "readiness"), 1),
-        {
-          x: "Mehr Eiwei\xDF an einem Tag",
-          pair: "deiner Eiwei\xDFmenge und der Erholungs-Einsch\xE4tzung am n\xE4chsten Morgen",
-          higher: "einer h\xF6heren Erholungs-Einsch\xE4tzung am n\xE4chsten Morgen",
-          lower: "einer niedrigeren Erholungs-Einsch\xE4tzung am n\xE4chsten Morgen"
-        }
-      )
-    },
-    {
       label: "Eiwei\xDF und Muskelkater am Folgetag",
       association: describeAssociation(
         pairByDate(protein, recoverySeries(data.recovery, "soreness"), 1),

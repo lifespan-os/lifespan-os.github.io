@@ -882,3 +882,12 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
 - Schrift „Barlow Condensed“ liegt in `fonts/` (OFL, `fonts/OFL-Barlow-Condensed.txt`) – keine Anfrage an Google
   Fonts mehr; der Service Worker speichert sie mit den App-Dateien.
 - Schlaf-Einträge: Pfeil statt „Bearbeiten“ (der ganze Eintrag ist tippbar).
+
+## Version 1.53.0 (18.11.2026): kleinerer Kopf mit Schritten
+
+- Overview-Kopf: kcal-Zahl, Tagesbedarf und Makros etwa 15 % kleiner, Figur klein oben rechts wie auf den
+  anderen Seiten. Rechts neben den kcal stehen die Schritte zum Tagesschrittziel im gleichen Stil (große Zahl,
+  Ziel, Balken; `heroSteps` in `overview.js`, Werte aus der Alltagsbewegung des Tages). Ohne Schritte und ohne
+  Schrittziel entfällt der Block.
+- Insights → mögliche Zusammenhänge: „Eiweiß und Erholung am Folgetag“ entfällt (wie am PC 1.0.151, ab neu
+  erzeugter pcdomain.js).

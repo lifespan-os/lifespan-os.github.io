@@ -845,7 +845,8 @@ export function overviewDayNav(date, today) {
 
 /**
  * Kopf der Overview (1.38.0, Entwurf „APP 1“): gegessene kcal des Tages groß, Tagesbedarf, offene kcal
- * und Makros (gleiche Rechnung wie die Karte Ernährung).
+ * und Makros (gleiche Rechnung wie die Karte Ernährung). Seit 1.53.0 rechts daneben die Schritte zum
+ * Schrittziel; Zahlen und Figur kleiner, damit der Kopf weniger Platz braucht.
  */
 export function overviewHero(db, catalog, date, today) {
   const { data } = overviewData(db, catalog, date);
@@ -862,10 +863,30 @@ export function overviewHero(db, catalog, date, today) {
     `<span class="hero__macro"><b>${F(val ?? 0, val && val < 100 ? 1 : 0)}</b> <span>${goalG != null ? `/ ${F(goalG)} g ` : "g "}${label}</span></span>`;
   return `<div class="hero">
     <span class="hero__date">${esc(date === today ? "Heute" : dayText)}${open !== null ? ` · ${open >= 0 ? `noch ${F(open)} kcal offen` : `${F(-open)} kcal über Bedarf`}` : ""}</span>
-    <div class="hero__kcal"><span class="hero__num">${F(kcal)}</span><span class="hero__goal">${target !== null ? `/ ${F(target)} kcal` : "kcal"}</span></div>
-    ${target !== null ? `<div class="hero__bar" role="img" aria-label="${esc(`${F(kcal)} von ${F(target)} kcal`)}"><span style="flex-grow:${share}"></span><span style="flex-grow:${1 - share}"></span></div>` : ""}
+    <div class="hero__row">
+      <div class="hero__main">
+        <div class="hero__kcal"><span class="hero__num">${F(kcal)}</span><span class="hero__goal">${target !== null ? `/ ${F(target)} kcal` : "kcal"}</span></div>
+        ${target !== null ? `<div class="hero__bar" role="img" aria-label="${esc(`${F(kcal)} von ${F(target)} kcal`)}"><span style="flex-grow:${share}"></span><span style="flex-grow:${1 - share}"></span></div>` : ""}
+      </div>
+      ${heroSteps(data.neatToday?.steps ?? null, goal?.steps ?? data.goal?.steps ?? null)}
+    </div>
     <div class="hero__macros">${macro(n?.proteinG, macros?.proteinG, "P")}${macro(n?.carbsG, macros?.carbsG, "KH")}${macro(n?.fatG, macros?.fatG, "F")}</div>
   </div>`;
+}
+
+/**
+ * Schritte zum Schrittziel im Kopf der Overview (1.53.0), im Stil der kcal zum Tagesbedarf:
+ * große Zahl, Ziel daneben, Balken. Ohne Schritte und ohne Ziel entfällt der Block.
+ */
+export function heroSteps(steps, goal) {
+  if (steps === null && (goal === null || goal <= 0)) return "";
+  const s = steps ?? 0;
+  const share = goal > 0 ? Math.max(0, Math.min(1, s / goal)) : 0;
+  return `<div class="hero__steps">
+        <div class="hero__kcal"><span class="hero__num hero__num--steps">${F(s)}</span>${goal > 0 ? `<span class="hero__goal">/ ${F(goal)}</span>` : ""}</div>
+        <span class="hero__unit">Schritte</span>
+        ${goal > 0 ? `<div class="hero__bar hero__bar--steps" role="img" aria-label="${esc(`${F(s)} von ${F(goal)} Schritten`)}"><span style="flex-grow:${share}"></span><span style="flex-grow:${1 - share}"></span></div>` : ""}
+      </div>`;
 }
 
 /** Alle Karten der Overview in der Anordnung vom PC (ausgeblendete fehlen, leere ans Ende). */

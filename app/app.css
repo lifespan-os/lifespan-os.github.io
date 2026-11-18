@@ -1524,3 +1524,23 @@ details.ov-card:not([open]) { padding-bottom: 12px; }
 .train-row { flex-wrap: wrap; }
 .train-row__main { flex: 1 1 190px; }
 .train-row > .linkbtn, .train-row > .row-actions { margin-left: auto; }
+
+/* 1.53.0: Kopf der Overview kleiner (Zahlen und Makros −15 %, Figur kleiner), Schritte zum Schrittziel daneben */
+.top--hero { padding-bottom: 28px; }
+.top--hero::before { top: calc(var(--safe-top) + 6px); right: 16px; width: 38px; height: 60px; }
+.top--hero .wrap { padding-right: 52px; }
+.top--hero .top__hero { padding-right: 16px; }
+.hero__num { font-size: 3.9rem; }
+.hero__goal { font-size: 1.1rem; }
+.hero__macros { margin-top: 8px; font-size: .7rem; }
+.hero__macro b { font-size: 1.06rem; }
+.hero__row { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px 16px; flex-wrap: wrap; }
+.hero__main { min-width: 0; }
+.hero__steps { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+.hero__steps .hero__kcal { justify-content: flex-end; gap: 6px; }
+.hero__num--steps { font-size: 2.2rem; }
+.hero__steps .hero__goal { font-size: .95rem; }
+.hero__unit { font-size: .75rem; color: var(--on-navy-muted); }
+.hero__bar--steps { width: 120px; max-width: 120px; margin-top: 4px; }
+.hero__bar--steps span:first-child { background: var(--cyan); }
+@media (max-width: 350px) { .hero__num { font-size: 3.3rem; } .hero__num--steps { font-size: 1.8rem; } }

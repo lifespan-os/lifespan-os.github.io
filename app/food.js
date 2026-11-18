@@ -3,7 +3,8 @@
 import { blsResultsHtml } from "./blsui.js";
 import * as N from "./nutrition.js";
 import * as L from "./label.js";
-import { nutritionTabs } from "./diary.js";
+import { buildDb, nutritionTabs } from "./diary.js";
+import * as QM from "./quickmeal.js";
 
 let X = null; // Verbindung zur App (Zustand, Anzeige, Speichern)
 
@@ -14,6 +15,25 @@ export function initFood(ctx) {
   document.addEventListener("pointermove", cropMove);
   document.addEventListener("pointerup", cropEnd);
   document.addEventListener("pointercancel", cropEnd);
+  // Favoriten: lange drücken öffnet die Menge (1.55.0)
+  document.addEventListener("pointerdown", holdStart);
+  for (const t of ["pointerup", "pointercancel", "pointerleave"]) document.addEventListener(t, holdEnd);
+}
+
+let hold = null;
+function holdStart(ev) {
+  const el = ev.target.closest?.("[data-hold]");
+  if (!el) return;
+  holdEnd();
+  hold = setTimeout(() => {
+    hold = null;
+    el.dataset.held = "1";
+    openFood(el.dataset.arg);
+  }, 550);
+}
+function holdEnd() {
+  clearTimeout(hold);
+  hold = null;
 }
 
 /** iPhone/iPad: „Text scannen“ der Tastatur ist genauer als die Erkennung im Browser. */
@@ -76,6 +96,129 @@ function timeHintHtml(kind) {
   return `<div class="warn" role="alert"><p class="small">Noch keine Uhrzeit eingetragen. Mit Uhrzeit lässt sich die Mahlzeit im Tagesverlauf genauer auswerten.</p>
     <div class="row"><button class="btn sm primary" data-act="food-time-focus" data-arg="${kind}">Uhrzeit eintragen</button><button class="btn sm" data-act="food-time-skip" data-arg="${kind}">Ohne Uhrzeit eintragen</button></div></div>`;
 }
+
+// ------------------------------------------------------------------ Schnell eintragen (1.55.0)
+
+/** Verlauf, aktive Lebensmittel und Nutzung – einmal je Anzeige. */
+function quickData() {
+  const db = buildDb();
+  const history = QM.pastMeals(db);
+  return { history, foods: N.allFoods(X.S.catalog, F().local), rank: QM.usageRank(history) };
+}
+
+/** Übliche Menge eines Lebensmittels (Median der Einträge der letzten 90 Tage) oder null. */
+function usualFor(history, foodId) {
+  const from = QM.Q.favoriteFoods(history, today(), { days: 90, limit: 500 }).find((x) => x.foodId === foodId);
+  if (from) return from.amount;
+  const once = history.flatMap((m) => m.items).filter((i) => i.foodId === foodId);
+  return once.length ? QM.Q.usualAmount(once.map((i) => i.amount)) : null;
+}
+
+/** Startmenge: übliche Menge, sonst 1 Portion, sonst 100 g/ml (in g/ml). */
+function startAmount(food, history) {
+  return usualFor(history, food.id) ?? (food.portion_amount ? food.portion_amount : 100);
+}
+
+const amountText = (v) => String(Math.round(v * 10) / 10).replace(".", ",");
+
+function quickCard() {
+  const s = F();
+  const { history, foods } = quickData();
+  const favs = QM.Q.favoriteFoods(history, today(), { limit: 10 }).filter((x) => foods.has(x.foodId));
+  const parsed = s.qmParsed;
+  return `<section class="card hl" id="quick-meal">
+    <h3>Schnell eintragen</h3>
+    <div class="field"><label for="qm-meal">Mahlzeit (${esc(trackDayLabel())})</label><select id="qm-meal" data-ft="mealType">${mealOptions(s.mealType)}</select></div>
+    ${
+      favs.length
+        ? `<p class="muted small">Favoriten – Tippen trägt die übliche Menge ein, lange drücken ändert sie:</p>
+          <div class="chip-row">${favs
+            .map((x) => {
+              const f = foods.get(x.foodId);
+              return `<button type="button" class="chip quick-fav" data-act="qm-fav" data-arg="${esc(f.id)}" data-hold="1">+ ${esc(f.name)} <span class="muted">${esc(amountText(x.amount))} ${esc(f.basis_unit)}</span></button>`;
+            })
+            .join("")}</div>`
+        : `<p class="muted small">Favoriten erscheinen, sobald du Lebensmittel mehrmals eingetragen hast.</p>`
+    }
+    <div class="field"><label for="qm-text">Freitext – auch per Diktat</label>
+      <textarea id="qm-text" rows="2" data-qm="text" placeholder="z. B. 200 g Hähnchen, 150 g Reis, 1 EL Olivenöl">${esc(s.qmText ?? "")}</textarea></div>
+    <button class="btn block" data-act="qm-parse">Erkennen</button>
+    ${parsed ? parsedHtml(parsed, foods) : ""}
+  </section>`;
+}
+
+function parsedHtml(parsed, foods) {
+  if (!parsed.length) return `<p class="muted small">Nichts erkannt. Beispiel: „200 g Hähnchen, 2 Eier“.</p>`;
+  const on = parsed.filter((l) => l.on).length;
+  return `<ul class="qm-parsed">${parsed
+    .map((l, i) => {
+      const opts = l.candidates.length
+        ? l.candidates.map((id) => foods.get(id)).filter(Boolean).map((f) => `<option value="${esc(f.id)}" ${f.id === l.foodId ? "selected" : ""}>${esc(N.foodLabel(f))}</option>`).join("")
+        : `<option value="">Kein Treffer – bitte suchen</option>`;
+      const unit = foods.get(l.foodId)?.basis_unit ?? "g";
+      return `<li class="qm-parsed__item${l.uncertain ? " is-uncertain" : ""}">
+        <label class="qm-parsed__on"><input type="checkbox" data-qm="on" data-i="${i}" ${l.on ? "checked" : ""}> <span>${esc(l.text)}</span></label>
+        <div class="row"><select data-qm="food" data-i="${i}" aria-label="Lebensmittel" ${l.candidates.length ? "" : "disabled"}>${opts}</select>
+          <input type="text" inputmode="decimal" data-qm="amount" data-i="${i}" value="${esc(l.amount)}" aria-label="Menge in ${unit}" placeholder="Menge"><span class="muted small">${esc(unit)}</span></div>
+        ${l.note ? `<p class="field-warn small">⚠ ${esc(l.note)}</p>` : ""}</li>`;
+    })
+    .join("")}</ul>
+    <div class="row"><button class="btn primary" data-act="qm-parsed-save" ${on ? "" : "disabled"}>${on} ${on === 1 ? "Lebensmittel" : "Lebensmittel"} eintragen</button>
+      <button class="btn ghost" data-act="qm-parsed-clear">Verwerfen</button></div>`;
+}
+
+function multiHtml() {
+  const s = F();
+  if (!s.multi) return "";
+  const foods = N.allFoods(X.S.catalog, s.local);
+  if (!s.multi.length) return `<p class="muted small">Lebensmittel antippen – sie sammeln sich hier und werden gemeinsam eingetragen.</p>`;
+  return `<ul class="qm-parsed">${s.multi
+    .map((m, i) => {
+      const f = foods.get(m.foodId);
+      return `<li class="qm-parsed__item"><b>${esc(f ? N.foodLabel(f) : "Unbekannt")}</b>
+        <div class="row"><input type="text" inputmode="decimal" data-qm="multi-amount" data-i="${i}" value="${esc(m.amount)}" aria-label="Menge"><span class="muted small">${esc(f?.basis_unit ?? "g")}</span>
+        <button class="btn sm ghost" data-act="qm-multi-del" data-arg="${i}" aria-label="Entfernen">✕</button></div></li>`;
+    })
+    .join("")}</ul>
+    <button class="btn primary block" data-act="qm-multi-save">${s.multi.length} ${s.multi.length === 1 ? "Lebensmittel" : "Lebensmittel"} eintragen</button>`;
+}
+
+/** Mehrere Einträge auf einmal in die gewählte Mahlzeit, mit „Rückgängig“. */
+async function quickTrack(items, label) {
+  const s = F();
+  const date = trackDate();
+  let res;
+  try {
+    res = QM.addItems(X.S.catalog, s.local, { date, mealKey: s.mealType, items, today: today(), uuid: () => X.uuid() });
+  } catch (e) {
+    X.toast(e.message, true);
+    return false;
+  }
+  await persist();
+  X.toast(`Eingetragen: ${label} bei ${N.mealLabel(s.mealType)}${date === today() ? "" : ` (${trackDayLabel()})`}`, false, async () => {
+    QM.undoItems(F().local, res.mealId, res.added);
+    await persist();
+    X.rerender();
+  });
+  return true;
+}
+
+/** Lebensmittel zum Tracken öffnen (mit üblicher Menge). */
+function openFood(id) {
+  const food = N.allFoods(X.S.catalog, F().local).get(id);
+  if (!food) return;
+  select(food);
+  const usual = usualFor(quickData().history, food.id);
+  if (usual) {
+    F().unit = "base";
+    F().amount = amountText(usual);
+  }
+  F().status = "";
+  X.rerender();
+  requestAnimationFrame(() => document.getElementById("food-track")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+}
+
+const resultAct = () => (F().multi ? "qm-multi-add" : "food-pick");
 
 function foodItem(f, act) {
   const portion = f.portion_amount ? ` · ${esc(f.portion_name)} ${num(f.portion_amount)} ${f.basis_unit}` : "";
@@ -171,6 +314,12 @@ function trackCard() {
       <div class="field wide"><label for="ft-meal">Mahlzeit (${esc(trackDayLabel())})</label><select id="ft-meal" data-ft="mealType">${mealOptions(s.mealType)}</select></div>
       ${timeFieldHtml("track", trackDate(), s.mealType)}
     </div>
+    <div class="chip-row amount-steps" role="group" aria-label="Menge schnell wählen">${
+      s.unit === "portion"
+        ? QM.Q.PORTION_PRESETS.map((p) => `<button type="button" class="chip" data-act="ft-set" data-arg="${p}">${esc(QM.Q.portionLabel(p))} ${esc(f.portion_name)}</button>`).join("")
+        : `${QM.Q.AMOUNT_PRESETS.map((a) => `<button type="button" class="chip" data-act="ft-set" data-arg="${a}">${a} ${f.basis_unit}</button>`).join("")}
+           <button type="button" class="chip" data-act="ft-step" data-arg="-10" aria-label="10 weniger">−10</button><button type="button" class="chip" data-act="ft-step" data-arg="10" aria-label="10 mehr">+10</button>`
+    }</div>
     <p class="small" id="track-preview">${esc(trackPreview())}</p>
     ${timeHintHtml("track")}
     <div class="row">
@@ -243,6 +392,14 @@ export function viewFood() {
     ${nutritionTabs("food")}
     ${s.trackDate && s.trackDate !== today() ? `<p class="warn small">Einträge gehen in den ${esc(trackDayLabel())} (aus dem Tagebuch). <button class="btn sm ghost" data-act="food-track-today">Lieber heute</button></p>` : ""}
     ${oldExport ? `<p class="warn">Deine Lebensmittel vom PC fehlen noch: Bitte am PC neu exportieren und hier „Neue Exportdatei laden“. Scannen und Tracken geht trotzdem.</p>` : ""}
+    ${s.selected && !s.form ? trackCard() : ""}
+    ${quickCard()}
+    <section class="card">
+      <div class="wo-head"><h3>Lebensmittel suchen</h3><button class="linkbtn" data-act="qm-multi-toggle">${s.multi ? "Einzeln auswählen" : "Mehrere auswählen"}</button></div>
+      <input id="food-q" type="search" placeholder="Name, Marke oder Strichcode" value="${esc(s.query)}" autocomplete="off" enterkeyhint="search">
+      <div class="list" id="food-results">${foodResults(s.query, resultAct())}</div>
+      <div id="qm-multi">${multiHtml()}</div>
+    </section>
     <section class="card">
       <h3>Etikett scannen</h3>
       <p class="muted small">Erkannt werden die Werte je 100 g/ml, die Packungsgröße und der Strichcode – offline auf dem Handy. Am besten gerade, scharf und ohne Spiegelung.</p>
@@ -255,13 +412,8 @@ export function viewFood() {
       ${IOS ? "" : liveTextBlock(false)}
     </section>
     ${s.photo ? cropCard() : ""}
-    ${s.selected && !s.form ? trackCard() : ""}
     ${s.form ? formCard() : ""}
-    <section class="card">
-      <h3>Lebensmittel suchen</h3>
-      <input id="food-q" type="search" placeholder="Name, Marke oder Strichcode" value="${esc(s.query)}" autocomplete="off" enterkeyhint="search">
-      <div class="list" id="food-results">${foodResults(s.query, "food-pick")}</div>
-    </section>
+
     <section class="card">
       <div class="wo-head"><h3>Gericht zusammenstellen</h3><span class="tag">${dish.items.length} Zutaten</span></div>
       <p class="muted small">Mehrere Lebensmittel zu einem Gericht kombinieren, als Rezept speichern und/oder deine Portion eintragen.</p>
@@ -596,9 +748,14 @@ async function track(items, mealType, label, { time = "", kind = "track", skipTi
   }
   s.askTime = null;
   try {
-    N.addToMeal(X.S.catalog, F().local, { date, mealType, items, time: time || null }, { uuid: () => X.uuid(), now: new Date() });
+    const meal = N.addToMeal(X.S.catalog, F().local, { date, mealType, items, time: time || null }, { uuid: () => X.uuid(), now: new Date() });
+    const added = meal.items.slice(meal.items.length - items.length).map((i) => i.id);
     await persist();
-    X.toast(`Eingetragen: ${label} bei ${N.mealLabel(mealType)}${trackDate() === today() ? "" : ` (${trackDayLabel()})`}`);
+    X.toast(`Eingetragen: ${label} bei ${N.mealLabel(mealType)}${trackDate() === today() ? "" : ` (${trackDayLabel()})`}`, false, async () => {
+      QM.undoItems(F().local, meal.row.id, added);
+      await persist();
+      X.rerender();
+    });
     // Aus dem Tagebuch gekommen: zurück zum Tag
     if (F().returnTo) {
       const to = F().returnTo;
@@ -683,13 +840,105 @@ export const foodActions = {
     X.rerender();
   },
   "food-parse": () => useText(document.getElementById("ocr-text")?.value ?? ""),
-  "food-pick": (el) => {
-    const food = N.allFoods(X.S.catalog, F().local).get(el.dataset.arg);
-    if (!food) return;
-    select(food);
-    F().status = "";
+  "food-pick": (el) => openFood(el.dataset.arg),
+  // ---------------- Schnell eintragen (1.55.0)
+  "qm-fav": async (el) => {
+    if (el.dataset.held) {
+      delete el.dataset.held; // lange gedrückt: Menge ist schon geöffnet
+      return;
+    }
+    const { history, foods } = quickData();
+    const f = foods.get(el.dataset.arg);
+    if (!f) return;
+    const amount = startAmount(f, history);
+    await quickTrack([{ foodId: f.id, amount }], `${amountText(amount)} ${f.basis_unit} ${f.name}`);
+  },
+  "qm-parse": () => {
+    const s = F();
+    s.qmText = document.getElementById("qm-text")?.value ?? s.qmText ?? "";
+    const { foods, rank } = quickData();
+    const list = [...foods.values()].map(QM.quickFood);
+    s.qmParsed = QM.Q.parseFreeText(s.qmText, list, rank).map((l) => ({
+      ...l,
+      amount: l.amount === null ? "" : amountText(l.amount),
+      on: Boolean(l.foodId && l.amount !== null),
+    }));
     X.rerender();
-    requestAnimationFrame(() => document.getElementById("food-track")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  },
+  "qm-parsed-clear": () => {
+    F().qmParsed = null;
+    X.rerender();
+  },
+  "qm-parsed-save": async () => {
+    const s = F();
+    const chosen = (s.qmParsed ?? []).filter((l) => l.on);
+    const items = [];
+    for (const l of chosen) {
+      const amount = N.parseNum(l.amount);
+      if (!l.foodId) return X.toast(`„${l.text}“: bitte ein Lebensmittel wählen oder abwählen.`, true);
+      if (!(amount > 0 && amount <= 10000)) return X.toast(`„${l.text}“: bitte eine Menge zwischen 0 und 10.000 eingeben.`, true);
+      items.push({ foodId: l.foodId, amount });
+    }
+    if (!items.length) return X.toast("Bitte mindestens ein Lebensmittel auswählen.", true);
+    if (await quickTrack(items, `${items.length} Lebensmittel`)) {
+      s.qmParsed = null;
+      s.qmText = "";
+      X.rerender();
+    }
+  },
+  "qm-multi-toggle": () => {
+    const s = F();
+    s.multi = s.multi ? null : [];
+    X.rerender();
+  },
+  "qm-multi-add": (el) => {
+    const s = F();
+    if (!s.multi) s.multi = [];
+    const { history, foods } = quickData();
+    const f = foods.get(el.dataset.arg);
+    if (!f) return;
+    if (!s.multi.some((m) => m.foodId === f.id)) s.multi.push({ foodId: f.id, amount: amountText(startAmount(f, history)) });
+    const box = document.getElementById("qm-multi");
+    if (box) box.innerHTML = multiHtml();
+    else X.rerender();
+  },
+  "qm-multi-del": (el) => {
+    F().multi?.splice(Number(el.dataset.arg), 1);
+    const box = document.getElementById("qm-multi");
+    if (box) box.innerHTML = multiHtml();
+  },
+  "qm-multi-save": async () => {
+    const s = F();
+    const items = [];
+    const foods = N.allFoods(X.S.catalog, s.local);
+    for (const m of s.multi ?? []) {
+      const amount = N.parseNum(m.amount);
+      if (!(amount > 0 && amount <= 10000)) return X.toast(`${foods.get(m.foodId)?.name ?? "Eintrag"}: bitte eine Menge zwischen 0 und 10.000 eingeben.`, true);
+      items.push({ foodId: m.foodId, amount });
+    }
+    if (!items.length) return;
+    if (await quickTrack(items, `${items.length} Lebensmittel`)) {
+      s.multi = [];
+      s.query = "";
+      X.rerender();
+    }
+  },
+  "ft-set": (el) => {
+    const s = F();
+    s.amount = String(el.dataset.arg).replace(".", ",");
+    const input = document.getElementById("ft-amount");
+    if (input) input.value = s.amount;
+    const p = document.getElementById("track-preview");
+    if (p) p.textContent = trackPreview();
+  },
+  "ft-step": (el) => {
+    const s = F();
+    const cur = N.parseNum(s.amount);
+    s.amount = amountText(QM.Q.stepAmount(Number.isFinite(cur) ? cur : 0, Number(el.dataset.arg)));
+    const input = document.getElementById("ft-amount");
+    if (input) input.value = s.amount;
+    const p = document.getElementById("track-preview");
+    if (p) p.textContent = trackPreview();
   },
   "food-save": async () => {
     const s = F();
@@ -811,7 +1060,7 @@ export function foodInput(el) {
   if (!s) return false;
   if (el.id === "food-q") {
     s.query = el.value;
-    document.getElementById("food-results").innerHTML = foodResults(s.query, "food-pick");
+    document.getElementById("food-results").innerHTML = foodResults(s.query, resultAct());
     return true;
   }
   if (el.id === "dish-q") {
@@ -821,6 +1070,21 @@ export function foodInput(el) {
   }
   if (el.id === "ocr-text") {
     s.text = el.value;
+    return true;
+  }
+  if (el.dataset.qm) {
+    const k = el.dataset.qm;
+    const i = Number(el.dataset.i);
+    if (k === "text") s.qmText = el.value;
+    else if (k === "amount" && s.qmParsed?.[i]) s.qmParsed[i].amount = el.value;
+    else if (k === "multi-amount" && s.multi?.[i]) s.multi[i].amount = el.value;
+    else if (k === "on" && s.qmParsed?.[i]) {
+      s.qmParsed[i].on = el.checked;
+      X.rerender();
+    } else if (k === "food" && s.qmParsed?.[i]) {
+      s.qmParsed[i].foodId = el.value || null;
+      X.rerender();
+    }
     return true;
   }
   if (el.dataset.ff) {
@@ -873,6 +1137,7 @@ export function foodChange(el) {
     reviewChange(el);
     return true;
   }
+  if (el.dataset.qm === "on" || el.dataset.qm === "food") return foodInput(el);
   if (el.dataset.ff === "basis" || el.dataset.ft || el.dataset.fd || el.dataset.du !== undefined) return foodInput(el);
   return false;
 }

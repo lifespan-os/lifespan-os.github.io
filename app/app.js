@@ -9,7 +9,8 @@ import { QUICK, SECTIONS, barChoices, barSlots, drawerHtml, icon, pcOnlyHtml, qu
 import { focusInfo, machineNamesOf } from "./focusinfo.js";
 import * as P from "./pcdb.js";
 import * as PDOM from "./pcdomain.js";
-import { buildDb, diaryActions, diaryChange, diaryInput, initDiary, today as todayIso, viewDiary, viewNutritionHistory, viewSuppIntake } from "./diary.js";
+import { buildDb, diaryActions, diaryChange, diaryInput, initDiary, today as todayIso, viewDiary, viewFastEntry, viewNutritionHistory, viewSuppIntake } from "./diary.js";
+import * as FT from "./fastdata.js";
 import * as SP from "./supplements.js";
 import { initVendor, vendorActions, vendorChange, viewVendor } from "./vendorui.js";
 import { catalogActions, catalogCard, catalogChange, initCatalog } from "./catalogui.js";
@@ -88,12 +89,30 @@ const fmtSec = (s) => {
   return `${Math.floor(a / 60)}:${String(a % 60).padStart(2, "0")}`;
 };
 
-function toast(text, err = false) {
+/** Meldung oben; mit `undo` (Funktion) zusätzlich ein Knopf „Rückgängig“ (1.55.0, 6 Sekunden). */
+function toast(text, err = false, undo = null) {
   toastEl.textContent = text;
   toastEl.className = err ? "toast err" : "toast";
+  if (typeof undo === "function") {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "toast__undo";
+    b.textContent = "Rückgängig";
+    b.addEventListener("click", async () => {
+      toastEl.hidden = true;
+      clearTimeout(toast.t);
+      try {
+        await undo();
+        toast("Rückgängig gemacht.");
+      } catch (e) {
+        toast(e.message || "Rückgängig ging nicht.", true);
+      }
+    });
+    toastEl.append(" ", b);
+  }
   toastEl.hidden = false;
   clearTimeout(toast.t);
-  toast.t = setTimeout(() => (toastEl.hidden = true), err ? 5000 : 2200);
+  toast.t = setTimeout(() => (toastEl.hidden = true), err ? 5000 : undo ? 6000 : 2200);
 }
 
 let saveTimer = null;
@@ -122,7 +141,7 @@ function refreshCatalog() {
 const exById = () => new Map(C.allExercises(S.catalog, S.localExercises).map((e) => [e.id, e]));
 const machineById = () => new Map(S.catalog.machines.map((m) => [m.id, m]));
 const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported);
-const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWater(S.water) + SP.unsentSupp(S.supp);
+const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWater(S.water) + SP.unsentSupp(S.supp) + FT.unsentFast(S.fast);
 // Körperwerte plus Schlaf und Regeneration (gehen zusammen in die Datei „Körperwerte“, 1.7.0)
 const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + GLD.unsentGlucose(S.glucose) + TR.unsentTrain(S.train) + GL.unsentGoals(S.goals) + PS.unsentSync(S.pcsettings);
 
@@ -1033,6 +1052,7 @@ const VIEWS = {
   pending: viewPending,
   "account-new": viewAccountNew,
   "supp-intake": viewSuppIntake,
+  "fast-entry": viewFastEntry,
   vendor: viewVendor,
   goals: viewGoals,
   bls: viewBls,
@@ -1215,7 +1235,7 @@ navRoot.id = "nav-root";
 document.body.appendChild(navRoot);
 
 /** Ansichten mit eigener Leiste unten (Training läuft, Speichern): dort keine Hauptleiste. */
-const NO_TABBAR = new Set(["setup", "workout", "picker", "machine", "finish", "supp-intake", "account-new"]);
+const NO_TABBAR = new Set(["setup", "workout", "picker", "machine", "finish", "supp-intake", "fast-entry", "account-new"]);
 
 function renderNav() {
   if (!S.catalog) {
@@ -1862,6 +1882,13 @@ function foodTables(all) {
   const out = mergeTables(mergeTables(N.nutritionTables(S.catalog, S.food.local, { all }), P.waterTables(S.water, { all })), SP.suppTables(S.supp, buildDb(), { all, withSupplements: Boolean(S.catalog?.startpaket) }));
   // Verwendeter Stack (vom PC) und Mahlzeit gehen mit – sonst lehnt der PC die Datei ab (1.45.1)
   const pcMeals = S.catalog?.pc?.meal ?? [];
+  // Fasttracking (1.55.0): Werte an einer Mahlzeit nehmen ihre Mahlzeit mit, wenn sie sonst fehlt
+  const fast = FT.fastTables(S.fast, {
+    all,
+    have: new Set((out.meal ?? []).map((m) => m.id)),
+    mealOf: (id) => S.food.local.meals[id]?.row ?? pcMeals.find((m) => m.id === id) ?? null,
+  });
+  Object.assign(out, mergeTables(out, fast));
   return SP.withIntakeParents(out, {
     stacks: S.catalog?.pc?.supplement_stack ?? [],
     mealOf: (id) => S.food.local.meals[id]?.row ?? pcMeals.find((m) => m.id === id) ?? null,
@@ -1960,6 +1987,8 @@ async function markSent(arg) {
     await store.set("nutrition", S.food.local);
     P.markWaterSent(S.water);
     await store.set("water", S.water);
+    FT.markFastSent(S.fast);
+    await store.set("fast", S.fast);
     SP.markSuppSent(S.supp);
     await store.set("supp", S.supp);
   }
@@ -2226,6 +2255,8 @@ async function applyCatalog(catalog) {
     await store.set("body", S.body.local);
     S.water = P.pruneWater(catalog, S.water);
     await store.set("water", S.water);
+    S.fast = FT.pruneFast(catalog, S.fast);
+    await store.set("fast", S.fast);
     S.supp = SP.pruneSupp(catalog, S.supp);
     await store.set("supp", S.supp);
     S.goals = GL.pruneGoals(catalog, S.goals);
@@ -2784,6 +2815,7 @@ async function boot() {
     S.food = foodState(await store.get("nutrition"));
     S.body = bodyState(await store.get("body"));
     S.water = (await store.get("water")) || P.emptyWaterLocal();
+    S.fast = FT.normFast(await store.get("fast"));
     S.supp = SP.normSupp(await store.get("supp"));
     S.goals = GL.normGoals(await store.get("goals"));
     S.pcsettings = PS.normSync(await store.get("pcsettings"));

@@ -641,6 +641,26 @@ var OPTIONAL_KEYS = {
   sugarG: "sugar",
   saturatedFatG: "saturated_fat"
 };
+function emptyFastDraft(date) {
+  return { date, exists: false, notes: "", values: {} };
+}
+function fastToDraft(entry) {
+  const values = {};
+  for (const [key, v] of Object.entries(entry.values)) values[key] = numberToInput(v, 3);
+  return { date: entry.date, exists: true, notes: entry.notes ?? "", values };
+}
+function fastDraftToInput(d) {
+  const p = new FormParser();
+  const values = {};
+  for (const [key, text2] of Object.entries(d.values)) {
+    const v = p.decimal(`values.${key}`, text2);
+    if (v !== null) values[key] = v;
+  }
+  if (p.ok && Object.keys(values).length === 0) {
+    p.error("values", "Bitte mindestens einen Wert eintragen.");
+  }
+  return p.ok ? { ok: true, input: { date: d.date, notes: textOrNull(d.notes), values } } : { ok: false, errors: p.errors };
+}
 function fastNutrients(entry) {
   const v = (key) => entry?.values[key] ?? 0;
   return {
@@ -10634,8 +10654,8 @@ function levelSeries(events, measurand, nowMs, rangeDays) {
   const stepMs = stepHoursFor(rangeDays) * 36e5;
   const raw = [];
   for (let t = fromMs; t <= toMs; t += stepMs) raw.push({ atMs: t, value: levelAt2(own, t) });
-  const inRange5 = own.filter((e) => e.atMs >= fromMs && e.atMs <= toMs);
-  const peakCandidates = inRange5.map((e) => {
+  const inRange6 = own.filter((e) => e.atMs >= fromMs && e.atMs <= toMs);
+  const peakCandidates = inRange6.map((e) => {
     const s = substanceById(e.substanceId);
     return s ? levelAt2(own, e.atMs + s.tmaxDays * MS_PER_DAY) : 0;
   });
@@ -10648,7 +10668,7 @@ function levelSeries(events, measurand, nowMs, rangeDays) {
     toMs,
     nowMs,
     points: raw.map((p) => ({ atMs: p.atMs, percent: pct(p.value) })),
-    doses: inRange5.map((event) => ({ event, percent: pct(levelAt2(own, event.atMs)) })),
+    doses: inRange6.map((event) => ({ event, percent: pct(levelAt2(own, event.atMs)) })),
     nowPercent: own.length > 0 && peak > 0 ? pct(nowValue) : null,
     peak
   };
@@ -13034,9 +13054,9 @@ function labRows(draws, analytes, from, to) {
   );
 }
 function hrtRows(entries, from, to) {
-  const inRange5 = entries.filter((e) => e.date >= from && e.date <= to);
+  const inRange6 = entries.filter((e) => e.date >= from && e.date <= to);
   const groups = /* @__PURE__ */ new Map();
-  for (const e of inRange5) {
+  for (const e of inRange6) {
     const k = `${e.hormone.trim().toLowerCase()}|${e.unit}`;
     groups.set(k, [...groups.get(k) ?? [], e]);
   }
@@ -13061,8 +13081,8 @@ function hrtRows(entries, from, to) {
 }
 function measuredRows(w, from, to) {
   if (!w) return [];
-  const inRange5 = (list2) => list2.filter((x) => x.date >= from && x.date <= to);
-  const pick2 = (list2, f) => inRange5(list2).flatMap((x) => {
+  const inRange6 = (list2) => list2.filter((x) => x.date >= from && x.date <= to);
+  const pick2 = (list2, f) => inRange6(list2).flatMap((x) => {
     const v = f(x);
     return v === null || !Number.isFinite(v) ? [] : [{ date: x.date, value: v }];
   });
@@ -15525,10 +15545,10 @@ var STATUS_TITLE = {
   sick: "Krank"
 };
 function buildSchedule(input) {
-  const inRange5 = new Set(input.days);
+  const inRange6 = new Set(input.days);
   const items = [];
   for (const s of input.dayStatus) {
-    if (!inRange5.has(s.date)) continue;
+    if (!inRange6.has(s.date)) continue;
     items.push({
       key: `status:${s.date}`,
       date: s.date,
@@ -15542,7 +15562,7 @@ function buildSchedule(input) {
   }
   items.push(...plannedTrainings(input.plans, input.days));
   for (const w of input.workouts) {
-    if (!inRange5.has(w.date)) continue;
+    if (!inRange6.has(w.date)) continue;
     items.push({
       key: `workout:${w.id}`,
       date: w.date,
@@ -15554,7 +15574,7 @@ function buildSchedule(input) {
     });
   }
   for (const due of input.hrtDue) {
-    if (!inRange5.has(due.next)) continue;
+    if (!inRange6.has(due.next)) continue;
     items.push({
       key: `hrt:${due.hormone}:${due.next}`,
       date: due.next,
@@ -15566,7 +15586,7 @@ function buildSchedule(input) {
     });
   }
   for (const a of input.appointments ?? []) {
-    if (inRange5.has(a.date)) {
+    if (inRange6.has(a.date)) {
       items.push({
         key: `appointment:${a.id}`,
         date: a.date,
@@ -15578,7 +15598,7 @@ function buildSchedule(input) {
       });
     }
     const remind = reminderStart(a);
-    if (remind && remind !== a.date && !a.done && inRange5.has(remind)) {
+    if (remind && remind !== a.date && !a.done && inRange6.has(remind)) {
       items.push({
         key: `appointment-reminder:${a.id}`,
         date: remind,
@@ -15591,7 +15611,7 @@ function buildSchedule(input) {
     }
   }
   for (const t of input.todos) {
-    if (!inRange5.has(t.date)) continue;
+    if (!inRange6.has(t.date)) continue;
     items.push({
       key: `todo:${t.id}`,
       date: t.date,
@@ -19012,9 +19032,13 @@ function weeklyReportToPdf(r2, opts) {
 // src/domain/quickFill.ts
 var quickFill_exports = {};
 __export(quickFill_exports, {
+  DEFAULT_GRIP_RULE: () => DEFAULT_GRIP_RULE,
   DEFAULT_SLEEP_RULE: () => DEFAULT_SLEEP_RULE,
   DEFAULT_WITH_MEASUREMENT: () => DEFAULT_WITH_MEASUREMENT,
   GAP_DAYS: () => GAP_DAYS,
+  GRIP_MAX_KG: () => GRIP_MAX_KG,
+  GRIP_MIN_KG: () => GRIP_MIN_KG,
+  GRIP_SKIP_ID: () => GRIP_SKIP_ID,
   IMPORTED_METRIC_IDS: () => IMPORTED_METRIC_IDS,
   QUICK_FILL_KEY: () => QUICK_FILL_KEY,
   QUICK_FILL_SKIP_KEY: () => QUICK_FILL_SKIP_KEY,
@@ -19025,12 +19049,15 @@ __export(quickFill_exports, {
   defaultRule: () => defaultRule,
   effectiveRules: () => effectiveRules,
   fillInputError: () => fillInputError,
+  gripInputError: () => gripInputError,
   lastCompositionDay: () => lastCompositionDay,
+  missingGrip: () => missingGrip,
   missingSleep: () => missingSleep,
   missingValues: () => missingValues,
   parseClock: () => parseClock2,
   parseFillInput: () => parseFillInput,
   parseFillRules: () => parseFillRules,
+  parseGripRule: () => parseGripRule,
   parseSkips: () => parseSkips,
   parseSleepRule: () => parseSleepRule,
   serializeFillRules: () => serializeFillRules,
@@ -19064,6 +19091,7 @@ var DEFAULT_WITH_MEASUREMENT = new Set(
   [24, 27, 30, 31, 33, 34, 35, 40, 41].map(builtinMetricId)
 );
 var RHYTHMS = ["off", "daily", "weekly", "biweekly", "monthly"];
+var dayNumber3 = (iso2) => Math.round(Date.parse(`${iso2}T00:00:00Z`) / 864e5);
 function defaultRule(metricId) {
   return { metricId, withMeasurement: DEFAULT_WITH_MEASUREMENT.has(metricId), rhythm: "off" };
 }
@@ -19083,12 +19111,54 @@ function parseFillRules(raw) {
     return null;
   }
 }
-function serializeFillRules(rules, sleep = DEFAULT_SLEEP_RULE) {
+function serializeFillRules(rules, sleep = DEFAULT_SLEEP_RULE, grip = DEFAULT_GRIP_RULE) {
   return JSON.stringify({
     v: 1,
     rules: rules.filter((r2) => r2.withMeasurement || r2.rhythm !== "off").map((r2) => ({ m: r2.metricId, g: r2.withMeasurement, r: r2.rhythm })),
-    sleep: { night: sleep.night, fields: sleep.fields }
+    sleep: { night: sleep.night, fields: sleep.fields },
+    grip: { r: grip.rhythm }
   });
+}
+var DEFAULT_GRIP_RULE = { rhythm: "off" };
+var GRIP_SKIP_ID = "grip";
+var GRIP_MIN_KG = 1;
+var GRIP_MAX_KG = 150;
+function parseGripRule(raw) {
+  if (!raw) return DEFAULT_GRIP_RULE;
+  try {
+    const data = JSON.parse(raw);
+    const rhythm = RHYTHMS.find((x) => x === data.grip?.r);
+    return rhythm ? { rhythm } : DEFAULT_GRIP_RULE;
+  } catch {
+    return DEFAULT_GRIP_RULE;
+  }
+}
+function missingGrip(input) {
+  const { rule, today } = input;
+  if (rule.rhythm === "off") return null;
+  let last = null;
+  for (const g of input.grip) {
+    if (g.date > today) continue;
+    if (!last || g.date > last.date) last = g;
+  }
+  const skipped = input.skips.filter((s) => s.kind === "due" && s.metricId === GRIP_SKIP_ID).map((s) => s.date);
+  const refs = [last?.date ?? null, ...skipped].filter((d) => d !== null);
+  const ref = refs.length ? refs.reduce((a, b) => a > b ? a : b) : null;
+  if (ref !== null && dayNumber3(today) - dayNumber3(ref) < RHYTHM_DAYS[rule.rhythm]) return null;
+  return {
+    date: today,
+    rhythm: rule.rhythm,
+    lastDate: last?.date ?? null,
+    lastLeftKg: last?.leftKg ?? null,
+    lastRightKg: last?.rightKg ?? null
+  };
+}
+function gripInputError(value) {
+  if (value === null) return null;
+  if (Number.isNaN(value)) return "Bitte eine Zahl eingeben.";
+  if (value < GRIP_MIN_KG || value > GRIP_MAX_KG)
+    return `Erlaubt: ${GRIP_MIN_KG}\u2013${GRIP_MAX_KG} kg je Hand.`;
+  return null;
 }
 var SLEEP_FILL_FIELDS = [
   { key: "quality", label: "Schlafqualit\xE4t", unit: "1\u201310", min: 1, max: 10 },
@@ -19180,7 +19250,6 @@ function serializeSkips(skips, today) {
   }
   return JSON.stringify(out);
 }
-var dayNumber3 = (iso2) => Math.round(Date.parse(`${iso2}T00:00:00Z`) / 864e5);
 function lastCompositionDay(measurements, categoryOf, today) {
   const from = shiftDays(today, -GAP_DAYS);
   let best = null;
@@ -20292,6 +20361,304 @@ function goalProgress2(goal, series, today, decimals = 1) {
 
 // src/domain/mealPlan.ts
 var PLAN_SLOTS = ["Fr\xFChst\xFCck", "Mittagessen", "Abendessen", "Snack"];
+
+// src/domain/mealQuick.ts
+var mealQuick_exports = {};
+__export(mealQuick_exports, {
+  AMOUNT_PRESETS: () => AMOUNT_PRESETS,
+  AMOUNT_STEP: () => AMOUNT_STEP,
+  MAX_AMOUNT: () => MAX_AMOUNT,
+  PORTION_PRESETS: () => PORTION_PRESETS,
+  favoriteFoods: () => favoriteFoods,
+  matchFood: () => matchFood,
+  mealItemsOn: () => mealItemsOn,
+  mealSuggestions: () => mealSuggestions,
+  normText: () => normText,
+  parseFreeText: () => parseFreeText,
+  planEaten: () => planEaten,
+  planItems: () => planItems,
+  planSlotKey: () => planSlotKey,
+  portionLabel: () => portionLabel,
+  repeatChoices: () => repeatChoices,
+  splitFreeText: () => splitFreeText,
+  stepAmount: () => stepAmount,
+  usualAmount: () => usualAmount
+});
+var MAX_AMOUNT = 1e4;
+function mealItemsOn(history, date, key) {
+  return history.filter((m) => m.date === date && m.key === key).flatMap((m) => m.items.filter((i) => i.amount > 0).map((i) => ({ ...i })));
+}
+var sameItems = (a, b) => a.length === b.length && a.every((x, i) => x.foodId === b[i]?.foodId && Math.abs(x.amount - (b[i]?.amount ?? 0)) < 0.05);
+function repeatChoices(history, date, key) {
+  const out = [];
+  const y = addDaysIso(date, -1);
+  const yItems = mealItemsOn(history, y, key);
+  if (yItems.length) out.push({ kind: "yesterday", date: y, label: "Wie gestern", items: yItems });
+  const w = addDaysIso(date, -7);
+  const wItems = mealItemsOn(history, w, key);
+  if (wItems.length && !sameItems(wItems, yItems)) {
+    out.push({ kind: "weekday", date: w, label: `Wie letzten ${weekdayName(w)}`, items: wItems });
+  }
+  return out;
+}
+function usualAmount(amounts) {
+  const list2 = amounts.filter((a) => Number.isFinite(a) && a > 0).sort((a, b) => a - b);
+  if (!list2.length) return 0;
+  const mid = Math.floor(list2.length / 2);
+  const m = list2.length % 2 ? list2[mid] : (list2[mid - 1] + list2[mid]) / 2;
+  return m >= 10 ? Math.round(m) : Math.round(m * 10) / 10;
+}
+var inRange5 = (date, today, days3) => date < today && date >= addDaysIso(today, -days3);
+function mealSuggestions(history, key, today, { days: days3 = 60, limit = 5 } = {}) {
+  const byDay = /* @__PURE__ */ new Map();
+  for (const m of history) {
+    if (m.key !== key || !inRange5(m.date, today, days3)) continue;
+    const list2 = byDay.get(m.date) ?? [];
+    list2.push(...m.items.filter((i) => i.amount > 0));
+    byDay.set(m.date, list2);
+  }
+  const groups = /* @__PURE__ */ new Map();
+  for (const [date, items] of byDay) {
+    if (!items.length) continue;
+    const ids = [...new Set(items.map((i) => i.foodId))];
+    const sig = [...ids].sort().join("|");
+    const g = groups.get(sig) ?? { order: ids, amounts: /* @__PURE__ */ new Map(), dates: /* @__PURE__ */ new Set() };
+    const perDay = /* @__PURE__ */ new Map();
+    for (const i of items) perDay.set(i.foodId, (perDay.get(i.foodId) ?? 0) + i.amount);
+    for (const [id3, a] of perDay) g.amounts.set(id3, [...g.amounts.get(id3) ?? [], a]);
+    g.dates.add(date);
+    groups.set(sig, g);
+  }
+  return [...groups.values()].filter((g) => g.dates.size >= 2).map((g) => ({
+    items: g.order.map((id3) => ({ foodId: id3, amount: usualAmount(g.amounts.get(id3) ?? []) })),
+    count: g.dates.size,
+    lastDate: [...g.dates].sort().at(-1) ?? ""
+  })).sort((a, b) => b.count - a.count || b.lastDate.localeCompare(a.lastDate)).slice(0, limit);
+}
+function favoriteFoods(history, today, { days: days3 = 90, limit = 15 } = {}) {
+  const stats2 = /* @__PURE__ */ new Map();
+  for (const m of history) {
+    if (!inRange5(m.date, today, days3)) continue;
+    for (const i of m.items) {
+      if (!(i.amount > 0)) continue;
+      const s = stats2.get(i.foodId) ?? { amounts: [], last: "" };
+      s.amounts.push(i.amount);
+      if (m.date > s.last) s.last = m.date;
+      stats2.set(i.foodId, s);
+    }
+  }
+  return [...stats2.entries()].filter(([, s]) => s.amounts.length >= 2).sort((a, b) => b[1].amounts.length - a[1].amounts.length || b[1].last.localeCompare(a[1].last)).slice(0, limit).map(([foodId, s]) => ({ foodId, amount: usualAmount(s.amounts), count: s.amounts.length }));
+}
+var AMOUNT_PRESETS = [50, 100, 150, 200];
+var PORTION_PRESETS = [0.5, 1, 2];
+var AMOUNT_STEP = 10;
+function stepAmount(current, delta) {
+  const base = Number.isFinite(current) && current > 0 ? current : 0;
+  const next = Math.round((base + delta) * 10) / 10;
+  return Math.min(MAX_AMOUNT, Math.max(1, next));
+}
+var portionLabel = (p) => p === 0.5 ? "\xBD" : String(p).replace(".", ",");
+var UNITS2 = {
+  g: 1,
+  gr: 1,
+  gramm: 1,
+  kg: 1e3,
+  ml: 1,
+  cl: 10,
+  dl: 100,
+  l: 1e3,
+  liter: 1e3,
+  el: 15,
+  essl: 15,
+  essloffel: 15,
+  tl: 5,
+  teel: 5,
+  teeloffel: 5,
+  stk: "portion",
+  stuck: "portion",
+  st: "portion",
+  portion: "portion",
+  portionen: "portion",
+  port: "portion",
+  scheibe: "portion",
+  scheiben: "portion",
+  becher: "portion",
+  glas: "portion",
+  glaser: "portion",
+  tasse: "portion",
+  tassen: "portion",
+  dose: "portion",
+  dosen: "portion",
+  packung: "portion",
+  packungen: "portion",
+  riegel: "portion",
+  handvoll: "portion"
+};
+var NUMBER_WORDS = {
+  ein: 1,
+  eine: 1,
+  einen: 1,
+  einem: 1,
+  zwei: 2,
+  drei: 3,
+  vier: 4,
+  funf: 5,
+  sechs: 6,
+  halb: 0.5,
+  halbe: 0.5,
+  halben: 0.5,
+  halbes: 0.5
+};
+function normText(s) {
+  return s.toLocaleLowerCase("de-DE").replace(/ß/g, "ss").normalize("NFKD").replace(/[̀-ͯ]/g, "");
+}
+var STOP = /* @__PURE__ */ new Set(["mit", "von", "und", "dem", "der", "die", "das", "etwas", "ca", "circa", "je"]);
+function parseQuantity(token) {
+  const frac = { "\xBD": 0.5, "\xBC": 0.25, "\xBE": 0.75 };
+  if (token in frac) return frac[token];
+  const t = normText(token);
+  if (t in NUMBER_WORDS) return NUMBER_WORDS[t];
+  const slash = /^(\d+)\/(\d+)$/.exec(t);
+  if (slash) return Number(slash[2]) > 0 ? Number(slash[1]) / Number(slash[2]) : null;
+  if (/^\d+(?:[.,]\d+)?$/.test(t)) {
+    const v = parseDecimal(t.replace(".", ","));
+    return Number.isFinite(v) ? v : null;
+  }
+  return null;
+}
+function stem(word) {
+  if (word.length < 4) return word;
+  return word.replace(/(en|er|n|e|s)$/, "");
+}
+function wordsOf(text2) {
+  return normText(text2).split(/[^a-z0-9]+/).filter((w) => w.length >= 2 && !STOP.has(w));
+}
+function wordMatches(query, hay) {
+  const q = stem(query);
+  return hay.some(
+    (h) => h.startsWith(query) || stem(h) === q || q.length >= 3 && h.startsWith(q) || h.length >= 4 && query.startsWith(stem(h))
+  );
+}
+function matchFood(name, foods, rank = /* @__PURE__ */ new Map()) {
+  const words = wordsOf(name);
+  if (!words.length) return { foodId: null, candidates: [], ambiguous: false };
+  const scored = foods.map((f) => {
+    const hay = wordsOf(`${f.name} ${f.brand ?? ""}`);
+    if (!words.every((w) => wordMatches(w, hay))) return null;
+    const first = wordsOf(f.name)[0] ?? "";
+    const starts = first.startsWith(stem(words[0])) ? 1 : 0;
+    return { f, used: rank.get(f.id) ?? 0, starts, len: f.name.length };
+  }).filter((x) => x !== null).sort(
+    (a, b) => b.used - a.used || b.starts - a.starts || a.len - b.len || a.f.name.localeCompare(b.f.name, "de")
+  );
+  const best = scored[0];
+  if (!best) return { foodId: null, candidates: [], ambiguous: false };
+  const second = scored[1];
+  const ambiguous = second !== void 0 && second.used === best.used && second.starts === best.starts;
+  return {
+    foodId: best.f.id,
+    candidates: scored.slice(0, 5).map((x) => x.f.id),
+    ambiguous
+  };
+}
+function splitFreeText(text2) {
+  return text2.split(/\r?\n|;|,(?!\d)|\s\+\s|\s+und\s+/i).map((s) => s.trim()).filter((s) => s.length > 0);
+}
+function splitQuantity(part) {
+  const spaced = part.replace(/(\d)([a-zA-ZäöüÄÖÜß])/g, "$1 $2").replace(/\s+/g, " ").trim();
+  const tokens = spaced.split(" ");
+  const isUnit = (t) => t !== void 0 && normText(t).replace(/\.$/, "") in UNITS2;
+  const unitOf = (t) => normText(t).replace(/\.$/, "");
+  const lead = parseQuantity(tokens[0] ?? "");
+  if (lead !== null) {
+    if (isUnit(tokens[1])) {
+      return { value: lead, unit: unitOf(tokens[1]), name: tokens.slice(2).join(" ") };
+    }
+    return { value: lead, unit: null, name: tokens.slice(1).join(" ") };
+  }
+  const n2 = tokens.length;
+  if (n2 >= 3 && isUnit(tokens[n2 - 1]) && parseQuantity(tokens[n2 - 2]) !== null) {
+    return {
+      value: parseQuantity(tokens[n2 - 2]),
+      unit: unitOf(tokens[n2 - 1]),
+      name: tokens.slice(0, n2 - 2).join(" ")
+    };
+  }
+  if (n2 >= 2 && parseQuantity(tokens[n2 - 1]) !== null) {
+    return { value: parseQuantity(tokens[n2 - 1]), unit: null, name: tokens.slice(0, n2 - 1).join(" ") };
+  }
+  return { value: null, unit: null, name: spaced };
+}
+var roundAmountText = (v) => Math.round(v * 10) / 10;
+function amountFor(q, food) {
+  const portion = food?.portionAmount && food.portionAmount > 0 ? food.portionAmount : null;
+  const unit = food?.basisUnit ?? "g";
+  if (q.unit) {
+    const f = UNITS2[q.unit];
+    if (f === "portion") {
+      if (!food) return { amount: null, note: null, assumed: false };
+      if (!portion) {
+        return { amount: null, note: "F\xFCr dieses Lebensmittel ist keine Portion hinterlegt \u2013 bitte Menge eintragen.", assumed: true };
+      }
+      return { amount: roundAmountText((q.value ?? 1) * portion), note: null, assumed: false };
+    }
+    if (typeof f === "number") return { amount: roundAmountText((q.value ?? 0) * f), note: null, assumed: false };
+  }
+  if (q.value === null) {
+    if (portion) return { amount: portion, note: `Menge angenommen: 1 ${food?.portionName ?? "Portion"}.`, assumed: true };
+    return { amount: null, note: "Keine Menge angegeben \u2013 bitte eintragen.", assumed: true };
+  }
+  if (portion && q.value < 10) return { amount: roundAmountText(q.value * portion), note: null, assumed: false };
+  if (q.value >= 10) return { amount: roundAmountText(q.value), note: `Menge als ${unit} gelesen.`, assumed: true };
+  return { amount: null, note: "Menge ohne Einheit \u2013 bitte eintragen.", assumed: true };
+}
+function parseFreeText(text2, foods, rank = /* @__PURE__ */ new Map()) {
+  const byId = new Map(foods.map((f) => [f.id, f]));
+  return splitFreeText(text2).map((part) => {
+    const q = splitQuantity(part);
+    const m = matchFood(q.name, foods, rank);
+    const food = m.foodId ? byId.get(m.foodId) ?? null : null;
+    const a = amountFor(q, food);
+    const valid = a.amount !== null && a.amount > 0 && a.amount <= MAX_AMOUNT;
+    let note = a.note;
+    if (!food) note = q.name ? `Kein Lebensmittel zu \u201E${q.name}\u201C gefunden.` : "Kein Lebensmittel angegeben.";
+    else if (m.ambiguous) note = [note, "Mehrere passende Lebensmittel \u2013 bitte pr\xFCfen."].filter(Boolean).join(" ");
+    if (a.amount !== null && a.amount > MAX_AMOUNT) note = "Menge \xFCber 10.000 \u2013 bitte pr\xFCfen.";
+    return {
+      text: part,
+      foodId: food?.id ?? null,
+      candidates: m.candidates,
+      amount: valid ? a.amount : null,
+      uncertain: !food || m.ambiguous || a.assumed || !valid,
+      note
+    };
+  });
+}
+var PLAN_DEFAULT = {
+  fruhstuck: "breakfast",
+  mittagessen: "lunch",
+  mittag: "lunch",
+  abendessen: "dinner",
+  abend: "dinner",
+  snack: "snack"
+};
+function planSlotKey(slot, choices) {
+  const n2 = normText(slot.trim());
+  const same2 = choices.find((c) => normText(c.label.trim()) === n2);
+  if (same2) return same2.key;
+  return PLAN_DEFAULT[n2] ?? "snack";
+}
+function planEaten(recipeFoodIds, dayMeals) {
+  if (!recipeFoodIds.length) return false;
+  return dayMeals.some((m) => {
+    const ids = new Set(m.items.map((i) => i.foodId));
+    return recipeFoodIds.every((id3) => ids.has(id3));
+  });
+}
+function planItems(recipe, servings) {
+  const f = recipe.servings > 0 ? servings / recipe.servings : 0;
+  return recipe.items.map((i) => ({ foodId: i.foodId, amount: Math.round(i.amount * f * 10) / 10 })).filter((i) => i.amount > 0);
+}
 export {
   AKH_REFERENCES,
   ANS_INFO,
@@ -20382,11 +20749,14 @@ export {
   drinksMl,
   dueNotices,
   duplicateHrtEntries,
+  emptyFastDraft,
   energy_exports as energy,
   energyGoalView,
   exerciseUsage_exports as exerciseUsage,
   exportReminderState,
+  fastDraftToInput,
   fastNutrients,
+  fastToDraft,
   fileStem,
   firstPage,
   formatAmount,
@@ -20435,6 +20805,7 @@ export {
   magazines_exports as magazines,
   mealDisplayName,
   mealHasContent,
+  mealQuick_exports as mealQuick,
   mealTypeLabel,
   methodChoices,
   microValues,

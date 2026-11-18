@@ -90,6 +90,8 @@ export const KEEP_TABLES = [
   "appointment",
   "meal_plan_entry",
   "recipe",
+  // seit 1.55.0: geplante Mahlzeiten am Handy als gegessen eintragen
+  "recipe_item",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */
@@ -147,7 +149,8 @@ export function pcFromRows(rows) {
  * Daten vom PC und vom Handy zusammenführen (gleiche ID: der Stand vom Handy gilt).
  * `phone` = { foods: Map, meals: [{row, items}], water: {rows, deleted}, body: [row],
  *   workouts: {workout, workout_exercise, workout_set}, exercises: [row],
- *   logs: {sleep: [row], naps: [row], recovery: [row], deleted: [{table, id}]} }
+ *   logs: {sleep: [row], naps: [row], recovery: [row], deleted: [{table, id}]},
+ *   fast: {entries: [row], dayValues: [row], mealValues: [row], deleted: [id]} }
  */
 export function makeDb(catalog, phone = {}) {
   const pc = catalog?.pc ?? {};
@@ -181,6 +184,14 @@ export function makeDb(catalog, phone = {}) {
     supplement_intake: new Set(t("supplement_intake").map((r) => r.id)),
     supplement_intake_item: new Set(t("supplement_intake_item").map((r) => r.id)),
   };
+
+  // Fasttracking (1.55.0): Tageswerte und Werte an Mahlzeiten vom Handy ersetzen bzw. löschen die vom PC
+  const pf = phone.fast ?? {};
+  const fastGone = new Set(pf.deleted ?? []);
+  const fastEntries = merge(t("nutrition_day_entry"), pf.entries ?? [], fastGone);
+  const fastEntryIds = new Set(fastEntries.map((r) => r.id));
+  const fastValueRows = merge(t("nutrition_day_value"), pf.dayValues ?? [], fastGone).filter((r) => fastEntryIds.has(r.entry_id));
+  const mealValueRows = merge(t("meal_value"), pf.mealValues ?? [], fastGone);
 
   // Wasser
   const water = phone.water ?? {};
@@ -221,10 +232,10 @@ export function makeDb(catalog, phone = {}) {
     meals,
     mealsByDate: groupBy(meals, "date"),
     itemsByMeal: groupBy(mealItems, "meal_id"),
-    valuesByMeal: groupBy(t("meal_value"), "meal_id"),
+    valuesByMeal: groupBy(mealValueRows, "meal_id"),
     mealDays: new Set(t("meal_day").map((d) => d.date)),
-    fastByDate: groupBy(t("nutrition_day_entry"), "date"),
-    fastValues: groupBy(t("nutrition_day_value"), "entry_id"),
+    fastByDate: groupBy(fastEntries, "date"),
+    fastValues: groupBy(fastValueRows, "entry_id"),
     intakesByDate: groupBy(intakes, "date"),
     intakeItems: groupBy(intakeItems, "intake_id"),
     pcIds,

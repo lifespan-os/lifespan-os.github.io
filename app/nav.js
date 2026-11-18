@@ -43,7 +43,7 @@ export const SECTIONS = [
     view: "training",
     views: ["training", "plans", "workout", "picker", "machine", "finish", "detail"],
   },
-  { id: "nutrition", label: "Nutrition", view: "diary", views: ["diary", "food-history", "food", "food-review", "dish"] },
+  { id: "nutrition", label: "Nutrition", view: "diary", views: ["diary", "food-history", "food", "food-review", "dish", "fast-entry", "meal-plan"] },
   { id: "sleep", label: "Sleep", view: "sleep", views: ["sleep"] },
   { id: "recovery", label: "Recovery", view: "recovery", views: ["recovery"] },
   { id: "body", label: "Body & Longevity", view: "body", views: ["body", "body-metric", "body-entry"] },

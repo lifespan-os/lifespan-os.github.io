@@ -14,6 +14,8 @@ import * as GL from "./goals.js";
 import { phoneLogs } from "./logsdata.js";
 import { CATALOG, GROUPS } from "./nutrientcatalog.js";
 import { barTrendSvg, compareHtml, COLOR, dayGoalHtml, macroBreakdownHtml } from "./pcview.js";
+import * as FT from "./fastdata.js";
+import * as QM from "./quickmeal.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice, buildReturnTables }
 
@@ -63,6 +65,7 @@ export function buildDb() {
     logs: phoneLogs(S.logs),
     supp: SP.phoneSupp(S.supp),
     goals: GL.phoneGoals(S.goals),
+    fast: FT.phoneFast(S.fast),
   });
   // Mahlzeitenliste wie am PC (Settings → Mahlzeiten: meal_name.*, meal_hidden, meal_extra)
   D.setMealList(N.setMealConfig(db.settings));
@@ -195,8 +198,8 @@ export function viewDiary() {
     { id: "totals", node: totalsCard },
     { id: "water", node: waterCard(db, date, goal) },
     { id: "micro", node: microCard(catalog, microGroups, micro, refGroup, fast || hasMealValues) },
-    { id: "fasttrack", empty: !fast, node: fast ? fastCard(catalog, fast) : "" },
-    { id: "meals", node: mealsCard(slots, fast, date) },
+    { id: "fasttrack", empty: !fast, node: fast ? fastCard(catalog, fast, date) : "" },
+    { id: "meals", node: mealsCard(slots, fast, date, db) },
     { id: "supplements", node: supplementsCard(intakes, suppMacros, hasSuppMacros) },
   ];
   const ordered = arrangeCards(db, "ui.diary_layout", cards).filter((c) => c.node);
@@ -312,8 +315,67 @@ function itemsOf(pk, ids) {
   return { slot, items: ids ? items.filter((i) => ids.includes(i.id)) : items };
 }
 
-function mealsCard(slots, fast, date) {
+/**
+ * Schnell eintragen an einer Mahlzeit (1.55.0): „Wie gestern“ / „Wie letzten <Wochentag>“ (nur
+ * solange die Mahlzeit leer ist) und Vorschläge – je ein Tipp trägt ein, danach „Rückgängig“.
+ */
+function quickSlotHtml(quick, key, filled, current) {
+  const { history, foods, date } = quick;
+  const repeat = filled ? [] : QM.Q.repeatChoices(history, date, key).map((c) => ({ ...c, items: QM.onlyKnown(c.items, foods) })).filter((c) => c.items.length);
+  const have = new Set(current.map((i) => i.foodId));
+  const sugg = QM.Q.mealSuggestions(history, key, date, { limit: 5 })
+    .map((x, i) => ({ ...x, i, items: QM.onlyKnown(x.items, foods) }))
+    .filter((x) => x.items.length && !x.items.every((it) => have.has(it.foodId)));
+  if (!repeat.length && !sugg.length) return "";
+  return `<div class="quick-meal">
+    ${repeat
+      .map(
+        (c) => `<button type="button" class="btn sm quick-meal__repeat" data-act="qm-repeat" data-arg="${esc(key)}|${c.kind}" title="${esc(QM.itemsName(c.items, foods))}">${esc(c.label)} <span class="muted">· ${c.items.length} Lebensmittel, ${esc(D.formatKcal(QM.itemsKcal(c.items, foods)))}</span></button>`,
+      )
+      .join("")}
+    ${
+      sugg.length
+        ? `<p class="quick-meal__label muted small">Vorschläge (oft gegessen):</p><div class="chip-row">${sugg
+            .map(
+              (x) => `<button type="button" class="chip" data-act="qm-suggest" data-arg="${esc(key)}|${x.i}">+ ${esc(QM.itemsName(x.items, foods))} <span class="muted">· ${esc(D.formatKcal(QM.itemsKcal(x.items, foods)))}</span></button>`,
+            )
+            .join("")}</div>`
+        : ""
+    }
+  </div>`;
+}
+
+/** Wochenplan (Nutrition → Planen am PC): geplante Gerichte des Tages mit „Gegessen“ (1.55.0). */
+function planCardHtml(db, date, slots) {
+  const entries = (db.pc.meal_plan_entry ?? []).filter((e) => e.date === date);
+  if (!entries.length) return "";
+  const recipes = new Map((db.pc.recipe ?? []).map((r) => [r.id, r]));
+  const itemsBy = new Map();
+  for (const it of db.pc.recipe_item ?? []) itemsBy.set(it.recipe_id, [...(itemsBy.get(it.recipe_id) ?? []), it]);
+  const withItems = (db.pc.recipe_item ?? null) !== null;
+  const dayMeals = slots.filter((s) => s.meal).map((s) => s.meal);
+  return `<div class="plan-today"><p class="small"><b>Geplant</b></p><ul class="plain-list">${entries
+    .map((e) => {
+      const r = recipes.get(e.recipe_id);
+      const items = itemsBy.get(e.recipe_id) ?? [];
+      const eaten = QM.Q.planEaten(items.map((i) => i.food_id), dayMeals);
+      const portions = `${String(e.servings).replace(".", ",")} ${e.servings === 1 ? "Portion" : "Portionen"}`;
+      return `<li class="plan-today__item"><span><span class="muted small">${esc(e.slot)}</span> ${esc(r?.name ?? "Rezept")} · ${esc(portions)}</span>
+        ${
+          eaten
+            ? `<span class="tag">✓ eingetragen</span>`
+            : withItems && items.length
+              ? `<button type="button" class="btn sm" data-act="qm-plan" data-arg="${esc(e.id)}">✓ Gegessen</button>`
+              : ""
+        }</li>`;
+    })
+    .join("")}</ul>${withItems ? "" : `<p class="muted small">Zum Eintragen am Handy bitte am PC neu exportieren und hier laden.</p>`}</div>`;
+}
+
+function mealsCard(slots, fast, date, db) {
   const local = X.S.food?.local;
+  const foodsActive = local ? N.allFoods(X.S.catalog, local) : new Map();
+  const quick = { history: QM.pastMeals(db), foods: foodsActive, date };
   const unsentItems = new Set(Object.values(local?.meals ?? {}).flatMap((m) => m.items.filter((i) => !i.sent).map((i) => i.id)));
   const sentItems = new Set(Object.values(local?.meals ?? {}).flatMap((m) => m.items.filter((i) => i.sent).map((i) => i.id)));
   const itemMeal = new Map(Object.values(local?.meals ?? {}).flatMap((m) => m.items.map((i) => [i.id, m.row.id])));
@@ -351,15 +413,19 @@ function mealsCard(slots, fast, date) {
       }
       ${m && Object.keys(m.values ?? {}).length ? `<p class="muted small">Mit Fasttracking-Werten an dieser Mahlzeit.</p>` : ""}
       ${m && m.items.length ? pickBarHtml(pk, picked.size, act) : ""}
-      <button class="btn sm" data-act="diary-add" data-arg="${esc(key)}">+ Lebensmittel eintragen</button>`
+      ${local ? quickSlotHtml(quick, key, has, m?.items ?? []) : ""}
+      <div class="row-actions"><button class="btn sm" data-act="diary-add" data-arg="${esc(key)}">+ Lebensmittel eintragen</button>
+        <button class="btn sm ghost" data-act="fast-open" data-arg="${esc(key)}">Fasttracking</button></div>`
       }
     </div>`;
   };
   const anyContent = slots.some((s) => s.meal && D.mealHasContent(s.meal));
   return `<section class="card card--nutrition meals-card"><h3>Mahlzeiten</h3>
     ${!anyContent && fast ? `<p class="muted">Keine einzelnen Mahlzeiten – die Tageswerte stehen unter „Fasttracking“.</p>` : ""}
+    ${planCardHtml(db, date, slots)}
     ${slots.map(slotHtml).join("")}
     ${slots.length === 0 ? `<p class="muted small">An diesem Tag sind keine Mahlzeiten angelegt.</p>` : ""}
+    ${fast ? "" : `<button class="btn sm ghost" data-act="fast-open" data-arg="">Fasttracking für den ganzen Tag</button>`}
     <p class="card__note">Einträge vom PC bearbeitest du am PC; am Handy Eingetragenes kannst du hier entfernen oder unter „Vor dem Senden prüfen“ ändern.${
       date !== today() ? " „+ Lebensmittel eintragen“ trägt in diesen Tag ein." : ""
     }</p>
@@ -514,8 +580,9 @@ async function persistSupp() {
 
 // ---------------- Fasttracking und Mikronährstoffe
 
-function fastCard(catalog, fast) {
-  return `<section class="card card--nutrition"><h3>Fasttracking</h3>
+function fastCard(catalog, fast, date) {
+  return `<section class="card card--nutrition"><div class="card__head"><h3>Fasttracking</h3>
+      <span class="card__meta"><button class="linkbtn" data-act="fast-open" data-arg="" data-date="${esc(date)}">Bearbeiten</button></span></div>
     ${D.groupedValues(catalog, fast)
       .map(
         (g) => `<div class="fast-values"><p class="fast-values__title">${esc(g.label)}</p><dl>${g.items
@@ -525,6 +592,159 @@ function fastCard(catalog, fast) {
       .join("")}
     ${fast.notes ? `<p class="card__note">${esc(fast.notes)}</p>` : ""}
   </section>`;
+}
+
+// ---------------- Fasttracking eintragen (am Handy seit 1.55.0, wie FasttrackEditor.tsx)
+
+const FAST_DAY = "";
+
+/** Mahlzeiten des Tages als Ziel (Schlüssel wie im Tagebuch). */
+function fastTargets(db, date) {
+  return D.daySlots(P.mealDay(db, date)).map((slot) => ({ key: slot.ref.name ? N.extraKey(slot.ref.name) : slot.ref.mealType, title: slot.title, meal: slot.meal }));
+}
+
+function fastTargetOf(db, st) {
+  if (st.target === FAST_DAY) return { kind: "day", date: st.date };
+  const t = fastTargets(db, st.date).find((x) => x.key === st.target);
+  return t?.meal ? { kind: "meal", mealId: t.meal.id } : null;
+}
+
+const numText = (v) => String(Math.round(v * 1000) / 1000).replace(".", ",");
+
+/** Formular mit den vorhandenen Werten des Ziels füllen. */
+function loadFast(st) {
+  const db = buildDb();
+  const target = fastTargetOf(db, st);
+  const cur = target ? FT.currentValues(db, target) : { values: {}, notes: "", exists: false };
+  st.values = Object.fromEntries(Object.entries(cur.values).map(([k, v]) => [k, numText(v)]));
+  st.notes = cur.notes ?? "";
+  st.exists = cur.exists;
+  st.errors = {};
+  st.error = null;
+}
+
+export function viewFastEntry() {
+  const st = X.S.fastEdit;
+  if (!st) return viewDiary();
+  const db = buildDb();
+  const catalog = nutrientCatalog(db);
+  const targets = fastTargets(db, st.date);
+  const field = (n) => {
+    const err = st.errors[`values.${n.key}`];
+    return `<div class="field"><label for="fe-${esc(n.key)}">${esc(n.label)} <span class="muted">(${esc(n.unit)})</span></label>
+      <input id="fe-${esc(n.key)}" type="text" inputmode="decimal" autocomplete="off" data-fast="${esc(n.key)}" value="${esc(st.values[n.key] ?? "")}" ${err ? 'aria-invalid="true"' : ""}>
+      ${err ? `<p class="err small">${esc(err)}</p>` : ""}</div>`;
+  };
+  const groups = catalog.groups.map((g) => ({ g, list: catalog.nutrients.filter((n) => n.group === g.key) })).filter((x) => x.list.length);
+  return `${X.header("Nutrition")}<main class="wrap">
+    ${nutritionTabs("diary")}
+    <section class="card hl">
+      <h3>Fasttracking</h3>
+      <p class="muted small">${st.date === today() ? "Heute" : `${WEEKDAYS[new Date(`${st.date}T12:00:00`).getDay()]} ${esc(D.formatDate(st.date))}`} – Nährwerte direkt eintragen, z. B. im Restaurant oder aus einer anderen App. Leere Felder = nicht erfasst.</p>
+      <div class="field"><label for="fe-target">Für</label><select id="fe-target" data-diary="fast-target">
+        <option value="" ${st.target === FAST_DAY ? "selected" : ""}>Ganzer Tag (Tageswerte)</option>
+        ${targets.map((t) => `<option value="${esc(t.key)}" ${t.key === st.target ? "selected" : ""}>${esc(t.title)}</option>`).join("")}
+      </select></div>
+      ${groups
+        .map(({ g, list }) =>
+          g.key === "macros"
+            ? `<div class="nf-grid">${list.map(field).join("")}</div>`
+            : `<details class="fast-group" ${list.some((n) => st.values[n.key]) ? "open" : ""}><summary>${esc(g.label)}${
+                list.filter((n) => st.values[n.key]).length ? ` · ${list.filter((n) => st.values[n.key]).length}` : ""
+              }</summary><div class="nf-grid">${list.map(field).join("")}</div></details>`,
+        )
+        .join("")}
+      ${
+        st.target === FAST_DAY
+          ? `<div class="field"><label for="fe-notes">Notiz (optional)</label><textarea id="fe-notes" rows="2" maxlength="500" data-fast-notes="1">${esc(st.notes)}</textarea></div>`
+          : ""
+      }
+      ${st.error ? `<p class="field-error">${esc(st.error)}</p>` : ""}
+      <button class="btn primary block" data-act="fast-save">Speichern</button>
+      ${st.exists ? `<button class="btn ghost danger block" data-act="fast-clear">Alle Werte entfernen</button>` : ""}
+      <button class="btn ghost block" data-act="fast-cancel">Abbrechen</button>
+      <p class="card__note">Speichern ersetzt alle Werte dieses Ziels. Geht mit „Lebensmittel senden“ an den PC.</p>
+    </section>
+  </main>`;
+}
+
+function readFastForm(st) {
+  for (const el of document.querySelectorAll("[data-fast]")) st.values[el.dataset.fast] = el.value;
+  const n = document.querySelector("[data-fast-notes]");
+  if (n) st.notes = n.value;
+}
+
+async function persistFast() {
+  try {
+    await X.store.set("fast", X.S.fast);
+  } catch (e) {
+    X.toast("Speichern auf dem Gerät fehlgeschlagen: " + e.message, true);
+  }
+}
+
+async function saveFastForm(clear) {
+  const st = X.S.fastEdit;
+  if (!st) return;
+  if (!clear) readFastForm(st);
+  let db = buildDb();
+  const catalog = nutrientCatalog(db);
+  const parsed = clear ? { ok: true, input: { values: {} } } : D.fastDraftToInput({ date: st.date, exists: st.exists, notes: st.notes, values: st.values });
+  if (!parsed.ok) {
+    st.errors = parsed.errors;
+    st.error = parsed.errors.values ?? "Bitte die markierten Felder prüfen.";
+    return X.rerender();
+  }
+  let target = fastTargetOf(db, st);
+  if (!target && st.target !== FAST_DAY) {
+    // Leere Mahlzeit: erst anlegen (ohne Lebensmittel)
+    const id = N.ensureMeal(X.S.catalog, X.S.food.local, st.date, st.target, { uuid: X.uuid, now: new Date() });
+    const row = X.S.food.local.meals[id]?.row;
+    if (row && st.date !== today()) row.time = null;
+    await X.store.set("nutrition", X.S.food.local);
+    db = buildDb();
+    target = { kind: "meal", mealId: id };
+  }
+  try {
+    X.S.fast = FT.normFast(X.S.fast);
+    FT.saveFast(db, X.S.fast, target, parsed.input.values, st.notes, {
+      uuid: X.uuid,
+      now: new Date(),
+      knownKeys: new Set(catalog.nutrients.map((n) => n.key)),
+      pcIds: FT.pcFastIds(X.S.catalog),
+    });
+  } catch (e) {
+    st.error = e.message;
+    return X.rerender();
+  }
+  await persistFast();
+  X.S.fastEdit = null;
+  X.S.diaryDate = st.date;
+  X.toast(clear ? "Fasttracking-Werte entfernt." : "Fasttracking gespeichert.");
+  X.go("diary");
+}
+
+// ---------------- Schnell eintragen (1.55.0)
+
+async function quickAdd(key, items, label) {
+  const date = X.S.diaryDate ?? today();
+  const local = X.S.food.local;
+  let res;
+  try {
+    res = QM.addItems(X.S.catalog, local, { date, mealKey: key, items, today: today(), uuid: X.uuid });
+  } catch (e) {
+    return X.toast(e.message, true);
+  }
+  try {
+    await X.store.set("nutrition", local);
+  } catch (e) {
+    X.toast("Speichern auf dem Gerät fehlgeschlagen: " + e.message, true);
+  }
+  X.rerender();
+  X.toast(`Eingetragen: ${label} bei ${N.mealLabel(key)}`, false, async () => {
+    QM.undoItems(X.S.food.local, res.mealId, res.added);
+    await X.store.set("nutrition", X.S.food.local);
+    X.rerender();
+  });
 }
 
 function microCard(catalog, groups, micro, refGroup, withFast) {
@@ -618,6 +838,52 @@ const shift = (iso, n) => {
 };
 
 export const diaryActions = {
+  "qm-repeat": (el) => {
+    const [key, kind] = el.dataset.arg.split("|");
+    const db = buildDb();
+    const foods = N.allFoods(X.S.catalog, X.S.food.local);
+    const c = QM.Q.repeatChoices(QM.pastMeals(db), X.S.diaryDate ?? today(), key).find((x) => x.kind === kind);
+    const items = c ? QM.onlyKnown(c.items, foods) : [];
+    if (!items.length) return X.toast("Nichts zum Übernehmen gefunden.", true);
+    return quickAdd(key, items, `${c.label} (${items.length} Lebensmittel)`);
+  },
+  "qm-suggest": (el) => {
+    const [key, i] = el.dataset.arg.split("|");
+    const db = buildDb();
+    const foods = N.allFoods(X.S.catalog, X.S.food.local);
+    const x = QM.Q.mealSuggestions(QM.pastMeals(db), key, X.S.diaryDate ?? today(), { limit: 5 })[Number(i)];
+    const items = x ? QM.onlyKnown(x.items, foods) : [];
+    if (!items.length) return X.toast("Vorschlag nicht mehr vorhanden.", true);
+    return quickAdd(key, items, QM.itemsName(items, foods));
+  },
+  "qm-plan": (el) => {
+    const db = buildDb();
+    const date = X.S.diaryDate ?? today();
+    const e = (db.pc.meal_plan_entry ?? []).find((x) => x.id === el.dataset.arg);
+    const r = e ? (db.pc.recipe ?? []).find((x) => x.id === e.recipe_id) : null;
+    if (!e || !r) return X.toast("Planeintrag nicht gefunden.", true);
+    const foods = N.allFoods(X.S.catalog, X.S.food.local);
+    const recipeItems = (db.pc.recipe_item ?? []).filter((i) => i.recipe_id === r.id).map((i) => ({ foodId: i.food_id, amount: i.amount }));
+    const items = QM.onlyKnown(QM.Q.planItems({ servings: r.servings, items: recipeItems }, e.servings), foods);
+    if (!items.length) return X.toast("Zu diesem Rezept fehlen die Lebensmittel – bitte am PC neu exportieren.", true);
+    const choices = fastTargets(db, date).map((t) => ({ key: t.key, label: t.title }));
+    return quickAdd(QM.Q.planSlotKey(e.slot, choices), items, r.name);
+  },
+  "fast-open": (el) => {
+    const date = el.dataset.date || X.S.diaryDate || today();
+    X.S.fastEdit = { date, target: el.dataset.arg ?? FAST_DAY, values: {}, notes: "", exists: false, errors: {}, error: null };
+    loadFast(X.S.fastEdit);
+    X.go("fast-entry");
+  },
+  "fast-save": () => saveFastForm(false),
+  "fast-clear": (el) => {
+    if (!X.confirmTwice(el, "Nochmal tippen: alle Werte entfernen")) return;
+    return saveFastForm(true);
+  },
+  "fast-cancel": () => {
+    X.S.fastEdit = null;
+    X.go("diary");
+  },
   "supp-new": () => {
     const db = buildDb();
     const date = X.S.diaryDate ?? today();
@@ -781,15 +1047,26 @@ export const diaryActions = {
     X.go("food");
   },
   "diary-remove": async (el) => {
-    if (!X.confirmTwice(el, "Nochmal: entfernen")) return;
+    // Sofort entfernen, danach „Rückgängig“ (1.55.0, statt zweimal tippen)
     const [mealId, itemId] = el.dataset.arg.split("|");
-    N.removeItem(X.S.food.local, mealId, itemId);
+    const local = X.S.food.local;
+    const meal = local.meals[mealId];
+    const item = meal?.items.find((i) => i.id === itemId);
+    if (!meal || !item) return;
+    const snapshot = { row: { ...meal.row }, items: meal.items.map((i) => ({ ...i })), fromPc: meal.fromPc, sent: meal.sent };
+    N.removeItem(local, mealId, itemId);
     try {
-      await X.store.set("nutrition", X.S.food.local);
+      await X.store.set("nutrition", local);
     } catch (e) {
       X.toast("Speichern auf dem Gerät fehlgeschlagen: " + e.message, true);
     }
     X.rerender();
+    const name = N.allFoods(X.S.catalog, local).get(item.food_id)?.name ?? "Eintrag";
+    X.toast(`„${name}“ entfernt.`, false, async () => {
+      X.S.food.local.meals[mealId] = snapshot;
+      await X.store.set("nutrition", X.S.food.local);
+      X.rerender();
+    });
   },
 };
 
@@ -809,6 +1086,15 @@ export function diaryInput(el) {
 export function diaryChange(el) {
   const k = el.dataset?.diary;
   if (!k) return false;
+  if (k === "fast-target") {
+    const st = X.S.fastEdit;
+    if (st) {
+      st.target = el.value;
+      loadFast(st);
+      X.rerender();
+    }
+    return true;
+  }
   if (k === "supp-stack") {
     readSuppForm();
     const st = X.S.suppEdit;

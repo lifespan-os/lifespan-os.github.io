@@ -61,9 +61,9 @@ function parseInteger(input) {
 function formatForInput(value) {
   return Number.isInteger(value) ? String(value) : formatNumber(value, 1);
 }
-function addDaysIso(iso2, days2) {
+function addDaysIso(iso2, days3) {
   const date = parseIsoDate(iso2);
-  date.setDate(date.getDate() + days2);
+  date.setDate(date.getDate() + days3);
   return toIsoDate(date);
 }
 function formatDuration(totalMinutes) {
@@ -207,12 +207,12 @@ function energyGoalView(totals2, goalKcal) {
   const base = Math.max(goalKcal, consumed);
   const segments2 = parts2.filter((p) => p.kcal > 0).map((p) => ({ ...p, percent: base > 0 ? p.kcal / base * 100 : 0 }));
   const diff = Math.round(goalKcal - consumed);
-  const balance = diff > 0 ? { kind: "deficit", kcal: diff } : diff < 0 ? { kind: "surplus", kcal: -diff } : { kind: "exact" };
+  const balance2 = diff > 0 ? { kind: "deficit", kcal: diff } : diff < 0 ? { kind: "surplus", kcal: -diff } : { kind: "exact" };
   return {
     goal: goalKcal,
     consumed,
     percentOfGoal: goalKcal > 0 ? consumed / goalKcal * 100 : 0,
-    balance,
+    balance: balance2,
     segments: segments2,
     goalMarkerPercent: base > 0 ? goalKcal / base * 100 : 100
   };
@@ -1282,6 +1282,9 @@ function describeNewRecord(r2) {
 }
 
 // src/domain/hyrox.ts
+var HYROX_SIMULATION_ID = "1fd2d179-c76e-51ad-a9ab-9aac59cb6b59";
+var HYROX_RACE_WOMEN_ID = "92b41740-afed-55e8-bf0a-758474b52164";
+var HYROX_RACE_MEN_ID = "baa6c63c-d7d0-5d71-85e0-6a60034ed14d";
 var HYROX_STATIONS = {
   run: {
     key: "run",
@@ -1419,6 +1422,12 @@ function formatFinishTime(seconds) {
   const ss = String(s).padStart(2, "0");
   return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
+var HYROX_EXERCISE_IDS = /* @__PURE__ */ new Set([
+  HYROX_SIMULATION_ID,
+  HYROX_RACE_WOMEN_ID,
+  HYROX_RACE_MEN_ID,
+  ...Object.values(HYROX_STATIONS).map((s) => s.exerciseId)
+]);
 
 // src/domain/cardio.ts
 var cardio_exports = {};
@@ -2619,8 +2628,8 @@ function utcDay(iso2) {
 function isoFromUtc(t) {
   return new Date(t).toISOString().slice(0, 10);
 }
-function shiftDays(iso2, days2) {
-  return isoFromUtc(utcDay(iso2) + days2 * DAY_MS);
+function shiftDays(iso2, days3) {
+  return isoFromUtc(utcDay(iso2) + days3 * DAY_MS);
 }
 function daysBetween(from, to) {
   return Math.round((utcDay(to) - utcDay(from)) / DAY_MS) + 1;
@@ -2683,15 +2692,15 @@ function groupByPeriod(points, period) {
 function rangeStats(points, from, to) {
   if (from > to) throw new Error("Der Beginn des Zeitraums muss vor dem Ende liegen.");
   const inside = points.filter((p) => p.date >= from && p.date <= to && Number.isFinite(p.value)).sort((a, b) => a.date.localeCompare(b.date));
-  const days2 = daysBetween(from, to);
+  const days3 = daysBetween(from, to);
   if (inside.length === 0) {
-    return { from, to, days: days2, count: 0, mean: null, min: null, max: null, first: null, last: null };
+    return { from, to, days: days3, count: 0, mean: null, min: null, max: null, first: null, last: null };
   }
   const s = stats(inside.map((p) => p.value));
   return {
     from,
     to,
-    days: days2,
+    days: days3,
     count: s.count,
     mean: s.mean,
     min: s.min,
@@ -7503,8 +7512,8 @@ function ansPercent(value) {
 function previousMean(values, date) {
   const before = values.filter((v) => v.date < date);
   if (before.length === 0) return null;
-  const mean3 = before.reduce((s, v) => s + v.value, 0) / before.length;
-  return { mean: Math.round(mean3 * 10) / 10, count: before.length };
+  const mean4 = before.reduce((s, v) => s + v.value, 0) / before.length;
+  return { mean: Math.round(mean4 * 10) / 10, count: before.length };
 }
 
 // src/domain/helpTexts.ts
@@ -7656,13 +7665,13 @@ var signedMin = (d) => {
   return r2 === 0 ? "\xB10 min" : `${r2 > 0 ? "+" : "\u2212"}${Math.abs(r2)} min`;
 };
 function sleepTimingRow(sleep, week, key) {
-  const pick = (w) => sleep.flatMap((s) => {
+  const pick2 = (w) => sleep.flatMap((s) => {
     if (!inWeek(s.date, w)) return [];
     const v = key === "bedTime" ? nightMinutes(s.bedTime) : minutesOfDay(s.wakeTime);
     return v === null ? [] : [v];
   });
-  const cur = pick(week);
-  const prev = pick(prevWeek(week));
+  const cur = pick2(week);
+  const prev = pick2(prevWeek(week));
   const label = key === "bedTime" ? "Zu Bett (Mittel)" : "Aufgestanden (Mittel)";
   const m = mean(cur);
   if (m === null) return { label, value: "\u2013", basis: "keine Nacht erfasst", note: null };
@@ -7753,14 +7762,14 @@ function failureRow(setLog, week) {
 }
 function proteinGoalRow(nutrition, goal, week) {
   if (goal?.proteinG == null) return null;
-  const days2 = nutrition.filter(
+  const days3 = nutrition.filter(
     (d) => inWeek(d.date, week) && (d.mealCount > 0 || d.fasttracking && d.proteinG > 0)
   );
-  const m = mean(days2.map((d) => d.proteinG));
+  const m = mean(days3.map((d) => d.proteinG));
   return {
     label: "Eiwei\xDF gegen\xFCber Tagesziel",
     value: m === null ? "\u2013" : `${formatSigned(m - goal.proteinG, 0)} g`,
-    basis: `${days2.length} von 7 Tagen erfasst`,
+    basis: `${days3.length} von 7 Tagen erfasst`,
     note: `Tagesziel ${formatNumber(goal.proteinG, 0)} g${m === null ? "" : `, Mittel ${formatNumber(m, 0)} g`}`
   };
 }
@@ -7974,10 +7983,10 @@ function sessionLoad(w) {
   return w.durationMin * w.perceivedExertion;
 }
 function trainingLoadByDay(workouts) {
-  const days2 = /* @__PURE__ */ new Map();
+  const days3 = /* @__PURE__ */ new Map();
   for (const w of workouts) {
     if (w.status !== "done") continue;
-    const d = days2.get(w.date) ?? {
+    const d = days3.get(w.date) ?? {
       date: w.date,
       sessions: 0,
       durationMin: 0,
@@ -7991,9 +8000,9 @@ function trainingLoadByDay(workouts) {
     const l = sessionLoad(w);
     if (l === null) d.incomplete += 1;
     else d.load += l;
-    days2.set(w.date, d);
+    days3.set(w.date, d);
   }
-  return [...days2.values()].sort((a, b) => a.date.localeCompare(b.date));
+  return [...days3.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 function sleepSeries(sleep) {
   return sleep.map((s) => ({ date: s.date, value: s.sleepMin }));
@@ -8265,7 +8274,7 @@ function weeklySummary(data, weekFrom) {
   const proteinDays = data.nutrition.filter(
     (d) => d.mealCount > 0 || d.fasttracking && d.proteinG > 0
   );
-  const kcal2 = weekValue(
+  const kcal3 = weekValue(
     "Energie (Mittel der erfassten Tage)",
     kcalDays.map((d) => ({ date: d.date, value: d.energyKcal })),
     week,
@@ -8287,8 +8296,8 @@ function weeklySummary(data, weekFrom) {
       basis: (n2) => countLabel(n2, 7, "Tag", "Tagen") + " erfasst"
     }
   );
-  if (data.goal?.energyKcal != null && kcal2.mean !== null) {
-    kcal2.item.change = `${kcal2.item.change ? `${kcal2.item.change} \xB7 ` : ""}Tagesziel ${formatNumber(data.goal.energyKcal, 0)} kcal`;
+  if (data.goal?.energyKcal != null && kcal3.mean !== null) {
+    kcal3.item.change = `${kcal3.item.change ? `${kcal3.item.change} \xB7 ` : ""}Tagesziel ${formatNumber(data.goal.energyKcal, 0)} kcal`;
   }
   const energyPoints = data.energy ?? [];
   const expenditure = weekValue(
@@ -8304,7 +8313,7 @@ function weeklySummary(data, weekFrom) {
   );
   const intakeByDate = new Map(kcalDays.map((d) => [d.date, d.energyKcal]));
   const balancePoints = energyPoints.filter((e) => intakeByDate.has(e.date)).map((e) => ({ date: e.date, value: (intakeByDate.get(e.date) ?? 0) - e.totalKcal }));
-  const balance = weekValue("Bilanz (Aufnahme \u2212 Verbrauch, Mittel)", balancePoints, week, prev, {
+  const balance2 = weekValue("Bilanz (Aufnahme \u2212 Verbrauch, Mittel)", balancePoints, week, prev, {
     format: (v) => `${formatSigned(v, 0)} kcal`,
     formatDiff: (d) => `${formatSigned(d, 0)} kcal`,
     basis: (n2) => countLabel(n2, 7, "Tag", "Tagen") + " mit Ern\xE4hrung und Verbrauch"
@@ -8324,14 +8333,14 @@ function weeklySummary(data, weekFrom) {
     area: "nutrition",
     title: "Ern\xE4hrung",
     values: [
-      kcal2.item,
+      kcal3.item,
       protein.item,
-      ...[expenditure, balance, palValue].filter((v) => v.count > 0).map((v) => v.item)
+      ...[expenditure, balance2, palValue].filter((v) => v.count > 0).map((v) => v.item)
     ]
   });
-  if (balance.mean !== null && balance.count >= MIN_WEEK_VALUES) {
+  if (balance2.mean !== null && balance2.count >= MIN_WEEK_VALUES) {
     observations.push(
-      balance.mean < 0 ? `Du hast an den erfassten Tagen im Mittel ${formatNumber(-balance.mean, 0)} kcal weniger gegessen als berechnet verbraucht (${balance.count} Tage). Der Verbrauch ist eine Sch\xE4tzung.` : `Du hast an den erfassten Tagen im Mittel ${formatNumber(balance.mean, 0)} kcal mehr gegessen als berechnet verbraucht (${balance.count} Tage). Der Verbrauch ist eine Sch\xE4tzung.`
+      balance2.mean < 0 ? `Du hast an den erfassten Tagen im Mittel ${formatNumber(-balance2.mean, 0)} kcal weniger gegessen als berechnet verbraucht (${balance2.count} Tage). Der Verbrauch ist eine Sch\xE4tzung.` : `Du hast an den erfassten Tagen im Mittel ${formatNumber(balance2.mean, 0)} kcal mehr gegessen als berechnet verbraucht (${balance2.count} Tage). Der Verbrauch ist eine Sch\xE4tzung.`
     );
   }
   const neatDays = data.neat ?? [];
@@ -8367,9 +8376,9 @@ function weeklySummary(data, weekFrom) {
       values: [steps, neatMinutes].filter((v) => v.count > 0).map((v) => v.item)
     });
   }
-  if (kcal2.count > 0 && kcal2.count < 7) {
+  if (kcal3.count > 0 && kcal3.count < 7) {
     gaps.push(
-      `Ern\xE4hrung: nur an ${kcal2.count} von 7 Tagen erfasst \u2013 das Mittel gilt nur f\xFCr diese Tage.`
+      `Ern\xE4hrung: nur an ${kcal3.count} von 7 Tagen erfasst \u2013 das Mittel gilt nur f\xFCr diese Tage.`
     );
   }
   const weight = weekValue(
@@ -8839,17 +8848,13 @@ function relativePerformanceSeries(workouts) {
   const byDay = /* @__PURE__ */ new Map();
   for (const list2 of groups.values()) {
     if (list2.length < MIN_SAME_TITLE) continue;
-    const mean3 = list2.reduce((a, w) => a + w.volumeKg, 0) / list2.length;
+    const mean4 = list2.reduce((a, w) => a + w.volumeKg, 0) / list2.length;
     for (const w of list2)
-      byDay.set(w.date, [...byDay.get(w.date) ?? [], w.volumeKg / mean3 * 100]);
+      byDay.set(w.date, [...byDay.get(w.date) ?? [], w.volumeKg / mean4 * 100]);
   }
   return [...byDay.entries()].map(([date, values]) => ({ date, value: values.reduce((a, b) => a + b, 0) / values.length })).sort((a, b) => a.date.localeCompare(b.date));
 }
-function proteinSeries(nutrition) {
-  return nutrition.filter((d) => d.mealCount > 0 || d.fasttracking && d.proteinG > 0).map((d) => ({ date: d.date, value: d.proteinG }));
-}
 function dailyAssociations(data) {
-  const protein = proteinSeries(data.nutrition);
   return [
     {
       label: "Schlafdauer und Trainingsleistung",
@@ -8860,18 +8865,6 @@ function dailyAssociations(data) {
           pair: "deiner Schlafdauer und dem Volumen der Einheit am folgenden Tag",
           higher: "mehr Volumen als bei deinen anderen Einheiten mit gleichem Titel",
           lower: "weniger Volumen als bei deinen anderen Einheiten mit gleichem Titel"
-        }
-      )
-    },
-    {
-      label: "Eiwei\xDF und Muskelkater am Folgetag",
-      association: describeAssociation(
-        pairByDate(protein, recoverySeries(data.recovery, "soreness"), 1),
-        {
-          x: "Mehr Eiwei\xDF an einem Tag",
-          pair: "deiner Eiwei\xDFmenge und dem Muskelkater am n\xE4chsten Tag",
-          higher: "mehr Muskelkater am n\xE4chsten Tag",
-          lower: "weniger Muskelkater am n\xE4chsten Tag"
         }
       )
     }
@@ -9034,8 +9027,8 @@ function parseDurationInput(text2) {
   if (/^\d+$/.test(t)) return Number(t);
   const colon = /^(\d+):([0-5]\d)$/.exec(t);
   if (colon) return Number(colon[1]) * 60 + Number(colon[2]);
-  const hm2 = /^(\d+)\s*h(?:\s*(\d+)\s*(?:m|min)?)?$/.exec(t);
-  if (hm2) return Number(hm2[1]) * 60 + Number(hm2[2] ?? 0);
+  const hm3 = /^(\d+)\s*h(?:\s*(\d+)\s*(?:m|min)?)?$/.exec(t);
+  if (hm3) return Number(hm3[1]) * 60 + Number(hm3[2] ?? 0);
   return Number.NaN;
 }
 function napMinutesByDate(naps) {
@@ -9213,9 +9206,9 @@ function parts(date) {
 function daysInMonth(year, month) {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
-function addDays(date, days2) {
+function addDays(date, days3) {
   const [y, m, d] = parts(date);
-  const t = new Date(Date.UTC(y, m - 1, d + days2));
+  const t = new Date(Date.UTC(y, m - 1, d + days3));
   return iso(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate());
 }
 function shiftMonth(month, n2) {
@@ -9309,9 +9302,9 @@ function roundTo(value, digits) {
   const f = 10 ** digits;
   return Math.round(value * f) / f;
 }
-function windowMean(points, endDate, days2) {
+function windowMean(points, endDate, days3) {
   const end = Date.parse(`${endDate}T00:00:00Z`);
-  const start = end - (days2 - 1) * 864e5;
+  const start = end - (days3 - 1) * 864e5;
   const inside = points.filter((p) => {
     const t = Date.parse(`${p.date}T00:00:00Z`);
     return t >= start && t <= end;
@@ -9413,11 +9406,11 @@ function describeCalibration(e) {
   const sign = change > 0 ? "+" : change < 0 ? "\u2212" : "\xB1";
   return `Kalibriert mit Faktor ${formatNumber(c.factor, 2)} aus ${c.daysUsed} Tagen: \xD8 ${formatNumber(c.avgIntakeKcal, 0)} kcal gegessen, Gewichtstrend ${sign}${formatNumber(Math.abs(change), 1)} kg \u2192 tats\xE4chlich ca. ${formatNumber(c.measuredKcal, 0)} kcal statt berechnet ${formatNumber(c.avgFormulaKcal, 0)} kcal je Tag.` + (c.limited ? " Der Faktor wurde auf 0,75\u20131,25 begrenzt \u2013 bitte Erfassung pr\xFCfen." : "");
 }
-function weightTrendSeries(points, days2 = TREND_WINDOW_DAYS) {
+function weightTrendSeries(points, days3 = TREND_WINDOW_DAYS) {
   return points.map((p) => ({
     date: p.date,
     value: p.value,
-    average: windowMean(points, p.date, days2)?.mean ?? null
+    average: windowMean(points, p.date, days3)?.mean ?? null
   }));
 }
 
@@ -9674,8 +9667,8 @@ function weeklyGoals(input) {
   }
   return out;
 }
-function streakOf(met, today, days2) {
-  const first = shiftDays(today, -(days2 - 1));
+function streakOf(met, today, days3) {
+  const first = shiftDays(today, -(days3 - 1));
   const todayMet = met(today);
   let current = 0;
   let day = todayMet ? today : shiftDays(today, -1);
@@ -9692,7 +9685,7 @@ function streakOf(met, today, days2) {
   return { current, best, today: todayMet, atLimit: current > 0 && day < first };
 }
 function streaks(input) {
-  const { today, days: days2, data, dashboard } = input;
+  const { today, days: days3, data, dashboard } = input;
   const goal = data.goal;
   const out = [];
   const add = (key, label, goalText, value, target, show) => {
@@ -9701,7 +9694,7 @@ function streaks(input) {
       key,
       label,
       goal: goalText,
-      ...streakOf((d) => value(d) >= target, today, days2),
+      ...streakOf((d) => value(d) >= target, today, days3),
       todayShare: Math.max(0, Math.min(1, now / target)),
       todayText: `heute ${show(now)} von ${show(target)}`
     });
@@ -9873,8 +9866,8 @@ function sd(values) {
   const avg = mean2(values);
   return Math.sqrt(mean2(values.map((v) => (v - avg) ** 2)));
 }
-function sleepRegularity(sleep, today, days2 = 14) {
-  const from = shiftDays(today, -(days2 - 1));
+function sleepRegularity(sleep, today, days3 = 14) {
+  const from = shiftDays(today, -(days3 - 1));
   const beds = [];
   const wakes = [];
   for (const s of sleep) {
@@ -9901,8 +9894,8 @@ function sleepRegularity(sleep, today, days2 = 14) {
     text: text2
   };
 }
-function metricChange(measurements, metricId, today, days2 = 30) {
-  const from = shiftDays(today, -(days2 - 1));
+function metricChange(measurements, metricId, today, days3 = 30) {
+  const from = shiftDays(today, -(days3 - 1));
   const list2 = measurements.filter((m) => m.metricId === metricId && inRange2(m.date, from, today)).sort((a, b) => a.date.localeCompare(b.date));
   const last = list2.at(-1);
   if (!last) return null;
@@ -9917,8 +9910,8 @@ function metricChange(measurements, metricId, today, days2 = 30) {
     decimals: last.decimals
   };
 }
-function progressExercises(log, today, days2 = 90) {
-  const from = shiftDays(today, -(days2 - 1));
+function progressExercises(log, today, days3 = 90) {
+  const from = shiftDays(today, -(days3 - 1));
   const byExercise = /* @__PURE__ */ new Map();
   for (const s of log) {
     if (s.isWarmup || s.exerciseCategory === "cardio" || !inRange2(s.date, from, today)) continue;
@@ -9929,8 +9922,8 @@ function progressExercises(log, today, days2 = 90) {
   }
   return [...byExercise.entries()].map(([exerciseId, e]) => ({ exerciseId, name: e.name, sessions: e.workouts.size })).sort((a, b) => b.sessions - a.sessions || a.name.localeCompare(b.name, "de"));
 }
-function exerciseProgress(log, exerciseId, today, days2 = 180) {
-  const from = shiftDays(today, -(days2 - 1));
+function exerciseProgress(log, exerciseId, today, days3 = 180) {
+  const from = shiftDays(today, -(days3 - 1));
   const points = e1rmBySession(
     log.filter((s) => s.exerciseId === exerciseId && inRange2(s.date, from, today))
   ).sort((a, b) => a.date.localeCompare(b.date));
@@ -9944,18 +9937,18 @@ function exerciseProgress(log, exerciseId, today, days2 = 180) {
 }
 var MIN_EXTRA_DAYS = 3;
 function extrasCheck(extras) {
-  const days2 = extras.filter((d) => d.items > 0);
-  if (days2.length < MIN_EXTRA_DAYS) return { days: days2.length, checks: [] };
-  const items = days2.reduce((a, d) => a + d.items, 0);
-  const avg = (f) => mean2(days2.map(f));
-  const kcal2 = avg((d) => d.energyKcal);
-  const share = (missing) => days2.reduce((a, d) => a + missing(d), 0) / items;
+  const days3 = extras.filter((d) => d.items > 0);
+  if (days3.length < MIN_EXTRA_DAYS) return { days: days3.length, checks: [] };
+  const items = days3.reduce((a, d) => a + d.items, 0);
+  const avg = (f) => mean2(days3.map(f));
+  const kcal3 = avg((d) => d.energyKcal);
+  const share = (missing) => days3.reduce((a, d) => a + missing(d), 0) / items;
   const fiber = avg((d) => d.fiberG);
   const salt = avg((d) => d.saltG);
-  const sugarPct = kcal2 > 0 ? avg((d) => d.sugarG) * 4 / kcal2 * 100 : 0;
-  const satPct = kcal2 > 0 ? avg((d) => d.saturatedFatG) * 9 / kcal2 * 100 : 0;
+  const sugarPct = kcal3 > 0 ? avg((d) => d.sugarG) * 4 / kcal3 * 100 : 0;
+  const satPct = kcal3 > 0 ? avg((d) => d.saturatedFatG) * 9 / kcal3 * 100 : 0;
   return {
-    days: days2.length,
+    days: days3.length,
     checks: [
       {
         key: "fiber",
@@ -10018,14 +10011,14 @@ function proteinSuggestions(foods, openProteinG, openKcal, limit = 3) {
       grams = Math.min(500, Math.max(10, Math.round(grams / 10) * 10));
       amount = `${formatNumber(grams, 0)} ${f.basisUnit}`;
     }
-    const kcal2 = f.energyKcal * grams / 100;
-    if (openKcal !== null && kcal2 > Math.max(openKcal, 0) + 50) continue;
+    const kcal3 = f.energyKcal * grams / 100;
+    if (openKcal !== null && kcal3 > Math.max(openKcal, 0) + 50) continue;
     out.push({
       foodId: f.id,
       name: f.brand ? `${f.name} (${f.brand})` : f.name,
       amount,
       proteinG: f.proteinG * grams / 100,
-      energyKcal: kcal2
+      energyKcal: kcal3
     });
     if (out.length >= limit) break;
   }
@@ -10560,17 +10553,17 @@ function unitCurveCumulative(t, { k1, k2 }) {
   if (t <= 0) return 0;
   return 1 - (k2 * Math.exp(-k1 * t) - k1 * Math.exp(-k2 * t)) / (k2 - k1);
 }
-function contribution(event, days2) {
-  if (days2 <= 0) return 0;
+function contribution(event, days3) {
+  if (days3 <= 0) return 0;
   const s = substanceById(event.substanceId);
   if (!s) return 0;
   const rates = ratesFor(s.halfLifeDays, s.tmaxDays);
   if (s.delivery === "patch") {
     const wear = event.wearDays ?? 0;
     if (wear <= 0) return 0;
-    return event.effective * (unitCurveCumulative(days2, rates) - unitCurveCumulative(days2 - wear, rates));
+    return event.effective * (unitCurveCumulative(days3, rates) - unitCurveCumulative(days3 - wear, rates));
   }
-  return event.effective * unitCurve(days2, rates);
+  return event.effective * unitCurve(days3, rates);
 }
 function levelAt2(events, atMs) {
   let sum = 0;
@@ -10641,8 +10634,8 @@ function levelSeries(events, measurand, nowMs, rangeDays) {
   const stepMs = stepHoursFor(rangeDays) * 36e5;
   const raw = [];
   for (let t = fromMs; t <= toMs; t += stepMs) raw.push({ atMs: t, value: levelAt2(own, t) });
-  const inRange4 = own.filter((e) => e.atMs >= fromMs && e.atMs <= toMs);
-  const peakCandidates = inRange4.map((e) => {
+  const inRange5 = own.filter((e) => e.atMs >= fromMs && e.atMs <= toMs);
+  const peakCandidates = inRange5.map((e) => {
     const s = substanceById(e.substanceId);
     return s ? levelAt2(own, e.atMs + s.tmaxDays * MS_PER_DAY) : 0;
   });
@@ -10655,7 +10648,7 @@ function levelSeries(events, measurand, nowMs, rangeDays) {
     toMs,
     nowMs,
     points: raw.map((p) => ({ atMs: p.atMs, percent: pct(p.value) })),
-    doses: inRange4.map((event) => ({ event, percent: pct(levelAt2(own, event.atMs)) })),
+    doses: inRange5.map((event) => ({ event, percent: pct(levelAt2(own, event.atMs)) })),
     nowPercent: own.length > 0 && peak > 0 ? pct(nowValue) : null,
     peak
   };
@@ -12806,8 +12799,8 @@ function pixelsToRgba(raw, width, height, bitsPerComponent) {
   const out = new Uint8ClampedArray(n2 * 4);
   for (let i = 0; i < n2; i++) {
     for (let c = 0; c < 3; c++) {
-      const src = (i * channels + (channels === 1 ? 0 : c)) * bytesPer;
-      out[i * 4 + c] = raw[src] ?? 0;
+      const src2 = (i * channels + (channels === 1 ? 0 : c)) * bytesPer;
+      out[i * 4 + c] = raw[src2] ?? 0;
     }
     out[i * 4 + 3] = 255;
   }
@@ -12916,20 +12909,20 @@ function glucoseStats(readings) {
       ranges
     };
   }
-  const mean3 = values.reduce((a, b) => a + b, 0) / n2;
-  const sd2 = n2 > 1 ? Math.sqrt(values.reduce((a, b) => a + (b - mean3) ** 2, 0) / (n2 - 1)) : null;
+  const mean4 = values.reduce((a, b) => a + b, 0) / n2;
+  const sd2 = n2 > 1 ? Math.sqrt(values.reduce((a, b) => a + (b - mean4) ** 2, 0) / (n2 - 1)) : null;
   for (const v of values) {
     const r2 = RANGES.find((x) => v < x.max);
     ranges[r2.key] += 100 / n2;
   }
-  const days2 = new Set(readings.map((r2) => r2.measuredAt.slice(0, 10))).size;
+  const days3 = new Set(readings.map((r2) => r2.measuredAt.slice(0, 10))).size;
   return {
     count: n2,
-    days: days2,
-    mean: mean3,
+    days: days3,
+    mean: mean4,
     sd: sd2,
-    cv: sd2 !== null && mean3 > 0 ? sd2 / mean3 * 100 : null,
-    gmi: days2 >= 10 ? 3.31 + 0.02392 * mean3 : null,
+    cv: sd2 !== null && mean4 > 0 ? sd2 / mean4 * 100 : null,
+    gmi: days3 >= 10 ? 3.31 + 0.02392 * mean4 : null,
     min: Math.min(...values),
     max: Math.max(...values),
     ranges
@@ -13041,9 +13034,9 @@ function labRows(draws, analytes, from, to) {
   );
 }
 function hrtRows(entries, from, to) {
-  const inRange4 = entries.filter((e) => e.date >= from && e.date <= to);
+  const inRange5 = entries.filter((e) => e.date >= from && e.date <= to);
   const groups = /* @__PURE__ */ new Map();
-  for (const e of inRange4) {
+  for (const e of inRange5) {
     const k = `${e.hormone.trim().toLowerCase()}|${e.unit}`;
     groups.set(k, [...groups.get(k) ?? [], e]);
   }
@@ -13068,30 +13061,30 @@ function hrtRows(entries, from, to) {
 }
 function measuredRows(w, from, to) {
   if (!w) return [];
-  const inRange4 = (list2) => list2.filter((x) => x.date >= from && x.date <= to);
-  const pick = (list2, f) => inRange4(list2).flatMap((x) => {
+  const inRange5 = (list2) => list2.filter((x) => x.date >= from && x.date <= to);
+  const pick2 = (list2, f) => inRange5(list2).flatMap((x) => {
     const v = f(x);
     return v === null || !Number.isFinite(v) ? [] : [{ date: x.date, value: v }];
   });
   return [
-    stat("Niedrigste Herzfrequenz der Nacht", "/min", 0, pick(w.sleep, nightLowestHr)),
+    stat("Niedrigste Herzfrequenz der Nacht", "/min", 0, pick2(w.sleep, nightLowestHr)),
     stat(
       "HRV der Nacht (RMSSD)",
       "ms",
       0,
-      pick(w.recovery, (r2) => r2.hrvMs)
+      pick2(w.recovery, (r2) => r2.hrvMs)
     ),
     stat(
       "Atemfrequenz der Nacht",
       "/min",
       1,
-      pick(w.recovery, (r2) => r2.breathingAvg)
+      pick2(w.recovery, (r2) => r2.breathingAvg)
     ),
     stat(
       "Schlafdauer gemessen",
       "Std.",
       1,
-      pick(w.sleep, (s) => {
+      pick2(w.sleep, (s) => {
         const m = measuredSleepMin(s);
         return m === null ? null : m / 60;
       })
@@ -13106,7 +13099,7 @@ function buildDoctorReport(input) {
   const sleep = sleepSeries(data.sleep.filter((s) => s.date >= from && s.date <= to)).filter(
     (s) => s.value > 0
   );
-  const days2 = isoDays(from, to);
+  const days3 = isoDays(from, to);
   let hrt = null;
   if (input.hrt) {
     const { events } = dosesFromHrt(input.hrt);
@@ -13126,7 +13119,7 @@ function buildDoctorReport(input) {
   return {
     from,
     to,
-    dayCount: days2,
+    dayCount: days3,
     person: profile ? {
       name: profile.name,
       age: profile.birthDate ? ageOn(profile.birthDate, input.today) : ageInYear(profile.birthYear, Number(input.today.slice(0, 4))),
@@ -13147,7 +13140,7 @@ function buildDoctorReport(input) {
     hrt,
     training: {
       sessions: done.length,
-      perWeek: done.length / (days2 / 7),
+      perWeek: done.length / (days3 / 7),
       minutes: done.reduce((s, w) => s + (w.durationMin ?? 0), 0),
       rpe: rpe.length > 0 ? rpe.reduce((s, w) => s + (w.perceivedExertion ?? 0), 0) / rpe.length : null
     },
@@ -14508,9 +14501,9 @@ function splitHeaderUnit(header2) {
   const h = clean(header2);
   const square = /^(.*?)\s*\[([^\]]+)\]$/.exec(h);
   if (square) return { name: clean(square[1] ?? ""), unit: clean(square[2] ?? "") };
-  const round3 = /^(.*?)\s*\(([^)]+)\)$/.exec(h);
-  if (round3 && /[/%µ]|^(mg|g|ng|pg|µg|u|iu|ie|mmol|nmol|pmol|mu)\b/i.test(round3[2] ?? "")) {
-    return { name: clean(round3[1] ?? ""), unit: clean(round3[2] ?? "") };
+  const round4 = /^(.*?)\s*\(([^)]+)\)$/.exec(h);
+  if (round4 && /[/%µ]|^(mg|g|ng|pg|µg|u|iu|ie|mmol|nmol|pmol|mu)\b/i.test(round4[2] ?? "")) {
+    return { name: clean(round4[1] ?? ""), unit: clean(round4[2] ?? "") };
   }
   return { name: h, unit: "" };
 }
@@ -15395,6 +15388,22 @@ __export(schedule_exports, {
 });
 
 // src/domain/appointments.ts
+var appointments_exports = {};
+__export(appointments_exports, {
+  APPOINTMENT_KINDS: () => APPOINTMENT_KINDS,
+  APPOINTMENT_KIND_LABELS: () => APPOINTMENT_KIND_LABELS,
+  appointmentDetail: () => appointmentDetail,
+  daysUntil: () => daysUntil,
+  dueReminders: () => dueReminders2,
+  reminderStart: () => reminderStart,
+  whenText: () => whenText
+});
+var APPOINTMENT_KINDS = [
+  "blood_draw",
+  "doctor",
+  "lab",
+  "other"
+];
 var APPOINTMENT_KIND_LABELS = {
   blood_draw: "Blutabnahme",
   doctor: "Arzttermin",
@@ -15405,11 +15414,28 @@ function dayNumber2(date) {
   const [y, m, d] = date.split("-").map(Number);
   return Math.round(Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1) / 864e5);
 }
+function daysUntil(date, today) {
+  return dayNumber2(date) - dayNumber2(today);
+}
 function reminderStart(a) {
   if (a.remindDays === null) return null;
   const d = new Date((dayNumber2(a.date) - a.remindDays) * 864e5);
   const pad3 = (n2) => String(n2).padStart(2, "0");
   return `${d.getUTCFullYear()}-${pad3(d.getUTCMonth() + 1)}-${pad3(d.getUTCDate())}`;
+}
+function dueReminders2(appointments, today) {
+  return appointments.filter((a) => {
+    if (a.done) return false;
+    const start = reminderStart(a);
+    return start !== null && start <= today && a.date >= today;
+  }).sort((a, b) => `${a.date}${a.time ?? ""}`.localeCompare(`${b.date}${b.time ?? ""}`));
+}
+function whenText(date, today) {
+  const n2 = daysUntil(date, today);
+  if (n2 === 0) return "heute";
+  if (n2 === 1) return "morgen";
+  if (n2 === -1) return "gestern";
+  return n2 > 0 ? `in ${n2} Tagen` : `vor ${-n2} Tagen`;
 }
 function appointmentDetail(a) {
   return [APPOINTMENT_KIND_LABELS[a.kind], a.location, a.fasting ? "n\xFCchtern erscheinen" : null].filter(Boolean).join(" \xB7 ");
@@ -15425,9 +15451,9 @@ var SCHEDULE_KIND_LABELS = {
   todo: "To-do"
 };
 var pad2 = (n2) => String(n2).padStart(2, "0");
-function addDays2(date, days2) {
+function addDays2(date, days3) {
   const [y, m, d] = date.split("-").map(Number);
-  const t = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + days2));
+  const t = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + days3));
   return `${t.getUTCFullYear()}-${pad2(t.getUTCMonth() + 1)}-${pad2(t.getUTCDate())}`;
 }
 function periodRange(date, mode) {
@@ -15462,13 +15488,13 @@ function periodLabel(date, mode) {
 function dayLabel(date) {
   return `${WEEKDAY_SHORT[isoWeekday(date)] ?? ""}, ${date.slice(8, 10)}.${date.slice(5, 7)}.`;
 }
-function plannedTrainings(plans, days2) {
+function plannedTrainings(plans, days3) {
   const out = [];
   for (const plan of plans) {
     if (plan.archived) continue;
     for (const day of plan.days) {
       for (const [i, slot] of (day.slots ?? []).entries()) {
-        for (const date of days2) {
+        for (const date of days3) {
           const hit = slot.weekday !== null ? slot.weekday === isoWeekday(date) : slot.date === date;
           if (!hit) continue;
           out.push({
@@ -15499,10 +15525,10 @@ var STATUS_TITLE = {
   sick: "Krank"
 };
 function buildSchedule(input) {
-  const inRange4 = new Set(input.days);
+  const inRange5 = new Set(input.days);
   const items = [];
   for (const s of input.dayStatus) {
-    if (!inRange4.has(s.date)) continue;
+    if (!inRange5.has(s.date)) continue;
     items.push({
       key: `status:${s.date}`,
       date: s.date,
@@ -15516,7 +15542,7 @@ function buildSchedule(input) {
   }
   items.push(...plannedTrainings(input.plans, input.days));
   for (const w of input.workouts) {
-    if (!inRange4.has(w.date)) continue;
+    if (!inRange5.has(w.date)) continue;
     items.push({
       key: `workout:${w.id}`,
       date: w.date,
@@ -15528,7 +15554,7 @@ function buildSchedule(input) {
     });
   }
   for (const due of input.hrtDue) {
-    if (!inRange4.has(due.next)) continue;
+    if (!inRange5.has(due.next)) continue;
     items.push({
       key: `hrt:${due.hormone}:${due.next}`,
       date: due.next,
@@ -15540,7 +15566,7 @@ function buildSchedule(input) {
     });
   }
   for (const a of input.appointments ?? []) {
-    if (inRange4.has(a.date)) {
+    if (inRange5.has(a.date)) {
       items.push({
         key: `appointment:${a.id}`,
         date: a.date,
@@ -15552,7 +15578,7 @@ function buildSchedule(input) {
       });
     }
     const remind = reminderStart(a);
-    if (remind && remind !== a.date && !a.done && inRange4.has(remind)) {
+    if (remind && remind !== a.date && !a.done && inRange5.has(remind)) {
       items.push({
         key: `appointment-reminder:${a.id}`,
         date: remind,
@@ -15565,7 +15591,7 @@ function buildSchedule(input) {
     }
   }
   for (const t of input.todos) {
-    if (!inRange4.has(t.date)) continue;
+    if (!inRange5.has(t.date)) continue;
     items.push({
       key: `todo:${t.id}`,
       date: t.date,
@@ -15586,8 +15612,8 @@ function buildSchedule(input) {
     )
   }));
 }
-function scheduleCounts(days2) {
-  const all = days2.flatMap((d) => d.items);
+function scheduleCounts(days3) {
+  const all = days3.flatMap((d) => d.items);
   const todos = all.filter((i) => i.kind === "todo");
   return {
     trainings: all.filter((i) => i.kind === "training" || i.kind === "workout").length,
@@ -16817,11 +16843,11 @@ function bestTrendKind(list2) {
 function bests(list2) {
   const rows = [];
   const kinds = [...new Set(list2.map((s) => s.kind))];
-  const pick = (items, score) => items.reduce((b, s) => b === null || score(s) > score(b) ? s : b, null);
+  const pick2 = (items, score) => items.reduce((b, s) => b === null || score(s) > score(b) ? s : b, null);
   for (const kind of kinds) {
     const items = list2.filter((s) => s.kind === kind);
     const name = cardioKindLabel(kind);
-    const far = pick(
+    const far = pick2(
       items.filter((s) => s.distanceM > 0),
       (s) => s.distanceM
     );
@@ -16834,7 +16860,7 @@ function bests(list2) {
         exerciseName: far.exerciseName
       });
     }
-    const long = pick(
+    const long = pick2(
       items.filter((s) => s.durationSeconds > 0),
       (s) => s.durationSeconds
     );
@@ -16849,7 +16875,7 @@ function bests(list2) {
     }
     if (kind === "run" || kind === "walk" || kind === "swim") {
       const per = kind === "swim" ? 100 : 1e3;
-      const fast = pick(
+      const fast = pick2(
         items.filter((s) => s.distanceM >= per && s.durationSeconds > 0),
         (s) => s.distanceM / s.durationSeconds
       );
@@ -16863,7 +16889,7 @@ function bests(list2) {
         });
       }
     }
-    const strong = pick(
+    const strong = pick2(
       items.filter((s) => s.powerAvg !== null),
       (s) => s.powerAvg ?? 0
     );
@@ -17203,9 +17229,9 @@ function trainingRows(workouts, statuses, limited = false) {
     (m, w) => m === null || w.date < m ? w.date : m,
     null
   );
-  const days2 = statuses.filter((s) => !limited || oldest === null || s.date >= oldest);
+  const days3 = statuses.filter((s) => !limited || oldest === null || s.date >= oldest);
   const rows = [
-    ...days2.map((status) => ({ kind: "day", date: status.date, status })),
+    ...days3.map((status) => ({ kind: "day", date: status.date, status })),
     ...workouts.map((workout) => ({ kind: "workout", date: workout.date, workout }))
   ];
   return rows.map((row, index) => ({ row, index })).sort((a, b) => b.row.date.localeCompare(a.row.date) || a.index - b.index).map((x) => x.row);
@@ -17651,10 +17677,10 @@ function filterMachines(list2, f) {
     return words.every((w) => text2.includes(w));
   });
 }
-function distinct(list2, pick) {
+function distinct(list2, pick2) {
   const set = /* @__PURE__ */ new Set();
   for (const m of list2) {
-    const v = pick(m);
+    const v = pick2(m);
     for (const x of Array.isArray(v) ? v : [v]) if (x) set.add(x);
   }
   return [...set].sort((a, b) => a.localeCompare(b, "de", { sensitivity: "base" }));
@@ -17927,16 +17953,16 @@ function hrvChart(hrv, rhr, width = 480) {
   ]);
   return { w: width, h, shapes };
 }
-function trainingChart(days2, width = 230) {
+function trainingChart(days3, width = 230) {
   const h = 170;
   const box2 = { x: 30, y: 26, w: width - 40, h: 110 };
   const shapes = [];
-  const totals2 = days2.map((d) => d.strengthMin + d.cardioMin + d.otherMin);
+  const totals2 = days3.map((d) => d.strengthMin + d.cardioMin + d.otherMin);
   const a = axis(0, Math.max(30, ...totals2));
   yGrid(shapes, { ...a, lo: 0 }, box2, "left");
-  const slot = box2.w / Math.max(days2.length, 1);
+  const slot = box2.w / Math.max(days3.length, 1);
   const y = (v) => box2.y + box2.h - v / a.hi * box2.h;
-  days2.forEach((d, i) => {
+  days3.forEach((d, i) => {
     const bx = box2.x + i * slot + slot * 0.2;
     const bw = slot * 0.6;
     let acc = 0;
@@ -18002,20 +18028,20 @@ function gripChart(points, weekStart4, width = 230) {
   ]);
   return { w: width, h, shapes };
 }
-function energyChart(days2, weight, width = 480) {
+function energyChart(days3, weight, width = 480) {
   const h = 180;
   const box2 = { x: 36, y: 22, w: width - 76, h: 118 };
   const shapes = [];
-  const kcals = days2.flatMap((d) => d.kcal === null ? [] : [d.kcal]);
+  const kcals = days3.flatMap((d) => d.kcal === null ? [] : [d.kcal]);
   const wv = weight.flatMap((p) => p.value === null ? [] : [p.value]);
   const a = axis(0, Math.max(1e3, ...kcals));
   const ax = { ...a, lo: 0 };
-  const slot = box2.w / Math.max(days2.length, 1);
-  if (days2.length >= 14)
+  const slot = box2.w / Math.max(days3.length, 1);
+  if (days3.length >= 14)
     shapes.push({ k: "rect", x: box2.x + 7 * slot, y: box2.y, w: 7 * slot, h: box2.h, c: "band" });
   yGrid(shapes, ax, box2, "left");
   const y = (v) => box2.y + box2.h - v / ax.hi * box2.h;
-  days2.forEach((d, i) => {
+  days3.forEach((d, i) => {
     const bx = box2.x + i * slot + slot * 0.18;
     if (d.kcal !== null)
       shapes.push({
@@ -18024,7 +18050,7 @@ function energyChart(days2, weight, width = 480) {
         y: y(d.kcal),
         w: slot * 0.64,
         h: y(0) - y(d.kcal),
-        c: i >= 7 || days2.length < 14 ? "blue" : "blueSoft"
+        c: i >= 7 || days3.length < 14 ? "blue" : "blueSoft"
       });
     shapes.push(text(bx + slot * 0.32, box2.y + box2.h + 11, dayMonth(d.date), "middle"));
   });
@@ -18047,17 +18073,17 @@ function energyChart(days2, weight, width = 480) {
   ]);
   return { w: width, h, shapes };
 }
-function macroChart(days2, width = 230) {
+function macroChart(days3, width = 230) {
   const h = 170;
   const box2 = { x: 34, y: 26, w: width - 44, h: 110 };
   const shapes = [];
   const parts2 = (d) => [d.proteinG * 4, d.carbsG * 4, d.fatG * 9];
-  const totals2 = days2.map((d) => d.kcal === null ? 0 : parts2(d).reduce((x, y2) => x + y2, 0));
+  const totals2 = days3.map((d) => d.kcal === null ? 0 : parts2(d).reduce((x, y2) => x + y2, 0));
   const a = axis(0, Math.max(1e3, ...totals2));
   yGrid(shapes, { ...a, lo: 0 }, box2, "left");
-  const slot = box2.w / Math.max(days2.length, 1);
+  const slot = box2.w / Math.max(days3.length, 1);
   const y = (v) => box2.y + box2.h - v / a.hi * box2.h;
-  days2.forEach((d, i) => {
+  days3.forEach((d, i) => {
     const bx = box2.x + i * slot + slot * 0.2;
     if (d.kcal !== null) {
       let acc = 0;
@@ -18982,6 +19008,1290 @@ function weeklyReportToPdf(r2, opts) {
   w.footers();
   return w.doc.toBytes(weeklyReportTitle(r2).replace(/–/g, "-"));
 }
+
+// src/domain/quickFill.ts
+var quickFill_exports = {};
+__export(quickFill_exports, {
+  DEFAULT_SLEEP_RULE: () => DEFAULT_SLEEP_RULE,
+  DEFAULT_WITH_MEASUREMENT: () => DEFAULT_WITH_MEASUREMENT,
+  GAP_DAYS: () => GAP_DAYS,
+  IMPORTED_METRIC_IDS: () => IMPORTED_METRIC_IDS,
+  QUICK_FILL_KEY: () => QUICK_FILL_KEY,
+  QUICK_FILL_SKIP_KEY: () => QUICK_FILL_SKIP_KEY,
+  RHYTHM_DAYS: () => RHYTHM_DAYS,
+  RHYTHM_LABELS: () => RHYTHM_LABELS,
+  SKIP_KEEP_DAYS: () => SKIP_KEEP_DAYS,
+  SLEEP_FILL_FIELDS: () => SLEEP_FILL_FIELDS,
+  defaultRule: () => defaultRule,
+  effectiveRules: () => effectiveRules,
+  fillInputError: () => fillInputError,
+  lastCompositionDay: () => lastCompositionDay,
+  missingSleep: () => missingSleep,
+  missingValues: () => missingValues,
+  parseClock: () => parseClock2,
+  parseFillInput: () => parseFillInput,
+  parseFillRules: () => parseFillRules,
+  parseSkips: () => parseSkips,
+  parseSleepRule: () => parseSleepRule,
+  serializeFillRules: () => serializeFillRules,
+  serializeSkips: () => serializeSkips,
+  sleepInputError: () => sleepInputError,
+  sleepSkipId: () => sleepSkipId
+});
+var QUICK_FILL_KEY = "ui.quick_fill";
+var QUICK_FILL_SKIP_KEY = "ui.quick_fill_skip";
+var GAP_DAYS = 30;
+var SKIP_KEEP_DAYS = 120;
+var RHYTHM_DAYS = {
+  daily: 1,
+  weekly: 7,
+  biweekly: 14,
+  monthly: 30
+};
+var RHYTHM_LABELS = {
+  off: "kein Rhythmus",
+  daily: "t\xE4glich",
+  weekly: "w\xF6chentlich",
+  biweekly: "alle 2 Wochen",
+  monthly: "monatlich"
+};
+var IMPORTED_METRIC_IDS = new Set(
+  [1, 2, 3, 14, 15, 16, 18, 19, 20, 21, 22, 25, 26, 28, 29, 32, 36, 37, 38, 39, 42, 43].map(
+    builtinMetricId
+  )
+);
+var DEFAULT_WITH_MEASUREMENT = new Set(
+  [24, 27, 30, 31, 33, 34, 35, 40, 41].map(builtinMetricId)
+);
+var RHYTHMS = ["off", "daily", "weekly", "biweekly", "monthly"];
+function defaultRule(metricId) {
+  return { metricId, withMeasurement: DEFAULT_WITH_MEASUREMENT.has(metricId), rhythm: "off" };
+}
+function parseFillRules(raw) {
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data.rules)) return null;
+    const out = [];
+    for (const r2 of data.rules) {
+      if (typeof r2?.m !== "string") continue;
+      const rhythm = RHYTHMS.find((x) => x === r2.r) ?? "off";
+      out.push({ metricId: r2.m, withMeasurement: r2.g === true, rhythm });
+    }
+    return out;
+  } catch {
+    return null;
+  }
+}
+function serializeFillRules(rules, sleep = DEFAULT_SLEEP_RULE) {
+  return JSON.stringify({
+    v: 1,
+    rules: rules.filter((r2) => r2.withMeasurement || r2.rhythm !== "off").map((r2) => ({ m: r2.metricId, g: r2.withMeasurement, r: r2.rhythm })),
+    sleep: { night: sleep.night, fields: sleep.fields }
+  });
+}
+var SLEEP_FILL_FIELDS = [
+  { key: "quality", label: "Schlafqualit\xE4t", unit: "1\u201310", min: 1, max: 10 },
+  { key: "sleepLatencyMin", label: "Einschlafdauer", unit: "Min.", min: 0, max: 300 },
+  { key: "awakenings", label: "Wachphasen", unit: "Anzahl", min: 0, max: 50 },
+  { key: "awakeMin", label: "Wachzeit in der Nacht", unit: "Min.", min: 0, max: 600 }
+];
+var DEFAULT_SLEEP_RULE = { night: true, fields: ["quality"] };
+function parseSleepRule(raw) {
+  if (!raw) return DEFAULT_SLEEP_RULE;
+  try {
+    const data = JSON.parse(raw);
+    if (!data.sleep) return DEFAULT_SLEEP_RULE;
+    const fields = Array.isArray(data.sleep.fields) ? data.sleep.fields : [];
+    return {
+      night: data.sleep.night === true,
+      fields: SLEEP_FILL_FIELDS.map((f) => f.key).filter((k) => fields.includes(k))
+    };
+  } catch {
+    return DEFAULT_SLEEP_RULE;
+  }
+}
+var sleepSkipId = (m) => m.kind === "night" ? "sleep:night" : `sleep:${m.field}`;
+function missingSleep(input) {
+  const skipped = new Set(
+    input.skips.filter((s) => s.kind === "gap").map((s) => `${s.metricId}|${s.date}`)
+  );
+  const ok = (m) => !skipped.has(`${sleepSkipId(m)}|${m.date}`);
+  const todayLog = input.sleep.find((l) => l.date === input.today);
+  const out = [];
+  if (!todayLog && input.rule.night) {
+    const night = { kind: "night", date: input.today };
+    if (ok(night)) out.push(night);
+    return out;
+  }
+  const log = todayLog ?? input.sleep.find((l) => l.date === shiftDays(input.today, -1));
+  if (!log) return out;
+  for (const field of input.rule.fields) {
+    if (log[field] !== null) continue;
+    const m = { kind: "field", date: log.date, field, logId: log.id };
+    if (ok(m)) out.push(m);
+  }
+  return out;
+}
+function sleepInputError(value, field) {
+  if (value === null) return null;
+  const def = SLEEP_FILL_FIELDS.find((f) => f.key === field);
+  if (Number.isNaN(value) || !Number.isInteger(value)) return "Bitte eine ganze Zahl eingeben.";
+  if (value < def.min || value > def.max) return `Erlaubt: ${def.min}\u2013${def.max}`;
+  return null;
+}
+function parseClock2(text2) {
+  const t = text2.trim();
+  if (t === "") return null;
+  const m = /^(\d{1,2})[:.](\d{2})$/.exec(t);
+  if (!m) return void 0;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h > 23 || min > 59) return void 0;
+  return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+}
+function effectiveRules(stored, metrics) {
+  const byId = new Map((stored ?? []).map((r2) => [r2.metricId, r2]));
+  return metrics.filter((m) => !m.archived).map(
+    (m) => stored === null ? defaultRule(m.id) : byId.get(m.id) ?? { metricId: m.id, withMeasurement: false, rhythm: "off" }
+  );
+}
+function parseSkips(raw) {
+  if (!raw) return [];
+  try {
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) return [];
+    return data.flatMap(
+      (s) => (s?.k === "gap" || s?.k === "due") && typeof s.m === "string" && typeof s.d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.d) ? [{ kind: s.k, metricId: s.m, date: s.d }] : []
+    );
+  } catch {
+    return [];
+  }
+}
+function serializeSkips(skips, today) {
+  const keepFrom = shiftDays(today, -SKIP_KEEP_DAYS);
+  const seen = /* @__PURE__ */ new Set();
+  const out = [];
+  for (const s of skips) {
+    const key = `${s.kind}|${s.metricId}|${s.date}`;
+    if (s.date < keepFrom || seen.has(key)) continue;
+    seen.add(key);
+    out.push({ k: s.kind, m: s.metricId, d: s.date });
+  }
+  return JSON.stringify(out);
+}
+var dayNumber3 = (iso2) => Math.round(Date.parse(`${iso2}T00:00:00Z`) / 864e5);
+function lastCompositionDay(measurements, categoryOf, today) {
+  const from = shiftDays(today, -GAP_DAYS);
+  let best = null;
+  for (const m of measurements) {
+    if (m.date > today || m.date < from) continue;
+    if (categoryOf(m.metricId) !== "composition") continue;
+    if (best === null || m.date > best) best = m.date;
+  }
+  return best;
+}
+function missingValues(input) {
+  const { today } = input;
+  const metricById = new Map(input.metrics.map((m) => [m.id, m]));
+  const anchor = lastCompositionDay(
+    input.measurements,
+    (id3) => metricById.get(id3)?.category,
+    today
+  );
+  const onAnchor = new Set(
+    input.measurements.filter((m) => m.date === anchor).map((m) => m.metricId)
+  );
+  const last = /* @__PURE__ */ new Map();
+  for (const m of input.measurements) {
+    if (m.date > today) continue;
+    const prev = last.get(m.metricId);
+    if (!prev || m.date > prev.date) last.set(m.metricId, { date: m.date, value: m.value });
+  }
+  const gapSkipped = new Set(
+    input.skips.filter((s) => s.kind === "gap").map((s) => `${s.metricId}|${s.date}`)
+  );
+  const dueSkipped = /* @__PURE__ */ new Map();
+  for (const s of input.skips) {
+    if (s.kind !== "due") continue;
+    const prev = dueSkipped.get(s.metricId);
+    if (!prev || s.date > prev) dueSkipped.set(s.metricId, s.date);
+  }
+  const out = [];
+  for (const rule of input.rules) {
+    const metric = metricById.get(rule.metricId);
+    if (!metric || metric.archived) continue;
+    const fromList = metric.latestDate && metric.latestDate <= today && metric.latestValue !== null ? { date: metric.latestDate, value: metric.latestValue } : null;
+    const lastOne = last.get(metric.id) ?? fromList;
+    const base = {
+      metricId: metric.id,
+      name: metric.name,
+      unit: metric.unit,
+      decimals: metric.decimals,
+      minValue: metric.minValue,
+      maxValue: metric.maxValue,
+      lastValue: lastOne?.value ?? null,
+      lastDate: lastOne?.date ?? null
+    };
+    if (rule.withMeasurement && anchor !== null && !onAnchor.has(metric.id) && !gapSkipped.has(`${metric.id}|${anchor}`)) {
+      out.push({ ...base, date: anchor, reason: "gap", rhythm: rule.rhythm });
+      continue;
+    }
+    if (rule.rhythm === "off") continue;
+    const days3 = RHYTHM_DAYS[rule.rhythm];
+    const skippedAt = dueSkipped.get(metric.id) ?? null;
+    const refs = [lastOne?.date ?? null, skippedAt].filter((d) => d !== null);
+    const ref = refs.length ? refs.reduce((a, b) => a > b ? a : b) : null;
+    if (ref === null || dayNumber3(today) - dayNumber3(ref) >= days3) {
+      out.push({ ...base, date: today, reason: "due", rhythm: rule.rhythm });
+    }
+  }
+  return out.sort(
+    (a, b) => a.date !== b.date ? a.date < b.date ? 1 : -1 : a.name.localeCompare(b.name, "de")
+  );
+}
+function parseFillInput(text2) {
+  const t = text2.trim().replace(/\s/g, "").replace(",", ".");
+  if (t === "") return null;
+  return /^-?\d+(\.\d+)?$/.test(t) ? Number(t) : Number.NaN;
+}
+function fillInputError(value, m) {
+  if (value === null) return null;
+  if (Number.isNaN(value)) return "Bitte eine Zahl eingeben.";
+  if (value < m.minValue || value > m.maxValue) return "Au\xDFerhalb des Bereichs der Messgr\xF6\xDFe.";
+  return null;
+}
+
+// src/domain/goalAdvice.ts
+var goalAdvice_exports = {};
+__export(goalAdvice_exports, {
+  ADVICE_DAYS: () => ADVICE_DAYS,
+  AI_CONSENT_KEY: () => AI_CONSENT_KEY,
+  CONSENT_TEXT: () => CONSENT_TEXT,
+  CONSENT_VERSION: () => CONSENT_VERSION,
+  LIMITS: () => LIMITS,
+  MAIN_GOALS: () => MAIN_GOALS,
+  MAIN_GOALS_KEY: () => MAIN_GOALS_KEY,
+  MAIN_GOAL_LABELS: () => MAIN_GOAL_LABELS,
+  MIN_DAYS: () => MIN_DAYS,
+  SOURCES: () => SOURCES,
+  goalAdvice: () => goalAdvice,
+  goalReading: () => goalReading,
+  parseConsent: () => parseConsent,
+  parseMainGoals: () => parseMainGoals,
+  serializeConsent: () => serializeConsent,
+  serializeMainGoals: () => serializeMainGoals
+});
+var MAIN_GOALS = [
+  { id: "fat_loss", label: "Fettabbau", hint: "K\xF6rperfett senken, Muskeln dabei halten" },
+  { id: "muscle_gain", label: "Muskelaufbau", hint: "Muskelmasse aufbauen" },
+  { id: "strength", label: "Kraft", hint: "Maximalkraft in den Haupt\xFCbungen steigern" },
+  { id: "endurance", label: "Ausdauer", hint: "Ausdauer und Herz-Kreislauf verbessern" },
+  { id: "sleep", label: "Besserer Schlaf", hint: "Dauer, Regelm\xE4\xDFigkeit und Einschlafen" },
+  { id: "recovery", label: "Regeneration", hint: "Erholung zwischen den Einheiten" },
+  {
+    id: "longevity",
+    label: "Gesundheit & Longevity",
+    hint: "Bewegung, Schlaf und Training f\xFCr ein langes, gesundes Leben"
+  }
+];
+var MAIN_GOAL_LABELS = Object.fromEntries(
+  MAIN_GOALS.map((g) => [g.id, g.label])
+);
+var MAIN_GOALS_KEY = "ui.main_goals";
+function parseMainGoals(raw) {
+  if (!raw) return [];
+  try {
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) return [];
+    return MAIN_GOALS.map((g) => g.id).filter((id3) => data.includes(id3));
+  } catch {
+    return [];
+  }
+}
+function serializeMainGoals(goals) {
+  const list2 = MAIN_GOALS.map((g) => g.id).filter((id3) => goals.includes(id3));
+  return list2.length ? JSON.stringify(list2) : null;
+}
+var AI_CONSENT_KEY = "ui.ai_consent";
+var CONSENT_VERSION = "1";
+var CONSENT_TEXT = [
+  "LIFESPAN OS wertet deine erfassten Werte aus und gibt dir dazu Empfehlungen und Bewertungen. Sie stammen aus festen Regeln, deren Grenzwerte aus \u201EiCoach.Me \u2013 Die Masterclass\u201C \xFCbernommen sind; jede Empfehlung nennt die verwendeten Werte und die Fundstelle im Buch.",
+  "Die Auswertung l\xE4uft nur auf diesem PC. Es werden keine Daten verschickt.",
+  "Die Empfehlungen sind allgemein und ersetzen keine \xE4rztliche Diagnose, Therapie oder individuelle Beratung. Sprich bei Beschwerden, Vorerkrankungen oder Fragen zu Medikamenten mit deiner \xC4rztin oder deinem Arzt.",
+  "Ohne Einwilligung zeigt die App weiterhin nur Werte, Rechnungen und die passenden Buchstellen. Du kannst die Einwilligung jederzeit widerrufen."
+];
+function parseConsent(raw) {
+  if (!raw) return null;
+  try {
+    const c = JSON.parse(raw);
+    if (c.version !== CONSENT_VERSION || typeof c.acceptedAt !== "string") return null;
+    return { version: c.version, acceptedAt: c.acceptedAt };
+  } catch {
+    return null;
+  }
+}
+function serializeConsent(acceptedAt) {
+  return JSON.stringify({ version: CONSENT_VERSION, acceptedAt });
+}
+var src = (question, title, pages) => ({
+  question,
+  title,
+  pages
+});
+var SOURCES = {
+  proteinMuscle: src(
+    "T02-037",
+    "Wie viel Protein brauche ich f\xFCr Muskelaufbau?",
+    [22, 23, 59, 75, 76, 77, 132, 154]
+  ),
+  fatLossOrder: src(
+    "T07-118",
+    "Was ist die Rangfolge der wichtigsten Ma\xDFnahmen beim Abnehmen?",
+    [293]
+  ),
+  deficit: src("T07-117", "Wie gro\xDF sollte mein Kaloriendefizit sein?", [231, 260, 262, 293, 294]),
+  surplus: src(
+    "T02-133",
+    "Wie gro\xDF sollte mein Kalorien\xFCberschuss im Muskelaufbau sein?",
+    [108, 109, 152, 154]
+  ),
+  dirtyBulk: src(
+    "T02-135",
+    "Bringt ein gro\xDFer Kalorien\xFCberschuss (Dirty Bulk) mehr Muskeln?",
+    [108, 109]
+  ),
+  dietStrength: src("T07-052", "Wie sollte ich in der Di\xE4t Krafttraining machen?", [274, 275]),
+  acsm: src(
+    "T01-132",
+    "Was empfiehlt das neue ACSM-Positionspapier 2026 zum Krafttraining?",
+    [52, 53]
+  ),
+  cardio: src("T01-066", "Wie viel Ausdauertraining pro Woche wird empfohlen?", [30, 31]),
+  sleepDiet: src("T07-062", "Wie wirkt sich Schlafmangel auf meine Di\xE4t aus?", [278, 279]),
+  sleepHours: src("T12-032", "Wie viele Stunden Schlaf brauche ich?", [22, 59, 278, 412, 413]),
+  wakeTime: src("T12-040", "Darf ich am Wochenende ausschlafen?", [413]),
+  latency: src("T12-021", "Wie lange darf das Einschlafen normalerweise dauern?", [409, 410]),
+  awake: src(
+    "T12-022",
+    "Wie lange darf ich nachts wach liegen, ohne dass es ein Problem ist?",
+    [409, 410]
+  ),
+  steps: src("T01-075", "Wie viele Schritte pro Tag sollte ich gehen?", [31, 32, 59]),
+  hrv: src("T12-031", "Welcher HRV-Wert und Ruhepuls sind gut?", [410, 432])
+};
+var ADVICE_DAYS = 14;
+var MIN_DAYS = 4;
+var LIMITS = {
+  proteinMinGPerKg: 1.6,
+  proteinMaxGPerKg: 2.2,
+  deficitMinKcal: 300,
+  deficitMaxKcal: 500,
+  lossMinPctWeek: 0.5,
+  lossMaxPctWeek: 1,
+  surplusMinPct: 5,
+  surplusMaxPct: 15,
+  strengthSessionsPerWeek: 2,
+  sleepMinMin: 7 * 60,
+  wakeDeviationMin: 60,
+  latencyMaxMin: 30,
+  awakeMaxMin: 30,
+  stepsMin: 7e3,
+  cardioMinPerWeek: 150,
+  /** Regel der App (wie Insights → Wochenanalyse): HRV mehr als 20 % unter dem Mittel der 7 Vortage */
+  hrvDrop: 0.2
+};
+var mean3 = (xs) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+var kcal2 = (v) => `${formatNumber(v, 0)} kcal`;
+var hm2 = (min) => `${Math.floor(min / 60)}:${String(Math.round(min % 60)).padStart(2, "0")} h`;
+var days2 = (n2) => n2 === 1 ? "1 Tag" : `${n2} Tagen`;
+function adviceWindow(to) {
+  const from = shiftDays(to, -(ADVICE_DAYS - 1));
+  return { from, to, inside: (d) => d >= from && d <= to };
+}
+var has = (goals, ...g) => g.some((x) => goals.includes(x));
+var pick = (goals, all) => all.filter((g) => goals.includes(g));
+function nutritionDays(input, inside) {
+  return input.nutrition.filter(
+    (d) => inside(d.date) && (d.mealCount > 0 || d.fasttracking && d.energyKcal > 0)
+  );
+}
+function latestWeight(input) {
+  let best = null;
+  for (const m of input.measurements) {
+    if (m.metricId !== WEIGHT_METRIC_ID || m.date > input.to) continue;
+    if (!best || m.date > best.date) best = { date: m.date, value: m.value };
+  }
+  return best;
+}
+function proteinAdvice(input, inside) {
+  const goals = pick(input.goals, ["fat_loss", "muscle_gain", "strength"]);
+  if (!goals.length) return null;
+  const source = goals.includes("fat_loss") ? SOURCES.fatLossOrder : SOURCES.proteinMuscle;
+  const base = { id: "protein", goals, title: "Eiwei\xDF je kg K\xF6rpergewicht", source };
+  const daysWith = nutritionDays(input, inside);
+  const weight = latestWeight(input);
+  if (daysWith.length < MIN_DAYS || !weight) {
+    return {
+      ...base,
+      status: "nodata",
+      text: "F\xFCr die Auswertung fehlen Werte.",
+      basis: `${daysWith.length} von ${ADVICE_DAYS} Tagen Ern\xE4hrung erfasst (mind. ${MIN_DAYS})${weight ? "" : ", kein Gewicht erfasst"}`
+    };
+  }
+  const perKg = (mean3(daysWith.map((d) => d.proteinG)) ?? 0) / weight.value;
+  const basis = `\xD8 ${formatNumber(perKg, 1)} g/kg an ${days2(daysWith.length)} (Gewicht ${formatNumber(weight.value, 1)} kg)`;
+  if (perKg < LIMITS.proteinMinGPerKg) {
+    const target = Math.round(LIMITS.proteinMinGPerKg * weight.value);
+    return {
+      ...base,
+      status: "act",
+      text: `Iss mehr Eiwei\xDF: mindestens 1,6 g je kg K\xF6rpergewicht, bei Bedarf bis 2,2 g/kg \u2013 f\xFCr dich mindestens ${target} g am Tag, verteilt auf 3\u20135 Mahlzeiten mit je 25\u201340 g.`,
+      basis
+    };
+  }
+  return {
+    ...base,
+    status: "ok",
+    text: "Deine Eiwei\xDFzufuhr liegt im empfohlenen Bereich ab 1,6 g/kg (Basis bis 2,2 g/kg).",
+    basis
+  };
+}
+function balance(input, inside) {
+  const used = new Map(
+    input.energy.filter((e) => inside(e.date)).map((e) => [e.date, e.totalKcal])
+  );
+  const pairs = nutritionDays(input, inside).flatMap((d) => {
+    const total = used.get(d.date);
+    return total ? [{ intake: d.energyKcal, total }] : [];
+  });
+  return {
+    n: pairs.length,
+    diff: mean3(pairs.map((p) => p.intake - p.total)),
+    total: mean3(pairs.map((p) => p.total))
+  };
+}
+function energyAdvice(input, inside) {
+  const fat = has(input.goals, "fat_loss");
+  const muscle = has(input.goals, "muscle_gain");
+  if (!fat && !muscle) return null;
+  const b = balance(input, inside);
+  if (fat && muscle) {
+    return {
+      id: "energy",
+      goals: ["fat_loss", "muscle_gain"],
+      status: "info",
+      title: "Fettabbau und Muskelaufbau gleichzeitig",
+      text: "Beides zugleich hei\xDFt Rekomposition: laut Masterclass bei Einsteigern oder h\xF6herem K\xF6rperfettanteil auch bei Erhaltungskalorien m\xF6glich. Sonst entscheide dich phasenweise \u2013 Defizit (300\u2013500 kcal) zum Abnehmen, kleiner \xDCberschuss (+5\u201310 %) zum Aufbau.",
+      basis: b.diff === null ? "keine Tage mit Zufuhr und berechnetem Verbrauch" : `\xD8 Bilanz ${formatSigned(b.diff, 0)} kcal an ${days2(b.n)}`,
+      source: SOURCES.surplus
+    };
+  }
+  const goals = fat ? ["fat_loss"] : ["muscle_gain"];
+  const title = fat ? "Kaloriendefizit" : "Kalorien\xFCberschuss";
+  if (b.n < MIN_DAYS || b.diff === null || b.total === null) {
+    return {
+      id: "energy",
+      goals,
+      status: "nodata",
+      title,
+      text: "F\xFCr die Auswertung fehlen Tage mit Ern\xE4hrung und berechnetem Verbrauch.",
+      basis: `${b.n} von ${ADVICE_DAYS} Tagen mit beidem (mind. ${MIN_DAYS})`,
+      source: fat ? SOURCES.deficit : SOURCES.surplus
+    };
+  }
+  const basis = `\xD8 Zufuhr minus Verbrauch ${formatSigned(b.diff, 0)} kcal an ${days2(b.n)} (\xD8 Verbrauch ${kcal2(b.total)}, berechnet)`;
+  if (fat) {
+    const deficit = -b.diff;
+    if (deficit < LIMITS.deficitMinKcal) {
+      return {
+        id: "energy",
+        goals,
+        status: "act",
+        title,
+        text: `Dein Defizit ist zu klein. Iss im Schnitt 300\u2013500 kcal unter deinem Verbrauch \u2013 etwa ${kcal2(b.total - 500)} bis ${kcal2(b.total - 300)} am Tag.`,
+        basis,
+        source: SOURCES.deficit
+      };
+    }
+    if (deficit > LIMITS.deficitMaxKcal) {
+      return {
+        id: "energy",
+        goals,
+        status: "act",
+        title,
+        text: `Dein Defizit ist gr\xF6\xDFer als empfohlen. Ein moderates Defizit von 300\u2013500 kcal sch\xFCtzt besser vor Hunger und hormoneller Gegenreaktion \u2013 etwa ${kcal2(b.total - 500)} bis ${kcal2(b.total - 300)} am Tag.`,
+        basis,
+        source: SOURCES.deficit
+      };
+    }
+    return {
+      id: "energy",
+      goals,
+      status: "ok",
+      title,
+      text: "Dein Defizit liegt im empfohlenen Bereich von 300\u2013500 kcal am Tag.",
+      basis,
+      source: SOURCES.deficit
+    };
+  }
+  const pct = b.diff / b.total * 100;
+  const basisPct = `${basis}, ${formatSigned(pct, 1)} %`;
+  if (pct < LIMITS.surplusMinPct) {
+    return {
+      id: "energy",
+      goals,
+      status: "act",
+      title,
+      text: `F\xFCr den Aufbau reicht ein kleiner \xDCberschuss: +5\u201310 % \xFCber dem Erhaltungsbedarf \u2013 etwa ${kcal2(b.total * 1.05)} bis ${kcal2(b.total * 1.1)} am Tag.`,
+      basis: basisPct,
+      source: SOURCES.surplus
+    };
+  }
+  if (pct > LIMITS.surplusMaxPct) {
+    return {
+      id: "energy",
+      goals,
+      status: "act",
+      title,
+      text: `Dein \xDCberschuss ist gro\xDF \u2013 mehr als +15 % bringt kaum mehr Muskeln, vor allem Fett. Senke auf +5\u201310 %, etwa ${kcal2(b.total * 1.05)} bis ${kcal2(b.total * 1.1)} am Tag.`,
+      basis: basisPct,
+      source: SOURCES.dirtyBulk
+    };
+  }
+  return {
+    id: "energy",
+    goals,
+    status: "ok",
+    title,
+    text: "Dein \xDCberschuss liegt im empfohlenen kleinen Bereich (+5\u201310 %, Anf\xE4nger bis 15 %).",
+    basis: basisPct,
+    source: SOURCES.surplus
+  };
+}
+function lossRateAdvice(input) {
+  if (!has(input.goals, "fat_loss")) return null;
+  const weights = input.measurements.filter((m) => m.metricId === WEIGHT_METRIC_ID);
+  const lastFrom = shiftDays(input.to, -6);
+  const prevFrom = shiftDays(input.to, -13);
+  const last = weights.filter((m) => m.date >= lastFrom && m.date <= input.to).map((m) => m.value);
+  const prev = weights.filter((m) => m.date >= prevFrom && m.date < lastFrom).map((m) => m.value);
+  const base = {
+    id: "loss_rate",
+    goals: ["fat_loss"],
+    title: "Abnahme je Woche",
+    source: SOURCES.deficit
+  };
+  const a = mean3(prev);
+  const b = mean3(last);
+  if (prev.length < 2 || last.length < 2 || a === null || b === null) {
+    return {
+      ...base,
+      status: "nodata",
+      text: "F\xFCr den Vergleich fehlen Gewichtswerte \u2013 wiege dich am besten t\xE4glich und vergleiche Wochenmittel.",
+      basis: `${prev.length} bzw. ${last.length} Werte in den beiden Wochen (je mind. 2)`
+    };
+  }
+  const pct = (b - a) / a * 100;
+  const basis = `Wochenmittel ${formatNumber(a, 1)} \u2192 ${formatNumber(b, 1)} kg (${formatSigned(pct, 1)} %)`;
+  if (-pct > LIMITS.lossMaxPctWeek) {
+    return {
+      ...base,
+      status: "act",
+      text: "Du nimmst schneller ab als 1 % pro Woche. Verkleinere das Defizit auf 300\u2013500 kcal, damit du Muskeln h\xE4ltst \u2013 Ziel 0,5\u20131 % pro Woche.",
+      basis
+    };
+  }
+  if (-pct < LIMITS.lossMinPctWeek) {
+    return {
+      ...base,
+      status: "act",
+      text: "Du nimmst weniger als 0,5 % pro Woche ab. Ziel sind 0,5\u20131 % pro Woche \u2013 pr\xFCfe dein Defizit (300\u2013500 kcal) und entscheide nach dem Trend \xFCber 2\u20133 Wochen.",
+      basis
+    };
+  }
+  return { ...base, status: "ok", text: "Dein Tempo liegt im Ziel von 0,5\u20131 % pro Woche.", basis };
+}
+function strengthAdvice(input, inside) {
+  const goals = pick(input.goals, ["fat_loss", "muscle_gain", "strength", "longevity"]);
+  if (!goals.length) return null;
+  const sessions2 = new Set(
+    input.setLog.filter((s) => inside(s.date) && s.exerciseCategory === "strength" && !s.isWarmup).map((s) => s.workoutId)
+  ).size;
+  const perWeek = sessions2 / ADVICE_DAYS * 7;
+  const source = goals.includes("fat_loss") ? SOURCES.dietStrength : goals.includes("strength") ? SOURCES.acsm : SOURCES.cardio;
+  const basis = `${sessions2} Krafteinheiten in ${ADVICE_DAYS} Tagen (\xD8 ${formatNumber(perWeek, 1)} pro Woche)`;
+  if (perWeek < LIMITS.strengthSessionsPerWeek) {
+    return {
+      id: "strength",
+      goals,
+      status: "act",
+      title: "Krafttraining pro Woche",
+      text: goals.includes("fat_loss") ? "Trainiere zwei- bis viermal pro Woche Kraft \u2013 es ist der st\xE4rkste Reiz gegen Muskelabbau im Defizit. Halte die Intensit\xE4t, senke bei Bedarf das Volumen." : "Trainiere mindestens zweimal pro Woche Kraft (2\u20134 Einheiten), f\xFCr Maximalkraft mit mindestens 80 % 1RM.",
+      basis,
+      source
+    };
+  }
+  return {
+    id: "strength",
+    goals,
+    status: "ok",
+    title: "Krafttraining pro Woche",
+    text: "Du trainierst mindestens zweimal pro Woche Kraft.",
+    basis,
+    source
+  };
+}
+function sleepNights(input, inside) {
+  return input.sleep.filter((s) => inside(s.date) && s.sleepMin > 0);
+}
+function sleepAdvice(input, inside) {
+  if (!input.goals.length) return null;
+  const goals = [...input.goals];
+  const source = goals.includes("fat_loss") && !goals.includes("sleep") ? SOURCES.sleepDiet : SOURCES.sleepHours;
+  const nights = sleepNights(input, inside);
+  const base = { id: "sleep_hours", goals, title: "Schlafdauer", source };
+  if (nights.length < MIN_DAYS) {
+    return {
+      ...base,
+      status: "nodata",
+      text: "F\xFCr die Auswertung fehlen N\xE4chte.",
+      basis: `${nights.length} von ${ADVICE_DAYS} N\xE4chten erfasst (mind. ${MIN_DAYS})`
+    };
+  }
+  const m = mean3(nights.map((s) => s.sleepMin)) ?? 0;
+  const short = nights.filter((s) => s.sleepMin < LIMITS.sleepMinMin).length;
+  const basis = `\xD8 ${hm2(m)} in ${nights.length} N\xE4chten, ${short} davon unter 7 h`;
+  if (m < LIMITS.sleepMinMin) {
+    return {
+      ...base,
+      status: "act",
+      text: goals.includes("fat_loss") ? "Schlaf mindestens 7 Stunden (7\u20139 h mit festen Zeiten). Mit zu wenig Schlaf verlierst du in der Di\xE4t mehr Muskeln und weniger Fett und bist hungriger." : "Schlaf mindestens 7 Stunden pro Nacht, besser 7\u20139 Stunden mit festen Zeiten \u2013 Schlafmangel verl\xE4ngert die Erholung nach dem Training.",
+      basis
+    };
+  }
+  return { ...base, status: "ok", text: "Du schl\xE4fst im Schnitt mindestens 7 Stunden.", basis };
+}
+var clockMin = (t) => {
+  const m = /^(\d{1,2}):(\d{2})/.exec(t ?? "");
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+};
+function wakeAdvice(input, inside) {
+  const goals = pick(input.goals, ["sleep", "recovery", "longevity"]);
+  if (!goals.length) return null;
+  const times = sleepNights(input, inside).map((s) => clockMin(s.wakeTime)).filter((t) => t !== null).sort((a, b) => a - b);
+  const base = { id: "wake_time", goals, title: "Feste Aufstehzeit", source: SOURCES.wakeTime };
+  if (times.length < MIN_DAYS) {
+    return {
+      ...base,
+      status: "nodata",
+      text: "F\xFCr die Auswertung fehlen Aufstehzeiten.",
+      basis: `${times.length} von ${ADVICE_DAYS} N\xE4chten erfasst (mind. ${MIN_DAYS})`
+    };
+  }
+  const median = times[Math.floor(times.length / 2)];
+  const off = times.filter((t) => Math.abs(t - median) > LIMITS.wakeDeviationMin).length;
+  const clock2 = `${String(Math.floor(median / 60)).padStart(2, "0")}:${String(median % 60).padStart(2, "0")}`;
+  const basis = `\xFCbliche Aufstehzeit ${clock2} Uhr, an ${days2(off)} mehr als 60 Min. abweichend (${times.length} N\xE4chte)`;
+  if (off > 0) {
+    return {
+      ...base,
+      status: "act",
+      text: "Steh an allen sieben Tagen zur gleichen Zeit auf \u2013 auch am Wochenende h\xF6chstens 30\u201360 Minuten sp\xE4ter. Regelm\xE4\xDFige Schlafzeiten sind ein starker Gesundheitsfaktor.",
+      basis
+    };
+  }
+  return {
+    ...base,
+    status: "ok",
+    text: "Deine Aufstehzeit ist regelm\xE4\xDFig (h\xF6chstens 60 Min. Abweichung).",
+    basis
+  };
+}
+function sleepQualityAdvice(input, inside, field) {
+  if (!has(input.goals, "sleep")) return null;
+  const latency = field === "sleepLatencyMin";
+  const values = sleepNights(input, inside).map((s) => s[field]).filter((v) => v !== null);
+  const base = {
+    id: latency ? "sleep_latency" : "sleep_awake",
+    goals: ["sleep"],
+    title: latency ? "Einschlafdauer" : "Wachzeit in der Nacht",
+    source: latency ? SOURCES.latency : SOURCES.awake
+  };
+  if (values.length < MIN_DAYS) {
+    return {
+      ...base,
+      status: "nodata",
+      text: "F\xFCr die Auswertung fehlen Werte.",
+      basis: `${values.length} von ${ADVICE_DAYS} N\xE4chten mit Angabe (mind. ${MIN_DAYS})`
+    };
+  }
+  const m = mean3(values) ?? 0;
+  const basis = `\xD8 ${formatNumber(m, 0)} Min. in ${values.length} N\xE4chten`;
+  const limit = latency ? LIMITS.latencyMaxMin : LIMITS.awakeMaxMin;
+  if (m > limit) {
+    return {
+      ...base,
+      status: "act",
+      text: latency ? "Du brauchst im Schnitt l\xE4nger als 30 Minuten zum Einschlafen (Richtwert 5\u201320 Min.). Stell feste Zeiten, Licht am Abend, Koffein und Temperatur nach; h\xE4lt es an, lass eine Insomnie \xE4rztlich abkl\xE4ren." : "Du liegst nachts im Schnitt l\xE4nger als 30 Minuten wach (gute Qualit\xE4t: h\xF6chstens 20 Min.). Pr\xFCfe Abendroutine, Alkohol und Koffein; h\xE4lt es an, lass es \xE4rztlich abkl\xE4ren.",
+      basis
+    };
+  }
+  return {
+    ...base,
+    status: "ok",
+    text: latency ? "Deine Einschlafdauer liegt im Rahmen (bis 30 Min.)." : "Deine Wachzeit liegt im Rahmen (bis 30 Min.).",
+    basis
+  };
+}
+function stepsAdvice(input, inside) {
+  const goals = pick(input.goals, ["fat_loss", "longevity", "endurance"]);
+  if (!goals.length) return null;
+  const values = input.neat.filter((d) => inside(d.date) && d.steps !== null && d.steps > 0).map((d) => d.steps);
+  const base = { id: "steps", goals, title: "Schritte am Tag", source: SOURCES.steps };
+  if (values.length < MIN_DAYS) {
+    return {
+      ...base,
+      status: "nodata",
+      text: "F\xFCr die Auswertung fehlen Schritte.",
+      basis: `${values.length} von ${ADVICE_DAYS} Tagen erfasst (mind. ${MIN_DAYS})`
+    };
+  }
+  const m = mean3(values) ?? 0;
+  const basis = `\xD8 ${formatNumber(m, 0)} Schritte an ${days2(values.length)}`;
+  if (m < LIMITS.stepsMin) {
+    return {
+      ...base,
+      status: "act",
+      text: `Geh mehr: Ziel 7.000\u201310.000 Schritte am Tag. Steigere schrittweise um 1.000 pro Tag \u2013 n\xE4chster Schritt etwa ${formatNumber(Math.round(m / 1e3) * 1e3 + 1e3, 0)}.`,
+      basis
+    };
+  }
+  return {
+    ...base,
+    status: "ok",
+    text: "Du erreichst im Schnitt mindestens 7.000 Schritte.",
+    basis
+  };
+}
+function cardioAdvice(input, inside) {
+  const goals = pick(input.goals, ["endurance", "longevity"]);
+  if (!goals.length) return null;
+  const seconds = input.setLog.filter((s) => inside(s.date) && s.exerciseCategory === "cardio" && !s.isWarmup).reduce((a, s) => a + (s.durationSeconds ?? 0), 0);
+  const perWeek = seconds / 60 / (ADVICE_DAYS / 7);
+  const basis = `${formatNumber(seconds / 60, 0)} Min. Cardio in ${ADVICE_DAYS} Tagen (\xD8 ${formatNumber(perWeek, 0)} Min. pro Woche, aus den Einheiten)`;
+  const base = { id: "cardio", goals, title: "Ausdauertraining pro Woche", source: SOURCES.cardio };
+  if (perWeek < LIMITS.cardioMinPerWeek) {
+    return {
+      ...base,
+      status: "act",
+      text: "Mach mindestens 150 Minuten moderates Ausdauertraining pro Woche (150\u2013300 Min. oder 75\u2013150 Min. intensiv), \xFCberwiegend locker nach dem Sprechtest, dazu 1\u20132 intensive Intervalleinheiten.",
+      basis
+    };
+  }
+  return {
+    ...base,
+    status: "ok",
+    text: "Du erreichst mindestens 150 Minuten Ausdauertraining pro Woche.",
+    basis
+  };
+}
+function hrvAdvice(input) {
+  if (!has(input.goals, "recovery")) return null;
+  const hrv = input.measurements.filter((m) => m.metricId === HRV_METRIC_ID && m.date <= input.to).sort((a, b) => a.date < b.date ? -1 : 1);
+  const from = shiftDays(input.to, -6);
+  let checked = 0;
+  const below = [];
+  for (const m of hrv.filter((x) => x.date >= from)) {
+    const start = shiftDays(m.date, -7);
+    const baseVals = hrv.filter((x) => x.date >= start && x.date < m.date).map((x) => x.value);
+    const b = mean3(baseVals);
+    if (baseVals.length < 3 || b === null) continue;
+    checked += 1;
+    if (m.value < b * (1 - LIMITS.hrvDrop)) below.push(m.date);
+  }
+  const base = {
+    id: "hrv",
+    goals: ["recovery"],
+    title: "HRV im Vergleich zu deinem Normalbereich",
+    source: SOURCES.hrv
+  };
+  if (checked < 3) {
+    return {
+      ...base,
+      status: "nodata",
+      text: "F\xFCr den Vergleich fehlen HRV-Messungen (je Messung mind. 3 Werte in den 7 Vortagen).",
+      basis: `${checked} vergleichbare Messungen in den letzten 7 Tagen (mind. 3)`
+    };
+  }
+  const basis = `an ${days2(below.length)} von ${checked} mehr als 20 % unter dem Mittel der 7 Vortage (Regel der App)`;
+  if (below.length >= 2) {
+    return {
+      ...base,
+      status: "act",
+      text: "Deine HRV lag mehrfach deutlich unter deinem eigenen Normalbereich \u2013 entscheidend ist dein Trend, nicht ein fester Grenzwert. Plane mehr Erholung ein und pr\xFCfe Schlaf, Alkohol und Belastung.",
+      basis
+    };
+  }
+  return { ...base, status: "ok", text: "Deine HRV liegt in deinem eigenen Normalbereich.", basis };
+}
+var ORDER = { act: 0, info: 1, ok: 2, nodata: 3 };
+function goalAdvice(input) {
+  if (!input.goals.length) return [];
+  const { inside } = adviceWindow(input.to);
+  const list2 = [
+    energyAdvice(input, inside),
+    lossRateAdvice(input),
+    proteinAdvice(input, inside),
+    strengthAdvice(input, inside),
+    cardioAdvice(input, inside),
+    stepsAdvice(input, inside),
+    sleepAdvice(input, inside),
+    wakeAdvice(input, inside),
+    sleepQualityAdvice(input, inside, "sleepLatencyMin"),
+    sleepQualityAdvice(input, inside, "awakeMin"),
+    hrvAdvice(input)
+  ].filter((a) => a !== null);
+  return list2.map((a, i) => ({ a, i })).sort((x, y) => ORDER[x.a.status] - ORDER[y.a.status] || x.i - y.i).map((x) => x.a);
+}
+function goalReading(goals) {
+  const by = {
+    fat_loss: [SOURCES.fatLossOrder, SOURCES.deficit, SOURCES.dietStrength, SOURCES.sleepDiet],
+    muscle_gain: [SOURCES.proteinMuscle, SOURCES.surplus, SOURCES.dirtyBulk],
+    strength: [SOURCES.acsm, SOURCES.proteinMuscle],
+    endurance: [SOURCES.cardio, SOURCES.steps],
+    sleep: [SOURCES.sleepHours, SOURCES.wakeTime, SOURCES.latency, SOURCES.awake],
+    recovery: [SOURCES.hrv, SOURCES.sleepHours],
+    longevity: [SOURCES.steps, SOURCES.cardio, SOURCES.sleepHours, SOURCES.wakeTime]
+  };
+  return MAIN_GOALS.filter((g) => goals.includes(g.id)).map((g) => ({
+    goal: g.id,
+    sources: by[g.id]
+  }));
+}
+
+// src/domain/dataQuality.ts
+var dataQuality_exports = {};
+__export(dataQuality_exports, {
+  DQ_CONFIRMED_KEY: () => DQ_CONFIRMED_KEY,
+  DQ_CONFIRMED_MAX: () => DQ_CONFIRMED_MAX,
+  QUALITY_KIND_LABELS: () => QUALITY_KIND_LABELS,
+  RULES: () => RULES,
+  addConfirmed: () => addConfirmed,
+  bodyIssues: () => bodyIssues,
+  countByKind: () => countByKind,
+  dataQuality: () => dataQuality,
+  glucoseIssues: () => glucoseIssues,
+  missingRuns: () => missingRuns,
+  neatIssues: () => neatIssues,
+  nutritionIssues: () => nutritionIssues,
+  parseConfirmed: () => parseConfirmed,
+  sleepIssues: () => sleepIssues,
+  withoutConfirmed: () => withoutConfirmed,
+  workoutIssues: () => workoutIssues
+});
+var QUALITY_KIND_LABELS = {
+  gap: "L\xFCcke",
+  outlier: "Ausrei\xDFer",
+  duplicate: "Doppelt"
+};
+var RULES = {
+  /** Gewicht: Änderung je Tag zum vorigen Messwert (kg) */
+  weightPerDayKg: 3,
+  /** Körperfett: Änderung je Tag zum vorigen Messwert (Prozentpunkte) */
+  bodyFatPerDayPts: 3,
+  /** Schlaf: weniger als … Minuten Schlaf */
+  sleepMinMin: 180,
+  /** Schlaf: mehr als … Minuten im Bett */
+  inBedMaxMin: 14 * 60,
+  /** Ernährung: mehr als … kcal am Tag */
+  energyMaxKcal: 7e3,
+  /** Ernährung: weniger als … kcal an Tagen mit Mahlzeiten */
+  energyMinKcal: 500,
+  /** Training: Einheit länger als … Minuten */
+  workoutMaxMin: 300,
+  /** Alltagsbewegung: mehr als … Schritte */
+  stepsMax: 6e4,
+  /** Blutzucker: unter … bzw. über … mg/dl */
+  glucoseLow: 40,
+  glucoseHigh: 400,
+  /** Lücken erst ab so vielen fehlenden Tagen am Stück melden */
+  gapMinDays: 1
+};
+var inRange4 = (date, from, to) => date >= from && date <= to;
+function dayDiff(a, b) {
+  const t = (d) => {
+    const [y, m, day] = d.split("-").map(Number);
+    return Date.UTC(y ?? 1970, (m ?? 1) - 1, day ?? 1);
+  };
+  return Math.round((t(b) - t(a)) / 864e5);
+}
+function fromWeekly(i) {
+  const kind = i.key.startsWith("dup.") || i.key.startsWith("hrt.") ? "duplicate" : "outlier";
+  return {
+    key: i.key,
+    date: i.date,
+    area: i.area,
+    kind,
+    text: i.text,
+    ...i.ref ? { ref: i.ref } : {}
+  };
+}
+function missingRuns(dates, from, to) {
+  const present = [...dates].filter((d) => inRange4(d, from, to)).sort();
+  const start = present[0];
+  if (!start) return [];
+  const runs = [];
+  let open = null;
+  for (let d = start; d <= to; d = addDaysIso(d, 1)) {
+    if (dates.has(d)) {
+      if (open) runs.push(open);
+      open = null;
+    } else if (open) {
+      open.last = d;
+      open.days += 1;
+    } else {
+      open = { first: d, last: d, days: 1 };
+    }
+  }
+  if (open) runs.push(open);
+  return runs.filter((r2) => r2.days >= RULES.gapMinDays);
+}
+function runText(r2, one, many) {
+  return r2.days === 1 ? `${formatDate(r2.first)}: keine ${one} erfasst.` : `${formatDate(r2.first)} bis ${formatDate(r2.last)}: ${r2.days} ${many} ohne Eintrag.`;
+}
+function sleepIssues(sleep, from, to, gapTo = to) {
+  const out = [];
+  for (const s of sleep) {
+    if (!inRange4(s.date, from, to)) continue;
+    const ref = { kind: "sleep", id: s.id, date: s.date };
+    if (s.sleepMin < RULES.sleepMinMin) {
+      out.push({
+        key: `sleep.short.${s.id}`,
+        date: s.date,
+        area: "Schlaf",
+        kind: "outlier",
+        ref,
+        text: `Nacht zum ${formatDate(s.date)}: nur ${formatDuration(s.sleepMin)} Schlaf (${s.bedTime}\u2013${s.wakeTime} Uhr) \u2013 Zeiten vertauscht oder Nacht unvollst\xE4ndig?`
+      });
+    }
+    if (s.timeInBedMin > RULES.inBedMaxMin) {
+      out.push({
+        key: `sleep.long.${s.id}`,
+        date: s.date,
+        area: "Schlaf",
+        kind: "outlier",
+        ref,
+        text: `Nacht zum ${formatDate(s.date)}: ${formatDuration(s.timeInBedMin)} im Bett (${s.bedTime}\u2013${s.wakeTime} Uhr) \u2013 Uhrzeit oder Datum verrutscht?`
+      });
+    }
+  }
+  for (const r2 of missingRuns(new Set(sleep.map((s) => s.date)), from, gapTo)) {
+    out.push({
+      key: `sleep.gap.${r2.first}`,
+      date: r2.first,
+      area: "Schlaf",
+      kind: "gap",
+      ref: { kind: "sleep", date: r2.first },
+      text: runText(r2, "Nacht", "N\xE4chte")
+    });
+  }
+  return out;
+}
+function nutritionIssues(days3, from, to, gapTo = to) {
+  const out = [];
+  const logged = days3.filter((d) => d.mealCount > 0 || d.energyKcal > 0);
+  for (const d of logged) {
+    if (!inRange4(d.date, from, to)) continue;
+    const ref = { kind: "nutrition", date: d.date };
+    const kcal3 = formatNumber(d.energyKcal, 0);
+    if (d.energyKcal > RULES.energyMaxKcal) {
+      out.push({
+        key: `food.high.${d.date}`,
+        date: d.date,
+        area: "Ern\xE4hrung",
+        kind: "outlier",
+        ref,
+        text: `${formatDate(d.date)}: ${kcal3} kcal \u2013 Menge in Gramm statt Portionen eingetragen?`
+      });
+    } else if (d.mealCount > 0 && d.energyKcal < RULES.energyMinKcal) {
+      out.push({
+        key: `food.low.${d.date}`,
+        date: d.date,
+        area: "Ern\xE4hrung",
+        kind: "outlier",
+        ref,
+        text: `${formatDate(d.date)}: nur ${kcal3} kcal bei ${d.mealCount} ${d.mealCount === 1 ? "Mahlzeit" : "Mahlzeiten"} \u2013 Tag unvollst\xE4ndig erfasst?`
+      });
+    }
+  }
+  for (const r2 of missingRuns(new Set(logged.map((d) => d.date)), from, gapTo)) {
+    out.push({
+      key: `food.gap.${r2.first}`,
+      date: r2.first,
+      area: "Ern\xE4hrung",
+      kind: "gap",
+      ref: { kind: "nutrition", date: r2.first },
+      text: runText(r2, "Mahlzeit", "Tage")
+    });
+  }
+  return out;
+}
+function bodyIssues(measurements, from, to) {
+  const out = [];
+  const limits = /* @__PURE__ */ new Map([
+    [WEIGHT_METRIC_ID, { perDay: RULES.weightPerDayKg, unit: "kg" }],
+    [BODY_FAT_METRIC_ID, { perDay: RULES.bodyFatPerDayPts, unit: "Prozentpunkte" }]
+  ]);
+  for (const [metricId, limit] of limits) {
+    const list2 = measurements.filter((m) => m.metricId === metricId).sort((a, b) => `${a.date} ${a.time ?? ""}`.localeCompare(`${b.date} ${b.time ?? ""}`));
+    for (let i = 1; i < list2.length; i++) {
+      const cur = list2[i];
+      const prev = list2[i - 1];
+      if (!inRange4(cur.date, from, to)) continue;
+      const days3 = Math.max(1, dayDiff(prev.date, cur.date));
+      const delta = cur.value - prev.value;
+      if (Math.abs(delta) / days3 <= limit.perDay) continue;
+      const fmt2 = (v) => `${formatNumber(v, cur.decimals)} ${cur.unit}`;
+      out.push({
+        key: `m.day.${cur.id}`,
+        date: cur.date,
+        area: "K\xF6rper",
+        kind: "outlier",
+        ref: { kind: "measurement", id: cur.id, date: cur.date },
+        text: `${cur.metricName}: ${fmt2(cur.value)} am ${formatDate(cur.date)} nach ${fmt2(prev.value)} am ${formatDate(prev.date)} (${formatSigned(delta, cur.decimals)} in ${days3} ${days3 === 1 ? "Tag" : "Tagen"}, Grenze ${formatNumber(limit.perDay, 0)} ${limit.unit} je Tag) \u2013 Tippfehler?`
+      });
+    }
+  }
+  const seen = /* @__PURE__ */ new Map();
+  for (const m of measurements) {
+    if (!inRange4(m.date, from, to)) continue;
+    const k = `${m.metricId}|${m.date}|${m.time ?? ""}|${m.value}`;
+    const first = seen.get(k);
+    if (!first) {
+      seen.set(k, m);
+      continue;
+    }
+    out.push({
+      key: `m.dup.${m.id}`,
+      date: m.date,
+      area: "K\xF6rper",
+      kind: "duplicate",
+      ref: { kind: "measurement", id: m.id, date: m.date },
+      text: `${m.metricName} am ${formatDate(m.date)}${m.time ? `, ${m.time} Uhr` : ""}: ${formatNumber(m.value, m.decimals)} ${m.unit} ist mehrfach gespeichert.`
+    });
+  }
+  return out;
+}
+function workoutIssues(workouts, from, to) {
+  return workouts.filter(
+    (w) => w.status === "done" && inRange4(w.date, from, to) && w.durationMin !== null && w.durationMin > RULES.workoutMaxMin
+  ).map((w) => ({
+    key: `w.long.${w.id}`,
+    date: w.date,
+    area: "Training",
+    kind: "outlier",
+    ref: { kind: "workout", id: w.id, date: w.date },
+    text: `\u201E${w.title}\u201C am ${formatDate(w.date)} dauerte ${formatDuration(w.durationMin ?? 0)} \u2013 Einheit nicht beendet?`
+  }));
+}
+function neatIssues(neat, from, to) {
+  return neat.filter((n2) => inRange4(n2.date, from, to) && n2.steps !== null && n2.steps > RULES.stepsMax).map((n2) => ({
+    key: `neat.${n2.date}`,
+    date: n2.date,
+    area: "Alltagsbewegung",
+    kind: "outlier",
+    ref: { kind: "neat", date: n2.date },
+    text: `${formatDate(n2.date)}: ${formatNumber(n2.steps ?? 0, 0)} Schritte \u2013 Tippfehler?`
+  }));
+}
+function glucoseIssues(readings, from, to) {
+  const out = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const g of readings) {
+    const date = g.measuredAt.slice(0, 10);
+    if (!inRange4(date, from, to)) continue;
+    const time = g.measuredAt.slice(11, 16);
+    const ref = { kind: "glucose", date };
+    if (g.mgDl < RULES.glucoseLow || g.mgDl > RULES.glucoseHigh) {
+      out.push({
+        key: `g.range.${g.measuredAt}.${g.mgDl}`,
+        date,
+        area: "Blutzucker",
+        kind: "outlier",
+        ref,
+        text: `${formatDate(date)}, ${time} Uhr: ${formatNumber(g.mgDl, 0)} mg/dl \u2013 Einheit (mmol/l?) oder Tippfehler?`
+      });
+    }
+    const k = `${g.measuredAt}|${g.mgDl}`;
+    if (seen.has(k)) {
+      out.push({
+        key: `g.dup.${k}`,
+        date,
+        area: "Blutzucker",
+        kind: "duplicate",
+        ref,
+        text: `${formatDate(date)}, ${time} Uhr: ${formatNumber(g.mgDl, 0)} mg/dl ist mehrfach gespeichert.`
+      });
+    }
+    seen.add(k);
+  }
+  return out;
+}
+function dataQuality(input) {
+  const { from, to } = input;
+  const weekly = dataCheck({
+    week: { from, to },
+    setLog: input.setLog,
+    workouts: input.workouts,
+    measurements: input.measurements,
+    categoryOf: input.categoryOf,
+    hrt: input.hrt
+  }).map(fromWeekly);
+  const all = [
+    ...weekly,
+    ...workoutIssues(input.workouts, from, to),
+    ...bodyIssues(input.measurements, from, to),
+    ...sleepIssues(input.sleep, from, to, input.gapTo ?? to),
+    ...nutritionIssues(input.nutrition, from, to, input.gapTo ?? to),
+    ...neatIssues(input.neat, from, to),
+    ...glucoseIssues(input.glucose, from, to)
+  ];
+  const jumped = new Set(weekly.filter((i) => i.key.startsWith("m.")).map((i) => i.ref?.id));
+  const seen = /* @__PURE__ */ new Set();
+  return all.filter((i) => !(i.key.startsWith("m.day.") && jumped.has(i.ref?.id))).filter((i) => seen.has(i.key) ? false : (seen.add(i.key), true)).sort((a, b) => b.date.localeCompare(a.date) || a.area.localeCompare(b.area));
+}
+function countByKind(issues) {
+  const out = { gap: 0, outlier: 0, duplicate: 0 };
+  for (const i of issues) out[i.kind] += 1;
+  return out;
+}
+var DQ_CONFIRMED_KEY = "ui.dq_confirmed";
+var DQ_CONFIRMED_MAX = 150;
+function parseConfirmed(raw) {
+  if (!raw) return [];
+  try {
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data.filter((k) => typeof k === "string") : [];
+  } catch {
+    return [];
+  }
+}
+function addConfirmed(list2, keys) {
+  const out = list2.filter((k) => !keys.includes(k));
+  for (const k of keys) if (!out.includes(k)) out.push(k);
+  return out.slice(-DQ_CONFIRMED_MAX);
+}
+function withoutConfirmed(issues, confirmed) {
+  const set = new Set(confirmed);
+  return issues.filter((i) => !set.has(i.key));
+}
+
+// src/domain/targetGoals.ts
+var targetGoals_exports = {};
+__export(targetGoals_exports, {
+  AUTO_SHARES: () => AUTO_SHARES,
+  TARGET_GOAL_KIND_LABELS: () => TARGET_GOAL_KIND_LABELS,
+  exerciseSeries: () => exerciseSeries,
+  goalProgress: () => goalProgress2,
+  metricSeries: () => metricSeries2,
+  milestoneValues: () => milestoneValues
+});
+var TARGET_GOAL_KIND_LABELS = {
+  exercise_e1rm: "\xDCbung: gesch\xE4tztes 1RM",
+  exercise_weight: "\xDCbung: h\xF6chstes Gewicht",
+  body_metric: "Messgr\xF6\xDFe"
+};
+var AUTO_SHARES = [0.25, 0.5, 0.75];
+function exerciseSeries(log, exerciseId, kind) {
+  const own = log.filter((s) => s.exerciseId === exerciseId);
+  if (kind === "exercise_e1rm") {
+    return e1rmBySession(own).map((p) => ({ date: p.date, value: p.value })).sort((a, b) => a.date.localeCompare(b.date));
+  }
+  const best = /* @__PURE__ */ new Map();
+  for (const s of own) {
+    if (s.isWarmup || s.weightKg === null || s.weightKg <= 0 || s.reps === null || s.reps < 1)
+      continue;
+    const cur = best.get(s.workoutId);
+    if (!cur || s.weightKg > cur.value) best.set(s.workoutId, { date: s.date, value: s.weightKg });
+  }
+  return [...best.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+function metricSeries2(measurements, metricId) {
+  const byDay = /* @__PURE__ */ new Map();
+  for (const m of measurements) {
+    if (m.metricId !== metricId) continue;
+    const cur = byDay.get(m.date);
+    if (!cur || (m.time ?? "") >= (cur.time ?? "")) byDay.set(m.date, m);
+  }
+  return [...byDay.values()].map((m) => ({ date: m.date, value: m.value })).sort((a, b) => a.date.localeCompare(b.date));
+}
+function dayNumber4(date) {
+  const [y, m, d] = date.split("-").map(Number);
+  return Math.round(Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1) / 864e5);
+}
+var round3 = (v, decimals) => {
+  const f = 10 ** decimals;
+  return Math.round(v * f) / f;
+};
+function milestoneValues(start, target, own, decimals = 1) {
+  const lo = Math.min(start, target);
+  const hi = Math.max(start, target);
+  const inner = own.length ? own.filter((v) => v > lo && v < hi) : AUTO_SHARES.map((s) => round3(start + (target - start) * s, decimals));
+  const sorted = [...new Set(inner)].sort((a, b) => target >= start ? a - b : b - a);
+  return [...sorted, target];
+}
+function goalProgress2(goal, series, today, decimals = 1) {
+  const before = series.filter((p) => p.date <= goal.startDate);
+  const after = series.filter((p) => p.date >= goal.startDate);
+  let start = goal.startValue;
+  let startSource = start !== null ? "saved" : null;
+  if (start === null) {
+    const s = before[before.length - 1] ?? after[0];
+    if (s) {
+      start = s.value;
+      startSource = "measured";
+    }
+  }
+  const target = goal.targetValue;
+  const direction = start === null || target >= start ? "up" : "down";
+  const reached = (v, m) => direction === "up" ? v >= m : v <= m;
+  const better2 = (a, b) => direction === "up" ? a > b : a < b;
+  let best = null;
+  for (const p of after) if (!best || better2(p.value, best.value)) best = p;
+  const current = after[after.length - 1] ?? before[before.length - 1] ?? null;
+  const milestones = start === null ? [{ value: target, share: 1, reachedOn: null, isTarget: true }] : milestoneValues(start, target, goal.milestones, decimals).map((value, i, all) => ({
+    value,
+    share: target === start ? 1 : (value - start) / (target - start),
+    reachedOn: after.find((p) => reached(p.value, value))?.date ?? null,
+    isTarget: i === all.length - 1
+  }));
+  const reachedOn = milestones[milestones.length - 1]?.reachedOn ?? null;
+  let share = null;
+  if (start !== null && best) {
+    share = target === start ? 1 : Math.min(1, Math.max(0, (best.value - start) / (target - start)));
+  }
+  const remaining = best && !reachedOn ? round3(Math.abs(target - best.value), decimals) : reachedOn ? 0 : null;
+  const daysLeft = goal.targetDate ? dayNumber4(goal.targetDate) - dayNumber4(today) : null;
+  const perWeekNeeded = remaining !== null && remaining > 0 && daysLeft !== null && daysLeft > 0 ? round3(remaining / daysLeft * 7, 2) : null;
+  return {
+    direction,
+    start,
+    startSource,
+    current,
+    best,
+    share,
+    milestones,
+    reachedOn,
+    points: after,
+    remaining,
+    perWeekNeeded,
+    daysLeft
+  };
+}
+
+// src/domain/mealPlan.ts
+var PLAN_SLOTS = ["Fr\xFChst\xFCck", "Mittagessen", "Abendessen", "Snack"];
 export {
   AKH_REFERENCES,
   ANS_INFO,
@@ -19010,6 +20320,7 @@ export {
   OPTIONAL_KEYS,
   OPTIONAL_LABELS,
   OVERVIEW_LAYOUT_KEY,
+  PLAN_SLOTS,
   REFERENCE_SOURCE,
   REFERENCE_URL,
   REMINDER_KINDS,
@@ -19026,6 +20337,7 @@ export {
   addNutrients,
   amountFromPortions,
   ansPercent,
+  appointments_exports as appointments,
   arrange,
   associationItem,
   bookOf,
@@ -19044,6 +20356,7 @@ export {
   dailyNeed,
   dashboard_exports as dashboard,
   dataCheck,
+  dataQuality_exports as dataQuality,
   dayChart,
   dayMacroGoals,
   daySlots,
@@ -19090,6 +20403,7 @@ export {
   formatSupplementAmount,
   formatWeekdayDate,
   glassOptions,
+  goalAdvice_exports as goalAdvice,
   goalGlasses,
   goalProgress,
   gramsFromPercent,
@@ -19151,6 +20465,7 @@ export {
   profileToDraft2 as profileToDraft,
   progressText,
   protocol_exports as protocol,
+  quickFill_exports as quickFill,
   readXlsx,
   recovery_exports as recovery,
   referenceGroup,
@@ -19176,6 +20491,7 @@ export {
   sumNutrients,
   sumOptional,
   targetFor,
+  targetGoals_exports as targetGoals,
   trainingCalc_exports as trainingCalc,
   trainingCoverage_exports as trainingCoverage,
   trainingGroupLabels_exports as trainingGroupLabels,

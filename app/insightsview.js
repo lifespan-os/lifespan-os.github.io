@@ -9,6 +9,7 @@ import * as O from "./pcoverview.js";
 import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
 import { weeklyReportsCard } from "./weeklyreports.js";
+import { dataQualityCard, goalAdviceCard, targetGoalsCard } from "./extras.js";
 
 let X = null; // { S, esc, header, rerender }
 
@@ -217,6 +218,10 @@ export function viewInsights() {
   const cards = [];
   // Weekly Reports (1.49.0): standardmäßig ganz oben, wie am PC
   cards.push({ id: "weekly-reports", node: weeklyReportsCard(card) });
+  // 1.54.0 wie am PC: Ziele, Empfehlungen zu den Hauptzielen, Datenqualität
+  cards.push({ id: "goals", node: targetGoalsCard(db, card, t) });
+  cards.push({ id: "goal-advice", node: goalAdviceCard(db, card, t) });
+  cards.push({ id: "data-quality", node: dataQualityCard(db, card, t) });
   if (hasAny) {
     cards.push({
       id: "observations",
@@ -264,7 +269,7 @@ export function viewInsights() {
   const arranged = arrangeCards(db, D.INSIGHTS_LAYOUT_KEY, cards);
   const layout = D.parseLayout(db.settings.get(D.INSIGHTS_LAYOUT_KEY) ?? null);
   return `${X.header("Insights")}<main class="wrap">
-    <p class="muted small">Wochenrückblick und vorsichtige Beobachtungen – ausschließlich aus deinen tatsächlich erfassten Daten. Die Auswertungen beschreiben nur deine Einträge. Sie sind keine Diagnose, treffen keine Aussagen über biologisches Alter und ersetzen keine ärztliche Beratung.</p>
+    <p class="muted small">Wochenrückblick und vorsichtige Beobachtungen – ausschließlich aus deinen tatsächlich erfassten Daten. Die Auswertungen ersetzen keine ärztliche Beratung. Empfehlungen und Bewertungen gibt es nur in „Empfehlungen zu deinen Hauptzielen“ – mit deiner Einwilligung am PC, aus festen Regeln mit Fundstelle in der Masterclass.</p>
     <section class="card day-nav">
       <button class="btn sm" data-act="ins-week" data-arg="-7" aria-label="Vorherige Woche">‹</button>
       <div class="day-nav__date"><strong>KW ${kw}</strong><span class="muted small">${esc(D.trends.formatRange(week, weekEnd))}</span>

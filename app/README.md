@@ -891,3 +891,17 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
   Schrittziel entfällt der Block.
 - Insights → mögliche Zusammenhänge: „Eiweiß und Erholung am Folgetag“ entfällt (wie am PC 1.0.151, ab neu
   erzeugter pcdomain.js).
+
+## Version 1.54.0 (18.11.2026): Funktionen vom PC 1.0.149–1.0.152
+
+- `extras.js` (neu): **Quick Fill** (Ansicht „Werte nachtragen“, Hinweis oben in der Overview): fehlende Werte ohne
+  Import und Schlaf der letzten Nacht wie am PC (`D.quickFill`, Auswahl aus `ui.quick_fill` der Exportdatei);
+  gespeichert wie „Werte erfassen“ bzw. Sleep (geht mit „An den PC senden“ zurück). Überspringen merkt sich das
+  Handy zusätzlich in `localStorage` `lifespan.quickfill.skips`.
+- Insights: **Ziele** (Meilensteine, `D.targetGoals`), **Empfehlungen zu deinen Hauptzielen** (`D.goalAdvice`, nur
+  mit Einwilligung am PC; Link öffnet die Frage in Ask iCoach.me – `icoach-ask`), **Datenqualität** (letzte 30 Tage,
+  `D.dataQuality`) mit „Erledigt“ (`localStorage` `lifespan.dq.confirmed`, am PC bestätigte sind ebenfalls aus).
+- Health → **Termine** (anstehende Termine vom PC), Nutrition → **Planen** (Wochenplan vom PC, nur Ansicht).
+  Dafür behält die App die Tabellen `goal`, `appointment`, `meal_plan_entry` und `recipe` aus der Exportdatei.
+- HYROX-Wettkampf-Angaben nur noch bei HYROX-Einheiten (Titel mit „HYROX“ oder eine Übung „Hyrox…“).
+- Insights → mögliche Zusammenhänge: „Eiweiß und Muskelkater am Folgetag“ entfällt (wie am PC 1.0.152).

@@ -1544,3 +1544,34 @@ details.ov-card:not([open]) { padding-bottom: 12px; }
 .hero__bar--steps { width: 120px; max-width: 120px; margin-top: 4px; }
 .hero__bar--steps span:first-child { background: var(--cyan); }
 @media (max-width: 350px) { .hero__num { font-size: 3.3rem; } .hero__num--steps { font-size: 1.8rem; } }
+
+/* 1.54.0: Quick Fill, Empfehlungen, Ziele, Termine */
+.qf-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-left: 4px solid var(--orange); }
+.qf-banner > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.qf-banner .btn { flex: 0 0 auto; width: auto; white-space: nowrap; padding-left: 16px; padding-right: 16px; }
+.qf-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.qf-row:first-of-type { border-top: 0; }
+.qf-row > div:first-child { display: flex; flex-direction: column; gap: 2px; }
+.qf-row .err { grid-column: 1 / -1; margin: 0; }
+.qf-value { display: flex; align-items: center; gap: 6px; }
+.qf-input { width: 92px; min-height: 44px; text-align: right; }
+.qf-times { display: flex; gap: 6px; }
+.qf-times .qf-input { width: 76px; text-align: center; }
+.advice-list { display: grid; gap: 10px; margin: 10px 0; }
+.advice { padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; }
+.advice p { margin: 4px 0; }
+.advice__head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.advice__status { font-size: .8rem; font-weight: 700; white-space: nowrap; }
+.advice--act { border-left-color: var(--orange); }
+.advice--act .advice__status { color: #a85800; }
+.advice--info { border-left-color: var(--cyan); }
+.advice--ok { border-left-color: #1d7048; }
+.advice--ok .advice__status { color: #1d7048; }
+.advice--nodata { color: var(--muted, #55657c); }
+.goal-row { padding: 8px 0; border-top: 1px solid var(--line); }
+.goal-row:first-of-type { border-top: 0; }
+.goal-row__head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.goal-row p { margin: 4px 0 0; }
+.appt-list li { padding: 8px 0; border-top: 1px solid var(--line); }
+.appt-list li:first-child { border-top: 0; }
+.appt-list p { margin: 4px 0 0; }

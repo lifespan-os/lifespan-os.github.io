@@ -227,8 +227,14 @@ function openTarget(target) {
   st.group = target.book;
   const apply = () => {
     const c = library?.collections.find((x) => x.book === target.book);
-    const p = c?.parts.find((x) => x.thema === target.thema);
+    // 1.54.0: Ziel mit Frage (Empfehlungen unter Insights) – Teil, Kapitel und Frage aufklappen
+    const q = target.question ? c?.data.fragen.find((f) => f.id === target.question) : null;
+    const p = c?.parts.find((x) => (q ? x.teil === q.teil : x.thema === target.thema));
     if (p) st.part = `${c.book}|${p.teil}`;
+    if (q && p) {
+      st.chapter = `${c.book}|${p.teil}|${q.kapitel}`;
+      st.question = q.id;
+    }
   };
   if (library) apply();
   else loadLibrary().then(() => {
@@ -492,6 +498,14 @@ export const icoachActions = {
     // Modul öffnet sich als Fach von unten (1.31.0) – die Seite bleibt, wo sie ist
     X.S.icModule = el.dataset.arg || null;
     X.rerender();
+  },
+  // Frage aus „Empfehlungen zu deinen Hauptzielen“ öffnen (1.54.0), Argument „buch|frage“
+  "icoach-ask": (el) => {
+    const [book, question] = String(el.dataset.arg).split("|");
+    openTarget({ kind: "book", book, thema: null, question });
+    X.S.icTab = "ask";
+    X.go("icoach");
+    window.scrollTo(0, 0);
   },
   "ic-ask-module": (el) => {
     const m = D.COACH_MODULES.find((x) => x.id === el.dataset.arg);

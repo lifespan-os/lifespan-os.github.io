@@ -85,6 +85,11 @@ export const KEEP_TABLES = [
   "glucose_reading",
   // seit 1.49.0 (Schema 62): Insights → Weekly Reports
   "weekly_report",
+  // seit 1.54.0 (Schema 63/64): Insights → Ziele, Health → Termine, Nutrition → Planen
+  "goal",
+  "appointment",
+  "meal_plan_entry",
+  "recipe",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */

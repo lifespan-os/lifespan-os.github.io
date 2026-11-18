@@ -94,6 +94,7 @@ const TABS = [
   ["diary", "Tagebuch"],
   ["food", "Scanner & Tracken"],
   ["food-history", "Verlauf"],
+  ["meal-plan", "Planen"],
 ];
 
 export function nutritionTabs(active) {

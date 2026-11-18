@@ -13,6 +13,7 @@ import * as O from "./pcoverview.js";
 import * as SD from "./superdata.js";
 import { hasWearable, heartTabHtml, wearableOf } from "./heart.js";
 import { glucoseTabHtml } from "./glucose.js";
+import { appointmentsHtml } from "./extras.js";
 import * as W from "./wearabledata.js";
 import * as GLD from "./glucosedata.js";
 
@@ -31,6 +32,7 @@ const TABS = [
   ["trend", "Verlauf"],
   ["heart", "Heart"],
   ["glucose", "Blutzucker"],
+  ["appointments", "Termine"],
   ["report", "Arztbericht"],
   ["lifetime", "Once in a Lifetime"],
   ["import", "Import"],
@@ -84,6 +86,14 @@ export function viewHealth() {
     `<nav class="tabs" aria-label="Health">${TABS.map(
       ([v, l]) => `<button class="tab ${v === active ? "active" : ""}" data-act="health-tab" data-arg="${v}" ${v === active ? 'aria-current="page"' : ""}>${l}</button>`,
     ).join("")}</nav>`;
+  // Termine (1.54.0, wie am PC unter Health → Termine) – nur Ansicht, angelegt wird am PC
+  if (S.healthTab === "appointments" && S.catalog?.pc) {
+    return `${X.header("Health")}<main class="wrap">
+    ${nav("appointments")}
+    <section class="card"><h3>Anstehende Termine</h3>${appointmentsHtml(buildDb())}
+      <p class="card__note">Blutabnahmen, Arzt- und Labortermine vom PC. Anlegen, ändern und als erledigt markieren am PC unter Health → Termine.</p></section>
+  </main>`;
+  }
   // Blutzucker (1.44.0) braucht wie Heart keine Laborwerte
   if (S.healthTab === "glucose" && S.catalog?.pc) {
     return `${X.header("Health")}<main class="wrap">

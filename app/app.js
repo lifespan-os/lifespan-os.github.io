@@ -42,6 +42,7 @@ import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
 import * as TR from "./trainingdata.js";
 import * as PD from "./pending.js";
 import * as HX from "./hyrox.js";
+import { extrasActions, initExtras, quickFillBanner, quickFillInput, viewMealPlan, viewQuickFill } from "./extras.js";
 
 const app = document.getElementById("app");
 const restEl = document.getElementById("rest");
@@ -208,7 +209,14 @@ function viewHome() {
   } else {
     try {
       const db = buildDb();
-      cards = `${overviewDayNav(date, today)}${overviewCardsHtml(db, c, date, today)}`;
+      // Quick Fill (1.54.0): Hinweis, wenn Werte fehlen
+      let fill = "";
+      try {
+        fill = date === today ? quickFillBanner() : "";
+      } catch (e) {
+        console.error(e);
+      }
+      cards = `${fill}${overviewDayNav(date, today)}${overviewCardsHtml(db, c, date, today)}`;
       try {
         hero = overviewHero(db, c, date, today);
       } catch (e) {
@@ -381,7 +389,7 @@ function viewWorkout() {
     ${w.competition ? competitionCard(w.competition) : ""}
     ${w.exercises.map((we, i) => exerciseCard(we, i, exs, machines)).join("")}
     <button class="btn block" data-go="picker">+ Übung oder Maschine hinzufügen</button>
-    ${w.competition ? "" : `<button class="btn ghost block" data-act="comp-add">HYROX-Wettkampf-Angaben hinzufügen</button>`}
+    ${w.competition || !isHyroxWorkout(w) ? "" : `<button class="btn ghost block" data-act="comp-add">HYROX-Wettkampf-Angaben hinzufügen</button>`}
     <button class="btn danger block" data-act="discard">${w.backfill ? "Verwerfen" : edit ? "Änderungen verwerfen" : "Training verwerfen"}</button>
   </main>
   <div class="bottom"><div class="inner"><button class="btn primary" data-go="finish">${w.backfill ? "Weiter zum Speichern" : edit ? "Änderungen speichern" : "Training beenden"}</button></div></div>`;
@@ -410,6 +418,13 @@ function isOpen(w, we) {
 function setFocus(w, id) {
   w.focusEx = id;
   S.exOpen = {};
+}
+
+/** HYROX-Einheit (1.54.0, wie am PC): „HYROX“ im Titel oder eine Übung, deren Name mit „Hyrox“ beginnt. */
+function isHyroxWorkout(w) {
+  if (/hyrox/i.test(w.title ?? "")) return true;
+  const exs = exById();
+  return w.exercises.some((e) => /^\s*hyrox/i.test(exs.get(e.exerciseId)?.name ?? e.exerciseName ?? ""));
 }
 
 /**
@@ -1023,6 +1038,8 @@ const VIEWS = {
   bls: viewBls,
   detail: viewDetail,
   help: viewHelp,
+  quickfill: viewQuickFill,
+  "meal-plan": viewMealPlan,
 };
 
 function render() {
@@ -1444,6 +1461,7 @@ const actions = {
   ...healthActions,
   ...superActions,
   ...bodyActions,
+  ...extrasActions,
   ...trainingActions,
   "start-free": () => startWorkout("Freies Training"),
   "comp-add": () => {
@@ -2036,6 +2054,7 @@ app.addEventListener("input", (ev) => {
   if (foodInput(el)) return;
   if (diaryInput(el)) return;
   if (blsInput(el)) return;
+  if (quickFillInput(el)) return;
   if (bodyInput(el)) return;
   if (logsInput(el)) return;
   if (todoInput(el)) return;
@@ -2698,6 +2717,7 @@ initBls(moduleCtx);
 initOverview({ ...moduleCtx, S, today: todayIso });
 initLogs(moduleCtx);
 initInsights(moduleCtx);
+initExtras(moduleCtx);
 initWeeklyReports({ ...moduleCtx, saveSoon: () => saveSoon() });
 initTodos(moduleCtx);
 initICoach(moduleCtx);

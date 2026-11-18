@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Was in LIFESPAN OS neu ist: alle Versionen der letzten Wochen auf einen Blick.">
+<link rel="icon" type="image/png" href="app/icons/icon-192.png">
+<title>Neuigkeiten · LIFESPAN OS</title>
+<style>
+/* Gleiche Farben wie die Startseite (bewusst nur helles Theme, wie index.html). Keine externen Schriften. */
+:root {
+  --bg: #fbfbfd;
+  --surface: #ffffff;
+  --surface-2: #f1f4f9;
+  --line: #e2e7ef;
+  --fg: #0a1a30;
+  --muted: #5b6a80;
+  --navy: #0f3d7a;
+  --blue: #1b80c4;
+  --orange: #f28a1a;
+  --f-body: "Inter", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --f-display: "Inter Display", "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+a { color: var(--blue); }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+.wrap { max-width: 960px; margin-inline: auto; padding-inline: max(16px, env(safe-area-inset-left, 0px)); }
+header.site { position: sticky; top: 0; z-index: 2; background: rgba(251,251,253,.85); backdrop-filter: saturate(180%) blur(18px); -webkit-backdrop-filter: saturate(180%) blur(18px); border-bottom: 1px solid rgba(10,26,48,.07); }
+header.site .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand img { width: 30px; height: 30px; border-radius: 7px; }
+.brand span { font-family: var(--f-display); font-weight: 800; font-size: 1.05rem; color: var(--navy); }
+header.site nav a { font-size: .9rem; color: var(--muted); text-decoration: none; }
+h1 { font-family: var(--f-display); font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.05; letter-spacing: -0.03em; margin: 48px 0 14px; }
+.lead { color: var(--muted); font-size: 1.1rem; max-width: 62ch; margin: 0 0 12px; }
+.steps { margin: 28px 0; padding: 18px 20px; background: var(--surface-2); border-radius: 16px; }
+.steps ol { margin: 0; padding-left: 1.2em; }
+.steps li + li { margin-top: 4px; }
+.ver { margin: 0 0 18px; padding: 18px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+.ver h2 { margin: 0 0 2px; font-family: var(--f-display); font-size: 1.25rem; letter-spacing: -0.01em; }
+.ver .date { margin: 0 0 10px; color: var(--muted); font-size: .9rem; }
+.ver ul { margin: 0; padding-left: 1.2em; }
+.ver li + li { margin-top: 4px; }
+.ver .tag { display: inline-block; margin-left: 8px; padding: 1px 10px; border-radius: 999px; background: var(--orange); color: #fff; font-size: .75rem; font-weight: 700; vertical-align: middle; }
+.note { color: var(--muted); font-size: .9rem; margin: 0 0 40px; }
+footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="app/icons/icon-192.png" alt="" width="30" height="30"><span>LIFESPAN OS</span></a>
+    <nav><a href="./#download">Zum Download der App</a></nav>
+  </div>
+</header>
+<main class="wrap">
+  <h1>Neuigkeiten</h1>
+  <p class="lead">Was in den letzten Versionen dazugekommen ist. Updates installierst du mit LIFESPAN-OS-Setup.exe – deine Daten bleiben erhalten.</p>
+  <section class="ver" id="v1.0.147">
+    <h2>Version 1.0.147<span class="tag">Neu</span></h2>
+    <p class="date">18.11.2026</p>
+    <ul>
+      <li><b>Nutrition → Planen:</b> Wochenplan aus deinen Vorlagen und Rezepten mit Nährwerten je Tag und Einkaufsliste mit Mengen (in die Zwischenablage oder als To-dos).</li>
+      <li><b>Insights → Monats- und Jahresrückblick:</b> Kennzahlen mit Vergleich zum Vormonat bzw. Vorjahr, Aufteilung nach Wochen bzw. Monaten und neue Rekorde – als PDF.</li>
+      <li><b>Geräte-Import:</b> Oura und WHOOP über deren Exportdateien (Schlaf mit Phasen, HRV, Ruhepuls, bei Oura auch Schritte).</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.146">
+    <h2>Version 1.0.146</h2>
+    <p class="date">18.11.2026</p>
+    <ul>
+      <li><b>Training → Fortschritt:</b> „Neue Rekorde“ erkennt jede verbesserte Bestleistung und das geschätzte 1RM (Epley); Bestenliste mit 1RM und Sortierung.</li>
+      <li><b>Insights → Ziele:</b> z. B. Kniebeuge 140 kg oder Körperfett unter 15 % – mit Fortschrittsbalken, Meilensteinen, Verlauf und nötigem Tempo bis zum Zieldatum.</li>
+      <li><b>Health → Termine:</b> Blutabnahme, Arzt- und Labortermine mit Erinnerung – in der Terminübersicht, der Kalender-Datei, im Weekly Report und als Hinweis in der Overview.</li>
+      <li><b>Globale Suche:</b> Strg+K oder „Suchen“ in der Kopfleiste – Übungen, Lebensmittel, Laborwerte, Einheiten, Notizen, Ziele, Termine und Tage.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.145">
+    <h2>Version 1.0.145</h2>
+    <p class="date">17.11.2026</p>
+    <ul>
+      <li><b>Insights → Datenqualität:</b> findet Lücken, Ausreißer (z. B. 8 kg Gewichtssprung an einem Tag) und Doppelte über alle Bereiche, mit „Öffnen“ zum Korrigieren.</li>
+      <li><b>Sleep → Schlaf-Regelmäßigkeit:</b> Streuung von Zubett-, Aufstehzeit und Schlafmitte, Verschiebung zur Vornacht und Wochenende gegenüber Werktagen.</li>
+      <li>Sleep → „Koffein vor dem Schlafen“: hellbraune Fläche unter der Kurve.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.144">
+    <h2>Version 1.0.144</h2>
+    <p class="date">17.11.2026</p>
+    <ul>
+      <li>Schritte über den Tag von Polar werden wieder übernommen (Uhrzeiten ohne Sekunden).</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.143">
+    <h2>Version 1.0.143</h2>
+    <p class="date">17.11.2026</p>
+    <ul>
+      <li>Import/Export → Freigabe-Paket für Trainer oder Ärztin: Tabellen, optional Arztbericht-PDF – weitergeben machst du selbst.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.142">
+    <h2>Version 1.0.142</h2>
+    <p class="date">17.11.2026</p>
+    <ul>
+      <li>Training → NEAT → Schritte über 24 Stunden.</li>
+      <li>Kalender-Datei (.ics) für die nächsten 8 Wochen.</li>
+      <li>Kurzanleitung fürs iPhone beim Austausch-Ordner.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.141">
+    <h2>Version 1.0.141</h2>
+    <p class="date">17.11.2026</p>
+    <ul>
+      <li>Austausch & Abgleich über einen Ordner in Google Drive; Import-Ordner für Uhr, Ring, Waage und Sensor.</li>
+      <li>Polar: Synchronisieren beim Start (abschaltbar).</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.140">
+    <h2>Version 1.0.140</h2>
+    <p class="date">17.11.2026</p>
+    <ul>
+      <li>Plan der Woche als To-dos, Datenprüfung mit „Öffnen“, Tag im Überblick, Superhuman-Zeitachse.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.139">
+    <h2>Version 1.0.139</h2>
+    <p class="date">17.11.2026</p>
+    <ul>
+      <li><b>Weekly Reports:</b> jeden Montag der Wochenbericht der abgeschlossenen Woche – lesen oder als PDF.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.138">
+    <h2>Version 1.0.138</h2>
+    <p class="date">17.11.2026</p>
+    <ul>
+      <li>Schritte: der zuletzt erfasste Wert gilt; Handy-Settings bearbeitbar.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.137">
+    <h2>Version 1.0.137</h2>
+    <p class="date">17.11.2026</p>
+    <ul>
+      <li>Polar-Datenexport (ZIP) vollständig einlesen.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.136">
+    <h2>Version 1.0.136</h2>
+    <p class="date">16.11.2026</p>
+    <ul>
+      <li>Eigene Mahlzeiten, Seiten anpassen in Sleep, Recovery und Import/Export, Koffeinspiegel in der Nacht.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.135">
+    <h2>Version 1.0.135</h2>
+    <p class="date">16.11.2026</p>
+    <ul>
+      <li>Hersteller-Pakete zum Herunterladen statt fest eingebauter Herstellerprodukte.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.134">
+    <h2>Version 1.0.134</h2>
+    <p class="date">16.11.2026</p>
+    <ul>
+      <li>113 neue Übungen, HYROX-Simulation und -Wettkampf.</li>
+    </ul>
+  </section>
+  <p class="note">Alle Daten bleiben auf deinem Computer. Ältere Versionen findest du auf GitHub unter „Releases“.</p>
+</main>
+<footer>
+  <div class="wrap">© 2026 LIFESPAN OS · Non-Profit-Projekt · <a href="./#impressum">Impressum</a> · <a href="./#datenschutz">Datenschutz</a></div>
+</footer>
+</body>
+</html>

@@ -1436,3 +1436,91 @@ html[data-theme="dark"] .btn.danger { color: var(--danger); background: transpar
   .wr-cols, .wr-levers { grid-template-columns: minmax(0, 1fr); }
   .wr-table { font-size: 12px; }
 }
+
+/* ================================================================== 1.52.0 Prüfung vom 18.11.2026 */
+
+/* Schrift „Barlow Condensed“ mitgeliefert (vorher von Google Fonts geladen) */
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 700; font-display: swap; src: url("fonts/barlow-condensed-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 800; font-display: swap; src: url("fonts/barlow-condensed-latin-800-normal.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-style: italic; font-weight: 800; font-display: swap; src: url("fonts/barlow-condensed-latin-800-italic.woff2") format("woff2"); }
+
+.nowrap { white-space: nowrap; }
+
+/* Zahlenzellen in Tabellen sind keine runden Zahlenknöpfe: die allgemeine Regel „.num“ zerlegte
+   „Volumen je Einheit“ und „Volumen je Muskelgruppe und Woche“ (Zellen untereinander, abgeschnitten) */
+.data-table th.num, .data-table td.num {
+  display: table-cell; min-width: 0; height: auto; padding: 5px 6px; border: 0; border-bottom: 1px solid var(--line);
+  border-radius: 0; background: none; color: inherit; font-family: inherit; font-size: inherit; font-weight: inherit;
+  text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.data-table th.num { color: var(--muted); font-weight: 600; font-size: .78rem; }
+.data-table td.num.review-matrix__cell { font-size: .8rem; }
+
+/* Breite Tabellen: kleinere Schrift, damit mehr Spalten ohne seitliches Wischen passen */
+.table-scroll .data-table { font-size: .8rem; }
+.table-scroll .data-table th, .table-scroll .data-table td { padding: 5px 5px; }
+
+/* Keine Trennung mitten im Wort (z. B. „Zuwei-sen“, „NER-VENSYSTEM“, „Reinigungsarbeite-n“) */
+.card h3 { overflow-wrap: break-word; hyphens: manual; }
+.train-row__main { overflow-wrap: break-word; }
+.ungrouped__form .btn { flex: none; white-space: nowrap; }
+.btn.sm { white-space: nowrap; }
+
+/* Lange Seitentitel (z. B. „Body & Longevity“) kleiner statt abgeschnitten */
+.top h1.h1--long { font-size: 1.32rem; }
+@media (max-width: 360px) {
+  .top h1 { font-size: 1.4rem; }
+  .top h1.h1--long { font-size: 1.08rem; }
+}
+
+/* Menükopf: Name nicht abgeschnitten; auf schmalen Handys nur das Logo */
+.drawer__brand b { white-space: nowrap; }
+@media (max-width: 420px) {
+  .drawer__brand b, .drawer__brand small { display: none; }
+}
+
+/* ANS-Skala: −10 und +10 bleiben innerhalb der Karte */
+.ans-bar__ticks > span:first-child { transform: none; }
+.ans-bar__ticks > span:last-child { transform: translateX(-100%); }
+
+/* Listen: zuerst 10 Einträge, Rest aufklappbar (statt Bildlauf in der Seite) */
+.logs-list--rows { max-height: none; overflow: visible; }
+.more-toggle:not(:checked) + .logs-list--rows > :nth-child(n + 11) { display: none; }
+.more-toggle:checked ~ .more-label { display: none; }
+.more-label { margin-top: 8px; text-align: center; cursor: pointer; }
+
+/* Größere Tippflächen für Text-Knöpfe in Listen und Gruppen (mind. 44 px) */
+.train-row .linkbtn, .row-actions .linkbtn, .wo-head .linkbtn { min-height: 44px; padding: 0 6px; }
+.lab-group__toggle { min-height: 44px; }
+
+/* Schnell erfassen: 3 Spalten – 9 Kacheln ohne einzelne letzte Kachel */
+.quick-sheet__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Overview-Karten zuklappbar: Kopf als Schalter */
+details.ov-card > summary { list-style: none; cursor: pointer; }
+details.ov-card > summary::-webkit-details-marker { display: none; }
+details.ov-card > summary::after { content: "▾"; margin-left: auto; padding-left: 8px; color: var(--muted); font-size: .9rem; }
+details.ov-card:not([open]) > summary::after { content: "▸"; }
+details.ov-card:not([open]) > summary { margin-bottom: 0; }
+details.ov-card:not([open]) { padding-bottom: 12px; }
+
+/* Sehr schmale Handys (320 px): iCoach-Kacheln und lange Hinweise bleiben in der Karte */
+@media (max-width: 360px) {
+  .icoach-tiles { grid-template-columns: minmax(0, 1fr); }
+  .tag { white-space: normal; }
+}
+
+/* Wirkstoffrechner: Name über die ganze Breite, darunter Konzentration und Entfernen */
+.calc-row { grid-template-columns: minmax(0, 1fr) auto; }
+.calc-row > .field:first-child { grid-column: 1 / -1; }
+
+/* Breite Tabellen: erste Spalte (Name) bleibt beim seitlichen Wischen stehen und darf umbrechen */
+.table-scroll .data-table th:first-child, .table-scroll .data-table td:first-child {
+  position: sticky; left: 0; z-index: 1; background: var(--surface); white-space: normal; min-width: 7rem; max-width: 10rem;
+}
+
+/* Trainings- und NEAT-Zeilen: Text bekommt genug Breite, „Öffnen“/„Bearbeiten“ rutscht bei Bedarf
+   in eine eigene Zeile (vorher Trennung mitten im Wort, z. B. „Reinigungsarbei-ten“) */
+.train-row { flex-wrap: wrap; }
+.train-row__main { flex: 1 1 190px; }
+.train-row > .linkbtn, .train-row > .row-actions { margin-left: auto; }

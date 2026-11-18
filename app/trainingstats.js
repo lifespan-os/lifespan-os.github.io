@@ -94,8 +94,7 @@ export function viewReviewTab() {
   const n = r.sessions.length;
   const ids = r.sessions.map((s) => s.workoutId);
   const totalChange = r.previousVolumeKg !== null && r.previousVolumeKg > 0 ? Math.round(((r.totalVolumeKg - r.previousVolumeKg) / r.previousVolumeKg) * 100) : null;
-  const maxGroup = Math.max(1, ...r.groups.map((g) => g.volumeKg));
-  const labels = D.trainingGroupLabels.reviewGroupLabels(
+  const rawLabels = D.trainingGroupLabels.reviewGroupLabels(
     r.groups.map((g) => g.group),
     log,
     exercises,
@@ -103,8 +102,15 @@ export function viewReviewTab() {
     ids,
     focus,
   );
+  // Gleicher Muskelteil aus verschiedenen Datenbank-Texten = eine Zeile (1.52.0, wie PC 1.0.148)
+  const merged = D.trainingGroupLabels.mergeLabeledGroups
+    ? D.trainingGroupLabels.mergeLabeledGroups(r.groups, rawLabels)
+    : { groups: r.groups, labels: rawLabels };
+  const groups = merged.groups;
+  const labels = merged.labels;
   const labelOf = (g) => labels.get(g)?.label ?? g;
-  const maxCell = Math.max(1, ...r.groups.flatMap((g) => g.perSession));
+  const maxGroup = Math.max(1, ...groups.map((g) => g.volumeKg));
+  const maxCell = Math.max(1, ...groups.flatMap((g) => g.perSession));
   const fv = (v) => C().formatVolume(v);
 
   // Körperkarte
@@ -132,7 +138,7 @@ export function viewReviewTab() {
   const coverage = D.trainingCoverage.trainingCoverage(r, map, ungrouped);
 
   return `<section class="card card--training"><div class="wo-head"><h3>Letzte ${n} ${n === 1 ? "Einheit" : "Einheiten"}</h3><span class="tag">${fmtDate(r.sessions[0]?.date ?? "")} – ${fmtDate(r.sessions.at(-1)?.date ?? "")}</span></div>
-      <div class="metric-row">${metricBox("Gesamtvolumen", F(r.totalVolumeKg), "kg")}${metricBox("Arbeitssätze", F(r.totalSets))}${metricBox("Ø Volumen je Einheit", F(r.totalVolumeKg / n), "kg")}${metricBox("Muskelgruppen", F(r.groups.length))}</div>
+      <div class="metric-row">${metricBox("Gesamtvolumen", F(r.totalVolumeKg), "kg")}${metricBox("Arbeitssätze", F(r.totalSets))}${metricBox("Ø Volumen je Einheit", F(r.totalVolumeKg / n), "kg")}${metricBox("Muskelgruppen", F(groups.length))}</div>
       ${r.previousCount > 0 ? `<p class="muted small">Gegenüber den ${r.previousCount} Einheiten davor (${esc(fv(r.previousVolumeKg ?? 0))}): ${change(totalChange)}${totalChange === null ? "kein Vergleich möglich" : ""}</p>` : ""}
       <ul class="train-list">${[...r.sessions]
         .reverse()
@@ -162,9 +168,9 @@ export function viewReviewTab() {
     </section>
     <section class="card card--training"><div class="wo-head"><h3>Trainingsvolumen je Muskelgruppe</h3><span class="tag">Kraftübungen, ohne Aufwärmsätze</span></div>
       ${
-        r.groups.length === 0
+        groups.length === 0
           ? `<p class="muted small">In diesen Einheiten gab es keine Kraftübungen mit Sätzen.</p>`
-          : `<ul class="review-bars" aria-label="Volumen je Muskelgruppe">${r.groups
+          : `<ul class="review-bars" aria-label="Volumen je Muskelgruppe">${groups
               .map(
                 (g) => `<li><div class="review-bars__head"><strong>${esc(labelOf(g.group))}</strong><span class="review-bars__value">${esc(fv(g.volumeKg))} · ${g.sharePercent} % ${change(g.changePercent)}</span></div>
                 <span class="review-bars__track" role="img" aria-label="${esc(`${labelOf(g.group)}: ${fv(g.volumeKg)}, ${g.sharePercent} % des Volumens`)}"><span class="review-bars__fill" style="width:${(g.volumeKg / maxGroup) * 100}%;background:${COLOR.training}"></span></span>
@@ -174,7 +180,7 @@ export function viewReviewTab() {
               .join("")}</ul>
             <h4>Volumen je Einheit</h4>
             <div class="table-scroll"><table class="data-table review-matrix"><thead><tr><th>Muskelgruppe</th>${r.sessions.map((s) => `<th class="num" title="${esc(s.title)}">${esc(D.formatDate(s.date).slice(0, 6))}</th>`).join("")}<th class="num">Summe</th></tr></thead>
-              <tbody>${r.groups
+              <tbody>${groups
                 .map(
                   (g) => `<tr><td>${esc(labelOf(g.group))}</td>${g.perSession
                     .map((v) => `<td class="num review-matrix__cell" ${v > 0 ? `style="background:rgba(43,89,195,${(0.08 + (v / maxCell) * 0.32).toFixed(3)})"` : ""}>${v > 0 ? F(v) : "–"}</td>`)

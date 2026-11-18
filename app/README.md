@@ -624,6 +624,134 @@ Fassung laden.
 - Overview: großer Kopf mit den heute gegessenen kcal, Tagesbedarf, offenen kcal und Protein/KH/Fett
   (gleiche Rechnung wie die Karte Ernährung, `overviewHero` in overview.js), die Figur groß rechts daneben.
 
+### Version 1.48.0 (17.11.2026): Settings am Handy bearbeiten
+
+Entscheidung des Nutzers vom 17.11.2026: Profil, Benutzer, Mahlzeiten, Messmethoden, Darstellung, Tageswechsel,
+Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Export sind am Handy änderbar.
+
+- **Mit dem PC abgeglichen** (`pcsettings.js`, Speicher „pcsettings“, geht mit „Körperwerte … senden“ als
+  `settings`, `profile` und Löschvermerke `settings:<Schlüssel>` an den PC; dort gewinnt der neuere Stand):
+  Profil (Prüfregeln des PCs über `validateProfile` in pcdomain.js), Mahlzeiten (`meal_name.*`, `meal_hidden`,
+  `meal_extra`; der PC zieht beim Abgleich wie unter Settings → Mahlzeiten nach: Einträge mit Inhalt behalten
+  den alten Namen, festgeschriebene Tage ab heute folgen der Liste), Messmethoden (`measurement_methods`),
+  Tageswechsel (`ui.day_start`, seit Desktop 1.0.138 auch am PC in der Datenbank), Seiten anpassen
+  (`ui.*_layout`, Bearbeiten-Modus auf der Seite selbst über `layoutedit.js`; Karten, die nur der PC kennt,
+  behalten ihren Platz) und Secret Protocols (`secret_protocols`; aus = Superhuman nicht im Menü, wie am PC).
+  Offene Daten zeigen je Bereich einen Eintrag „Einstellung“ bzw. „Profil“ zum Verwerfen.
+- **Nur auf diesem Handy** (`devprefs.js`, in `S.prefs`): Darstellung (Hell/Dunkel/Wie das Handy; dunkles Design
+  über `html[data-theme="dark"]`, untere Leiste mit oder ohne Text), Erinnerungen (Wiegen, Supplements,
+  nächste Hormongabe wie `domain/reminders.ts` am PC: ab der Uhrzeit, einmal am Tag, nur solange nichts
+  eingetragen ist; Karte „Erinnerungen“ in der Overview und – wenn erlaubt – Benachrichtigung, nur solange die
+  App geöffnet ist), Schnellerfassung (Reihenfolge, ausblenden) und Import/Export (Erinnerung ans Senden nach
+  1–14 Tagen, nach dem Senden automatisch als übertragen markieren).
+- Konten: andere Konten umbenennen; der Name gilt beim nächsten Wechsel auch im Profil. Der Name des
+  angemeldeten Kontos ist der Profilname.
+- „Heute“ mit Tageswechsel: `appday.js` (`C.appDay`), genutzt von Tagebuch, Body, Ernährung und neuen Trainings.
+- Neue Dateien: pcsettings.js, devprefs.js, appday.js, layoutedit.js (+ pcsettings.test.mjs, devprefs.test.mjs).
+  pcdomain.js neu erzeugt (zusätzlich `domain/profile.ts` und `domain/reminders.ts`).
+
+### Version 1.47.0 (17.11.2026): Mahlzeiten-Liste, Koffein in der Nacht, Wochenabschluss
+
+- Mahlzeiten wie am PC (Settings → Mahlzeiten): eigene Namen, abgewählte Standardmahlzeiten und bis zu
+  10 Mahlzeiten (`meal_name.*`, `meal_hidden`, `meal_extra` aus der Exportdatei, `setMealConfig` in
+  nutrition.js). Eigene Mahlzeiten haben den Schlüssel `x:<Name>` (Mahlzeit `other` mit Namen). Beim
+  Eintragen gibt es ein Uhrzeit-Feld ohne Vorgabe; ohne Uhrzeit erscheint vorher ein Hinweis mit Sprung ins
+  Feld („Ohne Uhrzeit eintragen“ bleibt möglich).
+- Koffein-Widget: Einschlafzeit und Halbwertszeit bleiben gespeichert (Gerätespeicher `caffeineSettings`,
+  sonst `ui.caffeine` vom PC) und gelten auch für „Koffein vor dem Schlafen“.
+- Sleep → Nacht im Detail: „Koffein anzeigen“ legt den Koffeinspiegel als gestrichelte braune Linie mit
+  eigener Skala über die Herzfrequenz (`nightCaffeineLevels`); Antippen der Nachtgrafiken zeigt Uhrzeit und
+  Werte (`nightHover` in logs.js).
+- Sleep, Recovery und Import/Export in der Anordnung vom PC (`ui.sleep_layout`, `ui.recovery_layout`,
+  `ui.transfer_layout`). Recovery: ANS-Werte und Einschätzungen zeigen höchstens 10 Einträge, der Rest per
+  Bildlauf.
+- Checklisten: „To-dos am Montag, 16.11.2026“ mit ‹ › und Wochentag überall; am Sonntag Wochenabschluss
+  (abhaken, bearbeiten, quittieren, löschen; Quittierungen im Gerätespeicher `weekReview`).
+- Trainingsliste zeigt HYROX-Wettkämpfe (`describeCompetition` in hyrox.js).
+- Settings: neue Karten „Einstellungen vom PC“ und „Was am Handy geht“ (settingsview.js).
+- Polar: Schritte über den Tag werden beim Abgleich am PC nachgezogen (Bericht in wearabledata.js neu
+  gebündelt).
+
+### Version 1.46.1 (16.11.2026): Herstellerprodukte nur noch als Pakete
+
+- `startpaket.json` (Konto am Handy) enthält keine Herstellerprodukte mehr: 56 allgemeine Lebensmittel
+  (BLS 4.0), keine Supplements. Hersteller und Shops gibt es als Pakete unter Import/Export →
+  Herstellerpakete (`pakete/index.json`, jetzt 12 Pakete: u. a. neu Bodylab24, ESN, More Nutrition,
+  Rühl24, VAST Sports, Vitaminversand24). Erzeugt mit `scripts/tools/pakete/hersteller-pakete-erzeugen.py`
+  und `scripts/tools/handy/pakete-fuers-handy.py`.
+- Bestehende Handy-Konten behalten ihre Einträge; am PC ordnet 1.0.135 sie einmalig den Paketen zu.
+
+### Version 1.46.0 (16.11.2026): HYROX-Ablauf und Wettkampf, Datenbanken als Datei
+
+- Training → Übung hinzufügen: „Hyrox-Simulation (komplett)“, „Hyrox-Wettkampf (Frauen)“ und
+  „Hyrox-Wettkampf (Männer)“ legen alle 16 Abschnitte eines Rennens an (8 × 1 km Laufen, jeweils gefolgt
+  von SkiErg, Sled Push, Sled Pull, Burpee Broad Jumps, Rudern, Farmers Carry, Sandbag Lunges, Wall
+  Balls) – mit Strecke bzw. Wiederholungen, beim Wettkampf mit den Gewichten der Klasse (Regelwerk
+  25/26). Fehlende Stationsübungen werden am Handy angelegt. Logik in `hyrox.js` (gleiche Werte wie
+  `src/domain/hyrox.ts` am PC).
+- Sled Push, Sled Pull, Farmers Carry und Sandbag Lunges zeigen neben Minuten und km eine Spalte kg;
+  Satznotizen („Lauf 3 von 8“, „inkl. Schlitten“) stehen unter dem Satz.
+- Wettkampf-Angaben im laufenden Training: Wettkampf Frauen/Männer, Wettkampfklasse (Division), Ort,
+  Altersklasse, Endzeit, Platz gesamt und in der Altersklasse (jeweils „von“). Beim Wechsel der Klasse
+  werden die Stationsgewichte eingetragen. Gespeichert in den Spalten `competition`, `comp_*` der
+  Tabelle `workout` (Schema 60), Prüfung wie am PC (`checkCompetition`).
+- Import/Export: neue Karte „Lebensmittel- und Supplementdatenbank“ – Export und Import im gleichen
+  Dateiformat wie am PC (`lifespan-os-katalog`, `catalogfile.js`, `catalogui.js`). Beim Import kommen
+  nur neue Einträge dazu (Prüfregeln und Felderabgleich aus `vendor.js`).
+
+### Version 1.45.6 (16.11.2026): Import/Export im Menükopf
+
+- Menü: Knopf **„Import/Export“** im Kopf neben dem Schließen-Knopf (`drawer__transfer`, Bereich `transfer` mit
+  `header: true` in nav.js – nicht in der Liste und nicht als Platz der unteren Leiste wählbar).
+- Neue Seite `viewTransfer` (app.js): An den PC senden (mit offenen Daten), Daten vom PC (Exportdatei laden, mit
+  Hinweis auf „Für die Handy-App exportieren“ am PC), ganzes Konto an den PC (Konto am Handy), Herstellerpakete,
+  BLS 4.0, Weg zu Health → Blutzucker. Settings behält Konten, Tagesziele, untere Leiste, Hilfe und einen Verweis.
+- Senden, Offene Daten, Pakete und BLS führen zurück zu Import/Export; Hinweise „unter Settings …“ heißen jetzt
+  „unter Import/Export …“ (am PC ab 1.0.133 ebenfalls Import/Export).
+
+### Version 1.45.5 (16.11.2026): Koffein beim Schlaf, Schritte über den Tag
+
+- Sleep: Karte „Koffein vor dem Schlafen“ (`sleepCaffeineHtml` in icoach.js, wie SleepCaffeineCard am PC): der
+  Zeitstrahl aus dem Koffein-Widget für den Abend vor der letzten erfassten Nacht; Einschlafzeit = Zubettgehen plus
+  Einschlafdauer (`fallAsleepClock` in caffeinedata.js + Test), ohne Eintrag 22:00; Halbwertszeit 5 Stunden.
+- Overview: Karte „Schritte über den Tag“ (`stepsDayHtml` in heart.js, Karten-ID `wearable-steps`): bis jetzt
+  gesammelte Schritte der Uhr neben dem Median derselben Uhrzeit der bisherigen Tage (bis 28 Tage, ab 3 Tagen).
+  Rechnung `stepDayCompare` aus wearableMore.ts des PCs – wearabledata.js neu gebündelt.
+- Tageswahl der Overview: iOS-Datumsfeld ragte über den Weiter-Knopf – bleibt jetzt in seiner Spalte.
+
+### Version 1.45.4 (16.11.2026): Koffein-Eingabe aufgeräumt
+
+- iCoach.me → Widgets → Koffein: Eingabe in zwei Blöcke „Dein Abbau“ (Einschlafzeit, Halbwertszeit) und
+  „Neue Einnahme“ (Getränk, Uhrzeit, Menge, Umrechnung, Eintragen). Alle Felder gleich hoch (48 px), Einheit im
+  Feld, Hinweise über die ganze Breite. iOS-Uhrzeitfelder ragten über ihre Spalte und waren höher – behoben
+  (`-webkit-appearance: none`, linksbündig). Stile `.cf-*` in app.css.
+
+### Version 1.45.3 (16.11.2026): Koffein-Widget mit Koffein aus Nutrition
+
+- iCoach.me → Widgets → Koffein: Der Zeitstrahl zählt jetzt wie am PC (`caffeine::list_with_nutrition`) auch
+  Koffein aus Nutrition: Supplement-Einnahmen mit dem Nährstoff Koffein (z. B. Pre-Workout), direkt
+  eingetragene Nährwerte einer Mahlzeit und das Fasttracking des Tages – vom PC und am Handy erfasst. Ohne
+  Uhrzeit gilt die Uhrzeit der Mahlzeit bzw. eine angenommene (nüchtern 07:30, Frühstück 08:00 …), markiert
+  „(angenommen)“. Einträge der Schnellerfassung am PC zählen nur einmal. Diese Einträge sind nur zu lesen
+  (bearbeiten unter Nutrition). `nutritionIntakes`/`dayIntakes` in caffeinedata.js + Test; `pcdb.intakesOn`
+  liefert `createdAt`. Lebensmittel haben keinen Koffeinwert (wie am PC).
+
+### Version 1.45.2 (16.11.2026): Lebensmittel-Export mit verwendeten Supplements
+
+- Fehlerbehebung: Nach 1.45.1 lehnte der PC die Datei mit „Supplement-Einträge, Eintrag 1: verweist auf einen
+  Eintrag, der in der Datei fehlt“ ab (`supplement_intake_item.supplement_id` → `supplement`). Bisher gingen
+  Supplements nur bei einem Konto vom Handy mit. Jetzt immer die verwendeten (ohne Notizen); Nährwerte nur für
+  eigene bzw. bei einem Konto vom Handy. Am PC bleibt beim Abgleich der gleiche oder neuere Stand. Gegen das
+  echte Schema (Migrationen 1–59, Fremdschlüsselprüfung wie im Import) mit der Datei des Nutzers geprüft.
+
+### Version 1.45.1 (16.11.2026): Lebensmittel-Export mit Stack
+
+- Fehlerbehebung: „Lebensmittel senden“ mit einer Supplement-Einnahme aus einem gespeicherten Stack (vom PC)
+  wurde am PC abgelehnt („Eingenommene Supplements, Eintrag 1: verweist auf einen Eintrag, der in der Datei
+  fehlt“). Der PC prüft die Datei vollständig (`supplement_intake.stack_id` → `supplement_stack`). Jetzt gehen
+  der verwendete Stack und die verknüpfte Mahlzeit (auch eine vom PC) mit (`withIntakeParents` in
+  supplements.js + Test). Beim Abgleich gewinnt am PC weiterhin der neuere Stand.
+
 ### Version 1.45.0 (16.11.2026): Atemfrequenz, Blutzucker am Handy, Zonen, Arztbericht
 
 - Health → Heart: Karte „Atemfrequenz in der Nacht“ (Verlauf, letzte 7 Tage gegen die 28 davor). Sleep →
@@ -715,3 +843,42 @@ Fassung laden.
 - iCoach.me → Magazin: „Vom Lebensmittel zur Kalorie“ (Ernährung) und „Macht Soja dich weiblich?“ (Gesundheit &
   Werte) – gleiche Einträge wie am PC (`MAGAZINES` in pcdomain.js), Titelbilder in `icoach/magazin/`, PDFs
   (verkleinert, 1240 px, JPEG 60) unter `/media/icoach/magazin/`.
+
+### Version 1.49.0 (17.11.2026): Weekly Reports unter Insights
+
+- Neue Karte „Weekly Reports“ ganz oben unter Insights (`weeklyreports.js`): Berichte, die der PC jeden Montag
+  für die abgeschlossene Woche erstellt (Tabelle `weekly_report` der Exportdatei, in `pcdb.js` `KEEP_TABLES`).
+  „Lesen“ zeigt den Bericht wie am PC (`weeklyReportHtml` aus pcdomain.js), „PDF“ erzeugt das PDF wie am PC
+  (`weeklyReportToPdf`, freigestelltes Logo `lifespan-logo-freigestellt.png`) und gibt es über Teilen weiter.
+  Superhuman-Teile nur bei eingeschalteten Secret Protocols.
+- Korrektur: Insights brach ab, wenn eine Karte leer war (`layout` fehlte in `insightsview.js`).
+
+### Version 1.50.0 (17.11.2026): Dateien aus Google Drive am iPhone
+
+- Dateiauswahl für „Neue Exportdatei laden“, Lebensmittel-/Supplementdatenbank und Hersteller-Pakete ohne
+  `accept`-Filter: Google Drive meldet JSON-Dateien in der App „Dateien“ nicht als JSON, iOS lehnte sie als
+  „nicht unterstützter Dateityp“ ab. Der Inhalt wird wie bisher beim Einlesen geprüft.
+- Passt zum Austausch-Ordner der PC-App (1.0.141): dort legt der PC die Handy-Datei ab.
+
+### Version 1.51.0 (17.11.2026): Hinweis auf neue Weekly Reports
+
+- Overview → „Erinnerungen“: „Neuer Weekly Report: KW …“, sobald die geladene Exportdatei einen Montagsbericht
+  enthält, der noch nicht angesehen wurde. „Lesen“ öffnet ihn unter Insights; „✕“ blendet den Hinweis aus.
+- Gesehen = `prefs.wrSeen` (Wochenbeginn des zuletzt gesehenen Berichts, je Gerät); Öffnen unter Insights zählt
+  ebenfalls. Kein Hintergrund-Push – die PWA zeigt den Hinweis, sobald sie geöffnet ist.
+
+## Version 1.52.0 (18.11.2026): Darstellung nach der Prüfung
+
+- Tabellen „Volumen je Einheit“ (Training → Auswertung) und „Volumen je Muskelgruppe und Woche“ (Training → Verlauf)
+  zerfielen: Die allgemeine Regel `.num` (runder Zahlenknopf) traf die Tabellenzellen. Jetzt normale Zellen,
+  erste Spalte bleibt beim seitlichen Wischen stehen. Gleiche Muskelteile werden zu einer Zeile zusammengefasst
+  (`D.trainingGroupLabels.mergeLabeledGroups`, ab neu erzeugter pcdomain.js).
+- Keine Trennung mitten im Wort mehr (Überschriften, „Zuweisen“, NEAT-Liste); Zahl und Einheit bleiben zusammen.
+- Lange Seitentitel kleiner statt „BODY & LON…“; im Menükopf auf schmalen Handys nur das Logo.
+- ANS-Skala: −10 und +10 bleiben in der Karte. Wirkstoffrechner: Name über die ganze Breite.
+- Listen mit mehr als 10 Einträgen: „Alle … Einträge anzeigen“ statt Bildlauf in der Seite.
+- Overview-Karten lassen sich zuklappen (Tippen auf den Kopf, gespeichert je Gerät: `lifespan.overview.collapsed`).
+- Schnell erfassen in 3 Spalten; Text-Knöpfe in Listen mit 44 px Tippfläche; Health-Einleitung nur auf dem ersten Reiter.
+- Schrift „Barlow Condensed“ liegt in `fonts/` (OFL, `fonts/OFL-Barlow-Condensed.txt`) – keine Anfrage an Google
+  Fonts mehr; der Service Worker speichert sie mit den App-Dateien.
+- Schlaf-Einträge: Pfeil statt „Bearbeiten“ (der ganze Eintrag ist tippbar).

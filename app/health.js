@@ -112,7 +112,12 @@ export function viewHealth() {
   const views = { trend: trendTab, report: reportTab, lifetime: lifetimeTab, import: importTab, analytes: analytesTab };
   const body = (views[tab] ?? drawsTab)(d);
   return `${X.header("Health")}<main class="wrap">
-    <p class="muted small">Laborwerte mit Referenzbereichen: Blutabnahmen erfassen oder aus CSV/Excel übernehmen, Verläufe mit Normbereich und markierten Ausreißern, Bericht für den Arzttermin und einmalig bestimmte Angaben wie Blutgruppe oder Gentests.</p>
+    ${
+      // Einleitung nur auf dem ersten Reiter, nicht auf jedem wiederholt (1.52.0)
+      tab === "draws"
+        ? `<p class="muted small">Laborwerte mit Referenzbereichen: Blutabnahmen erfassen oder aus CSV/Excel übernehmen, Verläufe mit Normbereich und markierten Ausreißern, Bericht für den Arzttermin und einmalig bestimmte Angaben wie Blutgruppe oder Gentests.</p>`
+        : ""
+    }
     <nav class="tabs" aria-label="Health">${TABS.map(
       ([v, l]) => `<button class="tab ${v === tab ? "active" : ""}" data-act="health-tab" data-arg="${v}" ${v === tab ? 'aria-current="page"' : ""}>${l}</button>`,
     ).join("")}</nav>

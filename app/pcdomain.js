@@ -777,6 +777,7 @@ var lifestyleCategoryLabel = (v) => labelOf(LIFESTYLE_CATEGORIES, v);
 var workoutDraft_exports = {};
 __export(workoutDraft_exports, {
   DEFAULT_REST_SECONDS: () => DEFAULT_REST_SECONDS,
+  LIGHT_FACTOR: () => LIGHT_FACTOR,
   activeProfiles: () => activeProfiles,
   adoptIds: () => adoptIds,
   cardioChoices: () => cardioChoices,
@@ -794,6 +795,7 @@ __export(workoutDraft_exports, {
   emptyWorkoutDraft: () => emptyWorkoutDraft,
   finishDraft: () => finishDraft,
   formatClock: () => formatClock,
+  lighterDraft: () => lighterDraft,
   localTime: () => localTime,
   minutesSince: () => minutesSince,
   newKey: () => newKey,
@@ -1991,6 +1993,23 @@ function adoptIds(current, sent, saved) {
       ...e,
       id: e.id ?? exIds.get(e.key) ?? null,
       sets: e.sets.map((s) => ({ ...s, id: s.id ?? setIds.get(s.key) ?? null }))
+    }))
+  };
+}
+var LIGHT_FACTOR = 0.8;
+function lighterDraft(draft, factor = LIGHT_FACTOR) {
+  const lighter = (text2) => {
+    const v = Number(text2.trim().replace(",", "."));
+    if (text2.trim() === "" || !Number.isFinite(v) || v <= 0) return text2;
+    const w = Math.round(v * factor * 2) / 2;
+    return Number.isInteger(w) ? String(w) : String(w).replace(".", ",");
+  };
+  return {
+    ...draft,
+    title: draft.title.endsWith(" (leicht)") ? draft.title : `${draft.title} (leicht)`.trim(),
+    exercises: draft.exercises.map((e) => ({
+      ...e,
+      sets: e.sets.map((s) => s.isWarmup ? s : { ...s, weightKg: lighter(s.weightKg) })
     }))
   };
 }
@@ -7829,7 +7848,13 @@ function trainingIssues(setLog, workouts, week) {
         }
       }
       for (const h of hints)
-        issues.push({ key: h.key, date: s.date, area: "Training", text: h.text });
+        issues.push({
+          key: h.key,
+          date: s.date,
+          area: "Training",
+          text: h.text,
+          ref: { kind: "workout", id: s.workoutId, date: s.date }
+        });
     }
     lastByExercise.set(s.exerciseId, s);
   }
@@ -7854,6 +7879,7 @@ function trainingIssues(setLog, workouts, week) {
       key: `dup.${w.id}`,
       date: w.date,
       area: "Training",
+      ref: { kind: "workout", id: w.id, date: w.date },
       text: `\u201E${w.title}\u201C (${when}) ist ${twins.length + 1}\xD7 mit denselben \xDCbungen gespeichert \u2013 doppelt erfasst?`
     });
   });
@@ -7874,6 +7900,7 @@ function hrtIssues(entries, week) {
       key: `hrt.${e.id}`,
       date: e.date,
       area: "HRT",
+      ref: { kind: "hrt", id: e.id, date: e.date },
       text: `${e.hormone} am ${formatDate(e.date)}: ${twins.length + 1} Gaben innerhalb von ${DUPLICATE_WINDOW_MIN} Minuten (${[
         e,
         ...twins
@@ -7906,6 +7933,7 @@ function measurementIssues(measurements, categoryOf, week) {
         key: `m.${cur.id}`,
         date: cur.date,
         area: "K\xF6rper",
+        ref: { kind: "measurement", id: cur.id, date: cur.date },
         text: `${cur.metricName}: ${fmt2(cur.value)} am ${formatDate(cur.date)} nach ${fmt2(prev.value)} am ${formatDate(prev.date)} (${formatSigned(change * 100, 0)} %) \u2013 Tippfehler oder andere Messgr\xF6\xDFe?`
       });
     }
@@ -15377,8 +15405,32 @@ __export(schedule_exports, {
   scheduleCounts: () => scheduleCounts,
   shiftPeriod: () => shiftPeriod
 });
+
+// src/domain/appointments.ts
+var APPOINTMENT_KIND_LABELS = {
+  blood_draw: "Blutabnahme",
+  doctor: "Arzttermin",
+  lab: "Labortermin",
+  other: "Sonstiger Termin"
+};
+function dayNumber2(date) {
+  const [y, m, d] = date.split("-").map(Number);
+  return Math.round(Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1) / 864e5);
+}
+function reminderStart(a) {
+  if (a.remindDays === null) return null;
+  const d = new Date((dayNumber2(a.date) - a.remindDays) * 864e5);
+  const pad3 = (n2) => String(n2).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${pad3(d.getUTCMonth() + 1)}-${pad3(d.getUTCDate())}`;
+}
+function appointmentDetail(a) {
+  return [APPOINTMENT_KIND_LABELS[a.kind], a.location, a.fasting ? "n\xFCchtern erscheinen" : null].filter(Boolean).join(" \xB7 ");
+}
+
+// src/domain/schedule.ts
 var SCHEDULE_KIND_LABELS = {
   note: "Hinweis",
+  appointment: "Termin",
   training: "Training geplant",
   workout: "Training erfasst",
   alarm: "Alarm",
@@ -15448,10 +15500,11 @@ function plannedTrainings(plans, days2) {
 }
 var KIND_ORDER = {
   note: 0,
-  training: 1,
-  workout: 2,
-  alarm: 3,
-  todo: 4
+  appointment: 1,
+  training: 2,
+  workout: 3,
+  alarm: 4,
+  todo: 5
 };
 var STATUS_TITLE = {
   rest: "Restday",
@@ -15497,6 +15550,31 @@ function buildSchedule(input) {
       detail: `alle ${due.intervalDays} Tage, zuletzt ${due.last.slice(8, 10)}.${due.last.slice(5, 7)}.`,
       done: false
     });
+  }
+  for (const a of input.appointments ?? []) {
+    if (inRange4.has(a.date)) {
+      items.push({
+        key: `appointment:${a.id}`,
+        date: a.date,
+        kind: "appointment",
+        time: a.time,
+        title: a.title,
+        detail: appointmentDetail(a),
+        done: a.done
+      });
+    }
+    const remind = reminderStart(a);
+    if (remind && remind !== a.date && !a.done && inRange4.has(remind)) {
+      items.push({
+        key: `appointment-reminder:${a.id}`,
+        date: remind,
+        kind: "alarm",
+        time: null,
+        title: `Erinnerung: ${a.title} am ${a.date.slice(8, 10)}.${a.date.slice(5, 7)}.${a.time ? ` um ${a.time} Uhr` : ""}`,
+        detail: a.fasting ? "n\xFCchtern erscheinen" : null,
+        done: false
+      });
+    }
   }
   for (const t of input.todos) {
     if (!inRange4.has(t.date)) continue;
@@ -16550,6 +16628,8 @@ function describeUnderTarget(m) {
 var trainingGroupLabels_exports = {};
 __export(trainingGroupLabels_exports, {
   FOCUS_SHARE: () => FOCUS_SHARE,
+  baseLabel: () => baseLabel,
+  mergeLabeledGroups: () => mergeLabeledGroups,
   regionsOf: () => regionsOf,
   reviewGroupLabels: () => reviewGroupLabels
 });
@@ -16601,6 +16681,46 @@ function reviewGroupLabels(groups, log, exercises, machines, workoutIds, focus =
       out.set(g, { ...l, label: `${l.label} (\u201E${g}\u201C)` });
   }
   return out;
+}
+function baseLabel(label) {
+  return label.replace(/ \(„[^“]*“\)$/, "");
+}
+function mergeLabeledGroups(groups, labels) {
+  const merged = /* @__PURE__ */ new Map();
+  for (const g of groups) {
+    const label = labels.get(g.group)?.label ?? g.group;
+    const key = g.group === NO_MUSCLE_GROUP ? `\0${g.group}` : baseLabel(label);
+    const cur = merged.get(key);
+    if (!cur) {
+      merged.set(key, { row: { ...g, perSession: [...g.perSession] }, sources: [g.group] });
+      continue;
+    }
+    const r2 = cur.row;
+    r2.workingSets += g.workingSets;
+    r2.reps += g.reps;
+    r2.volumeKg += g.volumeKg;
+    r2.sharePercent += g.sharePercent;
+    r2.perSession = r2.perSession.map((v, i) => v + (g.perSession[i] ?? 0));
+    r2.sessions = r2.perSession.filter((v) => v > 0).length;
+    r2.previousVolumeKg = r2.previousVolumeKg === null && g.previousVolumeKg === null ? null : (r2.previousVolumeKg ?? 0) + (g.previousVolumeKg ?? 0);
+    r2.changePercent = r2.previousVolumeKg !== null && r2.previousVolumeKg > 0 ? Math.round((r2.volumeKg - r2.previousVolumeKg) / r2.previousVolumeKg * 100) : null;
+    cur.sources.push(g.group);
+  }
+  const outLabels = /* @__PURE__ */ new Map();
+  const rows = [];
+  for (const [key, { row, sources }] of merged) {
+    rows.push(row);
+    if (sources.length === 1) {
+      outLabels.set(row.group, labels.get(row.group) ?? { label: row.group, detail: null });
+    } else {
+      outLabels.set(row.group, {
+        label: key,
+        detail: `zusammengefasst aus den Muskelgruppen ${sources.map((x) => `\u201E${x}\u201C`).join(", ")}`
+      });
+    }
+  }
+  rows.sort((a, b) => b.volumeKg - a.volumeKg);
+  return { groups: rows, labels: outLabels };
 }
 
 // src/domain/cardioReport.ts
@@ -17663,6 +17783,10 @@ var WR_AREAS = [
 ];
 var dayMonth = (iso2) => `${iso2.slice(8, 10)}.${iso2.slice(5, 7)}.`;
 var rangeText2 = (from, to) => `${dayMonth(from)} \u2013 ${formatDate(to)}`;
+function appointmentLine(a) {
+  const wd = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][(/* @__PURE__ */ new Date(`${a.date}T12:00:00Z`)).getUTCDay()];
+  return `${wd} ${dayMonth(a.date)}${a.time ? `, ${a.time} Uhr` : ""} \u2013 ${a.title}${a.detail && a.detail !== a.title ? ` (${a.detail})` : ""}`;
+}
 function lastCompletedWeek(today) {
   return shiftDays(weekStart2(today), -7);
 }
@@ -17998,6 +18122,10 @@ function tips(hints, areas) {
   if (own.length === 0) return `<p class="wr-muted">Keine Regel ausgel\xF6st \u2013 so weitermachen.</p>`;
   return `<ol class="wr-olist">${own.map((h) => `<li><strong>${esc(h.title)}:</strong> ${esc(h.text)}</li>`).join("")}</ol>`;
 }
+function checkText(c, linkOf2) {
+  const href = c.ref && linkOf2 ? linkOf2(c.ref) : null;
+  return href ? `${esc(c.text)} <a class="wr-fix" href="${esc(href)}">\xD6ffnen</a>` : esc(c.text);
+}
 var prioClass = (p) => p === "HOCH" ? "wr-prio wr-prio--high" : "wr-prio";
 function weeklyReportHtml(r2, opts) {
   const kw = `KW ${r2.week}`;
@@ -18023,6 +18151,14 @@ function weeklyReportHtml(r2, opts) {
 <div class="wr-kpis">${kpis}</div>
 <p class="wr-legend"><i class="wr-dot wr-dot--reached"></i> eigenes Ziel erreicht <i class="wr-dot wr-dot--missed"></i> eigenes Ziel nicht erreicht \xB7 ohne Punkt: kein Ziel hinterlegt</p>
 <div class="wr-cols">${box("Was sich verbessert hat", r2.better.length ? list(r2.better, "wr-list wr-list--good") : `<p class="wr-muted">Kein Vergleich mit Fortschritt m\xF6glich.</p>`)}${box("Was Aufmerksamkeit braucht", r2.attention.length ? list(r2.attention, "wr-list wr-list--warn") : `<p class="wr-muted">Keine Regel ausgel\xF6st.</p>`)}</div>
+${r2.plan ? box(
+    `Plan der Woche: ${r2.plan.done} von ${r2.plan.total} To-dos abgehakt`,
+    list(
+      r2.plan.items.map((i) => `${i.text} \u2013 ${i.done}/${i.total}${i.total > 1 ? " Tage" : ""}`)
+    ),
+    "insight"
+  ) : ""}
+${r2.appointments?.length ? box(`Termine in KW ${next}`, list(r2.appointments.map(appointmentLine)), "insight") : ""}
 ${levers.length ? `<h4 class="wr-sub">Die ${levers.length === 1 ? "wichtigste Stellschraube" : `${levers.length} Hebel`} f\xFCr KW ${next}</h4><div class="wr-levers">${levers.map(
     (h, i) => `<div class="wr-lever"><span class="wr-lever__num">${i + 1}</span><div><p class="wr-lever__title">${esc(h.title)} <span class="${prioClass(h.priority)}">${h.priority}</span></p><p>${esc(h.measure)}</p></div></div>`
   ).join("")}</div>` : ""}
@@ -18099,7 +18235,7 @@ ${card(`Energieaufnahme und K\xF6rpergewicht (dunkel: ${kw})`, chartSvg(energyCh
 <div class="wr-cols">${blocks.join("")}</div>
 <h4 class="wr-sub">Datenpr\xFCfung ${kw}</h4>
 ${checks.length ? `<table class="wr-table"><thead><tr><th>Bereich</th><th>Stand</th><th>Status</th></tr></thead><tbody>${checks.map(
-    (c) => `<tr><td>${esc(c.area)}</td><td>${esc(c.text)}</td><td><span class="wr-badge wr-badge--${c.status === "offen" ? "open" : "missing"}">${c.status}</span></td></tr>`
+    (c) => `<tr><td>${esc(c.area)}</td><td>${checkText(c, opts.linkOf)}</td><td><span class="wr-badge wr-badge--${c.status === "offen" ? "open" : "missing"}">${c.status}</span></td></tr>`
   ).join("")}</tbody></table>` : `<p class="wr-muted">Keine Auff\xE4lligkeiten.</p>`}
 ${fixes.length && checks.length ? box("So korrigierst du die offenen Punkte", `<ol class="wr-olist">${fixes.map((f) => `<li>${esc(f)}</li>`).join("")}</ol>`, "tip") : ""}
 </section>`);
@@ -18596,6 +18732,30 @@ function weeklyReportToPdf(r2, opts) {
     );
     if (attention.length) w.bullets(attention, M2 + bw + 24, w.y + 28, bw - 24, C.orange, true);
     w.y += h + 16;
+  }
+  if (r2.plan) {
+    const items = r2.plan.items.map(
+      (i) => `${i.text} \u2013 ${i.done}/${i.total}${i.total > 1 ? " Tage" : ""}`
+    );
+    const h = w.boxHeight(items, CW);
+    w.ensure(h + 8);
+    w.box(
+      M2,
+      w.y,
+      CW,
+      h,
+      `Plan der Woche: ${r2.plan.done} von ${r2.plan.total} To-dos abgehakt`,
+      items,
+      "insight"
+    );
+    w.y += h + 14;
+  }
+  if (r2.appointments?.length) {
+    const items = r2.appointments.map(appointmentLine);
+    const h = w.boxHeight(items, CW);
+    w.ensure(h + 8);
+    w.box(M2, w.y, CW, h, `Termine in KW ${next}`, items, "insight");
+    w.y += h + 14;
   }
   const levers = r2.hints.slice(0, 4);
   if (levers.length) {

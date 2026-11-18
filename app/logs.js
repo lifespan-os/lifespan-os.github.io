@@ -106,9 +106,18 @@ function arranged(db, key, cards) {
     .join("");
 }
 
-/** Liste mit höchstens 10 sichtbaren Einträgen, Rest per Bildlauf (1.47.0, wie am PC). */
-const tenRows = (html, count) =>
-  `<div class="list logs-list ${count > 10 ? "logs-list--rows" : ""}">${html}</div>${count > 10 ? `<p class="muted small">${count} Einträge – die neuesten 10 sind zu sehen, ältere per Bildlauf.</p>` : ""}`;
+/**
+ * Liste mit zuerst 10 Einträgen; „Alle … anzeigen“ klappt den Rest auf (1.52.0, vorher ein eigener
+ * Bildlaufbereich in der Seite – zwei Bildläufe ineinander waren am Handy schwer zu bedienen).
+ * Reines CSS über ein verstecktes Kästchen, damit kein Zustand nötig ist.
+ */
+let moreId = 0;
+const tenRows = (html, count) => {
+  if (count <= 10) return `<div class="list logs-list">${html}</div>`;
+  const id = `logs-more-${++moreId}`;
+  return `<input type="checkbox" class="more-toggle" id="${id}" hidden><div class="list logs-list logs-list--rows">${html}</div>
+    <label for="${id}" class="btn sm block more-label">Alle ${count} Einträge anzeigen</label>`;
+};
 
 function select(attr, value, options, label) {
   return `<label class="field logs-select"><span>${esc(label)}</span><select data-logs="${attr}">${options
@@ -311,7 +320,7 @@ function entriesCard(logs, naps, napMin) {
           return `<button class="item nap-item" data-act="nap-edit" data-arg="${esc(n.id)}"><span class="main">
             <b>${row.alone ? `${esc(D.formatDate(n.date))} · ` : ""}Nickerchen</b>
             <span class="muted small">${esc(n.startTime)}–${esc(n.endTime)} Uhr · ${dur(n.durationMin)}${n.notes ? ` · ${esc(n.notes)}` : ""}</span></span>
-            ${st ? `<span class="tag">${st}</span>` : `<span class="tag">Bearbeiten</span>`}</button>`;
+            ${st ? `<span class="tag">${st}</span>` : `<span class="chev" aria-hidden="true">›</span>`}</button>`;
         }
         const l = row.log;
         const nap = napMin.get(l.date);
@@ -319,7 +328,7 @@ function entriesCard(logs, naps, napMin) {
         const st = isLocal("sleep", l.id);
         return `<button class="item" data-act="sleep-edit" data-arg="${esc(l.id)}"><span class="main">
           <b>${esc(D.formatDate(l.date))} · ${dur(D.sleep.sleepWithNaps(l, napMin))}</b>
-          <span class="muted small">${esc(l.bedTime)}–${esc(l.wakeTime)} Uhr · im Bett ${dur(l.timeInBedMin)}${nap !== undefined ? ` · Nacht ${dur(l.sleepMin)} + Nickerchen ${dur(nap)}` : ""}</span>
+          <span class="muted small"><span class="nowrap">${esc(l.bedTime)}–${esc(l.wakeTime)} Uhr</span> · im Bett <span class="nowrap">${dur(l.timeInBedMin)}</span>${nap !== undefined ? ` · Nacht <span class="nowrap">${dur(l.sleepMin)}</span> + Nickerchen <span class="nowrap">${dur(nap)}</span>` : ""}</span>
           <span class="muted small">${[
             l.efficiencyPct !== null ? `Efficiency ${l.efficiencyPct} %` : "",
             l.awakenings !== null ? `${l.awakenings} Wachphasen` : "",
@@ -327,11 +336,11 @@ function entriesCard(logs, naps, napMin) {
             l.method ?? "",
           ]
             .filter(Boolean)
-            .map(esc)
+            .map((x) => `<span class="nowrap">${esc(x)}</span>`)
             .join(" · ")}</span>
           ${sh ? phaseBar(sh, D.formatDate(l.date)) : ""}
           ${l.notes ? `<span class="muted small">${esc(l.notes)}</span>` : ""}</span>
-          ${st ? `<span class="tag">${st}</span>` : `<span class="tag">Bearbeiten</span>`}</button>`;
+          ${st ? `<span class="tag">${st}</span>` : `<span class="chev" aria-hidden="true">›</span>`}</button>`;
       })
       .join("")}</div>
     ${note("Nickerchen stehen unter der Nacht desselben Tages und werden zur Schlafdauer des Tages addiert (Diagramm, Liste und Trend). Tippen zum Bearbeiten.")}`,
@@ -643,7 +652,7 @@ function vitalsCard(data) {
         rows
           .map(
             (m) => `<button class="item" data-act="vitals-edit" data-arg="${esc(m.date)}"><span class="main"><b>${esc(m.metricName)}: ${esc(m.metricId === ANS_STATUS ? signed(m.value) : `${F(m.value, m.decimals)} ${m.unit}`)}</b>
-            <span class="muted small">${esc(D.formatDate(m.date))}${m.method ? ` · ${esc(m.method)}` : ""}</span></span><span class="tag">Bearbeiten</span></button>`,
+            <span class="muted small">${esc(D.formatDate(m.date))}${m.method ? ` · ${esc(m.method)}` : ""}</span></span><span class="chev" aria-hidden="true">›</span></button>`,
           )
           .join(""),
         rows.length,

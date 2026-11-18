@@ -573,6 +573,8 @@ export function viewNutritionHistory() {
   });
   const logged = totals.filter((t) => t.energyKcal > 0);
   const avg = logged.length ? logged.reduce((s, t) => s + t.energyKcal, 0) / logged.length : null;
+  // Spalte „Ziel kcal“ nur mit festem kcal-Ziel im Zeitraum (1.52.0)
+  const hasGoal = totals.some((t) => P.goalFor(db, t.date)?.energyKcal != null);
   return `${X.header("Nutrition")}<main class="wrap">
     ${nutritionTabs("food-history")}
     <section class="card card--nutrition">
@@ -583,13 +585,13 @@ export function viewNutritionHistory() {
           ? `<p class="muted">In diesem Zeitraum gibt es keine erfassten Mahlzeiten.</p>`
           : `${barTrendSvg(series, { color: COLOR.nutrition, format: (v) => `${D.formatNumber(v, 0)} kcal`, height: 200, label: `Energie je Tag der letzten ${days} Tage` })}
         <p class="card__note">Mittel über ${logged.length} Tage mit Einträgen: ${avg !== null ? `${esc(D.formatNumber(avg, 0))} kcal` : "–"}. Tage ohne Einträge zählen nicht mit.</p>
-        <div class="table-scroll"><table class="data-table"><thead><tr><th>Datum</th><th class="tnum">kcal</th><th class="tnum">Ziel kcal</th><th class="tnum">Protein</th><th class="tnum">KH</th><th class="tnum">Fett</th></tr></thead>
+        <div class="table-scroll"><table class="data-table"><thead><tr><th>Datum</th><th class="tnum">kcal</th>${hasGoal ? `<th class="tnum">Ziel kcal</th>` : ""}<th class="tnum">Protein</th><th class="tnum">KH</th><th class="tnum">Fett</th></tr></thead>
         <tbody>${[...totals]
           .reverse()
           .map((t) => {
             const g = P.goalFor(db, t.date);
             return `<tr><td>${esc(D.formatDate(t.date))}</td><td class="tnum">${esc(D.formatNumber(t.energyKcal, 0))}</td>
-              <td class="tnum">${g?.energyKcal != null ? esc(D.formatNumber(g.energyKcal, 0)) : "–"}</td>
+              ${hasGoal ? `<td class="tnum">${g?.energyKcal != null ? esc(D.formatNumber(g.energyKcal, 0)) : "–"}</td>` : ""}
               <td class="tnum">${esc(D.formatNumber(t.proteinG, 0))} g</td><td class="tnum">${esc(D.formatNumber(t.carbsG, 0))} g</td><td class="tnum">${esc(D.formatNumber(t.fatG, 0))} g</td></tr>`;
           })
           .join("")}</tbody></table></div>`

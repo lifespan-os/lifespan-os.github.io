@@ -149,7 +149,7 @@ function header(title, { back = null, sub = "" } = {}) {
   return `<header class="top"><div class="wrap">
     ${menuButton()}
     ${back ? `<button class="back back--icon" data-go="${back}" aria-label="Zurück">‹</button>` : ""}
-    <h1>${esc(title)}${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</h1>
+    <h1${title.length > 11 ? ' class="h1--long"' : ""}>${esc(title)}${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</h1>
   </div></header>`;
 }
 

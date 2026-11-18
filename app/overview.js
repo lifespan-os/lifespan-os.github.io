@@ -23,10 +23,46 @@ const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
 // ------------------------------------------------------------------ Bausteine
 
+/**
+ * Overview-Karten lassen sich zuklappen (1.52.0): Tippen auf den Kartenkopf zeigt nur noch den
+ * Titel. Der Zustand bleibt auf diesem Handy gespeichert, die Overview wird so deutlich kürzer.
+ */
+const COLLAPSED_KEY = "lifespan.overview.collapsed";
+
+function collapsedCards() {
+  try {
+    const list = JSON.parse(localStorage.getItem(COLLAPSED_KEY) ?? "[]");
+    return new Set(Array.isArray(list) ? list : []);
+  } catch {
+    return new Set();
+  }
+}
+
+if (typeof document !== "undefined") {
+  // „toggle“ steigt nicht auf – deshalb in der Einfangphase am Dokument
+  document.addEventListener(
+    "toggle",
+    (event) => {
+      const el = event.target;
+      if (!(el instanceof HTMLDetailsElement) || !el.classList.contains("ov-card")) return;
+      const set = collapsedCards();
+      if (el.open) set.delete(el.dataset.card);
+      else set.add(el.dataset.card);
+      try {
+        localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...set]));
+      } catch {
+        // ohne Speicher bleibt der Zustand nur bis zum Neuladen
+      }
+    },
+    true,
+  );
+}
+
 function card(id, title, meta, body, { area = "", wide = false } = {}) {
-  return `<section class="card ov-card ${area ? `card--${area}` : ""} ${wide ? "ov-card--wide" : ""}" data-card="${esc(id)}">
-    <div class="wo-head"><h3>${esc(title)}</h3>${meta ? `<span class="tag">${esc(meta)}</span>` : ""}</div>
-    ${body}</section>`;
+  const open = !collapsedCards().has(id);
+  return `<details class="card ov-card ${area ? `card--${area}` : ""} ${wide ? "ov-card--wide" : ""}" data-card="${esc(id)}"${open ? " open" : ""}>
+    <summary class="wo-head ov-card__head"><h3>${esc(title)}</h3>${meta ? `<span class="tag">${esc(meta)}</span>` : ""}</summary>
+    ${body}</details>`;
 }
 
 const metric = (label, value, unit = "", display = false) =>

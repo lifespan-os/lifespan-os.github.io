@@ -42,6 +42,16 @@
    "bytes": 1340618
   },
   {
+   "key": "inlead",
+   "manufacturer": "Inlead",
+   "title": "Inlead – Saucen, Syrup, Proteine, Food und Vitalstoffe",
+   "version": "2026.11.18",
+   "file": "Inlead.json",
+   "foods": 117,
+   "supplements": 23,
+   "bytes": 82227
+  },
+  {
    "key": "ironmaxx",
    "manufacturer": "IronMaxx",
    "title": "IronMaxx – Lebensmittel und Supplements",

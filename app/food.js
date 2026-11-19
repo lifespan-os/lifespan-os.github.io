@@ -1,6 +1,8 @@
 // LIFESPAN OS Mobil – Oberfläche „Ernährung“: Etikett scannen, Lebensmittel speichern und
 // tracken, Gerichte zusammenstellen. Logik in nutrition.js und label.js, Texterkennung in ocr.js.
 import { blsResultsHtml } from "./blsui.js";
+import { offReady, offResultsHtml, openOffForm } from "./offui.js";
+import * as OFF from "./off.js";
 import * as N from "./nutrition.js";
 import * as L from "./label.js";
 import { buildDb, nutritionTabs } from "./diary.js";
@@ -125,7 +127,6 @@ function quickCard() {
   const s = F();
   const { history, foods } = quickData();
   const favs = QM.Q.favoriteFoods(history, today(), { limit: 10 }).filter((x) => foods.has(x.foodId));
-  const parsed = s.qmParsed;
   return `<section class="card hl" id="quick-meal">
     <h3>Schnell eintragen</h3>
     <div class="field"><label for="qm-meal">Mahlzeit (${esc(trackDayLabel())})</label><select id="qm-meal" data-ft="mealType">${mealOptions(s.mealType)}</select></div>
@@ -140,6 +141,16 @@ function quickCard() {
             .join("")}</div>`
         : `<p class="muted small">Favoriten erscheinen, sobald du Lebensmittel mehrmals eingetragen hast.</p>`
     }
+  </section>`;
+}
+
+/** Freitext-Erfassung – steht seit 1.58.0 unter „Lebensmittel suchen“ (Wunsch des Nutzers). */
+function freeTextCard() {
+  const s = F();
+  const { foods } = quickData();
+  const parsed = s.qmParsed;
+  return `<section class="card" id="quick-text">
+    <h3>Freitext</h3>
     <div class="field"><label for="qm-text">Freitext – auch per Diktat</label>
       <textarea id="qm-text" rows="2" data-qm="text" placeholder="z. B. 200 g Hähnchen, 150 g Reis, 1 EL Olivenöl">${esc(s.qmText ?? "")}</textarea></div>
     <button class="btn block" data-act="qm-parse">Erkennen</button>
@@ -229,7 +240,8 @@ function foodItem(f, act) {
 export function foodResults(query, act) {
   const list = N.searchFoods(X.S.catalog, F().local, query, 25);
   // BLS 4.0 (1.30.0): falls heruntergeladen, Treffer darunter
-  const bls = blsResultsHtml(query, act);
+  // Open Food Facts (1.58.0): falls heruntergeladen, Treffer darunter (Tippen öffnet das Formular)
+  const bls = blsResultsHtml(query, act) + offResultsHtml(query, act);
   if (!list.length) {
     return query.trim()
       ? `${bls ? "" : `<p class="empty">Nichts gefunden. Scanne das Etikett, um das Lebensmittel anzulegen.</p>`}${bls}`
@@ -274,9 +286,10 @@ function formCard() {
       ${e[key] ? `<p class="err small">${esc(e[key])}</p>` : ""}${key.startsWith("v.") ? warn(key.slice(2)) + fixed(key.slice(2)) : ""}</div>`;
   const hint = (k) => (s.scan?.lessThan.includes(k) ? " (<)" : "");
   return `<section class="card" id="food-form">
-    <div class="wo-head"><h3>${s.known ? "Gespeichertes Lebensmittel" : "Erkannte Nährwerte"}</h3>${
+    <div class="wo-head"><h3>${s.known ? "Gespeichertes Lebensmittel" : s.offHint && !f.id ? "Aus Open Food Facts" : "Erkannte Nährwerte"}</h3>${
       s.scan ? `<span class="tag">${L.recognizedCount(s.scan)} von 8 erkannt</span>` : ""
     }</div>
+    ${s.offHint && !f.id ? `<p class="small">Werte aus Open Food Facts (je 100 ${esc(f.basis)}). Bitte mit der Packung vergleichen und bei Bedarf ändern, dann speichern – danach ist es ein normales eigenes Lebensmittel und lässt sich jederzeit bearbeiten.</p>` : ""}
     <div class="nf-grid">
       ${field("name", "Name", f.name, { mode: "text", wide: true })}
       ${field("brand", "Marke (optional)", f.brand, { mode: "text" })}
@@ -394,6 +407,7 @@ export function viewFood() {
       <div class="list" id="food-results">${foodResults(s.query, resultAct())}</div>
       <div id="qm-multi">${multiHtml()}</div>
     </section>
+    ${freeTextCard()}
     <section class="card">
       <h3>Etikett scannen</h3>
       <p class="muted small">Erkannt werden die Werte je 100 g/ml, die Packungsgröße und der Strichcode – offline auf dem Handy. Am besten gerade, scharf und ohne Spiegelung.</p>
@@ -608,9 +622,26 @@ function select(food, { known = false } = {}) {
   s.selected = food;
   s.known = known;
   s.form = null;
+  s.offHint = false;
   s.errors = {};
   s.unit = food.portion_amount ? "portion" : "base";
   s.amount = food.portion_amount ? "1" : "100";
+}
+
+const offStatus = (p) => `Strichcode ${p.code} in Open Food Facts gefunden: „${p.name}“. Bitte mit der Packung vergleichen und speichern.`;
+
+/**
+ * Open Food Facts erst noch laden (1.58.0): Ist der Katalog gespeichert, aber in dieser Sitzung
+ * noch nicht gelesen, wird nach dem Laden nachgesehen – solange das Formular noch unverändert ist.
+ */
+async function offLater(code, form) {
+  const before = JSON.stringify(form);
+  const c = await offReady();
+  const p = c ? OFF.byCode(c, code) : null;
+  const s = F();
+  if (!p || s.form !== form || JSON.stringify(s.form) !== before) return;
+  openOffForm(p, offStatus(p));
+  X.rerender();
 }
 
 /** Erkannten Text auswerten: bekannter Strichcode → direkt tracken, sonst Formular. */
@@ -620,10 +651,15 @@ function useText(text) {
   const scan = L.repairScan(L.parseLabel(s.text));
   s.scan = scan;
   const known = scan.barcode ? N.foodByBarcode(X.S.catalog, s.local, scan.barcode) : null;
+  // Open Food Facts (1.58.0): unbekannter Strichcode, aber im Katalog → Formular mit dessen Werten
+  const offHit = !known && scan.barcode && X.S.off ? OFF.byCode(X.S.off, scan.barcode) : null;
   if (known) {
     select(known, { known: true });
     s.status = `Strichcode erkannt: „${known.name}“ ist schon gespeichert.`;
+  } else if (offHit) {
+    openOffForm(offHit, offStatus(offHit));
   } else {
+    s.offHint = false;
     s.selected = null;
     s.form = N.scanToForm(scan, s.text);
     s.errors = {};
@@ -633,6 +669,7 @@ function useText(text) {
   }
   X.rerender();
   requestAnimationFrame(() => document.getElementById(known ? "food-track" : "food-form")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  if (!known && !offHit && scan.barcode && X.S.offInfo && !X.S.off) offLater(scan.barcode, s.form);
 }
 
 /** Foto übernehmen: Vorschau zum Wählen des Ausschnitts. */

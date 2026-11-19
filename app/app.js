@@ -18,6 +18,7 @@ import { initGoals, goalActions, goalChange, viewGoals } from "./goalsui.js";
 import * as GL from "./goals.js";
 import * as AX from "./accountexport.js";
 import { blsActions, blsBoot, blsCard, blsChange, blsInput, initBls, viewBls } from "./blsui.js";
+import { initOff, offActions, offBoot, offCard } from "./offui.js";
 import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewDayNav, overviewHero } from "./overview.js";
 import { initLogs, logsActions, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
@@ -341,6 +342,7 @@ function viewTransfer() {
     </section>` },
     { id: "catalog", node: catalogCard() },
     { id: "bls", node: blsCard() },
+    { id: "off", node: offCard() },
     { id: "glucose", node: `<section class="card">
       <h3>Blutzucker-Dateien</h3>
       <p class="muted small">Dateien von LibreView, Dexcom Clarity oder eine eigene CSV liest du unter Health → Blutzucker ein. Die Werte gehen mit „Körperwerte … senden“ an den PC.</p>
@@ -1486,6 +1488,7 @@ const actions = {
     return go("diary");
   },
   ...blsActions,
+  ...offActions,
   ...overviewActions,
   ...logsActions,
   ...insightsActions,
@@ -2772,6 +2775,7 @@ initSettings({
   version: C.MOBILE_VERSION,
 });
 initBls(moduleCtx);
+initOff(moduleCtx);
 initOverview({ ...moduleCtx, S, today: todayIso });
 initLogs(moduleCtx);
 initInsights(moduleCtx);
@@ -2847,6 +2851,7 @@ async function boot() {
     S.goals = GL.normGoals(await store.get("goals"));
     S.pcsettings = PS.normSync(await store.get("pcsettings"));
     await blsBoot();
+    await offBoot();
     S.logs = LG.logsState(await store.get("logs"));
     S.todos = TD.todosState(await store.get("todos"));
     S.checklists = CD.checklistState(await store.get("checklists"));

@@ -51,6 +51,9 @@ h1 { font-family: var(--f-display); font-size: clamp(2rem, 6vw, 3.2rem); line-he
 .ver figcaption { color: var(--muted); font-size: .85rem; margin-top: 6px; }
 .note { color: var(--muted); font-size: .9rem; margin: 0 0 40px; }
 footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--muted); font-size: .85rem; }
+.ver .src { margin: 10px 0 0; color: var(--muted); font-size: .85rem; }
+.ver h2 .sub { font-weight: 600; color: var(--muted); font-size: .95rem; }
+.ver li ul { margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -62,9 +65,56 @@ footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--m
 </header>
 <main class="wrap">
   <h1>Neuigkeiten</h1>
-  <p class="lead">Was in den letzten Versionen dazugekommen ist. Updates installierst du mit LIFESPAN-OS-Setup.exe – deine Daten bleiben erhalten.</p>
+  <p class="lead">Was in den letzten Versionen dazugekommen ist. Updates installierst du mit LIFESPAN-OS-Setup.exe – deine Daten bleiben erhalten. Neue Maschinen und den aktuellen Lebensmittel-Katalog bekommst du mit dem Komplettpaket (ZIP neu laden, Einrichten.cmd starten).</p>
+  <section class="ver" id="v1.0.158">
+    <h2>Version 1.0.158 (Handy-App 1.58.0)<span class="sub"> – Open Food Facts, Strichcode im Lebensmittel-Formular</span><span class="tag">Neu</span></h2>
+    <p class="date">19.11.2026</p>
+    <p class="date">Enthält auch die Neuerungen aus 1.0.156 und 1.0.157:</p>
+    <ul>
+      <li><b>Open Food Facts:</b> rund 240.000 Markenprodukte aus Deutschland und Österreich, lokal auf dem PC – keine Verbindung ins Internet. Übernommen werden nur geprüfte Produkte (Pflichtwerte vorhanden, kcal höchstens 15 % neben der Rechnung aus den Makros).
+      <ul>
+        <li><b>Nutrition → Open Food Facts:</b> suchen nach Name, Marke oder Strichcode, „Übernehmen …“ öffnet das Formular – alles lässt sich vor dem Speichern bearbeiten.</li>
+        <li>„Lebensmittel hinzufügen“ durchsucht jetzt eigene Lebensmittel, BLS 4.0 und Open Food Facts zusammen.</li>
+        <li>Der Katalog ist im Download-Paket enthalten; „Einrichten.cmd“ kopiert ihn mit.</li>
+      </ul>
+    </li>
+      <li><b>Nutrition → Lebensmitteldatenbank → Neues Lebensmittel:</b> Feld für den Strichcode und Nährwerte vom Foto der Packung erkennen (wie am Handy); bekannte Strichcodes werden in Open Food Facts nachgesehen.</li>
+      <li><b>Mahlzeit erfassen:</b> „Lebensmittel hinzufügen“ steht über dem Freitext; die Mengen-Knöpfe (50/100/150/200, ±10) sind wieder entfernt.</li>
+      <li><b>Maschinenbilder:</b> Dateien mit falscher Endung in echte JPG/PNG umgewandelt.</li>
+      <li><b>Handy-App 1.58.0:</b> Open Food Facts als optionaler Download (Import/Export → Open Food Facts), Treffer bei der Suche und beim Strichcode-Scan; Suche steht über dem Freitext.</li>
+    </ul>
+    <p class="src">Daten: Open Food Facts (world.openfoodfacts.org), Open Database License (ODbL).</p>
+  </section>
+  <section class="ver" id="v1.0.155">
+    <h2>Version 1.0.155 (Handy-App 1.56.0)</h2>
+    <p class="date">19.11.2026</p>
+    <ul>
+      <li><b>Abgleich auch während die App läuft:</b> Polar höchstens einmal je Stunde, neue Handy-Datei alle 2 Stunden bzw. 30 Minuten nach einer Änderung, Rückgabedateien vom Handy alle 10 Minuten.</li>
+      <li><b>Settings → Polar:</b> Schalter „Automatisch synchronisieren“ (beim Start und im laufenden Betrieb).</li>
+      <li><b>Handy:</b> Griffkraft im Quick Fill (links und rechts, Rhythmus aus Settings → Quick Fill).</li>
+      <li><b>Handy:</b> „Importieren“ direkt in der Overview – ein Tipp öffnet die Dateiauswahl; ältere Dateien werden erkannt.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.154">
+    <h2>Version 1.0.154<span class="sub"> – Mahlzeiten schneller eintragen</span></h2>
+    <p class="date">18.11.2026</p>
+    <ul>
+      <li><b>Tagebuch:</b> „Wie gestern“ und „Wie letzten &lt;Wochentag&gt;“ sowie oft gegessene Zusammenstellungen mit einem Klick eintragen – danach „Rückgängig“.</li>
+      <li>Geplante Gerichte aus Nutrition → Planen mit „Gegessen“ ins Tagebuch übernehmen.</li>
+      <li><b>Mahlzeit erfassen:</b> Freitext („200 g Hähnchen, 150 g Reis, 1 EL Olivenöl“), Favoriten mit üblicher Menge und Mengen-Knöpfe (50/100/150/200 g, ±10, ½/1/2 Portionen).</li>
+      <li><b>Handy-App 1.55.0:</b> dieselben Funktionen, Mehrfachauswahl in der Suche und Fasttracking direkt am Handy.</li>
+    </ul>
+  </section>
+  <section class="ver" id="v1.0.153">
+    <h2>Version 1.0.153<span class="sub"> – Griffkraft im Quick Fill</span></h2>
+    <p class="date">18.11.2026</p>
+    <ul>
+      <li>Quick Fill fragt auf Wunsch die Griffkraft ab (links und rechts, nach Rhythmus: täglich bis monatlich). Einstellen unter Settings → Quick Fill.</li>
+      <li><b>Import/Export:</b> kürzere Einleitung, mehr Platz für die Inhalte.</li>
+    </ul>
+  </section>
   <section class="ver" id="v1.0.152">
-    <h2>Version 1.0.152<span class="tag">Neu</span></h2>
+    <h2>Version 1.0.152</h2>
     <p class="date">18.11.2026</p>
     <ul>
       <li><b>Handy-App 1.54.0:</b> Quick Fill zum Nachtragen fehlender Werte und des Schlafs, Empfehlungen zu deinen Hauptzielen, Ziele, Datenqualität mit „Erledigt“, Health → Termine und Nutrition → Planen.</li>

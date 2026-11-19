@@ -412,7 +412,7 @@ export function dashboardFor(db, date, plans = []) {
     { key: "weight", date: lastMetric(db, P.WEIGHT_METRIC_ID, date) },
     { key: "circumference", date: maxDate(db.body.filter((m) => metrics.get(m.metric_id)?.category === "circumference").map((m) => m.date)) },
     { key: "checkin", date: maxDate((db.pc.checkin_date ?? []).map((c) => c.date)) },
-    { key: "grip", date: later(maxDate((db.pc.grip_strength_measurement ?? []).map((g) => g.date)), lastMetric(db, GRIP_METRIC_ID, date)) },
+    { key: "grip", date: later(maxDate((db.grip ?? db.pc.grip_strength_measurement ?? []).map((g) => g.date)), lastMetric(db, GRIP_METRIC_ID, date)) },
     { key: "vo2max", date: lastMetric(db, VO2MAX_METRIC_ID, date) },
     { key: "hrv", date: lastMetric(db, HRV_METRIC_ID, date) },
   ];

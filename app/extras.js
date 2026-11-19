@@ -1,5 +1,6 @@
 // LIFESPAN OS Mobil 1.54.0 – Funktionen vom PC (1.0.149–1.0.152):
-// - Quick Fill: fehlende Werte (ohne Import) und Schlaf gesammelt nachtragen (Ansicht „quickfill“),
+// - Quick Fill: fehlende Werte (ohne Import), Schlaf und seit 1.56.0 die Griffkraft gesammelt
+//   nachtragen (Ansicht „quickfill“),
 // - Insights: Empfehlungen zu den Hauptzielen, Ziele mit Meilensteinen, Datenqualität mit „Erledigt“,
 // - Health: Termine, Nutrition: Wochenplan.
 // Gerechnet mit den Regeln aus pcdomain.js (= src/domain); Auswahl, Hauptziele und Einwilligung
@@ -65,7 +66,7 @@ function metricsWithLatest(db, measurements) {
 
 /** Fehlende Werte wie am PC (Auswahl aus den PC-Einstellungen, Überspringen PC + Handy). */
 export function missingAll(db = buildDb()) {
-  if (!X.S.catalog?.body) return { values: [], sleep: [], sleepRows: [] };
+  if (!X.S.catalog?.body) return { values: [], sleep: [], sleepRows: [], grip: null };
   const t = today();
   const measurements = O.measurementsBetween(db, null, D.trends.shiftDays(t, -400), t);
   const metrics = metricsWithLatest(db, measurements);
@@ -81,13 +82,20 @@ export function missingAll(db = buildDb()) {
     skips,
     today: t,
   });
-  return { values, sleep, sleepRows };
+  // Griffkraft (1.56.0): nach Rhythmus aus Settings → Quick Fill am PC
+  const grip = Q().missingGrip({
+    grip: (db.grip ?? []).map((g) => ({ date: g.date, leftKg: g.left_kg, rightKg: g.right_kg })),
+    rule: Q().parseGripRule(raw),
+    skips,
+    today: t,
+  });
+  return { values, sleep, sleepRows, grip };
 }
 
 export function missingCount() {
   try {
     const m = missingAll();
-    return m.values.length + m.sleep.length;
+    return m.values.length + m.sleep.length + (m.grip ? 1 : 0);
   } catch {
     return 0;
   }
@@ -98,7 +106,7 @@ export function quickFillBanner() {
   const n = missingCount();
   if (!n) return "";
   return `<section class="card qf-banner"><div><strong>${n} ${n === 1 ? "Wert fehlt" : "Werte fehlen"}</strong>
-    <span class="muted small">Werte ohne Import und Schlaf der letzten Nacht – Auswahl am PC unter Settings → Quick Fill.</span></div>
+    <span class="muted small">Werte ohne Import, Schlaf der letzten Nacht und Griffkraft – Auswahl am PC unter Settings → Quick Fill.</span></div>
     <button class="btn sm primary" data-go="quickfill">Nachtragen</button></section>`;
 }
 
@@ -108,7 +116,7 @@ const valueKey = (m) => `${m.metricId}|${m.date}`;
 export function viewQuickFill() {
   const S = X.S;
   const f = (S.qf ??= { inputs: {}, errors: {} });
-  const { values, sleep } = missingAll();
+  const { values, sleep, grip } = missingAll();
   const input = (key, attrs = "") =>
     `<input class="qf-input" data-qf="${esc(key)}" value="${esc(f.inputs[key] ?? "")}" ${attrs} autocomplete="off">`;
   const err = (key) => (f.errors[key] ? `<p class="err small">${esc(f.errors[key])}</p>` : "");
@@ -133,6 +141,13 @@ export function viewQuickFill() {
         })
         .join("")}</section>`
     : "";
+  const gripHtml = grip
+    ? `<section class="card"><div class="wo-head"><h3>Griffkraft · ${esc(Q().RHYTHM_LABELS[grip.rhythm])}</h3><button class="linkbtn" data-act="qf-skip-grip">überspringen</button></div>
+      <div class="qf-row"><div><strong>Links und rechts</strong><span class="muted small">${
+        grip.lastDate ? `zuletzt ${esc(F(grip.lastLeftKg ?? 0, 1))} / ${esc(F(grip.lastRightKg ?? 0, 1))} kg am ${esc(D.formatDate(grip.lastDate))}` : "noch keine Messung"
+      }</span></div>
+      <div class="qf-times">${input("grip|left", 'inputmode="decimal" placeholder="Links" aria-label="Griffkraft links in kg"')}${input("grip|right", 'inputmode="decimal" placeholder="Rechts" aria-label="Griffkraft rechts in kg"')}<span class="muted small">kg</span></div>${err("grip")}</div></section>`
+    : "";
   const valuesHtml = [...groups.entries()]
     .map(
       ([title, list]) => `<section class="card"><div class="wo-head"><h3>${esc(title)}</h3><button class="linkbtn" data-act="qf-skip-group" data-arg="${esc(list.map(valueKey).join(","))}">alle überspringen</button></div>
@@ -146,10 +161,10 @@ export function viewQuickFill() {
         .join("")}</section>`,
     )
     .join("");
-  const empty = !values.length && !sleep.length;
+  const empty = !values.length && !sleep.length && !grip;
   return `${X.header("Werte nachtragen", { back: "home" })}<main class="wrap">
-    <p class="muted small">Werte, die kein Import liefert – aus der letzten Messung, nach ihrem Rhythmus fällig oder aus der letzten Nacht. Leere Felder bleiben offen. Die Auswahl stellst du am PC unter Settings → Quick Fill ein.</p>
-    ${empty ? `<section class="card"><p class="ok-note">Alles erfasst – es fehlt gerade kein Wert.</p></section>` : `${sleepHtml}${valuesHtml}`}
+    <p class="muted small">Werte, die kein Import liefert – aus der letzten Messung, nach ihrem Rhythmus fällig, aus der letzten Nacht oder die Griffkraft. Leere Felder bleiben offen. Die Auswahl stellst du am PC unter Settings → Quick Fill ein.</p>
+    ${empty ? `<section class="card"><p class="ok-note">Alles erfasst – es fehlt gerade kein Wert.</p></section>` : `${sleepHtml}${gripHtml}${valuesHtml}`}
   </main>
   ${empty ? "" : `<div class="bottom"><div class="inner"><button class="btn primary" data-act="qf-save">Speichern</button></div></div>`}`;
 }
@@ -162,15 +177,17 @@ export function quickFillInput(el) {
   return true;
 }
 
-function skip(values, sleep) {
+function skip(values, sleep, grip = false) {
   const t = today();
   const list = [
     ...readLocal(SKIP_KEY),
     ...values.map((m) => ({ k: m.reason, m: m.metricId, d: m.reason === "gap" ? m.date : t })),
     ...sleep.map((m) => ({ k: "gap", m: Q().sleepSkipId(m), d: m.date })),
+    ...(grip ? [{ k: "due", m: Q().GRIP_SKIP_ID, d: t }] : []),
   ];
   writeLocal(SKIP_KEY, JSON.parse(Q().serializeSkips(Q().parseSkips(JSON.stringify(list)), t)));
-  X.toast(values.length + sleep.length === 1 ? "Übersprungen." : `${values.length + sleep.length} Werte übersprungen.`);
+  const n = values.length + sleep.length + (grip ? 1 : 0);
+  X.toast(n === 1 && grip ? "Griffkraft übersprungen." : n === 1 ? "Übersprungen." : `${n} Werte übersprungen.`);
   X.rerender();
 }
 
@@ -200,11 +217,12 @@ export const extrasActions = {
     skip(missingAll().values.filter((m) => keys.has(valueKey(m))), []);
   },
   "qf-skip-sleep": () => skip([], missingAll().sleep),
+  "qf-skip-grip": () => skip([], [], true),
   "qf-save": async () => {
     const S = X.S;
     const f = (S.qf ??= { inputs: {}, errors: {} });
     const db = buildDb();
-    const { values, sleep, sleepRows } = missingAll(db);
+    const { values, sleep, sleepRows, grip } = missingAll(db);
     const errors = {};
     const bodyItems = [];
     for (const m of values) {
@@ -241,12 +259,22 @@ export const extrasActions = {
       draft[m.field] = String(v);
       patches.set(row.id, draft);
     }
+    // Griffkraft: beide Hände oder keine (wie am PC)
+    let gripDraft = null;
+    if (grip) {
+      const left = Q().parseFillInput(f.inputs["grip|left"] ?? "");
+      const right = Q().parseFillInput(f.inputs["grip|right"] ?? "");
+      const e = Q().gripInputError(left) ?? Q().gripInputError(right);
+      if (e) errors.grip = e;
+      else if ((left === null) !== (right === null)) errors.grip = "Bitte beide Hände eintragen (oder beide leer lassen).";
+      else if (left !== null) gripDraft = { date: grip.date, leftKg: left, rightKg: right };
+    }
     f.errors = errors;
     if (Object.keys(errors).length) {
       X.rerender();
       return X.toast("Bitte die markierten Felder prüfen.", true);
     }
-    const total = bodyItems.length + nights.length + patches.size;
+    const total = bodyItems.length + nights.length + patches.size + (gripDraft ? 1 : 0);
     if (!total) return X.toast("Noch kein Wert eingetragen.", true);
     try {
       for (const { m, v } of bodyItems) {
@@ -256,8 +284,12 @@ export const extrasActions = {
         const res = L.saveSleep(db, S.logs, draft, { uuid: X.uuid, now: new Date() });
         if (res.errors) throw new Error(Object.values(res.errors)[0]);
       }
+      if (gripDraft) {
+        const res = L.saveGrip(db, S.logs, gripDraft, { uuid: X.uuid, now: new Date() });
+        if (res.errors) throw new Error(Object.values(res.errors)[0]);
+      }
       if (bodyItems.length) await X.store.set("body", S.body.local);
-      if (nights.length || patches.size) await X.store.set("logs", S.logs);
+      if (nights.length || patches.size || gripDraft) await X.store.set("logs", S.logs);
     } catch (e) {
       X.rerender();
       return X.toast(e.message, true);

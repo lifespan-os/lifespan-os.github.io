@@ -5,6 +5,8 @@
 // als Löschvermerk. Sie gehen mit „Körperwerte senden“ an den PC; beim Abgleich am PC gilt je
 // Nacht bzw. Tag ein Eintrag (natürlicher Schlüssel: Datum), der neuere Stand gewinnt.
 // Prüfregeln wie im Rust-Kern (sleep.rs, nap.rs, recovery.rs).
+// Seit 1.56.0 auch die Griffkraft aus Quick Fill (grip_strength_measurement, je Tag eine Messung,
+// grip.rs).
 
 export const SLEEP_COLUMNS = [
   "id",
@@ -26,13 +28,17 @@ export const SLEEP_COLUMNS = [
 ];
 export const NAP_COLUMNS = ["id", "date", "start_time", "end_time", "notes", "created_at", "updated_at"];
 export const RECOVERY_COLUMNS = ["id", "date", "readiness", "fatigue", "soreness", "stress", "notes", "created_at", "updated_at"];
+export const GRIP_COLUMNS = ["id", "date", "time", "left_kg", "right_kg", "dominant_hand", "sex", "age_years", "height_cm", "notes", "created_at", "updated_at", "method"];
 export const MAX_NAP_MIN = 360;
+/** Grenzen je Hand wie `repo::grip` (1–150 kg, eine Nachkommastelle) */
+export const GRIP_MIN_KG = 1;
+export const GRIP_MAX_KG = 150;
 
-const TABLES = { sleep: "sleep_log", naps: "sleep_nap", recovery: "recovery_log" };
+const TABLES = { sleep: "sleep_log", naps: "sleep_nap", recovery: "recovery_log", grip: "grip_strength_measurement" };
 const KINDS = Object.keys(TABLES);
 
 export function emptyLogsLocal() {
-  return { sleep: {}, naps: {}, recovery: {}, deleted: {} };
+  return { sleep: {}, naps: {}, recovery: {}, grip: {}, deleted: {} };
 }
 
 /** Ablage aus dem Gerätespeicher (fehlende Teile ergänzt). */
@@ -47,6 +53,7 @@ export function phoneLogs(local) {
     sleep: Object.values(l.sleep).map((e) => e.row),
     naps: Object.values(l.naps).map((e) => e.row),
     recovery: Object.values(l.recovery).map((e) => e.row),
+    grip: Object.values(l.grip).map((e) => e.row),
     deleted: Object.values(l.deleted).map((d) => ({ table: d.table, id: d.id })),
   };
 }
@@ -118,7 +125,7 @@ export function parseDuration(textValue) {
 
 /** Alle Einträge einer Art (PC und Handy zusammengeführt, Löschungen ausgeblendet). */
 function listOf(db, kind) {
-  return kind === "sleep" ? db.sleep : kind === "naps" ? db.naps : db.recovery;
+  return kind === "sleep" ? db.sleep : kind === "naps" ? db.naps : kind === "grip" ? db.grip : db.recovery;
 }
 
 /**
@@ -233,6 +240,62 @@ export function saveRecovery(db, local, draft, { uuid, now = new Date() }) {
   return { row };
 }
 
+/** Alter in vollen Jahren am Messtag (wie `grip::age_on`: Geburtsdatum, sonst Geburtsjahr). */
+function ageOn(profile, date) {
+  if (profile.birth_date && DATE.test(profile.birth_date)) {
+    let years = +date.slice(0, 4) - +profile.birth_date.slice(0, 4);
+    if (date.slice(5) < profile.birth_date.slice(5)) years -= 1;
+    return Math.max(0, years);
+  }
+  return Math.max(0, +date.slice(0, 4) - +profile.birth_year);
+}
+
+/**
+ * Griffkraft speichern wie `grip::save` (Quick Fill, 1.56.0): `draft` = { date, leftKg, rightKg }
+ * als Zahlen. Gibt es für den Tag schon eine Messung, wird sie ersetzt (gleiche ID). Geschlecht,
+ * Alter und Körpergröße kommen aus dem Profil, Messhand und Methode aus der letzten Messung.
+ * Rückgabe { errors } oder { row }.
+ */
+export function saveGrip(db, local, draft, { uuid, now = new Date() }) {
+  const errors = {};
+  const date = DATE.test(draft.date ?? "") ? draft.date : ((errors.date = "Bitte ein Datum angeben."), null);
+  const hand = (field, label, v) => {
+    if (typeof v !== "number" || !Number.isFinite(v)) errors[field] = `${label}: bitte eine Zahl eingeben.`;
+    else if (v < GRIP_MIN_KG || v > GRIP_MAX_KG) errors[field] = `${label} muss zwischen ${GRIP_MIN_KG} und ${GRIP_MAX_KG} kg liegen.`;
+    else return Math.round(v * 10) / 10;
+    return null;
+  };
+  const left = hand("leftKg", "Die linke Hand", draft.leftKg);
+  const right = hand("rightKg", "Die rechte Hand", draft.rightKg);
+  const profile = db.profile;
+  if (!profile) errors.date = "Bitte zuerst unter Settings ein Profil mit Körpergröße und Geburtsdatum anlegen.";
+  else if (profile.sex !== "male" && profile.sex !== "female") errors.date = "Bitte im Profil das Geschlecht wählen – die Normwerte unterscheiden Männer und Frauen.";
+  if (Object.keys(errors).length) return { errors };
+  const list = listOf(db, "grip") ?? [];
+  const same = list.find((g) => g.date === date);
+  const last = list.filter((g) => g.date <= date).sort((a, b) => (a.date < b.date ? 1 : -1))[0] ?? null;
+  const iso = now.toISOString();
+  const id = same?.id ?? uuid();
+  const row = {
+    id,
+    date,
+    time: same?.time ?? null,
+    left_kg: left,
+    right_kg: right,
+    dominant_hand: same?.dominant_hand ?? last?.dominant_hand ?? null,
+    sex: profile.sex,
+    age_years: ageOn(profile, date),
+    height_cm: profile.height_cm ?? null,
+    notes: same?.notes ?? null,
+    created_at: same?.created_at ?? iso,
+    updated_at: iso,
+    method: same?.method ?? last?.method ?? null,
+  };
+  local.grip[id] = { row, sent: false };
+  delete local.deleted[`grip_strength_measurement:${id}`];
+  return { row };
+}
+
 /**
  * Eintrag löschen. Nur am Handy und noch nicht gesendet: einfach weg. Vom PC oder schon gesendet:
  * Löschvermerk für den Abgleich am PC.
@@ -266,9 +329,11 @@ export function logTables(local, { all = false } = {}) {
   const sleep = rows("sleep", SLEEP_COLUMNS);
   const naps = rows("naps", NAP_COLUMNS);
   const recovery = rows("recovery", RECOVERY_COLUMNS);
+  const grip = rows("grip", GRIP_COLUMNS);
   if (sleep.length) out.sleep_log = sleep;
   if (naps.length) out.sleep_nap = naps;
   if (recovery.length) out.recovery_log = recovery;
+  if (grip.length) out.grip_strength_measurement = grip;
   const del = Object.entries(l.deleted)
     .filter(([, d]) => all || !d.sent)
     .map(([key, d]) => ({ id: key, table_name: d.table, record_id: d.id, deleted_at: d.at }));
@@ -293,7 +358,7 @@ export function pruneLogs(catalog, local) {
     const pc = catalog?.pc?.[TABLES[kind]] ?? [];
     const byId = new Map(pc.map((r) => [r.id, r]));
     const byDate = kind === "naps" ? new Map() : new Map(pc.map((r) => [r.date, r]));
-    for (const [id, e] of Object.entries(l[kind])) {
+    for (const [id, e] of Object.entries(l[kind] ?? {})) {
       if (!e.sent) continue;
       const r = byId.get(id) ?? byDate.get(e.row.date);
       if (r && String(r.updated_at) >= String(e.row.updated_at)) delete l[kind][id];

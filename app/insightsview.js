@@ -127,7 +127,7 @@ function associationsCard(data, t) {
 }
 
 function gripOf(db) {
-  return (db.pc.grip_strength_measurement ?? []).map((g) => ({
+  return (db.grip ?? db.pc.grip_strength_measurement ?? []).map((g) => ({
     id: g.id,
     date: g.date,
     time: g.time ?? null,

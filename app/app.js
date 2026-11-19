@@ -211,6 +211,19 @@ function fileButton(label) {
 }
 
 /**
+ * Overview (1.56.0): „Importieren“ mit einem Tipp – öffnet sofort die Dateiauswahl (Safari erlaubt
+ * keinen eigenen Zugriff auf iCloud Drive oder Google Drive). Ab 3 Stunden Alter orange.
+ */
+function pcImportRow(c) {
+  if (!c || c.startpaket) return "";
+  const { stale } = C.importCheck(null, c);
+  return `<section class="card pc-import${stale ? " is-stale" : ""}"><div><strong>Daten vom PC</strong>
+    <span class="muted small">Stand ${esc(fmtDateTime(c.exportedAt))}${stale ? " – am PC entsteht alle 2 Stunden eine neue Handy-Datei, solange LIFESPAN OS läuft" : ""}</span></div>
+    <label class="btn sm${stale ? " primary" : ""}" for="file-in">Importieren</label>
+    <input id="file-in" type="file" hidden></section>`;
+}
+
+/**
  * Overview wie am PC (1.6.0): oben das Training am Handy (läuft bzw. starten) und offene
  * Einträge für den PC, darunter die Karten der Desktop-App in deren Anordnung.
  */
@@ -259,6 +272,7 @@ function viewHome() {
         : ""
     }
     ${date === today ? remindersCardHtml() : ""}
+    ${pcImportRow(c)}
     ${
       offen
         ? `<section class="card"><div class="wo-head"><h3>An den PC senden</h3><span class="tag">${offen} offen</span></div>
@@ -2232,8 +2246,21 @@ async function loadFile(file) {
     toast("Datei wird gelesen …");
     const text = await file.text();
     const catalog = C.parseExport(text);
+    // 1.56.0: ältere Datei als der geladene Stand nicht übernehmen, gleicher Stand nur Hinweis
+    const check = C.importCheck(S.catalog, catalog);
+    if (check.action === "older") {
+      return toast(`Diese Datei ist älter (Stand ${fmtDateTime(catalog.exportedAt)}) als die geladenen Daten (${fmtDateTime(S.catalog.exportedAt)}) – bitte die neueste „LIFESPAN-Handy-…“-Datei wählen.`, true);
+    }
+    if (check.action === "same") {
+      toast(`Diese Datei ist schon geladen (Stand ${fmtDateTime(catalog.exportedAt)}). Eine neuere legt der PC ab, solange LIFESPAN OS läuft.`);
+      return go("home");
+    }
     await applyCatalog(catalog);
-    toast(`Geladen: ${catalog.machines.length.toLocaleString("de-DE")} Maschinen, ${catalog.plans.length} Pläne, ${catalog.nutrition.foods.length.toLocaleString("de-DE")} Lebensmittel`);
+    toast(
+      `Geladen: Stand ${fmtDateTime(catalog.exportedAt)} · ${catalog.machines.length.toLocaleString("de-DE")} Maschinen, ${catalog.plans.length} Pläne, ${catalog.nutrition.foods.length.toLocaleString("de-DE")} Lebensmittel${
+        check.stale ? ". Hinweis: Der Stand ist älter als 3 Stunden – gibt es eine neuere Handy-Datei?" : ""
+      }`,
+    );
     go("home");
   } catch (e) {
     toast(e.message || "Die Datei konnte nicht gelesen werden.", true);

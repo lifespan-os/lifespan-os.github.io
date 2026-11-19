@@ -1549,13 +1549,18 @@ details.ov-card:not([open]) { padding-bottom: 12px; }
 .qf-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-left: 4px solid var(--orange); }
 .qf-banner > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .qf-banner .btn { flex: 0 0 auto; width: auto; white-space: nowrap; padding-left: 16px; padding-right: 16px; }
+/* Overview: Daten vom PC mit „Importieren“ (1.56.0) */
+.pc-import { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pc-import > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pc-import .btn { flex: 0 0 auto; width: auto; white-space: nowrap; padding-left: 16px; padding-right: 16px; }
+.pc-import.is-stale { border-left: 4px solid var(--orange); }
 .qf-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
 .qf-row:first-of-type { border-top: 0; }
 .qf-row > div:first-child { display: flex; flex-direction: column; gap: 2px; }
 .qf-row .err { grid-column: 1 / -1; margin: 0; }
 .qf-value { display: flex; align-items: center; gap: 6px; }
 .qf-input { width: 92px; min-height: 44px; text-align: right; }
-.qf-times { display: flex; gap: 6px; }
+.qf-times { display: flex; align-items: center; gap: 6px; }
 .qf-times .qf-input { width: 76px; text-align: center; }
 .advice-list { display: grid; gap: 10px; margin: 10px 0; }
 .advice { padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; }

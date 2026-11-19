@@ -16,6 +16,8 @@ damit die Dateien direkt auf GitHub Pages laufen.
 | `core.test.mjs` | Tests: `node --test core.test.mjs nutrition.test.mjs body.test.mjs focus.test.mjs pcdb.test.mjs` |
 | `label.js` | Etikett-Scanner: Nährwerte aus Text lesen (Regeln wie `src/domain/labelScan.ts`, plus spaltenweise gelesener Text) |
 | `nutrition.js` | Ernährung: Lebensmittel aus dem Export, speichern, tracken, Gerichte, Tabellen für die Rückgabedatei (mit Tests) |
+| `quickmeal.js` | Mahlzeiten schneller eintragen: Verlauf für Vorschläge/Favoriten, Eintragen mit „Rückgängig“ (1.55.0) |
+| `fastdata.js` | Fasttracking am Handy: Tages- und Mahlzeitwerte, Tabellen für die Rückgabedatei (mit Tests, 1.55.0) |
 | `food.js` | Oberfläche „Ernährung“ und „Gericht“ |
 | `ocr.js` | Texterkennung auf dem Handy (Tesseract.js aus `vendor/ocr/`, erst beim ersten Scan geladen) |
 | `vendor/ocr/` | Tesseract.js 5 + deutsche Sprachdaten; nicht im Git, holen mit `scripts/48-handy-texterkennung-laden.cmd` |
@@ -905,3 +907,39 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
   Dafür behält die App die Tabellen `goal`, `appointment`, `meal_plan_entry` und `recipe` aus der Exportdatei.
 - HYROX-Wettkampf-Angaben nur noch bei HYROX-Einheiten (Titel mit „HYROX“ oder eine Übung „Hyrox…“).
 - Insights → mögliche Zusammenhänge: „Eiweiß und Muskelkater am Folgetag“ entfällt (wie am PC 1.0.152).
+
+## Version 1.55.0 (18.11.2026): Mahlzeiten schneller eintragen (PC 1.0.154)
+
+- Regeln aus `src/domain/mealQuick.ts` (`D.mealQuick` in `pcdomain.js`); Daten dafür in `quickmeal.js`
+  (`pastMeals` aus PC- und Handy-Mahlzeiten, `addItems`/`undoItems`).
+- Tagebuch: an jeder Mahlzeit „Wie gestern“ / „Wie letzten <Wochentag>“ (solange sie leer ist) und „Vorschläge (oft
+  gegessen)“ – ein Tipp trägt ein. „Geplant“ mit „✓ Gegessen“ für Gerichte aus dem Wochenplan (dafür behält die App
+  jetzt auch `recipe_item`; ältere Exportdateien zeigen einen Hinweis). Entfernen ohne zweites Tippen.
+- Nach jedem Eintragen und Entfernen erscheint „Rückgängig“ in der Meldung oben (6 Sekunden; `toast(text, false, undo)`).
+- Scanner & Tracken: oben „Schnell eintragen“ mit Mahlzeit, Favoriten (Tippen = übliche Menge, lange drücken = Menge
+  ändern) und Freitext (auch per Diktat; „Erkennen“ zeigt Lebensmittel und Mengen zum Bestätigen, Unsicheres orange).
+  Suche mit „Mehrere auswählen“ (gemeinsam eintragen). Beim Tracken Mengen-Knöpfe 50/100/150/200, ±10 bzw. ½/1/2
+  Portionen; ein gewähltes Lebensmittel startet mit seiner üblichen Menge. Die Suche steht jetzt vor dem Scanner.
+- **Fasttracking am Handy** (`fastdata.js`, mit Tests; Ansicht `fast-entry`): Nährwerte für den ganzen Tag
+  (`nutrition_day_entry`/`nutrition_day_value`) oder an einer Mahlzeit (`meal_value`) eintragen, ändern oder
+  entfernen – Speichern ersetzt alle Werte des Ziels wie am PC; Werte vom PC werden mit `deleted_record` gelöscht.
+  Ablage „fast“, gesendet mit „Lebensmittel senden“ (eine Mahlzeit, die nur Werte hat, geht mit). `pcdb.makeDb`
+  führt `phone.fast` mit den Tabellen vom PC zusammen.
+- Tests: `node --test *.test.mjs` (129 bestanden, neu `fastdata.test.mjs`); Ansichten mit einer Handy-Datei im
+  iPhone-13-Format durchgespielt (Playwright).
+
+## Version 1.56.0 (19.11.2026): Griffkraft im Quick Fill, „Importieren“ mit einem Tipp (PC 1.0.155)
+
+- Quick Fill („Werte nachtragen“, `extras.js`): Griffkraft links und rechts nach dem Rhythmus aus Settings → Quick Fill
+  am PC (`D.quickFill.parseGripRule`/`missingGrip`/`gripInputError`; beide Hände oder keine; „überspringen“ wie am PC
+  als `due` mit Kennung `grip`). Gespeichert mit `logsdata.saveGrip` (Prüfung wie `repo::grip`: 1–150 kg je Hand,
+  eine Nachkommastelle; Geschlecht, Alter und Größe aus dem Profil, Messhand und Methode aus der letzten Messung; gibt
+  es für den Tag schon eine Messung, wird sie mit gleicher ID ersetzt). Ablage „logs“ (Teil `grip`), gesendet als
+  `grip_strength_measurement` mit „Körperwerte senden“; `pcdb.makeDb` liefert `db.grip` (PC + Handy, je Tag eine),
+  Insights und Overview-Erinnerung lesen daraus.
+- Overview: Zeile „Daten vom PC · Stand …“ mit **Importieren** – ein Tipp öffnet die Dateiauswahl (Safari erlaubt keinen
+  eigenen Zugriff auf iCloud Drive/Google Drive). Ab 3 Stunden Alter orange mit Hinweis (der PC legt im Betrieb alle
+  2 Stunden eine neue Handy-Datei ab). Beim Laden prüft `C.importCheck`: ältere Datei als der geladene Stand → nicht
+  übernommen (Meldung), gleicher Stand → nur Hinweis, sonst übernommen (Meldung mit Stand).
+- Tests: `node --test *.test.mjs` (132 bestanden; neu Griffkraft in `logsdata.test.mjs`, `importCheck` in
+  `core.test.mjs`).

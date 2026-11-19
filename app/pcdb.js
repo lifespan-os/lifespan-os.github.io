@@ -149,7 +149,7 @@ export function pcFromRows(rows) {
  * Daten vom PC und vom Handy zusammenführen (gleiche ID: der Stand vom Handy gilt).
  * `phone` = { foods: Map, meals: [{row, items}], water: {rows, deleted}, body: [row],
  *   workouts: {workout, workout_exercise, workout_set}, exercises: [row],
- *   logs: {sleep: [row], naps: [row], recovery: [row], deleted: [{table, id}]},
+ *   logs: {sleep: [row], naps: [row], recovery: [row], grip: [row], deleted: [{table, id}]},
  *   fast: {entries: [row], dayValues: [row], mealValues: [row], deleted: [id]} }
  */
 export function makeDb(catalog, phone = {}) {
@@ -221,6 +221,14 @@ export function makeDb(catalog, phone = {}) {
   const sleep = merge(t("sleep_log"), logs.sleep ?? [], gone("sleep_log"));
   const naps = merge(t("sleep_nap"), logs.naps ?? [], gone("sleep_nap"));
   const recovery = merge(t("recovery_log"), logs.recovery ?? [], gone("recovery_log"));
+  // Griffkraft (1.56.0, Quick Fill am Handy): je Tag eine Messung, die vom Handy gilt
+  const gripPhone = logs.grip ?? [];
+  const gripDays = new Set(gripPhone.map((g) => g.date));
+  const grip = merge(
+    t("grip_strength_measurement").filter((g) => !gripDays.has(g.date) || gripPhone.some((p) => p.id === g.id)),
+    gripPhone,
+    gone("grip_strength_measurement"),
+  );
 
   const settings = new Map(t("settings").map((s) => [s.key, s.value]));
   for (const [k, v] of Object.entries(phone.settings ?? {})) settings.set(k, v);
@@ -261,6 +269,7 @@ export function makeDb(catalog, phone = {}) {
     sleep,
     naps,
     recovery,
+    grip,
     pc,
   };
 }

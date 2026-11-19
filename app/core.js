@@ -11,7 +11,7 @@ import { appDay } from "./appday.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.55.0";
+export const MOBILE_VERSION = "1.56.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -286,6 +286,28 @@ export function parseExport(text) {
 }
 
 /** Trainingspläne (nicht archiviert) mit Tagen, Übungen und Sätzen zum Starten am Handy. */
+/**
+ * Neue Exportdatei vom PC prüfen (1.56.0, „Importieren“ mit einem Tipp): Ist sie älter als der
+ * geladene Stand, wird sie nicht übernommen; gleicher Stand → Hinweis; `stale`, wenn der Stand
+ * mehr als `staleHours` alt ist (am PC entsteht im Betrieb alle 2 Stunden eine neue Handy-Datei).
+ * Vorher ein Konto am Handy (Startpaket) oder nichts geladen: immer übernehmen.
+ */
+export function importCheck(previous, next, now = new Date(), staleHours = 3) {
+  const t = (iso) => {
+    const v = iso ? Date.parse(iso) : NaN;
+    return Number.isNaN(v) ? null : v;
+  };
+  const prev = previous && !previous.startpaket ? t(previous.exportedAt) : null;
+  const nextAt = t(next?.exportedAt);
+  const hours = nextAt === null ? null : Math.max(0, (now.getTime() - nextAt) / 3_600_000);
+  const stale = hours !== null && hours > staleHours;
+  if (prev !== null && nextAt !== null && !next.startpaket) {
+    if (nextAt < prev) return { action: "older", hours, stale };
+    if (nextAt === prev) return { action: "same", hours, stale };
+  }
+  return { action: "apply", hours, stale };
+}
+
 export function plansFromRows(rows) {
   const planRows = rows("training_plan").filter((p) => !p.archived);
   const dayRows = rows("training_plan_day");

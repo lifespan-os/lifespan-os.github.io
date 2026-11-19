@@ -314,12 +314,6 @@ function trackCard() {
       <div class="field wide"><label for="ft-meal">Mahlzeit (${esc(trackDayLabel())})</label><select id="ft-meal" data-ft="mealType">${mealOptions(s.mealType)}</select></div>
       ${timeFieldHtml("track", trackDate(), s.mealType)}
     </div>
-    <div class="chip-row amount-steps" role="group" aria-label="Menge schnell wählen">${
-      s.unit === "portion"
-        ? QM.Q.PORTION_PRESETS.map((p) => `<button type="button" class="chip" data-act="ft-set" data-arg="${p}">${esc(QM.Q.portionLabel(p))} ${esc(f.portion_name)}</button>`).join("")
-        : `${QM.Q.AMOUNT_PRESETS.map((a) => `<button type="button" class="chip" data-act="ft-set" data-arg="${a}">${a} ${f.basis_unit}</button>`).join("")}
-           <button type="button" class="chip" data-act="ft-step" data-arg="-10" aria-label="10 weniger">−10</button><button type="button" class="chip" data-act="ft-step" data-arg="10" aria-label="10 mehr">+10</button>`
-    }</div>
     <p class="small" id="track-preview">${esc(trackPreview())}</p>
     ${timeHintHtml("track")}
     <div class="row">
@@ -922,23 +916,6 @@ export const foodActions = {
       s.query = "";
       X.rerender();
     }
-  },
-  "ft-set": (el) => {
-    const s = F();
-    s.amount = String(el.dataset.arg).replace(".", ",");
-    const input = document.getElementById("ft-amount");
-    if (input) input.value = s.amount;
-    const p = document.getElementById("track-preview");
-    if (p) p.textContent = trackPreview();
-  },
-  "ft-step": (el) => {
-    const s = F();
-    const cur = N.parseNum(s.amount);
-    s.amount = amountText(QM.Q.stepAmount(Number.isFinite(cur) ? cur : 0, Number(el.dataset.arg)));
-    const input = document.getElementById("ft-amount");
-    if (input) input.value = s.amount;
-    const p = document.getElementById("track-preview");
-    if (p) p.textContent = trackPreview();
   },
   "food-save": async () => {
     const s = F();

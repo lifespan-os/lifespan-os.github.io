@@ -1602,3 +1602,9 @@ details.ov-card:not([open]) { padding-bottom: 12px; }
 .fast-group { margin: 8px 0; }
 .fast-group summary { cursor: pointer; font-weight: 600; font-size: .92rem; padding: 4px 0; }
 .fast-group .nf-grid { margin-top: 8px; }
+
+/* 1.59.0: Tastatur offen – untere Leiste bleibt verborgen (nimmt der Auswahl keinen Platz);
+   Lebensmittelsuche steht oben, darunter genug Raum zum Hochschieben auch am Seitenende */
+body.is-typing .tabbar,
+body.is-typing .tabbar__fab { display: none; }
+body.is-searching main.wrap:has(.food-search) { padding-bottom: 100vh; }

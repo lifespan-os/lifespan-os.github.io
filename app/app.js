@@ -1385,6 +1385,35 @@ document.addEventListener("focusout", (ev) => {
   });
 }
 
+/**
+ * Tastatur offen (1.59.0, Wunsch des Nutzers): Solange ein Eingabefeld den Fokus hat, bleibt die
+ * untere Menüleiste ausgeblendet – sie würde sonst über der Tastatur stehen und der Auswahl Platz
+ * nehmen. Die Lebensmittelsuche springt beim Antippen ganz nach oben (unter den Kopf), darunter ist
+ * genug Platz, damit das auch am Seitenende geht.
+ */
+const TYPING = /^(text|search|number|email|tel|url|password)$/;
+const typingField = (el) => el?.matches?.("textarea") || (el?.matches?.("input") && TYPING.test(el.type || "text"));
+document.addEventListener("focusin", (ev) => {
+  if (!typingField(ev.target)) return;
+  document.body.classList.add("is-typing");
+  const search = ev.target.id === "food-q" || ev.target.id === "dish-q" ? ev.target.closest(".card") : null;
+  if (search) {
+    document.body.classList.add("is-searching");
+    // nach dem Aufgehen der Tastatur (Ansicht wird kleiner) ausrichten
+    const align = () => search.scrollIntoView({ block: "start" });
+    requestAnimationFrame(align);
+    setTimeout(align, 320);
+  }
+});
+document.addEventListener("focusout", (ev) => {
+  if (!typingField(ev.target)) return;
+  setTimeout(() => {
+    if (typingField(document.activeElement)) return;
+    document.body.classList.remove("is-typing");
+    if (!(ev.target.value ?? "").trim()) document.body.classList.remove("is-searching");
+  }, 60);
+});
+
 /** Höhe des Kopfs als CSS-Variable – Sprungziele landen darunter statt dahinter (1.40.0). */
 function measureHead() {
   const h = document.querySelector(".top")?.offsetHeight ?? 0;

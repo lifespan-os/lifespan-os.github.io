@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar. Speichert nur die App-Dateien,
 // niemals Trainingsdaten (die liegen in IndexedDB auf dem Gerät).
-const VERSION = "lifespan-mobil-1.58.0";
+const VERSION = "lifespan-mobil-1.59.0";
 const FILES = [
   "./",
   "index.html",
@@ -61,7 +61,7 @@ const FILES = [
   "accountexport.js",
   "bls.js",
   "blsui.js",
-  // Open Food Facts (1.58.0): Programmteile; der Katalog selbst (off/off-de-at.tsv.gz) nur bei Bedarf
+  // Open Food Facts (1.59.0): Programmteile; der Katalog selbst (off/off-de-at.tsv.gz) nur bei Bedarf
   "off.js",
   "offui.js",
   "pcoverview.js",

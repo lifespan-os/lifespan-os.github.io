@@ -401,7 +401,7 @@ export function viewFood() {
     ${oldExport ? `<p class="warn">Deine Lebensmittel vom PC fehlen noch: Bitte am PC neu exportieren und hier „Neue Exportdatei laden“. Scannen und Tracken geht trotzdem.</p>` : ""}
     ${s.selected && !s.form ? trackCard() : ""}
     ${quickCard()}
-    <section class="card">
+    <section class="card food-search" id="food-search">
       <div class="wo-head"><h3>Lebensmittel suchen</h3><button class="linkbtn" data-act="qm-multi-toggle">${s.multi ? "Einzeln auswählen" : "Mehrere auswählen"}</button></div>
       <input id="food-q" type="search" placeholder="Name, Marke oder Strichcode" value="${esc(s.query)}" autocomplete="off" enterkeyhint="search">
       <div class="list" id="food-results">${foodResults(s.query, resultAct())}</div>
@@ -596,7 +596,7 @@ export function viewDish() {
       }
       <p class="small"><b id="dish-total">${esc(dishTotalText())}</b></p>
     </section>
-    <section class="card">
+    <section class="card food-search">
       <h3>Zutat hinzufügen</h3>
       <input id="dish-q" type="search" placeholder="Name, Marke oder Strichcode" value="${esc(s.dishQuery)}" autocomplete="off">
       <div class="list" id="dish-results">${foodResults(s.dishQuery, "dish-add")}</div>

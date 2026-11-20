@@ -17059,7 +17059,14 @@ function emptyPlanDay(name = "") {
   return { key: newKey(), id: null, name, notes: "", exercises: [], slots: [] };
 }
 function emptyPlanDraft() {
-  return { id: null, name: "", description: "", archived: false, days: [emptyPlanDay("Tag A")] };
+  return {
+    id: null,
+    name: "",
+    description: "",
+    icon: "auto",
+    archived: false,
+    days: [emptyPlanDay("Tag A")]
+  };
 }
 function slotToDraft(s) {
   return {
@@ -17075,6 +17082,7 @@ function planToDraft(plan, isCardio = () => false) {
     id: plan.id,
     name: plan.name,
     description: plan.description ?? "",
+    icon: plan.icon ?? "auto",
     archived: plan.archived,
     days: plan.days.map((d) => ({
       key: newKey(),
@@ -17157,6 +17165,7 @@ function planDraftToInput(d, defaults = () => []) {
     id: d.id,
     name: d.name,
     description: textOrNull(d.description),
+    icon: d.icon && d.icon !== "auto" ? d.icon : null,
     archived: d.archived,
     days: d.days.map((day, i) => {
       const checked = checkPlanDay(day, defaults);
@@ -17619,7 +17628,7 @@ function describeMerge(r2) {
   const head2 = r2.applied ? "Zusammengef\xFChrt" : "Vorschau";
   return `${head2}: ${r2.items.length} Kraft\xFCbungen \u2013 ${parts2.join(", ")}. Der Trainingsverlauf aus ${sessions2} Einheiten ${r2.applied ? "geh\xF6rt jetzt" : "geh\xF6rt danach"} zur jeweiligen Maschine.`;
 }
-function machinePickerOptions(machines, exercises) {
+function machinePickerOptions(machines, exercises, gym) {
   const byMachine = /* @__PURE__ */ new Map();
   for (const e of exercises) {
     if (!e.machineId || e.archived) continue;
@@ -17630,15 +17639,27 @@ function machinePickerOptions(machines, exercises) {
   const out = [];
   for (const m of machines) {
     if (m.archived) continue;
-    const info = [m.manufacturer, m.series, numberLabel(m), m.muscleGroups.join(", ")].filter(Boolean).join(" \xB7 ");
+    const inGym = gym ? gym.numbers.has(m.id) : true;
+    if (gym?.only && !inGym) continue;
+    const gymNo = gym?.numbers.get(m.id) ?? null;
+    const info = [
+      gymNo ? `${gym?.name} ${gymNo}` : null,
+      m.manufacturer,
+      m.series,
+      gym ? m.ownNumber ? `Nr. ${m.ownNumber}` : null : numberLabel(m),
+      m.muscleGroups.join(", ")
+    ].filter(Boolean).join(" \xB7 ");
     const linked = byMachine.get(m.id) ?? [];
-    const exact = [m.ownNumber, m.gymNumber].filter((n2) => !!n2 && n2.trim() !== "");
+    const exact = [gymNo, m.ownNumber, m.gymNumber].filter(
+      (n2) => !!n2 && n2.trim() !== ""
+    );
+    const extra = inGym ? 0 : 2;
     if (linked.length === 0) {
       out.push({
         id: `m:${m.id}`,
         label: m.displayName,
         detail: info,
-        priority: 1,
+        priority: 1 + extra,
         machineId: m.id,
         exerciseId: null,
         exact
@@ -17649,7 +17670,7 @@ function machinePickerOptions(machines, exercises) {
           id: `e:${e.id}`,
           label: e.name,
           detail: e.name === m.displayName ? info : `${m.displayName} \xB7 ${info}`,
-          priority: 0,
+          priority: extra,
           machineId: m.id,
           exerciseId: e.id,
           exact
@@ -20372,6 +20393,7 @@ __export(mealQuick_exports, {
   favoriteFoods: () => favoriteFoods,
   matchFood: () => matchFood,
   mealItemsOn: () => mealItemsOn,
+  mealKeyOf: () => mealKeyOf,
   mealSuggestions: () => mealSuggestions,
   normText: () => normText,
   parseFreeText: () => parseFreeText,
@@ -20385,6 +20407,9 @@ __export(mealQuick_exports, {
   usualAmount: () => usualAmount
 });
 var MAX_AMOUNT = 1e4;
+function mealKeyOf(m) {
+  return m.mealType === "other" && m.name ? `x:${m.name}` : m.mealType;
+}
 function mealItemsOn(history, date, key) {
   return history.filter((m) => m.date === date && m.key === key).flatMap((m) => m.items.filter((i) => i.amount > 0).map((i) => ({ ...i })));
 }
@@ -20512,7 +20537,19 @@ var NUMBER_WORDS = {
 function normText(s) {
   return s.toLocaleLowerCase("de-DE").replace(/ß/g, "ss").normalize("NFKD").replace(/[̀-ͯ]/g, "");
 }
-var STOP = /* @__PURE__ */ new Set(["mit", "von", "und", "dem", "der", "die", "das", "etwas", "ca", "circa", "je"]);
+var STOP = /* @__PURE__ */ new Set([
+  "mit",
+  "von",
+  "und",
+  "dem",
+  "der",
+  "die",
+  "das",
+  "etwas",
+  "ca",
+  "circa",
+  "je"
+]);
 function parseQuantity(token) {
   const frac = { "\xBD": 0.5, "\xBC": 0.25, "\xBE": 0.75 };
   if (token in frac) return frac[token];
@@ -20566,26 +20603,30 @@ function splitFreeText(text2) {
 }
 function splitQuantity(part) {
   const spaced = part.replace(/(\d)([a-zA-ZäöüÄÖÜß])/g, "$1 $2").replace(/\s+/g, " ").trim();
-  const tokens = spaced.split(" ");
+  const tokens2 = spaced.split(" ");
   const isUnit = (t) => t !== void 0 && normText(t).replace(/\.$/, "") in UNITS2;
   const unitOf = (t) => normText(t).replace(/\.$/, "");
-  const lead = parseQuantity(tokens[0] ?? "");
+  const lead = parseQuantity(tokens2[0] ?? "");
   if (lead !== null) {
-    if (isUnit(tokens[1])) {
-      return { value: lead, unit: unitOf(tokens[1]), name: tokens.slice(2).join(" ") };
+    if (isUnit(tokens2[1])) {
+      return { value: lead, unit: unitOf(tokens2[1]), name: tokens2.slice(2).join(" ") };
     }
-    return { value: lead, unit: null, name: tokens.slice(1).join(" ") };
+    return { value: lead, unit: null, name: tokens2.slice(1).join(" ") };
   }
-  const n2 = tokens.length;
-  if (n2 >= 3 && isUnit(tokens[n2 - 1]) && parseQuantity(tokens[n2 - 2]) !== null) {
+  const n2 = tokens2.length;
+  if (n2 >= 3 && isUnit(tokens2[n2 - 1]) && parseQuantity(tokens2[n2 - 2]) !== null) {
     return {
-      value: parseQuantity(tokens[n2 - 2]),
-      unit: unitOf(tokens[n2 - 1]),
-      name: tokens.slice(0, n2 - 2).join(" ")
+      value: parseQuantity(tokens2[n2 - 2]),
+      unit: unitOf(tokens2[n2 - 1]),
+      name: tokens2.slice(0, n2 - 2).join(" ")
     };
   }
-  if (n2 >= 2 && parseQuantity(tokens[n2 - 1]) !== null) {
-    return { value: parseQuantity(tokens[n2 - 1]), unit: null, name: tokens.slice(0, n2 - 1).join(" ") };
+  if (n2 >= 2 && parseQuantity(tokens2[n2 - 1]) !== null) {
+    return {
+      value: parseQuantity(tokens2[n2 - 1]),
+      unit: null,
+      name: tokens2.slice(0, n2 - 1).join(" ")
+    };
   }
   return { value: null, unit: null, name: spaced };
 }
@@ -20598,18 +20639,30 @@ function amountFor(q, food) {
     if (f === "portion") {
       if (!food) return { amount: null, note: null, assumed: false };
       if (!portion) {
-        return { amount: null, note: "F\xFCr dieses Lebensmittel ist keine Portion hinterlegt \u2013 bitte Menge eintragen.", assumed: true };
+        return {
+          amount: null,
+          note: "F\xFCr dieses Lebensmittel ist keine Portion hinterlegt \u2013 bitte Menge eintragen.",
+          assumed: true
+        };
       }
       return { amount: roundAmountText((q.value ?? 1) * portion), note: null, assumed: false };
     }
-    if (typeof f === "number") return { amount: roundAmountText((q.value ?? 0) * f), note: null, assumed: false };
+    if (typeof f === "number")
+      return { amount: roundAmountText((q.value ?? 0) * f), note: null, assumed: false };
   }
   if (q.value === null) {
-    if (portion) return { amount: portion, note: `Menge angenommen: 1 ${food?.portionName ?? "Portion"}.`, assumed: true };
+    if (portion)
+      return {
+        amount: portion,
+        note: `Menge angenommen: 1 ${food?.portionName ?? "Portion"}.`,
+        assumed: true
+      };
     return { amount: null, note: "Keine Menge angegeben \u2013 bitte eintragen.", assumed: true };
   }
-  if (portion && q.value < 10) return { amount: roundAmountText(q.value * portion), note: null, assumed: false };
-  if (q.value >= 10) return { amount: roundAmountText(q.value), note: `Menge als ${unit} gelesen.`, assumed: true };
+  if (portion && q.value < 10)
+    return { amount: roundAmountText(q.value * portion), note: null, assumed: false };
+  if (q.value >= 10)
+    return { amount: roundAmountText(q.value), note: `Menge als ${unit} gelesen.`, assumed: true };
   return { amount: null, note: "Menge ohne Einheit \u2013 bitte eintragen.", assumed: true };
 }
 function parseFreeText(text2, foods, rank = /* @__PURE__ */ new Map()) {
@@ -20621,8 +20674,10 @@ function parseFreeText(text2, foods, rank = /* @__PURE__ */ new Map()) {
     const a = amountFor(q, food);
     const valid = a.amount !== null && a.amount > 0 && a.amount <= MAX_AMOUNT;
     let note = a.note;
-    if (!food) note = q.name ? `Kein Lebensmittel zu \u201E${q.name}\u201C gefunden.` : "Kein Lebensmittel angegeben.";
-    else if (m.ambiguous) note = [note, "Mehrere passende Lebensmittel \u2013 bitte pr\xFCfen."].filter(Boolean).join(" ");
+    if (!food)
+      note = q.name ? `Kein Lebensmittel zu \u201E${q.name}\u201C gefunden.` : "Kein Lebensmittel angegeben.";
+    else if (m.ambiguous)
+      note = [note, "Mehrere passende Lebensmittel \u2013 bitte pr\xFCfen."].filter(Boolean).join(" ");
     if (a.amount !== null && a.amount > MAX_AMOUNT) note = "Menge \xFCber 10.000 \u2013 bitte pr\xFCfen.";
     return {
       text: part,
@@ -20659,12 +20714,360 @@ function planItems(recipe, servings) {
   const f = recipe.servings > 0 ? servings / recipe.servings : 0;
   return recipe.items.map((i) => ({ foodId: i.foodId, amount: Math.round(i.amount * f * 10) / 10 })).filter((i) => i.amount > 0);
 }
+
+// src/domain/search.ts
+function normalizeSearch2(text2) {
+  return text2.toLocaleLowerCase("de-DE").replace(/ß/g, "ss").normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+}
+
+// src/domain/smartSearch.ts
+var SYNONYM_GROUPS = [
+  ["brustpresse", "chest press", "brustdr\xFCcken maschine", "seated chest press", "vertical chest press"],
+  ["bankdr\xFCcken", "bench press", "flachbankdr\xFCcken", "flat bench", "brustdr\xFCcken"],
+  ["schr\xE4gbankdr\xFCcken", "incline press", "incline bench", "schr\xE4gbank", "incline chest"],
+  ["negativbankdr\xFCcken", "decline press", "decline bench", "negativbank"],
+  ["butterfly", "pec deck", "pec fly", "chest fly", "brustfliegen", "fliegende", "flys"],
+  ["reverse butterfly", "reverse fly", "rear delt", "reverse pec deck", "hintere schulter"],
+  ["beinpresse", "leg press", "beinpressen"],
+  ["kniebeuge", "squat", "kniebeugen", "hack squat", "pendulum squat", "belt squat"],
+  ["beinstrecker", "leg extension", "beinstreckung", "quadrizeps maschine"],
+  ["beinbeuger", "leg curl", "beinbeugen", "hamstring curl", "lying leg curl", "seated leg curl"],
+  ["latzug", "lat pulldown", "lat pull down", "latziehen", "pulldown", "lat maschine"],
+  ["klimmzug", "pull up", "pullup", "chin up", "klimmz\xFCge", "assisted pull up"],
+  ["rudern", "row", "seated row", "rudermaschine", "kabelrudern", "cable row", "t-bar row", "low row"],
+  ["ruderger\xE4t", "rowing machine", "rower", "ergometer rudern", "concept2"],
+  ["schulterpresse", "shoulder press", "schulterdr\xFCcken", "overhead press", "military press"],
+  ["seitheben", "lateral raise", "seitheben maschine", "side raise"],
+  ["bizepscurl", "biceps curl", "bizeps curl", "armbeuger", "preacher curl", "scott curl"],
+  ["trizepsdr\xFCcken", "triceps extension", "triceps pushdown", "trizeps", "armstrecker", "french press"],
+  ["dips", "dip", "barren", "dip maschine"],
+  ["bauchmaschine", "ab crunch", "abdominal", "crunch", "bauchmuskel", "bauchpresse"],
+  ["r\xFCckenstrecker", "back extension", "hyperextension", "lower back", "hyperextensions"],
+  ["kreuzheben", "deadlift", "rum\xE4nisches kreuzheben", "romanian deadlift"],
+  ["adduktoren", "adduktion", "adductor", "hip adduction", "innenschenkel"],
+  ["abduktoren", "abduktion", "abductor", "hip abduction", "au\xDFenschenkel"],
+  ["hip thrust", "glute bridge", "h\xFCftstrecken", "glute drive", "beckenheben"],
+  ["glute kickback", "kickback", "ges\xE4\xDFkick", "glute kick"],
+  ["wadenheben", "calf raise", "waden", "calf press"],
+  ["multipresse", "smith machine", "smith"],
+  ["kabelzug", "cable", "kabelturm", "cable crossover", "crossover", "kabelstation"],
+  ["laufband", "treadmill", "laufen", "running"],
+  ["crosstrainer", "elliptical", "ellipsentrainer"],
+  ["fahrradergometer", "bike", "fahrrad", "spinning", "radfahren", "ergometer", "cycle"],
+  ["stepper", "stair climber", "treppensteiger", "stairmaster"],
+  ["nackenmaschine", "neck", "nacken"],
+  ["shrugs", "shrug", "schulterheben", "nackenheben"]
+];
+var RELATED = {
+  brustpresse: ["bankdr\xFCcken", "schr\xE4gbankdr\xFCcken", "butterfly", "dips"],
+  bankdr\u00FCcken: ["brustpresse", "schr\xE4gbankdr\xFCcken", "negativbankdr\xFCcken", "dips"],
+  schr\u00E4gbankdr\u00FCcken: ["bankdr\xFCcken", "brustpresse", "schulterpresse"],
+  negativbankdr\u00FCcken: ["bankdr\xFCcken", "dips"],
+  butterfly: ["brustpresse", "kabelzug"],
+  "reverse butterfly": ["seitheben", "rudern"],
+  beinpresse: ["kniebeuge", "beinstrecker", "hip thrust"],
+  kniebeuge: ["beinpresse", "beinstrecker", "multipresse"],
+  beinstrecker: ["beinpresse", "kniebeuge"],
+  beinbeuger: ["kreuzheben", "r\xFCckenstrecker", "hip thrust"],
+  latzug: ["klimmzug", "rudern"],
+  klimmzug: ["latzug", "rudern"],
+  rudern: ["latzug", "klimmzug", "reverse butterfly"],
+  schulterpresse: ["seitheben", "schr\xE4gbankdr\xFCcken"],
+  seitheben: ["schulterpresse", "reverse butterfly"],
+  bizepscurl: ["kabelzug"],
+  trizepsdr\u00FCcken: ["dips", "kabelzug"],
+  dips: ["trizepsdr\xFCcken", "bankdr\xFCcken"],
+  r\u00FCckenstrecker: ["kreuzheben", "beinbeuger"],
+  kreuzheben: ["r\xFCckenstrecker", "beinbeuger", "hip thrust"],
+  "hip thrust": ["glute kickback", "abduktoren", "kreuzheben"],
+  "glute kickback": ["hip thrust", "abduktoren"],
+  adduktoren: ["abduktoren"],
+  abduktoren: ["adduktoren", "glute kickback"],
+  laufband: ["crosstrainer", "stepper"],
+  crosstrainer: ["laufband", "fahrradergometer"],
+  fahrradergometer: ["crosstrainer", "ruderger\xE4t"],
+  ruderger\u00E4t: ["fahrradergometer", "rudern"]
+};
+function compactSearch(text2) {
+  return normalizeSearch2(text2).replace(/[^a-z0-9]/g, "");
+}
+function editDistance2(a, b, max = 2) {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  const d = Array.from(
+    { length: a.length + 1 },
+    (_, i) => Array.from({ length: b.length + 1 }, (_2, j) => i === 0 ? j : j === 0 ? i : 0)
+  );
+  for (let i = 1; i <= a.length; i++) {
+    let rowMin = Infinity;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      let v = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        v = Math.min(v, d[i - 2][j - 2] + 1);
+      }
+      d[i][j] = v;
+      rowMin = Math.min(rowMin, v);
+    }
+    if (rowMin > max) return max + 1;
+  }
+  return d[a.length][b.length];
+}
+var typoBudget = (len) => len < 4 ? 0 : len < 8 ? 1 : 2;
+var COMPACT_GROUPS = SYNONYM_GROUPS.map((g) => g.map(compactSearch));
+function matchingGroups(query) {
+  const q = compactSearch(query);
+  if (q.length < 3) return [];
+  const out = [];
+  COMPACT_GROUPS.forEach((terms, i) => {
+    const hit = terms.some(
+      (t) => t === q || q.length >= 4 && t.startsWith(q) || t.length >= 4 && q.includes(t) || editDistance2(q, t, typoBudget(t.length)) <= typoBudget(t.length)
+    );
+    if (hit) out.push(i);
+  });
+  return out;
+}
+function relatedGroups(groups) {
+  const names = new Set(groups.map((i) => SYNONYM_GROUPS[i][0]));
+  const out = /* @__PURE__ */ new Set();
+  for (const i of groups) {
+    for (const r2 of RELATED[SYNONYM_GROUPS[i][0]] ?? []) {
+      if (names.has(r2)) continue;
+      const idx = SYNONYM_GROUPS.findIndex((g) => g[0] === r2);
+      if (idx >= 0) out.add(idx);
+    }
+  }
+  return [...out];
+}
+function prepare(o) {
+  const label = normalizeSearch2(o.label);
+  const exact = (o.exact ?? []).map(normalizeSearch2);
+  const hay = `${label} ${normalizeSearch2(o.detail ?? "")}`;
+  return {
+    o,
+    label,
+    // Nummern (z. B. Studionummer) sind auch Suchwörter
+    words: [...hay.split(/[^a-z0-9]+/).filter(Boolean), ...exact],
+    compact: compactSearch(hay),
+    exact
+  };
+}
+var KIND_ORDER2 = { exact: 0, synonym: 1, related: 2, typo: 3 };
+function smartFilter(options, query, limit = 8) {
+  const words = normalizeSearch2(query).split(/\s+/).filter(Boolean);
+  const q = compactSearch(query);
+  const prepared = options.map(prepare);
+  const kinds = /* @__PURE__ */ new Map();
+  if (words.length === 0) {
+    for (const p of prepared) kinds.set(p, "exact");
+  } else {
+    for (const p of prepared) {
+      const hay = p.words.join(" ");
+      if (words.every((w) => hay.includes(w)) || q.length >= 4 && p.compact.includes(q)) {
+        kinds.set(p, "exact");
+      }
+    }
+    const groups = matchingGroups(query);
+    const terms = (idx) => idx.flatMap((i) => COMPACT_GROUPS[i]);
+    const synonyms = terms(groups);
+    const related = terms(relatedGroups(groups));
+    const has2 = (p, t) => t.length >= 4 ? p.compact.includes(t) : p.words.includes(t);
+    for (const p of prepared) {
+      if (kinds.has(p)) continue;
+      if (synonyms.some((t) => has2(p, t))) kinds.set(p, "synonym");
+      else if (related.some((t) => has2(p, t))) kinds.set(p, "related");
+    }
+    const found = [...kinds.values()].some((k) => k === "exact" || k === "synonym");
+    if (!found) {
+      for (const p of prepared) {
+        if (kinds.has(p)) continue;
+        const pairs = p.words.slice(1).map((w, i) => p.words[i] + w);
+        const candidates = [...p.words, ...pairs];
+        const ok = words.every((w) => {
+          const budget = typoBudget(w.length);
+          return p.words.some((x) => x.includes(w)) || budget > 0 && candidates.some((c) => editDistance2(w, c, budget) <= budget);
+        });
+        const okCompact = q.length >= 4 && candidates.some((c) => editDistance2(q, c, typoBudget(q.length)) <= typoBudget(q.length));
+        if (ok || okCompact) kinds.set(p, "typo");
+      }
+    }
+  }
+  const first = words[0] ?? "";
+  return [...kinds.entries()].map(([p, kind]) => ({
+    p,
+    kind,
+    hit: words.some((w) => p.exact.includes(w)) ? 0 : 1,
+    rank: first === "" ? 2 : p.label.startsWith(first) ? 0 : p.label.includes(` ${first}`) ? 1 : 2
+  })).sort(
+    (a, b) => a.hit - b.hit || KIND_ORDER2[a.kind] - KIND_ORDER2[b.kind] || (a.p.o.priority ?? 0) - (b.p.o.priority ?? 0) || (b.p.o.usage ?? 0) - (a.p.o.usage ?? 0) || a.rank - b.rank || a.p.label.localeCompare(b.p.label, "de")
+  ).slice(0, limit).map((x) => ({ option: x.p.o, kind: x.kind }));
+}
+
+// src/domain/planIcons.ts
+var AUTO_ICON = "auto";
+var HEAD = (cx, cy, r2 = 6) => `<circle cx="${cx}" cy="${cy}" r="${r2}"/>`;
+var PLAN_ICONS = [
+  {
+    key: "upper",
+    label: "Oberk\xF6rper",
+    keywords: ["ok", "oberkorper", "upper", "upper body", "upperbody", "push", "pull", "oberkoerper"],
+    body: HEAD(32, 11, 6.5) + '<path d="M27 17h10l1 4c6 0 13 2 16 6l3 9c1 3-1 5-4 4l-4-1-1 12c-1 5-4 8-9 9h-14c-5-1-8-4-9-9l-1-12-4 1c-3 1-5-1-4-4l3-9c3-4 10-6 16-6z"/><path d="M32 26v20M22 31c3 3 7 3 10 0 3 3 7 3 10 0" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="1.8" stroke-linecap="round"/>'
+  },
+  {
+    key: "lower",
+    label: "Unterk\xF6rper / Beine",
+    keywords: ["uk", "unterkorper", "lower", "lower body", "legs", "leg day", "beine", "bein", "leg", "unterkoerper", "quads", "squat"],
+    body: '<path d="M17 6h30l3 14c1 6 0 11-2 16l-3 10 1 9c0 2-1 3-3 3h-6c-2 0-3-1-3-3l1-10-2-14h-2l-2 14 1 10c0 2-1 3-3 3h-6c-2 0-3-1-3-3l1-9-3-10c-2-5-3-10-2-16z"/><path d="M32 10v12" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="1.8" stroke-linecap="round"/>'
+  },
+  {
+    key: "full",
+    label: "Ganzk\xF6rper",
+    keywords: ["gk", "ganzkorper", "fullbody", "full body", "full", "total body", "totalbody", "ganzkoerper", "komplett", "ppl", "push pull legs", "push pull beine"],
+    body: HEAD(32, 7, 5) + '<path d="M27 13h10c5 0 10 2 12 5l4 10c1 2 0 4-2 4l-3-1-3-7v10l-1 9 2 16c0 2-1 3-3 3h-3c-2 0-3-1-3-3l-2-14h-2l-2 14c0 2-1 3-3 3h-3c-2 0-3-1-3-3l2-16-1-9V24l-3 7-3 1c-2 0-3-2-2-4l4-10c2-3 7-5 12-5z"/>'
+  },
+  {
+    key: "arms",
+    label: "Arme",
+    keywords: ["arme", "arms", "arm", "bizeps", "biceps", "bizep", "trizeps", "triceps", "limbs", "unterarm", "forearm"],
+    body: '<path d="M14 54c-4-6-4-14 0-21l9-15c2-4 6-6 10-5l7 2c3 1 4 4 3 7l-2 5c-1 2-3 3-5 2l-5-2-3 6c4-2 9-2 13 0 7-6 15-5 19 1 3 5 2 12-3 16-6 5-15 7-24 6z"/><path d="M30 40c5-3 10-3 14 1" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="1.8" stroke-linecap="round"/>'
+  },
+  {
+    key: "chest",
+    label: "Brust",
+    keywords: ["brust", "chest", "pecs", "pec", "bankdrucken", "bench"],
+    body: '<path d="M24 4h16l2 4c7 0 14 3 18 8l2 12c0 3-2 5-5 5l-3-1v10c0 9-8 18-22 18S10 51 10 42V32l-3 1c-3 0-5-2-5-5l2-12c4-5 11-8 18-8z"/><path d="M32 12v26M15 22c4 9 12 11 17 7 5 4 13 2 17-7M17 42c5 3 10 4 15 4s10-1 15-4" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="2" stroke-linecap="round"/>'
+  },
+  {
+    key: "back",
+    label: "R\xFCcken",
+    keywords: ["rucken", "back", "lat", "lats", "latissimus", "ruecken", "kreuzheben", "deadlift"],
+    body: HEAD(32, 9, 5.5) + '<path d="M26 15h12c8 1 15 4 18 8l-6 14-6 4-4 15c-1 2-2 3-4 3h-8c-2 0-3-1-4-3l-4-15-6-4-6-14c3-4 10-7 18-8z"/><path d="M32 20v32M24 26c2 6 5 9 8 10 3-1 6-4 8-10" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="1.8" stroke-linecap="round"/>'
+  },
+  {
+    key: "shoulders",
+    label: "Schultern",
+    keywords: ["schulter", "schultern", "shoulder", "shoulders", "delts", "delta", "deltoid", "nacken", "trapez"],
+    body: HEAD(32, 12, 6.5) + '<path d="M26 19h12l4 3H22z"/><circle cx="15" cy="30" r="9"/><circle cx="49" cy="30" r="9"/><path d="M22 23h20l2 10-2 24H22l-2-24z"/><path d="M15 23v14M49 23v14" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="1.8" stroke-linecap="round"/>'
+  },
+  {
+    key: "core",
+    label: "Bauch / Core",
+    keywords: ["bauch", "core", "abs", "abdominal", "sixpack", "six pack", "rumpf", "planks", "plank", "crunch"],
+    body: '<path d="M10 4h44l-5 20c-1 6-1 13 2 21 2 7-6 15-19 15S11 52 13 45c3-8 3-15 2-21z"/><g fill="var(--plan-icon-cut, #fff)"><rect x="20" y="12" width="10" height="8" rx="3"/><rect x="34" y="12" width="10" height="8" rx="3"/><rect x="20" y="24" width="10" height="8" rx="3"/><rect x="34" y="24" width="10" height="8" rx="3"/><rect x="21" y="36" width="9" height="8" rx="3"/><rect x="34" y="36" width="9" height="8" rx="3"/></g><path d="M32 10v40" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="2" stroke-linecap="round"/>'
+  },
+  {
+    key: "run",
+    label: "Laufen / Cardio",
+    keywords: ["cardio", "laufen", "lauf", "rennen", "run", "running", "jogging", "joggen", "sprint", "sprints", "gehen", "walk", "walking", "marathon", "intervall", "hiit", "ausdauer", "laufband"],
+    body: HEAD(40, 8, 5.5) + '<path d="M33 15l9 3c2 1 3 2 3 4l-1 9 7 4c2 1 2 3 1 5-1 1-3 2-4 1l-9-5-2 7 8 8c1 1 1 2 1 3l-3 10c-1 2-3 3-5 2-2 0-3-2-2-4l2-7-9-7-5 9c-1 2-3 2-4 2l-11-2c-2 0-3-2-3-4 1-2 2-3 4-3l8 2 7-15 2-9-4 2-4 7c-1 2-3 2-4 1-2-1-2-3-1-4l5-9c1-1 2-2 3-2z"/>'
+  },
+  {
+    key: "bike",
+    label: "Radfahren",
+    keywords: ["rad", "radfahren", "bike", "biking", "cycling", "spinning", "fahrrad", "ergometer", "radeln", "rennrad", "mtb"],
+    body: '<circle cx="14" cy="46" r="10" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="46" r="10" fill="none" stroke="currentColor" stroke-width="4"/><path d="M14 46l9-17h17l10 17M23 29l9 17 8-17M20 24h8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' + HEAD(42, 10, 5) + '<path d="M30 19l9-3c2 0 3 1 4 2l4 9c1 2 0 3-2 4l-3 1-3-6-6 3z"/>'
+  },
+  {
+    key: "row",
+    label: "Rudern",
+    keywords: ["rudern", "row", "rowing", "rudergerat", "rower", "concept2", "kanu", "kajak"],
+    body: HEAD(30, 14, 5.5) + '<path d="M25 21l7 1 10 9 12-3c2 0 3 1 3 3s-1 3-3 3l-13 4c-1 0-2 0-3-1l-6-5-1 8 9 4c2 1 2 3 1 4h-1l-12-3c-2-1-3-2-3-4l1-15c0-3 2-5 4-5z"/><rect x="4" y="50" width="56" height="5" rx="2.5"/><path d="M50 32l6-6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>'
+  },
+  {
+    key: "swim",
+    label: "Schwimmen",
+    keywords: ["schwimmen", "swim", "swimming", "kraulen", "brustschwimmen", "pool", "triathlon"],
+    body: HEAD(46, 24, 5.5) + '<path d="M8 33l20-12c2-1 4-1 6 1l6 6-11 6-5-3-12 6c-2 1-4 0-4-2zM36 29l3 3-4 3z"/><path d="M4 44c5-4 9-4 14 0s9 4 14 0 9-4 14 0 9 4 14 0M4 55c5-4 9-4 14 0s9 4 14 0 9-4 14 0 9 4 14 0" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>'
+  },
+  {
+    key: "functional",
+    label: "HYROX / Functional",
+    keywords: ["hyrox", "functional", "crossfit", "kettlebell", "kettlebells", "circuit", "zirkel", "athletik", "wod", "metcon"],
+    body: '<path fill-rule="evenodd" d="M22 8h20c4 0 7 3 7 7v3c0 2-1 4-2 5 6 4 9 10 9 17 0 11-9 18-24 18S8 51 8 40c0-7 3-13 9-17-1-1-2-3-2-5v-3c0-4 3-7 7-7zm2 6c-2 0-3 1-3 3v1c0 1 1 2 2 2 3-1 6-1 9-1s6 0 9 1c1 0 2-1 2-2v-1c0-2-1-3-3-3z"/>'
+  },
+  {
+    key: "mobility",
+    label: "Mobility / Yoga",
+    keywords: ["mobility", "mobilitat", "yoga", "dehnen", "stretching", "stretch", "pilates", "beweglichkeit", "faszien", "flexibility"],
+    body: HEAD(32, 8, 5.5) + '<path d="M30 15h4l2 10 10-14c1-2 3-2 4-1s1 3 0 4L37 32v10l3 12 9-3c2 0 3 1 3 3s-1 3-3 3l-12 4c-2 0-3-1-4-2l-2-11h-2l-2 11c-1 1-2 2-4 2l-12-4c-2 0-3-2-3-3 0-2 1-3 3-3l9 3 3-12V32L13 14c-1-1-1-3 0-4s3-1 4 1l11 14z"/>'
+  },
+  {
+    key: "recovery",
+    label: "Erholung",
+    keywords: ["erholung", "regeneration", "recovery", "deload", "entlastung", "pause", "rest", "sauna", "regenerativ"],
+    body: '<path d="M40 6C28 8 19 18 19 31c0 14 11 25 25 25 6 0 11-2 15-5-3 1-6 1-9 1-15 0-26-12-26-26 0-8 4-15 10-20z"/><path d="M44 14h10l-10 12h10M34 30h7l-7 8h7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
+  },
+  {
+    key: "combat",
+    label: "Kampfsport / Boxen",
+    keywords: ["boxen", "boxing", "kickboxen", "kampfsport", "mma", "muay", "karate", "judo", "sparring", "kampf"],
+    body: '<path d="M20 10h20c9 0 16 7 16 16v6c0 6-4 11-10 12v6H22v-7c-6-2-10-8-10-14V18c0-4 4-8 8-8z"/><path d="M20 54h28v4H20z"/><path d="M14 30c4-4 10-4 14 0" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="2" stroke-linecap="round"/>'
+  },
+  {
+    key: "outdoor",
+    label: "Klettern / Wandern",
+    keywords: ["klettern", "bouldern", "climbing", "boulder", "wandern", "hiking", "berg", "berge", "trail", "outdoor", "ski", "skitour"],
+    body: '<path d="M2 56l20-32 9 12 9-18 22 38z"/><path d="M36 26l4-8 5 9-5 3z" fill="var(--plan-icon-cut, #fff)"/>'
+  },
+  {
+    key: "ball",
+    label: "Ballsport",
+    keywords: ["fussball", "soccer", "basketball", "tennis", "padel", "volleyball", "handball", "squash", "badminton", "ball", "golf", "hockey"],
+    body: '<circle cx="32" cy="32" r="26"/><path d="M32 6c-8 8-8 44 0 52M32 6c8 8 8 44 0 52M7 25c16 6 34 6 50 0M7 39c16-6 34-6 50 0" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="2.2"/>'
+  },
+  {
+    key: "strength",
+    label: "Krafttraining (Standard)",
+    keywords: ["kraft", "strength", "hypertrophie", "powerlifting", "gym", "training", "maschinen"],
+    body: '<rect x="4" y="24" width="7" height="16" rx="2"/><rect x="11" y="18" width="8" height="28" rx="2"/><rect x="45" y="18" width="8" height="28" rx="2"/><rect x="53" y="24" width="7" height="16" rx="2"/><rect x="19" y="29" width="26" height="6" rx="2"/>'
+  }
+];
+var DEFAULT_PLAN_ICON = "strength";
+var BY_KEY = new Map(PLAN_ICONS.map((i) => [i.key, i]));
+function tokens(text2) {
+  return normalizeSearch2(text2).replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter(Boolean);
+}
+function matchesAt(words, i, keyword) {
+  const parts2 = keyword.split(" ");
+  if (parts2.length > 1) return parts2.every((p, k) => words[i + k] === p);
+  const w = words[i];
+  if (keyword.length < 4) return w === keyword || new RegExp(`^${keyword}\\d+$`).test(w);
+  return w === keyword || w.startsWith(keyword);
+}
+function detectPlanIcon(name, description = "") {
+  for (const text2 of [name, description]) {
+    const words = tokens(text2);
+    for (let i = 0; i < words.length; i++) {
+      let best = null;
+      for (const icon of PLAN_ICONS) {
+        if (icon.key === DEFAULT_PLAN_ICON) continue;
+        for (const k of icon.keywords) {
+          if (matchesAt(words, i, k) && (!best || k.length > best.len)) best = { key: icon.key, len: k.length };
+        }
+      }
+      if (best) return best.key;
+    }
+  }
+  return DEFAULT_PLAN_ICON;
+}
+function planIconKey(plan) {
+  const chosen = plan.icon?.trim();
+  if (chosen && chosen !== AUTO_ICON && BY_KEY.has(chosen)) return chosen;
+  return detectPlanIcon(plan.name, plan.description ?? "");
+}
+function planIconLabel(key) {
+  return BY_KEY.get(key)?.label ?? BY_KEY.get(DEFAULT_PLAN_ICON).label;
+}
+function planIconSvg(key, size = 28) {
+  const icon = BY_KEY.get(key) ?? BY_KEY.get(DEFAULT_PLAN_ICON);
+  return `<svg viewBox="0 0 64 64" width="${size}" height="${size}" fill="currentColor" aria-hidden="true" focusable="false">${icon.body}</svg>`;
+}
 export {
   AKH_REFERENCES,
   ANS_INFO,
   ANS_MAX,
   ANS_MIN,
   ANS_TITLE,
+  AUTO_ICON,
   BOOKS,
   BOOK_ORDER,
   COACH_MODULES,
@@ -20687,6 +21090,7 @@ export {
   OPTIONAL_KEYS,
   OPTIONAL_LABELS,
   OVERVIEW_LAYOUT_KEY,
+  PLAN_ICONS,
   PLAN_SLOTS,
   REFERENCE_SOURCE,
   REFERENCE_URL,
@@ -20717,6 +21121,7 @@ export {
   checkin_exports as checkin,
   checklistToPdf,
   checklistToXlsx,
+  compactSearch,
   countAfterClick,
   coverage,
   dailyAssociations,
@@ -20740,6 +21145,7 @@ export {
   describeScheduled,
   describeSupplements,
   describeTiming,
+  detectPlanIcon,
   doctorReport_exports as doctorReport,
   doctorReportFileName,
   doctorReportToPdf,
@@ -20749,6 +21155,7 @@ export {
   drinksMl,
   dueNotices,
   duplicateHrtEntries,
+  editDistance2 as editDistance,
   emptyFastDraft,
   energy_exports as energy,
   energyGoalView,
@@ -20803,6 +21210,7 @@ export {
   macroGoalRows,
   macrosOf,
   magazines_exports as magazines,
+  matchingGroups,
   mealDisplayName,
   mealHasContent,
   mealQuick_exports as mealQuick,
@@ -20830,6 +21238,9 @@ export {
   perServing,
   percentText,
   planDraft_exports as planDraft,
+  planIconKey,
+  planIconLabel,
+  planIconSvg,
   planSchedule_exports as planSchedule,
   portionsFromAmount,
   previousMean,
@@ -20856,6 +21267,7 @@ export {
   setMealList,
   setMealNames,
   sleep_exports as sleep,
+  smartFilter,
   sorting_exports as sorting,
   sports_exports as sports,
   stats_exports as stats,

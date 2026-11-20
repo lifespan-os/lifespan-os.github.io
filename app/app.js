@@ -677,19 +677,27 @@ function pickerResults() {
   const catalog = gymOn ? GY.pickerCatalog() : S.catalog;
   const anyNumbered = catalog.machines.some((m) => m.own_number || m.gym_number);
   const onlyNr = !gymOn && S.prefs.onlyNumbered && anyNumbered;
-  const hits = C.search(catalog, S.localExercises, S.query, { onlyNumbered: onlyNr });
+  const hits = C.search(catalog, S.localExercises, S.query, { onlyNumbered: onlyNr, smart: PDOM.smartFilter });
   if (!hits.length) {
     return `<p class="empty">Nichts gefunden.${gymOn && !S.gymAll ? " Tippe auf „Alle Maschinen zeigen“, um alle Maschinen zu durchsuchen." : onlyNr ? " Schalte „Nur Maschinen mit Nummer“ aus, um alle Maschinen zu durchsuchen." : ""}</p>`;
   }
+  const similarFrom = hits.findIndex((h) => h.match === "related" || h.match === "typo");
+  const typoOnly = similarFrom >= 0 && hits.slice(similarFrom).every((h) => h.match === "typo");
   return hits
-    .map((h) => {
+    .map((h, i) => (i === similarFrom ? `<p class="pick-group">${typoOnly ? (i === 0 ? `Keine genauen Treffer – meintest du …?` : "Meintest du …?") : "Ähnlich"}</p>` : "") + hitHtml(h))
+    .join("");
+}
+
+/** Ein Treffer der Übungsauswahl (Maschine oder freie Übung). */
+function hitHtml(h) {
+  const same = h.match === "synonym" ? ' <span class="tag">gleichbedeutend</span>' : "";
       if (h.kind === "machine") {
         const m = h.machine;
         const nr = m.own_number || m.gym_number;
         const key = `machine:${m.id}`;
         return `<div class="item-row"><button class="item" data-act="pick-machine" data-arg="${esc(m.id)}">
           <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>
-          <span class="main"><b>${esc(m.display_name)}</b><span class="muted small">${esc([m.manufacturer, m.series, C.machineMuscles(m).slice(0, 3).join(", ")].filter(Boolean).join(" · "))}</span>${
+          <span class="main"><b>${esc(m.display_name)}</b>${same}<span class="muted small">${esc([m.manufacturer, m.series, C.machineMuscles(m).slice(0, 3).join(", ")].filter(Boolean).join(" · "))}</span>${
             h.exercises.length ? `<span class="small">Übungen: ${esc(h.exercises.map((e) => e.name).join(" · "))}</span>` : ""
           }<span class="usage small">${esc(usageText(C.usageOf(S.catalog, S.workouts, C.machineExercises(S.catalog, S.localExercises, m.id).map((e) => e.id))))}</span></span>
           <span class="chev">${h.exercises.length ? "›" : "+"}</span></button>
@@ -699,11 +707,9 @@ function pickerResults() {
       const e = h.exercise;
       return `<button class="item" data-act="pick-exercise" data-arg="${esc(e.id)}">
         <span class="num none">Übung</span>
-        <span class="main"><b>${esc(e.name)}</b><span class="muted small">${esc([e.muscle_group, e.equipment].filter(Boolean).join(" · "))}</span>
+        <span class="main"><b>${esc(e.name)}</b>${same}<span class="muted small">${esc([e.muscle_group, e.equipment].filter(Boolean).join(" · "))}</span>
           <span class="usage small">${esc(usageText(C.usageOf(S.catalog, S.workouts, [e.id])))}</span></span>
         <span class="chev">+</span></button>`;
-    })
-    .join("");
 }
 
 /** Maschine mit Übungen: eine davon wählen oder eine weitere anlegen. */

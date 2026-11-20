@@ -6,7 +6,7 @@
 // PC. Prüfregeln wie im Rust-Kern (`repo/gym.rs`). Das gewählte Gym am Handy bleibt am Handy
 // (`local.active`). Referenz-Studio „dasGym Wien“ (Paket-ID `dasgym-wien`) lässt sich nicht löschen.
 
-export const GYM_COLUMNS = ["id", "name", "address", "contact", "member_number", "website", "photo", "package_id", "sort_order", "archived", "created_at", "updated_at"];
+export const GYM_COLUMNS = ["id", "name", "address", "contact", "member_number", "website", "photo", "package_id", "sort_order", "archived", "created_at", "updated_at", "phone", "email", "social"];
 export const ENTRY_COLUMNS = ["id", "gym_id", "machine_id", "number", "note", "created_at", "updated_at"];
 export const REFERENCE_PACKAGE = "dasgym-wien";
 export const MAX_PHOTO_CHARS = 600000;
@@ -188,6 +188,27 @@ export function websiteHref(website) {
   return /^https?:\/\/[^\s/]+\.[^\s]+/i.test(url) ? url : null;
 }
 
+/** Telefon als Link (wie `phoneHref` am PC). */
+export function phoneHref(phone) {
+  const p = String(phone ?? "").trim();
+  if (!p) return null;
+  const digits = p.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
+  return /\d{3,}/.test(digits) ? `tel:${digits}` : null;
+}
+
+/** E-Mail als Link (wie `emailHref` am PC). */
+export function emailHref(email) {
+  const e = String(email ?? "").trim();
+  return e && /^[^\s@]+@[^\s@]+\.[^\s@.]+$/.test(e) ? `mailto:${e}` : null;
+}
+
+/** Social Media als Link, wenn es eine Adresse ist; „@name“ bleibt Text (wie `socialHref` am PC). */
+export function socialHref(social) {
+  const s = String(social ?? "").trim();
+  if (!s || s.startsWith("@")) return null;
+  return websiteHref(s);
+}
+
 /** Gym speichern (neu oder ändern) wie `gym::save`. Ergebnis `{ row }` oder `{ errors }`. */
 export function saveGym(catalog, local, input, uuid, now = new Date()) {
   const errors = {};
@@ -195,6 +216,11 @@ export function saveGym(catalog, local, input, uuid, now = new Date()) {
   if (!name || [...name].length > 120) errors.name = "Bitte einen Namen mit höchstens 120 Zeichen eingeben.";
   const address = text(errors, "address", input.address, 300);
   const contact = text(errors, "contact", input.contact, 300);
+  const phone = text(errors, "phone", input.phone, 40);
+  if (phone && !/^[\d +\-/()]+$/.test(phone)) errors.phone = "Bitte nur Ziffern, Leerzeichen und + - / ( ) eingeben.";
+  const email = text(errors, "email", input.email, 200);
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@.]+$/.test(email)) errors.email = "Bitte eine gültige E-Mail-Adresse eingeben (name@beispiel.at).";
+  const social = text(errors, "social", input.social, 300);
   const member = text(errors, "member_number", input.member_number, 60);
   const website = text(errors, "website", input.website, 300);
   const photo = input.photo ? String(input.photo) : null;
@@ -209,6 +235,9 @@ export function saveGym(catalog, local, input, uuid, now = new Date()) {
     name,
     address,
     contact,
+    phone,
+    email,
+    social,
     member_number: member,
     website,
     photo,

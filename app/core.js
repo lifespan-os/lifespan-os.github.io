@@ -11,7 +11,7 @@ import { appDay } from "./appday.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.61.0";
+export const MOBILE_VERSION = "1.63.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -526,7 +526,7 @@ export function newMachineExercise(catalog, localExercises, machineId, name, now
 }
 
 /** Suche über Maschinen (Nummern, Name, Hersteller) und freie Übungen. */
-export function search(catalog, localExercises, query, { onlyNumbered = false, limit = 60 } = {}) {
+export function search(catalog, localExercises, query, { onlyNumbered = false, limit = 60, smart = null } = {}) {
   const q = query.trim().toLowerCase();
   const byMachine = new Map();
   for (const e of allExercises(catalog, localExercises)) {
@@ -566,7 +566,30 @@ export function search(catalog, localExercises, query, { onlyNumbered = false, l
   const all = [...machineHits, ...exHits].sort(
     (a, b) => b.score - a.score || numCompare(sortKey(a), sortKey(b)),
   );
-  return all.slice(0, limit);
+  const direct = all.slice(0, limit);
+  if (!smart || q.length < 3 || direct.length >= limit) return direct;
+  // Intelligente Suche (1.62.0, `smartFilter` aus pcdomain.js wie am PC): Übersetzungen,
+  // Schreibweisen, ähnliche Bewegungen und Tippfehler hinten anhängen.
+  const seen = new Set(direct.map((h) => (h.kind === "machine" ? `m:${h.machine.id}` : `e:${h.exercise.id}`)));
+  const options = [];
+  for (const m of catalog.machines) {
+    if (m.archived || (onlyNumbered && !(m.own_number || m.gym_number)) || seen.has(`m:${m.id}`)) continue;
+    const names = (byMachine.get(m.id) ?? []).map((e) => e.name).join(" ");
+    options.push({ id: `m:${m.id}`, label: m.display_name, detail: `${m.name} ${m.manufacturer} ${m.series ?? ""} ${names}`, ref: m });
+  }
+  for (const e of allExercises(catalog, localExercises)) {
+    if (e.archived || e.machine_id || seen.has(`e:${e.id}`)) continue;
+    options.push({ id: `e:${e.id}`, label: e.name, detail: `${e.muscle_group ?? ""} ${e.equipment ?? ""}`, ref: e });
+  }
+  const extra = smart(options, query, limit - direct.length)
+    // Tippfehler nur, wenn es sonst keine Treffer gibt (wie am PC)
+    .filter((h) => h.kind !== "exact" && !(direct.length && h.kind === "typo"))
+    .map((h) =>
+      h.option.id.startsWith("m:")
+        ? { kind: "machine", score: 0, machine: h.option.ref, exercises: byMachine.get(h.option.ref.id) ?? [], match: h.kind }
+        : { kind: "exercise", score: 0, exercise: h.option.ref, match: h.kind },
+    );
+  return [...direct, ...extra];
 }
 
 function numCompare(a, b) {

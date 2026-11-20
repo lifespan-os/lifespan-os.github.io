@@ -143,3 +143,17 @@ test("Mitgeliefertes Studio-Paket dasGym Wien ist gültig", async () => {
     assert.equal(r.pkg.machines.length, s.machines);
   }
 });
+
+test("Kontaktfelder: Telefon, E-Mail, Social Media (Prüfung und Links wie am PC)", () => {
+  const c = { machines: catalog().machines };
+  const local = G.emptyGymsLocal();
+  const bad = G.saveGym(c, local, { name: "X", phone: "01 abc", email: "a@b" }, uuid);
+  assert.ok(bad.errors.phone && bad.errors.email);
+  const ok = G.saveGym(c, local, { name: "X", phone: "+43 1 234 56-78", email: "info@x.at", social: "@x" }, uuid);
+  assert.deepEqual([ok.row.phone, ok.row.email, ok.row.social], ["+43 1 234 56-78", "info@x.at", "@x"]);
+  assert.deepEqual(Object.keys(G.gymTables(local).gym[0]).slice(-3), ["phone", "email", "social"]);
+  assert.equal(G.phoneHref("0664 / 12 34 567"), "tel:06641234567");
+  assert.equal(G.emailHref("info@dasgym.at"), "mailto:info@dasgym.at");
+  assert.equal(G.socialHref("@dasgym"), null);
+  assert.equal(G.socialHref("instagram.com/dasgym"), "https://instagram.com/dasgym");
+});

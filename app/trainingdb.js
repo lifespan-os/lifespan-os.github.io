@@ -8,6 +8,7 @@ import * as TR from "./trainingdata.js";
 import { buildDb, today } from "./diary.js";
 import { esc } from "./pcview.js";
 import { exerciseModels } from "./trainingstats.js";
+import { cropPhoto } from "./photocrop.js";
 
 let X = null;
 
@@ -815,9 +816,13 @@ export function dbChange(el) {
   else if (k === "sportImage") {
     syncSport();
     const file = el.files?.[0];
+    el.value = "";
     if (!file) return true;
-    loadImage(file)
+    // Ausschnitt wählen (1.63.0), Format wie die Anzeige (8 : 5)
+    cropPhoto(file, { title: "Ausschnitt für das Sportart-Bild", aspect: 8 / 5, maxSide: 1200, blob: true })
+      .then((blob) => (blob ? loadImage(blob) : null))
       .then((img) => {
+        if (!img) return;
         const r = draw(img, 480, 0.8);
         S.trainSportEdit.image = `data:${r.mime};base64,${r.data}`;
         S.trainErrors = {};
@@ -830,11 +835,18 @@ export function dbChange(el) {
   } else if (k === "checkinImage") {
     syncCheckin();
     const file = el.files?.[0];
+    el.value = "";
     if (!file) return true;
-    S.trainCheckinBusy = true;
-    X.rerender();
-    loadImage(file)
+    // Ausschnitt wählen (1.63.0), hochkant 3 : 4 wie die Check-In-Kacheln
+    cropPhoto(file, { title: "Ausschnitt für das Check-In-Foto", aspect: 3 / 4, maxSide: 2000, blob: true })
+      .then((blob) => {
+        if (!blob) return null;
+        S.trainCheckinBusy = true;
+        X.rerender();
+        return loadImage(blob);
+      })
       .then((img) => {
+        if (!img) return;
         S.trainCheckin.image = draw(img, 1600, 0.85);
         S.trainCheckin.thumb = draw(img, 360, 0.8);
         S.trainErrors = {};

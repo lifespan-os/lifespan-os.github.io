@@ -10,6 +10,7 @@ import * as PS from "./pcsettings.js";
 import * as DP from "./devprefs.js";
 import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
+import { cropPhoto } from "./photocrop.js";
 import { QUICK } from "./nav.js";
 import { LAYOUT_PAGES, setLayoutEditing } from "./layoutedit.js";
 
@@ -71,6 +72,10 @@ function profileCard(db) {
   const opt = (opts, cur) => opts.map((o) => `<option value="${esc(o.value)}" ${o.value === cur ? "selected" : ""}>${esc(o.label)}</option>`).join("");
   return `<section class="card" id="set-profile">
     <h3>Profil</h3>
+    <div class="prof-photo"><span class="prof-photo__img">${p.photo ? `<img src="${esc(p.photo)}" alt="Profilbild">` : "👤"}</span><div>
+      <button class="btn sm" data-act="prof-photo-pick">${p.photo ? "Anderes Bild" : "Profilbild aufnehmen oder wählen"}</button>
+      ${p.photo ? '<button class="linkbtn" data-act="prof-photo-crop">Ausschnitt ändern</button> <button class="linkbtn danger" data-act="prof-photo-remove">Entfernen</button>' : ""}
+    </div></div>
     <div class="field"><label for="prof-name">Name</label><input id="prof-name" data-prof="name" type="text" maxlength="60" autocomplete="off" value="${esc(f.name)}" ${e?.name ? 'aria-invalid="true"' : ""}>${errOf(e, "name")}</div>
     <div class="grid2">
       <div class="field"><label for="prof-height">Größe (cm)</label><input id="prof-height" data-prof="height" type="text" inputmode="decimal" value="${esc(f.height)}" ${e?.height ? 'aria-invalid="true"' : ""}>${errOf(e, "height")}</div>
@@ -354,7 +359,45 @@ async function savePrefs() {
   X.applyPrefs();
 }
 
+/** Profilbild in die Profilzeile schreiben (geht wie das Profil mit „An den PC senden“ an den PC). */
+async function saveProfilePhoto(photo) {
+  const S = X.S;
+  const cur = buildDb()?.profile;
+  if (!cur) return X.toast("Bitte zuerst das Profil anlegen.", true);
+  const { id: _id, updated_at: _u, ...row } = cur;
+  S.pcsettings = PS.normSync(S.pcsettings);
+  PS.setProfile(S.pcsettings, { ...row, photo });
+  await X.store.set("pcsettings", S.pcsettings);
+  X.toast(photo ? "Profilbild gespeichert" : "Profilbild entfernt");
+  X.rerender();
+}
+
+async function chooseProfilePhoto(source) {
+  try {
+    const url = await cropPhoto(source, { title: "Ausschnitt für das Profilbild", maxSide: 512 });
+    if (url) await saveProfilePhoto(url);
+  } catch {
+    X.toast("Das Bild konnte nicht gelesen werden.", true);
+  }
+}
+
 export const settingsActions = {
+  // Profilbild (1.63.0): Kamera oder Fotomediathek, quadratischer Ausschnitt, wie am PC
+  "prof-photo-pick": () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.addEventListener("change", () => {
+      const file = input.files?.[0];
+      if (file) void chooseProfilePhoto(file);
+    });
+    input.click();
+  },
+  "prof-photo-crop": () => {
+    const photo = buildDb()?.profile?.photo;
+    if (photo) void chooseProfilePhoto(photo);
+  },
+  "prof-photo-remove": () => saveProfilePhoto(null),
   "prof-save": async () => {
     const f = readProfile();
     const r = PS.validateProfile(f, today());
@@ -364,7 +407,7 @@ export const settingsActions = {
     }
     const S = X.S;
     S.pcsettings = PS.normSync(S.pcsettings);
-    PS.setProfile(S.pcsettings, r.value);
+    PS.setProfile(S.pcsettings, { ...r.value, photo: buildDb()?.profile?.photo ?? null });
     await X.store.set("pcsettings", S.pcsettings);
     S.setProfile = null;
     await X.renameActiveAccount(r.value.name);

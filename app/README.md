@@ -1006,3 +1006,32 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
   muss dafür neu erzeugt werden (`scripts\tools\handy\startpaket-erzeugen.py`).
 - Website: neue Seite `studios.html`, verlinkt auf der Startseite (Maschinen-Kachel, Download-Bereich).
 - Tests: `node --test *.test.mjs` (140 bestanden); im Testbrowser Installieren aus der Liste geprüft.
+
+## Version 1.62.0 (20.11.2026): Gym-Kontakt und Foto-Ausschnitt
+
+- Meine Gyms: neue Felder Telefon, E-Mail und Social Media (Spalten `phone`, `email`, `social`, Schema 66) –
+  in der Ansicht als Link (tel:, mailto:, Adresse); „@name“ bleibt Text. Prüfregeln wie am PC. Gehen nicht in
+  Studio-Pakete.
+- Foto: nach der Auswahl öffnet sich `photocrop.js` – quadratischer Ausschnitt, mit dem Finger verschieben,
+  mit dem Regler vergrößern; gespeichert wird ein JPEG bis 800 × 800 px (höchstens 550.000 Zeichen).
+  „Ausschnitt ändern“ für ein vorhandenes Foto. Gleiche Rechnung wie `src/domain/photoCrop.ts` am PC.
+- Tests: `node --test *.test.mjs` (142 bestanden, neu `photocrop.test.mjs`); im Testbrowser Gym mit Kontakt
+  und zugeschnittenem Foto angelegt.
+
+## Version 1.63.0 (20.11.2026): Intelligente Suche, Plan-Symbole, Aktionen als Symbol
+
+- Übungsauswahl: `C.search(…, { smart: PDOM.smartFilter })` hängt an die direkten Treffer Übersetzungen
+  (Brustpresse ↔ Chest Press), andere Schreibweisen (Latpulldown ↔ Lat Pull Down), „Ähnlich“ (verwandte
+  Bewegungen) und – nur ohne direkte Treffer – Tippfehler an. Regeln und Wörterbuch: `src/domain/smartSearch.ts`
+  (über pcdomain.js wie am PC).
+- Training → Pläne: Symbol je Plan (eigene Silhouetten, `src/domain/planIcons.ts`): automatisch nach dem Namen
+  (OK/Upper → Oberkörper, UK/Legs → Unterkörper, GK/Fullbody → Ganzkörper, Arme, Brust, Rücken, Schulter,
+  Bauch/Core, Laufen, Rad, Rudern, Schwimmen, HYROX, Mobility, Erholung, Kampfsport, Klettern/Wandern, Ballsport)
+  oder im Plan-Editor gewählt (Spalte `training_plan.icon`, Schema 67).
+- Bearbeiten, Kopieren, Löschen bei Plänen nur als Symbol (Text als Hinweis/für Vorleseprogramme).
+- Einheiten-Liste: „♥ HF“ statt „♥ Puls“, „Open“ statt „Öffnen“.
+- Bildausschnitt auch für Check-In-Fotos (hochkant 3 : 4 wie die Kacheln) und Sportart-Bilder (8 : 5):
+  `photocrop.js` mit `aspect` und `blob: true` (Ausschnitt als JPEG-Datei bis 2000 bzw. 1200 px, danach die
+  bisherige Verkleinerung). Fotos kommen wie bisher aus der Kamera oder der Fotomediathek.
+- Settings → Profil: Profilbild aufnehmen oder aus der Mediathek wählen (quadratischer Ausschnitt, 512 px);
+  Spalte `profile.photo` (Schema 68), geht wie das Profil mit „An den PC senden“ an den PC.

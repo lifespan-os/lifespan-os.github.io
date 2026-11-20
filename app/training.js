@@ -18,8 +18,13 @@ import { energyHtml, stepGoalBar } from "./overview.js";
 import { statsActions, viewCardioTab, viewProgressTab, viewReviewTab, statsChange } from "./trainingstats.js";
 import { dbActions, dbChange, dbInput, viewDatabaseTab } from "./trainingdb.js";
 import { activeGymSelectHtml, viewGymsTab } from "./gymsui.js";
+import { icon } from "./nav.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice, saveTrain, startPlanDay, startFree, startBackfill, startCardio, openWorkout, C }
+
+/** Aktion nur als Symbol (1.63.0); der Text steht im Hinweis und für Vorleseprogramme bereit. */
+const actionBtn = (act, id, name, label, tone = "") =>
+  `<button class="icon-act ${tone}" data-act="${act}" data-arg="${esc(id)}" aria-label="${esc(label)}" title="${esc(label)}">${icon(name)}</button>`;
 
 export function initTraining(ctx) {
   X = ctx;
@@ -188,7 +193,7 @@ function workoutsTab() {
           return `<li class="train-row"><span class="train-row__date">${fmtDate(w.date)}${w.startTime ? `<span class="muted small">${esc(w.startTime)} Uhr</span>` : ""}</span>
             <span class="train-row__main"><strong>${esc(w.title)}</strong>${w.status === "active" ? ' <span class="status-pill status-pill--active">läuft</span>' : ""}${w.competition ? `<span class="small train-row__comp">${esc(HX.describeCompetition(w.competition))}</span>` : ""}
               <span class="muted small">${w.exerciseCount} ${w.exerciseCount === 1 ? "Übung" : "Übungen"} · ${w.setCount} Arbeitssätze · ${w.volumeKg > 0 ? `${F(w.volumeKg)} kg` : "–"} · ${w.durationMin !== null ? `${w.durationMin} min` : "–"}</span></span>
-            <span class="train-row__acts">${w.status === "done" && hasWearable(S.catalog) ? `<button class="linkbtn" data-act="train-heart" data-arg="${esc(w.id)}" aria-expanded="${S.trainHeart === w.id}">♥ Puls</button>` : ""}<button class="linkbtn" data-act="train-open" data-arg="${esc(w.id)}">Öffnen</button></span></li>${
+            <span class="train-row__acts">${w.status === "done" && hasWearable(S.catalog) ? `<button class="linkbtn" data-act="train-heart" data-arg="${esc(w.id)}" aria-expanded="${S.trainHeart === w.id}" aria-label="Herzfrequenz der Einheit" title="Herzfrequenz">♥ HF</button>` : ""}<button class="linkbtn" data-act="train-open" data-arg="${esc(w.id)}" aria-label="Einheit öffnen">Open</button></span></li>${
               S.trainHeart === w.id ? `<li class="train-heart">${workoutHeartHtml(workoutHeartOf(S.catalog, w))}</li>` : ""
             }`;
         })
@@ -429,10 +434,8 @@ function plansTab() {
     ${plans
       .map(
         (plan) => `<section class="card card--training">
-        <div class="wo-head"><h3>📅 ${esc(plan.name)} ${plan.archived ? '<span class="pill">Archiviert</span>' : ""}</h3></div>
-        <div class="row-actions"><button class="linkbtn" data-act="plan-edit" data-arg="${esc(plan.id)}">Bearbeiten</button>
-          <button class="linkbtn" data-act="plan-copy" data-arg="${esc(plan.id)}">Kopieren</button>
-          <button class="linkbtn danger" data-act="plan-delete" data-arg="${esc(plan.id)}">Löschen</button></div>
+        <div class="wo-head"><h3 class="plan-title"><span class="plan-icon" title="${esc(D.planIconLabel(D.planIconKey(plan)))}">${D.planIconSvg(D.planIconKey(plan), 30)}</span>${esc(plan.name)} ${plan.archived ? '<span class="pill">Archiviert</span>' : ""}</h3></div>
+        <div class="row-actions icon-actions">${actionBtn("plan-edit", plan.id, "edit", `Plan „${plan.name}“ bearbeiten`)}${actionBtn("plan-copy", plan.id, "copy", `Plan „${plan.name}“ kopieren`)}${actionBtn("plan-delete", plan.id, "trash", `Plan „${plan.name}“ löschen`, "danger")}</div>
         ${plan.description ? `<p class="muted small">${esc(plan.description)}</p>` : ""}
         ${plan.days
           .map(
@@ -457,6 +460,18 @@ function plansTab() {
 
 const describeSlot = (s) => D.planSchedule.describeSlot(s);
 
+/** Symbol des Plans wählen (1.63.0): „Automatisch“ nach dem Namen oder ein festes Symbol. */
+function planIconPickerHtml(draft) {
+  const auto = D.detectPlanIcon(draft.name ?? "", draft.description ?? "");
+  const current = draft.icon || D.AUTO_ICON;
+  const opts = [{ key: D.AUTO_ICON, label: `Automatisch (${D.planIconLabel(auto)})`, icon: auto }, ...D.PLAN_ICONS.map((i) => ({ key: i.key, label: i.label, icon: i.key }))];
+  return `<div class="field"><span class="label">Symbol</span><div class="plan-icon-grid" role="radiogroup" aria-label="Symbol des Plans">${opts
+    .map(
+      (o) => `<button class="plan-icon-choice ${current === o.key ? "is-selected" : ""}" role="radio" aria-checked="${current === o.key}" data-act="plan-icon" data-arg="${esc(o.key)}"><span class="plan-icon">${D.planIconSvg(o.icon, 28)}</span><span>${esc(o.label)}</span></button>`,
+    )
+    .join("")}</div></div>`;
+}
+
 function planEditor() {
   const S = X.S;
   const draft = S.trainPlanEdit;
@@ -469,6 +484,7 @@ function planEditor() {
     <div class="field"><label for="plan-name">Name</label><input id="plan-name" type="text" maxlength="80" placeholder="z. B. Push/Pull/Beine oder Cardio" value="${esc(draft.name)}" data-plan="name">${fieldError(errors, "name")}</div>
     <label class="toggle"><input type="checkbox" data-plan="archived" ${draft.archived ? "checked" : ""}> Archiviert</label>
     <div class="field"><label for="plan-description">Beschreibung (optional)</label><textarea id="plan-description" rows="2" maxlength="2000" data-plan="description">${esc(draft.description)}</textarea>${fieldError(errors, "description")}</div>
+    ${planIconPickerHtml(draft)}${fieldError(errors, "icon")}
     <h4>Trainingstage</h4>
     <p class="muted small">Übungen fügst du wie in einem normalen Training hinzu (Sätze, Pause, Notiz). Für einen Cardioplan wählst du Cardio-Übungen wie Laufband oder Rad.</p>
     ${fieldError(errors, "days")}
@@ -771,6 +787,12 @@ export const trainingActions = {
     S.trainPlanDayIdx = null;
     S.trainNotice = null;
     S.trainErrors = {};
+    X.rerender();
+  },
+  "plan-icon": (el) => {
+    const S = X.S;
+    if (!S.trainPlanEdit) return;
+    S.trainPlanEdit.icon = el.dataset.arg;
     X.rerender();
   },
   "plan-edit": (el) => {

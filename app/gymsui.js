@@ -3,6 +3,7 @@
 // Logik in gymsdata.js; Änderungen gehen mit der Rückgabedatei an den PC.
 
 import * as G from "./gymsdata.js";
+import { cropPhoto } from "./photocrop.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -167,11 +168,16 @@ function detailHtml(g, active) {
         .slice(0, 25)
     : [];
   const fact = (label, value) => `<p class="small"><span class="muted">${label}:</span> ${value}</p>`;
+  const link = (text, url, external = false) =>
+    url ? `<a href="${esc(url)}"${external ? ' target="_blank" rel="noopener noreferrer"' : ""}>${esc(text)}</a>` : esc(text);
   return `<section class="card">
     <div class="wo-head"><h3>${esc(g.name)}</h3><button class="linkbtn" data-act="gym-back">‹ Alle Gyms</button></div>
     <div class="gym-head">${photoHtml(g, "gym-photo gym-photo--large")}<div>
       ${g.address ? fact("Anschrift", esc(g.address)) : ""}
       ${g.contact ? fact("Kontakt", esc(g.contact)) : ""}
+      ${g.phone ? fact("Telefon", link(g.phone, G.phoneHref(g.phone))) : ""}
+      ${g.email ? fact("E-Mail", link(g.email, G.emailHref(g.email))) : ""}
+      ${g.social ? fact("Social Media", link(g.social, G.socialHref(g.social), true)) : ""}
       ${g.member_number ? fact("Mitgliedsnummer", esc(g.member_number)) : ""}
       ${g.website ? fact("Website", href ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(g.website)}</a>` : esc(g.website)) : ""}
     </div></div>
@@ -220,13 +226,17 @@ function editorHtml(d) {
     <div class="wo-head"><h3>${d.id ? "Gym bearbeiten" : "Neues Gym"}</h3></div>
     ${f("name", "Name", 'maxlength="120" placeholder="z. B. John Reed Wien Mitte"')}
     ${f("address", "Anschrift", 'maxlength="300"')}
-    ${f("contact", "Kontakt", 'maxlength="300" placeholder="Telefon, E-Mail …"')}
+    ${f("contact", "Kontakt", 'maxlength="300" placeholder="Ansprechperson, Öffnungszeiten …"')}
+    ${f("phone", "Telefon", 'maxlength="40" type="tel" inputmode="tel" placeholder="z. B. +43 1 234 56 78"')}
+    ${f("email", "E-Mail", 'maxlength="200" type="email" inputmode="email" placeholder="z. B. info@studio.at"')}
+    ${f("social", "Social Media", 'maxlength="300" placeholder="z. B. instagram.com/studio oder @studio"')}
     ${f("member_number", "Mitgliedsnummer", 'maxlength="60"')}
     ${f("website", "Website", 'maxlength="300" inputmode="url" placeholder="z. B. dasgym.at"')}
     <div class="gym-head">${photoHtml(d, "gym-photo gym-photo--large")}<div>
       <label class="btn sm" for="ge-photo">${d.photo ? "Anderes Foto" : "Foto aufnehmen oder wählen"}</label>
       <input id="ge-photo" type="file" accept="image/*" data-gym="photo" hidden>
-      ${d.photo ? '<button class="linkbtn" data-act="gym-photo-remove">Foto entfernen</button>' : ""}
+      ${d.photo ? '<button class="linkbtn" data-act="gym-photo-crop">Ausschnitt ändern</button> <button class="linkbtn" data-act="gym-photo-remove">Foto entfernen</button>' : ""}
+      <p class="muted small">Du wählst den Ausschnitt; das Bild wird verkleinert gespeichert.</p>
       ${err.photo ? `<p class="warn small">${esc(err.photo)}</p>` : ""}
     </div></div>
     <div class="row-actions">
@@ -236,21 +246,17 @@ function editorHtml(d) {
   </section>`;
 }
 
-/** Foto verkleinern (längste Seite 900 px, JPEG) wie am PC. */
-async function fileToPhoto(file) {
-  const bitmap = await createImageBitmap(file);
-  let size = 900;
-  let quality = 0.82;
-  for (;;) {
-    const scale = Math.min(1, size / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const url = canvas.toDataURL("image/jpeg", quality);
-    if (url.length <= 550000 || size <= 400) return url;
-    size = Math.round(size * 0.8);
-    quality = 0.72;
+/** Ausschnitt wählen (Datei oder vorhandenes Foto) und ins Formular übernehmen. */
+async function choosePhoto(source) {
+  const S = X.S;
+  try {
+    const url = await cropPhoto(source, { title: "Ausschnitt für das Gym-Foto" });
+    if (!url || !S.gymEdit) return;
+    S.gymEdit.photo = url;
+    S.gymErrors = { ...(S.gymErrors ?? {}), photo: undefined };
+    X.rerender();
+  } catch {
+    X.toast("Das Bild konnte nicht gelesen werden.", true);
   }
 }
 
@@ -259,6 +265,9 @@ const toDraft = (g) => ({
   name: g?.name ?? "",
   address: g?.address ?? "",
   contact: g?.contact ?? "",
+  phone: g?.phone ?? "",
+  email: g?.email ?? "",
+  social: g?.social ?? "",
   member_number: g?.member_number ?? "",
   website: g?.website ?? "",
   photo: g?.photo ?? null,
@@ -305,6 +314,9 @@ export const gymsActions = {
   "gym-cancel": () => {
     X.S.gymEdit = null;
     X.rerender();
+  },
+  "gym-photo-crop": () => {
+    if (X.S.gymEdit?.photo) void choosePhoto(X.S.gymEdit.photo);
   },
   "gym-photo-remove": () => {
     X.S.gymEdit.photo = null;
@@ -397,14 +409,9 @@ export function gymsChange(el) {
   }
   if (kind === "photo") {
     const file = el.files?.[0];
+    el.value = "";
     if (!file || !S.gymEdit) return true;
-    fileToPhoto(file)
-      .then((url) => {
-        S.gymEdit.photo = url;
-        S.gymErrors = { ...(S.gymErrors ?? {}), photo: undefined };
-        X.rerender();
-      })
-      .catch(() => X.toast("Das Bild konnte nicht gelesen werden.", true));
+    void choosePhoto(file);
     return true;
   }
   if (kind === "number" || kind === "note") {

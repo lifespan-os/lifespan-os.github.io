@@ -163,6 +163,7 @@ export function plansOf(raw, local, exercises) {
       id: p.id,
       name: p.name,
       description: p.description ?? null,
+      icon: p.icon ?? null,
       archived: Boolean(p.archived),
       createdAt: p.created_at,
       updatedAt: p.updated_at,
@@ -263,7 +264,7 @@ export function savePlan(raw, local, input, { uuid, now = new Date(), exercises 
   const ts = iso(now);
   const oldPlan = rowsOf(raw, local, "training_plan").find((p) => p.id === input.id) ?? null;
   const planId = oldPlan?.id ?? uuid();
-  put(local, "training_plan", withColumns(raw, "training_plan", { ...(oldPlan ?? {}), id: planId, name, description, archived: input.archived ? 1 : 0, created_at: oldPlan?.created_at ?? ts, updated_at: ts }));
+  put(local, "training_plan", withColumns(raw, "training_plan", { ...(oldPlan ?? {}), id: planId, name, description, ...planIcon(raw, input.icon), archived: input.archived ? 1 : 0, created_at: oldPlan?.created_at ?? ts, updated_at: ts }));
 
   const oldDays = rowsOf(raw, local, "training_plan_day").filter((d) => d.plan_id === planId);
   const oldPex = rowsOf(raw, local, "training_plan_exercise");
@@ -352,6 +353,18 @@ export function deletePlan(raw, local, id, now = new Date()) {
   remove(raw, local, "training_plan", id, now);
 }
 
+/**
+ * Symbol des Plans (Schema 67, Handy 1.63.0) wie `plan_icon` im Rust-Kern: leer/„auto“ = automatisch.
+ * Kennt die PC-Datei die Spalte noch nicht und ist nichts gewählt, bleibt sie weg.
+ */
+function planIcon(raw, icon) {
+  const v = String(icon ?? "").trim();
+  const value = v && v !== "auto" ? v : null;
+  if (value !== null && (v.length > 20 || !/^[a-z]+$/.test(v))) throw new FieldError("icon", "Unbekanntes Symbol.");
+  const known = raw?.columns?.training_plan?.includes("icon");
+  return value !== null || known ? { icon: value } : {};
+}
+
 /** Name der Kopie wie `plan::copy_name`. */
 export function copyName(raw, local, name) {
   const taken = new Set(rowsOf(raw, local, "training_plan").map((p) => p.name));
@@ -369,6 +382,7 @@ export function copyPlan(raw, local, plan, opts) {
     id: null,
     name: copyName(raw, local, plan.name),
     description: plan.description,
+    icon: plan.icon ?? null,
     archived: false,
     days: plan.days.map((d) => ({
       id: null,

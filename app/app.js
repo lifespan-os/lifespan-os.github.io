@@ -165,7 +165,12 @@ function go(view, arg = null) {
   S.view = view;
   S.arg = arg;
   render();
-  window.scrollTo(0, 0);
+  // Nach dem Eintragen aus dem Tagebuch: zur Mahlzeit springen statt an den Anfang (1.70.1)
+  const mealKey = view === "diary" ? S.diaryFocus : null;
+  S.diaryFocus = null;
+  const slot = mealKey ? [...document.querySelectorAll(".meal-slot[data-meal-key]")].find((el) => el.dataset.mealKey === mealKey) : null;
+  if (slot) slot.scrollIntoView({ block: "start" });
+  else window.scrollTo(0, 0);
 }
 
 // ------------------------------------------------------------------ Ansichten

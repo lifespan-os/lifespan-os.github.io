@@ -389,7 +389,7 @@ function mealsCard(slots, fast, date, db) {
     // Wie am PC: gefüllte Mahlzeiten anfangs zugeklappt, leere aufgeklappt; Wahl bleibt je Mahlzeit
     const key = slot.ref.name ? N.extraKey(slot.ref.name) : slot.ref.mealType;
     const expanded = X.S.mealOpen?.[key] ?? !has;
-    return `<div class="meal-slot ${has ? "" : "is-empty"} ${expanded ? "" : "meal-slot--collapsed"}">
+    return `<div class="meal-slot ${has ? "" : "is-empty"} ${expanded ? "" : "meal-slot--collapsed"}" data-meal-key="${esc(key)}">
       <div class="meal-slot__head"><button type="button" class="meal-slot__toggle" data-act="meal-toggle" data-arg="${esc(key)}|${expanded ? 0 : 1}" aria-expanded="${expanded}" title="${expanded ? "Zuklappen" : "Aufklappen"}"><span class="meal-slot__chevron" aria-hidden="true">${expanded ? "▾" : "▸"}</span><b>${esc(slot.title)}</b>${m?.time ? ` <span class="muted small">${esc(m.time)}</span>` : ""}</button>
         ${has ? `<span class="meal-slot__kcal">${esc(D.formatKcal(m.energyKcal))}</span>` : ""}</div>
       ${has ? `<p class="muted small">Protein ${esc(D.formatGrams(m.proteinG))} · KH ${esc(D.formatGrams(m.carbsG))} · Fett ${esc(D.formatGrams(m.fatG))}</p>` : ""}
@@ -739,6 +739,8 @@ async function quickAdd(key, items, label) {
   } catch (e) {
     X.toast("Speichern auf dem Gerät fehlgeschlagen: " + e.message, true);
   }
+  // Die Mahlzeit bleibt aufgeklappt, damit das Eingetragene zu sehen ist (1.70.1)
+  X.S.mealOpen = { ...(X.S.mealOpen ?? {}), [key]: true };
   X.rerender();
   X.toast(`Eingetragen: ${label} bei ${N.mealLabel(key)}`, false, async () => {
     QM.undoItems(X.S.food.local, res.mealId, res.added);

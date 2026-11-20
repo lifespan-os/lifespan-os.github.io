@@ -787,9 +787,13 @@ async function track(items, mealType, label, { time = "", kind = "track", skipTi
       await persist();
       X.rerender();
     });
-    // Aus dem Tagebuch gekommen: zurück zum Tag
+    // Aus dem Tagebuch gekommen: zurück zum Tag – und zwar zur Mahlzeit, nicht an den Seitenanfang (1.70.1)
     if (F().returnTo) {
       const to = F().returnTo;
+      if (to === "diary") {
+        X.S.diaryFocus = mealType;
+        X.S.mealOpen = { ...(X.S.mealOpen ?? {}), [mealType]: true };
+      }
       F().returnTo = null;
       F().trackDate = null;
       F().selected = null;

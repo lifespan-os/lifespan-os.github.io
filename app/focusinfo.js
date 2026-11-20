@@ -4,6 +4,7 @@
 // Angabe 100 %, weitere 50 %), 5. nichts hinterlegt.
 
 import { FOCUS_DATA as D } from "./focusdata.js";
+import { muscleMapAll as MM } from "./pcdomain.js";
 
 const COMBOS = D.combos.map((c) => ({
   machines: new Map(Object.entries(c.machines)),
@@ -59,12 +60,17 @@ export function patternOf(machineId, exerciseName, machineNames = []) {
   return null;
 }
 
+/**
+ * Zeilen je Muskelgruppe mit `percent` (eingetragener Anteil) und `relative` (Hauptmuskel = 100 %,
+ * seit 1.70.0 – gleiche Regel wie am PC: `focusReference` in src/domain/muscleMap.ts).
+ */
 function grouped(entries) {
+  const reference = MM.focusReference(entries.map(([muscle, percent]) => ({ muscle, percent })));
   return D.muscleGroups
     .map((g) => {
       const rows = entries
         .filter(([m, pct]) => g.parts.includes(m) && pct > 0)
-        .map(([m, pct]) => ({ muscle: m, label: D.muscleLabels[m] ?? m, percent: pct }))
+        .map(([m, pct]) => ({ muscle: m, label: D.muscleLabels[m] ?? m, percent: pct, relative: Math.round(MM.relativeFocus(pct, reference) * 100) }))
         .sort((a, b) => b.percent - a.percent || MUSCLE_ORDER.indexOf(a.muscle) - MUSCLE_ORDER.indexOf(b.muscle));
       return { label: g.label, total: rows.reduce((s, r) => s + r.percent, 0), rows };
     })

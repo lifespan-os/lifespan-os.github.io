@@ -735,10 +735,11 @@ function focusPanelHtml(info) {
     <b>${esc(info.title)}</b>
     ${info.groups
       .map(
-        (g) => `<div class="fp-group"><div class="fp-head"><span>${esc(g.label)}</span><span>${g.total} %</span></div>
-        ${g.rows.map((r) => `<div class="fp-row"><span>${esc(r.label)}</span><span>${r.percent} %</span></div>`).join("")}</div>`,
+        (g) => `<div class="fp-group"><div class="fp-head"><span>${esc(g.label)}</span><span>Anteil ${g.total} %</span></div>
+        ${g.rows.map((r) => `<div class="fp-row"><span>${esc(r.label)}</span><span>${r.relative} %<small class="fp-share"> (Anteil ${r.percent} %)</small></span></div>`).join("")}</div>`,
       )
       .join("")}
+    ${info.groups.length ? `<p class="muted small">Hauptmuskel = 100 %, so zählt die Körperkarte; in Klammern der eingetragene Anteil.</p>` : ""}
     ${info.terms.length ? `<div class="fp-group">${info.terms.map((t) => `<div class="fp-row"><span>${esc(t.label)}</span><span>${t.percent} %</span></div>`).join("")}</div>` : ""}
     ${info.note ? `<p class="muted small">${esc(info.note)}</p>` : ""}
     ${S.catalog.focus ? "" : `<p class="muted small">Für den eigenen Muskelfokus bitte eine neue Exportdatei vom PC laden.</p>`}

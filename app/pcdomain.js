@@ -2954,6 +2954,7 @@ __export(muscleMap_exports, {
   exerciseMuscles: () => exerciseMuscles,
   focusFactors: () => focusFactors,
   focusFromInputs: () => focusFromInputs,
+  focusReference: () => focusReference,
   focusSummary: () => focusSummary,
   focusToInputs: () => focusToInputs,
   groupOf: () => groupOf,
@@ -2966,6 +2967,7 @@ __export(muscleMap_exports, {
   muscleMapForRange: () => muscleMapForRange,
   muscleMapForWorkouts: () => muscleMapForWorkouts,
   parseMuscleMapSettings: () => parseMuscleMapSettings,
+  relativeFocus: () => relativeFocus,
   relativeValues: () => relativeValues,
   serializeMuscleMapSettings: () => serializeMuscleMapSettings,
   splitMuscleText: () => splitMuscleText,
@@ -7160,11 +7162,29 @@ function muscleIdsForTerm(term) {
 function isMuscleId(v) {
   return MUSCLE_IDS.includes(v);
 }
+function focusReference(focus) {
+  const entries = (focus ?? []).filter((f) => f.percent > 0);
+  if (entries.length === 0) return 0;
+  const totals3 = /* @__PURE__ */ new Map();
+  let top = entries[0];
+  for (const f of entries) {
+    const id3 = groupOf(f.muscle).id;
+    totals3.set(id3, (totals3.get(id3) ?? 0) + Math.min(100, f.percent));
+    if (Math.min(100, f.percent) > Math.min(100, top.percent)) top = f;
+  }
+  const topGroup = Math.max(...totals3.values());
+  const ownGroup = totals3.get(groupOf(top.muscle).id) ?? 0;
+  return ownGroup >= topGroup ? Math.min(100, top.percent) : topGroup;
+}
+function relativeFocus(percent, reference) {
+  return reference > 0 && percent > 0 ? Math.min(1, Math.min(100, percent) / reference) : 0;
+}
 function focusFactors(focus) {
   if (!focus || focus.length === 0) return null;
+  const reference = focusReference(focus);
   const factors = {};
   for (const f of focus) {
-    if (f.percent > 0) factors[f.muscle] = Math.min(100, f.percent) / 100;
+    if (f.percent > 0) factors[f.muscle] = relativeFocus(f.percent, reference);
   }
   return Object.keys(factors).length > 0 ? { factors, unmapped: [] } : null;
 }
@@ -8621,6 +8641,7 @@ __export(caffeine_exports, {
   isEditableIntake: () => isEditableIntake,
   levelAt: () => levelAt,
   mgPer100Ml: () => mgPer100Ml,
+  minuteOfDay: () => minuteOfDay,
   nightCaffeineLevels: () => nightCaffeineLevels,
   parseCaffeineSettings: () => parseCaffeineSettings,
   parseClock: () => parseClock,
@@ -8855,6 +8876,11 @@ function nightCaffeineLevels(evening, night, ts, halfLifeH) {
     })
   ].filter((p) => p.offset !== null && p.mg > 0);
   return ts.map((t) => levelAt(points, t + DAY_MIN, halfLifeH));
+}
+function minuteOfDay(date, now) {
+  const [y, m, d] = date.split("-").map(Number);
+  const start = new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
+  return Math.floor((now.getTime() - start.getTime()) / 6e4);
 }
 
 // src/domain/insightsDaily.ts

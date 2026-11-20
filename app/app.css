@@ -297,6 +297,7 @@ input, textarea, select { font-size: max(16px, 1em); }
 .fp-head, .fp-row { display: flex; justify-content: space-between; gap: 12px; font-variant-numeric: tabular-nums; }
 .fp-head { font-weight: 700; border-bottom: 1px solid var(--line); padding-bottom: 2px; }
 .fp-row { font-size: .9rem; padding-left: 8px; }
+.fp-share { color: var(--muted); font-size: .8rem; }
 
 /* ------------------------------------------------------------------ Wie am PC (1.5.0) */
 :root {

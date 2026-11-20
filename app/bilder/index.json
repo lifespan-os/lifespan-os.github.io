@@ -1,0 +1,21 @@
+{"format":"lifespan-os-bilderpaketliste","created":"2026-11-20T12:20:27.396Z","packages":[
+{"key":"bilder-atlantis","manufacturer":"Atlantis","folder":"Atlantis","version":"2026-11-20","images":88,"bytes":4511805,"files":["Atlantis.json"]},
+{"key":"bilder-bootybuilder","manufacturer":"Booty Builder","folder":"BootyBuilder","version":"2026-11-20","images":21,"bytes":983877,"files":["BootyBuilder.json"]},
+{"key":"bilder-citadel","manufacturer":"Citadel Strength","folder":"Citadel","version":"2026-11-20","images":8,"bytes":203927,"files":["Citadel.json"]},
+{"key":"bilder-crossaxes","manufacturer":"CrossAxes","folder":"CrossAxes","version":"2026-11-20","images":5,"bytes":278737,"files":["CrossAxes.json"]},
+{"key":"bilder-eigene","manufacturer":"Weitere Hersteller","folder":"Eigene","version":"2026-11-20","images":86,"bytes":8843540,"files":["Eigene.json","Eigene-2.json"]},
+{"key":"bilder-elitefts","manufacturer":"EliteFTS","folder":"EliteFTS","version":"2026-11-20","images":86,"bytes":3853817,"files":["EliteFTS.json"]},
+{"key":"bilder-glutebuilder","manufacturer":"Glute Builder","folder":"GluteBuilder","version":"2026-11-20","images":20,"bytes":997581,"files":["GluteBuilder.json"]},
+{"key":"bilder-granite","manufacturer":"Granite","folder":"Granite","version":"2026-11-20","images":14,"bytes":1331544,"files":["Granite.json"]},
+{"key":"bilder-gym80","manufacturer":"gym80","folder":"Gym80","version":"2026-11-20","images":208,"bytes":6514627,"files":["Gym80.json"]},
+{"key":"bilder-gymleco","manufacturer":"Gymleco","folder":"Gymleco","version":"2026-11-20","images":113,"bytes":5833561,"files":["Gymleco.json"]},
+{"key":"bilder-lifefitness","manufacturer":"Life Fitness","folder":"LifeFitness","version":"2026-11-20","images":157,"bytes":7305049,"files":["LifeFitness.json"]},
+{"key":"bilder-milon","manufacturer":"milon","folder":"Milon","version":"2026-11-20","images":11,"bytes":433306,"files":["Milon.json"]},
+{"key":"bilder-nautilus","manufacturer":"Nautilus","folder":"Nautilus","version":"2026-11-20","images":111,"bytes":4533067,"files":["Nautilus.json"]},
+{"key":"bilder-newtech","manufacturer":"Newtech","folder":"Newtech","version":"2026-11-20","images":94,"bytes":3882777,"files":["Newtech.json"]},
+{"key":"bilder-panatta","manufacturer":"Panatta","folder":"Panatta","version":"2026-11-20","images":298,"bytes":18731701,"files":["Panatta.json","Panatta-2.json","Panatta-3.json"]},
+{"key":"bilder-prime","manufacturer":"PRIME Fitness","folder":"Prime","version":"2026-11-20","images":66,"bytes":3036757,"files":["Prime.json"]},
+{"key":"bilder-realleader","manufacturer":"Realleader USA","folder":"Realleader","version":"2026-11-20","images":234,"bytes":11001415,"files":["Realleader.json","Realleader-2.json"]},
+{"key":"bilder-technogym","manufacturer":"Technogym","folder":"Technogym","version":"2026-11-20","images":172,"bytes":8516216,"files":["Technogym.json","Technogym-2.json"]},
+{"key":"bilder-watson","manufacturer":"Watson","folder":"Watson","version":"2026-11-20","images":146,"bytes":7722648,"files":["Watson.json"]}
+]}

@@ -1,13 +1,12 @@
-// LIFESPAN OS Mobil – Maschinenbilder (1.67.0): je Hersteller ein Bilderpaket von der Website (app/bilder/,
-// erzeugt am PC mit scripts/tools/handy/bilderpakete-erzeugen.cmd) oder als Datei. Je Maschine ein Bild
-// (Hauptbild, lange Seite 800 px, JPEG). Die Bilder liegen in einer eigenen IndexedDB („lifespan-bilder“) –
-// getrennt von den Daten der Konten, gelten für alle Konten und gehen nie an den PC zurück.
+// LIFESPAN OS Mobil – Maschinenbilder (1.67.0; seit 1.68.0 ein Gesamtpaket „Maschinenbilder“ in Teilen mit allen
+// Bildern jeder Maschine): von der Website (app/bilder/, erzeugt am PC mit scripts/tools/handy/bilderpakete-erzeugen.cmd)
+// oder als Datei. Je Maschine alle Bilder in der Reihenfolge des PCs (eigenes Foto zuerst), lange Seite 800 px, JPEG.
+// Die Bilder liegen in einer eigenen IndexedDB („lifespan-bilder“) – getrennt von den Daten der Konten, gelten für
+// alle Konten und gehen nie an den PC zurück. Schlüssel: Maschinen-ID für das Hauptbild, „<ID>#<n>“ für weitere.
 //
-// Anzeige: `thumb(id)` setzt einen Platzhalter `<img data-mimg="id">`, `hydrate(root)` füllt ihn (läuft nach
-// jedem Zeichnen über einen MutationObserver in app.js). Das Wissen, welche Maschinen ein Bild haben, liegt
-// im Speicher (`ids`), damit Listen ohne Flackern nur dort einen Platz reservieren.
-
-import * as GD from "./gymsdata.js";
+// Anzeige: `thumb(id)` setzt einen Platzhalter `<img data-mimg="id">` (Hauptbild), `hydrate(root)` füllt ihn (läuft
+// nach jedem Zeichnen über einen MutationObserver in app.js). Wie viele Bilder eine Maschine hat, liegt im Speicher
+// (`counts`), damit Listen ohne Flackern nur dort einen Platz reservieren. `showMachine` öffnet alle Bilder als Galerie.
 
 export const PACKAGE_FORMAT = "lifespan-os-bilderpaket";
 export const INDEX_FORMAT = "lifespan-os-bilderpaketliste";
@@ -17,8 +16,8 @@ const IMAGES = "images";
 const PACKAGES = "packages";
 
 let X = null; // { S, esc, header, toast, rerender, go, confirmTwice, store }
-let ids = null; // Set der Maschinen-IDs mit Bild (null = noch nicht geladen)
-const urls = new Map(); // Maschinen-ID → Objekt-URL
+let counts = null; // Maschinen-ID → Anzahl Bilder (null = noch nicht geladen)
+const urls = new Map(); // Bild-Schlüssel → Objekt-URL
 let dbPromise = null;
 const BLANK = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
@@ -35,9 +34,12 @@ export function parsePackage(text) {
   if (!d || d.format !== PACKAGE_FORMAT) throw new Error("Die Datei ist kein Bilderpaket von LIFESPAN OS.");
   const p = d.package ?? {};
   if (!p.key || !p.version) throw new Error("Im Bilderpaket fehlen Name oder Stand.");
-  const images = (Array.isArray(d.images) ? d.images : []).filter(
-    (x) => x && typeof x.machine === "string" && x.machine && typeof x.data === "string" && x.data && /^image\/(jpeg|png|webp)$/.test(x.type ?? ""),
-  );
+  const images = (Array.isArray(d.images) ? d.images : [])
+    .filter(
+      (x) =>
+        x && typeof x.machine === "string" && x.machine && !x.machine.includes("#") && typeof x.data === "string" && x.data && /^image\/(jpeg|png|webp)$/.test(x.type ?? ""),
+    )
+    .map((x) => ({ ...x, i: Math.max(0, Math.floor(Number(x.i) || 0)) }));
   return {
     package: {
       key: String(p.key),
@@ -75,17 +77,17 @@ export function packageState(entry, installed) {
   return installed.version === entry.version ? "current" : "old";
 }
 
-/** Hersteller-Ordner der Maschinen in den eigenen Gyms (für „Für meine Gyms laden“). */
-export function gymFolders(catalog, local) {
-  const byId = new Map((catalog?.machines ?? []).map((m) => [m.id, m]));
-  const folders = new Set();
-  for (const g of GD.gymList(catalog, local)) {
-    for (const e of GD.gymEntries(catalog, local, g.id)) {
-      const f = byId.get(e.machine_id)?.folder;
-      if (f) folders.add(f);
-    }
+/** Schlüssel eines Bilds: Hauptbild = Maschinen-ID, weitere = „<ID>#<n>“. */
+export const imageKey = (machine, i = 0) => (i ? `${machine}#${i}` : machine);
+
+/** Anzahl Bilder je Maschine aus den Schlüsseln. */
+export function countKeys(keys) {
+  const m = new Map();
+  for (const k of keys) {
+    const id = String(k).replace(/#\d+$/, "");
+    m.set(id, (m.get(id) ?? 0) + 1);
   }
-  return folders;
+  return m;
 }
 
 /** Base64 → Bytes. */
@@ -103,9 +105,11 @@ const mb = (bytes) => `${(bytes / 1024 / 1024).toLocaleString("de-DE", { maximum
 function open() {
   if (!dbPromise) {
     dbPromise = new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, 1);
+      // Version 2 (1.68.0): ein Gesamtpaket mit mehreren Bildern je Maschine – frühere Herstellerpakete werden verworfen
+      const req = indexedDB.open(DB_NAME, 2);
       req.onupgradeneeded = () => {
         const db = req.result;
+        for (const name of [IMAGES, PACKAGES]) if (db.objectStoreNames.contains(name)) db.deleteObjectStore(name);
         const os = db.createObjectStore(IMAGES);
         os.createIndex("pkg", "pkg");
         db.createObjectStore(PACKAGES, { keyPath: "key" });
@@ -149,7 +153,10 @@ export async function storePart(parsed) {
   const tx = db.transaction([IMAGES, PACKAGES], "readwrite");
   const os = tx.objectStore(IMAGES);
   for (const im of parsed.images) {
-    os.put({ pkg: p.key, type: im.type, w: im.w ?? null, h: im.h ?? null, blob: new Blob([decodeBase64(im.data)], { type: im.type }) }, im.machine);
+    os.put(
+      { pkg: p.key, machine: im.machine, i: im.i, own: Boolean(im.own), type: im.type, w: im.w ?? null, h: im.h ?? null, blob: new Blob([decodeBase64(im.data)], { type: im.type }) },
+      imageKey(im.machine, im.i),
+    );
   }
   const partsDone = [...new Set([...(fresh ? [] : (old?.partsDone ?? [])), p.part])].sort((a, b) => a - b);
   const count = (fresh ? 0 : (old?.count ?? 0)) + parsed.images.length;
@@ -164,11 +171,32 @@ export async function storePart(parsed) {
     installedAt: new Date().toISOString(),
   });
   await done(tx);
-  for (const im of parsed.images) {
-    ids?.add(im.machine);
-    const u = urls.get(im.machine);
-    if (u) URL.revokeObjectURL(u);
-    urls.delete(im.machine);
+  await dropEmptyPackages(db, p.key);
+  for (const im of parsed.images) forgetUrl(imageKey(im.machine, im.i));
+  await refreshCounts(db);
+}
+
+function forgetUrl(key) {
+  const u = urls.get(key);
+  if (u) URL.revokeObjectURL(u);
+  urls.delete(key);
+}
+
+async function refreshCounts(db) {
+  counts = countKeys(await result(db.transaction(IMAGES).objectStore(IMAGES).getAllKeys()));
+}
+
+/** Pakete ohne eigene Bilder mehr (ihre Bilder gehören jetzt einem anderen Paket) aus der Liste nehmen. */
+async function dropEmptyPackages(db, keep) {
+  const metas = (await result(db.transaction(PACKAGES).objectStore(PACKAGES).getAll())) ?? [];
+  for (const m of metas) {
+    if (m.key === keep) continue;
+    const n = await result(db.transaction(IMAGES).objectStore(IMAGES).index("pkg").count(m.key));
+    if (!n) {
+      const tx = db.transaction(PACKAGES, "readwrite");
+      tx.objectStore(PACKAGES).delete(m.key);
+      await done(tx);
+    }
   }
 }
 
@@ -178,12 +206,8 @@ async function removeImages(db, key) {
   const os = tx.objectStore(IMAGES);
   for (const k of keys) os.delete(k);
   await done(tx);
-  for (const k of keys) {
-    ids?.delete(k);
-    const u = urls.get(k);
-    if (u) URL.revokeObjectURL(u);
-    urls.delete(k);
-  }
+  for (const k of keys) forgetUrl(k);
+  await refreshCounts(db);
 }
 
 export async function removePackage(key) {
@@ -194,34 +218,54 @@ export async function removePackage(key) {
   await done(tx);
 }
 
-/** Welche Maschinen ein Bild haben, einmal laden; danach `onReady` (neu zeichnen). */
+/** Welche Maschinen Bilder haben, einmal laden; danach `onReady` (neu zeichnen). */
 export async function loadIds(onReady) {
   try {
-    const db = await open();
-    ids = new Set(await result(db.transaction(IMAGES).objectStore(IMAGES).getAllKeys()));
+    await refreshCounts(await open());
   } catch {
-    ids = new Set();
+    counts = new Map();
   }
-  if (ids.size) onReady?.();
+  if (counts.size) onReady?.();
 }
 
-export const has = (id) => Boolean(id && ids?.has(id));
-export const imageCount = () => ids?.size ?? 0;
+export const has = (id) => Boolean(id && counts?.has(id));
+/** Anzahl Bilder einer Maschine. */
+export const countOf = (id) => counts?.get(id) ?? 0;
+/** Maschinen mit Bild. */
+export const imageCount = () => counts?.size ?? 0;
+/** Bilder insgesamt. */
+export const totalImages = () => [...(counts?.values() ?? [])].reduce((a, b) => a + b, 0);
 
-/** Objekt-URL des Bilds einer Maschine (oder null). */
-export async function imageUrl(id) {
+/** Objekt-URL des Bilds `i` einer Maschine (0 = Hauptbild) oder null. */
+export async function imageUrl(id, i = 0) {
   if (!has(id)) return null;
-  if (urls.has(id)) return urls.get(id);
+  const key = imageKey(id, i);
+  if (urls.has(key)) return urls.get(key);
   try {
     const db = await open();
-    const row = await result(db.transaction(IMAGES).objectStore(IMAGES).get(id));
+    const row = await result(db.transaction(IMAGES).objectStore(IMAGES).get(key));
     if (!row?.blob) return null;
     const u = URL.createObjectURL(row.blob);
-    urls.set(id, u);
+    urls.set(key, u);
     return u;
   } catch {
     return null;
   }
+}
+
+/** Alle Bilder einer Maschine (Objekt-URLs in Reihenfolge). */
+async function machineUrls(id) {
+  const db = await open();
+  const keys = (await result(db.transaction(IMAGES).objectStore(IMAGES).getAllKeys(IDBKeyRange.bound(id, `${id}#\uffff`))))
+    .filter((k) => k === id || /^#\d+$/.test(k.slice(id.length)))
+    .sort((a, b) => Number(a.split("#")[1] ?? 0) - Number(b.split("#")[1] ?? 0));
+  const out = [];
+  for (const k of keys) {
+    const [, n] = k.split("#");
+    const u = await imageUrl(id, Number(n ?? 0));
+    if (u) out.push(u);
+  }
+  return out;
 }
 
 // ------------------------------------------------------------------ Anzeige
@@ -233,9 +277,16 @@ export function thumb(id, cls = "mthumb") {
   return has(id) ? `<img class="${cls}" data-mimg="${escAttr(id)}" alt="" decoding="async">` : "";
 }
 
+/** Großes Bild einer Maschine mit Anzahl; Antippen öffnet die Galerie (leer, wenn es kein Bild gibt). */
+export function photoButton(id, caption) {
+  if (!has(id)) return "";
+  const n = countOf(id);
+  return `<button class="machine-photo" data-act="mimg-show" data-arg="${escAttr(id)}" data-caption="${escAttr(caption)}" aria-label="${escAttr(n > 1 ? `Alle ${n} Bilder groß anzeigen` : "Bild groß anzeigen")}">${thumb(id, "machine-photo__img")}${n > 1 ? `<span class="machine-photo__count">${n} Bilder</span>` : ""}</button>`;
+}
+
 /** Platzhalter in `root` mit dem Bild füllen. */
 export function hydrate(root) {
-  if (!ids?.size) return;
+  if (!counts?.size) return;
   for (const el of root.querySelectorAll("img[data-mimg]:not([src])")) {
     const id = el.dataset.mimg;
     el.setAttribute("src", BLANK); // nicht doppelt laden
@@ -266,10 +317,67 @@ export function openLightbox(src, caption) {
   box.querySelector(".lightbox__close").focus();
 }
 
-/** Großansicht des Maschinenbilds (Paketbild). */
+/**
+ * Galerie in Bildschirmgröße (1.68.0): Wischen oder ‹ › blättern, Zähler „2 / 5“, Antippen außerhalb oder ✕ schließt.
+ */
+export function openGallery(srcs, caption, start = 0) {
+  if (srcs.length <= 1) return srcs[0] ? openLightbox(srcs[0], caption) : undefined;
+  let at = Math.min(Math.max(0, start), srcs.length - 1);
+  const box = document.createElement("div");
+  box.className = "lightbox lightbox--gallery";
+  box.setAttribute("role", "dialog");
+  box.setAttribute("aria-modal", "true");
+  box.setAttribute("aria-label", caption || "Bilder");
+  box.innerHTML = `<button class="lightbox__close" aria-label="Bilder schließen">✕</button>
+    <button class="lightbox__nav lightbox__nav--prev" aria-label="Voriges Bild">‹</button>
+    <figure class="lightbox__figure"><img class="lightbox__img" alt="${escAttr(caption)}"><figcaption class="lightbox__caption"><span class="lightbox__counter"></span> ${escAttr(caption)}</figcaption></figure>
+    <button class="lightbox__nav lightbox__nav--next" aria-label="Nächstes Bild">›</button>`;
+  const img = box.querySelector("img");
+  const counter = box.querySelector(".lightbox__counter");
+  const show = () => {
+    img.src = srcs[at];
+    counter.textContent = `${at + 1} / ${srcs.length}`;
+  };
+  const step = (d) => {
+    at = (at + d + srcs.length) % srcs.length;
+    show();
+  };
+  const close = () => {
+    box.remove();
+    document.removeEventListener("keydown", onKey);
+  };
+  const onKey = (e) => {
+    if (e.key === "Escape") close();
+    else if (e.key === "ArrowLeft") step(-1);
+    else if (e.key === "ArrowRight") step(1);
+  };
+  box.querySelector(".lightbox__nav--prev").addEventListener("click", (e) => (e.stopPropagation(), step(-1)));
+  box.querySelector(".lightbox__nav--next").addEventListener("click", (e) => (e.stopPropagation(), step(1)));
+  let x0 = null;
+  box.addEventListener("touchstart", (e) => (x0 = e.touches.length === 1 ? e.touches[0].clientX : null), { passive: true });
+  box.addEventListener("touchend", (e) => {
+    const dx = x0 === null ? 0 : (e.changedTouches[0]?.clientX ?? x0) - x0;
+    x0 = null;
+    if (Math.abs(dx) > 40) {
+      step(dx < 0 ? 1 : -1);
+      box.dataset.swiped = "1";
+    }
+  });
+  box.addEventListener("click", (e) => {
+    if (box.dataset.swiped) return void delete box.dataset.swiped;
+    if (e.target === img) return step(1);
+    close();
+  });
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(box);
+  show();
+  box.querySelector(".lightbox__close").focus();
+}
+
+/** Großansicht aller Bilder einer Maschine. */
 export async function showMachine(id, caption) {
-  const u = await imageUrl(id);
-  if (u) openLightbox(u, caption);
+  const srcs = await machineUrls(id).catch(() => []);
+  if (srcs.length) openGallery(srcs, caption);
 }
 
 // ------------------------------------------------------------------ Ansicht Import/Export → Maschinenbilder
@@ -315,8 +423,6 @@ export function viewMachineImages() {
   if (!S.mimgInstalled) refreshInstalled();
   const installed = new Map((S.mimgInstalled ?? []).map((p) => [p.key, p]));
   const list = S.mimgIndex ?? null;
-  const gymSet = gymFolders(S.catalog, S.gyms);
-  const gymPkgs = (list ?? []).filter((p) => gymSet.has(p.folder));
   const missing = (sel) => sel.filter((p) => packageState(p, installed.get(p.key)) !== "current");
   const sum = (sel) => sel.reduce((a, p) => a + p.bytes, 0);
   const busy = S.mimgBusy;
@@ -325,7 +431,7 @@ export function viewMachineImages() {
     const label = { none: "Laden", partial: "Fertig laden", old: "Aktualisieren", current: "" }[st];
     const inst = installed.get(p.key);
     return `<li><span><b>${esc(p.manufacturer)}</b>${p.folder && p.folder !== p.manufacturer ? `<small class="muted">Ordner ${esc(p.folder)}</small>` : ""}
-      <small class="muted">${n(p.images)} Bilder · ${mb(p.bytes)} · Stand ${esc(p.version)}${st === "current" ? " · installiert" : st === "old" ? ` · installiert: ${esc(inst.version)}` : st === "partial" ? " · unvollständig" : ""}${gymSet.has(p.folder) ? " · in deinen Gyms" : ""}</small></span>
+      <small class="muted">${n(p.images)} Bilder · ${mb(p.bytes)} · Stand ${esc(p.version)}${st === "current" ? " · installiert" : st === "old" ? ` · installiert: ${esc(inst.version)}` : st === "partial" ? " · unvollständig" : ""}</small></span>
       <span class="mimg-actions">${label ? `<button class="btn sm" data-act="mimg-get" data-arg="${esc(p.key)}" ${busy ? "disabled" : ""}>${label}</button>` : ""}${inst ? `<button class="btn sm ghost" data-act="mimg-remove" data-arg="${esc(p.key)}" ${busy ? "disabled" : ""} aria-label="Bilder von ${esc(p.manufacturer)} entfernen">Entfernen</button>` : ""}</span></li>`;
   };
   const extra = [...installed.values()].filter((p) => !(list ?? []).some((x) => x.key === p.key));
@@ -333,15 +439,23 @@ export function viewMachineImages() {
   return `${X.header("Maschinenbilder", { back: "transfer" })}<main class="wrap">
     <section class="card">
       <h3>Bilder der Maschinen</h3>
-      <p class="muted small">Je Hersteller ein Paket mit einem Bild pro Maschine – dieselben Bilder wie im Maschinen-Ordner am PC, fürs Handy verkleinert. Sie erscheinen in der Maschinensuche, im Training, im Verlauf und in der Datenbank; Antippen im Verlauf und in der Datenbank zeigt sie groß. Die Bilder bleiben auf diesem Gerät und gelten für alle Konten.</p>
+      <p class="muted small">Alle Bilder der Maschinen, so wie sie am PC hinterlegt sind – auch deine eigenen Fotos –, fürs Handy verkleinert. Das Hauptbild erscheint in der Maschinensuche, im Training, im Verlauf und in der Datenbank; Antippen in Verlauf und Datenbank zeigt alle Bilder der Maschine zum Durchblättern. Die Bilder bleiben auf diesem Gerät und gelten für alle Konten.</p>
       ${busy ? `<p class="notice" role="status">${esc(busy)}</p>` : ""}
-      <p class="small">${n(imageCount())} Maschinen mit Bild auf diesem Gerät${st?.usage ? ` · belegter Speicher der App: ${mb(st.usage)}` : ""}</p>
+      <p class="small">${imageCount() ? `${n(totalImages())} Bilder von ${n(imageCount())} Maschinen auf diesem Gerät` : "Noch keine Bilder auf diesem Gerät"}${st?.usage ? ` · belegter Speicher der App: ${mb(st.usage)}` : ""}</p>
       ${
         list === null
           ? `<p class="muted small">Liste wird geladen …</p>`
           : list.length
-            ? `${gymPkgs.length && missing(gymPkgs).length ? `<button class="btn primary block" data-act="mimg-get-gyms" ${busy ? "disabled" : ""}>Für meine Gyms laden (${missing(gymPkgs).length} ${missing(gymPkgs).length === 1 ? "Paket" : "Pakete"}, ${mb(sum(missing(gymPkgs)))})</button>` : ""}
-              ${missing(list).length ? `<button class="btn block" data-act="mimg-get-all" ${busy ? "disabled" : ""}>Alle laden (${missing(list).length} Pakete, ${mb(sum(missing(list)))})</button>` : `<p class="muted small">Alle Pakete sind installiert und aktuell.</p>`}`
+            ? `
+              ${
+                missing(list).length
+                  ? `<button class="btn ${list.length === 1 ? "primary " : ""}block" data-act="mimg-get-all" ${busy ? "disabled" : ""}>${
+                      list.length === 1
+                        ? `${{ none: "Alle Maschinenbilder laden", partial: "Laden fortsetzen", old: "Maschinenbilder aktualisieren" }[packageState(list[0], installed.get(list[0].key))] ?? "Laden"} (${n(list[0].images)} Bilder, ${mb(list[0].bytes)})`
+                        : `Alle laden (${missing(list).length} Pakete, ${mb(sum(missing(list)))})`
+                    }</button>`
+                  : `<p class="muted small">${list.length === 1 ? "Alle Maschinenbilder sind geladen und aktuell." : "Alle Pakete sind installiert und aktuell."}</p>`
+              }`
             : `<p class="muted small">${esc(S.mimgIndexError ?? "Noch keine Bilderpakete in der Liste.")}</p>`
       }
     </section>
@@ -358,7 +472,7 @@ export function viewMachineImages() {
     }
     <section class="card">
       <h3>Paketdatei wählen</h3>
-      <p class="muted small">Ein Bilderpaket, das du von der Website (Bilderpakete) geladen hast. Große Hersteller haben mehrere Teile – jeden Teil einmal wählen.</p>
+      <p class="muted small">Ein Teil des Bilderpakets, das du von der Website (Bilderpakete) geladen hast – jeden Teil einmal wählen. Abgebrochenes Laden setzt „Alle Maschinenbilder laden“ beim nächsten Mal fort.</p>
       <label class="btn block" for="mimg-file">Paketdatei wählen …</label>
       <input id="mimg-file" type="file" accept=".json,application/json" hidden>
     </section>
@@ -377,7 +491,7 @@ async function installFromIndex(entries) {
       const skip = inst && inst.version === p.version ? new Set(inst.partsDone ?? []) : new Set();
       for (const [j, file] of p.files.entries()) {
         if (skip.has(j + 1)) continue;
-        S.mimgBusy = `Lädt ${p.manufacturer}${p.files.length > 1 ? ` (Teil ${j + 1} von ${p.files.length})` : ""} … ${entries.length > 1 ? `Paket ${i + 1} von ${entries.length}` : ""}`;
+        S.mimgBusy = `Lädt ${p.key === "maschinenbilder" ? "Maschinenbilder" : p.manufacturer}${p.files.length > 1 ? ` – Teil ${j + 1} von ${p.files.length}` : ""} …${entries.length > 1 ? ` Paket ${i + 1} von ${entries.length}` : ""} Bitte die App geöffnet lassen.`;
         X.rerender();
         const res = await fetch(`bilder/${encodeURIComponent(file)}`, { cache: "no-cache" });
         if (!res.ok) throw new Error(`${p.manufacturer}: Datei nicht erreichbar.`);
@@ -385,7 +499,7 @@ async function installFromIndex(entries) {
       }
       ok++;
     }
-    X.toast(entries.length === 1 ? `Bilder von ${entries[0].manufacturer} geladen.` : `${ok} Bilderpakete geladen.`);
+    X.toast(entries.length === 1 ? (entries[0].key === "maschinenbilder" ? `${n(entries[0].images)} Maschinenbilder geladen.` : `Bilder von ${entries[0].manufacturer} geladen.`) : `${ok} Bilderpakete geladen.`);
   } catch (e) {
     X.toast(`${ok ? `${ok} Pakete geladen, dann abgebrochen: ` : ""}${e?.message || "Laden fehlgeschlagen (offline oder Speicher voll?)."}`, true);
   }
@@ -399,12 +513,6 @@ export const machineImageActions = {
   "mimg-get": (el) => {
     const p = (X.S.mimgIndex ?? []).find((x) => x.key === el.dataset.arg);
     if (p) installFromIndex([p]);
-  },
-  "mimg-get-gyms": () => {
-    const S = X.S;
-    const set = gymFolders(S.catalog, S.gyms);
-    const installed = new Map((S.mimgInstalled ?? []).map((p) => [p.key, p]));
-    installFromIndex((S.mimgIndex ?? []).filter((p) => set.has(p.folder) && packageState(p, installed.get(p.key)) !== "current"));
   },
   "mimg-get-all": () => {
     const S = X.S;

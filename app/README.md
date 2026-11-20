@@ -1045,6 +1045,20 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
   orange, wenn mehr gegessen als der Tagesbedarf.
 - Die Figur „Pro“ oben rechts ist ein Knopf: Antippen zeigt bzw. verbirgt die Einleitung zur Seite (`PAGE_INTROS`).
 
+## Version 1.68.0 (20.11.2026): ein Gesamtpaket mit allen Maschinenbildern
+
+- Statt Herstellerpaketen ein Paket „Maschinenbilder“ (`key` `maschinenbilder`) mit allen Bildern jeder Maschine wie am
+  PC hinterlegt (5.550 Bilder; Reihenfolge wie `bilder` in `maschinen_master.json`, eigenes Foto aus
+  `machine.own_photo` zuerst, eigene Fotos im Ordner „Eigene“ sind mit `own` markiert). Bild-Feld `i` (0 = Hauptbild).
+  Teile bis 8 MB (`Maschinenbilder.json`, `Maschinenbilder-2.json` …), `index.json` mit `images`, `machines`, `files`.
+  Erzeuger: `scripts/tools/handy/bilderpakete-erzeugen.cmd` (liest eigene Fotos mit `eigene-fotos.mjs` über
+  `node:sqlite`, nur lesend; schreibt die Teile sofort, Kopfzahlen werden am Ende eingesetzt).
+- Handy: IndexedDB `lifespan-bilder` Version 2 (frühere Herstellerpakete werden verworfen); Schlüssel = Maschinen-ID
+  (Hauptbild) bzw. `<ID>#<n>`. „Alle Maschinenbilder laden“ lädt alle Teile, „Laden fortsetzen“ nach Abbruch.
+  Maschinenansicht und Datenbank-Detail zeigen „n Bilder“; Antippen öffnet die Galerie (`openGallery`: Wischen,
+  ‹ ›, Pfeiltasten, Zähler, Antippen des Bilds = weiter). Auswahl „Für meine Gyms“ entfällt.
+- Website `bilder.html` heißt jetzt „Maschinenbilder“ (ein Eintrag mit Download je Teil).
+
 ## Version 1.67.0 (20.11.2026): Maschinenbilder als Bilderpakete von der Website
 
 - Bilderpakete (`lifespan-os-bilderpaket`, je Hersteller-Ordner des Maschinen-Ordners, je Maschine ein Bild: das erste

@@ -322,7 +322,7 @@ function viewTransfer() {
     </section>` },
     { id: "mimages", node: `<section class="card">
       <h3>Maschinenbilder</h3>
-      <p class="muted small">Bilder der Maschinen je Hersteller von der Website laden – für Maschinensuche, Training, Verlauf und Datenbank. ${MI.imageCount() ? `${MI.imageCount().toLocaleString("de-DE")} Maschinen mit Bild auf diesem Gerät.` : "Noch keine Bilder auf diesem Gerät."}</p>
+      <p class="muted small">Alle Maschinenbilder (auch deine eigenen Fotos) in einem Paket von der Website laden – für Maschinensuche, Training, Verlauf und Datenbank. ${MI.imageCount() ? `${MI.imageCount().toLocaleString("de-DE")} Maschinen mit Bild auf diesem Gerät.` : "Noch keine Bilder auf diesem Gerät."}</p>
       <button class="btn block" data-act="mimg-open">Maschinenbilder</button>
     </section>` },
     { id: "catalog", node: catalogCard() },
@@ -751,7 +751,7 @@ function viewMachine() {
   const nr = m.own_number || m.gym_number;
   const list = C.machineExercises(S.catalog, S.localExercises, m.id);
   return `${header(m.display_name, { back: "picker", sub: [nr ? `Nr. ${nr}` : "", m.manufacturer].filter(Boolean).join(" · ") })}<main class="wrap">
-    ${MI.has(m.id) ? `<button class="machine-photo" data-act="mimg-show" data-arg="${esc(m.id)}" data-caption="${esc([m.manufacturer, m.display_name].filter(Boolean).join(" · "))}" aria-label="Bild von ${esc(m.display_name)} groß anzeigen">${MI.thumb(m.id, "machine-photo__img")}</button>` : ""}
+    ${MI.photoButton(m.id, [m.manufacturer, m.display_name].filter(Boolean).join(" · "))}
     ${(() => {
       const info = machineFocusInfo(m);
       const key = `machine:${m.id}`;

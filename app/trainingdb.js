@@ -281,11 +281,11 @@ function machineDetail() {
   const row = (label, value) => (value ? `<div class="kv"><span class="muted small">${esc(label)}</span><span>${esc(value)}</span></div>` : "");
   return `<section class="card card--training"><button class="linkbtn" data-act="train-machine-close">‹ Zurück zur Datenbank</button>
     <h3>${esc(m.displayName)}</h3>
-    ${MI.has(m.id) ? `<button class="machine-photo" data-act="mimg-show" data-arg="${esc(m.id)}" data-caption="${esc([m.manufacturer, m.displayName].filter(Boolean).join(" · "))}" aria-label="Bild groß anzeigen">${MI.thumb(m.id, "machine-photo__img")}</button>` : ""}
+    ${MI.photoButton(m.id, [m.manufacturer, m.displayName].filter(Boolean).join(" · "))}
     ${row("Hersteller", m.manufacturer)}${row("Serie", m.series)}${row("Kategorie · Typ", [m.category, m.machineType].filter(Boolean).join(" · "))}${row("Artikelnummer", m.articleNumber)}
     ${row("Eigene Nummer", m.ownNumber)}${row("dasGym-Nummer", m.gymNumber)}${row("Muskelgruppen", m.muscleGroups.join(", "))}${row("Besonderheiten", m.features.join(", "))}
     ${focus.length ? row("Muskelfokus", focus.map(([mu, p]) => `${D.MUSCLE_LABELS[mu] ?? mu} ${F(p)} %`).join(", ")) : ""}
-    ${row("Notiz", m.notes)}${row("Bilder", m.images.length ? `${m.images.length} am PC${MI.has(m.id) ? "" : " · aufs Handy unter Import/Export → Maschinenbilder"}` : "")}
+    ${row("Notiz", m.notes)}${row("Bilder", m.images.length ? `${m.images.length} am PC${MI.has(m.id) ? ` · ${MI.countOf(m.id)} auf dem Handy` : " · aufs Handy unter Import/Export → Maschinenbilder"}` : "")}
     ${m.productUrl ? `<p class="small"><a href="${esc(m.productUrl)}" target="_blank" rel="noopener">Produktseite des Herstellers</a></p>` : ""}
     <h4>Übungen an dieser Maschine</h4>
     ${

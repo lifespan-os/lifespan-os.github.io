@@ -1,0 +1,14 @@
+{
+ "format": "lifespan-studio-index",
+ "studios": [
+  {
+   "id": "dasgym-wien",
+   "name": "dasGym Wien",
+   "address": null,
+   "website": null,
+   "file": "dasgym-wien.json",
+   "machines": 187,
+   "created": "2026-11-20"
+  }
+ ]
+}

@@ -1,0 +1,946 @@
+{
+ "format": "lifespan-studio",
+ "version": 1,
+ "id": "dasgym-wien",
+ "name": "dasGym Wien",
+ "address": null,
+ "website": null,
+ "created": "2026-11-20",
+ "machines": [
+  {
+   "machine": "eigen-mw54m4na-m97lg",
+   "number": "1",
+   "name": "Hyperextension (TbJP)"
+  },
+  {
+   "machine": "gym80-4384",
+   "number": "2",
+   "name": "4384 Abduktion 3D"
+  },
+  {
+   "machine": "eigen-mw54fps7-77iv4",
+   "number": "3",
+   "name": "Abduktion Maschine"
+  },
+  {
+   "machine": "eigen-mwcn0mty-q8in0",
+   "number": "4",
+   "name": "Adduktion"
+  },
+  {
+   "machine": "eigen-mwcmyaka-ocp34",
+   "number": "5",
+   "name": "Abduktor"
+  },
+  {
+   "machine": "gym80-3029",
+   "number": "6",
+   "name": "3029 Adduktionsmaschine"
+  },
+  {
+   "machine": "eigen-mwm6lg9z-8fw7v",
+   "number": "7",
+   "name": "Inverse Curl Nordic Ham"
+  },
+  {
+   "machine": "gym80-4333",
+   "number": "8",
+   "name": "4333 Deadlift Doppelgriffe Dual"
+  },
+  {
+   "machine": "eigen-mw0xmvj3-ljstv",
+   "number": "9",
+   "name": "Belt Squat"
+  },
+  {
+   "machine": "eigen-mw2dnqvl-f0bub",
+   "number": "10",
+   "name": "Hack Squat"
+  },
+  {
+   "machine": "eigen-mw2dl0xb-oi7u4",
+   "number": "11",
+   "name": "Hack Squat"
+  },
+  {
+   "machine": "watson-deluxe-reverse-hyper-extension",
+   "number": "12",
+   "name": "PL Deluxe Reverse Hyper Extension"
+  },
+  {
+   "machine": "gym80-4434",
+   "number": "13",
+   "name": "4434 Glute Ham Developer"
+  },
+  {
+   "machine": "elitefts-elitefts-professional-45-degree-back-raise",
+   "number": "14",
+   "name": "Professional 45 Degree Back Raise"
+  },
+  {
+   "machine": "eigen-mw0y25o7-6izcw",
+   "number": "15",
+   "name": "Glute Drive"
+  },
+  {
+   "machine": "eigen-mwkrpw9w-o0l0d",
+   "number": "16",
+   "name": "Pure Kraft | Hip Thrust Glute Builder 4408"
+  },
+  {
+   "machine": "gym80-4386n",
+   "number": "17",
+   "name": "4386N Booty Booster Special"
+  },
+  {
+   "machine": "eigen-mw1akbdo-q1puv",
+   "number": "18",
+   "name": "Hack Squat"
+  },
+  {
+   "machine": "elitefts-elitefts-monster-hack-squat",
+   "number": "19",
+   "name": "Monster Hack Squat"
+  },
+  {
+   "machine": "eigen-mw1anesf-i4e0q",
+   "number": "20",
+   "name": "Hack Squat"
+  },
+  {
+   "machine": "lifefitness-plate-loaded-linear-leg-press",
+   "number": "21",
+   "name": "Plate Loaded Linear Leg Press"
+  },
+  {
+   "machine": "eigen-mw0y45kk-ib3wo",
+   "number": "22",
+   "name": "Pendulum Squat"
+  },
+  {
+   "machine": "eigen-mwm6vjpp-ubq4f",
+   "number": "23",
+   "name": "Plate Loaded Leg Press"
+  },
+  {
+   "machine": "elitefts-elitefts-deluxe-lever-squat-press-machine-with-weight-storage",
+   "number": "24",
+   "name": "Deluxe Lever Squat + Press Machine with Weight Storage"
+  },
+  {
+   "machine": "gym80-4416",
+   "number": "25",
+   "name": "4416 Bootymizer"
+  },
+  {
+   "machine": "eigen-mw0xxofg-2ukx2",
+   "number": "26",
+   "name": "Magnum Glute Trainer"
+  },
+  {
+   "machine": "elitefts-elitefts-leg-press",
+   "number": "27",
+   "name": "Leg Press"
+  },
+  {
+   "machine": "elitefts-monster-mondo-leg-press",
+   "number": "28",
+   "name": "Monster Mondo Leg Press"
+  },
+  {
+   "machine": "eigen-mwm6yn6a-masun",
+   "number": "29",
+   "name": "Plate Loaded Iso Lateral Leg Press"
+  },
+  {
+   "machine": "eigen-mwm73wjp-3bglu",
+   "number": "30",
+   "name": "Gen 1 | Leg Press Beinpresse"
+  },
+  {
+   "machine": "eigen-mwm76f2g-ftwc0",
+   "number": "31",
+   "name": "Leg Press Beinpresse"
+  },
+  {
+   "machine": "eigen-mwm79x6z-xrbk7",
+   "number": "32",
+   "name": "XPload Leg Press Beinpresse"
+  },
+  {
+   "machine": "eigen-mwm7e5gx-ddp77",
+   "number": "33",
+   "name": "Leg Press \"Car\""
+  },
+  {
+   "machine": "gym80-4361",
+   "number": "34",
+   "name": "4361 Beinpresse Dual"
+  },
+  {
+   "machine": "eigen-mw0y0u36-cs9e6",
+   "number": "35",
+   "name": "Duo Squat"
+  },
+  {
+   "machine": "eigen-mwm7gb68-nxown",
+   "number": "36",
+   "name": "Gen 1 | Beinbeuger liegend Leg Curl"
+  },
+  {
+   "machine": "elitefts-elitefts-deluxe-selectorized-lying-leg-curl",
+   "number": "37",
+   "name": "Deluxe Lying Leg Curl - Selectorized"
+  },
+  {
+   "machine": "prime-plate-loaded-prone-leg-curl",
+   "number": "38",
+   "name": "Plate Loaded | Prone Leg Curl"
+  },
+  {
+   "machine": "eigen-mw4wccvs-7pyn0",
+   "number": "39",
+   "name": "Eagle Leg Curl"
+  },
+  {
+   "machine": "eigen-mw54tyl0-joncq",
+   "number": "40",
+   "name": "Overhead Triceps Extension"
+  },
+  {
+   "machine": "eigen-mwm7htq8-sx7ro",
+   "number": "41",
+   "name": "Gen 1 | Beinbeuger sitzend Leg Curl seated"
+  },
+  {
+   "machine": "gym80-3013",
+   "number": "42",
+   "name": "3013 Beinbeuger Stehend"
+  },
+  {
+   "machine": "eigen-mwm7j363-o1p7s",
+   "number": "43",
+   "name": "Gen 1 | Beinbeuger stehend Leg Curl standing"
+  },
+  {
+   "machine": "prime-plate-loaded-leg-extension",
+   "number": "44",
+   "name": "Plate Loaded | Leg Extension"
+  },
+  {
+   "machine": "eigen-mw58ufod-xdptg",
+   "number": "46",
+   "name": "Goliath Beinstrecker dual"
+  },
+  {
+   "machine": "eigen-mwm7lchj-b0xxf",
+   "number": "47",
+   "name": "Eagle | Beinstrecker Leg Extension"
+  },
+  {
+   "machine": "eigen-mwm7mpw3-bu9u9",
+   "number": "48",
+   "name": "Beinstrecker Leg Extension"
+  },
+  {
+   "machine": "elitefts-elitefts-signature-deluxe-leg-extension-selectorized-w-250lb-weight-stack",
+   "number": "49",
+   "name": "Signature Deluxe Leg Extension – Selectorized w/ 250lb Weight Stack"
+  },
+  {
+   "machine": "eigen-mwm7ov6k-4w41f",
+   "number": "50",
+   "name": "Gen 1 | Beinstrecker Leg Extension"
+  },
+  {
+   "machine": "eigen-mwmnvd5f-r22hq",
+   "number": "51",
+   "name": "Gen 1 Wadenheben stehend"
+  },
+  {
+   "machine": "eigen-mw0xpnf8-lquzo",
+   "number": "52",
+   "name": "Gen 1 | Donkey Calve Raises"
+  },
+  {
+   "machine": "eigen-mwmnycet-zb9df",
+   "number": "53",
+   "name": "Gen 1 | 55 Grad Wadenheben stehend"
+  },
+  {
+   "machine": "eigen-mwmo2iu1-qsu5q",
+   "number": "54",
+   "name": "Wadenheben sitzend"
+  },
+  {
+   "machine": "eigen-mwmo3yb4-smtzl",
+   "number": "56",
+   "name": "Deluxe seated Calf raise"
+  },
+  {
+   "machine": "eigen-mwmo87h2-21b23",
+   "number": "57",
+   "name": "Eagle | NX Glute Kickback"
+  },
+  {
+   "machine": "eigen-mwmoa3ja-9aavl",
+   "number": "58",
+   "name": "Hamflexor"
+  },
+  {
+   "machine": "eigen-mwmoghf8-0zzcl",
+   "number": "59",
+   "name": "Hyperextension stehend"
+  },
+  {
+   "machine": "gym80-3006",
+   "number": "60",
+   "name": "3006 Kickmaschine"
+  },
+  {
+   "machine": "lifefitness-plate-loaded-seated-standing-shrug",
+   "number": "61",
+   "name": "Seated / Standing Shrug"
+  },
+  {
+   "machine": "lifefitness-plate-loaded-iso-lateral-front-lat-pulldown",
+   "number": "62",
+   "name": "Plate Loaded Iso-Lateral Front Lat Pulldown"
+  },
+  {
+   "machine": "eigen-mwai4ggz-dpa42",
+   "number": "63",
+   "name": "Precision Series | Standing Shoulder Lateral Raise E-252"
+  },
+  {
+   "machine": "prime-plate-loaded-pulldown",
+   "number": "64",
+   "name": "Plate Loaded | Pulldown"
+  },
+  {
+   "machine": "lifefitness-plate-loaded-iso-lateral-high-row",
+   "number": "65",
+   "name": "Iso-Lateral High Row"
+  },
+  {
+   "machine": "lifefitness-plate-loaded-iso-lateral-d-y-row",
+   "number": "66",
+   "name": "Plate Loaded Iso-Lateral D.Y. Row"
+  },
+  {
+   "machine": "lifefitness-hammer-strength-mts-iso-lateral-row",
+   "number": "67",
+   "name": "MTS Iso-Lateral Row"
+  },
+  {
+   "machine": "crossaxes-b-2000c",
+   "number": "68",
+   "name": "B-2000c Cross Axes Pulldown"
+  },
+  {
+   "machine": "eigen-mw1b17h1-4eqyr",
+   "number": "69",
+   "name": "Lat Pulldown"
+  },
+  {
+   "machine": "prime-plate-loaded-seated-row",
+   "number": "70",
+   "name": "Plate Loaded | Seated Row"
+  },
+  {
+   "machine": "eigen-mw16ut6c-imxnz",
+   "number": "71",
+   "name": "Fantastic Line | Row"
+  },
+  {
+   "machine": "eigen-mw1bd69p-bcx8b",
+   "number": "72",
+   "name": "Seated Row"
+  },
+  {
+   "machine": "eigen-mw1ba6ii-poz0x",
+   "number": "73",
+   "name": "Seated Row"
+  },
+  {
+   "machine": "eigen-mw1b8das-7p8by",
+   "number": "74",
+   "name": "Row"
+  },
+  {
+   "machine": "eigen-mw4viggu-r24n7",
+   "number": "75",
+   "name": "Eagle Row"
+  },
+  {
+   "machine": "eigen-mw4w0rj6-3demt",
+   "number": "76",
+   "name": "Iso Lateral D.Y. Row"
+  },
+  {
+   "machine": "eigen-mvwxzejn-g00rq",
+   "number": "77",
+   "name": "Assisted Standing Pull Up Machine"
+  },
+  {
+   "machine": "eigen-mwayk3xt-vn0km",
+   "number": "78",
+   "name": "Chain Driven SPO-3 Pullover"
+  },
+  {
+   "machine": "eigen-mw1bgko8-z25w4",
+   "number": "79",
+   "name": "Seated Row"
+  },
+  {
+   "machine": "eigen-mw1bjw39-qaipd",
+   "number": "80",
+   "name": "DRP 600 Low Row"
+  },
+  {
+   "machine": "eigen-mw1b5zv4-w4kof",
+   "number": "81",
+   "name": "Galileo Seated Row"
+  },
+  {
+   "machine": "prime-plate-loaded-extreme-row",
+   "number": "82",
+   "name": "Plate Loaded | Extreme Row"
+  },
+  {
+   "machine": "prime-plate-loaded-incline-press",
+   "number": "83",
+   "name": "Plate Loaded | Incline Press"
+  },
+  {
+   "machine": "eigen-mw1bol46-s7z4y",
+   "number": "84",
+   "name": "Double Chest"
+  },
+  {
+   "machine": "lifefitness-insignia-series-lateral-raise",
+   "number": "85",
+   "name": "Insignia Series Lateral Raise"
+  },
+  {
+   "machine": "prime-hybrid-lateral-raise",
+   "number": "86",
+   "name": "Hybrid | Lateral Raise"
+  },
+  {
+   "machine": "eigen-mwai0qx5-sthlv",
+   "number": "87",
+   "name": "Lateral Raise"
+  },
+  {
+   "machine": "eigen-mwai25cv-ezhva",
+   "number": "88",
+   "name": "Standing Lateral Raise"
+  },
+  {
+   "machine": "eigen-mw2ej86w-bhbcc",
+   "number": "89",
+   "name": "Flat Chest Press"
+  },
+  {
+   "machine": "gym80-4365",
+   "number": "90",
+   "name": "4365 Schrägbank Dual"
+  },
+  {
+   "machine": "eigen-mw2f33y3-n5ani",
+   "number": "91",
+   "name": "Flat Chest Press"
+  },
+  {
+   "machine": "gymleco-021-seated-chest-press",
+   "number": "92",
+   "name": "021 Seated Chest Press"
+  },
+  {
+   "machine": "lifefitness-plate-loaded-iso-lateral-horizontal-bench-press",
+   "number": "93",
+   "name": "Iso-Lateral Horizontal Bench Press"
+  },
+  {
+   "machine": "eigen-mw2eugog-08mqb",
+   "number": "94",
+   "name": "Incline Chest Press"
+  },
+  {
+   "machine": "eigen-mw0xujbr-gmbq3",
+   "number": "95",
+   "name": "Leverage Chest Press"
+  },
+  {
+   "machine": "eigen-mw2e5r3b-p9jvy",
+   "number": "96",
+   "name": "Standig Chest Press"
+  },
+  {
+   "machine": "lifefitness-plate-loaded-iso-lateral-shoulder-press",
+   "number": "97",
+   "name": "Iso-Lateral Shoulder Press"
+  },
+  {
+   "machine": "eigen-mwaiadif-154hi",
+   "number": "98",
+   "name": "XPload ISO Lateral Plate Loaded Overhead Shoulder Press"
+  },
+  {
+   "machine": "lifefitness-mts-iso-lateral-shoulder-press",
+   "number": "99",
+   "name": "MTS Iso-Lateral Shoulder Press"
+  },
+  {
+   "machine": "gym80-4363",
+   "number": "100",
+   "name": "4363 Schulterdrückmaschine Dual"
+  },
+  {
+   "machine": "prime-plate-loaded-shoulder-press",
+   "number": "101",
+   "name": "Plate Loaded | Shoulder Press"
+  },
+  {
+   "machine": "eigen-mwai6lum-i58bo",
+   "number": "102",
+   "name": "Precision Series | Converging Shoulder Press E-149"
+  },
+  {
+   "machine": "eigen-mwkresan-rx8zj",
+   "number": "103",
+   "name": "Shoulder Press"
+  },
+  {
+   "machine": "eigen-mwmohmfe-3m3hz",
+   "number": "104",
+   "name": "Gen 1 | Schulterpresse"
+  },
+  {
+   "machine": "eigen-mw4v78cr-v5c17",
+   "number": "105",
+   "name": "Chest Fly"
+  },
+  {
+   "machine": "gym80-3025",
+   "number": "106",
+   "name": "3025 Butterfly Reverse"
+  },
+  {
+   "machine": "eigen-mw2f5qtw-wmdn8",
+   "number": "107",
+   "name": "Incline Chest Press"
+  },
+  {
+   "machine": "gym80-4364",
+   "number": "108",
+   "name": "4364 Drückbank Dual"
+  },
+  {
+   "machine": "eigen-mw2dveah-lykc1",
+   "number": "109",
+   "name": "Incline Chest Press"
+  },
+  {
+   "machine": "eigen-mw2f8zz4-zskih",
+   "number": "110",
+   "name": "Pendulum Chest Press"
+  },
+  {
+   "machine": "eigen-mw2exhw2-5cp3y",
+   "number": "111",
+   "name": "XPload Chest Press"
+  },
+  {
+   "machine": "lifefitness-plate-loaded-iso-lateral-decline-chest-press",
+   "number": "112",
+   "name": "Plate Loaded Iso-Lateral Decline Chest Press"
+  },
+  {
+   "machine": "lifefitness-plate-loaded-iso-lateral-wide-chest",
+   "number": "113",
+   "name": "Iso-Lateral Wide Chest"
+  },
+  {
+   "machine": "lifefitness-plate-loaded-iso-lateral-incline-press",
+   "number": "114",
+   "name": "Iso-Lateral Incline Press"
+  },
+  {
+   "machine": "lifefitness-hammer-strength-mts-iso-lateral-chest-press",
+   "number": "115",
+   "name": "MTS Iso-Lateral Chest Press"
+  },
+  {
+   "machine": "eigen-mw2eqjgk-k9u0v",
+   "number": "116",
+   "name": "Seated Chest Press"
+  },
+  {
+   "machine": "eigen-mw4veh6i-uqzbd",
+   "number": "117",
+   "name": "Chest Fly 2.0"
+  },
+  {
+   "machine": "prime-hybrid-pec-rear-delt",
+   "number": "118",
+   "name": "Hybrid | Pec/Rear Delt"
+  },
+  {
+   "machine": "eigen-mw4vcgwg-y0us0",
+   "number": "119",
+   "name": "Chest Fly"
+  },
+  {
+   "machine": "eigen-mw4v8rmb-5vj8m",
+   "number": "120",
+   "name": "Chest Fly"
+  },
+  {
+   "machine": "lifefitness-hammer-strength-mts-abdominal-crunch",
+   "number": "121",
+   "name": "MTS Abdominal Crunch"
+  },
+  {
+   "machine": "eigen-mwahpx70-1g9ky",
+   "number": "122",
+   "name": "Abdominal Crunch"
+  },
+  {
+   "machine": "eigen-mwmoiyio-22pk7",
+   "number": "123",
+   "name": "Eagle | Bauchmuskulatur Maschine"
+  },
+  {
+   "machine": "gym80-3007",
+   "number": "124",
+   "name": "3007 Rückenstrecker"
+  },
+  {
+   "machine": "watson-seated-plate-load-hand-gripper",
+   "number": "125",
+   "name": "PL Seated Hand Gripper"
+  },
+  {
+   "machine": "lifefitness-mts-iso-lateral-triceps-extension",
+   "number": "126",
+   "name": "MTS Iso-Lateral Triceps Extension"
+  },
+  {
+   "machine": "lifefitness-hammer-strength-mts-iso-lateral-biceps-curl",
+   "number": "127",
+   "name": "MTS Iso-Lateral Biceps Curl"
+  },
+  {
+   "machine": "eigen-mwkrhqyc-19otc",
+   "number": "128",
+   "name": "Biceps Dual Cable Curl"
+  },
+  {
+   "machine": "eigen-mwahwsy9-w7v6s",
+   "number": "129",
+   "name": "Multi Biceps"
+  },
+  {
+   "machine": "eigen-mwaynche-e9oxg",
+   "number": "130",
+   "name": "Biceps Curl"
+  },
+  {
+   "machine": "eigen-mwahuvvw-bamcd",
+   "number": "131",
+   "name": "Triceps Extension"
+  },
+  {
+   "machine": "eigen-mwo1f62a-3n2kv",
+   "number": "132",
+   "name": "Gen 1 | Bizeps Curl"
+  },
+  {
+   "machine": "eigen-mwahsytn-36s22",
+   "number": "133",
+   "name": "Cable Biceps Curl"
+  },
+  {
+   "machine": "atlantis-t164",
+   "number": "134",
+   "name": "T164 Triceps extension"
+  },
+  {
+   "machine": "lifefitness-plate-loaded-seated-biceps",
+   "number": "135",
+   "name": "Plate Loaded Seated Biceps"
+  },
+  {
+   "machine": "lifefitness-plate-loaded-seated-dip",
+   "number": "136",
+   "name": "Plate Loaded Seated Dip"
+  },
+  {
+   "machine": "eigen-mw54sj42-o26sk",
+   "number": "137",
+   "name": "Biceps Triceps Machine"
+  },
+  {
+   "machine": "eigen-mwnamqh3-kflpf",
+   "number": "138",
+   "name": "Biceps Curl"
+  },
+  {
+   "machine": "eigen-mvwq46xb-cnfte",
+   "number": "139",
+   "name": "Fantastic Line | Overhead Triceps Extension"
+  },
+  {
+   "machine": "eigen-mwo1gsiw-qf63u",
+   "number": "140",
+   "name": "Overhead Triceps Extension"
+  },
+  {
+   "machine": "eigen-mw55dwh8-u5chs",
+   "number": "141",
+   "name": "Bench row"
+  },
+  {
+   "machine": "eigen-mw4w5fpj-mdyyl",
+   "number": "142",
+   "name": "T-Bar Row"
+  },
+  {
+   "machine": "eigen-mw4w3hk1-w9kz7",
+   "number": "143",
+   "name": "T-Bar Row"
+  },
+  {
+   "machine": "gym80-4322",
+   "number": "145",
+   "name": "4322 Rudermaschine Sitzend Dual"
+  },
+  {
+   "machine": "gym80-3225",
+   "number": "146",
+   "name": "3225 Rotationsmaschine"
+  },
+  {
+   "machine": "gym80-3003",
+   "number": "147",
+   "name": "3003 Beinbeuger Sitzend"
+  },
+  {
+   "machine": "gym80-4374",
+   "number": "148",
+   "name": "4374 Stehende Abduktion"
+  },
+  {
+   "machine": "gym80-4324",
+   "number": "149",
+   "name": "4324 45 Grad Pivot Beinpresse"
+  },
+  {
+   "machine": "gym80-4354",
+   "number": "150",
+   "name": "4354 Vertikale Beinpresse"
+  },
+  {
+   "machine": "gym80-4353n",
+   "number": "151",
+   "name": "4353N Pendulum Squat"
+  },
+  {
+   "machine": "gym80-5004",
+   "number": "152",
+   "name": "5004 Innovation Curler Maschine"
+  },
+  {
+   "machine": "gym80-3020",
+   "number": "153",
+   "name": "3020 Rückenzugmaschine"
+  },
+  {
+   "machine": "gym80-4311",
+   "number": "154",
+   "name": "4311 Rückenzugmaschine Dual"
+  },
+  {
+   "machine": "gym80-3012n",
+   "number": "155",
+   "name": "3012N Überzugmaschine"
+  },
+  {
+   "machine": "gym80-4335",
+   "number": "156",
+   "name": "4335 Trizeps Dip Maschine Dual"
+  },
+  {
+   "machine": "gym80-4338n",
+   "number": "157",
+   "name": "4338N Bizepsmaschine"
+  },
+  {
+   "machine": "gym80-4388",
+   "number": "158",
+   "name": "4388 Viking Press"
+  },
+  {
+   "machine": "gym80-3099",
+   "number": "159",
+   "name": "3099 Seithebemaschine Stehend"
+  },
+  {
+   "machine": "watson-animal-viking-press",
+   "number": "160",
+   "name": "PL Animal Viking Press"
+  },
+  {
+   "machine": "eigen-mwo0atlo-0ir6a",
+   "number": "161",
+   "name": "Monolift Model 3908"
+  },
+  {
+   "machine": "gymleco-030-shoulder-press",
+   "number": "162",
+   "name": "030 Shoulder Press"
+  },
+  {
+   "machine": "gymleco-050-biceps-curl-machine",
+   "number": "163",
+   "name": "050 Biceps Curl Machine"
+  },
+  {
+   "machine": "gym80-3123",
+   "number": "164",
+   "name": "3123 Beinstrecker Liegend mit verstellbarer Rückenlehne"
+  },
+  {
+   "machine": "eigen-mw4v4fyj-baelv",
+   "number": "165",
+   "name": "Chest Fly"
+  },
+  {
+   "machine": "eigen-mwnavg7i-gjzxu",
+   "number": "167",
+   "name": "80A00033 SLIDING HIP EXTENSION"
+  },
+  {
+   "machine": "eigen-mw5588yd-sb7mz",
+   "number": "168",
+   "name": "Trimotion ft. Tim Budesheim"
+  },
+  {
+   "machine": "granite-leverage-row-3-0",
+   "number": "169",
+   "name": "Leverage Row 3.0"
+  },
+  {
+   "machine": "granite-leverage-pulldown-2-0",
+   "number": "170",
+   "name": "Leverage Pulldown 2.0"
+  },
+  {
+   "machine": "eigen-mwahoir7-3v7rv",
+   "number": "171",
+   "name": "Superforearm"
+  },
+  {
+   "machine": "citadel-lat-pulldown",
+   "number": "172",
+   "name": "Lat Pulldown"
+  },
+  {
+   "machine": "milon-pump-dual-chest-press",
+   "number": "173",
+   "name": "06 Dual Chest Press"
+  },
+  {
+   "machine": "eigen-mwo1czys-oz2uv",
+   "number": "174",
+   "name": "Brustpresse Chest Press"
+  },
+  {
+   "machine": "eigen-mwcmwuad-0n2h8",
+   "number": "175",
+   "name": "C1 Dual Pullover"
+  },
+  {
+   "machine": "milon-pump-row",
+   "number": "176",
+   "name": "05 Row"
+  },
+  {
+   "machine": "milon-pump-pull-down",
+   "number": "177",
+   "name": "09 Pull Down"
+  },
+  {
+   "machine": "eigen-mvzdskz9-2o3p1",
+   "number": "178",
+   "name": "Leverage middle row"
+  },
+  {
+   "machine": "milon-pump-side-raise",
+   "number": "179",
+   "name": "08 Side Raise"
+  },
+  {
+   "machine": "watson-pl-westside-mr-19",
+   "number": "180",
+   "name": "PL Westside MR-19"
+  },
+  {
+   "machine": "watson-westside-ultra-supreme-reverse-hyper",
+   "number": "181",
+   "name": "PL Westside Ultra Supreme Reverse Hyper"
+  },
+  {
+   "machine": "eigen-mwkry3wy-ed6wn",
+   "number": "182",
+   "name": "Athletic Training Platform"
+  },
+  {
+   "machine": "gym80-4392",
+   "number": "183",
+   "name": "4392 Beinstrecker Stehend"
+  },
+  {
+   "machine": "milon-pump-leg-extension",
+   "number": "184",
+   "name": "01 Leg Extension"
+  },
+  {
+   "machine": "eigen-mwaicbt7-blapr",
+   "number": "185",
+   "name": "Total Shoulder"
+  },
+  {
+   "machine": "eigen-mw165upg-yaa1i",
+   "number": "186",
+   "name": "Low Row"
+  },
+  {
+   "machine": "eigen-mw16cb9y-5152z",
+   "number": "187",
+   "name": "55 Grad Rudermaschine"
+  },
+  {
+   "machine": "elitefts-lat-pull-down-low-row-foot-plate-included",
+   "number": "996",
+   "name": "Lat Pull Down Low Row Foot Plate Included"
+  },
+  {
+   "machine": "glutebuilder-pendulum-kick-back",
+   "number": "997",
+   "name": "Pendulum Kick Back"
+  },
+  {
+   "machine": "eigen-mwj5ipb5-2lus9",
+   "number": "998",
+   "name": "Squat Press"
+  },
+  {
+   "machine": "gym80-4034",
+   "number": "999",
+   "name": "4034 Dual Verstellbarer Seilzug"
+  }
+ ]
+}

@@ -4,6 +4,8 @@
 import * as B from "./bodydata.js";
 import * as D from "./pcdomain.js";
 import { appDay } from "./appday.js";
+import { notice as trainNotice } from "./training.js";
+import { viewCheckinsTab } from "./trainingdb.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -135,17 +137,40 @@ function formCard({ fixed = false } = {}) {
 
 // ------------------------------------------------------------------ Ansicht „Body & Longevity“
 
+/** Reiter „Erfassen“ und „Check-Ins“ (Check-Ins seit 1.60.0 hier statt im Training, wie am PC 1.0.159). */
+export const BODY_TABS = [
+  ["entry", "Erfassen"],
+  ["checkins", "Check-Ins"],
+];
+
+const bodyTabsHtml = (tab) =>
+  `<nav class="tabs" aria-label="Body &amp; Longevity">${BODY_TABS.map(
+    ([v, l]) => `<button class="tab ${v === tab ? "active" : ""}" data-act="body-tab" data-arg="${v}" ${v === tab ? 'aria-current="page"' : ""}>${esc(l)}</button>`,
+  ).join("")}</nav>`;
+
 export function viewBody() {
   const st = S();
+  const tab = X.S.bodyTab === "checkins" ? "checkins" : "entry";
   const head = X.header("Body & Longevity", { back: "home" });
+  const nav = bodyTabsHtml(tab);
+  if (tab === "checkins") {
+    let body;
+    try {
+      body = viewCheckinsTab();
+    } catch (e) {
+      console.error(e);
+      body = `<section class="card"><p class="warn">Die Check-Ins konnten nicht angezeigt werden: ${esc(e.message)}</p></section>`;
+    }
+    return `${head}<main class="wrap">${nav}${trainNotice()}${body}</main>`;
+  }
   if (!X.S.catalog?.body) {
-    return `${head}<main class="wrap"><section class="card"><p class="small">Für die Körperwerte bitte einmal eine neue Exportdatei vom PC laden (am PC Import/Export → „Für die Handy-App exportieren“, dann hier unter Import/Export „Neue Exportdatei laden“).</p></section></main>`;
+    return `${head}<main class="wrap">${nav}<section class="card"><p class="small">Für die Körperwerte bitte einmal eine neue Exportdatei vom PC laden (am PC Import/Export → „Für die Handy-App exportieren“, dann hier unter Import/Export „Neue Exportdatei laden“).</p></section></main>`;
   }
   const all = B.allValues(X.S.catalog, st.local);
   const withData = metrics().filter((m) => all.get(m.id)?.length);
   const sections = B.metricSections(withData, { categories: B.SUMMARY_CATEGORIES });
   const open = B.unsentBody(st.local);
-  return `${head}<main class="wrap">
+  return `${head}<main class="wrap">${nav}
     ${
       open
         ? `<section class="card hl"><div class="wo-head"><h3>${open} ${open === 1 ? "Wert" : "Werte"} noch nicht am PC</h3></div>
@@ -516,6 +541,12 @@ export function viewBodyEntry() {
 // ------------------------------------------------------------------ Ereignisse
 
 export const bodyActions = {
+  "body-tab": (el) => {
+    X.S.bodyTab = el.dataset.arg;
+    X.S.trainNotice = null;
+    X.S.trainErrors = {};
+    X.rerender();
+  },
   "scale-discard": () => {
     S().scale = null;
     X.rerender();

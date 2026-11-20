@@ -16,7 +16,8 @@ import { barTrendSvg, COLOR } from "./pcview.js";
 import { hasWearable, workoutHeartHtml, workoutHeartOf } from "./heart.js";
 import { energyHtml, stepGoalBar } from "./overview.js";
 import { statsActions, viewCardioTab, viewProgressTab, viewReviewTab, statsChange } from "./trainingstats.js";
-import { dbActions, dbChange, dbInput, viewCheckinsTab, viewDatabaseTab } from "./trainingdb.js";
+import { dbActions, dbChange, dbInput, viewDatabaseTab } from "./trainingdb.js";
+import { activeGymSelectHtml, viewGymsTab } from "./gymsui.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice, saveTrain, startPlanDay, startFree, startBackfill, startCardio, openWorkout, C }
 
@@ -35,7 +36,7 @@ export const TRAINING_TABS = [
   ["neat", "NEAT – Non-Exercise Activity"],
   ["plans", "Pläne"],
   ["exercises", "Datenbank"],
-  ["checkins", "Check-Ins"],
+  ["gyms", "Meine Gyms"],
   ["progress", "Verlauf"],
 ];
 
@@ -79,7 +80,7 @@ export function viewTrainingSection() {
     neat: neatTab,
     plans: plansTab,
     exercises: viewDatabaseTab,
-    checkins: viewCheckinsTab,
+    gyms: viewGymsTab,
     progress: viewProgressTab,
   };
   let body;
@@ -147,8 +148,9 @@ function workoutsTab() {
           <button class="btn" data-act="train-start-day" ${!planSel || blocked ? "disabled" : ""}>▶ Tag starten</button>`
           : ""
       }
+      ${activeGymSelectHtml(blocked)}
       <div class="row-actions">
-        <button class="btn primary" data-act="start-free" ${blocked ? "disabled" : ""}>▶ Training starten</button>
+        <button class="btn primary" data-act="start-free" ${blocked ? "disabled" : ""}>▶ Freies Training</button>
         <button class="btn" data-act="train-backfill" ${blocked ? "disabled" : ""}>Nachtragen</button>
         <button class="btn ${todayStatus?.kind === "rest" ? "primary" : ""}" data-act="train-day" data-arg="${todayStatus?.kind === "rest" ? "" : "rest"}" aria-pressed="${todayStatus?.kind === "rest"}" title="Heute kein Training – Regeneration">🛏 Restday</button>
         <button class="btn ${todayStatus?.kind === "sick" ? "primary" : ""}" data-act="train-day" data-arg="${todayStatus?.kind === "sick" ? "" : "sick"}" aria-pressed="${todayStatus?.kind === "sick"}" title="Heute kein Training wegen Krankheit">🌡 Krankheit</button>
@@ -191,7 +193,7 @@ function workoutsTab() {
             }`;
         })
         .join("")}</ul>`
-    : `<div class="empty-state"><p><strong>Noch keine Einheiten</strong></p><p class="muted small">Starte dein erstes Training mit „Training starten“${dayOptions.length ? ", starte einen Trainingstag aus deinem Plan" : ""} oder trage eine frühere Einheit mit „Nachtragen“ ein.</p></div>`;
+    : `<div class="empty-state"><p><strong>Noch keine Einheiten</strong></p><p class="muted small">Starte dein erstes Training mit „Freies Training“${dayOptions.length ? ", starte einen Trainingstag aus deinem Plan" : ""} oder trage eine frühere Einheit mit „Nachtragen“ ein.</p></div>`;
   const volume = finished.length
     ? `<section class="card card--training"><div class="wo-head"><h3 id="volume-title">Trainingsvolumen je Woche</h3><span class="tag">letzte 8 Wochen</span></div>
         ${barTrendSvg(weeks, { color: COLOR.training, format: (v) => `${F(v)} kg`, label: "Trainingsvolumen je Woche der letzten 8 Wochen" })}

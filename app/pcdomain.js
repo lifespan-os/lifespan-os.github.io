@@ -9804,7 +9804,7 @@ var REMINDER_RULES = [
     label: "Check-In-Fotos",
     days: 28,
     evenIfNever: true,
-    where: "training",
+    where: "body",
     tab: "checkins",
     anchor: "checkin-new-title"
   },

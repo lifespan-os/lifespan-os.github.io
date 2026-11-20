@@ -62,6 +62,9 @@ export const KEEP_TABLES = [
   "training_plan_exercise",
   "training_plan_set",
   "checkin_photo",
+  // Meine Gyms (Schema 65, 1.60.0)
+  "gym",
+  "gym_machine",
   "todo",
   "lab_analyte",
   "lab_draw",

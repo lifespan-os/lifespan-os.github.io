@@ -943,3 +943,51 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
   übernommen (Meldung), gleicher Stand → nur Hinweis, sonst übernommen (Meldung mit Stand).
 - Tests: `node --test *.test.mjs` (132 bestanden; neu Griffkraft in `logsdata.test.mjs`, `importCheck` in
   `core.test.mjs`).
+
+## Version 1.58.0 (19.11.2026): Open Food Facts am Handy, Suche über dem Freitext (PC 1.0.158)
+
+- **Open Food Facts** (`off.js` reine Logik mit Tests, `offui.js` Oberfläche): Import/Export → Karte „Open Food Facts“
+  lädt einmal je Gerät `off/off-de-at.tsv.gz` (≈ 10 MB, entpackt mit `DecompressionStream`, ab iOS 16.4) und speichert
+  den Text in „global:off“ (≈ 23 MB, für alle Konten), Kennung „global:offInfo“. Die Datei liegt nur auf GitHub Pages
+  (`app/off/`), nicht im PC-Repository; Skript 46 erzeugt sie aus dem Katalog von Skript 56.
+- Beim ersten Suchen in der Sitzung wird die Liste gelesen und geprüft wie am PC (`core/src/off.rs`: gültiger
+  Strichcode, Pflichtwerte, Grenzen, gesättigte ≤ Fett, Zucker ≤ KH, Makros ≤ 100,5 g, kcal höchstens 15 % bzw.
+  20 kcal neben der Rechnung aus den Makros) – im Gerät des Nutzers 241.503 Produkte wie am PC.
+- Lebensmittel suchen: unter eigenen Lebensmitteln und BLS stehen Treffer aus Open Food Facts (Marke, Packung, EAN,
+  kcal ↔ Makros); schon übernommene (gleicher Strichcode) fehlen. Tippen öffnet das Formular „Neues Lebensmittel“
+  mit allen Werten – bearbeiten, dann „Als Lebensmittel speichern“ (Strichcode wird zugeordnet, Notiz mit Quelle).
+- Etikett-Scan: unbekannter Strichcode, der in Open Food Facts steht → Formular mit dessen Werten statt der
+  erkannten (ist die Liste noch nicht gelesen, wird nachgeladen und nur ersetzt, solange das Formular unverändert ist).
+- Nutrition → Lebensmittel: „Lebensmittel suchen“ steht über der neuen Karte „Freitext“ (vorher in „Schnell
+  eintragen“); „Schnell eintragen“ behält Mahlzeit und Favoriten.
+- Tests: `node --test *.test.mjs` (135 bestanden, neu `off.test.mjs`); Ablauf mit dem echten Katalog im Testbrowser
+  durchgespielt (Download, Suche „skyr milbona“, Formular, Ändern, Speichern, Treffer danach als eigenes Lebensmittel).
+
+## Version 1.59.0 (20.11.2026): Lebensmittelsuche oben, Menüleiste beim Tippen verborgen
+
+- Antippen von „Lebensmittel suchen“ bzw. „Zutat hinzufügen“ schiebt die Karte ganz nach oben unter den Kopf
+  (`app.js` focusin, `body.is-searching`: unten 100vh Raum, solange gesucht wird) – mehr Platz für die Treffer.
+- Solange ein Eingabefeld den Fokus hat (`body.is-typing`), ist die untere Menüleiste ausgeblendet; zusätzlich
+  `interactive-widget=resizes-visual` im Viewport, damit Android feste Leisten nicht über die Tastatur schiebt.
+  Der Pausentimer (`.rest`) bleibt sichtbar.
+- Im Testbrowser geprüft (390 × 844): Karte nach dem Fokus bei 82 px (Kopf 74 px), Leiste `display: none`,
+  nach dem Verlassen wieder sichtbar.
+
+## Version 1.60.0 (20.11.2026): Meine Gyms
+
+- Training → neuer Reiter „Meine Gyms“ (statt „Check-Ins“): mehrere Studios mit Name, Anschrift, Kontakt,
+  Mitgliedsnummer, Website und Foto (aufnehmen oder wählen, verkleinert, als Miniatur). Je Studio eine
+  Maschinenliste mit Studionummer (je Gym eindeutig) und Notiz; Maschinen über die Suche aufnehmen bzw. mit ✕ entfernen.
+- Referenz-Studio „dasGym Wien“ ist immer da: vom PC (ab 1.0.159) oder – solange der PC es nicht liefert, z. B. bei
+  Konten aus dem Startpaket – am Handy aus den dasGym-Nummern der Master-Maschinen. Feste IDs wie am PC
+  (`stableId` = SHA-256 → UUID v8, `gymsdata.js`), damit Handy und PC dasselbe Studio bzw. denselben Eintrag meinen.
+  Bei einer Änderung geht das Studio mit an den PC; eine entfernte Maschine bekommt einen Löschvermerk und kommt
+  nicht wieder (am PC ebenso, `gym::ensure_reference`).
+- Training → Einheiten: Auswahl „Gym“ vor dem Knopf, der jetzt „Freies Training“ heißt. In der Übungsauswahl stehen
+  nur die Maschinen des aktiven Gyms mit dessen Nummer; „Alle Maschinen zeigen“ schaltet die übrigen zu.
+- Check-Ins liegen jetzt unter Body & Longevity (Reiter „Erfassen“ | „Check-Ins“, wie am PC); Erinnerung,
+  Offene Daten und Sprünge führen dorthin.
+- Abgleich: Tabellen `gym` und `gym_machine` (Schema 65) in `pcdb.js` (KEEP_TABLES), Rückgabedatei
+  (`gymTables`), „Ganzes Konto an den PC“ und Offene Daten (`pending.js`).
+- Tests: `node --test *.test.mjs` (138 bestanden, neu `gymsdata.test.mjs`); im Testbrowser (iPhone 13) Liste,
+  Referenz-Studio, neues Gym, Maschine aufnehmen, Gymauswahl, gefilterte Übungsauswahl und Body → Check-Ins geprüft.

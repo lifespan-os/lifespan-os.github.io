@@ -24,6 +24,7 @@ export const SOURCES = [
   { store: "goals", area: "settings", maps: { rows: "daily_goal" }, delTable: "daily_goal" },
   { store: "supp", area: "nutrition", maps: { intakes: "supplement_intake", items: "supplement_intake_item" } },
   { store: "caffeine", area: "icoach", maps: { rows: "caffeine_intake" }, delTable: "caffeine_intake" },
+  { store: "gyms", area: "training", maps: { gyms: "gym", entries: "gym_machine" } },
 ];
 
 /** Bereiche in der Reihenfolge des Menüs. */
@@ -56,6 +57,8 @@ export const TABLE_LABELS = {
   training_plan_set: "Satz",
   training_plan_slot: "Termin",
   checkin_photo: "Check-In-Foto",
+  gym: "Gym",
+  gym_machine: "Maschine im Gym",
   water_intake: "Wasser",
   body_measurement: "Körperwert",
   lab_analyte: "Laborparameter",
@@ -365,7 +368,11 @@ export function editTarget(table, row) {
     case "training_plan":
       return { view: "training", set: { trainTab: "plans" }, act: "plan-edit", arg: id };
     case "checkin_photo":
-      return { view: "training", set: { trainTab: "checkins" }, act: "train-checkin-edit", arg: id };
+      return { view: "body", set: { bodyTab: "checkins" }, act: "train-checkin-edit", arg: id };
+    case "gym":
+      return { view: "training", set: { trainTab: "gyms", gymSel: id, gymEdit: null } };
+    case "gym_machine":
+      return { view: "training", set: { trainTab: "gyms", gymSel: row.gym_id, gymEdit: null } };
     case "water_intake":
       return { view: "diary", set: { diaryDate: row.date } };
     case "daily_goal":

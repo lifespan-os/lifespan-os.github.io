@@ -44,6 +44,8 @@ import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
 import * as TR from "./trainingdata.js";
 import * as PD from "./pending.js";
 import * as HX from "./hyrox.js";
+import * as GD from "./gymsdata.js";
+import * as GY from "./gymsui.js";
 import { extrasActions, initExtras, quickFillBanner, quickFillInput, viewMealPlan, viewQuickFill } from "./extras.js";
 
 const app = document.getElementById("app");
@@ -144,7 +146,7 @@ const machineById = () => new Map(S.catalog.machines.map((m) => [m.id, m]));
 const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.exported);
 const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWater(S.water) + SP.unsentSupp(S.supp) + FT.unsentFast(S.fast);
 // Körperwerte plus Schlaf und Regeneration (gehen zusammen in die Datei „Körperwerte“, 1.7.0)
-const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + GLD.unsentGlucose(S.glucose) + TR.unsentTrain(S.train) + GL.unsentGoals(S.goals) + PS.unsentSync(S.pcsettings);
+const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + GLD.unsentGlucose(S.glucose) + TR.unsentTrain(S.train) + GL.unsentGoals(S.goals) + PS.unsentSync(S.pcsettings) + GD.unsentGyms(S.gyms);
 
 function go(view, arg = null) {
   // Seite anpassen (1.48.0): Bearbeiten endet, wenn eine andere Seite geöffnet wird
@@ -658,7 +660,7 @@ function viewPicker() {
   return `${header("Übung hinzufügen", { back: "workout" })}<main class="wrap">
     <div class="search">
       <input id="q" type="search" placeholder="Nummer oder Name, z. B. 47 oder Beinpresse" value="${esc(S.query)}" autocomplete="off" enterkeyhint="search">
-      <label class="toggle"><input id="only-nr" type="checkbox" ${S.prefs.onlyNumbered ? "checked" : ""}> Nur Maschinen mit Nummer (dein Studio)</label>
+      ${GY.pickerGymNote() || `<label class="toggle"><input id="only-nr" type="checkbox" ${S.prefs.onlyNumbered ? "checked" : ""}> Nur Maschinen mit Nummer (dein Studio)</label>`}
     </div>
     <div class="list" id="results">${pickerResults()}</div>
   </main>`;
@@ -670,10 +672,14 @@ function usageText(u) {
 }
 
 function pickerResults() {
-  const anyNumbered = S.catalog.machines.some((m) => m.own_number || m.gym_number);
-  const hits = C.search(S.catalog, S.localExercises, S.query, { onlyNumbered: S.prefs.onlyNumbered && anyNumbered });
+  // Meine Gyms (1.60.0): nur die Maschinen des aktiven Gyms mit dessen Nummer (zuschaltbar)
+  const gymOn = Boolean(GY.pickerGymNote());
+  const catalog = gymOn ? GY.pickerCatalog() : S.catalog;
+  const anyNumbered = catalog.machines.some((m) => m.own_number || m.gym_number);
+  const onlyNr = !gymOn && S.prefs.onlyNumbered && anyNumbered;
+  const hits = C.search(catalog, S.localExercises, S.query, { onlyNumbered: onlyNr });
   if (!hits.length) {
-    return `<p class="empty">Nichts gefunden.${S.prefs.onlyNumbered ? " Schalte „Nur Maschinen mit Nummer“ aus, um alle Maschinen zu durchsuchen." : ""}</p>`;
+    return `<p class="empty">Nichts gefunden.${gymOn && !S.gymAll ? " Tippe auf „Alle Maschinen zeigen“, um alle Maschinen zu durchsuchen." : onlyNr ? " Schalte „Nur Maschinen mit Nummer“ aus, um alle Maschinen zu durchsuchen." : ""}</p>`;
   }
   return hits
     .map((h) => {
@@ -862,12 +868,12 @@ function viewSend() {
       ${body ? `<button class="btn primary block" data-act="send" data-arg="body">Körperwerte, Schlaf, Regeneration, To-dos, Training, Health, Superhuman &amp; Tagesziele senden (${body})</button>` : ""}
     </section>
     ${
-      all.length || Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length || Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || (Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length || Object.keys(GLD.glucoseTables(S.glucose, { all: true })).length || Object.keys(TR.trainTables(S.train, { all: true })).length)
+      all.length || Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length || Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || (Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length || Object.keys(GLD.glucoseTables(S.glucose, { all: true })).length || Object.keys(TR.trainTables(S.train, { all: true })).length || Object.keys(GD.gymTables(S.gyms, { all: true })).length)
         ? `<section class="card"><h3>Alles vom Handy</h3>
             <p class="muted small">Falls eine Datei verloren ging: Du kannst alle ${all.length} Trainings und die Ernährungseinträge noch einmal senden. Am PC entstehen dabei keine doppelten Einträge.</p>
             ${all.length ? `<button class="btn block" data-act="send" data-arg="training|all">Alle Trainings erneut senden</button>` : ""}
             ${Object.keys(S.food?.local.meals ?? {}).length || Object.keys(S.food?.local.foods ?? {}).length ? `<button class="btn block" data-act="send" data-arg="food|all">Alle Ernährungseinträge erneut senden</button>` : ""}
-            ${Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || (Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length || Object.keys(GLD.glucoseTables(S.glucose, { all: true })).length || Object.keys(TR.trainTables(S.train, { all: true })).length) ? `<button class="btn block" data-act="send" data-arg="body|all">Alle Körperwerte, Schlaf, Regeneration, To-dos, Checklisten, Health, Superhuman &amp; Koffein erneut senden</button>` : ""}</section>`
+            ${Object.keys(S.body?.local.entries ?? {}).length || Object.keys(LG.logTables(S.logs, { all: true })).length || Object.keys(TD.todoTables(S.todos, { all: true })).length || Object.keys(HD.healthTables(S.health, { all: true })).length || Object.keys(SD.superTables(S.super, { all: true })).length || Object.keys(CD.checklistTables(S.checklists, { all: true })).length || (Object.keys(CF.caffeineTables(S.caffeine, { all: true })).length || Object.keys(GLD.glucoseTables(S.glucose, { all: true })).length || Object.keys(TR.trainTables(S.train, { all: true })).length || Object.keys(GD.gymTables(S.gyms, { all: true })).length) ? `<button class="btn block" data-act="send" data-arg="body|all">Alle Körperwerte, Schlaf, Regeneration, To-dos, Checklisten, Health, Superhuman &amp; Koffein erneut senden</button>` : ""}</section>`
         : ""
     }
     <div id="send-result"></div>
@@ -1290,8 +1296,8 @@ function quickGo(id) {
   }
   if (id === "training") S.trainTab = "workouts";
   if (id === "checkin") {
-    S.trainTab = "checkins";
-    return go("training");
+    S.bodyTab = "checkins";
+    return go("body");
   }
   if (id === "body") return bodyOpenEntry(null);
   if (id === "caffeine") S.icTab = "widgets";
@@ -1529,6 +1535,7 @@ const actions = {
   ...bodyActions,
   ...extrasActions,
   ...trainingActions,
+  ...GY.gymsActions,
   "start-free": () => startWorkout("Freies Training"),
   "comp-add": () => {
     S.active.competition = { ...HX.emptyCompetition(null), sex: "women" };
@@ -1890,6 +1897,8 @@ const actions = {
     if (el.dataset.arg === "training") S.trainTab = el.dataset.tab ?? (el.closest(".drawer") ? "workouts" : S.trainTab ?? "workouts");
     // Body: direkt „Werte erfassen“, auf Wunsch beim Bereich (z. B. „entry:circumference“, 1.40.0)
     if (el.dataset.arg === "body" && el.dataset.tab?.startsWith("entry")) return bodyOpenEntry(el.dataset.tab.split(":")[1] ?? null);
+    // Check-Ins liegen seit 1.60.0 unter Body & Longevity; aus dem Menü immer „Erfassen“
+    if (el.dataset.arg === "body") S.bodyTab = el.dataset.tab ?? (el.closest(".drawer") ? "entry" : S.bodyTab ?? "entry");
     const sec = SECTIONS.find((x) => x.id === el.dataset.arg);
     return sec?.view ? go(sec.view) : go("pc-only", el.dataset.arg);
   },
@@ -1943,7 +1952,7 @@ function foodTables(all) {
 
 /** Tabellen für „Körperwerte … senden“: Körperwerte, Schlaf, To-dos, Health, Superhuman, Checklisten, Koffein, Training am Handy, Ziele. */
 function bodyPartTables(all) {
-  return mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), mergeTables(CF.caffeineTables(S.caffeine, { all }), GLD.glucoseTables(S.glucose, { all }))), mergeTables(TR.trainTables(S.train, { all }), mergeTables(GL.goalTables(S.goals, { all }), PS.syncTables(S.pcsettings, { all }))))))));
+  return mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), mergeTables(CF.caffeineTables(S.caffeine, { all }), GLD.glucoseTables(S.glucose, { all }))), mergeTables(TR.trainTables(S.train, { all }), mergeTables(GL.goalTables(S.goals, { all }), mergeTables(PS.syncTables(S.pcsettings, { all }), GD.gymTables(S.gyms, { all })))))))));
 }
 
 /**
@@ -2023,6 +2032,8 @@ async function markSent(arg) {
     await store.set("super", S.super);
     TR.markTrainSent(S.train);
     await store.set("train", S.train);
+    GD.markGymsSent(S.gyms);
+    await store.set("gyms", S.gyms);
     GL.markGoalsSent(S.goals);
     await store.set("goals", S.goals);
     PS.markSyncSent(S.pcsettings);
@@ -2136,6 +2147,7 @@ app.addEventListener("input", (ev) => {
   if (icoachInput(el)) return;
   if (healthInput(el)) return;
   if (superInput(el)) return;
+  if (GY.gymsInput(el)) return;
   if (trainingInput(el)) return;
   if (el.id === "q") {
     S.query = el.value;
@@ -2231,6 +2243,7 @@ app.addEventListener("change", async (ev) => {
   if (icoachChange(el)) return;
   if (healthChange(el)) return;
   if (superChange(el)) return;
+  if (GY.gymsChange(el)) return;
   if (trainingChange(el)) return;
   if (el.dataset?.cfield && S.active?.competition) {
     const c = S.active.competition;
@@ -2307,6 +2320,8 @@ async function applyCatalog(catalog) {
     await store.set("catalog", catalog);
     S.train = TR.pruneTrain(catalog, S.train);
     await store.set("train", S.train);
+    S.gyms = GD.pruneGyms(catalog, S.gyms);
+    await store.set("gyms", S.gyms);
     refreshCatalog();
     N.pruneLocal(catalog, S.food.local);
     await store.set("nutrition", S.food.local);
@@ -2789,6 +2804,7 @@ const moduleCtx = {
     C.buildReturnFile(S.catalog, S.localExercises, S.workouts.filter((w) => w.status === "done"), new Date()).tables,
 };
 initBody(moduleCtx);
+GY.initGyms(moduleCtx);
 initDiary(moduleCtx);
 initVendor(moduleCtx);
 initCatalog(moduleCtx);
@@ -2881,6 +2897,7 @@ async function boot() {
     S.pcsettings = PS.normSync(await store.get("pcsettings"));
     await blsBoot();
     await offBoot();
+    await GY.gymsBoot();
     S.logs = LG.logsState(await store.get("logs"));
     S.todos = TD.todosState(await store.get("todos"));
     S.checklists = CD.checklistState(await store.get("checklists"));

@@ -1608,3 +1608,15 @@ details.ov-card:not([open]) { padding-bottom: 12px; }
 body.is-typing .tabbar,
 body.is-typing .tabbar__fab { display: none; }
 body.is-searching main.wrap:has(.food-search) { padding-bottom: 100vh; }
+
+/* Meine Gyms (1.60.0) */
+.gym-photo { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 10px; overflow: hidden; display: grid; place-items: center; background: var(--surface-2); font-size: 22px; }
+.gym-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gym-photo--large { width: 96px; height: 96px; font-size: 40px; }
+.gym-head { display: flex; gap: 12px; align-items: flex-start; margin: 8px 0 12px; }
+.gym-head > div { min-width: 0; display: grid; gap: 4px; }
+.gym-rows { display: grid; gap: 8px; margin-top: 8px; }
+.gym-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 8px; align-items: start; padding: 8px 0; border-top: 1px solid var(--line); }
+.gym-row__no { width: 100%; min-width: 0; text-align: center; font-weight: 600; }
+.gym-row__name { display: grid; gap: 2px; min-width: 0; }
+.gym-row__name input { width: 100%; min-width: 0; margin-top: 4px; }

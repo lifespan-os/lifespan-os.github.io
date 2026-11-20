@@ -1045,6 +1045,15 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
   orange, wenn mehr gegessen als der Tagesbedarf.
 - Die Figur „Pro“ oben rechts ist ein Knopf: Antippen zeigt bzw. verbirgt die Einleitung zur Seite (`PAGE_INTROS`).
 
+## Version 1.66.0 (20.11.2026): Overview ohne Import-/Sende-Karten, Tag per Wischen
+
+- Overview: „Daten vom PC / Importieren“, „An den PC senden“ und die Tageswahl (Datum mit Pfeilen) sind weg. Import
+  und Senden bleiben unter Import/Export.
+- Tag wechseln per Wischen (`dayswipe.js`, generisch über `main[data-day-swipe]`): nach links = nächster Tag, nach
+  rechts = voriger Tag, nie in die Zukunft (federt zurück). Die Scrollhöhe bleibt erhalten. Kein Wischen in
+  Eingabefeldern, waagrecht scrollbaren Bereichen, mit `data-no-swipe` und am Bildschirmrand. Ist ein früherer Tag
+  gewählt, steht im Kopf „Heute“ als Knopf (`ov-today`) vor dem Datum.
+
 ## Version 1.65.0 (20.11.2026): Gym an Einheiten, sortierbare Liste, Jahresübersicht, Bild im Verlauf
 
 - Einheit und Plan haben ein Gym (Schema 69, `gym_id`): im Training oben „Gym“ wählbar (auch beim Bearbeiten und

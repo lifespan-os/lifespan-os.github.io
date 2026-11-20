@@ -1186,6 +1186,8 @@ body.has-submenu [data-sheet].tabs--fold { display: none; }
 .top--hero .top__hero { display: block; min-height: 0; padding-right: 108px; position: relative; z-index: 1; }
 .hero { display: flex; flex-direction: column; gap: 2px; color: #fff; }
 .hero__date { font-size: .8rem; color: var(--on-navy-muted); }
+.hero__today { margin-right: 4px; padding: 2px 10px; border: 1px solid var(--on-navy-muted); border-radius: 999px; background: transparent; color: inherit; font: inherit; font-weight: 700; }
+main[data-day-swipe] { touch-action: pan-y pinch-zoom; }
 .hero__kcal { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .hero__num { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 4.6rem; line-height: .95; }
 .hero__goal { font-family: var(--display); font-weight: 700; font-size: 1.3rem; color: #f7b65e; }
@@ -1550,10 +1552,6 @@ details.ov-card:not([open]) { padding-bottom: 12px; }
 .qf-banner > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .qf-banner .btn { flex: 0 0 auto; width: auto; white-space: nowrap; padding-left: 16px; padding-right: 16px; }
 /* Overview: Daten vom PC mit „Importieren“ (1.56.0) */
-.pc-import { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.pc-import > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.pc-import .btn { flex: 0 0 auto; width: auto; white-space: nowrap; padding-left: 16px; padding-right: 16px; }
-.pc-import.is-stale { border-left: 4px solid var(--orange); }
 .qf-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
 .qf-row:first-of-type { border-top: 0; }
 .qf-row > div:first-child { display: flex; flex-direction: column; gap: 2px; }

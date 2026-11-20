@@ -19,7 +19,6 @@ export function initOverview(ctx) {
 
 const F = (v, d = 0) => D.formatNumber(v, d);
 const dur = (m) => D.formatDuration(m);
-const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
 // ------------------------------------------------------------------ Bausteine
 
@@ -835,17 +834,6 @@ function liveCards(data, week, widgets, isToday) {
 
 // ------------------------------------------------------------------ Ansicht
 
-/** Tageswahl wie am PC (heute oder ein früherer Tag). */
-export function overviewDayNav(date, today) {
-  const wd = WEEKDAYS[new Date(`${date}T12:00:00`).getDay()];
-  return `<section class="card day-nav">
-    <button class="btn sm" data-act="ov-shift" data-arg="-1" aria-label="Vortag">‹</button>
-    <label class="day-nav__date"><span class="muted small">${date === today ? "Heute" : `${wd} ${D.formatDate(date)}`}</span>
-      <input type="date" data-ov="date" value="${esc(date)}" max="${today}" aria-label="Tag"></label>
-    <button class="btn sm" data-act="ov-shift" data-arg="1" aria-label="Folgetag" ${date >= today ? "disabled" : ""}>›</button>
-  </section>`;
-}
-
 /**
  * Kopf der Overview (1.38.0, Entwurf „APP 1“): gegessene kcal des Tages groß, Tagesbedarf, offene kcal
  * und Makros (gleiche Rechnung wie die Karte Ernährung). Seit 1.53.0 rechts daneben die Schritte zum
@@ -865,7 +853,7 @@ export function overviewHero(db, catalog, date, today) {
   const macro = (val, goalG, label) =>
     `<span class="hero__macro"><b>${F(val ?? 0, val && val < 100 ? 1 : 0)}</b> <span>${goalG != null ? `/ ${F(goalG)} g ` : "g "}${label}</span></span>`;
   return `<div class="hero">
-    <span class="hero__date">${esc(date === today ? "Heute" : dayText)}${open !== null ? ` · ${open >= 0 ? `noch ${F(open)} kcal offen` : `${F(-open)} kcal über Bedarf`}` : ""}</span>
+    <span class="hero__date">${date === today ? "Heute" : `<button type="button" class="hero__today" data-act="ov-today" aria-label="Zurück zu heute">Heute</button> ${esc(dayText)}`}${open !== null ? ` · ${open >= 0 ? `noch ${F(open)} kcal offen` : `${F(-open)} kcal über Bedarf`}` : ""}</span>
     <div class="hero__row">
       <div class="hero__main">
         <div class="hero__kcal"><span class="hero__num">${F(kcal)}</span><span class="hero__goal">${target !== null ? `/ ${F(target)} kcal` : "kcal"}</span></div>
@@ -905,6 +893,23 @@ export function overviewCardsHtml(db, catalog, date, today) {
   return `<div class="ov-grid">${cards.map((c) => (c.empty && layout.emptyLast ? `<div class="overview-card--empty">${c.node}</div>` : c.node)).join("")}</div>`;
 }
 
+/**
+ * Overview-Tag um `delta` Tage verschieben (Wischen, seit 1.66.0). Nie in die Zukunft: heute = null.
+ * Gibt false zurück, wenn es nicht weitergeht (schon heute und „vor“).
+ */
+export function shiftOverviewDay(delta) {
+  const S = X.S;
+  const today = X.today();
+  const cur = S.ovDate && S.ovDate < today ? S.ovDate : today;
+  if (delta > 0 && cur >= today) return false;
+  const d = new Date(`${cur}T12:00:00`);
+  d.setDate(d.getDate() + delta);
+  const pad = (x) => String(x).padStart(2, "0");
+  const next = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  S.ovDate = next >= today ? null : next;
+  return true;
+}
+
 export const overviewActions = {
   "ov-body-week": (el) => {
     X.S.ovBodyPrev = el.dataset.arg === "1";
@@ -923,13 +928,11 @@ export const overviewActions = {
     X.rerender();
   },
   "ov-shift": (el) => {
-    const S = X.S;
-    const today = X.today();
-    const d = new Date(`${S.ovDate ?? today}T12:00:00`);
-    d.setDate(d.getDate() + Number(el.dataset.arg));
-    const pad = (x) => String(x).padStart(2, "0");
-    const next = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    S.ovDate = next >= today ? null : next;
+    shiftOverviewDay(Number(el.dataset.arg));
+    X.rerender();
+  },
+  "ov-today": () => {
+    X.S.ovDate = null;
     X.rerender();
   },
 };

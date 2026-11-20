@@ -19,7 +19,8 @@ import * as GL from "./goals.js";
 import * as AX from "./accountexport.js";
 import { blsActions, blsBoot, blsCard, blsChange, blsInput, initBls, viewBls } from "./blsui.js";
 import { initOff, offActions, offBoot, offCard } from "./offui.js";
-import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewDayNav, overviewHero } from "./overview.js";
+import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewHero, shiftOverviewDay } from "./overview.js";
+import { initDaySwipe } from "./dayswipe.js";
 import { initLogs, logsActions, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
 import { initInsights, insightsActions, viewInsights } from "./insightsview.js";
@@ -216,27 +217,13 @@ function fileButton(label) {
 }
 
 /**
- * Overview (1.56.0): „Importieren“ mit einem Tipp – öffnet sofort die Dateiauswahl (Safari erlaubt
- * keinen eigenen Zugriff auf iCloud Drive oder Google Drive). Ab 3 Stunden Alter orange.
- */
-function pcImportRow(c) {
-  if (!c || c.startpaket) return "";
-  const { stale } = C.importCheck(null, c);
-  return `<section class="card pc-import${stale ? " is-stale" : ""}"><div><strong>Daten vom PC</strong>
-    <span class="muted small">Stand ${esc(fmtDateTime(c.exportedAt))}${stale ? " – am PC entsteht alle 2 Stunden eine neue Handy-Datei, solange LIFESPAN OS läuft" : ""}</span></div>
-    <label class="btn sm${stale ? " primary" : ""}" for="file-in">Importieren</label>
-    <input id="file-in" type="file" hidden></section>`;
-}
-
-/**
- * Overview wie am PC (1.6.0): oben das Training am Handy (läuft bzw. starten) und offene
- * Einträge für den PC, darunter die Karten der Desktop-App in deren Anordnung.
+ * Overview wie am PC (1.6.0): oben das Training am Handy (läuft bzw. starten), darunter die Karten der
+ * Desktop-App in deren Anordnung. Seit 1.66.0 ohne „Daten vom PC“, „An den PC senden“ und Tageswahl –
+ * beides unter Import/Export; der Tag wechselt per Wischen (dayswipe.js), „Heute“ im Kopf springt zurück.
  */
 function viewHome() {
   const c = S.catalog;
-  const open = unsent();
   const a = S.active;
-  const offen = open.length + unsentFood() + unsentBodyCount();
   const today = todayIso();
   const date = S.ovDate && S.ovDate < today ? S.ovDate : today;
   let cards;
@@ -253,7 +240,7 @@ function viewHome() {
       } catch (e) {
         console.error(e);
       }
-      cards = `${fill}${overviewDayNav(date, today)}${overviewCardsHtml(db, c, date, today)}`;
+      cards = `${fill}${overviewCardsHtml(db, c, date, today)}`;
       try {
         hero = overviewHero(db, c, date, today);
       } catch (e) {
@@ -264,7 +251,7 @@ function viewHome() {
       cards = `<section class="card"><p class="warn">Die Overview konnte nicht berechnet werden: ${esc(e.message)}</p></section>`;
     }
   }
-  return `${brandHeader(hero)}<main class="wrap">
+  return `${brandHeader(hero)}<main class="wrap" data-day-swipe="ov" data-day="${esc(date)}">
     ${
       a
         ? a.editOf
@@ -277,20 +264,6 @@ function viewHome() {
         : ""
     }
     ${date === today ? remindersCardHtml() : ""}
-    ${pcImportRow(c)}
-    ${
-      offen
-        ? `<section class="card"><div class="wo-head"><h3>An den PC senden</h3><span class="tag">${offen} offen</span></div>
-            <p class="muted small">${[
-              open.length ? (open.length === 1 ? "1 Training" : `${open.length} Trainings`) : "",
-              unsentFood() ? `${unsentFood()} Ernährungseinträge` : "",
-              unsentBodyCount() ? `${unsentBodyCount()} Körperwerte, Schlaf-, Regenerations-, To-do-, Trainingseinträge und Einstellungen` : "",
-            ]
-              .filter(Boolean)
-              .join(" und ")} noch nicht am PC.</p>
-            <button class="btn block" data-go="send">An den PC senden</button></section>`
-        : ""
-    }
     ${cards}
     <p class="muted small ov-source">Stand der Daten vom PC: ${fmtDateTime(c.exportedAt)} – plus alles, was du seitdem am Handy erfasst hast. Anordnung der Karten wie am PC (Overview → Übersicht anpassen).</p>
   </main>`;
@@ -2834,6 +2807,16 @@ initSettings({
 initBls(moduleCtx);
 initOff(moduleCtx);
 initOverview({ ...moduleCtx, S, today: todayIso });
+// Overview: Tag per Wischen wechseln (1.66.0); nie in die Zukunft
+initDaySwipe(
+  {
+    ov: {
+      canShift: (delta) => delta < 0 || Boolean(S.ovDate && S.ovDate < todayIso()),
+      shift: (delta) => shiftOverviewDay(delta),
+    },
+  },
+  rerenderKeepScroll,
+);
 initLogs(moduleCtx);
 initInsights(moduleCtx);
 initExtras(moduleCtx);

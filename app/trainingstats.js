@@ -12,6 +12,7 @@ import { barTrendSvg, COLOR, esc, trendSvg } from "./pcview.js";
 import { focusIndex, heatmapHtml, machinesOf } from "./overview.js";
 import * as CD from "./checklistdata.js";
 import { arrangeCards, layoutEditing, setLayoutEditing } from "./layoutedit.js";
+import * as MI from "./machineimages.js";
 
 /** Anordnung der Auswertung wie am PC (`ui.training_review_layout`, 1.65.0) */
 export const REVIEW_LAYOUT_KEY = "ui.training_review_layout";
@@ -344,13 +345,15 @@ function ungroupedHtml(ungrouped, exercises, machines) {
 // ------------------------------------------------------------------ Verlauf (ProgressTab.tsx)
 
 /**
- * Bild der Übung (1.65.0, wie ExerciseThumb am PC): eigenes Foto der Maschine bzw. eigenes Bild der
- * Sportart. Die Bilder aus dem Maschinen-Ordner gibt es nur am PC.
+ * Bild der Übung (1.65.0, wie ExerciseThumb am PC): eigenes Foto der Maschine, sonst (1.67.0) das Bild aus
+ * dem Bilderpaket des Herstellers (`mimg`), bzw. eigenes Bild der Sportart.
  */
 function exerciseImage(db, exercise) {
   if (exercise.machineId) {
     const m = (X.S.catalog?.machines ?? []).find((x) => x.id === exercise.machineId);
-    if (m?.own_photo) return { src: m.own_photo, caption: [m.manufacturer, m.display_name ?? m.name].filter(Boolean).join(" · ") };
+    const caption = [m?.manufacturer, m?.display_name ?? m?.name].filter(Boolean).join(" · ");
+    if (m?.own_photo) return { src: m.own_photo, caption };
+    if (MI.has(exercise.machineId)) return { mimg: exercise.machineId, caption };
   }
   if (exercise.sportId) {
     const sp = db.sports.get(exercise.sportId);
@@ -362,29 +365,9 @@ function exerciseImage(db, exercise) {
 function exerciseThumbHtml(db, exercise) {
   const img = exerciseImage(db, exercise);
   if (!img) return "";
-  return `<button class="exercise-thumb" data-act="train-prog-img" aria-label="${esc(`Bild von „${exercise.name}“ groß anzeigen`)}"><img src="${esc(img.src)}" alt=""></button>`;
-}
-
-/** Bild in Bildschirmgröße; Antippen schließt. */
-function openLightbox(src, caption) {
-  const box = document.createElement("div");
-  box.className = "lightbox";
-  box.setAttribute("role", "dialog");
-  box.setAttribute("aria-modal", "true");
-  box.setAttribute("aria-label", caption || "Bild");
-  box.innerHTML = `<button class="lightbox__close" aria-label="Bild schließen">✕</button><figure class="lightbox__figure"><img class="lightbox__img" alt="${esc(caption || "")}"><figcaption class="lightbox__caption">${esc(caption || "")}</figcaption></figure>`;
-  box.querySelector("img").src = src;
-  const close = () => {
-    box.remove();
-    document.removeEventListener("keydown", onKey);
-  };
-  const onKey = (e) => {
-    if (e.key === "Escape") close();
-  };
-  box.addEventListener("click", close);
-  document.addEventListener("keydown", onKey);
-  document.body.appendChild(box);
-  box.querySelector("button").focus();
+  const label = esc(`Bild von „${exercise.name}“ groß anzeigen`);
+  if (img.mimg) return `<button class="exercise-thumb" data-act="mimg-show" data-arg="${esc(img.mimg)}" data-caption="${esc(img.caption)}" aria-label="${label}">${MI.thumb(img.mimg, "")}</button>`;
+  return `<button class="exercise-thumb" data-act="train-prog-img" aria-label="${label}"><img src="${esc(img.src)}" alt=""></button>`;
 }
 
 const METRIC_LABEL = {
@@ -671,7 +654,8 @@ export const statsActions = {
     const ex = exerciseModels(db, S.catalog).find((e) => e.id === S.trainProgEx) ?? null;
     const sel = ex ?? exerciseModels(db, S.catalog).find((e) => document.getElementById("progress-exercise")?.value === e.id);
     const img = sel ? exerciseImage(db, sel) : null;
-    if (img) openLightbox(img.src, img.caption);
+    if (img?.src) MI.openLightbox(img.src, img.caption);
+    else if (img?.mimg) MI.showMachine(img.mimg, img.caption);
   },
   /** Auswertung anpassen (1.65.0): Karten umsortieren und ausblenden wie am PC */
   "train-review-layout": () => {

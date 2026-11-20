@@ -1723,6 +1723,13 @@ body.is-searching main.wrap:has(.food-search) { padding-bottom: 100vh; }
 .progress-pick .field { flex: 1; min-width: 0; }
 .exercise-thumb { flex: none; width: 60px; height: 60px; margin-bottom: 10px; padding: 2px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 .exercise-thumb img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
+/* Maschinenbilder aus den Bilderpaketen (1.67.0) – Hintergrund weiß wie die Herstellerfotos */
+.mthumb { flex: none; width: 48px; height: 48px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); background: #fff; }
+.ex-head .mthumb { width: 44px; height: 44px; }
+.machine-photo { display: block; width: 100%; margin: 8px 0 12px; padding: 0; border: 1px solid var(--line); border-radius: 14px; background: #fff; overflow: hidden; }
+.machine-photo__img { display: block; width: 100%; max-height: 42vh; object-fit: contain; }
+.mimg-actions { display: flex; flex-shrink: 0; gap: 6px; }
+.mimg-list li { align-items: center; }
 .lightbox { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: calc(var(--safe-top) + 12px) 12px 12px; background: rgba(11, 42, 74, .92); }
 .lightbox__figure { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 0; max-width: 100%; max-height: 100%; }
 .lightbox__img { max-width: calc(100vw - 24px); max-height: calc(100vh - 90px); object-fit: contain; border-radius: 10px; background: #fff; }

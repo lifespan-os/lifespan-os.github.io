@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar. Speichert nur die App-Dateien,
 // niemals Trainingsdaten (die liegen in IndexedDB auf dem Gerät).
-const VERSION = "lifespan-mobil-1.66.0";
+const VERSION = "lifespan-mobil-1.67.0";
 const FILES = [
   "./",
   "index.html",
@@ -70,6 +70,7 @@ const FILES = [
   "photocrop.js",
   "infonotes.js",
   "dayswipe.js",
+  "machineimages.js",
   "pcoverview.js",
   "settingsview.js",
   "pcsettings.js",
@@ -133,6 +134,9 @@ self.addEventListener("activate", (ev) => {
 self.addEventListener("fetch", (ev) => {
   const req = ev.request;
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
+  // Bilderpakete (1.67.0, bis 8 MB je Datei) nicht zusätzlich im Speicher des Service Workers ablegen –
+  // die Bilder landen ohnehin in der IndexedDB „lifespan-bilder“
+  if (new URL(req.url).pathname.includes("/bilder/")) return;
   ev.respondWith(
     caches.open(VERSION).then(async (cache) => {
       const net = fetch(req, { cache: "no-cache" }).then((res) => {

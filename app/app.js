@@ -13,6 +13,7 @@ import { buildDb, diaryActions, diaryChange, diaryInput, initDiary, today as tod
 import * as FT from "./fastdata.js";
 import * as SP from "./supplements.js";
 import { initVendor, vendorActions, vendorChange, viewVendor } from "./vendorui.js";
+import * as MI from "./machineimages.js";
 import { catalogActions, catalogCard, catalogChange, initCatalog } from "./catalogui.js";
 import { initGoals, goalActions, goalChange, viewGoals } from "./goalsui.js";
 import * as GL from "./goals.js";
@@ -51,6 +52,8 @@ import * as GY from "./gymsui.js";
 import { extrasActions, initExtras, quickFillBanner, quickFillInput, viewMealPlan, viewQuickFill } from "./extras.js";
 
 const app = document.getElementById("app");
+// Maschinenbilder (1.67.0): Platzhalter <img data-mimg> nach jedem Zeichnen füllen
+new MutationObserver(() => MI.hydrate(app)).observe(app, { childList: true, subtree: true });
 initInfoNotes(app);
 const restEl = document.getElementById("rest");
 const toastEl = document.getElementById("toast");
@@ -317,6 +320,11 @@ function viewTransfer() {
       <p class="muted small">Lebensmittel und Supplements von Herstellern (PEAK, GymBeam, IronMaxx, #sinob, Proteini.si …) mit einem Tipp installieren – wie am PC.</p>
       <button class="btn block" data-act="vendor-open">Herstellerpakete</button>
     </section>` },
+    { id: "mimages", node: `<section class="card">
+      <h3>Maschinenbilder</h3>
+      <p class="muted small">Bilder der Maschinen je Hersteller von der Website laden – für Maschinensuche, Training, Verlauf und Datenbank. ${MI.imageCount() ? `${MI.imageCount().toLocaleString("de-DE")} Maschinen mit Bild auf diesem Gerät.` : "Noch keine Bilder auf diesem Gerät."}</p>
+      <button class="btn block" data-act="mimg-open">Maschinenbilder</button>
+    </section>` },
     { id: "catalog", node: catalogCard() },
     { id: "bls", node: blsCard() },
     { id: "off", node: offCard() },
@@ -537,7 +545,7 @@ function exerciseCard(we, i, exs, machines) {
   const open = isOpen(S.active, we);
   const done = we.sets.filter((x) => x.isDone).length;
   const head = `<button class="ex-head ex-toggle" data-act="toggle-ex" data-we="${we.id}" aria-expanded="${open}">
-      <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>
+      <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>${MI.thumb(m?.id)}
       <span class="main"><b>${esc(name)}</b><span class="muted small">${esc([m?.manufacturer, ex?.muscle_group].filter(Boolean).join(" · "))}</span></span>
       <span class="ex-progress${we.sets.length && done === we.sets.length ? " all" : ""}">${done}/${we.sets.length}</span>
       <span class="chev" aria-hidden="true">${open ? "▾" : "▸"}</span>
@@ -672,7 +680,7 @@ function hitHtml(h) {
         const nr = m.own_number || m.gym_number;
         const key = `machine:${m.id}`;
         return `<div class="item-row"><button class="item" data-act="pick-machine" data-arg="${esc(m.id)}">
-          <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>
+          <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>${MI.thumb(m.id)}
           <span class="main"><b>${esc(m.display_name)}</b>${same}<span class="muted small">${esc([m.manufacturer, m.series, C.machineMuscles(m).slice(0, 3).join(", ")].filter(Boolean).join(" · "))}</span>${
             h.exercises.length ? `<span class="small">Übungen: ${esc(h.exercises.map((e) => e.name).join(" · "))}</span>` : ""
           }<span class="usage small">${esc(usageText(C.usageOf(S.catalog, S.workouts, C.machineExercises(S.catalog, S.localExercises, m.id).map((e) => e.id))))}</span></span>
@@ -743,6 +751,7 @@ function viewMachine() {
   const nr = m.own_number || m.gym_number;
   const list = C.machineExercises(S.catalog, S.localExercises, m.id);
   return `${header(m.display_name, { back: "picker", sub: [nr ? `Nr. ${nr}` : "", m.manufacturer].filter(Boolean).join(" · ") })}<main class="wrap">
+    ${MI.has(m.id) ? `<button class="machine-photo" data-act="mimg-show" data-arg="${esc(m.id)}" data-caption="${esc([m.manufacturer, m.display_name].filter(Boolean).join(" · "))}" aria-label="Bild von ${esc(m.display_name)} groß anzeigen">${MI.thumb(m.id, "machine-photo__img")}</button>` : ""}
     ${(() => {
       const info = machineFocusInfo(m);
       const key = `machine:${m.id}`;
@@ -1058,6 +1067,7 @@ const VIEWS = {
   "supp-intake": viewSuppIntake,
   "fast-entry": viewFastEntry,
   vendor: viewVendor,
+  mimages: MI.viewMachineImages,
   goals: viewGoals,
   bls: viewBls,
   detail: viewDetail,
@@ -1496,6 +1506,7 @@ const actions = {
   ...foodActions,
   ...diaryActions,
   ...vendorActions,
+  ...MI.machineImageActions,
   ...catalogActions,
   ...goalActions,
   ...settingsActions,
@@ -2217,6 +2228,7 @@ app.addEventListener("change", async (ev) => {
   if (bodyChange(el)) return;
   if (diaryChange(el)) return;
   if (vendorChange(el)) return;
+  if (MI.machineImageChange(el)) return;
   if (catalogChange(el)) return;
   if (goalChange(el)) return;
   if (settingsChange(el)) return;
@@ -2792,6 +2804,8 @@ initBody(moduleCtx);
 GY.initGyms(moduleCtx);
 initDiary(moduleCtx);
 initVendor(moduleCtx);
+MI.initMachineImages(moduleCtx);
+MI.loadIds(() => rerenderKeepScroll());
 initCatalog(moduleCtx);
 initGoals(moduleCtx);
 initSettings({

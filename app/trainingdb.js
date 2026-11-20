@@ -9,6 +9,7 @@ import { buildDb, today } from "./diary.js";
 import { esc } from "./pcview.js";
 import { exerciseModels } from "./trainingstats.js";
 import { cropPhoto } from "./photocrop.js";
+import * as MI from "./machineimages.js";
 
 let X = null;
 
@@ -258,7 +259,7 @@ function machineRows(shown, exByMachine, usage) {
     .map((m) => {
       const exs = exByMachine.get(m.id) ?? [];
       const n = exs.reduce((a, e) => a + (usage.get(e.id) ?? 0), 0);
-      return `<li class="train-row"><span class="train-row__main"><strong>${esc(m.displayName)}</strong>
+      return `<li class="train-row">${MI.thumb(m.id)}<span class="train-row__main"><strong>${esc(m.displayName)}</strong>
         <span class="muted small">${esc([m.manufacturer, m.series, [m.category, m.machineType].filter(Boolean).join(" · ")].filter(Boolean).join(" · "))}</span>
         <span class="small">${esc(m.muscleGroups.join(", ") || "–")}${M.numberLabel(m) ? ` · <strong>${esc(M.numberLabel(m))}</strong>` : ""}</span>
         ${exs.length ? `<span class="muted small">Im Training: ${esc(exs.map((e) => `${e.name} (${usage.get(e.id) ?? 0}×)`).join(", "))}</span>` : ""}</span>
@@ -280,10 +281,11 @@ function machineDetail() {
   const row = (label, value) => (value ? `<div class="kv"><span class="muted small">${esc(label)}</span><span>${esc(value)}</span></div>` : "");
   return `<section class="card card--training"><button class="linkbtn" data-act="train-machine-close">‹ Zurück zur Datenbank</button>
     <h3>${esc(m.displayName)}</h3>
+    ${MI.has(m.id) ? `<button class="machine-photo" data-act="mimg-show" data-arg="${esc(m.id)}" data-caption="${esc([m.manufacturer, m.displayName].filter(Boolean).join(" · "))}" aria-label="Bild groß anzeigen">${MI.thumb(m.id, "machine-photo__img")}</button>` : ""}
     ${row("Hersteller", m.manufacturer)}${row("Serie", m.series)}${row("Kategorie · Typ", [m.category, m.machineType].filter(Boolean).join(" · "))}${row("Artikelnummer", m.articleNumber)}
     ${row("Eigene Nummer", m.ownNumber)}${row("dasGym-Nummer", m.gymNumber)}${row("Muskelgruppen", m.muscleGroups.join(", "))}${row("Besonderheiten", m.features.join(", "))}
     ${focus.length ? row("Muskelfokus", focus.map(([mu, p]) => `${D.MUSCLE_LABELS[mu] ?? mu} ${F(p)} %`).join(", ")) : ""}
-    ${row("Notiz", m.notes)}${row("Bilder", m.images.length ? `${m.images.length} am PC` : "")}
+    ${row("Notiz", m.notes)}${row("Bilder", m.images.length ? `${m.images.length} am PC${MI.has(m.id) ? "" : " · aufs Handy unter Import/Export → Maschinenbilder"}` : "")}
     ${m.productUrl ? `<p class="small"><a href="${esc(m.productUrl)}" target="_blank" rel="noopener">Produktseite des Herstellers</a></p>` : ""}
     <h4>Übungen an dieser Maschine</h4>
     ${

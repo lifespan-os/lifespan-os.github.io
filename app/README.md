@@ -1045,6 +1045,22 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
   orange, wenn mehr gegessen als der Tagesbedarf.
 - Die Figur „Pro“ oben rechts ist ein Knopf: Antippen zeigt bzw. verbirgt die Einleitung zur Seite (`PAGE_INTROS`).
 
+## Version 1.67.0 (20.11.2026): Maschinenbilder als Bilderpakete von der Website
+
+- Bilderpakete (`lifespan-os-bilderpaket`, je Hersteller-Ordner des Maschinen-Ordners, je Maschine ein Bild: das erste
+  lesbare aus `bilder`, lange Seite 800 px, JPEG 72, Transparenz auf Weiß) erzeugt der PC mit
+  `scripts/tools/handy/bilderpakete-erzeugen.cmd` nach `mobile/bilder/` (+ `index.json`, Format
+  `lifespan-os-bilderpaketliste`); über 8 MB in Teile geteilt (`Panatta.json`, `Panatta-2.json` …). Nicht versioniert
+  (`.gitignore`), nur auf GitHub Pages unter `app/bilder/`; Website-Seite `bilder.html` (Liste mit Download je Teil).
+- Handy `machineimages.js`: Import/Export → Maschinenbilder (Liste von `bilder/index.json`, „Für meine Gyms laden“ =
+  Hersteller der Maschinen in den eigenen Gyms, „Alle laden“, je Paket Laden/Aktualisieren/Entfernen, Paketdatei
+  wählen). Speicher: eigene IndexedDB `lifespan-bilder` (Bilder als Blob je Maschinen-ID, Paketstand mit erledigten
+  Teilen) – für alle Konten, nicht im Konto-Export, nie an den PC. Der Service Worker legt `bilder/` nicht in seinen
+  Speicher.
+- Anzeige: Platzhalter `<img data-mimg>` (`thumb(id)`), gefüllt nach jedem Zeichnen (MutationObserver in app.js):
+  Maschinensuche (Treffer), Training (Kopf der Übung), Maschinenansicht, Training → Datenbank (Liste und Detail mit
+  großem Bild), Verlauf (eigenes Foto geht vor). Antippen von Detailbild bzw. Verlauf-Bild = Großansicht.
+
 ## Version 1.66.0 (20.11.2026): Overview ohne Import-/Sende-Karten, Tag per Wischen
 
 - Overview: „Daten vom PC / Importieren“, „An den PC senden“ und die Tageswahl (Datum mit Pfeilen) sind weg. Import

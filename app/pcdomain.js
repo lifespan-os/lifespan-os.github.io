@@ -2964,6 +2964,7 @@ __export(muscleMap_exports, {
   muscleIdsForTerm: () => muscleIdsForTerm,
   muscleLevels: () => muscleLevels,
   muscleMapData: () => muscleMapData,
+  muscleMapForOpenWorkout: () => muscleMapForOpenWorkout,
   muscleMapForRange: () => muscleMapForRange,
   muscleMapForWorkouts: () => muscleMapForWorkouts,
   parseMuscleMapSettings: () => parseMuscleMapSettings,
@@ -7316,6 +7317,13 @@ function muscleMapForRange(log, exercises, machines, from, to, focus = NO_FOCUS)
 function muscleMapForWorkouts(log, exercises, machines, workoutIds, focus = NO_FOCUS) {
   const ids = new Set(workoutIds);
   return muscleMapData(log, exercises, machines, (s) => ids.has(s.workoutId), focus);
+}
+function muscleMapForOpenWorkout(sets2, running, exercises, machines, focus = NO_FOCUS) {
+  const category = new Map(exercises.map((e) => [e.id, e.category]));
+  const counted = sets2.filter(
+    (s) => running ? s.isDone : s.isDone || (s.reps ?? 0) > 0 || (s.weightKg ?? 0) > 0
+  ).map((s) => ({ ...s, exerciseCategory: category.get(s.exerciseId) ?? "strength" }));
+  return muscleMapData(counted, exercises, machines, () => true, focus);
 }
 var SCALE_MODE_LABELS = {
   standard: "Standard",

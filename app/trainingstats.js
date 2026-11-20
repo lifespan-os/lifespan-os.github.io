@@ -86,6 +86,45 @@ function change(percent) {
   return `<span class="${cls}">${esc(D.formatSigned(percent, 0))} %</span>`;
 }
 
+/**
+ * Körperkarte der geöffneten Einheit (1.71.0, wie PC 1.0.161 `WorkoutBodyMap.tsx`): unter
+ * „Übung oder Maschine hinzufügen“. Laufendes Training = abgehakte Sätze, Bearbeiten/Nachtragen =
+ * alle Sätze mit Werten (`muscleMapForOpenWorkout`). Farbe = Anteil am meistbelasteten Muskel.
+ */
+export function workoutBodyMapHtml(w, exerciseRows) {
+  const S = X.S;
+  const exercises = exerciseRows.map((e) => ({ id: e.id, name: e.name, category: e.category ?? "strength", muscleGroup: e.muscle_group ?? null, machineId: e.machine_id ?? null }));
+  const sets = w.exercises.flatMap((we) =>
+    we.sets.map((s) => ({
+      exerciseId: we.exerciseId,
+      reps: s.reps ?? null,
+      weightKg: s.weightKg ?? null,
+      isWarmup: Boolean(s.isWarmup),
+      isFailure: Boolean(s.isFailure),
+      isDone: Boolean(s.isDone),
+      gripWidth: we.settings?.gripWidth || null,
+      gripPosition: we.settings?.gripPosition || null,
+    })),
+  );
+  const running = !w.backfill && !w.editOf;
+  const map = D.muscleMapAll.muscleMapForOpenWorkout(sets, running, exercises, machinesOf(S.catalog), focusIndex(S.catalog));
+  const levels = D.muscleLevels(map.sets, "relative");
+  const describe = (m) => {
+    const level = levels[m];
+    const vol = map.volumeKg[m] > 0 ? ` · ${C().formatVolume(map.volumeKg[m])}` : "";
+    return `${D.MUSCLE_LABELS[m]} · ${F(map.sets[m], 1)} ${map.sets[m] === 1 ? "Satz" : "Sätze"}${vol}${level > 0 ? ` · ${D.LEVEL_NAMES[level - 1]}` : ""}`;
+  };
+  const sexRaw = S.catalog?.pc?.profile?.[0]?.sex;
+  const sex = sexRaw === "female" || sexRaw === "male" ? sexRaw : "male";
+  const n = map.totalSets;
+  return `<section class="card card--training wo-bodymap"><div class="wo-head"><h3>Muskel-Körperkarte dieser Einheit</h3><span class="tag">${n} ${n === 1 ? "Arbeitssatz" : "Arbeitssätze"}${running ? " abgehakt" : ""}</span></div>
+    ${n === 0 ? `<p class="muted small">${running ? "Noch kein Arbeitssatz abgehakt – die Karte füllt sich mit jedem erledigten Satz." : "Noch keine Arbeitssätze von Kraftübungen eingetragen."}</p>` : ""}
+    ${heatmapHtml({ levels, describe, sex, active: S.woMuscle ?? null, act: "wo-muscle", legend: D.legendLabels("relative") })}
+    <p class="muted small">Farbe = Anteil am meistbelasteten Muskel dieser Einheit (Arbeitssätze, Hauptmuskel = 100 %, die übrigen anteilig nach Muskelfokus). ${running ? "Während des Trainings zählen die abgehakten Sätze." : "Gezählt werden alle Sätze mit Werten."}${
+      map.setsWithoutMuscle > 0 ? ` ${map.setsWithoutMuscle} ${map.setsWithoutMuscle === 1 ? "Satz" : "Sätze"} ohne zuordenbare Muskelgruppe.` : ""
+    }</p></section>`;
+}
+
 export function viewReviewTab() {
   const S = X.S;
   const db = buildDb();
@@ -665,6 +704,10 @@ export const statsActions = {
   },
   "train-review-metric": (el) => {
     X.S.trainReviewMetric = el.dataset.arg;
+    X.rerender();
+  },
+  "wo-muscle": (el) => {
+    X.S.woMuscle = X.S.woMuscle === el.dataset.arg ? null : el.dataset.arg;
     X.rerender();
   },
   "train-muscle": (el) => {

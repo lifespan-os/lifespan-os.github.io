@@ -42,7 +42,7 @@ import * as PS from "./pcsettings.js";
 import * as DP from "./devprefs.js";
 import { enhanceInfo, initInfoNotes, introPanel, proButton } from "./infonotes.js";
 import { initTraining, trainingActions, trainingChange, trainingInput, viewTrainingSection, persistTrain, setNotice as trainSetNotice, failed as trainFailed } from "./training.js";
-import { initTrainingStats } from "./trainingstats.js";
+import { initTrainingStats, workoutBodyMapHtml } from "./trainingstats.js";
 import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
 import * as TR from "./trainingdata.js";
 import * as PD from "./pending.js";
@@ -415,6 +415,7 @@ function viewWorkout() {
     ${w.competition ? competitionCard(w.competition) : ""}
     ${w.exercises.map((we, i) => exerciseCard(we, i, exs, machines)).join("")}
     <button class="btn block" data-go="picker">+ Übung oder Maschine hinzufügen</button>
+    ${workoutBodyMapHtml(w, C.allExercises(S.catalog, S.localExercises))}
     ${w.competition || !isHyroxWorkout(w) ? "" : `<button class="btn ghost block" data-act="comp-add">HYROX-Wettkampf-Angaben hinzufügen</button>`}
     <button class="btn danger block" data-act="discard">${w.backfill ? "Verwerfen" : edit ? "Änderungen verwerfen" : "Training verwerfen"}</button>
   </main>

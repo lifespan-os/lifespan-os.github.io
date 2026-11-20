@@ -86,7 +86,68 @@ export function viewGymsTab() {
           <span>${g.id === active ? '<span class="tag">Aktiv</span> ' : ""}${g.package_id === G.REFERENCE_PACKAGE ? '<span class="tag">Referenz</span>' : ""}</span></span><span class="chev">›</span></button>`,
       )
       .join("")}</div>
+  </section>
+  ${packagesHtml(list)}`;
+}
+
+// ------------------------------------------------------------------ Studio-Pakete (1.61.0)
+
+/** Liste der Studio-Pakete (studios/index.json, wie pakete/index.json bei den Herstellerpaketen) einmal laden. */
+async function loadStudioIndex() {
+  const S = X.S;
+  if (S.studioIndex !== undefined || S.studioIndexLoading) return;
+  S.studioIndexLoading = true;
+  try {
+    const res = await fetch("studios/index.json", { cache: "no-cache" });
+    if (!res.ok) throw new Error();
+    S.studioIndex = (await res.json()).studios ?? [];
+  } catch {
+    S.studioIndex = [];
+    S.studioIndexError = "Die Liste der Studio-Pakete ist gerade nicht erreichbar (offline?). Eine Paketdatei kannst du trotzdem wählen.";
+  }
+  S.studioIndexLoading = false;
+  if (S.view === "training") X.rerender();
+}
+
+function packagesHtml(list) {
+  const S = X.S;
+  void loadStudioIndex();
+  const installed = new Map(list.filter((g) => g.package_id).map((g) => [g.package_id, g]));
+  const idx = S.studioIndex;
+  return `<section class="card">
+    <h3>Studio-Pakete</h3>
+    <p class="muted small">Ein Studio mit seiner Maschinenliste und den Nummern im Studio auf einmal übernehmen. Deine Mitgliedsnummer, Fotos und Notizen bleiben unverändert; fehlende Maschinen werden genannt.</p>
+    ${S.gymPkgReport ? `<p class="ok-note">${esc(S.gymPkgReport)}</p>` : ""}
+    ${
+      idx === undefined
+        ? `<p class="muted small">Liste wird geladen …</p>`
+        : idx.length
+          ? `<ul class="vendor-list">${idx
+              .map((p) => {
+                const have = installed.get(p.id);
+                return `<li><span><b>${esc(p.name)}</b><small class="muted">${p.address ? `${esc(p.address)} · ` : ""}${Number(p.machines ?? 0).toLocaleString("de-DE")} Maschinen · Stand ${esc(String(p.created ?? "").split("-").reverse().join("."))}${have ? " · installiert" : ""}</small></span>
+                  <button class="btn sm" data-act="gym-pkg" data-arg="${esc(p.file)}" ${S.gymPkgBusy ? "disabled" : ""}>${have ? "Aktualisieren" : "Installieren"}</button></li>`;
+              })
+              .join("")}</ul>`
+          : `<p class="muted small">${esc(S.studioIndexError ?? "Noch keine Studio-Pakete in der Liste.")}</p>`
+    }
+    <label class="btn block" for="gym-pkg-file">Paketdatei wählen …</label>
+    <input id="gym-pkg-file" type="file" data-gym="package" hidden>
   </section>`;
+}
+
+async function installFromText(textValue) {
+  const S = X.S;
+  const parsed = G.parsePackage(textValue);
+  if (parsed.error) {
+    X.toast(parsed.error, true);
+    return;
+  }
+  const report = G.installPackage(S.catalog, S.gyms, parsed.pkg);
+  await persist();
+  S.gymPkgReport = G.describeInstall(report);
+  X.toast(`„${report.name}“ installiert`);
+  X.rerender();
 }
 
 function detailHtml(g, active) {
@@ -204,6 +265,23 @@ const toDraft = (g) => ({
 });
 
 export const gymsActions = {
+  "gym-pkg": async (el) => {
+    const S = X.S;
+    const file = el.dataset.arg;
+    if (!/^[a-z0-9-]+\.json$/.test(file ?? "")) return;
+    S.gymPkgBusy = true;
+    X.rerender();
+    try {
+      const res = await fetch(`studios/${file}`, { cache: "no-cache" });
+      if (!res.ok) throw new Error();
+      await installFromText(await res.text());
+    } catch {
+      X.toast("Das Studio-Paket konnte nicht geladen werden (offline?).", true);
+    } finally {
+      S.gymPkgBusy = false;
+      X.rerender();
+    }
+  },
   "gym-new": () => {
     X.S.gymEdit = toDraft(null);
     X.S.gymErrors = {};
@@ -309,6 +387,12 @@ export function gymsChange(el) {
   if (kind === "active") {
     S.gyms.active = el.value;
     void persist().then(() => X.rerender());
+    return true;
+  }
+  if (kind === "package") {
+    const file = el.files?.[0];
+    el.value = "";
+    if (file) file.text().then(installFromText).catch(() => X.toast("Die Datei konnte nicht gelesen werden.", true));
     return true;
   }
   if (kind === "photo") {

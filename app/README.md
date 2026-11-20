@@ -991,3 +991,18 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
   (`gymTables`), „Ganzes Konto an den PC“ und Offene Daten (`pending.js`).
 - Tests: `node --test *.test.mjs` (138 bestanden, neu `gymsdata.test.mjs`); im Testbrowser (iPhone 13) Liste,
   Referenz-Studio, neues Gym, Maschine aufnehmen, Gymauswahl, gefilterte Übungsauswahl und Body → Check-Ins geprüft.
+
+## Version 1.61.0 (20.11.2026): Studio-Pakete
+
+- Training → Meine Gyms → „Studio-Pakete“: Liste aus `studios/index.json` (wie `pakete/index.json` bei den
+  Herstellerpaketen) mit „Installieren“/„Aktualisieren“, außerdem „Paketdatei wählen …“.
+- `gymsdata.js` `parsePackage`/`installPackage`/`describeInstall` mit denselben Regeln wie `gym::install_package` am PC:
+  Format `lifespan-studio` Version 1, Paket-ID nur a–z, 0–9, „-“; Gym-ID fest `stableId("gym:<id>")` (das Paket
+  `dasgym-wien` landet im Referenz-Studio); Maschinen ergänzen, geänderte Nummern aktualisieren; Mitgliedsnummer,
+  Kontakt, Foto und Notizen bleiben; Maschinen, die in der eigenen Datenbank fehlen, werden genannt.
+- `studios/dasgym-wien.json`: Export vom PC (Meine Gyms → „Als Studio-Paket exportieren“), ohne die eigene
+  App-Maschine „Cybex Bauchmaschine“ (UUID-ID, nur in der Datenbank des Nutzers); 187 Maschinen.
+  Konten nur aus dem Startpaket (Stand 16.11.) kennen 40 neuere Master-Maschinen noch nicht – das Startpaket
+  muss dafür neu erzeugt werden (`scripts\tools\handy\startpaket-erzeugen.py`).
+- Website: neue Seite `studios.html`, verlinkt auf der Startseite (Maschinen-Kachel, Download-Bereich).
+- Tests: `node --test *.test.mjs` (140 bestanden); im Testbrowser Installieren aus der Liste geprüft.

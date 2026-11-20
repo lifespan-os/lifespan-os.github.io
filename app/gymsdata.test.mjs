@@ -85,3 +85,61 @@ test("Referenz-Studio ohne PC-Daten (Startpaket): aus den dasGym-Nummern, feste 
   assert.deepEqual(G.gymEntries(c, local, G.REFERENCE_ID).map((e) => e.machine_id), ["m3"]);
   assert.equal(G.gymTables(local).deleted_record[0].record_id, G.entryId(G.REFERENCE_ID, "m1"));
 });
+
+test("Studio-Paket installieren: feste ID, Nummern ergänzen, eigene Angaben bleiben, fehlende Maschinen genannt", () => {
+  const c = { machines: catalog().machines };
+  const local = G.emptyGymsLocal();
+  assert.match(G.parsePackage("kein json").error, /keine JSON-Datei/);
+  assert.match(G.parsePackage(JSON.stringify({ format: "x" })).error, /kein Studio-Paket/);
+  assert.match(G.parsePackage(JSON.stringify({ format: "lifespan-studio", version: 2, id: "a", name: "A", machines: [] })).error, /neuer/);
+  assert.match(G.parsePackage(JSON.stringify({ format: "lifespan-studio", version: 1, id: "A B", name: "A", machines: [] })).error, /Ungültige Paket-ID/);
+  const pkg = G.parsePackage(
+    JSON.stringify({
+      format: "lifespan-studio",
+      version: 1,
+      id: "studio-x",
+      name: "Studio X",
+      address: "Hauptstraße 1",
+      machines: [
+        { machine: "m1", number: "4", name: "Beinpresse" },
+        { machine: "m2", number: "5", name: "Brustpresse" },
+        { machine: "m1", number: "9" },
+        { machine: "fehlt", number: "6", name: "Unbekannt" },
+      ],
+    }),
+  ).pkg;
+  const r1 = G.installPackage(c, local, pkg, new Date("2026-11-20T10:00:00Z"));
+  assert.equal(r1.gymId, G.stableId("gym:studio-x"));
+  assert.deepEqual([r1.added, r1.updated, r1.unchanged, r1.missing], [2, 0, 0, ["Unbekannt"]]);
+  assert.match(G.describeInstall(r1), /„Studio X“: 2 Maschinen aufgenommen\. 1 Maschinen fehlen .*\(Unbekannt\)/);
+  // eigene Angaben ergänzen, dann neuere Paketfassung installieren
+  G.saveGym(c, local, { id: r1.gymId, name: "Studio X", address: "Hauptstraße 1", member_number: "M-7" }, () => "x");
+  G.setEntry(c, local, r1.gymId, "m1", "4", "Sitz 3", () => "x");
+  pkg.machines[0].number = "40";
+  const r2 = G.installPackage(c, local, pkg, new Date("2026-11-21T10:00:00Z"));
+  assert.deepEqual([r2.added, r2.updated, r2.unchanged], [0, 1, 1]);
+  const gym = G.gymList(c, local).find((g) => g.id === r1.gymId);
+  assert.equal(gym.member_number, "M-7");
+  assert.equal(gym.package_id, "studio-x");
+  const e = G.gymEntries(c, local, r1.gymId).find((x) => x.machine_id === "m1");
+  assert.deepEqual([e.number, e.note, e.id], ["40", "Sitz 3", G.entryId(r1.gymId, "m1")]);
+  // das dasGym-Paket landet im Referenz-Studio
+  const ref = G.installPackage(c, local, { ...pkg, id: "dasgym-wien", name: "dasGym Wien", machines: [{ machine: "m3", number: "77" }] });
+  assert.equal(ref.gymId, G.REFERENCE_ID);
+  assert.equal(G.gymList(c, local).filter((g) => g.name === "dasGym Wien").length, 1);
+  assert.deepEqual(
+    G.gymEntries(c, local, G.REFERENCE_ID).map((x) => [x.machine_id, x.number]).sort(),
+    [["m1", "12"], ["m3", "77"]],
+  );
+});
+
+test("Mitgeliefertes Studio-Paket dasGym Wien ist gültig", async () => {
+  const fs = await import("node:fs");
+  const idx = JSON.parse(fs.readFileSync(new URL("./studios/index.json", import.meta.url), "utf8"));
+  for (const s of idx.studios) {
+    const r = G.parsePackage(fs.readFileSync(new URL(`./studios/${s.file}`, import.meta.url), "utf8"));
+    assert.ok(r.pkg, r.error);
+    assert.equal(r.pkg.id, s.id);
+    assert.equal(r.pkg.machines.length, s.machines);
+  }
+});

@@ -350,3 +350,104 @@ export function pruneGyms(catalog, local) {
   }
   return l;
 }
+
+// ------------------------------------------------------------------ Studio-Pakete (1.61.0, wie `gym::install_package` am PC)
+
+export const PACKAGE_FORMAT = "lifespan-studio";
+export const MAX_PACKAGE_CHARS = 2_000_000;
+
+/** Paketdatei prüfen. Liefert { pkg } oder { error }. */
+export function parsePackage(textValue) {
+  if (String(textValue ?? "").length > MAX_PACKAGE_CHARS) return { error: "Die Paketdatei ist zu groß." };
+  let pkg;
+  try {
+    pkg = JSON.parse(textValue);
+  } catch {
+    return { error: "Das ist kein gültiges Studio-Paket (keine JSON-Datei)." };
+  }
+  if (!pkg || pkg.format !== PACKAGE_FORMAT) return { error: "Das ist kein Studio-Paket von LIFESPAN OS." };
+  if (Number(pkg.version) > 1) return { error: "Das Studio-Paket ist neuer als diese Version – bitte die App neu laden." };
+  const id = String(pkg.id ?? "");
+  if (!id || id.length > 80 || !/^[a-z0-9-]+$/.test(id)) return { error: `Ungültige Paket-ID „${id}“ (nur Kleinbuchstaben, Ziffern, Bindestriche).` };
+  const name = String(pkg.name ?? "").trim();
+  if (!name || [...name].length > 120) return { error: "Das Paket hat keinen gültigen Namen." };
+  if (!Array.isArray(pkg.machines)) return { error: "Das Paket enthält keine Maschinenliste." };
+  return { pkg: { ...pkg, id, name } };
+}
+
+const short = (v, max) => {
+  const t = String(v ?? "").trim();
+  return t ? [...t].slice(0, max).join("") : null;
+};
+
+/**
+ * Paket installieren: Gym mit fester ID (`gym:<paket-id>`, wie am PC; „dasgym-wien“ ist das Referenz-Studio), Maschinen
+ * ergänzen bzw. Nummern aktualisieren. Eigene Angaben (Mitgliedsnummer, Kontakt, Foto, Notizen) bleiben erhalten.
+ * Liefert { gymId, name, added, updated, unchanged, missing: [Namen] }.
+ */
+export function installPackage(catalog, local, pkg, now = new Date()) {
+  const iso = now.toISOString();
+  const gymId = stableId(`gym:${pkg.id}`);
+  const prev = gymList(catalog, local).find((g) => g.id === gymId);
+  const row = {
+    ...(prev ?? { contact: null, member_number: null, photo: null, sort_order: 0, created_at: iso }),
+    id: gymId,
+    name: pkg.name,
+    address: short(pkg.address, 300) ?? prev?.address ?? null,
+    website: short(pkg.website, 300) ?? prev?.website ?? null,
+    package_id: pkg.id,
+    archived: 0,
+    updated_at: iso,
+  };
+  if (gymId === REFERENCE_ID && prev && !prev.package_id) row.package_id = REFERENCE_PACKAGE;
+  delete row.machine_count;
+  local.gyms[gymId] = { row, sent: false };
+  delete local.deleted[`gym:${gymId}`];
+  const report = { gymId, name: pkg.name, added: 0, updated: 0, unchanged: 0, missing: [] };
+  const have = new Map(gymEntries(catalog, local, gymId).map((e) => [e.machine_id, e]));
+  const machines = new Set((catalog?.machines ?? []).map((m) => m.id));
+  const seen = new Set();
+  for (const m of pkg.machines) {
+    const mid = String(m?.machine ?? "").trim();
+    if (!mid || seen.has(mid)) continue;
+    seen.add(mid);
+    if (!machines.has(mid)) {
+      report.missing.push(String(m?.name ?? "").trim() || mid);
+      continue;
+    }
+    const number = short(m?.number, 40);
+    const cur = have.get(mid);
+    if (cur && (cur.number === number || number === null)) {
+      report.unchanged += 1;
+      continue;
+    }
+    const entry = {
+      id: cur?.id ?? entryId(gymId, mid),
+      gym_id: gymId,
+      machine_id: mid,
+      number,
+      note: cur?.note ?? null,
+      created_at: cur?.created_at ?? iso,
+      updated_at: iso,
+    };
+    local.entries[entry.id] = { row: entry, sent: false };
+    delete local.deleted[`gym_machine:${entry.id}`];
+    if (cur) report.updated += 1;
+    else report.added += 1;
+  }
+  return report;
+}
+
+/** Kurzer Bericht nach der Installation (gleicher Text wie `describeInstall` am PC). */
+export function describeInstall(r) {
+  const parts = [`${r.added} Maschinen aufgenommen`];
+  if (r.updated) parts.push(`${r.updated} Nummern aktualisiert`);
+  if (r.unchanged) parts.push(`${r.unchanged} unverändert`);
+  let s = `„${r.name}“: ${parts.join(", ")}.`;
+  if (r.missing.length) {
+    const shown = r.missing.slice(0, 3).join(", ");
+    const more = r.missing.length > 3 ? ` und ${r.missing.length - 3} weitere` : "";
+    s += ` ${r.missing.length} Maschinen fehlen in deiner Maschinendatenbank (${shown}${more}) – nach dem nächsten Import der Maschinendatenbank das Paket erneut installieren.`;
+  }
+  return s;
+}

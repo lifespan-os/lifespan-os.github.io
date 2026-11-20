@@ -42,7 +42,7 @@ export function weeklyReportsCard(card) {
       </li>`;
     })
     .join("");
-  const body = `<p class="muted small">Jeden Montag erstellt der PC den Bericht der abgeschlossenen Woche. Nach dem nächsten Export vom PC erscheint er hier.</p>
+  const body = `<p class="muted small card-info">Jeden Montag erstellt der PC den Bericht der abgeschlossenen Woche. Nach dem nächsten Export vom PC erscheint er hier.</p>
     ${list.length ? `<ul class="wr-rows">${rows}</ul>` : `<p class="muted">Noch kein Bericht in der geladenen Exportdatei.</p>`}
     ${list.length > SHOWN ? `<button class="linkbtn" data-act="wr-all">${st.all ? "Weniger anzeigen" : `Alle ${list.length} Berichte anzeigen`}</button>` : ""}
     ${st.message ? `<p class="${st.message.tone === "error" ? "warn" : "muted small"}">${esc(st.message.text)}</p>` : ""}

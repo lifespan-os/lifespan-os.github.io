@@ -58,8 +58,8 @@ const segmented = (act, options, current) =>
   `<div class="segmented" role="radiogroup">${options
     .map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === current}" class="${v === current ? "is-active" : ""}" data-act="${act}" data-arg="${esc(v)}">${esc(l)}</button>`)
     .join("")}</div>`;
-const syncNote = `<p class="muted small">Gilt für PC und Handy: geht mit „An den PC senden“ an den PC; dort gewinnt beim Abgleich der neuere Stand.</p>`;
-const deviceNote = `<p class="muted small">Gilt nur auf diesem Handy (am PC gibt es eine eigene Einstellung).</p>`;
+const syncNote = `<p class="muted small card-info">Gilt für PC und Handy: geht mit „An den PC senden“ an den PC; dort gewinnt beim Abgleich der neuere Stand.</p>`;
+const deviceNote = `<p class="muted small card-info">Gilt nur auf diesem Handy (am PC gibt es eine eigene Einstellung).</p>`;
 
 // ------------------------------------------------------------------ Karten
 
@@ -85,7 +85,7 @@ function profileCard(db) {
       e?.birthDate ? errOf(e, "birthDate") : !f.birthDate && p.birth_year ? `<p class="muted small">Bisher nur das Geburtsjahr ${esc(String(p.birth_year))} eingetragen.</p>` : ""
     }</div>
     ${f.sex === "female" ? `<div class="field"><label for="prof-phase">Schwangerschaft/Stillzeit</label><select id="prof-phase" data-prof="lifePhase">${opt(D.LIFE_PHASE_OPTIONS, f.lifePhase)}</select>${errOf(e, "lifePhase")}</div>` : ""}
-    <p class="muted small">Geschlecht, Alter und Größe braucht die App für Energiebedarf und Referenzwerte – wie am PC.</p>
+    <p class="muted small card-info">Geschlecht, Alter und Größe braucht die App für Energiebedarf und Referenzwerte – wie am PC.</p>
     <button class="btn primary block" data-act="prof-save">Profil speichern</button>
     ${syncNote}
   </section>`;
@@ -113,7 +113,7 @@ function mealsCard(db) {
     .join("");
   return `<section class="card" id="set-meals">
     <div class="wo-head"><h3>Mahlzeiten</h3><span class="tag">${active} von ${PS.MAX_MEALS}</span></div>
-    <p class="muted small">Haken = erscheint im Tagebuch. Standardmahlzeiten umbenennen (leer = Standardname), eigene Mahlzeiten hinten anhängen. Gilt nur für künftige Einträge: vorhandene behalten ihren Namen.</p>
+    <p class="muted small card-info">Haken = erscheint im Tagebuch. Standardmahlzeiten umbenennen (leer = Standardname), eigene Mahlzeiten hinten anhängen. Gilt nur für künftige Einträge: vorhandene behalten ihren Namen.</p>
     <ul class="set-list">${rows}${extras}</ul>
     ${errOf(e, "hidden")}${errOf(e, "extras")}
     <div class="row-actions">
@@ -145,7 +145,7 @@ function methodsCard(db) {
   }).join("");
   return `<section class="card" id="set-methods">
     <h3>Messmethoden</h3>
-    <p class="muted small">Je Thema die Methoden, die du beim Erfassen wählst (z. B. Waage, Maßband, Polar) – höchstens 30, je bis 40 Zeichen.</p>
+    <p class="muted small card-info">Je Thema die Methoden, die du beim Erfassen wählst (z. B. Waage, Maßband, Polar) – höchstens 30, je bis 40 Zeichen.</p>
     ${topics}
     <div class="row-actions">${S.setMethods ? `<button class="btn sm ghost" data-act="method-discard">Verwerfen</button>` : ""}</div>
     <button class="btn primary block" data-act="method-save">Messmethoden speichern</button>
@@ -170,7 +170,7 @@ function dayStartCard(db) {
     <h3>Tageswechsel</h3>
     <div class="field"><label for="day-start">Neuer Tag beginnt um</label><input id="day-start" type="time" value="${esc(v)}" data-daystart="1">
       ${X.S.dayStartError ? `<p class="field-error">${esc(X.S.dayStartError)}</p>` : ""}
-      <p class="muted small">Bis zu dieser Uhrzeit zählt alles noch zum Vortag (Voreinstellung 00:00 Uhr, spätestens 12:00 Uhr). „Heute“ ist gerade der ${esc(D.formatDate(today()))}.</p></div>
+      <p class="muted small card-info">Bis zu dieser Uhrzeit zählt alles noch zum Vortag (Voreinstellung 00:00 Uhr, spätestens 12:00 Uhr). „Heute“ ist gerade der ${esc(D.formatDate(today()))}.</p></div>
     ${v !== "00:00" ? `<button class="btn sm ghost" data-act="daystart-reset">Auf 00:00 Uhr zurücksetzen</button>` : ""}
     ${syncNote}
   </section>`;
@@ -184,7 +184,7 @@ function remindersCard(db) {
   const perm = typeof Notification === "undefined" ? "none" : Notification.permission;
   return `<section class="card" id="set-reminders">
     <h3>Erinnerungen</h3>
-    <p class="muted small">Höchstens einmal am Tag ab der gewählten Uhrzeit – als Hinweis oben in der Overview und, wenn erlaubt, als Benachrichtigung. Ohne Server meldet sich die App nur, solange sie geöffnet ist (auch kurz im Hintergrund), nicht bei geschlossener App.</p>
+    <p class="muted small card-info">Höchstens einmal am Tag ab der gewählten Uhrzeit – als Hinweis oben in der Overview und, wenn erlaubt, als Benachrichtigung. Ohne Server meldet sich die App nur, solange sie geöffnet ist (auch kurz im Hintergrund), nicht bei geschlossener App.</p>
     <ul class="set-list">${kinds
       .map(
         (k) => `<li class="set-rem">
@@ -228,7 +228,7 @@ function quickCard() {
 function layoutsCard(db) {
   return `<section class="card" id="set-layouts">
     <h3>Seiten anpassen</h3>
-    <p class="muted small">Karten einer Seite umsortieren oder ausblenden – „Anpassen“ öffnet die Seite im Bearbeiten-Modus.</p>
+    <p class="muted small card-info">Karten einer Seite umsortieren oder ausblenden – „Anpassen“ öffnet die Seite im Bearbeiten-Modus.</p>
     <ul class="list">${LAYOUT_PAGES.filter(([key]) => key !== "ui.transfer_layout")
       .map(([key, view, label]) => {
         const l = D.parseLayout(setting(db, key));
@@ -245,7 +245,7 @@ function secretCard(db) {
   return `<section class="card" id="set-secret">
     <h3>Secret Protocols</h3>
     <label class="toggle"><input type="checkbox" data-secret="1" ${on ? "checked" : ""}> <span>Bereich „Superhuman“ (Hormontherapie, Einnahme-Protokoll) anzeigen</span></label>
-    <p class="muted small">Ausgeschaltet verschwindet der Bereich aus dem Menü; gespeicherte Einträge bleiben erhalten.</p>
+    <p class="muted small card-info">Ausgeschaltet verschwindet der Bereich aus dem Menü; gespeicherte Einträge bleiben erhalten.</p>
     ${syncNote}
   </section>`;
 }
@@ -257,7 +257,7 @@ function transferCard(db) {
     <h3>Import/Export</h3>
     <div class="field"><label for="send-remind">Erinnerung ans Senden</label>
       <select id="send-remind" data-transfer="remindDays">${DP.SEND_REMIND_DAYS.map((d) => `<option value="${d}" ${d === p.transfer.remindDays ? "selected" : ""}>${d === 0 ? "aus" : d === 1 ? "nach 1 Tag" : `nach ${d} Tagen`}</option>`).join("")}</select>
-      <p class="muted small">Hinweis in der Overview, wenn Daten offen sind und so lange nichts an den PC gesendet wurde.</p></div>
+      <p class="muted small card-info">Hinweis in der Overview, wenn Daten offen sind und so lange nichts an den PC gesendet wurde.</p></div>
     <label class="toggle"><input type="checkbox" data-transfer="autoMark" ${p.transfer.autoMark ? "checked" : ""}> <span>Nach dem Senden automatisch als übertragen markieren (sobald die Datei weitergegeben oder gesichert ist)</span></label>
     <div class="meal-item"><span><b>Karten der Seite</b><br><span class="muted small">${l.order.length || l.hidden.length ? "angepasst" : "Standard"}</span></span><button class="btn sm" data-act="layout-edit" data-arg="ui.transfer_layout|transfer">Anordnen</button></div>
     ${deviceNote.replace("(am PC gibt es eine eigene Einstellung)", "– bis auf die Anordnung der Karten, die gilt wie am PC")}
@@ -293,7 +293,7 @@ export function viewSettings() {
     ${X.accountsCard()}
     <section class="card">
       <h3>Tagesziele</h3>
-      <p class="muted small">Energie (fest oder dynamisch aus dem Verbrauch), Makros, Schlaf, Gewicht, Schritte und Wasser – wie am PC.</p>
+      <p class="muted small card-info">Energie (fest oder dynamisch aus dem Verbrauch), Makros, Schlaf, Gewicht, Schritte und Wasser – wie am PC.</p>
       <button class="btn block" data-act="goals-open">Tagesziele festlegen</button>
     </section>
     ${db ? weekGoalsCard(db) : ""}

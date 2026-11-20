@@ -123,8 +123,9 @@ const SHORT = { "Body & Longevity": "Body", "iCoach.me": "iCoach", Checklisten: 
 
 /**
  * Untere Leiste (1.34.0): vier Hauptpunkte gleich breit (Overview, zwei frei wählbare Bereiche, Mehr).
- * Die runden Knöpfe schweben mit ihrer Mitte auf der Oberkante der Leiste: „+“ (Schnell erfassen) zwischen
- * Punkt 1 und 2, „:“ (Untermenü der Seite, `sub` = { key, label, open }) zwischen Punkt 3 und 4.
+ * Seit 1.72.0 („cleaner“) stehen die runden Knöpfe in der Leiste statt darüber zu schweben – sie verdecken
+ * keinen Inhalt mehr: „+“ (Schnell erfassen) zwischen Punkt 1 und 2, „:“ (Untermenü der Seite,
+ * `sub` = { key, label, open }) zwischen Punkt 3 und 4.
  */
 export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = DEFAULT_BAR_SLOTS, sub = null }) {
   const current = sectionOf(view, arg, back);
@@ -145,13 +146,13 @@ export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = 
       if (active) marked = true;
       const act = b.id === "more" ? `data-act="menu-open-bar"` : `data-act="tabbar-go" data-arg="${b.id}"`;
       return `<button class="tabbar__item ${active ? "active" : ""}" ${act} ${active ? 'aria-current="page"' : ""}>${ICONS[b.icon] ?? ""}<span>${b.label}</span></button>`;
-    })
-    .join("");
+    });
   const quick = `<button class="tabbar__quick tabbar__fab tabbar__fab--a" data-act="quick-open" aria-label="Schnell erfassen" aria-expanded="${quickOpen}">${ICONS.plus}</button>`;
   const subBtn = sub
     ? `<button class="tabbar__quick tabbar__sub tabbar__fab tabbar__fab--b" data-act="tabs-fold" data-arg="${escAttr(sub.key)}" aria-label="Untermenü: ${escAttr(sub.label)}" aria-haspopup="dialog" aria-expanded="${Boolean(sub.open)}">${ICONS.sub}</button>`
     : "";
-  return `<nav class="tabbar tabbar--float${sub ? " tabbar--sub" : ""}" aria-label="Hauptbereiche"><div class="tabbar__grid">${buttons}${quick}${subBtn}</div></nav>`;
+  const [b0, b1, b2, b3] = buttons;
+  return `<nav class="tabbar tabbar--float tabbar--inline${sub ? " tabbar--sub" : ""}" aria-label="Hauptbereiche"><div class="tabbar__grid">${b0}${quick}${b1}${b2}${subBtn}${b3}</div></nav>`;
 }
 
 const escAttr = (v) => String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");

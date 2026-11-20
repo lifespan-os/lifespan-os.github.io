@@ -64,7 +64,7 @@ export function dayGoalHtml({ totals, goal, stepKcal = null, expenditure = null 
           <span class="muted small"> · ${esc(D.percentText(energy.percentOfGoal))}</span></p>
         ${balance}
       </div>
-      ${needText ? `<p class="muted small day-goal__need">${esc(needText)}</p>` : ""}
+      ${needText ? `<p class="muted small day-goal__need card-info">${esc(needText)}</p>` : ""}
       <div class="goal-bar goal-bar--energy" role="img" aria-label="${esc(`${D.formatKcal(energy.consumed)} von ${D.formatKcal(energy.goal)} Kalorienziel`)}">
         ${energy.segments.map((s) => `<span class="goal-bar__fill" style="width:${s.percent}%;background:${SEGMENTS[s.key].fill}"></span>`).join("")}
         ${energy.goalMarkerPercent < 100 ? `<span class="goal-bar__marker" style="left:${energy.goalMarkerPercent}%"></span>` : ""}
@@ -89,7 +89,7 @@ export function dayGoalHtml({ totals, goal, stepKcal = null, expenditure = null 
       </div>`,
       )
       .join("")}
-      ${macroNote ? `<p class="muted small day-goal__need">${esc(macroNote)}</p>` : ""}</div>`;
+      ${macroNote ? `<p class="muted small day-goal__need card-info">${esc(macroNote)}</p>` : ""}</div>`;
   }
   return `${out}</div>`;
 }

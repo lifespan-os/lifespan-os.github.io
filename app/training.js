@@ -34,16 +34,20 @@ const esc = (v) => X.esc(v);
 const F = (v, d = 0) => D.formatNumber(v, d);
 const fmtDate = (d) => D.formatDate(d);
 
-export const TRAINING_TABS = [
-  ["workouts", "Einheiten"],
-  ["review", "Auswertung"],
-  ["cardio", "Cardio"],
-  ["neat", "NEAT – Non-Exercise Activity"],
-  ["plans", "Pläne"],
-  ["exercises", "Datenbank"],
-  ["gyms", "Meine Gyms"],
-  ["progress", "Verlauf"],
+/**
+ * Fünf Reiter statt acht (1.72.0, wie PC 1.0.162): Gruppe → Unterreiter. Die Unterreiter behalten
+ * ihre Kennungen (`S.trainTab`), Verweise wie „gyms“ oder „neat“ funktionieren weiter.
+ */
+export const TRAINING_GROUPS = [
+  ["workouts", "Einheiten", [["workouts", "Einheiten"]]],
+  ["plans", "Pläne", [["plans", "Pläne"]]],
+  ["review", "Auswertung", [["review", "Auswertung"], ["progress", "Verlauf"]]],
+  ["cardio", "Cardio & NEAT", [["cardio", "Cardio"], ["neat", "NEAT"]]],
+  ["database", "Datenbank", [["exercises", "Übungen & Maschinen"], ["gyms", "Meine Gyms"]]],
 ];
+/** Alle Unterreiter mit Beschriftung (früher `TRAINING_TABS`). */
+export const TRAINING_TABS = TRAINING_GROUPS.flatMap(([, , subs]) => subs);
+const groupOfTab = (tab) => TRAINING_GROUPS.find(([, , subs]) => subs.some(([v]) => v === tab)) ?? TRAINING_GROUPS[0];
 
 const KIND_LABELS = { rest: "Restday", sick: "Krankheit" };
 
@@ -97,9 +101,18 @@ export function viewTrainingSection() {
   }
   const pending = TR.unsentTrain(S.train);
   return `${X.header("Training")}<main class="wrap">
-    <nav class="tabs" aria-label="Training">${TRAINING_TABS.map(
-      ([v, l]) => `<button class="tab ${v === tab ? "active" : ""}" data-act="train-tab" data-arg="${v}" ${v === tab ? 'aria-current="page"' : ""}>${esc(l)}</button>`,
-    ).join("")}</nav>
+    ${(() => {
+      const [gid, glabel, subs] = groupOfTab(tab);
+      return `<nav class="tabs" aria-label="Training">${TRAINING_GROUPS.map(
+        ([g, l]) => `<button class="tab ${g === gid ? "active" : ""}" data-act="train-group" data-arg="${g}" ${g === gid ? 'aria-current="page"' : ""}>${esc(l)}</button>`,
+      ).join("")}</nav>${
+        subs.length > 1
+          ? `<div class="segmented subtabs" role="radiogroup" aria-label="${esc(glabel)}">${subs
+              .map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === tab}" class="${v === tab ? "is-active" : ""}" data-act="train-tab" data-arg="${v}">${esc(l)}</button>`)
+              .join("")}</div>`
+          : ""
+      }`;
+    })()}
     ${pending ? `<p class="muted small">${pending} ${pending === 1 ? "Änderung" : "Änderungen"} im Training noch nicht am PC · <button class="linkbtn" data-go="send">An den PC senden</button></p>` : ""}
     ${body}
   </main>`;
@@ -667,10 +680,19 @@ function addPlanExercise(exerciseId) {
 export const trainingActions = {
   ...statsActions,
   ...dbActions,
+  // Gruppe der Reiterleiste: zuletzt gewählter Unterreiter dieser Gruppe, sonst der erste (1.72.0)
+  "train-group": (el) => {
+    const S = X.S;
+    const group = TRAINING_GROUPS.find(([g]) => g === el.dataset.arg);
+    if (!group) return;
+    const last = S.trainSub?.[group[0]];
+    trainingActions["train-tab"]({ dataset: { arg: group[2].some(([v]) => v === last) ? last : group[2][0][0] } });
+  },
   "train-tab": (el) => {
     const S = X.S;
     syncPlanInputs();
     S.trainTab = el.dataset.arg;
+    S.trainSub = { ...(S.trainSub ?? {}), [groupOfTab(S.trainTab)[0]]: S.trainTab };
     S.trainNotice = null;
     S.trainErrors = {};
     X.rerender();

@@ -94,7 +94,7 @@ export function offCard() {
         ? `<p class="small">${fmt(info.products, 0)} geprüfte Produkte – auf diesem Gerät gespeichert (für alle Konten). Sie erscheinen bei der Lebensmittelsuche und beim Scannen (Strichcode).</p>
           <button class="btn block" data-act="off-download" ${S.offBusy ? "disabled" : ""}>${S.offBusy ? "Wird geladen …" : "Neu herunterladen"}</button>
           <button class="btn block ghost danger" data-act="off-remove">Vom Gerät entfernen</button>`
-        : `<p class="muted small">Optional: rund 240.000 Markenprodukte mit Nährwerten je 100 g/ml. Übernommen werden nur geprüfte Produkte (Pflichtwerte vorhanden, kcal höchstens 15 % neben der Rechnung aus den Makros). Download ca. 10 MB, auf dem Gerät ca. 25 MB. Vor dem Speichern lässt sich jedes Produkt bearbeiten; danach ist es ein normales eigenes Lebensmittel.</p>
+        : `<p class="muted small card-info">Optional: rund 240.000 Markenprodukte mit Nährwerten je 100 g/ml. Übernommen werden nur geprüfte Produkte (Pflichtwerte vorhanden, kcal höchstens 15 % neben der Rechnung aus den Makros). Download ca. 10 MB, auf dem Gerät ca. 25 MB. Vor dem Speichern lässt sich jedes Produkt bearbeiten; danach ist es ein normales eigenes Lebensmittel.</p>
           <button class="btn block" data-act="off-download" ${S.offBusy ? "disabled" : ""}>${S.offBusy ? "Wird geladen …" : "Open Food Facts herunterladen"}</button>`
     }
     <p class="card__note bls-source">${esc(O.OFF_LICENSE_NOTE)}, Inhalte Database Contents License (DbCL).</p>

@@ -657,6 +657,8 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .level-key--forecast { border-top-style: dashed; opacity: .6; }
 .level-key--dot { width: 8px; height: 8px; border: 0; border-radius: 50%; background: var(--orange); }
 .segmented + .segmented { margin-top: 6px; }
+/* Unterreiter einer zusammengefassten Gruppe (1.72.0) */
+.segmented.subtabs { display: flex; flex-wrap: wrap; width: fit-content; max-width: 100%; margin: 8px 0 12px; }
 .calc-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; margin-top: 8px; }
 .data-table tr.calc-total td { font-weight: 700; }
 .hrt-check__list > li { border-bottom: 1px solid var(--line); padding: 6px 0; }
@@ -1761,3 +1763,28 @@ body.is-searching main.wrap:has(.food-search) { padding-bottom: 100vh; }
 .lightbox__img { max-width: calc(100vw - 24px); max-height: calc(100vh - 90px); object-fit: contain; border-radius: 10px; background: #fff; }
 .lightbox__caption { color: #fff; font-size: .85rem; text-align: center; }
 .lightbox__close { position: absolute; top: calc(var(--safe-top) + 10px); right: 10px; width: 44px; height: 44px; border: 0; border-radius: 999px; background: #fff; color: #14233b; font-size: 1.2rem; }
+
+/* ------------------------------------------------------------------ Leiste ohne schwebende Knöpfe (1.72.0, „cleaner“)
+   „+“ und „:“ stehen in der Leiste zwischen den Punkten und verdecken keinen Inhalt mehr; Meldungen und Pausentimer
+   sitzen knapp über der Leiste statt oben über dem Inhalt. */
+.tabbar--inline .tabbar__grid { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); column-gap: 2px; padding: 0 max(4px, env(safe-area-inset-left)); }
+.tabbar--inline.tabbar--sub .tabbar__grid { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr); }
+.tabbar--inline .tabbar__fab { position: static; transform: none; top: auto; left: auto; justify-self: center; width: 46px; height: 46px; border-radius: 23px; border-width: 2px; box-shadow: none; }
+.tabbar--inline .tabbar__fab svg { width: 24px; height: 24px; }
+.tabbar--inline .tabbar__sub svg { width: 20px; height: 20px; }
+.tabbar--inline .tabbar__fab[aria-expanded="true"] { box-shadow: 0 0 0 3px rgba(243, 154, 34, .45); }
+@media (max-width: 350px) { .tabbar--inline .tabbar__fab { width: 40px; height: 40px; border-radius: 20px; } }
+body.has-tabbar { padding-bottom: calc(env(safe-area-inset-bottom) + 84px); }
+.rest { bottom: calc(76px + env(safe-area-inset-bottom)); }
+.toast { top: auto; bottom: calc(env(safe-area-inset-bottom) + 84px); display: flex; align-items: center; gap: 10px; width: max-content; padding: 8px 10px 8px 14px; font-size: .9rem; line-height: 1.3; }
+.toast .toast__undo { margin-left: 0; flex: 0 0 auto; }
+body:not(.has-tabbar) .toast { bottom: calc(env(safe-area-inset-bottom) + 16px); }
+body:has(.rest) .toast { bottom: calc(env(safe-area-inset-bottom) + 160px); }
+
+
+/* 1.72.0 Stil-Durchgang: nichts ragt über den Kartenrand (Ernährung „Wie letzten …“, Vorschläge; Profilbild-Knopf). */
+.quick-meal { grid-template-columns: minmax(0, 1fr); }
+.quick-meal__repeat { display: block; }
+.btn.sm.quick-meal__repeat { white-space: normal; }
+.prof-photo > div { min-width: 0; }
+.prof-photo .btn.sm { height: auto; white-space: normal; text-align: left; }

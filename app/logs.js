@@ -140,7 +140,7 @@ function phaseSummary(shares) {
         return `<li><span class="swatch" style="background:${PHASE_COLOR[p.key]}"></span><span><strong>${esc(info.label)}</strong> ${dur(p.minutes)} · <strong>${Math.round(p.percent)} %</strong><span class="muted small"> (typisch ${info.typicalMin}–${info.typicalMax} %)</span></span></li>`;
       })
       .join("")}</ul>
-    <p class="muted small">Gesamtschlaf aus den Phasen: ${dur(shares.totalMin)}. Die Anteile beziehen sich auf diese Summe.</p></div>`;
+    <p class="muted small card-info">Gesamtschlaf aus den Phasen: ${dur(shares.totalMin)}. Die Anteile beziehen sich auf diese Summe.</p></div>`;
 }
 
 /** Senkrechte Balken je Woche bzw. Monat wie PeriodBars (Mittelwert, Zahl der Nächte darunter). */

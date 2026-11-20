@@ -381,7 +381,7 @@ export function sleepCaffeineHtml(logs, todayIso) {
     : `<p class="muted">Am ${esc(D.formatDate(evening))} ist kein Koffein eingetragen – weder im Koffein-Widget noch unter Nutrition (Supplemente, Mahlzeiten, Fasttracking).</p>`;
   return `<section class="card card--sleep"><div class="wo-head"><h3>Koffein vor dem Schlafen</h3><span class="tag">${log ? `Nacht zum ${esc(D.formatDate(night))}` : "Letzte Nacht"}</span></div>
     ${body}
-    <p class="muted small">Zeitstrahl wie im Koffein-Widget (iCoach.me → Widgets): vollständige Aufnahme zur eingetragenen Uhrzeit, Abbau mit fester Halbwertszeit von ${esc(D.formatNumber(saved.halfLifeH, saved.halfLifeH % 1 === 0 ? 0 : 1))} Stunden (im Widget einstellbar). Einschlafzeit aus dem Schlafeintrag (Zubettgehen plus Einschlafdauer)${bed ? "" : `, ohne Eintrag ${esc(saved.bedtime)} Uhr (Einschlafzeit im Widget)`}. Vereinfachte Modellrechnung, keine Messung.</p>
+    <p class="muted small card-info">Zeitstrahl wie im Koffein-Widget (iCoach.me → Widgets): vollständige Aufnahme zur eingetragenen Uhrzeit, Abbau mit fester Halbwertszeit von ${esc(D.formatNumber(saved.halfLifeH, saved.halfLifeH % 1 === 0 ? 0 : 1))} Stunden (im Widget einstellbar). Einschlafzeit aus dem Schlafeintrag (Zubettgehen plus Einschlafdauer)${bed ? "" : `, ohne Eintrag ${esc(saved.bedtime)} Uhr (Einschlafzeit im Widget)`}. Vereinfachte Modellrechnung, keine Messung.</p>
   </section>`;
 }
 

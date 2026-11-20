@@ -55,7 +55,7 @@ export function catalogCard() {
     </div>`;
   return `<section class="card">
     <h3>Lebensmittel- und Supplementdatenbank</h3>
-    <p class="muted small">Alle Lebensmittel bzw. Supplements als Datei – im gleichen Format wie am PC (Import/Export → Lebensmittel- und Supplementdatenbank). Beim Import kommen nur neue Einträge dazu; sie gehen mit „Lebensmittel senden“ an den PC.</p>
+    <p class="muted small card-info">Alle Lebensmittel bzw. Supplements als Datei – im gleichen Format wie am PC (Import/Export → Lebensmittel- und Supplementdatenbank). Beim Import kommen nur neue Einträge dazu; sie gehen mit „Lebensmittel senden“ an den PC.</p>
     ${block("foods")}
     ${block("supplements")}
   </section>`;

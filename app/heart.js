@@ -339,7 +339,7 @@ export function stepsDayHtml(catalog, day, nowMinute = 1440) {
       ${[0, 360, 720, 1080, 1440].map((m) => `<text x="${x(m).toFixed(1)}" y="${H - 5}" text-anchor="${m === 0 ? "start" : m === 1440 ? "end" : "middle"}">${String(m / 60).padStart(2, "0")}:00</text>`).join("")}
     </svg>
     <ul class="legend"><li><span class="swatch" style="background:${COLOR.training}"></span>${label} gesammelt</li><li><span class="swatch" style="background:${COLOR.ink};opacity:.55"></span>Median derselben Uhrzeit</li></ul>
-    <p class="muted small">Gemessene Schritte deiner Uhr im 5-Minuten-Raster. Median = mittlerer Wert der bisherigen Tage mit Schrittverlauf (bis 28 Tage zurück, ab ${W.MIN_STEP_DAYS} Tagen) zur selben Uhrzeit – Vergleich mit dir selbst, keine Bewertung.</p>
+    <p class="muted small card-info">Gemessene Schritte deiner Uhr im 5-Minuten-Raster. Median = mittlerer Wert der bisherigen Tage mit Schrittverlauf (bis 28 Tage zurück, ab ${W.MIN_STEP_DAYS} Tagen) zur selben Uhrzeit – Vergleich mit dir selbst, keine Bewertung.</p>
   </section>`;
 }
 

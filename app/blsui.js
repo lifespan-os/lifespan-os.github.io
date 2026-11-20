@@ -69,7 +69,7 @@ export function blsCard() {
         ? `<p class="small">${fmt(info.foods, 0)} Lebensmittel mit bis zu 138 Nährstoffen je 100 g – auf diesem Gerät gespeichert (für alle Konten). Sie erscheinen bei der Lebensmittelsuche.</p>
           <button class="btn block" data-act="bls-open">BLS durchsuchen</button>
           <button class="btn block ghost danger" data-act="bls-remove">Vom Gerät entfernen</button>`
-        : `<p class="muted small">Optional: rund 7.100 Lebensmittel des Max Rubner-Instituts mit allen Nährwerten (je 100 g). Download ca. 2 MB, auf dem Gerät ca. 8 MB. Übernommene Lebensmittel werden normale eigene Lebensmittel (Marke „BLS 4.0“) und gehen wie gewohnt an den PC.</p>
+        : `<p class="muted small card-info">Optional: rund 7.100 Lebensmittel des Max Rubner-Instituts mit allen Nährwerten (je 100 g). Download ca. 2 MB, auf dem Gerät ca. 8 MB. Übernommene Lebensmittel werden normale eigene Lebensmittel (Marke „BLS 4.0“) und gehen wie gewohnt an den PC.</p>
           <button class="btn block" data-act="bls-download" ${S.blsBusy ? "disabled" : ""}>${S.blsBusy ? "Wird geladen …" : "BLS herunterladen"}</button>`
     }
     <p class="card__note bls-source">Quelle: Max Rubner-Institut (2025), Bundeslebensmittelschlüssel (BLS), Version 4.0, Karlsruhe, DOI 10.25826/Data20251217-134202-0 – Lizenz CC BY 4.0.</p>

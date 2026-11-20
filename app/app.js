@@ -302,7 +302,7 @@ function viewTransfer() {
   const cards = [
     { id: "import", node: `<section class="card">
       <div class="wo-head"><h3>An den PC senden</h3><span class="tag">${total} offen</span></div>
-      <p class="muted small">Trainings, Lebensmittel und Körperwerte als Dateien für den Import am PC (Import/Export → Daten importieren → „Abgleichen“).</p>
+      <p class="muted small card-info">Trainings, Lebensmittel und Körperwerte als Dateien für den Import am PC (Import/Export → Daten importieren → „Abgleichen“).</p>
       <button class="btn block" data-go="pending" ${total ? "" : "disabled"}>${total ? "Offene Daten ansehen und bearbeiten" : "Keine offenen Daten"}</button>
       <button class="btn primary block" data-go="send">An den PC senden</button>
     </section>` },
@@ -310,7 +310,7 @@ function viewTransfer() {
       <h3>${c.startpaket ? "Grunddaten" : "Daten vom PC"}</h3>
       <p class="muted small">Stand: ${fmtDateTime(c.exportedAt)} · ${c.machines.length.toLocaleString("de-DE")} Maschinen · ${c.exercises.length} Übungen · ${c.plans.length} Pläne</p>
       ${fileButton("Neue Exportdatei laden")}
-      <p class="muted small">Am PC unter Import/Export entweder <b>„Für die Handy-App exportieren“</b> (kleiner, lädt schneller – keine Sicherung) oder den vollständigen Export „Daten exportieren“ wählen. Beide Dateien lassen sich hier laden.</p>
+      <p class="muted small card-info">Am PC unter Import/Export entweder <b>„Für die Handy-App exportieren“</b> (kleiner, lädt schneller – keine Sicherung) oder den vollständigen Export „Daten exportieren“ wählen. Beide Dateien lassen sich hier laden.</p>
     </section>` },
     { id: "account", node: c.startpaket
         ? `<section class="card">
@@ -322,12 +322,12 @@ function viewTransfer() {
         : "" },
     { id: "vendor", node: `<section class="card">
       <h3>Herstellerpakete</h3>
-      <p class="muted small">Lebensmittel und Supplements von Herstellern (PEAK, GymBeam, IronMaxx, #sinob, Proteini.si …) mit einem Tipp installieren – wie am PC.</p>
+      <p class="muted small card-info">Lebensmittel und Supplements von Herstellern (PEAK, GymBeam, IronMaxx, #sinob, Proteini.si …) mit einem Tipp installieren – wie am PC.</p>
       <button class="btn block" data-act="vendor-open">Herstellerpakete</button>
     </section>` },
     { id: "mimages", node: `<section class="card">
       <h3>Maschinenbilder</h3>
-      <p class="muted small">Alle Maschinenbilder (auch deine eigenen Fotos) in einem Paket von der Website laden – für Maschinensuche, Training, Verlauf und Datenbank. ${MI.imageCount() ? `${MI.imageCount().toLocaleString("de-DE")} Maschinen mit Bild auf diesem Gerät.` : "Noch keine Bilder auf diesem Gerät."}</p>
+      <p class="muted small card-info">Alle Maschinenbilder (auch deine eigenen Fotos) in einem Paket von der Website laden – für Maschinensuche, Training, Verlauf und Datenbank. ${MI.imageCount() ? `${MI.imageCount().toLocaleString("de-DE")} Maschinen mit Bild auf diesem Gerät.` : "Noch keine Bilder auf diesem Gerät."}</p>
       <button class="btn block" data-act="mimg-open">Maschinenbilder</button>
     </section>` },
     { id: "catalog", node: catalogCard() },
@@ -335,7 +335,7 @@ function viewTransfer() {
     { id: "off", node: offCard() },
     { id: "glucose", node: `<section class="card">
       <h3>Blutzucker-Dateien</h3>
-      <p class="muted small">Dateien von LibreView, Dexcom Clarity oder eine eigene CSV liest du unter Health → Blutzucker ein. Die Werte gehen mit „Körperwerte … senden“ an den PC.</p>
+      <p class="muted small card-info">Dateien von LibreView, Dexcom Clarity oder eine eigene CSV liest du unter Health → Blutzucker ein. Die Werte gehen mit „Körperwerte … senden“ an den PC.</p>
       <button class="btn block" data-act="transfer-glucose">Zu Health → Blutzucker</button>
     </section>` },
   ];
@@ -2581,7 +2581,7 @@ function viewAccountNew() {
         <div class="field"><label for="acc-height">Größe (cm)</label><input id="acc-height" type="text" inputmode="decimal" value="${esc(f.heightCm)}" placeholder="z. B. 172"></div>
       </div>
       <div class="field"><label for="acc-birth">Geburtsdatum</label><input id="acc-birth" type="date" value="${esc(f.birthDate)}"></div>
-      <p class="muted small">Geschlecht, Alter und Größe braucht die App für Energiebedarf und Referenzwerte.</p>
+      <p class="muted small card-info">Geschlecht, Alter und Größe braucht die App für Energiebedarf und Referenzwerte.</p>
       ${f.error ? `<p class="field-error">${esc(f.error)}</p>` : ""}
       <button class="btn primary block" data-act="account-create" ${f.busy ? "disabled" : ""}>${f.busy ? "Wird eingerichtet …" : "Konto anlegen"}</button>
     </section>
@@ -2595,7 +2595,7 @@ function accountsCard() {
   return `<section class="card">
     <div class="wo-head"><h3>Konten</h3><span class="tag">${list.length}</span></div>
     <p class="small">Angemeldet: <b>${esc(accountName())}</b> · ${S.catalog?.startpaket ? "Konto am Handy" : "Daten vom PC"}</p>
-    <p class="muted small">Den Namen des angemeldeten Kontos änderst du oben im Profil; andere Konten hier mit „Umbenennen“. Benutzer am PC sind eigene Datenbanken am PC.</p>
+    <p class="muted small card-info">Den Namen des angemeldeten Kontos änderst du oben im Profil; andere Konten hier mit „Umbenennen“. Benutzer am PC sind eigene Datenbanken am PC.</p>
     ${
       list.length > 1
         ? `<ul class="account-list">${list

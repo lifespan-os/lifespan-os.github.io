@@ -1,0 +1,1 @@
+Bilderpaket der Maschinen fuer die Handy-App von LIFESPAN OS - erzeugt am PC mit scripts/tools/handy/bilderpakete-erzeugen.cmd

@@ -385,7 +385,40 @@ export function sleepCaffeineHtml(logs, todayIso) {
   </section>`;
 }
 
-function caffeineChart(t) {
+/**
+ * Overview-Kachel „Koffein“ (1.69.0, wie am PC): Kennzahlen und Zeitstrahl des Tages; am heutigen
+ * Tag zeigt eine senkrechte Linie den Stand jetzt (`nowOffset` = Minute ab 00:00). Gibt
+ * { empty, body } zurück – die Karte baut overview.js.
+ */
+export function overviewCaffeine(date, nowOffset = null) {
+  const saved = caffeineSettings();
+  const intakes = caffeineIntakesOn(date);
+  if (!intakes.length) return { empty: true, body: `<p class="muted">${nowOffset !== null ? "Heute" : "An diesem Tag"} ist kein Koffein eingetragen – weder im Koffein-Widget noch unter Nutrition.</p>` };
+  const t = C().caffeineTimeline(
+    intakes.map((i) => ({ id: i.id, drinkId: i.drinkId, time: i.time, mg: i.mg, ml: i.ml, label: i.label, source: i.source, timeEstimated: i.timeEstimated })),
+    saved.bedtime,
+    saved.halfLifeH,
+  );
+  return {
+    empty: false,
+    body: `${caffeineMetrics(t)}${caffeineChart(t, nowOffset)}
+    <p class="muted small">Wie im Koffein-Widget: Einschlafen ${esc(saved.bedtime)} Uhr, Halbwertszeit ${esc(D.formatNumber(saved.halfLifeH, saved.halfLifeH % 1 === 0 ? 0 : 1))} Stunden.${nowOffset !== null ? " Die senkrechte Linie zeigt den Stand jetzt." : ""}</p>`,
+  };
+}
+
+/** Kennzahlen zum Zeitstrahl (Widget und Overview). */
+function caffeineMetrics(t) {
+  const fmg = C().formatMg;
+  return `<div class="level-metrics">
+      <div><span class="muted small">Koffein im Körper ${esc(C().formatDayTime(t.bedtimeOffset))}</span><strong class="level-big">${esc(fmg(t.bedtimeMg))} mg</strong></div>
+      <div><span class="muted small">Aufgenommen</span><strong>${esc(fmg(t.totalMg))} mg</strong></div>
+      ${t.bedtimeShare !== null ? `<div><span class="muted small">davon zur Einschlafzeit noch vorhanden</span><strong>${esc(D.formatNumber(t.bedtimeShare * 100, 0))} %</strong></div>` : ""}
+      ${t.peak ? `<div><span class="muted small">Höchstwert ${esc(C().formatDayTime(t.peak.offset))}</span><strong>${esc(fmg(t.peak.mg))} mg</strong></div>` : ""}
+      ${t.clearedOffset !== null ? `<div><span class="muted small">vollständig abgebaut (höchstens ${C().CLEARED_BELOW_MG} mg)</span><strong>${esc(C().formatDayTime(t.clearedOffset).replace(/^./, (c) => c.toUpperCase()))}</strong></div>` : ""}
+    </div>`;
+}
+
+function caffeineChart(t, nowOffset = null) {
   const W = 340;
   const H = 170;
   const L = 34;
@@ -406,8 +439,20 @@ function caffeineChart(t) {
     <path d="${line} L${x(DAY).toFixed(1)},${y(0)} L${x(0)},${y(0)} Z" fill="var(--orange)" fill-opacity=".15"/>
     <path d="${line}" fill="none" stroke="var(--orange)" stroke-width="2"/>
     ${t.bedtimeOffset <= DAY ? `<line x1="${x(bed).toFixed(1)}" x2="${x(bed).toFixed(1)}" y1="${T}" y2="${H - B}" class="level-now"/><text x="${x(bed).toFixed(1)}" y="${T + 8}" text-anchor="middle" class="level-now__label">Schlaf</text>` : ""}
+    ${nowLine(t, nowOffset, x, y, T, H - B, W)}
     ${[0, 360, 720, 1080, 1440].map((o) => `<text x="${x(o).toFixed(1)}" y="${H - 6}" text-anchor="${o === 0 ? "start" : o === 1440 ? "end" : "middle"}">${o === 1440 ? "24:00" : C().formatClock(o)}</text>`).join("")}
   </svg>`;
+}
+
+/** Senkrechte Linie „Jetzt“ mit Punkt und Wert (nur innerhalb des Tages). */
+function nowLine(t, now, x, y, top, bottom, width) {
+  if (now === null || now < 0 || now > 1440) return "";
+  const mg = C().levelAt(t.intakes, now, t.halfLifeH);
+  const nx = x(now);
+  const right = nx < width * 0.62;
+  return `<line x1="${nx.toFixed(1)}" x2="${nx.toFixed(1)}" y1="${top}" y2="${bottom}" class="cf-now"/>
+    <circle cx="${nx.toFixed(1)}" cy="${y(mg).toFixed(1)}" r="3.5" class="cf-now__dot"/>
+    <text x="${(right ? nx + 5 : nx - 5).toFixed(1)}" y="${top + 22}" text-anchor="${right ? "start" : "end"}" class="cf-now__label">Jetzt ${esc(C().formatClock(now))} · ${esc(C().formatMg(mg))} mg</text>`;
 }
 
 function widgetsTab() {
@@ -459,13 +504,7 @@ function widgetsTab() {
   ${
     intakes.length
       ? `<section class="card">
-    <div class="level-metrics">
-      <div><span class="muted small">Koffein im Körper ${esc(C().formatDayTime(t.bedtimeOffset))}</span><strong class="level-big">${esc(fmg(t.bedtimeMg))} mg</strong></div>
-      <div><span class="muted small">Aufgenommen</span><strong>${esc(fmg(t.totalMg))} mg</strong></div>
-      ${t.bedtimeShare !== null ? `<div><span class="muted small">davon zur Einschlafzeit noch vorhanden</span><strong>${esc(D.formatNumber(t.bedtimeShare * 100, 0))} %</strong></div>` : ""}
-      ${t.peak ? `<div><span class="muted small">Höchstwert ${esc(C().formatDayTime(t.peak.offset))}</span><strong>${esc(fmg(t.peak.mg))} mg</strong></div>` : ""}
-      ${t.clearedOffset !== null ? `<div><span class="muted small">vollständig abgebaut (höchstens ${C().CLEARED_BELOW_MG} mg)</span><strong>${esc(C().formatDayTime(t.clearedOffset).replace(/^./, (c) => c.toUpperCase()))}</strong></div>` : ""}
-    </div>
+    ${caffeineMetrics(t)}
     ${caffeineChart(t)}
     <ul class="lab-results">${t.intakes
       .map(

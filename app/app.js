@@ -20,7 +20,7 @@ import * as GL from "./goals.js";
 import * as AX from "./accountexport.js";
 import { blsActions, blsBoot, blsCard, blsChange, blsInput, initBls, viewBls } from "./blsui.js";
 import { initOff, offActions, offBoot, offCard } from "./offui.js";
-import { initOverview, overviewActions, overviewCardsHtml, overviewChange, overviewHero, shiftOverviewDay } from "./overview.js";
+import { initOverview, minutesSince, overviewActions, overviewCardsHtml, overviewChange, overviewHero, shiftOverviewDay } from "./overview.js";
 import { initDaySwipe } from "./dayswipe.js";
 import { initLogs, logsActions, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
@@ -35,7 +35,7 @@ import * as SD from "./superdata.js";
 import * as CD from "./checklistdata.js";
 import * as CF from "./caffeinedata.js";
 import * as GLD from "./glucosedata.js";
-import { caffeineSettings, icoachActions, icoachChange, icoachInput, initICoach, viewICoach } from "./icoach.js";
+import { caffeineSettings, icoachActions, icoachChange, icoachInput, initICoach, overviewCaffeine, viewICoach } from "./icoach.js";
 import { initSettings, layoutActions, layoutChange, settingsActions, settingsChange, viewSettings } from "./settingsview.js";
 import { LAYOUT_PAGES, layoutEditing, setLayoutEditing } from "./layoutedit.js";
 import * as PS from "./pcsettings.js";
@@ -680,7 +680,7 @@ function hitHtml(h) {
         const nr = m.own_number || m.gym_number;
         const key = `machine:${m.id}`;
         return `<div class="item-row"><button class="item" data-act="pick-machine" data-arg="${esc(m.id)}">
-          <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>${MI.thumb(m.id)}
+          <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>${MI.thumbButton(m.id, m.display_name, { inner: true })}
           <span class="main"><b>${esc(m.display_name)}</b>${same}<span class="muted small">${esc([m.manufacturer, m.series, C.machineMuscles(m).slice(0, 3).join(", ")].filter(Boolean).join(" · "))}</span>${
             h.exercises.length ? `<span class="small">Übungen: ${esc(h.exercises.map((e) => e.name).join(" · "))}</span>` : ""
           }<span class="usage small">${esc(usageText(C.usageOf(S.catalog, S.workouts, C.machineExercises(S.catalog, S.localExercises, m.id).map((e) => e.id))))}</span></span>
@@ -690,7 +690,7 @@ function hitHtml(h) {
       }
       const e = h.exercise;
       return `<button class="item" data-act="pick-exercise" data-arg="${esc(e.id)}">
-        <span class="num none">Übung</span>
+        <span class="num none">Übung</span>${e.machine_id ? MI.thumbButton(e.machine_id, e.name, { inner: true }) : ""}
         <span class="main"><b>${esc(e.name)}</b>${same}<span class="muted small">${esc([e.muscle_group, e.equipment].filter(Boolean).join(" · "))}</span>
           <span class="usage small">${esc(usageText(C.usageOf(S.catalog, S.workouts, [e.id])))}</span></span>
         <span class="chev">+</span></button>`;
@@ -2741,6 +2741,22 @@ setInterval(() => {
   const clock = document.querySelector("[data-clock]");
   if (clock && S.active) clock.textContent = fmtSec((Date.now() - new Date(S.active.startedAt)) / 1000);
 }, 500);
+
+// Overview: Koffein-Linie „jetzt“ jede Minute nachziehen (1.69.0) – nur die Kachel, ohne neu zu zeichnen
+setInterval(() => {
+  if (S.view !== "home" || document.hidden) return;
+  const cardEl = document.querySelector('[data-card="caffeine-status"]');
+  const day = cardEl?.closest("main")?.dataset.day;
+  if (!cardEl || !day || day !== todayIso()) return;
+  try {
+    const { body } = overviewCaffeine(day, minutesSince(day, new Date()));
+    const summary = cardEl.querySelector("summary");
+    cardEl.replaceChildren(...(summary ? [summary] : []));
+    cardEl.insertAdjacentHTML("beforeend", body);
+  } catch {
+    // beim nächsten Neuzeichnen
+  }
+}, 60_000);
 
 // ------------------------------------------------------------------ Bildschirm anlassen
 

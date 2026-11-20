@@ -277,6 +277,16 @@ export function thumb(id, cls = "mthumb") {
   return has(id) ? `<img class="${cls}" data-mimg="${escAttr(id)}" alt="" decoding="async">` : "";
 }
 
+/** Kleines Bild, das beim Antippen groß aufgeht (vor der Auswahl prüfen, ob es die richtige Maschine ist).
+ *  `inner`: steht in einem anderen Knopf (Treffer der Suche) – dann als <span>, das Antippen öffnet nur das Bild. */
+export function thumbButton(id, caption, { inner = false } = {}) {
+  if (!has(id)) return "";
+  const n = countOf(id);
+  const label = escAttr(`Bild von ${caption} groß anzeigen${n > 1 ? ` (${n} Bilder)` : ""}`);
+  const attrs = `class="mthumb-btn" data-act="mimg-show" data-arg="${escAttr(id)}" data-caption="${escAttr(caption)}" aria-label="${label}" title="Bild groß anzeigen"`;
+  return inner ? `<span ${attrs} role="button">${thumb(id)}</span>` : `<button type="button" ${attrs}>${thumb(id)}</button>`;
+}
+
 /** Großes Bild einer Maschine mit Anzahl; Antippen öffnet die Galerie (leer, wenn es kein Bild gibt). */
 export function photoButton(id, caption) {
   if (!has(id)) return "";

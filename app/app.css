@@ -648,6 +648,10 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .level-big { font-size: 1.8rem; line-height: 1.1; }
 .level-chart .level-now { stroke: var(--muted); stroke-dasharray: 2 3; }
 .level-chart .level-now__label { fill: var(--muted); font-size: 10px; }
+/* 1.69.0: Linie „jetzt“ im Koffein-Zeitstrahl (Overview) */
+.pc-chart .cf-now { stroke: var(--fg); stroke-width: 1.5; }
+.pc-chart .cf-now__dot { fill: var(--fg); }
+.pc-chart .cf-now__label { fill: var(--fg); font-size: 10px; font-weight: 600; }
 .level-key { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--blue); vertical-align: middle; }
 .level-key--forecast { border-top-style: dashed; opacity: .6; }
 .level-key--dot { width: 8px; height: 8px; border: 0; border-radius: 50%; background: var(--orange); }
@@ -764,6 +768,14 @@ mark { background: rgba(242, 138, 26, .35); color: inherit; border-radius: 3px; 
 .meal-slot--collapsed { padding-bottom: 6px; }
 /* Zwei Felder nebeneinander dürfen schrumpfen (Datumsfelder sind sonst breiter als der Bildschirm) */
 .lab-row__grid > * { min-width: 0; }
+/* 1.69.0: Felder nebeneinander oben bündig – ein Hinweis unter nur einem Feld zieht das andere nicht auseinander */
+.lab-row__grid > .field { align-content: start; grid-template-columns: minmax(0, 1fr); }
+.lab-row__grid > .field > * { min-width: 0; }
+@supports (grid-template-rows: subgrid) {
+  /* Bezeichnung, Feld und Hinweis je Zeile auf gleicher Höhe – auch wenn eine Bezeichnung zweizeilig ist */
+  .lab-row__grid > .field { grid-row: span 3; grid-template-rows: subgrid; row-gap: 6px; }
+  .lab-row__grid > .field > label { align-self: end; }
+}
 .lab-row__grid input { min-width: 0; width: 100%; max-width: 100%; }
 input[type="date"], input[type="time"] { min-width: 0; max-width: 100%; }
 
@@ -1614,7 +1626,7 @@ body.is-searching main.wrap:has(.food-search) { padding-bottom: 100vh; }
 .gym-head { display: flex; gap: 12px; align-items: flex-start; margin: 8px 0 12px; }
 .gym-head > div { min-width: 0; display: grid; gap: 4px; }
 .gym-rows { display: grid; gap: 8px; margin-top: 8px; }
-.gym-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 8px; align-items: start; padding: 8px 0; border-top: 1px solid var(--line); }
+.gym-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto auto; gap: 8px; align-items: start; padding: 8px 0; border-top: 1px solid var(--line); }
 .gym-row__no { width: 100%; min-width: 0; text-align: center; font-weight: 600; }
 .gym-row__name { display: grid; gap: 2px; min-width: 0; }
 .gym-row__name input { width: 100%; min-width: 0; margin-top: 4px; }
@@ -1726,6 +1738,13 @@ body.is-searching main.wrap:has(.food-search) { padding-bottom: 100vh; }
 /* Maschinenbilder aus den Bilderpaketen (1.67.0) – Hintergrund weiß wie die Herstellerfotos */
 .mthumb { flex: none; width: 48px; height: 48px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); background: #fff; }
 .ex-head .mthumb { width: 44px; height: 44px; }
+/* 1.69.0: kleines Bild zum Vergrößern (Suche, Gym-Maschinen) – Antippen öffnet das Bild, nicht die Auswahl */
+.mthumb-btn { position: relative; flex: none; display: inline-grid; padding: 0; border: 0; background: none; border-radius: 10px; cursor: zoom-in; line-height: 0; }
+.mthumb-btn .mthumb { display: block; }
+.mthumb-btn::after { content: ""; position: absolute; right: 2px; bottom: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23667' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cpath d='M10.5 10.5 14 14'/%3E%3C/svg%3E") center / 10px no-repeat; box-shadow: 0 0 0 1px var(--line); }
+.mthumb-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.gym-row__img { display: flex; align-self: start; }
+.gym-row__img:empty { display: none; }
 .machine-photo { display: block; width: 100%; margin: 8px 0 12px; padding: 0; border: 1px solid var(--line); border-radius: 14px; background: #fff; overflow: hidden; }
 .machine-photo__img { display: block; width: 100%; max-height: 42vh; object-fit: contain; }
 .machine-photo { position: relative; }

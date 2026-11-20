@@ -10,6 +10,7 @@ import * as D from "./pcdomain.js";
 import { barTrendSvg, COLOR, dayChartHtml, esc, trendSvg } from "./pcview.js";
 import { REGIONS } from "./musclemap/regions.js";
 import { stepsDayHtml } from "./heart.js";
+import { overviewCaffeine } from "./icoach.js";
 
 let X = null; // { S, buildDb, rerender, today }
 
@@ -889,8 +890,21 @@ export function overviewCardsHtml(db, catalog, date, today) {
   const now = new Date();
   const steps = stepsDayHtml(catalog, date, date === today ? now.getHours() * 60 + now.getMinutes() : 1440);
   if (steps) live.push({ id: "wearable-steps", empty: false, node: steps });
+  // Koffein über den Tag mit Linie „jetzt“ (1.69.0, wie am PC)
+  try {
+    const caf = overviewCaffeine(date, date === today ? minutesSince(date, now) : null);
+    live.push({ id: "caffeine-status", empty: caf.empty, node: card("caffeine-status", "Koffein", "Modellrechnung", caf.body, { area: "nutrition" }) });
+  } catch {
+    // ohne Koffein-Daten keine Kachel
+  }
   const cards = arrangeCards(db, D.OVERVIEW_LAYOUT_KEY, live);
   return `<div class="ov-grid">${cards.map((c) => (c.empty && layout.emptyLast ? `<div class="overview-card--empty">${c.node}</div>` : c.node)).join("")}</div>`;
+}
+
+/** Minute ab 00:00 des Tages `date` (nach Mitternacht vor Tagesbeginn über 1440). */
+export function minutesSince(date, now) {
+  const [y, m, d] = String(date).split("-").map(Number);
+  return Math.floor((now.getTime() - new Date(y, m - 1, d).getTime()) / 60000);
 }
 
 /**

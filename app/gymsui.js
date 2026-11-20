@@ -4,6 +4,7 @@
 
 import * as G from "./gymsdata.js";
 import { cropPhoto } from "./photocrop.js";
+import { thumbButton } from "./machineimages.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -236,6 +237,7 @@ function detailHtml(g, active) {
             <input class="gym-row__no" aria-label="Nummer ${esc(m.display_name)}" data-gym="number" data-arg="${esc(m.id)}" value="${esc(e.number ?? "")}" maxlength="40" placeholder="Nr.">
             <span class="gym-row__name"><b>${esc(m.display_name)}</b><span class="muted small">${esc([m.manufacturer, m.series].filter(Boolean).join(" · "))}</span>
               <input aria-label="Notiz ${esc(m.display_name)}" data-gym="note" data-arg="${esc(m.id)}" value="${esc(e.note ?? "")}" maxlength="500" placeholder="Notiz, z. B. OG hinten links"></span>
+            <span class="gym-row__img">${thumbButton(m.id, m.display_name)}</span>
             <button class="linkbtn" data-act="gym-remove" data-arg="${esc(m.id)}" aria-label="${esc(m.display_name)} aus dem Gym nehmen">✕</button>
           </div>`,
             )
@@ -248,7 +250,7 @@ function detailHtml(g, active) {
 function hitsHtml(hits) {
   return hits
     .map(
-      (m) => `<button class="item" data-act="gym-add" data-arg="${esc(m.id)}"><span class="main"><b>${esc(m.display_name)}</b>
+      (m) => `<button class="item" data-act="gym-add" data-arg="${esc(m.id)}">${thumbButton(m.id, m.display_name, { inner: true })}<span class="main"><b>${esc(m.display_name)}</b>
         <span class="muted small">${esc([m.manufacturer, m.series].filter(Boolean).join(" · "))}</span></span><span class="chev">+</span></button>`,
     )
     .join("");

@@ -38,6 +38,7 @@ import { initSettings, layoutActions, layoutChange, settingsActions, settingsCha
 import { LAYOUT_PAGES, layoutEditing, setLayoutEditing } from "./layoutedit.js";
 import * as PS from "./pcsettings.js";
 import * as DP from "./devprefs.js";
+import { enhanceInfo, initInfoNotes, introPanel, proButton } from "./infonotes.js";
 import { initTraining, trainingActions, trainingChange, trainingInput, viewTrainingSection, persistTrain, setNotice as trainSetNotice, failed as trainFailed } from "./training.js";
 import { initTrainingStats } from "./trainingstats.js";
 import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
@@ -49,6 +50,7 @@ import * as GY from "./gymsui.js";
 import { extrasActions, initExtras, quickFillBanner, quickFillInput, viewMealPlan, viewQuickFill } from "./extras.js";
 
 const app = document.getElementById("app");
+initInfoNotes(app);
 const restEl = document.getElementById("rest");
 const toastEl = document.getElementById("toast");
 
@@ -173,7 +175,7 @@ function header(title, { back = null, sub = "" } = {}) {
     ${menuButton()}
     ${back ? `<button class="back back--icon" data-go="${back}" aria-label="Zurück">‹</button>` : ""}
     <h1${title.length > 11 ? ' class="h1--long"' : ""}>${esc(title)}${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</h1>
-  </div></header>`;
+  </div>${proButton(title)}${introPanel(title)}</header>`;
 }
 
 function brandHeader(hero = "") {
@@ -181,7 +183,7 @@ function brandHeader(hero = "") {
     ${menuButton()}
     <div class="brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b><small class="brand__date">${esc(new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" }))}</small></div></div>
     ${S.catalog ? "" : `<button class="back" data-go="help">Hilfe</button>`}
-  </div>${hero ? `<div class="wrap top__hero">${hero}</div>` : ""}</header>`;
+  </div>${hero ? `<div class="wrap top__hero">${hero}</div>${proButton("Overview", { hero: true })}${introPanel("Overview")}` : ""}</header>`;
 }
 
 function viewSetup() {
@@ -1094,6 +1096,8 @@ function render() {
   if (!S.catalog && S.view !== "help" && S.view !== "account-new") S.view = "setup";
   syncSections();
   app.innerHTML = (VIEWS[S.view] || viewHome)();
+  // Kleingedrucktes hinter das Info-Symbol (1.64.0) – sofort, damit nichts aufblitzt
+  enhanceInfo(app);
   foldTabs();
   renderNav();
   measureHead();

@@ -1645,3 +1645,20 @@ body.is-searching main.wrap:has(.food-search) { padding-bottom: 100vh; }
 .prof-photo { display: flex; align-items: center; gap: 14px; margin: 6px 0 12px; }
 .prof-photo__img { display: grid; place-items: center; width: 64px; height: 64px; flex: 0 0 auto; overflow: hidden; border-radius: 50%; background: var(--surface-2); font-size: 30px; }
 .prof-photo__img img { width: 100%; height: 100%; object-fit: cover; }
+
+/* 1.64.0: Kleingedrucktes hinter dem Info-Symbol neben der Kartenüberschrift (infonotes.js) */
+.card .is-in-info { display: none; }
+.card.info-open .is-in-info { display: block; margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--orange); border-radius: 8px; background: var(--surface-2); color: var(--fg); }
+.card.info-open .card-info.is-in-info .card__note { color: var(--fg); }
+.card__note--over { color: var(--orange-text); font-weight: 600; }
+.card-info__btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; min-height: 0; margin: -6px 0 -6px 4px; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--muted); vertical-align: middle; flex: none; }
+.card-info__btn[aria-expanded="true"] { background: var(--surface-2); color: var(--orange-text); }
+.card-info__btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 1px; }
+
+/* 1.64.0: Figur „Pro“ im Kopf ist ein Knopf – Antippen zeigt die Einleitung zur Seite */
+.top__pro { position: absolute; z-index: 2; top: calc(var(--safe-top) + 6px); right: 16px; width: 38px; height: 60px; min-height: 0; padding: 0; border: 0; border-radius: 12px; background: transparent; }
+/* Overview: die Figur sitzt auch hier klein oben rechts (letzte Regel .top--hero::before) */
+.top__pro--hero { top: calc(var(--safe-top) + 6px); right: 16px; width: 38px; height: 60px; }
+.top__pro:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.top__intro { position: relative; z-index: 1; }
+.top__intro .wrap { display: block; min-height: 0; padding-top: 2px; padding-bottom: 6px; padding-right: 52px; color: var(--on-navy-muted); font-size: .86rem; line-height: 1.4; }

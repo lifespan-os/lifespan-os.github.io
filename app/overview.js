@@ -70,6 +70,8 @@ const metric = (label, value, unit = "", display = false) =>
 
 const row = (...items) => `<div class="metric-row">${items.filter(Boolean).join("")}</div>`;
 const note = (text) => (text ? `<p class="card__note">${text}</p>` : "");
+// Echte Werte bleiben neben dem Info-Symbol sichtbar (1.64.0, infonotes.js); `over` = über dem Ziel (orange)
+const keepNote = (text, over = false) => (text ? `<p class="card__note card__note--keep${over ? " card__note--over" : ""}">${text}</p>` : "");
 const link = (section, label, tab = null) => `<button class="linkbtn" data-act="menu-go" data-arg="${section}"${tab ? ` data-tab="${tab}"` : ""}>${esc(label)}</button>`;
 /** Erinnerung → direkt zum passenden Reiter bzw. Bereich (1.40.0). */
 const REMINDER_TARGET = {
@@ -178,7 +180,7 @@ function dashboardCards(data, w, isToday) {
             .join("")}</ul>`
         : ""
     }
-    ${r.missing.length ? note(`Ohne Wert: ${esc(r.missing.join(", "))}.`) : ""}
+    ${r.missing.length ? keepNote(`Ohne Wert: ${esc(r.missing.join(", "))}.`) : ""}
     ${note("Vergleich mit deinem eigenen Schnitt der 28 Tage davor – Orientierung, keine medizinische Bewertung.")}`,
     { area: "recovery" },
   );
@@ -529,7 +531,7 @@ export function energyHtml(energy) {
   const cal = D.energy.describeCalibration(energy);
   if (total === null) {
     return `<p class="muted">Für den Gesamtverbrauch fehlt noch: ${esc(energy.missing.join(", "))}.</p>
-      ${note(`${link("body", "Gewicht erfassen", "entry:weight")} · Profil am PC unter Settings`)}`;
+      ${keepNote(`${link("body", "Gewicht erfassen", "entry:weight")} · Profil am PC unter Settings`)}`;
   }
   return `${row(
     metric(energy.calibratedTotalKcal !== null ? "Gesamtverbrauch (kalibriert)" : "Gesamtverbrauch (berechnet)", F(total), "kcal", true),
@@ -542,7 +544,7 @@ export function energyHtml(energy) {
     ${cal ? note(esc(cal)) : ""}
     ${
       energy.workoutsWithoutDuration > 0
-        ? note(energy.workoutsWithoutDuration === 1 ? "Eine Einheit ohne Dauer zählt nicht mit." : `${energy.workoutsWithoutDuration} Einheiten ohne Dauer zählen nicht mit.`)
+        ? keepNote(energy.workoutsWithoutDuration === 1 ? "Eine Einheit ohne Dauer zählt nicht mit." : `${energy.workoutsWithoutDuration} Einheiten ohne Dauer zählen nicht mit.`)
         : ""
     }
     ${note("Schätzung aus Formeln, keine Messung. PAL = Gesamtverbrauch ÷ Grundumsatz.")}`;
@@ -592,7 +594,7 @@ function liveCards(data, week, widgets, isToday) {
           )
           .join("")}</tbody></table>`
       : `${missing(`${onDay} noch keine Einheit erfasst.`, "training", "Zum Training", "workouts")}
-        ${data.lastWorkout ? note(esc(`Letzte Einheit: ${data.lastWorkout.title} am ${D.formatDate(data.lastWorkout.date)} · ${data.lastWorkout.setCount} Arbeitssätze`)) : ""}`,
+        ${data.lastWorkout ? keepNote(esc(`Letzte Einheit: ${data.lastWorkout.title} am ${D.formatDate(data.lastWorkout.date)} · ${data.lastWorkout.setCount} Arbeitssätze`)) : ""}`,
     { area: "training" },
   );
 
@@ -634,7 +636,7 @@ function liveCards(data, week, widgets, isToday) {
   const suggestions = openProtein !== null ? D.dashboard.proteinSuggestions(widgets.foods, openProtein, openKcal) : [];
   const budget =
     openProtein !== null && openProtein >= 10
-      ? `<div class="protein-suggest"><p class="card__note"><strong>Noch ${F(openProtein)} g Protein offen.</strong>${
+      ? `<div class="protein-suggest card-info"><p class="card__note"><strong>Noch ${F(openProtein)} g Protein offen.</strong>${
           suggestions.length
             ? openProtein > D.dashboard.MEAL_PROTEIN
               ? ` Für die nächste Mahlzeit (etwa ${D.dashboard.MEAL_PROTEIN} g Protein) passend aus deinen häufig genutzten Lebensmitteln – je eines davon:`
@@ -657,7 +659,7 @@ function liveCards(data, week, widgets, isToday) {
         ${needNote ? note(esc(needNote)) : ""}${macroNote ? note(esc(macroNote)) : ""}${budget}
         ${
           need !== null || goal?.proteinG != null
-            ? note(
+            ? keepNote(
                 esc(
                   [
                     need !== null ? `Energie: ${D.describeGoalProgress(D.goalProgress(need.total, n.energyKcal, 0), "kcal")}` : null,
@@ -666,6 +668,7 @@ function liveCards(data, week, widgets, isToday) {
                     .filter(Boolean)
                     .join(" · "),
                 ),
+                need !== null && n.energyKcal > need.total,
               )
             : ""
         }`
@@ -700,8 +703,8 @@ function liveCards(data, week, widgets, isToday) {
           )
         : ""
     }
-    ${data.sleepToday && napsToday > 0 ? note(`Nacht ${dur(data.sleepToday.sleepMin)} + Nickerchen ${dur(napsToday)}`) : ""}
-    ${goal?.sleepMin != null ? note(`Dein Schlafziel: ${dur(goal.sleepMin)}`) : ""}`,
+    ${data.sleepToday && napsToday > 0 ? keepNote(`Nacht ${dur(data.sleepToday.sleepMin)} + Nickerchen ${dur(napsToday)}`) : ""}
+    ${goal?.sleepMin != null ? keepNote(`Dein Schlafziel: ${dur(goal.sleepMin)}`) : ""}`,
     { area: "sleep" },
   );
 
@@ -719,7 +722,7 @@ function liveCards(data, week, widgets, isToday) {
       ? `<div class="neat-overview"><div>${stepGoalBar(neat.steps, stepGoal)}
           ${
             minutes.length
-              ? `${note(`Weitere Alltagsbewegung: ${dur(neat.totalMin)}`)}<ul class="neat-bars" aria-label="Minuten je Tätigkeit">${minutes
+              ? `${keepNote(`Weitere Alltagsbewegung: ${dur(neat.totalMin)}`)}<ul class="neat-bars" aria-label="Minuten je Tätigkeit">${minutes
                   .map(
                     (r) =>
                       `<li><span>${esc(r.label)}</span><span class="goal-bar"><span class="goal-bar__fill" style="width:${(r.minutes / maxMin) * 100}%;background:${COLOR.recovery}"></span></span><span class="muted">${dur(r.minutes)}</span></li>`,
@@ -740,7 +743,7 @@ function liveCards(data, week, widgets, isToday) {
                 )
               : ""
           }</div>`
-      : `${missing(`${onDay} noch keine Alltagsbewegung erfasst.`, "training", "Zum Training (NEAT)", "neat")}${stepGoal !== null ? note(`Dein Tagesschrittziel: ${F(stepGoal)} Schritte`) : ""}`,
+      : `${missing(`${onDay} noch keine Alltagsbewegung erfasst.`, "training", "Zum Training (NEAT)", "neat")}${stepGoal !== null ? keepNote(`Dein Tagesschrittziel: ${F(stepGoal)} Schritte`) : ""}`,
     { area: "training" },
   );
 

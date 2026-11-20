@@ -590,7 +590,7 @@ function fastCard(catalog, fast, date) {
           .join("")}</dl></div>`,
       )
       .join("")}
-    ${fast.notes ? `<p class="card__note">${esc(fast.notes)}</p>` : ""}
+    ${fast.notes ? `<p class="card__note card__note--keep">${esc(fast.notes)}</p>` : ""}
   </section>`;
 }
 

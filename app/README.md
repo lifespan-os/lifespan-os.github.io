@@ -1035,3 +1035,12 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
   bisherige Verkleinerung). Fotos kommen wie bisher aus der Kamera oder der Fotomediathek.
 - Settings → Profil: Profilbild aufnehmen oder aus der Mediathek wählen (quadratischer Ausschnitt, 512 px);
   Spalte `profile.photo` (Schema 68), geht wie das Profil mit „An den PC senden“ an den PC.
+
+## Version 1.64.0 (20.11.2026): Zusatzinfos hinter dem Info-Symbol, Einleitung über „Pro“
+
+- Kleingedrucktes einer Karte (`.card__note`, Blöcke mit `.card-info`) liegt hinter einem ⓘ neben der Überschrift;
+  Antippen klappt die Texte an Ort und Stelle auf (`infonotes.js`, gleiche Regeln wie am PC `src/ui/cardInfo.ts`).
+  Sichtbar bleiben `.card__note--keep` (echte Werte, eigene Notizen) und Hinweise mit Eingabefeldern.
+- Overview → Ernährung: Makroziele und Protein-Vorschläge nur noch im ⓘ; „Energie: noch … kcal“ bleibt und ist
+  orange, wenn mehr gegessen als der Tagesbedarf.
+- Die Figur „Pro“ oben rechts ist ein Knopf: Antippen zeigt bzw. verbirgt die Einleitung zur Seite (`PAGE_INTROS`).

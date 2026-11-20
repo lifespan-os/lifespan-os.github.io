@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Studio-Pakete für LIFESPAN OS: Fitnessstudios mit ihrer Maschinenliste und den Gerätenummern im Studio.">
 <link rel="icon" type="image/png" href="app/icons/icon-192.png">
-<title>Bilderpakete · LIFESPAN OS</title>
+<title>Maschinenbilder · LIFESPAN OS</title>
 <style>
 /* Gleiche Farben wie die Startseite (bewusst nur helles Theme, wie index.html). Keine externen Schriften. */
 :root {
@@ -64,19 +64,19 @@ footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--m
   </div>
 </header>
 <main class="wrap">
-  <h1>Bilderpakete</h1>
-  <p class="lead">Ein Bilderpaket enthält je Maschine eines Herstellers ein Bild – dieselben Bilder wie im Maschinen-Ordner von LIFESPAN OS am PC, fürs Handy verkleinert. In der Handy-App erscheinen sie in der Maschinensuche, im Training, im Verlauf und in der Datenbank.</p>
+  <h1>Maschinenbilder</h1>
+  <p class="lead">Ein Paket mit allen Bildern aller Maschinen – dieselben Bilder wie in LIFESPAN OS am PC, fürs Handy verkleinert. In der Handy-App erscheint das Hauptbild in der Maschinensuche, im Training, im Verlauf und in der Datenbank; Antippen zeigt alle Bilder einer Maschine zum Durchblättern.</p>
   <div class="steps">
     <ol>
-      <li><b>Handy-App:</b> Import/Export → „Maschinenbilder“ – dort stehen alle Pakete direkt zur Auswahl, auch „Für meine Gyms laden“.</li>
-      <li><b>Als Datei:</b> Paket herunterladen und in der Handy-App unter Import/Export → Maschinenbilder → „Paketdatei wählen …“ öffnen. Große Hersteller haben mehrere Teile – jeden Teil einmal wählen.</li>
-      <li>Die Bilder bleiben auf dem Gerät und gelten für alle Konten; eine neuere Fassung ersetzt die Bilder des Herstellers.</li>
+      <li><b>Handy-App:</b> Import/Export → „Maschinenbilder“ → „Alle Maschinenbilder laden“ – ein Tipp lädt alle Teile nacheinander. Wird das Laden unterbrochen, setzt es beim nächsten Mal fort.</li>
+      <li><b>Als Datei:</b> Die Teile einzeln herunterladen und in der Handy-App unter Import/Export → Maschinenbilder → „Paketdatei wählen …“ öffnen – jeden Teil einmal.</li>
+      <li>Die Bilder bleiben auf dem Gerät und gelten für alle Konten; eine neuere Fassung ersetzt sie.</li>
     </ol>
   </div>
   <ul class="list" id="list" aria-live="polite">
     <li class="note">Liste wird geladen …</li>
   </ul>
-  <p class="note">Bilderpakete enthalten nur Bilder und die Kennung der Maschine – keine persönlichen Daten. Produktbilder, Marken und Namen gehören den jeweiligen Herstellern; LIFESPAN OS steht in keiner Verbindung zu ihnen.</p>
+  <p class="note">Das Paket enthält nur Bilder und die Kennung der Maschine – keine Trainings- oder Gesundheitsdaten. Produktbilder, Marken und Namen gehören den jeweiligen Herstellern; LIFESPAN OS steht in keiner Verbindung zu ihnen.</p>
 </main>
 <footer>
   <div class="wrap">© 2026 LIFESPAN OS · Non-Profit-Projekt · <a href="./#impressum">Impressum</a> · <a href="./#datenschutz">Datenschutz</a></div>
@@ -99,9 +99,9 @@ footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--m
           return '<a class="dl" href="app/bilder/' + encodeURIComponent(f) + '" download="' + esc(f) + '">' + icon + (files.length > 1 ? "Teil " + (i + 1) : "Herunterladen") + '</a>';
         }).join("");
         return '<li class="pkg"><div><h2>' + esc(x.manufacturer) + '</h2>' +
-          '<p class="meta">' + num(x.images) + ' Bilder · ' + mb(x.bytes) + ' · Stand ' + stand(x.version) + '</p></div>' +
+          '<p class="meta">' + num(x.images) + ' Bilder' + (x.machines ? ' von ' + num(x.machines) + ' Maschinen' : '') + ' · ' + mb(x.bytes) + ' · Stand ' + stand(x.version) + (files.length > 1 ? ' · ' + files.length + ' Teile' : '') + '</p></div>' +
           '<div class="dls">' + links + '</div></li>';
-      }).join("") : '<li class="note">Noch keine Bilderpakete.</li>';
+      }).join("") : '<li class="note">Noch kein Bilderpaket.</li>';
     })
     .catch(function () {
       list.innerHTML = '<li class="note">Die Liste konnte nicht geladen werden. Bitte später erneut versuchen.</li>';

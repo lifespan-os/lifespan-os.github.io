@@ -164,6 +164,7 @@ export function plansOf(raw, local, exercises) {
       name: p.name,
       description: p.description ?? null,
       icon: p.icon ?? null,
+      gymId: p.gym_id ?? null,
       archived: Boolean(p.archived),
       createdAt: p.created_at,
       updatedAt: p.updated_at,
@@ -264,7 +265,7 @@ export function savePlan(raw, local, input, { uuid, now = new Date(), exercises 
   const ts = iso(now);
   const oldPlan = rowsOf(raw, local, "training_plan").find((p) => p.id === input.id) ?? null;
   const planId = oldPlan?.id ?? uuid();
-  put(local, "training_plan", withColumns(raw, "training_plan", { ...(oldPlan ?? {}), id: planId, name, description, ...planIcon(raw, input.icon), archived: input.archived ? 1 : 0, created_at: oldPlan?.created_at ?? ts, updated_at: ts }));
+  put(local, "training_plan", withColumns(raw, "training_plan", { ...(oldPlan ?? {}), id: planId, name, description, ...planIcon(raw, input.icon), ...planGym(raw, input.gymId), archived: input.archived ? 1 : 0, created_at: oldPlan?.created_at ?? ts, updated_at: ts }));
 
   const oldDays = rowsOf(raw, local, "training_plan_day").filter((d) => d.plan_id === planId);
   const oldPex = rowsOf(raw, local, "training_plan_exercise");
@@ -365,6 +366,16 @@ function planIcon(raw, icon) {
   return value !== null || known ? { icon: value } : {};
 }
 
+/**
+ * Gym des Plans (Schema 69, Handy 1.65.0): leer = ohne festes Gym. Kennt die PC-Datei die Spalte
+ * noch nicht und ist nichts gewählt, bleibt sie weg.
+ */
+function planGym(raw, gymId) {
+  const value = String(gymId ?? "").trim() || null;
+  const known = raw?.columns?.training_plan?.includes("gym_id");
+  return value !== null || known ? { gym_id: value } : {};
+}
+
 /** Name der Kopie wie `plan::copy_name`. */
 export function copyName(raw, local, name) {
   const taken = new Set(rowsOf(raw, local, "training_plan").map((p) => p.name));
@@ -383,6 +394,7 @@ export function copyPlan(raw, local, plan, opts) {
     name: copyName(raw, local, plan.name),
     description: plan.description,
     icon: plan.icon ?? null,
+    gymId: plan.gymId ?? null,
     archived: false,
     days: plan.days.map((d) => ({
       id: null,

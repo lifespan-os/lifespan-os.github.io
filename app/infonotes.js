@@ -69,6 +69,26 @@ export function infoNotesOf(card) {
   return result;
 }
 
+/**
+ * Lange Listen mit `data-limit-rows="20"` (1.65.0, z. B. Training → Einheiten): Die ersten 20 Einträge
+ * sind sichtbar, der Rest liegt in einem eigenen Rollbereich.
+ */
+export function limitRows(root) {
+  for (const list of root.querySelectorAll("[data-limit-rows]")) {
+    const n = Number(list.dataset.limitRows) || 20;
+    const items = [...list.children].filter((c) => c.offsetParent !== null || c.getClientRects().length);
+    if (items.length <= n) {
+      list.classList.remove("is-limited");
+      list.style.maxHeight = "";
+      continue;
+    }
+    list.classList.add("is-limited");
+    const top = list.getBoundingClientRect().top - list.scrollTop;
+    const cut = items[n].getBoundingClientRect().top - top;
+    list.style.maxHeight = `${Math.round(cut)}px`;
+  }
+}
+
 /** Karten unter `root` mit Info-Symbol versehen (nach jedem Neuzeichnen aufrufen). */
 export function enhanceInfo(root) {
   if (!root) return;
@@ -98,6 +118,7 @@ export function enhanceInfo(root) {
   root.querySelectorAll(`.${HIDDEN}`).forEach((el) => {
     if (!keep.has(el)) el.classList.remove(HIDDEN);
   });
+  limitRows(root);
 }
 
 let started = false;

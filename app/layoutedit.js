@@ -12,6 +12,7 @@ export const LAYOUT_PAGES = [
   ["ui.recovery_layout", "recovery", "Recovery"],
   ["ui.insights_layout", "insights", "Insights"],
   ["ui.transfer_layout", "transfer", "Import/Export"],
+  ["ui.training_review_layout", "training", "Training → Auswertung"],
 ];
 
 let editing = null;

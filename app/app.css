@@ -1662,3 +1662,71 @@ body.is-searching main.wrap:has(.food-search) { padding-bottom: 100vh; }
 .top__pro:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .top__intro { position: relative; z-index: 1; }
 .top__intro .wrap { display: block; min-height: 0; padding-top: 2px; padding-bottom: 6px; padding-right: 52px; color: var(--on-navy-muted); font-size: .86rem; line-height: 1.4; }
+
+/* 1.65.0: Training → Einheiten – Gym, Sortierung, 20 Einträge sichtbar, Rest im Rollbereich */
+.train-row__gym { display: block; color: var(--fg); }
+.train-sort { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+.train-sort select { flex: 1; min-width: 0; }
+.train-list.is-limited { overflow-y: auto; overscroll-behavior: contain; border-bottom: 1px solid var(--line); }
+.wo-gym { margin: 6px 0 10px; }
+
+/* 1.65.0: Training → Auswertung – Jahresübersicht (wie YearReviewCard am PC) */
+.toolbar-end { display: flex; justify-content: flex-end; margin: 4px 0 8px; }
+.year-review { --tr: #2b59c3; }
+.year-review__head { align-items: center; }
+.year-review__select { width: auto; min-width: 88px; font-weight: 700; }
+.year-tiles { display: grid; gap: 10px; margin-bottom: 10px; }
+.year-tiles--two { grid-template-columns: 1fr; }
+.year-tiles--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.year-tile { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.year-tiles--three .year-tile { flex-direction: column; gap: 6px; padding: 10px; }
+.year-tiles--three .year-tile__icon { width: 32px; height: 32px; font-size: 1rem; }
+.year-tiles--three .year-tile__label { font-size: .78rem; overflow-wrap: anywhere; }
+.year-tiles--three .year-change { white-space: nowrap; font-size: .7rem; padding: 2px 6px; }
+.year-tiles--three .year-change__vs { display: none; }
+.year-tile--training { background: color-mix(in srgb, var(--tr) 6%, var(--surface)); }
+.year-tile--time { background: color-mix(in srgb, #0e6fa8 6%, var(--surface)); }
+.year-tile__icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: color-mix(in srgb, var(--tr) 14%, var(--surface)); font-size: 1.2rem; }
+.year-tile--rest .year-tile__icon { background: var(--surface-2); }
+.year-tile--sick .year-tile__icon { background: color-mix(in srgb, var(--danger) 14%, var(--surface)); }
+.year-tile__body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.year-tile__label { font-size: .85rem; }
+.year-tile__value { font-family: var(--display); font-weight: 800; font-size: 1.6rem; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.year-tile--big .year-tile__value { font-size: 2.1rem; }
+.year-tile__unit { font-size: .7em; }
+.year-change { display: inline-flex; align-items: center; align-self: flex-start; gap: 3px; padding: 2px 8px; border-radius: 8px; background: var(--surface-2); color: var(--muted); font-size: .74rem; font-weight: 700; }
+.year-change.is-up { background: color-mix(in srgb, var(--ok) 14%, var(--surface)); color: #1d7048; }
+.year-change.is-down { background: color-mix(in srgb, var(--danger) 12%, var(--surface)); color: var(--danger); }
+.year-change__vs { color: var(--muted); font-weight: 500; }
+.year-panel { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px; }
+.year-panel__title { margin: 0 0 6px; font-size: .95rem; }
+.year-bars { display: block; width: 100%; height: auto; }
+.year-bars__grid { stroke: var(--line); stroke-width: 1; }
+.year-bars__axis { fill: var(--muted); font-size: 11px; }
+.year-ring { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.year-ring__svg { width: 150px; height: auto; }
+.year-ring__track { fill: none; stroke: var(--surface-2); stroke-width: 26; }
+.year-ring__seg { fill: none; stroke-width: 26; }
+.year-ring__seg.is-training, .year-ring__dot.is-training { stroke: var(--tr); background: var(--tr); }
+.year-ring__seg.is-rest, .year-ring__dot.is-rest { stroke: #c3cedc; background: #c3cedc; }
+.year-ring__seg.is-sick, .year-ring__dot.is-sick { stroke: var(--danger); background: var(--danger); }
+.year-ring__seg.is-none, .year-ring__dot.is-none { stroke: var(--line); background: var(--line); }
+.year-ring__seg.is-upcoming, .year-ring__dot.is-upcoming { stroke: var(--surface-2); background: var(--surface-2); }
+.year-ring__num { fill: var(--fg); font-family: var(--display); font-size: 30px; font-weight: 800; }
+.year-ring__label { fill: var(--muted); font-size: 15px; }
+.year-ring__legend { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: .85rem; }
+.year-ring__legend li { display: flex; align-items: flex-start; gap: 6px; }
+.year-ring__dot { flex: none; width: 11px; height: 11px; margin-top: 4px; border: 1px solid #c3cedc; border-radius: 999px; }
+.year-ring__count { display: block; color: var(--muted); }
+@media (max-width: 360px) { .year-tiles--three { grid-template-columns: 1fr; } .year-tiles--three .year-tile { flex-direction: row; } }
+
+/* 1.65.0: Training → Verlauf – Bild der Übung und Großansicht */
+.progress-pick { display: flex; align-items: flex-end; gap: 10px; }
+.progress-pick .field { flex: 1; min-width: 0; }
+.exercise-thumb { flex: none; width: 60px; height: 60px; margin-bottom: 10px; padding: 2px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.exercise-thumb img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
+.lightbox { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: calc(var(--safe-top) + 12px) 12px 12px; background: rgba(11, 42, 74, .92); }
+.lightbox__figure { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 0; max-width: 100%; max-height: 100%; }
+.lightbox__img { max-width: calc(100vw - 24px); max-height: calc(100vh - 90px); object-fit: contain; border-radius: 10px; background: #fff; }
+.lightbox__caption { color: #fff; font-size: .85rem; text-align: center; }
+.lightbox__close { position: absolute; top: calc(var(--safe-top) + 10px); right: 10px; width: 44px; height: 44px; border: 0; border-radius: 999px; background: #fff; color: #14233b; font-size: 1.2rem; }

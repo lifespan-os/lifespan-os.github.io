@@ -24,6 +24,7 @@ export const SYNC_KEYS = [
   "ui.recovery_layout",
   "ui.transfer_layout",
   "ui.insights_layout",
+  "ui.training_review_layout",
 ];
 export const DEFAULT_MEALS = ["breakfast", "lunch", "snack", "dinner"];
 export const MEAL_LABELS = { breakfast: "Frühstück", lunch: "Mittagessen", snack: "Snacks", dinner: "Abendessen" };
@@ -131,6 +132,7 @@ const LAYOUT_NAMES = {
   "ui.sleep_layout": "Sleep",
   "ui.recovery_layout": "Recovery",
   "ui.insights_layout": "Insights",
+  "ui.training_review_layout": "Training → Auswertung",
   "ui.transfer_layout": "Import/Export",
 };
 

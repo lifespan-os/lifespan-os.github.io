@@ -130,6 +130,31 @@ export function gymList(catalog, local) {
     .sort((a, b) => Number(b.package_id === REFERENCE_PACKAGE) - Number(a.package_id === REFERENCE_PACKAGE) || String(a.name).localeCompare(String(b.name), "de"));
 }
 
+/**
+ * Zeilen der Gyms mit diesen IDs (auch archivierte und das Referenz-Studio) für die Rückgabedatei
+ * der Trainings (Handy 1.65.0): Der PC braucht das Gym, auf das eine Einheit verweist.
+ */
+export function gymRowsFor(catalog, local, ids) {
+  const want = new Set([...ids].filter(Boolean));
+  if (!want.size) return [];
+  const l = gymsState(local);
+  const map = new Map((catalog?.pc?.gym ?? []).map((r) => [r.id, r]));
+  const ref = virtualReference(catalog);
+  if (ref) map.set(ref.id, ref);
+  for (const e of Object.values(l.gyms)) map.set(e.row.id, e.row);
+  return [...want].map((id) => map.get(id)).filter(Boolean).map((r) => pick(r, GYM_COLUMNS));
+}
+
+/** Alle Gyms mit Namen (auch archivierte) – für die Anzeige in der Einheitenliste. */
+export function gymNames(catalog, local) {
+  const l = gymsState(local);
+  const map = new Map((catalog?.pc?.gym ?? []).map((r) => [r.id, r.name]));
+  const ref = virtualReference(catalog);
+  if (ref) map.set(ref.id, ref.name);
+  for (const e of Object.values(l.gyms)) map.set(e.row.id, e.row.name);
+  return map;
+}
+
 /** Maschinenliste eines Gyms (PC + Handy). */
 export function gymEntries(catalog, local, gymId) {
   const l = gymsState(local);

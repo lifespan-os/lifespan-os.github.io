@@ -12,12 +12,12 @@ import * as TR from "./trainingdata.js";
 import * as HX from "./hyrox.js";
 import * as CD from "./checklistdata.js";
 import { buildDb, today } from "./diary.js";
-import { barTrendSvg, COLOR } from "./pcview.js";
 import { hasWearable, workoutHeartHtml, workoutHeartOf } from "./heart.js";
 import { energyHtml, stepGoalBar } from "./overview.js";
 import { statsActions, viewCardioTab, viewProgressTab, viewReviewTab, statsChange } from "./trainingstats.js";
 import { dbActions, dbChange, dbInput, viewDatabaseTab } from "./trainingdb.js";
-import { activeGymSelectHtml, viewGymsTab } from "./gymsui.js";
+import { activeGymSelectHtml, planGymSelectHtml, viewGymsTab } from "./gymsui.js";
+import * as GD from "./gymsdata.js";
 import { icon } from "./nav.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice, saveTrain, startPlanDay, startFree, startBackfill, startCardio, openWorkout, C }
@@ -126,10 +126,17 @@ function workoutsTab() {
   const statuses = CD.dayStatusOf(S.catalog, S.checklists, "2000-01-01", "2099-12-31");
   const todayStatus = statuses.find((s) => s.date === day0) ?? null;
   const streak = restStreak(statuses, day0);
-  const summaries = db.workouts.map((w) => O.workoutSummary(db, w));
-  const rows = D.checkin.trainingRows(summaries, statuses);
-  const finished = summaries.filter((w) => w.status === "done");
-  const weeks = D.workoutDraft.weeklyTotals(finished, day0, 8);
+  // Gym der Einheit (1.65.0): vom PC (`gym_id`) bzw. am Handy gewählt
+  const gymNames = GD.gymNames(S.catalog, S.gyms);
+  const gymOf = new Map(db.workouts.map((w) => [w.id, w.gym_id ?? null]));
+  for (const w of S.workouts ?? []) gymOf.set(w.id, w.gymId ?? null);
+  const summaries = db.workouts.map((w) => {
+    const sum = O.workoutSummary(db, w);
+    const gymId = gymOf.get(w.id) ?? null;
+    return { ...sum, gymId, gymName: gymId ? (gymNames.get(gymId) ?? null) : null };
+  });
+  const sort = S.trainSort ?? D.workoutList.DEFAULT_WORKOUT_SORT;
+  const rows = D.workoutList.sortTrainingRows(D.checkin.trainingRows(summaries, statuses), sort.key, sort.direction);
   const plans = S.catalog.plans ?? [];
   const dayOptions = plans.flatMap((p) => p.days.map((d) => ({ value: d.row.id, label: `${p.row.name} – ${d.row.name}` })));
   const a = S.active;
@@ -179,8 +186,15 @@ function workoutsTab() {
     ? `<div class="active-banner" role="status"><span><strong>${a.editOf ? "Bearbeitung" : "Training läuft"}:</strong> ${esc(a.title)}${a.startTime && !a.editOf ? ` · seit ${esc(a.startTime)} Uhr` : ""} · ${a.exercises.length} ${a.exercises.length === 1 ? "Übung" : "Übungen"}</span>
         <button class="btn sm primary" data-go="workout">${a.editOf ? "Weiter bearbeiten" : "Fortsetzen"}</button></div>`
     : "";
+  const sortBar = rows.length
+    ? `<div class="train-sort"><label for="train-sort" class="small">Sortieren</label>
+        <select id="train-sort" data-tchange="sort">${Object.entries(D.workoutList.WORKOUT_SORT_LABELS)
+          .map(([k, l]) => `<option value="${k}" ${k === sort.key ? "selected" : ""}>${esc(l)}</option>`)
+          .join("")}</select>
+        <button class="btn sm" data-act="train-sort-dir" aria-label="${sort.direction === "asc" ? "Aufsteigend – umkehren" : "Absteigend – umkehren"}" title="Reihenfolge umkehren">${sort.direction === "asc" ? "↑" : "↓"}</button></div>`
+    : "";
   const list = rows.length
-    ? `<ul class="train-list">${rows
+    ? `${sortBar}<ul class="train-list" data-limit-rows="${D.workoutList.VISIBLE_WORKOUTS}">${rows
         .map((row) => {
           if (row.kind === "day") {
             const s = row.status;
@@ -192,6 +206,7 @@ function workoutsTab() {
           const w = row.workout;
           return `<li class="train-row"><span class="train-row__date">${fmtDate(w.date)}${w.startTime ? `<span class="muted small">${esc(w.startTime)} Uhr</span>` : ""}</span>
             <span class="train-row__main"><strong>${esc(w.title)}</strong>${w.status === "active" ? ' <span class="status-pill status-pill--active">läuft</span>' : ""}${w.competition ? `<span class="small train-row__comp">${esc(HX.describeCompetition(w.competition))}</span>` : ""}
+              ${w.gymName ? `<span class="small train-row__gym">🏋️ ${esc(w.gymName)}</span>` : ""}
               <span class="muted small">${w.exerciseCount} ${w.exerciseCount === 1 ? "Übung" : "Übungen"} · ${w.setCount} Arbeitssätze · ${w.volumeKg > 0 ? `${F(w.volumeKg)} kg` : "–"} · ${w.durationMin !== null ? `${w.durationMin} min` : "–"}</span></span>
             <span class="train-row__acts">${w.status === "done" && hasWearable(S.catalog) ? `<button class="linkbtn" data-act="train-heart" data-arg="${esc(w.id)}" aria-expanded="${S.trainHeart === w.id}" aria-label="Herzfrequenz der Einheit" title="Herzfrequenz">♥ HF</button>` : ""}<button class="linkbtn" data-act="train-open" data-arg="${esc(w.id)}" aria-label="Einheit öffnen">Open</button></span></li>${
               S.trainHeart === w.id ? `<li class="train-heart">${workoutHeartHtml(workoutHeartOf(S.catalog, w))}</li>` : ""
@@ -199,11 +214,6 @@ function workoutsTab() {
         })
         .join("")}</ul>`
     : `<div class="empty-state"><p><strong>Noch keine Einheiten</strong></p><p class="muted small">Starte dein erstes Training mit „Freies Training“${dayOptions.length ? ", starte einen Trainingstag aus deinem Plan" : ""} oder trage eine frühere Einheit mit „Nachtragen“ ein.</p></div>`;
-  const volume = finished.length
-    ? `<section class="card card--training"><div class="wo-head"><h3 id="volume-title">Trainingsvolumen je Woche</h3><span class="tag">letzte 8 Wochen</span></div>
-        ${barTrendSvg(weeks, { color: COLOR.training, format: (v) => `${F(v)} kg`, label: "Trainingsvolumen je Woche der letzten 8 Wochen" })}
-        <p class="muted small">Volumen = Wiederholungen × Gewicht in kg aller Arbeitssätze abgeschlossener Einheiten (ohne Aufwärmsätze; Sätze ohne Zusatzgewicht zählen 0 kg). Die Beschriftung zeigt den Montag der Woche.</p></section>`
-    : "";
   return `<section class="card card--training" id="workouts-title">
       <h3>Trainingseinheiten</h3>
       ${actions}
@@ -213,8 +223,7 @@ function workoutsTab() {
       ${S.trainAdopt ? adoptOffer() : ""}
       ${list}
     </section>
-    ${S.trainDialog ? `<section class="card dialog-card" role="alertdialog"><h3>${esc(S.trainDialog.title)}</h3><p class="small">${esc(S.trainDialog.message)}</p><button class="btn block" data-act="train-dialog-close">Verstanden</button></section>` : ""}
-    ${volume}`;
+    ${S.trainDialog ? `<section class="card dialog-card" role="alertdialog"><h3>${esc(S.trainDialog.title)}</h3><p class="small">${esc(S.trainDialog.message)}</p><button class="btn block" data-act="train-dialog-close">Verstanden</button></section>` : ""}`;
 }
 
 function adoptOffer() {
@@ -426,6 +435,7 @@ function plansTab() {
   }
   if (S.trainPlanEdit) return planEditor();
   const plans = TR.plansOf(S.catalogRaw, S.train, S.catalog.exercises);
+  const planGymNames = GD.gymNames(S.catalog, S.gyms);
   const cardio = isCardioCheck();
   return `<div class="toolbar"><p class="muted small">Pläne legen Trainingstage mit Übungen und Sätzen fest – auch Cardiopläne. Aus einem Tag startest du ein Training; die Sätze sind dann mit den Richtwerten vorbelegt. Termine (Wochentag oder Datum mit Uhrzeit) zeigen in der Übersicht das nächste Training.</p>
       <button class="btn primary" data-act="plan-new">Neuer Plan</button></div>
@@ -437,6 +447,7 @@ function plansTab() {
         <div class="wo-head"><h3 class="plan-title"><span class="plan-icon" title="${esc(D.planIconLabel(D.planIconKey(plan)))}">${D.planIconSvg(D.planIconKey(plan), 30)}</span>${esc(plan.name)} ${plan.archived ? '<span class="pill">Archiviert</span>' : ""}</h3></div>
         <div class="row-actions icon-actions">${actionBtn("plan-edit", plan.id, "edit", `Plan „${plan.name}“ bearbeiten`)}${actionBtn("plan-copy", plan.id, "copy", `Plan „${plan.name}“ kopieren`)}${actionBtn("plan-delete", plan.id, "trash", `Plan „${plan.name}“ löschen`, "danger")}</div>
         ${plan.description ? `<p class="muted small">${esc(plan.description)}</p>` : ""}
+        ${plan.gymId && planGymNames.get(plan.gymId) ? `<p class="muted small">Gym: ${esc(planGymNames.get(plan.gymId))}</p>` : ""}
         ${plan.days
           .map(
             (day) => `<div class="meal-block"><div class="wo-head"><h4>${esc(day.name)}</h4>${
@@ -484,6 +495,7 @@ function planEditor() {
     <div class="field"><label for="plan-name">Name</label><input id="plan-name" type="text" maxlength="80" placeholder="z. B. Push/Pull/Beine oder Cardio" value="${esc(draft.name)}" data-plan="name">${fieldError(errors, "name")}</div>
     <label class="toggle"><input type="checkbox" data-plan="archived" ${draft.archived ? "checked" : ""}> Archiviert</label>
     <div class="field"><label for="plan-description">Beschreibung (optional)</label><textarea id="plan-description" rows="2" maxlength="2000" data-plan="description">${esc(draft.description)}</textarea>${fieldError(errors, "description")}</div>
+    ${planGymSelectHtml(draft)}${fieldError(errors, "gymId")}
     ${planIconPickerHtml(draft)}${fieldError(errors, "icon")}
     <h4>Trainingstage</h4>
     <p class="muted small">Übungen fügst du wie in einem normalen Training hinzu (Sätze, Pause, Notiz). Für einen Cardioplan wählst du Cardio-Übungen wie Laufband oder Rad.</p>
@@ -664,6 +676,12 @@ export const trainingActions = {
     X.rerender();
   },
   "train-start-day": () => X.startPlanDay(X.S.trainPlanDay),
+  "train-sort-dir": () => {
+    const S = X.S;
+    const cur = S.trainSort ?? D.workoutList.DEFAULT_WORKOUT_SORT;
+    S.trainSort = { key: cur.key, direction: cur.direction === "asc" ? "desc" : "asc" };
+    X.rerender();
+  },
   "train-start-plan-day": (el) => X.startPlanDay(el.dataset.arg),
   "train-backfill": () => X.startBackfill(today()),
   "train-cardio": () => X.startCardio(X.S.trainCardio),
@@ -999,6 +1017,11 @@ export function trainingChange(el) {
   if (statsChange(el)) return true;
   if (dbChange(el)) return true;
   const k = el.dataset.tchange;
+  if (k === "sort") {
+    S.trainSort = D.workoutList.nextWorkoutSort(S.trainSort ?? D.workoutList.DEFAULT_WORKOUT_SORT, el.value);
+    X.rerender();
+    return true;
+  }
   if (k === "planDay") {
     S.trainPlanDay = el.value;
     X.rerender();

@@ -425,6 +425,7 @@ function viewWorkout() {
     <div class="wo-head"><span class="muted small">${w.exercises.length} Übungen · ${C.fmtNum(C.volumeKg(w), 0)} kg Volumen</span>${
       edit ? `<span class="tag">${w.backfill ? "Nachtragen" : "Bearbeitung"}</span>` : `<span class="clock" data-clock>${fmtSec((Date.now() - new Date(w.startedAt)) / 1000)}</span>`
     }</div>
+    ${GY.workoutGymSelectHtml(w)}
     ${w.competition ? competitionCard(w.competition) : ""}
     ${w.exercises.map((we, i) => exerciseCard(we, i, exs, machines)).join("")}
     <button class="btn block" data-go="picker">+ Übung oder Maschine hinzufügen</button>
@@ -1447,7 +1448,7 @@ function rerenderKeepScroll() {
 function startPlanDay(dayId) {
   for (const p of S.catalog.plans) {
     const d = p.days.find((x) => x.row.id === dayId);
-    if (d) return startWorkout(d.row.name, d);
+    if (d) return startWorkout(d.row.name, d, p.row.gym_id ?? null);
   }
   toast("Den Trainingstag gibt es nicht mehr.", true);
 }
@@ -1460,7 +1461,7 @@ function startPlanDay(dayId) {
 async function startBackfill(date, exerciseId = null) {
   if (S.active) return go("workout");
   const ex = exerciseId ? C.allExercises(S.catalog, S.localExercises).find((e) => e.id === exerciseId) : null;
-  const w = C.newWorkout({ title: ex ? ex.name : "Training" });
+  const w = C.newWorkout({ title: ex ? ex.name : "Training", gymId: GY.activeGymIdNow() });
   w.date = date;
   w.startTime = null;
   w.status = "done";
@@ -1482,9 +1483,10 @@ function pcWorkout(id) {
   return C.workoutFromPc(w, wex, db.setsByWex);
 }
 
-async function startWorkout(title, planDay = null) {
+async function startWorkout(title, planDay = null, planGymId = null) {
   if (S.active) return go("workout");
-  const w = C.newWorkout({ title, planDayId: planDay?.row.id ?? null });
+  // Gym (1.65.0): das des Plans, sonst das aktive Gym
+  const w = C.newWorkout({ title, planDayId: planDay?.row.id ?? null, gymId: planGymId || GY.activeGymIdNow() });
   if (planDay) {
     for (const pe of planDay.exercises) {
       w.exercises.push(C.workoutExercise({ exerciseId: pe.exerciseId, planExercise: pe, last: C.lastSessionFor(S.catalog, S.workouts, pe.exerciseId) }));
@@ -1571,7 +1573,7 @@ const actions = {
   "start-plan": (el) => {
     for (const p of S.catalog.plans) {
       const d = p.days.find((x) => x.row.id === el.dataset.arg);
-      if (d) return startWorkout(d.row.name, d);
+      if (d) return startWorkout(d.row.name, d, p.row.gym_id ?? null);
     }
   },
   "pick-machine": (el) => {
@@ -1616,7 +1618,6 @@ const actions = {
         saveSoon();
         render();
         requestAnimationFrame(() => document.getElementById(`ex-${next.id}`)?.scrollIntoView({ block: "start", behavior: "smooth" }));
-        resetZoom();
         return;
       }
     }
@@ -1624,7 +1625,6 @@ const actions = {
     if (s.isDone && !exComplete(we) && focusExId(S.active) !== we.id) setFocus(S.active, we.id);
     saveSoon();
     rerenderKeepScroll();
-    resetZoom();
   },
   flag: (el) => {
     const s = findSet(el.dataset.we, el.dataset.set);
@@ -1981,7 +1981,7 @@ async function exportAccount(el) {
     const now = new Date();
     let training = {};
     const done = S.workouts.filter((w) => w.status === "done");
-    if (done.length) training = C.buildReturnFile(S.catalog, S.localExercises, done, now, {}).tables;
+    if (done.length) training = C.buildReturnFile(S.catalog, S.localExercises, done, now, { gym: GD.gymRowsFor(S.catalog, S.gyms, done.map((w) => w.gymId)) }).tables;
     const parts = [training, S.food ? foodTables(true) : {}, S.body ? bodyPartTables(true) : {}];
     doc = AX.fullAccountDoc(start, S.catalog.pc.profile[0], parts, { now, appVersion: `mobil ${C.MOBILE_VERSION}` });
   } catch (e) {
@@ -2080,6 +2080,8 @@ async function sendFile(kind, all) {
     if (kind === "food" && !Object.keys(food).length) return toast("Keine Ernährungseinträge zum Senden.", true);
     if (kind === "body" && !Object.keys(food).length) return toast("Keine Körperwerte, Schlaf-, Regenerations-, To-do-, Training-, Health- oder Superhuman-Einträge zum Senden.", true);
     if (kind === "training" && !list.length) return toast("Keine Trainings zum Senden.", true);
+    // Gyms, auf die die Trainings verweisen, gehen mit (der PC braucht sie für die Zuordnung, 1.65.0)
+    if (kind === "training") food.gym = GD.gymRowsFor(S.catalog, S.gyms, list.map((w) => w.gymId));
     doc = C.buildReturnFile(S.catalog, S.localExercises, list, new Date(), food);
   } catch (e) {
     return toast(e.message, true);

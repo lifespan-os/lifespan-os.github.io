@@ -1044,3 +1044,17 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
 - Overview → Ernährung: Makroziele und Protein-Vorschläge nur noch im ⓘ; „Energie: noch … kcal“ bleibt und ist
   orange, wenn mehr gegessen als der Tagesbedarf.
 - Die Figur „Pro“ oben rechts ist ein Knopf: Antippen zeigt bzw. verbirgt die Einleitung zur Seite (`PAGE_INTROS`).
+
+## Version 1.65.0 (20.11.2026): Gym an Einheiten, sortierbare Liste, Jahresübersicht, Bild im Verlauf
+
+- Einheit und Plan haben ein Gym (Schema 69, `gym_id`): im Training oben „Gym“ wählbar (auch beim Bearbeiten und
+  Nachtragen), im Plan-Editor „Gym“ (optional). Neues Training: Gym des Plans, sonst das aktive Gym; die
+  Maschinensuche zeigt die Maschinen des Gyms der Einheit. Die Rückgabedatei nimmt die verwiesenen Gyms mit.
+- Training → Einheiten: Gym je Einheit, Sortieren nach Datum, Einheit, Gym, Übungen, Arbeitssätze, Volumen oder Dauer
+  (Regeln `src/domain/workoutList.ts` über pcdomain.js), die neuesten 20 sichtbar, der Rest im Rollbereich
+  (`data-limit-rows`).
+- Training → Auswertung: Jahresübersicht oben (wie am PC, `src/domain/yearReview.ts`), „Trainingsvolumen je Woche“
+  von den Einheiten hierher verschoben, Karten über „Auswertung anpassen“ anordnen (`ui.training_review_layout`).
+- Training → Verlauf: Bild der Übung (eigenes Maschinenfoto bzw. eigenes Sportbild), Antippen = Großansicht.
+- Fehler behoben: Abhaken des letzten Satzes einer Übung rief das seit 1.40.0 entfernte `resetZoom()` auf
+  (Fehlermeldung im Hintergrund, Anzeige war trotzdem richtig).

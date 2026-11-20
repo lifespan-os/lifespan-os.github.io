@@ -11,7 +11,7 @@ import { appDay } from "./appday.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.64.0";
+export const MOBILE_VERSION = "1.65.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -615,7 +615,7 @@ export function newSet(from = null) {
   };
 }
 
-export function newWorkout({ title, planDayId = null, now = new Date() }) {
+export function newWorkout({ title, planDayId = null, gymId = null, now = new Date() }) {
   const ts = isoNow(now);
   return {
     id: uuidv7(now.getTime()),
@@ -623,6 +623,8 @@ export function newWorkout({ title, planDayId = null, now = new Date() }) {
     startTime: localTime(now),
     title: [...title].slice(0, 80).join("").trim() || "Training",
     planDayId,
+    // Gym der Einheit (Schema 69, Handy 1.65.0): Plan-Gym bzw. aktives Gym, im Training änderbar
+    gymId: gymId || null,
     perceivedExertion: null,
     notes: null,
     status: "active",
@@ -785,6 +787,7 @@ export function workoutFromPc(w, wexRows, setsByWex) {
     startTime: w.start_time ?? null,
     title: w.title,
     planDayId: w.plan_day_id ?? null,
+    gymId: w.gym_id ?? null,
     perceivedExertion: w.perceived_exertion ?? null,
     notes: w.notes ?? null,
     status: "done",
@@ -895,6 +898,7 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
       duration_min: w.durationMin,
       title: txt(w.title, 80) ?? "Training",
       plan_day_id: planDayId,
+      gym_id: w.gymId ?? null,
       perceived_exertion: nn(w.perceivedExertion),
       notes: txt(w.notes, 2000),
       created_at: w.createdAt,

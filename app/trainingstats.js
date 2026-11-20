@@ -10,6 +10,11 @@ import * as TR from "./trainingdata.js";
 import { buildDb, today } from "./diary.js";
 import { barTrendSvg, COLOR, esc, trendSvg } from "./pcview.js";
 import { focusIndex, heatmapHtml, machinesOf } from "./overview.js";
+import * as CD from "./checklistdata.js";
+import { arrangeCards, layoutEditing, setLayoutEditing } from "./layoutedit.js";
+
+/** Anordnung der Auswertung wie am PC (`ui.training_review_layout`, 1.65.0) */
+export const REVIEW_LAYOUT_KEY = "ui.training_review_layout";
 
 let X = null;
 
@@ -83,13 +88,27 @@ function change(percent) {
 export function viewReviewTab() {
   const S = X.S;
   const db = buildDb();
+  const summaries = db.workouts.map((w) => O.workoutSummary(db, w));
+  const statuses = CD.dayStatusOf(S.catalog, S.checklists, "2000-01-01", "2099-12-31");
+  const common = [
+    { id: "year", node: yearReviewHtml(summaries, statuses) },
+    { id: "weekly", node: weeklyVolumeHtml(summaries) },
+  ];
+  const shell = (cards) => {
+    const arranged = arrangeCards(db, REVIEW_LAYOUT_KEY, cards.filter((c) => c.node), { emptyLast: false });
+    const edit = layoutEditing() === REVIEW_LAYOUT_KEY;
+    return `${edit ? "" : `<div class="toolbar-end"><button class="linkbtn small" data-act="train-review-layout">Auswertung anpassen</button></div>`}${arranged.map((c) => c.node).join("")}`;
+  };
   const log = O.setLog(db);
   const exercises = exerciseModels(db, S.catalog);
   const machines = machinesOf(S.catalog);
   const focus = focusIndex(S.catalog);
   const r = D.trainingReview.trainingReview(log, exercises, D.trainingReview.REVIEW_SESSIONS);
   if (r.sessions.length === 0) {
-    return `<section class="card card--training"><div class="empty-state"><p><strong>Noch keine abgeschlossene Einheit</strong></p><p class="muted small">Sobald du Einheiten abschließt, siehst du hier die Auswertung der letzten sieben.</p></div></section>`;
+    return shell([
+      ...common,
+      { id: "sessions", node: `<section class="card card--training"><h3>Letzte Einheiten</h3><div class="empty-state"><p><strong>Noch keine abgeschlossene Einheit</strong></p><p class="muted small">Sobald du Einheiten abschließt, siehst du hier die Auswertung der letzten sieben.</p></div></section>` },
+    ]);
   }
   const n = r.sessions.length;
   const ids = r.sessions.map((s) => s.workoutId);
@@ -137,7 +156,9 @@ export function viewReviewTab() {
   const ungrouped = D.trainingCoverage.exercisesWithoutGroup(log, exercises, ids);
   const coverage = D.trainingCoverage.trainingCoverage(r, map, ungrouped);
 
-  return `<section class="card card--training"><div class="wo-head"><h3>Letzte ${n} ${n === 1 ? "Einheit" : "Einheiten"}</h3><span class="tag">${fmtDate(r.sessions[0]?.date ?? "")} – ${fmtDate(r.sessions.at(-1)?.date ?? "")}</span></div>
+  return shell([
+    ...common,
+    { id: "sessions", node: `<section class="card card--training"><div class="wo-head"><h3>Letzte ${n} ${n === 1 ? "Einheit" : "Einheiten"}</h3><span class="tag">${fmtDate(r.sessions[0]?.date ?? "")} – ${fmtDate(r.sessions.at(-1)?.date ?? "")}</span></div>
       <div class="metric-row">${metricBox("Gesamtvolumen", F(r.totalVolumeKg), "kg")}${metricBox("Arbeitssätze", F(r.totalSets))}${metricBox("Ø Volumen je Einheit", F(r.totalVolumeKg / n), "kg")}${metricBox("Muskelgruppen", F(groups.length))}</div>
       ${r.previousCount > 0 ? `<p class="muted small">Gegenüber den ${r.previousCount} Einheiten davor (${esc(fv(r.previousVolumeKg ?? 0))}): ${change(totalChange)}${totalChange === null ? "kein Vergleich möglich" : ""}</p>` : ""}
       <ul class="train-list">${[...r.sessions]
@@ -147,15 +168,15 @@ export function viewReviewTab() {
             <span class="muted small">${s.exercises} Übungen · ${s.workingSets} Sätze · ${F(s.reps)} Wdh. · ${esc(fv(s.volumeKg))}</span></span></li>`,
         )
         .join("")}</ul>
-    </section>
-    <section class="card card--training"><div class="wo-head"><h3>Muskel-Körperkarte</h3><span class="tag">letzte ${n} ${n === 1 ? "Einheit" : "Einheiten"}</span></div>
+    </section>` },
+    { id: "bodymap", node: `<section class="card card--training"><div class="wo-head"><h3>Muskel-Körperkarte</h3><span class="tag">letzte ${n} ${n === 1 ? "Einheit" : "Einheiten"}</span></div>
       <div class="muscle-map__tools">${seg([["volume", "Volumen"], ["sets", "Arbeitssätze"]], metric, "train-review-metric")}</div>
       ${heatmapHtml({ levels, describe, sex: sex ?? "male", active: S.trainMuscle ?? null, act: "train-muscle", legend: D.legendLabels("relative") })}
       <p class="muted small">Farbe = Anteil am meisttrainierten Muskel (${metric === "volume" ? "Volumen" : "Arbeitssätze"}). Hauptmuskel = erste Muskelgruppe der Übung bzw. der Maschine, weitere zählen zur Hälfte. Maschinen mit Bewegungsprofil werden nach diesem Profil verteilt, Griffbreite/Fußstellung und Griffstellung verfeinern es.${
         map.setsWithoutMuscle > 0 ? ` ${map.setsWithoutMuscle} ${map.setsWithoutMuscle === 1 ? "Satz" : "Sätze"} ohne zuordenbare Muskelgruppe.` : ""
       }${map.unmapped.length > 0 ? ` Nicht zugeordnet: ${esc(map.unmapped.map((u) => u.term).join(", "))}.` : ""}${sex === null ? " Ohne Geschlecht im Profil wird das männliche Modell gezeigt – Profil am PC in Settings ergänzen." : ""}</p>
-    </section>
-    <section class="card card--training"><div class="wo-head"><h3>Muskeln unter dem Zielvolumen</h3><span class="tag">letzte ${W} Wochen · ${esc(range)}</span></div>
+    </section>` },
+    { id: "under", node: `<section class="card card--training"><div class="wo-head"><h3>Muskeln unter dem Zielvolumen</h3><span class="tag">letzte ${W} Wochen · ${esc(range)}</span></div>
       ${
         under.kind === "insufficient"
           ? `<p class="muted small">Für den Hinweis braucht es in jeder der letzten ${W} abgeschlossenen Wochen mindestens eine Einheit mit Kraftübungen (vorhanden: ${under.weeksWithTraining}).</p>`
@@ -165,8 +186,8 @@ export function viewReviewTab() {
                ${under.untrained.length ? `<p class="muted small">In diesen Wochen gar nicht trainiert: ${esc(under.untrained.map((m) => m.label).join(", "))}.</p>` : ""}`
       }
       <p class="muted small">Gezählt werden gewichtete Arbeitssätze je Woche (Montag–Sonntag) wie in der Muskel-Körperkarte. Zielvolumen = Beginn der Stufe „Aufbau“ deiner Zielwerte je Muskel (Overview → Muskel-Körperkarte → Individuell; ohne eigene Werte die Ausgangswerte). Ein Muskel erscheint nur, wenn er in jeder der Wochen darunter lag. Das ist ein Hinweis, keine Bewertung.</p>
-    </section>
-    <section class="card card--training"><div class="wo-head"><h3>Trainingsvolumen je Muskelgruppe</h3><span class="tag">Kraftübungen, ohne Aufwärmsätze</span></div>
+    </section>` },
+    { id: "groups", node: `<section class="card card--training"><div class="wo-head"><h3>Trainingsvolumen je Muskelgruppe</h3><span class="tag">Kraftübungen, ohne Aufwärmsätze</span></div>
       ${
         groups.length === 0
           ? `<p class="muted small">In diesen Einheiten gab es keine Kraftübungen mit Sätzen.</p>`
@@ -189,8 +210,116 @@ export function viewReviewTab() {
                 .join("")}</tbody></table></div>
             <p class="muted small">Volumen = Wiederholungen × kg der Arbeitssätze (kg). Die Muskelgruppe stammt aus der Übungsdatenbank; Übungen ohne Angabe stehen unter „Ohne Muskelgruppe“ und lassen sich dort direkt zuweisen. Gehören mehrere Zeilen zur selben Körperregion, steht dort der Muskelteil mit dem meisten Volumen laut Fokusprofil (Master-Editor), sofern er mindestens die Hälfte ausmacht. Die Veränderung vergleicht mit den ${D.trainingReview.REVIEW_SESSIONS} Einheiten davor.</p>`
       }
-    </section>
-    ${coverageHtml(coverage, `letzte ${n} ${n === 1 ? "Einheit" : "Einheiten"}`, "Gezählt werden nur abgeschlossene Einheiten und Arbeitssätze. Die Hinweise bewerten das Training nicht.")}`;
+    </section>` },
+    { id: "coverage", node: coverageHtml(coverage, `letzte ${n} ${n === 1 ? "Einheit" : "Einheiten"}`, "Gezählt werden nur abgeschlossene Einheiten und Arbeitssätze. Die Hinweise bewerten das Training nicht.") },
+  ]);
+}
+
+// ------------------------------------------------------------------ Jahresübersicht (YearReviewCard.tsx, 1.65.0)
+
+const MONTHS = () => D.yearReview.MONTH_LABELS;
+
+function yearChange(review, field) {
+  const p = review.change[field];
+  if (p === null) return `<span class="year-change is-neutral" title="kein Vorjahreswert">kein Vorjahr</span>`;
+  const tone = D.yearReview.changeTone(field, p);
+  const arrow = p > 0 ? "↗" : p < 0 ? "↘" : "–";
+  return `<span class="year-change is-${tone}" title="Veränderung gegenüber ${review.year - 1}">${arrow} ${p > 0 ? "+" : ""}${F(p)} % <span class="year-change__vs">vs. ${review.year - 1}</span></span>`;
+}
+
+const yearTile = (tone, iconChar, label, value, unit, changeHtml, big = false) =>
+  `<div class="year-tile year-tile--${tone}${big ? " year-tile--big" : ""}"><span class="year-tile__icon" aria-hidden="true">${iconChar}</span>
+    <div class="year-tile__body"><span class="year-tile__label">${esc(label)}</span><span class="year-tile__value">${esc(value)}${unit ? `<span class="year-tile__unit"> ${esc(unit)}</span>` : ""}</span>${changeHtml}</div></div>`;
+
+function monthBarsSvg(values, year) {
+  const max = Math.max(1, ...values);
+  const raw = max / 4;
+  const pow = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((f) => f * pow).find((v) => raw <= v) ?? 10 * pow;
+  const top = Math.ceil(max / step) * step;
+  const W = 360;
+  const H = 200;
+  const left = 44;
+  const bottom = 22;
+  const plotW = W - left - 4;
+  const plotH = H - bottom - 8;
+  const slot = plotW / 12;
+  const y = (v) => 8 + plotH - (v / top) * plotH;
+  const ticks = Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step);
+  return `<svg class="year-bars" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(`Trainingsvolumen je Monat ${year}: ${values.map((v, i) => `${MONTHS()[i]} ${F(v)} kg`).join(", ")}`)}">
+    ${ticks.map((t) => `<line x1="${left}" x2="${W - 4}" y1="${y(t)}" y2="${y(t)}" class="year-bars__grid"/><text x="${left - 6}" y="${y(t) + 4}" text-anchor="end" class="year-bars__axis">${esc(F(t))}</text>`).join("")}
+    ${values
+      .map((v, i) => {
+        const x = left + i * slot + slot * 0.16;
+        const w = slot * 0.68;
+        return `${v > 0 ? `<rect x="${x}" y="${y(v)}" width="${w}" height="${y(0) - y(v)}" rx="2" fill="${COLOR.training}"><title>${esc(`${MONTHS()[i]} ${year}: ${F(v)} kg`)}</title></rect>` : ""}<text x="${x + w / 2}" y="${H - 6}" text-anchor="middle" class="year-bars__axis">${esc(MONTHS()[i].slice(0, 3))}</text>`;
+      })
+      .join("")}
+  </svg>`;
+}
+
+function daysRingSvg(review) {
+  const segs = [
+    ["training", "Training", review.trainingDays],
+    ["rest", "Restday", review.restDays],
+    ["sick", "Krankheit", review.sickDays],
+    ["none", "Ohne Eintrag", review.untrackedDays],
+    ["upcoming", "Noch offen", review.upcomingDays],
+  ].filter(([, , v]) => v > 0);
+  const total = review.daysInYear;
+  const r = 70;
+  const c = 2 * Math.PI * r;
+  let offset = 0;
+  const circles = segs
+    .map(([k, label, v]) => {
+      const len = (v / total) * c;
+      const el = `<circle cx="90" cy="90" r="${r}" class="year-ring__seg is-${k}" stroke-dasharray="${len} ${c - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 90 90)"><title>${esc(`${label}: ${v} Tage`)}</title></circle>`;
+      offset += len;
+      return el;
+    })
+    .join("");
+  return `<div class="year-ring"><svg viewBox="0 0 180 180" class="year-ring__svg" role="img" aria-label="${esc(`Tage im Jahr ${review.year}: ${segs.map(([, l, v]) => `${l} ${v}`).join(", ")} von ${total}`)}">
+      <circle cx="90" cy="90" r="${r}" class="year-ring__track"/>${circles}
+      <text x="90" y="88" text-anchor="middle" class="year-ring__num">${total}</text><text x="90" y="110" text-anchor="middle" class="year-ring__label">Tage</text></svg>
+    <ul class="year-ring__legend">${segs.map(([k, l, v]) => `<li><span class="year-ring__dot is-${k}" aria-hidden="true"></span><span>${esc(l)}<span class="year-ring__count">${F(v)} (${F((v / total) * 100)} %)</span></span></li>`).join("")}</ul></div>`;
+}
+
+function yearReviewHtml(summaries, statuses) {
+  const S = X.S;
+  const now = today();
+  const years = D.yearReview.reviewYears(summaries, statuses, now);
+  const year = years.includes(S.trainYear) ? S.trainYear : years[0];
+  const rv = D.yearReview.yearReview(summaries, statuses, year, now);
+  return `<section class="card card--training year-review">
+    <div class="wo-head year-review__head"><h3>📅 Jahresübersicht ${year}</h3>
+      <select class="year-review__select" data-schange="year" aria-label="Jahr wählen">${years.map((y) => `<option value="${y}" ${y === year ? "selected" : ""}>${y}</option>`).join("")}</select></div>
+    <div class="year-tiles year-tiles--two">
+      ${yearTile("training", "🏋️", "Trainingsvolumen gesamt", F(rv.volumeKg), "kg", yearChange(rv, "volumeKg"), true)}
+      ${yearTile("time", "⏱", "Trainingszeit", D.yearReview.formatHoursMinutes(rv.minutes), "", yearChange(rv, "minutes"), true)}
+    </div>
+    <div class="year-tiles year-tiles--three">
+      ${yearTile("training", "📆", "Einheiten", F(rv.sessions), "", yearChange(rv, "sessions"))}
+      ${yearTile("rest", "🛏", "Restdays", F(rv.restDays), "", yearChange(rv, "restDays"))}
+      ${yearTile("sick", "🌡", "Krankheitstage", F(rv.sickDays), "", yearChange(rv, "sickDays"))}
+    </div>
+    <div class="year-panel"><h4 class="year-panel__title">Trainingsvolumen pro Monat</h4>${monthBarsSvg(rv.monthlyVolumeKg, year)}</div>
+    <div class="year-panel"><h4 class="year-panel__title">Tage im Jahr</h4>${daysRingSvg(rv)}</div>
+    <p class="card__note">Nur abgeschlossene Einheiten. Volumen = Wiederholungen × kg der Arbeitssätze (ohne Aufwärmsätze). Trainingszeit = Summe der Dauer${
+      rv.withoutDuration > 0 ? ` (${rv.withoutDuration} ${rv.withoutDuration === 1 ? "Einheit" : "Einheiten"} ohne Dauer zählen nicht mit)` : ""
+    }. Restday und Krankheit zählen nur an Tagen ohne Einheit; „Ohne Eintrag“ sind vergangene Tage ohne Training, Restday oder Krankheit. ${
+      rv.compareUntil ? `Vergleich mit dem gleichen Zeitraum ${rv.year - 1} (1. Januar bis ${fmtDate(rv.compareUntil)}).` : `Vergleich mit dem ganzen Jahr ${rv.year - 1}.`
+    }</p>
+  </section>`;
+}
+
+/** Trainingsvolumen je Woche (bis 1.64.0 unter Einheiten). */
+function weeklyVolumeHtml(summaries) {
+  const finished = summaries.filter((w) => w.status === "done");
+  if (!finished.length) return "";
+  const weeks = D.workoutDraft.weeklyTotals(finished, today(), 8);
+  return `<section class="card card--training"><div class="wo-head"><h3 id="volume-title">Trainingsvolumen je Woche</h3><span class="tag">letzte 8 Wochen</span></div>
+    ${barTrendSvg(weeks, { color: COLOR.training, format: (v) => `${F(v)} kg`, label: "Trainingsvolumen je Woche der letzten 8 Wochen" })}
+    <p class="card__note">Volumen = Wiederholungen × Gewicht in kg aller Arbeitssätze abgeschlossener Einheiten (ohne Aufwärmsätze; Sätze ohne Zusatzgewicht zählen 0 kg). Die Beschriftung zeigt den Montag der Woche.</p></section>`;
 }
 
 function ungroupedHtml(ungrouped, exercises, machines) {
@@ -213,6 +342,50 @@ function ungroupedHtml(ungrouped, exercises, machines) {
 }
 
 // ------------------------------------------------------------------ Verlauf (ProgressTab.tsx)
+
+/**
+ * Bild der Übung (1.65.0, wie ExerciseThumb am PC): eigenes Foto der Maschine bzw. eigenes Bild der
+ * Sportart. Die Bilder aus dem Maschinen-Ordner gibt es nur am PC.
+ */
+function exerciseImage(db, exercise) {
+  if (exercise.machineId) {
+    const m = (X.S.catalog?.machines ?? []).find((x) => x.id === exercise.machineId);
+    if (m?.own_photo) return { src: m.own_photo, caption: [m.manufacturer, m.display_name ?? m.name].filter(Boolean).join(" · ") };
+  }
+  if (exercise.sportId) {
+    const sp = db.sports.get(exercise.sportId);
+    if (sp?.image && sp.image !== "None") return { src: sp.image, caption: sp.name };
+  }
+  return null;
+}
+
+function exerciseThumbHtml(db, exercise) {
+  const img = exerciseImage(db, exercise);
+  if (!img) return "";
+  return `<button class="exercise-thumb" data-act="train-prog-img" aria-label="${esc(`Bild von „${exercise.name}“ groß anzeigen`)}"><img src="${esc(img.src)}" alt=""></button>`;
+}
+
+/** Bild in Bildschirmgröße; Antippen schließt. */
+function openLightbox(src, caption) {
+  const box = document.createElement("div");
+  box.className = "lightbox";
+  box.setAttribute("role", "dialog");
+  box.setAttribute("aria-modal", "true");
+  box.setAttribute("aria-label", caption || "Bild");
+  box.innerHTML = `<button class="lightbox__close" aria-label="Bild schließen">✕</button><figure class="lightbox__figure"><img class="lightbox__img" alt="${esc(caption || "")}"><figcaption class="lightbox__caption">${esc(caption || "")}</figcaption></figure>`;
+  box.querySelector("img").src = src;
+  const close = () => {
+    box.remove();
+    document.removeEventListener("keydown", onKey);
+  };
+  const onKey = (e) => {
+    if (e.key === "Escape") close();
+  };
+  box.addEventListener("click", close);
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(box);
+  box.querySelector("button").focus();
+}
 
 const METRIC_LABEL = {
   weight: "Höchstes Gewicht je Einheit",
@@ -257,7 +430,7 @@ export function viewProgressTab() {
   const muscleWeeks = D.weeklyMuscleSets(log, exercises, today());
   const decimals = metric === "distance" ? 2 : metric === "reps" || metric === "volume" ? 0 : 1;
   return `<section class="card card--training" id="progress-title"><h3>Verlauf je Übung</h3>
-      <div class="field"><label for="progress-exercise">Übung</label><select id="progress-exercise" data-schange="progEx">${used.map((e) => `<option value="${esc(e.id)}" ${e.id === selected.id ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select></div>
+      <div class="progress-pick"><div class="field"><label for="progress-exercise">Übung</label><select id="progress-exercise" data-schange="progEx">${used.map((e) => `<option value="${esc(e.id)}" ${e.id === selected.id ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select></div>${exerciseThumbHtml(db, selected)}</div>
       ${available.length > 1 ? `<div class="field"><label for="progress-metric">Anzeige</label><select id="progress-metric" data-schange="progMetric">${available.map((m) => `<option value="${m}" ${m === metric ? "selected" : ""}>${esc(METRIC_LABEL[m])}</option>`).join("")}</select></div>` : ""}
       ${chartData.length ? trendSvg(chartData, { color: COLOR.training, decimals, label: `Verlauf ${selected.name}: ${METRIC_LABEL[metric]}` }) : ""}
       <p class="muted small">Nur Arbeitssätze abgeschlossener Einheiten. Volumen = Wiederholungen × kg; Sätze ohne Zusatzgewicht zählen 0 kg. Einzige Schätzung ist das 1RM (Epley: Gewicht × (1 + Wdh. ÷ 30), nur aus Sätzen mit 1–12 Wiederholungen).</p>
@@ -492,6 +665,20 @@ export function viewCardioTab() {
 // ------------------------------------------------------------------ Aktionen
 
 export const statsActions = {
+  "train-prog-img": () => {
+    const S = X.S;
+    const db = buildDb();
+    const ex = exerciseModels(db, S.catalog).find((e) => e.id === S.trainProgEx) ?? null;
+    const sel = ex ?? exerciseModels(db, S.catalog).find((e) => document.getElementById("progress-exercise")?.value === e.id);
+    const img = sel ? exerciseImage(db, sel) : null;
+    if (img) openLightbox(img.src, img.caption);
+  },
+  /** Auswertung anpassen (1.65.0): Karten umsortieren und ausblenden wie am PC */
+  "train-review-layout": () => {
+    setLayoutEditing(REVIEW_LAYOUT_KEY);
+    X.rerender();
+    window.scrollTo(0, 0);
+  },
   "train-review-metric": (el) => {
     X.S.trainReviewMetric = el.dataset.arg;
     X.rerender();
@@ -531,6 +718,11 @@ export function statsChange(el) {
   const S = X.S;
   const k = el.dataset.schange;
   if (!k) return false;
+  if (k === "year") {
+    S.trainYear = Number(el.value);
+    X.rerender();
+    return true;
+  }
   if (k === "progEx") {
     S.trainProgEx = el.value;
     S.trainProgMetric = null;

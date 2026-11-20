@@ -28,11 +28,13 @@ async function persist() {
 
 export const unsentGyms = () => G.unsentGyms(X.S.gyms);
 
-/** Aktives Gym (ID) und seine Maschinenliste. */
+/** Aktives Gym (ID) und seine Maschinenliste; im Training das Gym der Einheit (Handy 1.65.0). */
 export function activeGym() {
   const S = X.S;
-  const id = G.activeGymId(S.catalog, S.gyms, pcActive());
-  const gym = G.gymList(S.catalog, S.gyms).find((g) => g.id === id) ?? null;
+  const list = G.gymList(S.catalog, S.gyms);
+  const own = S.active?.gymId && list.some((g) => g.id === S.active.gymId) ? S.active.gymId : null;
+  const id = own ?? G.activeGymId(S.catalog, S.gyms, pcActive());
+  const gym = list.find((g) => g.id === id) ?? null;
   return { gym, entries: gym ? G.gymEntries(S.catalog, S.gyms, gym.id) : [] };
 }
 
@@ -62,6 +64,40 @@ export function activeGymSelectHtml(blocked) {
     <select id="w-gym" data-gym="active" ${blocked ? "disabled" : ""}>${list
       .map((g) => `<option value="${esc(g.id)}" ${g.id === id ? "selected" : ""}>${esc(g.name)} (${count(g)} Maschinen)</option>`)
       .join("")}</select></div>`;
+}
+
+/** ID des aktiven Gyms (für neue Einheiten). */
+export function activeGymIdNow() {
+  const S = X.S;
+  return G.activeGymId(S.catalog, S.gyms, pcActive());
+}
+
+/** Auswahl „Gym“ einer Einheit (im Training, beim Bearbeiten und Nachtragen, Handy 1.65.0). */
+export function workoutGymSelectHtml(w) {
+  const S = X.S;
+  const list = G.gymList(S.catalog, S.gyms);
+  const names = G.gymNames(S.catalog, S.gyms);
+  if (!list.length && !w.gymId) return "";
+  const options = [...list.map((g) => [g.id, g.name])];
+  if (w.gymId && !list.some((g) => g.id === w.gymId)) options.push([w.gymId, names.get(w.gymId) ?? "Gym (entfernt)"]);
+  return `<div class="field wo-gym"><label for="wo-gym">Gym</label>
+    <select id="wo-gym" data-wfield="gymId"><option value="">Ohne Gym</option>${options
+      .map(([id, name]) => `<option value="${esc(id)}" ${id === w.gymId ? "selected" : ""}>${esc(name)}</option>`)
+      .join("")}</select></div>`;
+}
+
+/** Auswahl „Gym“ eines Plans im Plan-Editor (optional). */
+export function planGymSelectHtml(draft) {
+  const S = X.S;
+  const list = G.gymList(S.catalog, S.gyms);
+  const names = G.gymNames(S.catalog, S.gyms);
+  const value = draft.gymId ?? "";
+  const options = list.map((g) => [g.id, g.name]);
+  if (value && !list.some((g) => g.id === value)) options.push([value, names.get(value) ?? "Gym (entfernt)"]);
+  return `<div class="field"><label for="plan-gym">Gym</label>
+    <select id="plan-gym" data-plan="gymId"><option value="">Ohne festes Gym</option>${options
+      .map(([id, name]) => `<option value="${esc(id)}" ${id === value ? "selected" : ""}>${esc(name)}</option>`)
+      .join("")}</select><p class="muted small">Beim Start eines Trainingstags wird dieses Gym für die Einheit vorgewählt.</p></div>`;
 }
 
 // ------------------------------------------------------------------ Reiter „Meine Gyms“

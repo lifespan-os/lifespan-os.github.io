@@ -1,18 +1,18 @@
 var __defProp = Object.defineProperty;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __defNormalProp = (obj, key, value2) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value: value2 }) : obj[key] = value2;
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
 };
-var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+var __publicField = (obj, key, value2) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value2);
 
 // src/lib/format.ts
 var LOCALE = "de-DE";
 var ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
-function parseIsoDate(value) {
-  const match = ISO_DATE.exec(value);
+function parseIsoDate(value2) {
+  const match = ISO_DATE.exec(value2);
   if (!match) {
-    throw new Error(`Ung\xFCltiges Datum: "${value}" (erwartet JJJJ-MM-TT)`);
+    throw new Error(`Ung\xFCltiges Datum: "${value2}" (erwartet JJJJ-MM-TT)`);
   }
   const year = Number(match[1]);
   const month = Number(match[2]);
@@ -20,7 +20,7 @@ function parseIsoDate(value) {
   const date = new Date(2e3, month - 1, day);
   date.setFullYear(year, month - 1, day);
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-    throw new Error(`Ung\xFCltiges Datum: "${value}"`);
+    throw new Error(`Ung\xFCltiges Datum: "${value2}"`);
   }
   return date;
 }
@@ -35,31 +35,31 @@ var dateFormatter = new Intl.DateTimeFormat(LOCALE, {
   month: "2-digit",
   year: "numeric"
 });
-function formatDate(value) {
-  const date = typeof value === "string" ? parseIsoDate(value) : value;
+function formatDate(value2) {
+  const date = typeof value2 === "string" ? parseIsoDate(value2) : value2;
   return dateFormatter.format(date);
 }
-function formatNumber(value, fractionDigits = 0) {
-  if (!Number.isFinite(value)) {
+function formatNumber(value2, fractionDigits = 0) {
+  if (!Number.isFinite(value2)) {
     return "\u2013";
   }
   return new Intl.NumberFormat(LOCALE, {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits
-  }).format(value);
+  }).format(value2);
 }
 var DECIMAL = /^[-+−]?\d+(?:[.,]\d+)?$/;
 var INTEGER = /^-?\d+$/;
 function parseDecimal(input) {
-  const value = input.trim();
-  return DECIMAL.test(value) ? Number(value.replace(",", ".").replace("\u2212", "-")) : Number.NaN;
+  const value2 = input.trim();
+  return DECIMAL.test(value2) ? Number(value2.replace(",", ".").replace("\u2212", "-")) : Number.NaN;
 }
 function parseInteger(input) {
-  const value = input.trim();
-  return INTEGER.test(value) ? Number(value) : Number.NaN;
+  const value2 = input.trim();
+  return INTEGER.test(value2) ? Number(value2) : Number.NaN;
 }
-function formatForInput(value) {
-  return Number.isInteger(value) ? String(value) : formatNumber(value, 1);
+function formatForInput(value2) {
+  return Number.isInteger(value2) ? String(value2) : formatNumber(value2, 1);
 }
 function addDaysIso(iso2, days3) {
   const date = parseIsoDate(iso2);
@@ -101,9 +101,9 @@ function weekdayName(iso2) {
 function formatWeekdayDate(iso2) {
   return `${weekdayName(iso2)}, ${formatDate(iso2)}`;
 }
-function formatSigned(value, fractionDigits = 1) {
-  if (!Number.isFinite(value)) return "\u2013";
-  const rounded = Number(value.toFixed(fractionDigits));
+function formatSigned(value2, fractionDigits = 1) {
+  if (!Number.isFinite(value2)) return "\u2013";
+  const rounded = Number(value2.toFixed(fractionDigits));
   const abs = formatNumber(Math.abs(rounded), fractionDigits);
   if (rounded > 0) return `+${abs}`;
   if (rounded < 0) return `\u2212${abs}`;
@@ -178,7 +178,7 @@ function macroEnergyShares(m) {
   const raw = keys.map((k) => parts2[k] / total * 100);
   const floors = raw.map(Math.floor);
   let rest = 100 - floors.reduce((a, b) => a + b, 0);
-  const order = raw.map((value, index) => ({ index, frac: value - Math.floor(value) })).sort((a, b) => b.frac - a.frac);
+  const order = raw.map((value2, index) => ({ index, frac: value2 - Math.floor(value2) })).sort((a, b) => b.frac - a.frac);
   for (const { index } of order) {
     if (rest <= 0) break;
     floors[index] = (floors[index] ?? 0) + 1;
@@ -188,12 +188,12 @@ function macroEnergyShares(m) {
 }
 
 // src/domain/dayGoal.ts
-function energyGoalView(totals2, goalKcal) {
-  const consumed = Math.max(0, totals2.energyKcal);
+function energyGoalView(totals3, goalKcal) {
+  const consumed = Math.max(0, totals3.energyKcal);
   const macroKcal = {
-    protein: totals2.proteinG * KCAL_PER_GRAM.protein,
-    carbs: totals2.carbsG * KCAL_PER_GRAM.carbs,
-    fat: totals2.fatG * KCAL_PER_GRAM.fat
+    protein: totals3.proteinG * KCAL_PER_GRAM.protein,
+    carbs: totals3.carbsG * KCAL_PER_GRAM.carbs,
+    fat: totals3.fatG * KCAL_PER_GRAM.fat
   };
   const macroSum = macroKcal.protein + macroKcal.carbs + macroKcal.fat;
   const scale = macroSum > consumed && macroSum > 0 ? consumed / macroSum : 1;
@@ -222,7 +222,7 @@ var MACROS = [
   { key: "carbs", label: "Kohlenhydrate", actual: (n2) => n2.carbsG },
   { key: "fat", label: "Fett", actual: (n2) => n2.fatG }
 ];
-function macroGoalRows(totals2, goals) {
+function macroGoalRows(totals3, goals) {
   const goalOf = {
     protein: goals.proteinG,
     carbs: goals.carbsG,
@@ -231,7 +231,7 @@ function macroGoalRows(totals2, goals) {
   return MACROS.flatMap((m) => {
     const goal = goalOf[m.key];
     if (goal === null || goal <= 0) return [];
-    const actual = m.actual(totals2);
+    const actual = m.actual(totals3);
     const remaining = Math.round((goal - actual) * 10) / 10;
     return [
       {
@@ -374,8 +374,8 @@ function describeMacroGoals(m) {
 // src/domain/nutritionDay.ts
 var LABELS = { protein: "Protein", carbs: "Kohlenhydrate", fat: "Fett" };
 var validGoal = (g) => g !== null && g !== void 0 && Number.isFinite(g) && g > 0 ? g : null;
-function dayChart(totals2, targets) {
-  const t = totals2 ?? { energyKcal: 0, proteinG: 0, carbsG: 0, fatG: 0 };
+function dayChart(totals3, targets) {
+  const t = totals3 ?? { energyKcal: 0, proteinG: 0, carbsG: 0, fatG: 0 };
   const shares = macroEnergyShares(t);
   const energyGoal = validGoal(targets.energyKcal);
   const energyPercent = energyGoal === null ? null : t.energyKcal / energyGoal * 100;
@@ -416,27 +416,27 @@ function dayChart(totals2, targets) {
 // src/domain/nutritionCalc.ts
 var ZERO = { energyKcal: 0, proteinG: 0, carbsG: 0, fatG: 0 };
 var DISPLAY_DECIMALS = { kcal: 0, grams: 1, amount: 1 };
-function roundKcal(value) {
-  return roundHalfAway(value, 0);
+function roundKcal(value2) {
+  return roundHalfAway(value2, 0);
 }
-function roundHalfAway(value, decimals) {
+function roundHalfAway(value2, decimals) {
   const factor = 10 ** decimals;
-  return Math.sign(value) * Math.round(Math.abs(value) * factor) / factor;
+  return Math.sign(value2) * Math.round(Math.abs(value2) * factor) / factor;
 }
-function roundGrams(value) {
-  return roundHalfAway(value, 1);
+function roundGrams(value2) {
+  return roundHalfAway(value2, 1);
 }
-function roundAmount(value) {
-  return roundHalfAway(value, 1);
+function roundAmount(value2) {
+  return roundHalfAway(value2, 1);
 }
-function formatKcal(value) {
-  return `${formatNumber(roundKcal(value), 0)} kcal`;
+function formatKcal(value2) {
+  return `${formatNumber(roundKcal(value2), 0)} kcal`;
 }
-function formatGrams(value) {
-  return `${formatNumber(roundGrams(value), 1)} g`;
+function formatGrams(value2) {
+  return `${formatNumber(roundGrams(value2), 1)} g`;
 }
-function formatAmount(value, unit) {
-  const r2 = roundAmount(value);
+function formatAmount(value2, unit) {
+  const r2 = roundAmount(value2);
   return `${formatNumber(r2, Number.isInteger(r2) ? 0 : 1)} ${unit}`;
 }
 function nutrientsFor(per100, amount) {
@@ -494,18 +494,18 @@ var OPTIONAL_LABELS = {
   saltG: "Salz"
 };
 function sumOptional(items, key) {
-  let value = 0;
+  let value2 = 0;
   let known = 0;
   let missing = 0;
   for (const item2 of items) {
     const v = item2[key];
     if (v === null || v === void 0) missing += 1;
     else {
-      value += v;
+      value2 += v;
       known += 1;
     }
   }
-  return { value: known === 0 ? null : value, known, missing };
+  return { value: known === 0 ? null : value2, known, missing };
 }
 function describeOptional(t) {
   if (t.value === null) return "keine Angaben";
@@ -537,14 +537,14 @@ function describeGoalProgress(p, unit) {
 }
 
 // src/domain/forms.ts
-function textOrNull(value) {
-  const clean2 = value.trim();
+function textOrNull(value2) {
+  const clean2 = value2.trim();
   return clean2 === "" ? null : clean2;
 }
-function numberToInput(value, maxDecimals = 2) {
-  if (value === null || value === void 0 || !Number.isFinite(value)) return "";
+function numberToInput(value2, maxDecimals = 2) {
+  if (value2 === null || value2 === void 0 || !Number.isFinite(value2)) return "";
   const factor = 10 ** maxDecimals;
-  const rounded = Math.round(value * factor) / factor;
+  const rounded = Math.round(value2 * factor) / factor;
   return String(rounded).replace(".", ",");
 }
 var FormParser = class {
@@ -564,12 +564,12 @@ var FormParser = class {
   /** Optionale Kommazahl. */
   decimal(field, text2) {
     if (text2.trim() === "") return null;
-    const value = parseDecimal(text2);
-    if (Number.isNaN(value)) {
+    const value2 = parseDecimal(text2);
+    if (Number.isNaN(value2)) {
       this.fail(field, "Bitte eine Zahl eingeben, z. B. 80 oder 80,5.");
       return null;
     }
-    return value;
+    return value2;
   }
   /** Pflicht-Kommazahl. */
   requiredDecimal(field, text2, label) {
@@ -582,12 +582,12 @@ var FormParser = class {
   /** Optionale ganze Zahl. */
   integer(field, text2) {
     if (text2.trim() === "") return null;
-    const value = parseInteger(text2);
-    if (Number.isNaN(value)) {
+    const value2 = parseInteger(text2);
+    if (Number.isNaN(value2)) {
       this.fail(field, "Bitte eine ganze Zahl eingeben.");
       return null;
     }
-    return value;
+    return value2;
   }
   requiredInteger(field, text2, label) {
     if (text2.trim() === "") {
@@ -597,9 +597,9 @@ var FormParser = class {
     return this.integer(field, text2) ?? 0;
   }
   /** Pflichtauswahl (z. B. Übung, Lebensmittel). */
-  required(field, value, message) {
-    if (value.trim() === "") this.fail(field, message);
-    return value;
+  required(field, value2, message) {
+    if (value2.trim() === "") this.fail(field, message);
+    return value2;
   }
   /** Dauer in Minuten (Kommazahl) → Sekunden. */
   minutesToSeconds(field, text2) {
@@ -620,10 +620,10 @@ function metersToKmInput(meters) {
 }
 
 // src/domain/bls.ts
-function neededDecimals(value) {
+function neededDecimals(value2) {
   for (let d = 0; d < 3; d += 1) {
     const f = 10 ** d;
-    if (Math.abs(Math.round(value * f) / f - value) < 1e-9) return d;
+    if (Math.abs(Math.round(value2 * f) / f - value2) < 1e-9) return d;
   }
   return 3;
 }
@@ -670,8 +670,8 @@ function fastNutrients(entry) {
     fatG: v(MACRO_KEYS.fatG)
   };
 }
-function formatNutrient(value, unit) {
-  const rounded = Math.round(value * 1e3) / 1e3;
+function formatNutrient(value2, unit) {
+  const rounded = Math.round(value2 * 1e3) / 1e3;
   return `${formatNumber(rounded, neededDecimals(rounded))} ${unit}`;
 }
 function groupedValues(catalog, entry) {
@@ -749,8 +749,8 @@ var LIFESTYLE_CATEGORIES = [
   { value: "stress", label: "Stress & Entspannung" },
   { value: "other", label: "Sonstiges" }
 ];
-function labelOf(list2, value) {
-  return list2.find((item2) => item2.value === value)?.label ?? value;
+function labelOf(list2, value2) {
+  return list2.find((item2) => item2.value === value2)?.label ?? value2;
 }
 var exerciseCategoryLabel = (v) => labelOf(EXERCISE_CATEGORIES, v);
 var customMealNames = {};
@@ -934,14 +934,14 @@ function profileTotal(weights) {
   return sum === null ? null : Math.round(sum * 100) / 100;
 }
 function profileTotalText(rp) {
-  const value = (k) => rp[k].trim() === "" ? NaN : parseDecimal(rp[k]);
-  const entered = PROFILE_KEYS.filter((k) => !Number.isNaN(value(k)));
+  const value2 = (k) => rp[k].trim() === "" ? NaN : parseDecimal(rp[k]);
+  const entered = PROFILE_KEYS.filter((k) => !Number.isNaN(value2(k)));
   if (entered.length === 0) return "";
-  const sum = countedProfiles(entered).reduce((a, k) => a + value(k), 0);
+  const sum = countedProfiles(entered).reduce((a, k) => a + value2(k), 0);
   return numberToInput(Math.round(sum * 100) / 100);
 }
-function isProfileKey(value) {
-  return PROFILE_KEYS.includes(value);
+function isProfileKey(value2) {
+  return PROFILE_KEYS.includes(value2);
 }
 function profileWeight(set, key) {
   return set[PROFILE_FIELDS[key]] ?? null;
@@ -1419,8 +1419,8 @@ var HYROX_DIVISIONS = [
   { value: "elite_women", label: "Elite 15 Frauen", sex: "women", weights: "womenPro" },
   { value: "elite_men", label: "Elite 15 M\xE4nner", sex: "men", weights: "menPro" }
 ];
-function divisionSex(value) {
-  return HYROX_DIVISIONS.find((d) => d.value === value)?.sex === "men" ? "men" : "women";
+function divisionSex(value2) {
+  return HYROX_DIVISIONS.find((d) => d.value === value2)?.sex === "men" ? "men" : "women";
 }
 function parseFinishTime(text2) {
   const t = text2.trim();
@@ -1802,6 +1802,7 @@ function workoutToDraft(w) {
     notes: w.notes ?? "",
     status: w.status,
     startedAt: w.startedAt,
+    gymId: w.gymId ?? null,
     competition: w.competition ? {
       sex: divisionSex(w.competition.division),
       division: w.competition.division ?? "",
@@ -1888,6 +1889,7 @@ function draftToInput(d, defaults = noDefaults) {
     notes: textOrNull(d.notes),
     status: d.status,
     competition: d.competition ? parseCompetition(p, d.competition) : null,
+    gymId: d.gymId || null,
     exercises: d.exercises.map((e, i) => ({
       id: e.id,
       exerciseId: p.required(`exercises.${i}.exerciseId`, e.exerciseId, "Bitte eine \xDCbung w\xE4hlen."),
@@ -2100,8 +2102,8 @@ var LIFE_PHASE_OPTIONS = [
   { value: "lactating", label: "Stillend" }
 ];
 var LIFE_PHASES = ["pregnant_1", "pregnant_2", "pregnant_3", "lactating"];
-function isLifePhase(value) {
-  return typeof value === "string" && LIFE_PHASES.includes(value);
+function isLifePhase(value2) {
+  return typeof value2 === "string" && LIFE_PHASES.includes(value2);
 }
 var SEX_OPTIONS = [
   { value: "", label: "Keine Angabe" },
@@ -2418,11 +2420,11 @@ function referenceGroup(profile, date) {
   return { ok: true, group: `${profile.sex === "male" ? "m" : "f"}${band}`, age };
 }
 var UNIT_FACTOR = { g: 1e6, mg: 1e3, \u00B5g: 1, mcg: 1 };
-function convertAmount(value, from, to) {
+function convertAmount(value2, from, to) {
   const f = UNIT_FACTOR[from.trim()];
   const t = UNIT_FACTOR[to];
   if (f === void 0 || t === void 0) return null;
-  return value * f / t;
+  return value2 * f / t;
 }
 function isRange(v) {
   return typeof v === "object";
@@ -2436,12 +2438,12 @@ function fmt(n2) {
 function dgeReference(key, group, age = null) {
   const entry = DGE[key];
   if (!entry) return null;
-  let value = isGroupValues(entry.value) ? entry.value[group] : entry.value;
+  let value2 = isGroupValues(entry.value) ? entry.value[group] : entry.value;
   const notes = [];
   const isPhase = group.startsWith("pregnant") || group === "lactating";
   if (isPhase && age !== null && age < 19) {
-    if (key === "calcium") value = 1200;
-    if (key === "phosphorus") value = 660;
+    if (key === "calcium") value2 = 1200;
+    if (key === "phosphorus") value2 = 660;
     if (key === "calcium" || key === "phosphorus") notes.push("Wert f\xFCr unter 19-J\xE4hrige");
   }
   if (entry.note) notes.push(entry.note);
@@ -2452,40 +2454,40 @@ function dgeReference(key, group, age = null) {
   if (key === "iron" && group === "f25") {
     notes.push("vor der Menopause; nach der Menopause 14 mg");
   }
-  const base = isRange(value) ? value.min : value;
-  const shown = isRange(value) ? `${fmt(value.min)}\u2013${fmt(value.max)} ${entry.unit}` : `${fmt(value)} ${entry.unit}`;
-  const range = isRange(value) ? `; Prozent bezogen auf den unteren Wert` : "";
+  const base = isRange(value2) ? value2.min : value2;
+  const shown = isRange(value2) ? `${fmt(value2.min)}\u2013${fmt(value2.max)} ${entry.unit}` : `${fmt(value2)} ${entry.unit}`;
+  const range = isRange(value2) ? `; Prozent bezogen auf den unteren Wert` : "";
   const title = `DGE ${entry.type}, ${GROUP_LABELS[group]}: ${shown} pro Tag${notes.length ? ` (${notes.join("; ")})` : ""}${range}`;
-  return isRange(value) ? { base, unit: entry.unit, range: value, title } : { base, unit: entry.unit, title };
+  return isRange(value2) ? { base, unit: entry.unit, range: value2, title } : { base, unit: entry.unit, title };
 }
 function efsaLimit(key, group) {
   const entry = EFSA[key];
   if (!entry) return null;
-  const value = group.startsWith("pregnant") ? entry.pregnancy : group === "lactating" ? entry.lactation : entry.adult;
-  if (value === null) return null;
+  const value2 = group.startsWith("pregnant") ? entry.pregnancy : group === "lactating" ? entry.lactation : entry.adult;
+  if (value2 === null) return null;
   const phase = group.startsWith("pregnant") ? "Schwangerschaft" : group === "lactating" ? "Stillzeit" : "Erwachsene";
   const kind = entry.kind === "UL" ? "tolerierbare H\xF6chstmenge (UL)" : "sichere Aufnahmemenge (safe level, kein UL abgeleitet)";
-  const title = `EFSA ${kind}, ${phase}: ${fmt(value)} ${entry.unit} pro Tag${entry.note ? ` \u2013 ${entry.note}` : ""}`;
-  return { base: value, unit: entry.unit, title };
+  const title = `EFSA ${kind}, ${phase}: ${fmt(value2)} ${entry.unit} pro Tag${entry.note ? ` \u2013 ${entry.note}` : ""}`;
+  return { base: value2, unit: entry.unit, title };
 }
 var DASH = { percent: null, title: "Kein Referenzwert vorhanden" };
-function cell(value, unit, ref) {
+function cell(value2, unit, ref) {
   if (!ref) return DASH;
-  const amount = convertAmount(value, unit, ref.unit);
+  const amount = convertAmount(value2, unit, ref.unit);
   if (amount === null) {
     return { percent: null, title: `Einheit \u201E${unit}\u201C l\xE4sst sich nicht umrechnen. ${ref.title}` };
   }
   return { percent: amount / ref.base * 100, title: ref.title };
 }
-function nutrientPercents(key, value, unit, group) {
+function nutrientPercents(key, value2, unit, group) {
   if (!group.ok) {
     return {
       reference: { percent: null, title: group.reason },
       limit: { percent: null, title: group.reason }
     };
   }
-  const limit = key === "vit_b3" ? { percent: null, title: NIACIN_UL_NOTE } : cell(value, unit, efsaLimit(key, group.group));
-  return { reference: cell(value, unit, dgeReference(key, group.group, group.age)), limit };
+  const limit = key === "vit_b3" ? { percent: null, title: NIACIN_UL_NOTE } : cell(value2, unit, efsaLimit(key, group.group));
+  return { reference: cell(value2, unit, dgeReference(key, group.group, group.age)), limit };
 }
 function formatPercent(percent) {
   if (percent === null || !Number.isFinite(percent)) return "-";
@@ -2790,21 +2792,21 @@ function epley1RM(weightKg, reps) {
   if (weightKg === null || reps === null || weightKg <= 0 || reps < 1 || reps > E1RM_MAX_REPS) {
     return null;
   }
-  const value = reps === 1 ? weightKg : weightKg * (1 + reps / 30);
-  return Math.round(value * 10) / 10;
+  const value2 = reps === 1 ? weightKg : weightKg * (1 + reps / 30);
+  return Math.round(value2 * 10) / 10;
 }
 function e1rmBySession(log) {
   const best = /* @__PURE__ */ new Map();
   for (const s of log) {
     if (s.isWarmup) continue;
-    const value = epley1RM(s.weightKg, s.reps);
-    if (value === null) continue;
+    const value2 = epley1RM(s.weightKg, s.reps);
+    if (value2 === null) continue;
     const current = best.get(s.workoutId);
-    if (!current || value > current.value) {
+    if (!current || value2 > current.value) {
       best.set(s.workoutId, {
         date: s.date,
         workoutId: s.workoutId,
-        value,
+        value: value2,
         weightKg: s.weightKg,
         reps: s.reps
       });
@@ -7364,12 +7366,12 @@ var DEFAULT_TARGETS = (() => {
     tibialis: t(2, 4, 8, 12)
   };
 })();
-function levelFor(value, t) {
-  if (!(value > 0)) return 0;
-  if (value >= t.veryHigh) return 5;
-  if (value >= t.high) return 4;
-  if (value >= t.build) return 3;
-  if (value >= t.moderate) return 2;
+function levelFor(value2, t) {
+  if (!(value2 > 0)) return 0;
+  if (value2 >= t.veryHigh) return 5;
+  if (value2 >= t.high) return 4;
+  if (value2 >= t.build) return 3;
+  if (value2 >= t.moderate) return 2;
   return 1;
 }
 function targetFor(m, mode, targets) {
@@ -7525,8 +7527,8 @@ var METRIC_SUBSECTIONS = {
 };
 var ANS_MIN = -10;
 var ANS_MAX = 10;
-function ansPercent(value) {
-  const clamped = Math.min(ANS_MAX, Math.max(ANS_MIN, value));
+function ansPercent(value2) {
+  const clamped = Math.min(ANS_MAX, Math.max(ANS_MIN, value2));
   return (clamped - ANS_MIN) / (ANS_MAX - ANS_MIN) * 100;
 }
 function previousMean(values, date) {
@@ -9318,9 +9320,9 @@ function movingAverage(values, window) {
   }
   return values.map((_, i) => i + 1 < window ? null : mean2(values.slice(i + 1 - window, i + 1)));
 }
-function roundTo(value, digits) {
+function roundTo(value2, digits) {
   const f = 10 ** digits;
-  return Math.round(value * f) / f;
+  return Math.round(value2 * f) / f;
 }
 function windowMean(points, endDate, days3) {
   const end = Date.parse(`${endDate}T00:00:00Z`);
@@ -9617,13 +9619,13 @@ function weekGoalsFromInput(input) {
       errors.sleepHours = `Bitte Stunden von ${WEEK_SLEEP_MIN_MIN / 60} bis ${WEEK_SLEEP_MAX_MIN / 60} angeben, z. B. 7,5.`;
     } else sleepMin = min;
   }
-  const value = {
+  const value2 = {
     trainings: read("trainings", WEEK_TRAININGS_MAX, "Einheiten"),
     cardioMin: read("cardioMin", WEEK_CARDIO_MAX_MIN, "Minuten"),
     proteinDays: read("proteinDays", WEEK_PROTEIN_DAYS_MAX, "Tage"),
     sleepMin
   };
-  return Object.keys(errors).length === 0 ? { ok: true, value } : { ok: false, errors };
+  return Object.keys(errors).length === 0 ? { ok: true, value: value2 } : { ok: false, errors };
 }
 function proteinTarget(goal, weightKg) {
   if (!goal) return null;
@@ -9708,13 +9710,13 @@ function streaks(input) {
   const { today, days: days3, data, dashboard } = input;
   const goal = data.goal;
   const out = [];
-  const add = (key, label, goalText, value, target, show) => {
-    const now = value(today);
+  const add = (key, label, goalText, value2, target, show) => {
+    const now = value2(today);
     out.push({
       key,
       label,
       goal: goalText,
-      ...streakOf((d) => value(d) >= target, today, days3),
+      ...streakOf((d) => value2(d) >= target, today, days3),
       todayShare: Math.max(0, Math.min(1, now / target)),
       todayText: `heute ${show(now)} von ${show(target)}`
     });
@@ -10188,9 +10190,9 @@ function scaleHint(key) {
   const s = recoveryScale(key);
   return `${s.min} = ${s.low}, ${s.max} = ${s.high}.`;
 }
-function formatScale(key, value) {
-  if (value === null) return "\u2013";
-  return `${value} / ${recoveryScale(key).max}`;
+function formatScale(key, value2) {
+  if (value2 === null) return "\u2013";
+  return `${value2} / ${recoveryScale(key).max}`;
 }
 
 // src/domain/weekReview.ts
@@ -10751,34 +10753,34 @@ function rangeFor(result, analyte) {
   }
   return { low: d.low, high: d.high };
 }
-function flagOf(value, comparator, range) {
+function flagOf(value2, comparator, range) {
   const { low, high } = range;
   if (low === null && high === null) return "none";
   if (comparator === "<") {
-    if (low !== null && value <= low) return "low";
-    if (high !== null && value <= high && low === null) return "normal";
+    if (low !== null && value2 <= low) return "low";
+    if (high !== null && value2 <= high && low === null) return "normal";
     return "none";
   }
   if (comparator === ">") {
-    if (high !== null && value >= high) return "high";
-    if (low !== null && value >= low && high === null) return "normal";
+    if (high !== null && value2 >= high) return "high";
+    if (low !== null && value2 >= low && high === null) return "normal";
     return "none";
   }
-  if (low !== null && value < low) return "low";
-  if (high !== null && value > high) return "high";
+  if (low !== null && value2 < low) return "low";
+  if (high !== null && value2 > high) return "high";
   return "normal";
 }
-function decimalsOf(value) {
+function decimalsOf(value2) {
   for (let d = 0; d <= 3; d++) {
-    if (Math.abs(Math.round(value * 10 ** d) - value * 10 ** d) < 1e-6) return d;
+    if (Math.abs(Math.round(value2 * 10 ** d) - value2 * 10 ** d) < 1e-6) return d;
   }
   return 3;
 }
-function formatLabNumber(value) {
-  return formatNumber(value, decimalsOf(value));
+function formatLabNumber(value2) {
+  return formatNumber(value2, decimalsOf(value2));
 }
-function formatLabValue(value, comparator) {
-  return `${comparator ? `${comparator} ` : ""}${formatLabNumber(value)}`;
+function formatLabValue(value2, comparator) {
+  return `${comparator ? `${comparator} ` : ""}${formatLabNumber(value2)}`;
 }
 function formatRange2(range) {
   const { low, high } = range;
@@ -10802,8 +10804,8 @@ function parseLabValue(text2) {
   const t = text2.trim().replace(/≤/g, "<").replace(/≥/g, ">");
   const m = /^([<>])\s*=?\s*(.+)$/.exec(t);
   const comparator = m ? m[1] : null;
-  const value = toNumber(m ? m[2] ?? "" : t);
-  return value === null ? null : { value, comparator };
+  const value2 = toNumber(m ? m[2] ?? "" : t);
+  return value2 === null ? null : { value: value2, comparator };
 }
 function parseRange(text2) {
   const t = text2.trim().replace(/[–—]/g, "-").replace(/≤|<=/g, "<").replace(/≥|>=/g, ">");
@@ -11564,9 +11566,9 @@ function findRecord(records, category, name) {
   const n2 = name.toLowerCase();
   return records.find((r2) => r2.category === category && r2.name.toLowerCase() === n2);
 }
-function kellShort(value) {
-  const m = /\((Kell-(?:positiv|negativ))\)/.exec(value);
-  return m?.[1] ?? value;
+function kellShort(value2) {
+  const m = /\((Kell-(?:positiv|negativ))\)/.exec(value2);
+  return m?.[1] ?? value2;
 }
 function bloodGroupSummary(records) {
   const ab0 = findRecord(records, "blood_group", AB0_NAME)?.value;
@@ -12031,9 +12033,9 @@ function summarizeHrt(entries, today) {
       (a, b) => (a.date + (a.time ?? "")).localeCompare(b.date + (b.time ?? ""))
     );
     const taken = sorted.filter((e) => e.status === "taken");
-    const totals2 = /* @__PURE__ */ new Map();
+    const totals3 = /* @__PURE__ */ new Map();
     for (const e of taken)
-      totals2.set(e.unit, Math.round(((totals2.get(e.unit) ?? 0) + e.amount) * 1e3) / 1e3);
+      totals3.set(e.unit, Math.round(((totals3.get(e.unit) ?? 0) + e.amount) * 1e3) / 1e3);
     const dates = [...new Set(taken.map((e) => e.date))];
     const gaps = dates.slice(1).map((d, i) => daysBetween3(dates[i] ?? d, d));
     const lastTaken = dates.at(-1) ?? null;
@@ -12041,7 +12043,7 @@ function summarizeHrt(entries, today) {
       hormone: sorted.at(-1)?.hormone ?? "",
       taken: taken.length,
       missed: sorted.length - taken.length,
-      totals: [...totals2.entries()],
+      totals: [...totals3.entries()],
       first: sorted[0]?.date ?? null,
       last: sorted.at(-1)?.date ?? null,
       daysSinceLast: lastTaken ? daysBetween3(lastTaken, today) : null,
@@ -12056,11 +12058,11 @@ function needleOptions(entries) {
   const seen = /* @__PURE__ */ new Set();
   const out = [];
   for (const e of sorted) {
-    const value = (e.needle ?? "").trim().replace(/\s+/g, " ");
-    const key = value.toLocaleLowerCase("de-DE");
+    const value2 = (e.needle ?? "").trim().replace(/\s+/g, " ");
+    const key = value2.toLocaleLowerCase("de-DE");
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push(value);
+    out.push(value2);
   }
   return out;
 }
@@ -12094,9 +12096,9 @@ __export(doseCalc_exports, {
   volumeForAmount: () => volumeForAmount,
   weeklyDose: () => weeklyDose
 });
-function roundTo2(value, decimals) {
+function roundTo2(value2, decimals) {
   const f = 10 ** decimals;
-  return Math.round(value * f) / f;
+  return Math.round(value2 * f) / f;
 }
 function positive(text2) {
   if (text2.trim() === "") return null;
@@ -12265,11 +12267,11 @@ var TEMPLATE_TEXT = new Map(
     (section) => TEMPLATE[section].map((text2, i) => [`${section}-v${i + 1}`, text2])
   )
 );
-function parseItems(value) {
-  if (!Array.isArray(value)) return null;
+function parseItems(value2) {
+  if (!Array.isArray(value2)) return null;
   const out = [];
   const seen = /* @__PURE__ */ new Set();
-  for (const v of value) {
+  for (const v of value2) {
     if (!v || typeof v !== "object") continue;
     const { id: id3, text: text2, t, done, d } = v;
     if (typeof id3 !== "string" || !id3 || seen.has(id3)) continue;
@@ -13265,8 +13267,8 @@ function checklistPdf(doc) {
   const pages = [];
   let ops = [];
   let y = PAGE_H - MARGIN;
-  const text2 = (x, yy, font, size, value, gray = 0) => ops.push(
-    `${n(gray)} g BT /${font} ${size} Tf ${n(x)} ${n(yy)} Td (${pdfText(value)}) Tj ET 0 g`
+  const text2 = (x, yy, font, size, value2, gray = 0) => ops.push(
+    `${n(gray)} g BT /${font} ${size} Tf ${n(x)} ${n(yy)} Td (${pdfText(value2)}) Tj ET 0 g`
   );
   const header2 = (first) => {
     if (first) {
@@ -13881,13 +13883,13 @@ var PdfPage = class {
   y(v) {
     return A4_H - v;
   }
-  text(x, y, value, style = {}) {
+  text(x, y, value2, style = {}) {
     const size = style.size ?? 10;
     const font = style.bold ? "F2" : "F1";
-    const w = textWidth(value, size, style.bold);
+    const w = textWidth(value2, size, style.bold);
     const left = style.align === "right" ? x - w : style.align === "center" ? x - w / 2 : x;
     this.ops.push(
-      `${rgb(style.color ?? [0, 0, 0])} rg BT /${font} ${num2(size)} Tf ${num2(left)} ${num2(this.y(y))} Td (${pdfText(value)}) Tj ET`
+      `${rgb(style.color ?? [0, 0, 0])} rg BT /${font} ${num2(size)} Tf ${num2(left)} ${num2(this.y(y))} Td (${pdfText(value2)}) Tj ET`
     );
   }
   /** Rechteck (optional mit runden Ecken), gefüllt und/oder umrandet. */
@@ -14200,11 +14202,11 @@ function glance(l, r2) {
   const gap = 8;
   const w = (CONTENT_W - gap * (items.length - 1)) / items.length;
   l.ensure(52);
-  items.forEach(([label, value], i) => {
+  items.forEach(([label, value2], i) => {
     const x = M + i * (w + gap);
     l.page.rect(x, l.y, w, 44, { fill: SOFT, stroke: LINE2, radius: 4 });
     l.page.text(x + 8, l.y + 15, fit(label, w - 16, 7.5), { size: 7.5, color: MUTED });
-    l.page.text(x + 8, l.y + 33, fit(value, w - 16, 10.5, true), {
+    l.page.text(x + 8, l.y + 33, fit(value2, w - 16, 10.5, true), {
       size: 10.5,
       bold: true,
       color: label.startsWith("Au\xDFerhalb") && r2.flagged.length > 0 ? DANGER : INK
@@ -14982,17 +14984,17 @@ function intlMissingText(analyte) {
 }
 var BAR_RANGE_START = 20;
 var BAR_RANGE_END = 80;
-function placeOnBar(value, comparator, range) {
+function placeOnBar(value2, comparator, range) {
   const low = range.low ?? 0;
   const high = range.high;
   if (high === null || !(high > low)) return null;
   const span = BAR_RANGE_END - BAR_RANGE_START;
-  const raw = BAR_RANGE_START + (value - low) / (high - low) * span;
+  const raw = BAR_RANGE_START + (value2 - low) / (high - low) * span;
   const position = Math.min(100, Math.max(0, raw));
   return {
     position: Math.round(position * 10) / 10,
     // Untergrenze 0 heißt „keine Untergrenze“ (z. B. „< 0,5“ bei CRP 0–5 liegt im Bereich)
-    flag: flagOf(value, comparator, { low: range.low === 0 ? null : range.low, high }),
+    flag: flagOf(value2, comparator, { low: range.low === 0 ? null : range.low, high }),
     clamped: raw < 0 || raw > 100
   };
 }
@@ -15345,14 +15347,14 @@ async function readXlsx(bytes, inflateRaw) {
       const type = attr(tag, "t");
       const inner = c[2] ?? "";
       const v = /<v>([\s\S]*?)<\/v>/.exec(inner)?.[1];
-      let value = "";
-      if (type === "s") value = shared[Number(v)] ?? "";
-      else if (type === "inlineStr") value = texts(inner);
-      else if (type === "b") value = v === "1" ? "WAHR" : "FALSCH";
-      else if (type === "str" || type === "e") value = decodeXml(v ?? "");
-      else if (v !== void 0) value = numberText(decodeXml(v));
+      let value2 = "";
+      if (type === "s") value2 = shared[Number(v)] ?? "";
+      else if (type === "inlineStr") value2 = texts(inner);
+      else if (type === "b") value2 = v === "1" ? "WAHR" : "FALSCH";
+      else if (type === "str" || type === "e") value2 = decodeXml(v ?? "");
+      else if (v !== void 0) value2 = numberText(decodeXml(v));
       while (cells.length < index) cells.push("");
-      cells[index] = value;
+      cells[index] = value2;
     }
     while (rows.length < rowNumber - 1) rows.push([]);
     rows[rowNumber - 1] = cells;
@@ -15365,7 +15367,7 @@ function safeSheetName(name) {
 }
 function writeXlsx(table2) {
   const enc = new TextEncoder();
-  const cell2 = (col, row, value, style) => value === "" ? "" : `<c r="${columnName(col)}${row}" t="inlineStr"${style ? ` s="${style}"` : ""}><is><t xml:space="preserve">${encodeXml(value)}</t></is></c>`;
+  const cell2 = (col, row, value2, style) => value2 === "" ? "" : `<c r="${columnName(col)}${row}" t="inlineStr"${style ? ` s="${style}"` : ""}><is><t xml:space="preserve">${encodeXml(value2)}</t></is></c>`;
   const allRows = [table2.header, ...table2.rows];
   const sheetRows = allRows.map(
     (r2, i) => `<row r="${i + 1}">${r2.map((v, c) => cell2(c, i + 1, v, i === 0 ? 1 : 0)).join("")}</row>`
@@ -17064,6 +17066,7 @@ function emptyPlanDraft() {
     name: "",
     description: "",
     icon: "auto",
+    gymId: "",
     archived: false,
     days: [emptyPlanDay("Tag A")]
   };
@@ -17083,6 +17086,7 @@ function planToDraft(plan, isCardio = () => false) {
     name: plan.name,
     description: plan.description ?? "",
     icon: plan.icon ?? "auto",
+    gymId: plan.gymId ?? "",
     archived: plan.archived,
     days: plan.days.map((d) => ({
       key: newKey(),
@@ -17166,6 +17170,7 @@ function planDraftToInput(d, defaults = () => []) {
     name: d.name,
     description: textOrNull(d.description),
     icon: d.icon && d.icon !== "auto" ? d.icon : null,
+    gymId: d.gymId || null,
     archived: d.archived,
     days: d.days.map((day, i) => {
       const checked = checkPlanDay(day, defaults);
@@ -17998,8 +18003,8 @@ function trainingChart(days3, width = 230) {
   const h = 170;
   const box2 = { x: 30, y: 26, w: width - 40, h: 110 };
   const shapes = [];
-  const totals2 = days3.map((d) => d.strengthMin + d.cardioMin + d.otherMin);
-  const a = axis(0, Math.max(30, ...totals2));
+  const totals3 = days3.map((d) => d.strengthMin + d.cardioMin + d.otherMin);
+  const a = axis(0, Math.max(30, ...totals3));
   yGrid(shapes, { ...a, lo: 0 }, box2, "left");
   const slot = box2.w / Math.max(days3.length, 1);
   const y = (v) => box2.y + box2.h - v / a.hi * box2.h;
@@ -18119,8 +18124,8 @@ function macroChart(days3, width = 230) {
   const box2 = { x: 34, y: 26, w: width - 44, h: 110 };
   const shapes = [];
   const parts2 = (d) => [d.proteinG * 4, d.carbsG * 4, d.fatG * 9];
-  const totals2 = days3.map((d) => d.kcal === null ? 0 : parts2(d).reduce((x, y2) => x + y2, 0));
-  const a = axis(0, Math.max(1e3, ...totals2));
+  const totals3 = days3.map((d) => d.kcal === null ? 0 : parts2(d).reduce((x, y2) => x + y2, 0));
+  const a = axis(0, Math.max(1e3, ...totals3));
   yGrid(shapes, { ...a, lo: 0 }, box2, "left");
   const slot = box2.w / Math.max(days3.length, 1);
   const y = (v) => box2.y + box2.h - v / a.hi * box2.h;
@@ -18187,7 +18192,7 @@ function weeklyReportHtml(r2, opts) {
   const next = isoWeek(shiftDays(r2.weekStart, 7)).week;
   const out = [];
   const person = r2.person ? `Erstellt f\xFCr <strong>${esc(r2.person.name)}</strong>${r2.person.age !== null ? ` \xB7 ${r2.person.age} Jahre` : ""}${r2.person.heightCm ? ` \xB7 ${formatNumber(r2.person.heightCm, 0)} cm` : ""}` : "";
-  const stat2 = (label, value, unit) => `<div class="wr-stat"><span>${esc(label)}</span><strong>${esc(value)}</strong> <small>${esc(unit)}</small></div>`;
+  const stat2 = (label, value2, unit) => `<div class="wr-stat"><span>${esc(label)}</span><strong>${esc(value2)}</strong> <small>${esc(unit)}</small></div>`;
   out.push(`<header class="wr-cover">
 <div class="wr-cover__logo"><img src="${esc(opts.logoUrl)}" alt="LIFESPAN OS"></div>
 <div class="wr-cover__band">
@@ -18413,12 +18418,12 @@ var Writer = class {
       ["SCHLAF ERFASST", String(r2.stats.sleepNights), "/ 7 N\xE4chte"]
     ];
     const colW = (CW - 20) / 4;
-    stats2.forEach(([label, value, unit], i) => {
+    stats2.forEach(([label, value2, unit], i) => {
       const x = M2 + 10 + i * colW;
       p.line(x, y, x + colW - 12, y, hex("#3A5680"), 0.6);
       p.text(x, y + 14, label, { size: 6.5, color: hex("#A9C1DD") });
-      p.text(x, y + 34, value, { size: 16, bold: true, color: C.white });
-      p.text(x + textWidth(value, 16, true) + 4, y + 34, unit, { size: 8, color: hex("#C9DCEB") });
+      p.text(x, y + 34, value2, { size: 16, bold: true, color: C.white });
+      p.text(x + textWidth(value2, 16, true) + 4, y + 34, unit, { size: 8, color: hex("#C9DCEB") });
     });
     const footY = A4_H - 45;
     p.line(M2 + 10, footY - 16, A4_W - M2 - 10, footY - 16, hex("#3A5680"), 0.6);
@@ -19174,10 +19179,10 @@ function missingGrip(input) {
     lastRightKg: last?.rightKg ?? null
   };
 }
-function gripInputError(value) {
-  if (value === null) return null;
-  if (Number.isNaN(value)) return "Bitte eine Zahl eingeben.";
-  if (value < GRIP_MIN_KG || value > GRIP_MAX_KG)
+function gripInputError(value2) {
+  if (value2 === null) return null;
+  if (Number.isNaN(value2)) return "Bitte eine Zahl eingeben.";
+  if (value2 < GRIP_MIN_KG || value2 > GRIP_MAX_KG)
     return `Erlaubt: ${GRIP_MIN_KG}\u2013${GRIP_MAX_KG} kg je Hand.`;
   return null;
 }
@@ -19224,11 +19229,11 @@ function missingSleep(input) {
   }
   return out;
 }
-function sleepInputError(value, field) {
-  if (value === null) return null;
+function sleepInputError(value2, field) {
+  if (value2 === null) return null;
   const def = SLEEP_FILL_FIELDS.find((f) => f.key === field);
-  if (Number.isNaN(value) || !Number.isInteger(value)) return "Bitte eine ganze Zahl eingeben.";
-  if (value < def.min || value > def.max) return `Erlaubt: ${def.min}\u2013${def.max}`;
+  if (Number.isNaN(value2) || !Number.isInteger(value2)) return "Bitte eine ganze Zahl eingeben.";
+  if (value2 < def.min || value2 > def.max) return `Erlaubt: ${def.min}\u2013${def.max}`;
   return null;
 }
 function parseClock2(text2) {
@@ -19345,10 +19350,10 @@ function parseFillInput(text2) {
   if (t === "") return null;
   return /^-?\d+(\.\d+)?$/.test(t) ? Number(t) : Number.NaN;
 }
-function fillInputError(value, m) {
-  if (value === null) return null;
-  if (Number.isNaN(value)) return "Bitte eine Zahl eingeben.";
-  if (value < m.minValue || value > m.maxValue) return "Au\xDFerhalb des Bereichs der Messgr\xF6\xDFe.";
+function fillInputError(value2, m) {
+  if (value2 === null) return null;
+  if (Number.isNaN(value2)) return "Bitte eine Zahl eingeben.";
+  if (value2 < m.minValue || value2 > m.maxValue) return "Au\xDFerhalb des Bereichs der Messgr\xF6\xDFe.";
   return null;
 }
 
@@ -20350,10 +20355,10 @@ function goalProgress2(goal, series, today, decimals = 1) {
   let best = null;
   for (const p of after) if (!best || better2(p.value, best.value)) best = p;
   const current = after[after.length - 1] ?? before[before.length - 1] ?? null;
-  const milestones = start === null ? [{ value: target, share: 1, reachedOn: null, isTarget: true }] : milestoneValues(start, target, goal.milestones, decimals).map((value, i, all) => ({
-    value,
-    share: target === start ? 1 : (value - start) / (target - start),
-    reachedOn: after.find((p) => reached(p.value, value))?.date ?? null,
+  const milestones = start === null ? [{ value: target, share: 1, reachedOn: null, isTarget: true }] : milestoneValues(start, target, goal.milestones, decimals).map((value2, i, all) => ({
+    value: value2,
+    share: target === start ? 1 : (value2 - start) / (target - start),
+    reachedOn: after.find((p) => reached(p.value, value2))?.date ?? null,
     isTarget: i === all.length - 1
   }));
   const reachedOn = milestones[milestones.length - 1]?.reachedOn ?? null;
@@ -20722,7 +20727,13 @@ function normalizeSearch2(text2) {
 
 // src/domain/smartSearch.ts
 var SYNONYM_GROUPS = [
-  ["brustpresse", "chest press", "brustdr\xFCcken maschine", "seated chest press", "vertical chest press"],
+  [
+    "brustpresse",
+    "chest press",
+    "brustdr\xFCcken maschine",
+    "seated chest press",
+    "vertical chest press"
+  ],
   ["bankdr\xFCcken", "bench press", "flachbankdr\xFCcken", "flat bench", "brustdr\xFCcken"],
   ["schr\xE4gbankdr\xFCcken", "incline press", "incline bench", "schr\xE4gbank", "incline chest"],
   ["negativbankdr\xFCcken", "decline press", "decline bench", "negativbank"],
@@ -20734,12 +20745,28 @@ var SYNONYM_GROUPS = [
   ["beinbeuger", "leg curl", "beinbeugen", "hamstring curl", "lying leg curl", "seated leg curl"],
   ["latzug", "lat pulldown", "lat pull down", "latziehen", "pulldown", "lat maschine"],
   ["klimmzug", "pull up", "pullup", "chin up", "klimmz\xFCge", "assisted pull up"],
-  ["rudern", "row", "seated row", "rudermaschine", "kabelrudern", "cable row", "t-bar row", "low row"],
+  [
+    "rudern",
+    "row",
+    "seated row",
+    "rudermaschine",
+    "kabelrudern",
+    "cable row",
+    "t-bar row",
+    "low row"
+  ],
   ["ruderger\xE4t", "rowing machine", "rower", "ergometer rudern", "concept2"],
   ["schulterpresse", "shoulder press", "schulterdr\xFCcken", "overhead press", "military press"],
   ["seitheben", "lateral raise", "seitheben maschine", "side raise"],
   ["bizepscurl", "biceps curl", "bizeps curl", "armbeuger", "preacher curl", "scott curl"],
-  ["trizepsdr\xFCcken", "triceps extension", "triceps pushdown", "trizeps", "armstrecker", "french press"],
+  [
+    "trizepsdr\xFCcken",
+    "triceps extension",
+    "triceps pushdown",
+    "trizeps",
+    "armstrecker",
+    "french press"
+  ],
   ["dips", "dip", "barren", "dip maschine"],
   ["bauchmaschine", "ab crunch", "abdominal", "crunch", "bauchmuskel", "bauchpresse"],
   ["r\xFCckenstrecker", "back extension", "hyperextension", "lower back", "hyperextensions"],
@@ -20909,25 +20936,72 @@ var PLAN_ICONS = [
   {
     key: "upper",
     label: "Oberk\xF6rper",
-    keywords: ["ok", "oberkorper", "upper", "upper body", "upperbody", "push", "pull", "oberkoerper"],
+    keywords: [
+      "ok",
+      "oberkorper",
+      "upper",
+      "upper body",
+      "upperbody",
+      "push",
+      "pull",
+      "oberkoerper"
+    ],
     body: HEAD(32, 11, 6.5) + '<path d="M27 17h10l1 4c6 0 13 2 16 6l3 9c1 3-1 5-4 4l-4-1-1 12c-1 5-4 8-9 9h-14c-5-1-8-4-9-9l-1-12-4 1c-3 1-5-1-4-4l3-9c3-4 10-6 16-6z"/><path d="M32 26v20M22 31c3 3 7 3 10 0 3 3 7 3 10 0" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="1.8" stroke-linecap="round"/>'
   },
   {
     key: "lower",
     label: "Unterk\xF6rper / Beine",
-    keywords: ["uk", "unterkorper", "lower", "lower body", "legs", "leg day", "beine", "bein", "leg", "unterkoerper", "quads", "squat"],
+    keywords: [
+      "uk",
+      "unterkorper",
+      "lower",
+      "lower body",
+      "legs",
+      "leg day",
+      "beine",
+      "bein",
+      "leg",
+      "unterkoerper",
+      "quads",
+      "squat"
+    ],
     body: '<path d="M17 6h30l3 14c1 6 0 11-2 16l-3 10 1 9c0 2-1 3-3 3h-6c-2 0-3-1-3-3l1-10-2-14h-2l-2 14 1 10c0 2-1 3-3 3h-6c-2 0-3-1-3-3l1-9-3-10c-2-5-3-10-2-16z"/><path d="M32 10v12" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="1.8" stroke-linecap="round"/>'
   },
   {
     key: "full",
     label: "Ganzk\xF6rper",
-    keywords: ["gk", "ganzkorper", "fullbody", "full body", "full", "total body", "totalbody", "ganzkoerper", "komplett", "ppl", "push pull legs", "push pull beine"],
+    keywords: [
+      "gk",
+      "ganzkorper",
+      "fullbody",
+      "full body",
+      "full",
+      "total body",
+      "totalbody",
+      "ganzkoerper",
+      "komplett",
+      "ppl",
+      "push pull legs",
+      "push pull beine"
+    ],
     body: HEAD(32, 7, 5) + '<path d="M27 13h10c5 0 10 2 12 5l4 10c1 2 0 4-2 4l-3-1-3-7v10l-1 9 2 16c0 2-1 3-3 3h-3c-2 0-3-1-3-3l-2-14h-2l-2 14c0 2-1 3-3 3h-3c-2 0-3-1-3-3l2-16-1-9V24l-3 7-3 1c-2 0-3-2-2-4l4-10c2-3 7-5 12-5z"/>'
   },
   {
     key: "arms",
     label: "Arme",
-    keywords: ["arme", "arms", "arm", "bizeps", "biceps", "bizep", "trizeps", "triceps", "limbs", "unterarm", "forearm"],
+    keywords: [
+      "arme",
+      "arms",
+      "arm",
+      "bizeps",
+      "biceps",
+      "bizep",
+      "trizeps",
+      "triceps",
+      "limbs",
+      "unterarm",
+      "forearm"
+    ],
     body: '<path d="M14 54c-4-6-4-14 0-21l9-15c2-4 6-6 10-5l7 2c3 1 4 4 3 7l-2 5c-1 2-3 3-5 2l-5-2-3 6c4-2 9-2 13 0 7-6 15-5 19 1 3 5 2 12-3 16-6 5-15 7-24 6z"/><path d="M30 40c5-3 10-3 14 1" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="1.8" stroke-linecap="round"/>'
   },
   {
@@ -20945,25 +21019,77 @@ var PLAN_ICONS = [
   {
     key: "shoulders",
     label: "Schultern",
-    keywords: ["schulter", "schultern", "shoulder", "shoulders", "delts", "delta", "deltoid", "nacken", "trapez"],
+    keywords: [
+      "schulter",
+      "schultern",
+      "shoulder",
+      "shoulders",
+      "delts",
+      "delta",
+      "deltoid",
+      "nacken",
+      "trapez"
+    ],
     body: HEAD(32, 12, 6.5) + '<path d="M26 19h12l4 3H22z"/><circle cx="15" cy="30" r="9"/><circle cx="49" cy="30" r="9"/><path d="M22 23h20l2 10-2 24H22l-2-24z"/><path d="M15 23v14M49 23v14" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="1.8" stroke-linecap="round"/>'
   },
   {
     key: "core",
     label: "Bauch / Core",
-    keywords: ["bauch", "core", "abs", "abdominal", "sixpack", "six pack", "rumpf", "planks", "plank", "crunch"],
+    keywords: [
+      "bauch",
+      "core",
+      "abs",
+      "abdominal",
+      "sixpack",
+      "six pack",
+      "rumpf",
+      "planks",
+      "plank",
+      "crunch"
+    ],
     body: '<path d="M10 4h44l-5 20c-1 6-1 13 2 21 2 7-6 15-19 15S11 52 13 45c3-8 3-15 2-21z"/><g fill="var(--plan-icon-cut, #fff)"><rect x="20" y="12" width="10" height="8" rx="3"/><rect x="34" y="12" width="10" height="8" rx="3"/><rect x="20" y="24" width="10" height="8" rx="3"/><rect x="34" y="24" width="10" height="8" rx="3"/><rect x="21" y="36" width="9" height="8" rx="3"/><rect x="34" y="36" width="9" height="8" rx="3"/></g><path d="M32 10v40" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="2" stroke-linecap="round"/>'
   },
   {
     key: "run",
     label: "Laufen / Cardio",
-    keywords: ["cardio", "laufen", "lauf", "rennen", "run", "running", "jogging", "joggen", "sprint", "sprints", "gehen", "walk", "walking", "marathon", "intervall", "hiit", "ausdauer", "laufband"],
+    keywords: [
+      "cardio",
+      "laufen",
+      "lauf",
+      "rennen",
+      "run",
+      "running",
+      "jogging",
+      "joggen",
+      "sprint",
+      "sprints",
+      "gehen",
+      "walk",
+      "walking",
+      "marathon",
+      "intervall",
+      "hiit",
+      "ausdauer",
+      "laufband"
+    ],
     body: HEAD(40, 8, 5.5) + '<path d="M33 15l9 3c2 1 3 2 3 4l-1 9 7 4c2 1 2 3 1 5-1 1-3 2-4 1l-9-5-2 7 8 8c1 1 1 2 1 3l-3 10c-1 2-3 3-5 2-2 0-3-2-2-4l2-7-9-7-5 9c-1 2-3 2-4 2l-11-2c-2 0-3-2-3-4 1-2 2-3 4-3l8 2 7-15 2-9-4 2-4 7c-1 2-3 2-4 1-2-1-2-3-1-4l5-9c1-1 2-2 3-2z"/>'
   },
   {
     key: "bike",
     label: "Radfahren",
-    keywords: ["rad", "radfahren", "bike", "biking", "cycling", "spinning", "fahrrad", "ergometer", "radeln", "rennrad", "mtb"],
+    keywords: [
+      "rad",
+      "radfahren",
+      "bike",
+      "biking",
+      "cycling",
+      "spinning",
+      "fahrrad",
+      "ergometer",
+      "radeln",
+      "rennrad",
+      "mtb"
+    ],
     body: '<circle cx="14" cy="46" r="10" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="46" r="10" fill="none" stroke="currentColor" stroke-width="4"/><path d="M14 46l9-17h17l10 17M23 29l9 17 8-17M20 24h8" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' + HEAD(42, 10, 5) + '<path d="M30 19l9-3c2 0 3 1 4 2l4 9c1 2 0 3-2 4l-3 1-3-6-6 3z"/>'
   },
   {
@@ -20981,37 +21107,106 @@ var PLAN_ICONS = [
   {
     key: "functional",
     label: "HYROX / Functional",
-    keywords: ["hyrox", "functional", "crossfit", "kettlebell", "kettlebells", "circuit", "zirkel", "athletik", "wod", "metcon"],
+    keywords: [
+      "hyrox",
+      "functional",
+      "crossfit",
+      "kettlebell",
+      "kettlebells",
+      "circuit",
+      "zirkel",
+      "athletik",
+      "wod",
+      "metcon"
+    ],
     body: '<path fill-rule="evenodd" d="M22 8h20c4 0 7 3 7 7v3c0 2-1 4-2 5 6 4 9 10 9 17 0 11-9 18-24 18S8 51 8 40c0-7 3-13 9-17-1-1-2-3-2-5v-3c0-4 3-7 7-7zm2 6c-2 0-3 1-3 3v1c0 1 1 2 2 2 3-1 6-1 9-1s6 0 9 1c1 0 2-1 2-2v-1c0-2-1-3-3-3z"/>'
   },
   {
     key: "mobility",
     label: "Mobility / Yoga",
-    keywords: ["mobility", "mobilitat", "yoga", "dehnen", "stretching", "stretch", "pilates", "beweglichkeit", "faszien", "flexibility"],
+    keywords: [
+      "mobility",
+      "mobilitat",
+      "yoga",
+      "dehnen",
+      "stretching",
+      "stretch",
+      "pilates",
+      "beweglichkeit",
+      "faszien",
+      "flexibility"
+    ],
     body: HEAD(32, 8, 5.5) + '<path d="M30 15h4l2 10 10-14c1-2 3-2 4-1s1 3 0 4L37 32v10l3 12 9-3c2 0 3 1 3 3s-1 3-3 3l-12 4c-2 0-3-1-4-2l-2-11h-2l-2 11c-1 1-2 2-4 2l-12-4c-2 0-3-2-3-3 0-2 1-3 3-3l9 3 3-12V32L13 14c-1-1-1-3 0-4s3-1 4 1l11 14z"/>'
   },
   {
     key: "recovery",
     label: "Erholung",
-    keywords: ["erholung", "regeneration", "recovery", "deload", "entlastung", "pause", "rest", "sauna", "regenerativ"],
+    keywords: [
+      "erholung",
+      "regeneration",
+      "recovery",
+      "deload",
+      "entlastung",
+      "pause",
+      "rest",
+      "sauna",
+      "regenerativ"
+    ],
     body: '<path d="M40 6C28 8 19 18 19 31c0 14 11 25 25 25 6 0 11-2 15-5-3 1-6 1-9 1-15 0-26-12-26-26 0-8 4-15 10-20z"/><path d="M44 14h10l-10 12h10M34 30h7l-7 8h7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'
   },
   {
     key: "combat",
     label: "Kampfsport / Boxen",
-    keywords: ["boxen", "boxing", "kickboxen", "kampfsport", "mma", "muay", "karate", "judo", "sparring", "kampf"],
+    keywords: [
+      "boxen",
+      "boxing",
+      "kickboxen",
+      "kampfsport",
+      "mma",
+      "muay",
+      "karate",
+      "judo",
+      "sparring",
+      "kampf"
+    ],
     body: '<path d="M20 10h20c9 0 16 7 16 16v6c0 6-4 11-10 12v6H22v-7c-6-2-10-8-10-14V18c0-4 4-8 8-8z"/><path d="M20 54h28v4H20z"/><path d="M14 30c4-4 10-4 14 0" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="2" stroke-linecap="round"/>'
   },
   {
     key: "outdoor",
     label: "Klettern / Wandern",
-    keywords: ["klettern", "bouldern", "climbing", "boulder", "wandern", "hiking", "berg", "berge", "trail", "outdoor", "ski", "skitour"],
+    keywords: [
+      "klettern",
+      "bouldern",
+      "climbing",
+      "boulder",
+      "wandern",
+      "hiking",
+      "berg",
+      "berge",
+      "trail",
+      "outdoor",
+      "ski",
+      "skitour"
+    ],
     body: '<path d="M2 56l20-32 9 12 9-18 22 38z"/><path d="M36 26l4-8 5 9-5 3z" fill="var(--plan-icon-cut, #fff)"/>'
   },
   {
     key: "ball",
     label: "Ballsport",
-    keywords: ["fussball", "soccer", "basketball", "tennis", "padel", "volleyball", "handball", "squash", "badminton", "ball", "golf", "hockey"],
+    keywords: [
+      "fussball",
+      "soccer",
+      "basketball",
+      "tennis",
+      "padel",
+      "volleyball",
+      "handball",
+      "squash",
+      "badminton",
+      "ball",
+      "golf",
+      "hockey"
+    ],
     body: '<circle cx="32" cy="32" r="26"/><path d="M32 6c-8 8-8 44 0 52M32 6c8 8 8 44 0 52M7 25c16 6 34 6 50 0M7 39c16-6 34-6 50 0" fill="none" stroke="var(--plan-icon-cut, #fff)" stroke-width="2.2"/>'
   },
   {
@@ -21041,7 +21236,8 @@ function detectPlanIcon(name, description = "") {
       for (const icon of PLAN_ICONS) {
         if (icon.key === DEFAULT_PLAN_ICON) continue;
         for (const k of icon.keywords) {
-          if (matchesAt(words, i, k) && (!best || k.length > best.len)) best = { key: icon.key, len: k.length };
+          if (matchesAt(words, i, k) && (!best || k.length > best.len))
+            best = { key: icon.key, len: k.length };
         }
       }
       if (best) return best.key;
@@ -21060,6 +21256,195 @@ function planIconLabel(key) {
 function planIconSvg(key, size = 28) {
   const icon = BY_KEY.get(key) ?? BY_KEY.get(DEFAULT_PLAN_ICON);
   return `<svg viewBox="0 0 64 64" width="${size}" height="${size}" fill="currentColor" aria-hidden="true" focusable="false">${icon.body}</svg>`;
+}
+
+// src/domain/workoutList.ts
+var workoutList_exports = {};
+__export(workoutList_exports, {
+  DEFAULT_WORKOUT_SORT: () => DEFAULT_WORKOUT_SORT,
+  VISIBLE_WORKOUTS: () => VISIBLE_WORKOUTS,
+  WORKOUT_SORT_LABELS: () => WORKOUT_SORT_LABELS,
+  nextWorkoutSort: () => nextWorkoutSort,
+  sortTrainingRows: () => sortTrainingRows
+});
+var WORKOUT_SORT_LABELS = {
+  date: "Datum",
+  title: "Einheit",
+  gym: "Gym",
+  exercises: "\xDCbungen",
+  sets: "Arbeitss\xE4tze",
+  volume: "Volumen",
+  duration: "Dauer"
+};
+var DEFAULT_WORKOUT_SORT = {
+  key: "date",
+  direction: "desc"
+};
+var VISIBLE_WORKOUTS = 20;
+function value(w, key) {
+  switch (key) {
+    case "date":
+      return `${w.date} ${w.startTime ?? ""}`;
+    case "title":
+      return w.title;
+    case "gym":
+      return w.gymName ?? null;
+    case "exercises":
+      return w.exerciseCount;
+    case "sets":
+      return w.setCount;
+    case "volume":
+      return w.volumeKg > 0 ? w.volumeKg : null;
+    case "duration":
+      return w.durationMin;
+  }
+}
+function sortTrainingRows(rows, key, direction) {
+  const indexed = rows.map((row, index) => ({ row, index }));
+  if (key === "date") {
+    return indexed.sort((a, b) => {
+      const va = a.row.kind === "workout" ? value(a.row.workout, "date") : `${a.row.date} `;
+      const vb = b.row.kind === "workout" ? value(b.row.workout, "date") : `${b.row.date} `;
+      return compareValues(va, vb, direction) || a.index - b.index;
+    }).map((x) => x.row);
+  }
+  const workouts = indexed.filter((x) => x.row.kind === "workout");
+  const days3 = indexed.filter((x) => x.row.kind === "day");
+  workouts.sort((a, b) => {
+    if (a.row.kind !== "workout" || b.row.kind !== "workout") return 0;
+    return compareValues(value(a.row.workout, key), value(b.row.workout, key), direction) || compareValues(value(a.row.workout, "date"), value(b.row.workout, "date"), "desc") || a.index - b.index;
+  });
+  days3.sort((a, b) => b.row.date.localeCompare(a.row.date) || a.index - b.index);
+  return [...workouts, ...days3].map((x) => x.row);
+}
+function nextWorkoutSort(current, key) {
+  if (current.key === key) {
+    return { key, direction: current.direction === "asc" ? "desc" : "asc" };
+  }
+  return { key, direction: key === "title" || key === "gym" ? "asc" : "desc" };
+}
+
+// src/domain/yearReview.ts
+var yearReview_exports = {};
+__export(yearReview_exports, {
+  MONTH_LABELS: () => MONTH_LABELS,
+  changeTone: () => changeTone,
+  dayOfYear: () => dayOfYear,
+  daysInYear: () => daysInYear,
+  formatHoursMinutes: () => formatHoursMinutes,
+  percentChange: () => percentChange,
+  reviewYears: () => reviewYears,
+  sameDayPreviousYear: () => sameDayPreviousYear,
+  yearReview: () => yearReview
+});
+var MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "M\xE4r",
+  "Apr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Dez"
+];
+var isLeap = (y) => y % 4 === 0 && y % 100 !== 0 || y % 400 === 0;
+function daysInYear(year) {
+  return isLeap(year) ? 366 : 365;
+}
+function dayOfYear(iso2) {
+  const [y, m, d] = iso2.split("-").map(Number);
+  const start = Date.UTC(y ?? 1970, 0, 1);
+  const day = Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1);
+  return Math.round((day - start) / 864e5) + 1;
+}
+function sameDayPreviousYear(iso2) {
+  const [y, m, d] = iso2.split("-").map(Number);
+  const year = (y ?? 1970) - 1;
+  const month = m ?? 1;
+  const day = month === 2 && (d ?? 1) === 29 && !isLeap(year) ? 28 : d ?? 1;
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+function totals2(workouts, statuses, from, to) {
+  const done = workouts.filter((w) => w.status === "done" && w.date >= from && w.date <= to);
+  const trainingDates = new Set(done.map((w) => w.date));
+  const statusIn = statuses.filter(
+    (s) => s.date >= from && s.date <= to && !trainingDates.has(s.date)
+  );
+  return {
+    volumeKg: done.reduce((sum, w) => sum + (w.volumeKg > 0 ? w.volumeKg : 0), 0),
+    minutes: done.reduce((sum, w) => sum + (w.durationMin ?? 0), 0),
+    sessions: done.length,
+    restDays: new Set(statusIn.filter((s) => s.kind === "rest").map((s) => s.date)).size,
+    sickDays: new Set(statusIn.filter((s) => s.kind === "sick").map((s) => s.date)).size,
+    trainingDays: trainingDates.size,
+    withoutDuration: done.filter((w) => w.durationMin === null).length
+  };
+}
+function percentChange(current, previous) {
+  if (previous === null || previous === void 0 || previous <= 0) return null;
+  return Math.round((current - previous) / previous * 100);
+}
+function yearReview(workouts, statuses, year, today) {
+  const from = `${year}-01-01`;
+  const yearEnd = `${year}-12-31`;
+  const current = today.slice(0, 4) === String(year);
+  const to = current ? today : yearEnd;
+  const now = totals2(workouts, statuses, from, to);
+  const monthly = Array.from({ length: 12 }, () => 0);
+  for (const w of workouts) {
+    if (w.status !== "done" || w.date < from || w.date > to || w.volumeKg <= 0) continue;
+    const m = Number(w.date.slice(5, 7)) - 1;
+    if (m >= 0 && m < 12) monthly[m] = (monthly[m] ?? 0) + w.volumeKg;
+  }
+  const total = daysInYear(year);
+  const elapsed = today < from ? 0 : current ? dayOfYear(today) : total;
+  const upcoming = total - elapsed;
+  const untracked = Math.max(0, elapsed - now.trainingDays - now.restDays - now.sickDays);
+  const prevFrom = `${year - 1}-01-01`;
+  const compareUntil = current ? sameDayPreviousYear(today) : null;
+  const prevTo = compareUntil ?? `${year - 1}-12-31`;
+  const prevTotals = totals2(workouts, statuses, prevFrom, prevTo);
+  const hasPrevious = prevTotals.sessions + prevTotals.restDays + prevTotals.sickDays > 0 ? prevTotals : null;
+  return {
+    year,
+    ...now,
+    monthlyVolumeKg: monthly,
+    daysInYear: total,
+    untrackedDays: untracked,
+    upcomingDays: upcoming,
+    compareUntil,
+    previous: hasPrevious,
+    change: {
+      volumeKg: percentChange(now.volumeKg, hasPrevious?.volumeKg),
+      minutes: percentChange(now.minutes, hasPrevious?.minutes),
+      sessions: percentChange(now.sessions, hasPrevious?.sessions),
+      restDays: percentChange(now.restDays, hasPrevious?.restDays),
+      sickDays: percentChange(now.sickDays, hasPrevious?.sickDays)
+    }
+  };
+}
+function reviewYears(workouts, statuses, today) {
+  const years = /* @__PURE__ */ new Set([Number(today.slice(0, 4))]);
+  for (const x of [...workouts, ...statuses]) {
+    const y = Number(x.date.slice(0, 4));
+    if (Number.isFinite(y) && y > 1990 && y <= Number(today.slice(0, 4))) years.add(y);
+  }
+  return [...years].sort((a, b) => b - a);
+}
+function changeTone(key, percent) {
+  if (percent === null || percent === 0 || key === "restDays") return "neutral";
+  const better2 = key === "sickDays" ? percent < 0 : percent > 0;
+  return better2 ? "up" : "down";
+}
+function formatHoursMinutes(minutes) {
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes - h * 60);
+  if (h === 0) return `${m} min`;
+  return `${h} h ${String(m).padStart(2, "0")} min`;
 }
 export {
   AKH_REFERENCES,
@@ -21299,5 +21684,7 @@ export {
   withDayMacros,
   withDefaultRanges,
   withProteinFromWeight,
-  workoutDraft_exports as workoutDraft
+  workoutDraft_exports as workoutDraft,
+  workoutList_exports as workoutList,
+  yearReview_exports as yearReview
 };

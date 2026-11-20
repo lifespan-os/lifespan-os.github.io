@@ -1946,6 +1946,19 @@ function foodTables(all) {
 
 /** Tabellen für „Körperwerte … senden“: Körperwerte, Schlaf, To-dos, Health, Superhuman, Checklisten, Koffein, Training am Handy, Ziele. */
 function bodyPartTables(all) {
+  // Verweise mitnehmen (1.68.1): sonst lehnt der PC z. B. eine geänderte Übung ab, deren Maschine nicht in der Datei steht
+  return TR.withReferences(bodyPartTablesRaw(all), referencedRow);
+}
+
+/** Zeile vom Stand des Handys (PC-Daten plus Änderungen am Handy) für `TR.withReferences`. */
+function referencedRow(table, id) {
+  if (table === "machine") return S.catalog?.machines?.find((m) => m.id === id) ?? null;
+  if (table === "gym") return GD.gymRowsFor(S.catalog, S.gyms, [id])[0] ?? null;
+  if (table === "exercise") return TR.rowsOf(S.catalog, S.train, "exercise").find((r) => r.id === id) ?? (S.localExercises ?? []).find((r) => r.id === id) ?? null;
+  return TR.rowsOf(S.catalog, S.train, table).find((r) => r.id === id) ?? null;
+}
+
+function bodyPartTablesRaw(all) {
   return mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), mergeTables(CF.caffeineTables(S.caffeine, { all }), GLD.glucoseTables(S.glucose, { all }))), mergeTables(TR.trainTables(S.train, { all }), mergeTables(GL.goalTables(S.goals, { all }), mergeTables(PS.syncTables(S.pcsettings, { all }), GD.gymTables(S.gyms, { all })))))))));
 }
 

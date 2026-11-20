@@ -1045,6 +1045,15 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
   orange, wenn mehr gegessen als der Tagesbedarf.
 - Die Figur „Pro“ oben rechts ist ein Knopf: Antippen zeigt bzw. verbirgt die Einleitung zur Seite (`PAGE_INTROS`).
 
+## Version 1.68.1 (20.11.2026): Datei „Körperwerte“ nimmt Verweise mit
+
+- Fehler am PC behoben: „Übungen, Eintrag 1: verweist auf einen Eintrag, der in der Datei fehlt“. Die Datei
+  „Körperwerte“ enthält Änderungen an Übungen, Plänen, Gyms usw.; der PC prüft beim Import, dass jeder Verweis in der
+  Datei steht. `trainingdata.js` `withReferences` (Liste `TRAIN_REFERENCES` nach den Fremdschlüsseln des PC-Schemas)
+  ergänzt beim Senden die verwiesenen Zeilen (Maschine, Sportart, Gym, Plan, Plantag, Übung … auch über mehrere Stufen)
+  aus dem Stand des Handys – wie die Trainingsdatei ihre Maschinen mitnimmt.
+- Eine schon erzeugte fehlerhafte Datei: am Handy unter „An den PC senden“ → „Alle … erneut senden“ neu erzeugen.
+
 ## Version 1.68.0 (20.11.2026): ein Gesamtpaket mit allen Maschinenbildern
 
 - Statt Herstellerpaketen ein Paket „Maschinenbilder“ (`key` `maschinenbilder`) mit allen Bildern jeder Maschine wie am

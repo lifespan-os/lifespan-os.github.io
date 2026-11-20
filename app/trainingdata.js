@@ -677,6 +677,51 @@ export function trainTables(local, { all = false } = {}) {
   return out;
 }
 
+/**
+ * Verweise der Trainingstabellen (Fremdschlüssel im PC-Schema). Der PC prüft beim Import, dass jeder Verweis in der
+ * Datei selbst steht – wie die Trainingsdatei ihre Maschinen mitnimmt, nimmt die Datei „Körperwerte“ seit 1.68.1 die
+ * verwiesenen Zeilen (Maschine, Sportart, Gym, Plan, Tag, Übung …) mit.
+ */
+export const TRAIN_REFERENCES = [
+  ["exercise", "machine_id", "machine"],
+  ["exercise", "sport_id", "sport"],
+  ["training_plan", "gym_id", "gym"],
+  ["training_plan_day", "plan_id", "training_plan"],
+  ["training_plan_exercise", "plan_day_id", "training_plan_day"],
+  ["training_plan_exercise", "exercise_id", "exercise"],
+  ["training_plan_set", "plan_exercise_id", "training_plan_exercise"],
+  ["training_plan_slot", "plan_day_id", "training_plan_day"],
+  ["gym_machine", "gym_id", "gym"],
+  ["gym_machine", "machine_id", "machine"],
+];
+
+/**
+ * Ergänzt `tables` um die Zeilen, auf die sie verweisen (auch über mehrere Stufen). `lookup(table, id)` liefert die
+ * Zeile vom PC- bzw. Handy-Stand oder null. Gibt ein neues Objekt zurück; vorhandene Zeilen bleiben unverändert.
+ */
+export function withReferences(tables, lookup) {
+  const out = {};
+  for (const [t, rows] of Object.entries(tables ?? {})) out[t] = [...rows];
+  const ids = (t) => new Set((out[t] ?? []).map((r) => r.id));
+  let added = true;
+  while (added) {
+    added = false;
+    for (const [from, col, to] of TRAIN_REFERENCES) {
+      const have = ids(to);
+      for (const r of out[from] ?? []) {
+        const id = r?.[col];
+        if (id === null || id === undefined || id === "" || have.has(id)) continue;
+        const row = lookup(to, id);
+        if (!row) continue;
+        (out[to] ??= []).push(row);
+        have.add(id);
+        added = true;
+      }
+    }
+  }
+  return out;
+}
+
 export function markTrainSent(local) {
   if (!local) return;
   for (const t of Object.values(local.rows ?? {})) for (const e of Object.values(t)) e.sent = true;

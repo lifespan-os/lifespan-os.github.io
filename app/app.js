@@ -43,6 +43,7 @@ import * as DP from "./devprefs.js";
 import { enhanceInfo, initInfoNotes, introPanel, proButton } from "./infonotes.js";
 import { initTraining, trainingActions, trainingChange, trainingInput, viewTrainingSection, persistTrain, setNotice as trainSetNotice, failed as trainFailed } from "./training.js";
 import { initTrainingStats, workoutBodyMapHtml } from "./trainingstats.js";
+import "./mapzoom.js";
 import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
 import * as TR from "./trainingdata.js";
 import * as PD from "./pending.js";
@@ -1012,6 +1013,7 @@ function viewDetail() {
             .join("<br>")}</p></section>`;
       })
       .join("")}
+    ${workoutBodyMapHtml(w, C.allExercises(S.catalog, S.localExercises), { finished: true })}
     <button class="btn block" data-act="edit-workout" data-arg="${w.id}">Training bearbeiten</button>
     ${!own || w.exported || w.fromPc ? "" : `<button class="btn danger block" data-act="delete-workout" data-arg="${w.id}">Training löschen</button>`}
   </main>`;

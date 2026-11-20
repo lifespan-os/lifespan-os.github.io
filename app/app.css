@@ -1788,3 +1788,22 @@ body:has(.rest) .toast { bottom: calc(env(safe-area-inset-bottom) + 160px); }
 .btn.sm.quick-meal__repeat { white-space: normal; }
 .prof-photo > div { min-width: 0; }
 .prof-photo .btn.sm { height: auto; white-space: normal; text-align: left; }
+
+/* 1.73.0 Muskel-Körperkarte vergrößern (mapzoom.js) */
+.muscle-map__views { position: relative; }
+.muscle-map__zoom { position: absolute; top: 0; right: 0; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--fg); }
+body.mapzoom-open { overflow: hidden; }
+.mapzoom { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; gap: 8px; padding: calc(env(safe-area-inset-top) + 10px) max(12px, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 12px) max(12px, env(safe-area-inset-left)); background: var(--bg); }
+.mapzoom__bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.mapzoom__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .95rem; }
+.mapzoom__btns { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.mapzoom__btn { width: 42px; height: 42px; padding: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--fg); font-size: 1.25rem; font-weight: 700; line-height: 1; }
+.mapzoom__close { margin-left: 4px; }
+.mapzoom__level { min-width: 3.4em; text-align: center; font-size: .84rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mapzoom__scroll { flex: 1 1 auto; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-x pan-y; border-radius: 14px; background: var(--surface); }
+.mapzoom__inner { display: flex; gap: 6px; width: 100%; }
+.mapzoom__inner .muscle-map__svg { flex: 1 1 0; min-width: 0; max-width: none; }
+.mapzoom__inner .muscle-map__zoom { display: none; }
+.mapzoom__inner path.is-picked { stroke: var(--blue); stroke-width: 3; }
+.mapzoom__info { margin: 0; min-height: 1.4em; text-align: center; font-size: .9rem; color: var(--fg); }
+.mapzoom .muscle-map__legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 12px; margin: 0; padding: 0; list-style: none; font-size: .76rem; color: var(--muted); }

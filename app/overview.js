@@ -456,12 +456,13 @@ export function heatmapHtml({ levels, describe, sex, active = null, act, legend 
             const level = levels[r.muscle] ?? 0;
             const on = active === r.muscle;
             const fill = level > 0 ? HEAT[level - 1] : COLOR.training;
-            return `<path d="${r.d}" fill="${fill}" fill-opacity="${level > 0 ? (on ? 1 : 0.85) : on ? 0.2 : 0}" stroke="${on ? COLOR.training : "none"}" stroke-width="3" data-act="${act}" data-arg="${esc(r.muscle)}"><title>${esc(describe(r.muscle))}</title></path>`;
+            return `<path d="${r.d}" fill="${fill}" fill-opacity="${level > 0 ? (on ? 1 : 0.85) : 0}" stroke="${on ? COLOR.training : "none"}" stroke-width="3" data-act="${act}" data-arg="${esc(r.muscle)}"><title>${esc(describe(r.muscle))}</title></path>`;
           })
           .join("")}</g></svg>`;
     })
     .join("");
-  return `<div class="muscle-map"><div class="muscle-map__views">${views}</div>
+  // 1.73.0: angetippter Muskel ohne Belastung nur als Umriss (blaue Füllung sah wie ein Wert aus); Lupe öffnet `mapzoom.js`
+  return `<div class="muscle-map"><div class="muscle-map__views">${views}<button type="button" class="muscle-map__zoom" data-map-zoom aria-label="Karte vergrößern" title="Vergrößern"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/><path d="M11 8v6M8 11h6"/></svg></button></div>
       <p class="muscle-map__hover" aria-live="polite">${esc(active ? describe(active) : "Muskel antippen")}</p>
       <ul class="muscle-map__legend" aria-label="Legende">${legend.map((l, i) => `<li><span class="muscle-map__swatch" style="background:${HEAT[i]}"></span>${esc(l)}</li>`).join("")}</ul></div>`;
 }

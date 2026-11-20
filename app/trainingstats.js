@@ -91,8 +91,14 @@ function change(percent) {
  * „Übung oder Maschine hinzufügen“. Laufendes Training = abgehakte Sätze, Bearbeiten/Nachtragen =
  * alle Sätze mit Werten (`muscleMapForOpenWorkout`). Farbe = Anteil am meistbelasteten Muskel.
  */
-export function workoutBodyMapHtml(w, exerciseRows) {
+export function workoutBodyMapHtml(w, exerciseRows, { finished = false } = {}) {
   const S = X.S;
+  // angetippter Muskel gilt nur für diese Einheit (1.73.0)
+  const mapKey = w.id ?? w.startedAt ?? "";
+  if (S.woMuscleFor !== mapKey) {
+    S.woMuscleFor = mapKey;
+    S.woMuscle = null;
+  }
   const exercises = exerciseRows.map((e) => ({ id: e.id, name: e.name, category: e.category ?? "strength", muscleGroup: e.muscle_group ?? null, machineId: e.machine_id ?? null }));
   const sets = w.exercises.flatMap((we) =>
     we.sets.map((s) => ({
@@ -106,7 +112,8 @@ export function workoutBodyMapHtml(w, exerciseRows) {
       gripPosition: we.settings?.gripPosition || null,
     })),
   );
-  const running = !w.backfill && !w.editOf;
+  // abgeschlossene Einheit (1.73.0, Detailansicht) wie Bearbeiten: alle Sätze mit Werten
+  const running = !finished && !w.backfill && !w.editOf;
   const map = D.muscleMapAll.muscleMapForOpenWorkout(sets, running, exercises, machinesOf(S.catalog), focusIndex(S.catalog));
   const levels = D.muscleLevels(map.sets, "relative");
   const describe = (m) => {

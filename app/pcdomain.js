@@ -11547,7 +11547,7 @@ var RHESUS_OPTIONS = ["positiv", "negativ"];
 var KELL_NAME = "Kell-System";
 var KELL_OPTIONS = ["K (Kell-positiv)", "k (Kell-negativ)"];
 var KELL_HINT = "Der dritth\xE4ufigste Marker, der schwere Immunreaktionen ausl\xF6sen kann.";
-var KELL_QUESTION = "G02-041";
+var KELL_QUESTION = "P06-066";
 var BLOOD_GROUP_FIXED = [AB0_NAME, RHESUS_NAME, KELL_NAME];
 function emptyLifetimeDraft(category, name = "") {
   return { id: null, category, name, value: "", date: "", source: "", notes: "" };
@@ -15821,6 +15821,7 @@ function buildLibrary(sets2) {
   });
   return { collections, fragen: collections.flatMap((c) => c.data.fragen) };
 }
+var BLOOD_GROUPS_THEME = "Blutgruppen";
 function bookOf(q) {
   return q.buch ?? "masterclass";
 }
@@ -15909,12 +15910,12 @@ var COACH_MODULES = [
     id: "blutgruppen",
     title: "Blutgruppen",
     description: "ABO, Rhesus und Kell \u2013 Transfusion, Schwangerschaft und Mythen.",
-    ask: { kind: "book", book: "blutgruppen", thema: null }
+    ask: { kind: "book", book: "blutwerte", thema: BLOOD_GROUPS_THEME }
   },
   {
     id: "blutwerte",
     title: "Blutwerte",
-    description: "Laborwerte verstehen, Referenzbereiche und Befunde richtig lesen.",
+    description: "Laborwerte und Hormone verstehen, Zusammenh\xE4nge erkennen, Befunde richtig lesen.",
     ask: { kind: "book", book: "blutwerte", thema: null }
   },
   {
@@ -16038,28 +16039,17 @@ var BOOKS = {
   },
   blutwerte: {
     id: "blutwerte",
-    title: "Die Masterclass Blutwerte",
+    title: "Die Masterclass Blutwerte+",
     brand: "iCoach.Me",
-    subtitle: "Blutwerte verstehen \u2013 was dein Labor verr\xE4t und warum Referenzwerte variieren",
-    description: "5 Teile: die gro\xDFen Gruppen von Laborwerten, wie Referenzbereiche entstehen, warum sie weltweit variieren, wie du Befunde richtig liest und die Praxis von der Blutabnahme bis zum Basis-Check.",
-    pages: 56,
-    parts: 5,
+    subtitle: "Das gro\xDFe Buch der Blutwerte, Hormone und Blutgruppen",
+    description: "8 Teile: Grundlagen und Vorbereitung, jeder wichtige Laborwert einzeln erkl\xE4rt, alle Hormonachsen und ihre Zusammenh\xE4nge, Muster und Fallbeispiele, Sportler, Hormontherapie und Longevity, die Blutgruppen ABO, Rhesus und Kell, die Praxis vom Befund bis zum Basis-Check und ein Lexikon von A bis Z.",
+    pages: 128,
+    parts: 8,
     edition: "Stand November 2026",
-    collection: "Masterclass Blutwerte"
-  },
-  blutgruppen: {
-    id: "blutgruppen",
-    title: "Die Masterclass Blutgruppen",
-    brand: "iCoach.Me",
-    subtitle: "Blutgruppen \u2013 ABO, Rhesus und Kell einfach erkl\xE4rt",
-    description: "3 Teile: was eine Blutgruppe ist, die drei wichtigsten Systeme ABO, Rhesus und Kell, warum eine falsche Blutkonserve lebensgef\xE4hrlich sein kann, die Blutgruppe in der Schwangerschaft und Mythen wie die Blutgruppendi\xE4t.",
-    pages: 18,
-    parts: 3,
-    edition: "Stand November 2026",
-    collection: "Masterclass Blutgruppen"
+    collection: "Masterclass Blutwerte+"
   }
 };
-var BOOK_ORDER = ["masterclass", "blutwerte", "blutgruppen"];
+var BOOK_ORDER = ["masterclass", "blutwerte"];
 var BOOK = BOOKS.masterclass;
 function firstPage(pages, book = "masterclass") {
   const max = BOOKS[book].pages;
@@ -24993,7 +24983,10 @@ var PROTOCOLS = [
       { title: "Sinn & Kontakte", text: "Beruf(ung), starke und schwache Bindungen." }
     ],
     day: [
-      { time: "Aufstehen", text: "5 Minuten den Atem beobachten \u2013 der kleinste m\xF6gliche Schritt z\xE4hlt." },
+      {
+        time: "Aufstehen",
+        text: "5 Minuten den Atem beobachten \u2013 der kleinste m\xF6gliche Schritt z\xE4hlt."
+      },
       { time: "Arbeitsweg", text: "Zu Fu\xDF, mit dem Rad oder eine Station fr\xFCher aussteigen." },
       {
         time: "Bei der Arbeit",
@@ -25020,14 +25013,26 @@ var PROTOCOLS = [
         label: "Sitzen ersetzen",
         text: "T\xE4glich 30 min Sitzen gegen moderate Bewegung tauschen."
       },
-      { value: "6\u20138 h", label: "Essfenster", text: "Z. B. 10\u201318 Uhr \u2013 weniger Kalorien ohne Z\xE4hlen." },
-      { value: "5:2", label: "Alternative", text: "2 Tage mit 500\u2013750 kcal; mit einem leichten Tag starten." },
+      {
+        value: "6\u20138 h",
+        label: "Essfenster",
+        text: "Z. B. 10\u201318 Uhr \u2013 weniger Kalorien ohne Z\xE4hlen."
+      },
+      {
+        value: "5:2",
+        label: "Alternative",
+        text: "2 Tage mit 500\u2013750 kcal; mit einem leichten Tag starten."
+      },
       {
         value: "10\u201320 g",
         label: "Protein danach",
         text: "In der ersten Stunde nach harter Belastung (ACSM)."
       },
-      { value: "1\xD7 im Jahr", label: "Misogi", text: "Eine Herausforderung mit echtem Risiko zu scheitern." }
+      {
+        value: "1\xD7 im Jahr",
+        label: "Misogi",
+        text: "Eine Herausforderung mit echtem Risiko zu scheitern."
+      }
     ],
     sections: [
       {
@@ -25052,8 +25057,14 @@ var PROTOCOLS = [
         items: [
           { label: "Quelle?", text: "Werden Studien genannt und lassen sie sich finden (PubMed)?" },
           { label: "Meinung oder Studie?", text: "Korrelation und Ursache sauber getrennt?" },
-          { label: "Gr\xF6\xDFe", text: "Unter 30 Teilnehmende, nur Zellen oder Tiere: wenig aussagekr\xE4ftig." },
-          { label: "Kontrolle", text: "Gab es eine Kontrollgruppe, idealerweise zuf\xE4llig zugeteilt?" },
+          {
+            label: "Gr\xF6\xDFe",
+            text: "Unter 30 Teilnehmende, nur Zellen oder Tiere: wenig aussagekr\xE4ftig."
+          },
+          {
+            label: "Kontrolle",
+            text: "Gab es eine Kontrollgruppe, idealerweise zuf\xE4llig zugeteilt?"
+          },
           { label: "Geld", text: "Wer hat bezahlt \u2013 profitiert jemand vom Ergebnis?" },
           { label: "Aktualit\xE4t", text: "Gibt es neuere Arbeiten zum selben Thema?" }
         ]
@@ -25062,9 +25073,15 @@ var PROTOCOLS = [
         title: "Evidenzgrade im Buch",
         items: [
           { label: "E1/E2", text: "Bewegung, Sport, Fitness; Yoga." },
-          { label: "E2/E3", text: "Pflanzenbasierte, vegetarische, vegane Kost; Achtsamkeit, Tai Chi, Qigong." },
+          {
+            label: "E2/E3",
+            text: "Pflanzenbasierte, vegetarische, vegane Kost; Achtsamkeit, Tai Chi, Qigong."
+          },
           { label: "E3", text: "Omega-3 als Kapsel, Flavanole (Kakao)." },
-          { label: "E3/E4", text: "Schlaf als Anti-Aging-Hebel, Metformin, GLP-1, Resveratrol, NAD-Vorstufen (NMN)." },
+          {
+            label: "E3/E4",
+            text: "Schlaf als Anti-Aging-Hebel, Metformin, GLP-1, Resveratrol, NAD-Vorstufen (NMN)."
+          },
           {
             label: "E4",
             text: "Multivitamin (kein Nutzen in gro\xDFen Studien), Vitamin C/D ohne Mangel, Spermidin, Rapamycin, Senolytika, Plasmaaustausch."
@@ -25077,8 +25094,14 @@ var PROTOCOLS = [
           { label: "WOOP", text: "Wunsch, Ergebnis, Hindernis, Plan \u2013 mit Wenn-dann-S\xE4tzen." },
           { label: "MVP", text: "Mini-Mini-Schritt statt gro\xDFer Vorsatz: heute f\xFCnf Minuten." },
           { label: "Erfolgskette", text: "Jeden aktiven Tag im Kalender markieren." },
-          { label: "Commitment", text: "Ziel teilen oder einen Vertrag mit sich selbst schlie\xDFen." },
-          { label: "Fresh Start", text: "An einem klaren Startpunkt beginnen: Montag, Monatsanfang." }
+          {
+            label: "Commitment",
+            text: "Ziel teilen oder einen Vertrag mit sich selbst schlie\xDFen."
+          },
+          {
+            label: "Fresh Start",
+            text: "An einem klaren Startpunkt beginnen: Montag, Monatsanfang."
+          }
         ]
       }
     ],
@@ -25134,7 +25157,10 @@ var PROTOCOLS = [
           { id: "w5-inventur", text: "Kontakt-Inventur: 3 starke, 3 schwache Bindungen" },
           { id: "w5-begegnung", text: "Jede Woche eine echte Begegnung ansto\xDFen" },
           { id: "w6-gewohnheit", text: "Die wirksamste Ver\xE4nderung als Gewohnheit verankern" },
-          { id: "w6-naechster", text: "N\xE4chsten kleinen Schritt f\xFCr die kommenden Monate festlegen" }
+          {
+            id: "w6-naechster",
+            text: "N\xE4chsten kleinen Schritt f\xFCr die kommenden Monate festlegen"
+          }
         ]
       }
     ],
@@ -25161,9 +25187,15 @@ var PROTOCOLS = [
     pillars: [
       { title: "Bewegung", text: "Alltag aktiv, Kraft mit Steigerung, Ausdauer, HIIT, Balance." },
       { title: "Ern\xE4hrung & Fasten", text: "Pflanzenbetont, Vollkorn, 16 Stunden Essenspause." },
-      { title: "Schlaf & Gehirn", text: "Eigene Schlafdauer finden, Neues lernen, Blutdruck im Blick." },
+      {
+        title: "Schlaf & Gehirn",
+        text: "Eigene Schlafdauer finden, Neues lernen, Blutdruck im Blick."
+      },
       { title: "Hitze & K\xE4lte", text: "Wechseldusche, Sauna, Eisbad \u2013 dosiert steigern." },
-      { title: "Vorsorge & Soziales", text: "Check-ups nach Kalender, Kontakte als feste Termine." }
+      {
+        title: "Vorsorge & Soziales",
+        text: "Check-ups nach Kalender, Kontakte als feste Termine."
+      }
     ],
     day: [
       {
@@ -25175,30 +25207,54 @@ var PROTOCOLS = [
       { time: "12 Uhr", text: "Erste Mahlzeit: Gem\xFCse in jede Mahlzeit, Vollkorn, gute Fette." },
       { time: "Nachmittag", text: "Snack nur bei Hunger: Obst, N\xFCsse, Joghurt." },
       { time: "Abends", text: "Bewegung laut Plan oder 30\u201360 min z\xFCgig gehen." },
-      { time: "Vor 20 Uhr", text: "Abendessen mit wenig schnellen Kohlenhydraten \u2013 dann 16 h Pause." },
+      {
+        time: "Vor 20 Uhr",
+        text: "Abendessen mit wenig schnellen Kohlenhydraten \u2013 dann 16 h Pause."
+      },
       { time: "30\u201360 min vorher", text: "Handy weg, lesen oder entspannen." },
       { time: "Schlafen", text: "Schlafzimmer 17\u201318 \xB0C, dunkel und ruhig, eigene Schlafdauer." }
     ],
     rules: [
       { value: "150 min", label: "Bewegung", text: "Moderat pro Woche (SMART-Stufe)." },
-      { value: "3 \xD7 45\u201360 min", label: "Kraft", text: "Grund\xFCbungen, Gewicht alle 1\u20132 Wochen steigern." },
-      { value: "70\u201380 %", label: "Ausdauer", text: "Der maximalen Herzfrequenz, 2\xD7 pro Woche 60\u201390 min." },
+      {
+        value: "3 \xD7 45\u201360 min",
+        label: "Kraft",
+        text: "Grund\xFCbungen, Gewicht alle 1\u20132 Wochen steigern."
+      },
+      {
+        value: "70\u201380 %",
+        label: "Ausdauer",
+        text: "Der maximalen Herzfrequenz, 2\xD7 pro Woche 60\u201390 min."
+      },
       { value: "16 h", label: "Essenspause", text: "Z. B. 12\u201320 Uhr essen; sonst 14\u201315 h." },
       { value: "10.000", label: "Schritte", text: "T\xE4glich (ADVANCED-Stufe)." },
-      { value: "17\u201318 \xB0C", label: "Schlafzimmer", text: "K\xFChl schlafen, 30\u201360 min ohne Bildschirm." },
+      {
+        value: "17\u201318 \xB0C",
+        label: "Schlafzimmer",
+        text: "K\xFChl schlafen, 30\u201360 min ohne Bildschirm."
+      },
       { value: "2 l", label: "Wasser", text: "Als Faustregel am Tag." }
     ],
     sections: [
       {
         title: "Bewegung ADVANCED",
         items: [
-          { label: "Kraft", text: "3\xD7 pro Woche 45\u201360 min: Kniebeugen, Kreuzheben, Bankdr\xFCcken, Klimmz\xFCge." },
+          {
+            label: "Kraft",
+            text: "3\xD7 pro Woche 45\u201360 min: Kniebeugen, Kreuzheben, Bankdr\xFCcken, Klimmz\xFCge."
+          },
           { label: "Ausdauer", text: "2\xD7 pro Woche 60\u201390 min Laufen, Rad oder Schwimmen." },
           { label: "HIIT", text: "1\xD7 pro Woche 20\u201330 min, z. B. 10 \xD7 30 s Sprint / 30 s Pause." },
           { label: "Beweglichkeit", text: "T\xE4glich 15\u201320 min; vor dem Training dynamisch dehnen." },
-          { label: "Balance", text: "3\xD7 pro Woche 15 min, z. B. Einbeinstand mit geschlossenen Augen." },
+          {
+            label: "Balance",
+            text: "3\xD7 pro Woche 15 min, z. B. Einbeinstand mit geschlossenen Augen."
+          },
           { label: "Natur & Ruhe", text: "1\xD7 pro Woche 2 h drau\xDFen; 1\u20132 Ruhetage pro Woche." },
-          { label: "Testen", text: "Ausdauer, Kraft, K\xF6rperzusammensetzung alle 4\u20136 Wochen messen." }
+          {
+            label: "Testen",
+            text: "Ausdauer, Kraft, K\xF6rperzusammensetzung alle 4\u20136 Wochen messen."
+          }
         ]
       },
       {
@@ -25206,8 +25262,14 @@ var PROTOCOLS = [
         items: [
           { label: "Wechseldusche", text: "T\xE4glich zum Abschluss der Dusche, kalt beenden." },
           { label: "Hand-/Fu\xDFbad", text: "Unter 15 \xB0C, 1\u20132 min; Einsteiger k\xFCrzer." },
-          { label: "Warmes Bad", text: "38\u201340 \xB0C, 15\u201320 min, 2\u20133\xD7 pro Woche \u2013 f\xF6rdert den Schlaf." },
-          { label: "Sauna", text: "8\u201315 min, 2\u20133 G\xE4nge, dazwischen abk\xFChlen und ruhen, viel trinken." },
+          {
+            label: "Warmes Bad",
+            text: "38\u201340 \xB0C, 15\u201320 min, 2\u20133\xD7 pro Woche \u2013 f\xF6rdert den Schlaf."
+          },
+          {
+            label: "Sauna",
+            text: "8\u201315 min, 2\u20133 G\xE4nge, dazwischen abk\xFChlen und ruhen, viel trinken."
+          },
           { label: "Eisschwimmen", text: "1\u20132 min, Kopf \xFCber Wasser \u2013 nie allein." }
         ]
       },
@@ -25225,8 +25287,14 @@ var PROTOCOLS = [
       {
         title: "Schlaf und Gehirn",
         items: [
-          { label: "Schlafdauer", text: "\xDCber Wochen herausfinden: kurz (5\u20136 h), mittel (7\u20138 h) oder lang (> 8 h)." },
-          { label: "Abkl\xE4ren", text: "Schnarchen, \xDCbergewicht und Tagesm\xFCdigkeit: an Schlafapnoe denken." },
+          {
+            label: "Schlafdauer",
+            text: "\xDCber Wochen herausfinden: kurz (5\u20136 h), mittel (7\u20138 h) oder lang (> 8 h)."
+          },
+          {
+            label: "Abkl\xE4ren",
+            text: "Schnarchen, \xDCbergewicht und Tagesm\xFCdigkeit: an Schlafapnoe denken."
+          },
           { label: "Schlafmittel", text: "Regelm\xE4\xDFig eingenommen: \xE4rztlich pr\xFCfen lassen." },
           { label: "Gehirn", text: "Rauchfrei, Blutdruck behandeln, Helm tragen, Neues lernen." },
           { label: "Koordination", text: "Tennis, Tanzen, Golf erg\xE4nzen die Ausdauer." }
@@ -25332,45 +25400,97 @@ var PROTOCOLS = [
         text: "Nah-fern-Wechsel: Hand in 30\u201340 cm, Kalender an der Wand \u2013 20\u201330\xD7 abwechselnd fokussieren."
       },
       { time: "Mittag", text: "Drau\xDFen gehen \u2013 Tageslicht und Weitblick f\xFCr die Augen." },
-      { time: "Nachmittag", text: "Bei M\xFCdigkeit 2 min sanft um die Augen klopfen, Kopf kreisen mit Blinzeln." },
-      { time: "Abends", text: "Feuchtwarmes Tuch 3\u20135 min auf die geschlossenen Augen, danach Lider sanft massieren." },
+      {
+        time: "Nachmittag",
+        text: "Bei M\xFCdigkeit 2 min sanft um die Augen klopfen, Kopf kreisen mit Blinzeln."
+      },
+      {
+        time: "Abends",
+        text: "Feuchtwarmes Tuch 3\u20135 min auf die geschlossenen Augen, danach Lider sanft massieren."
+      },
       { time: "Schlafen", text: "Bildschirme fr\xFCh weg, ausreichend schlafen." }
     ],
     rules: [
-      { value: "10 s", label: "Augen zu, Augen auf", text: "Je Richtung, 2 Runden \u2013 morgens und nach langer Bildschirmzeit." },
-      { value: "20\u201330\xD7", label: "Nah-fern-Wechsel", text: "Fokus springen lassen, mit Brille falls n\xF6tig." },
+      {
+        value: "10 s",
+        label: "Augen zu, Augen auf",
+        text: "Je Richtung, 2 Runden \u2013 morgens und nach langer Bildschirmzeit."
+      },
+      {
+        value: "20\u201330\xD7",
+        label: "Nah-fern-Wechsel",
+        text: "Fokus springen lassen, mit Brille falls n\xF6tig."
+      },
       { value: "10\xD7", label: "Blinzeln", text: "Nach langem Fixieren zehnmal blinzeln, 5 Runden." },
-      { value: "3\u20135 min", label: "W\xE4rme", text: "Feuchtwarmes Tuch (Temperatur pr\xFCfen), dann Lider massieren." },
-      { value: "2 min", label: "Zickzack", text: "Einer Zickzacklinie mit den Augen folgen, auch quer." }
+      {
+        value: "3\u20135 min",
+        label: "W\xE4rme",
+        text: "Feuchtwarmes Tuch (Temperatur pr\xFCfen), dann Lider massieren."
+      },
+      {
+        value: "2 min",
+        label: "Zickzack",
+        text: "Einer Zickzacklinie mit den Augen folgen, auch quer."
+      }
     ],
     sections: [
       {
         title: "Augentraining",
         items: [
-          { label: "Schiel\xFCbung", text: "Daumen aus 30 cm langsam zur Nasenwurzel f\xFChren und fixieren." },
-          { label: "Augen folgen", text: "Daumen in Kreisen und Kurven bewegen, erst klein und langsam, dann gr\xF6\xDFer." },
-          { label: "Kreis, Dreieck, Quadrat", text: "Kinn festhalten, mit dem Finger gro\xDFe Formen in die Luft zeichnen und folgen." },
-          { label: "Alle Augenmuskeln", text: "Daumen 10 cm vor den Augen 15 cm nach rechts, links, oben, unten f\xFChren." },
-          { label: "Beide Augen", text: "Ein A auf dem Daumennagel abwechselnd mit einem und beiden Augen anpeilen." }
+          {
+            label: "Schiel\xFCbung",
+            text: "Daumen aus 30 cm langsam zur Nasenwurzel f\xFChren und fixieren."
+          },
+          {
+            label: "Augen folgen",
+            text: "Daumen in Kreisen und Kurven bewegen, erst klein und langsam, dann gr\xF6\xDFer."
+          },
+          {
+            label: "Kreis, Dreieck, Quadrat",
+            text: "Kinn festhalten, mit dem Finger gro\xDFe Formen in die Luft zeichnen und folgen."
+          },
+          {
+            label: "Alle Augenmuskeln",
+            text: "Daumen 10 cm vor den Augen 15 cm nach rechts, links, oben, unten f\xFChren."
+          },
+          {
+            label: "Beide Augen",
+            text: "Ein A auf dem Daumennagel abwechselnd mit einem und beiden Augen anpeilen."
+          }
         ]
       },
       {
         title: "Bei trockenen Augen",
         items: [
-          { label: "Tr\xE4nendr\xFCsen", text: "Einen Punkt fixieren, dann 10\xD7 blinzeln \u2013 5 Runden; bewusst g\xE4hnen." },
-          { label: "Meibom-Dr\xFCsen", text: "W\xE4rme und sanfte Massage des Lidrands l\xF6sen den Fettfilm." },
+          {
+            label: "Tr\xE4nendr\xFCsen",
+            text: "Einen Punkt fixieren, dann 10\xD7 blinzeln \u2013 5 Runden; bewusst g\xE4hnen."
+          },
+          {
+            label: "Meibom-Dr\xFCsen",
+            text: "W\xE4rme und sanfte Massage des Lidrands l\xF6sen den Fettfilm."
+          },
           { label: "Umgebung", text: "Luftbefeuchter bei Heizungs- und Klimaluft." },
           { label: "Make-up", text: "Lidrand frei halten, abends gr\xFCndlich entfernen." },
-          { label: "Lidmuskeln", text: "Kopf langsam nach hinten neigen und auf die Nase sehen, dann nach vorn und nach oben \u2013 10\xD7." }
+          {
+            label: "Lidmuskeln",
+            text: "Kopf langsam nach hinten neigen und auf die Nase sehen, dann nach vorn und nach oben \u2013 10\xD7."
+          }
         ]
       },
       {
         title: "Vorbeugen im Alter",
         items: [
-          { label: "Gr\xFCner Star", text: "Oft ohne Beschwerden \u2013 Augeninnendruck und Sehnerv ab 40 pr\xFCfen lassen." },
+          {
+            label: "Gr\xFCner Star",
+            text: "Oft ohne Beschwerden \u2013 Augeninnendruck und Sehnerv ab 40 pr\xFCfen lassen."
+          },
           { label: "Makula", text: "Nicht rauchen; viel gr\xFCnes Blattgem\xFCse." },
           { label: "Grauer Star", text: "Sonnenbrille mit UV-Schutz, Blutzucker im Griff." },
-          { label: "Warnzeichen", text: "Pl\xF6tzliche Sehverschlechterung, Schatten, Blitze: sofort zum Augenarzt." }
+          {
+            label: "Warnzeichen",
+            text: "Pl\xF6tzliche Sehverschlechterung, Schatten, Blitze: sofort zum Augenarzt."
+          }
         ]
       }
     ],

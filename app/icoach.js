@@ -37,14 +37,12 @@ const MEDIA = "../media/icoach/";
 /** PDF-Dateien der Bücher (mit Passwort verschlüsselt). */
 const BOOK_FILES = {
   masterclass: `${MEDIA}books/iCoachMe_Die_Masterclass.pdf`,
-  blutwerte: `${MEDIA}books/iCoachMe_Die_Masterclass_Blutwerte.pdf`,
-  blutgruppen: `${MEDIA}books/iCoachMe_Die_Masterclass_Blutgruppen.pdf`,
+  blutwerte: `${MEDIA}books/iCoachMe_Die_Masterclass_Blutwerte_Plus.pdf`,
 };
 const magazinePdf = (id) => `${MEDIA}magazin/${encodeURIComponent(id)}.pdf`;
 const FAQ_FILES = [
   ["masterclass", "icoach/icoachme-faq.json"],
-  ["blutwerte", "icoach/icoachme-faq-blutwerte.json"],
-  ["blutgruppen", "icoach/icoachme-faq-blutgruppen.json"],
+  ["blutwerte", "icoach/icoachme-faq-blutwerte-plus.json"],
 ];
 const PAGE = 40;
 
@@ -58,7 +56,7 @@ export function viewICoach() {
   const views = { evolve: evolveTab, ask: askTab, downloads: downloadsTab, magazin: magazineTab, widgets: widgetsTab };
   return `${X.header("iCoach.me")}<main class="wrap icoach">
     <p class="icoach__brand">iCoach.Me · Die Masterclass</p>
-    <p class="muted small">Wissen für Training, Ernährung und Gesundheit: Module, Antworten auf deine Fragen, die Bücher „Die Masterclass“, „Die Masterclass Blutwerte“ und „Die Masterclass Blutgruppen“ und Magazine zum Lesen.</p>
+    <p class="muted small">Wissen für Training, Ernährung und Gesundheit: Module, Antworten auf deine Fragen, die Bücher „Die Masterclass“ und „Die Masterclass Blutwerte+“ und Magazine zum Lesen.</p>
     <nav class="tabs" aria-label="iCoach.me">${TABS.map(
       ([v, l]) => `<button class="tab ${v === tab ? "active" : ""}" data-act="ic-tab" data-arg="${v}" ${v === tab ? 'aria-current="page"' : ""}>${l}</button>`,
     ).join("")}</nav>

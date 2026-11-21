@@ -24072,51 +24072,98 @@ var PROTOCOLS = [
         time: "+10 min",
         text: "10\u201330 min Tageslicht drau\xDFen, ohne Sonnenbrille und nicht durchs Fenster."
       },
-      { time: "+30\u201360 min", text: "Erster Kaffee (100\u2013400 mg Koffein) \u2013 nicht direkt nach dem Aufwachen." },
-      { time: "Vormittag", text: "Training laut Wochenplan, auf Wunsch vorher 1\u20133 min kalt duschen." },
-      { time: "Mahlzeiten", text: "Je 30\u201350 g Protein, Gem\xFCse, gute Fette \u2013 danach 5\u201310 min gehen." },
+      {
+        time: "+30\u201360 min",
+        text: "Erster Kaffee (100\u2013400 mg Koffein) \u2013 nicht direkt nach dem Aufwachen."
+      },
+      {
+        time: "Vormittag",
+        text: "Training laut Wochenplan, auf Wunsch vorher 1\u20133 min kalt duschen."
+      },
+      {
+        time: "Mahlzeiten",
+        text: "Je 30\u201350 g Protein, Gem\xFCse, gute Fette \u2013 danach 5\u201310 min gehen."
+      },
       { time: "Mittag", text: "20\u201330 min Sonne auf m\xF6glichst viel Haut, ohne Sonnenbrand." },
       { time: "bis 14 Uhr", text: "Letzter Kaffee (Koffein wirkt 8\u201310 Stunden nach)." },
-      { time: "Nachmittag", text: "Bei Bedarf NSDR oder Nickerchen bis 20 min; Abendlicht nach Westen." },
-      { time: "Abend", text: "Licht dimmen, warm statt wei\xDF; 1 Stunde vor dem Schlaf keine Bildschirme." },
+      {
+        time: "Nachmittag",
+        text: "Bei Bedarf NSDR oder Nickerchen bis 20 min; Abendlicht nach Westen."
+      },
+      {
+        time: "Abend",
+        text: "Licht dimmen, warm statt wei\xDF; 1 Stunde vor dem Schlaf keine Bildschirme."
+      },
       { time: "Schlafen", text: "18\u201320 \xB0C, H\xE4nde und F\xFC\xDFe frei, 7\u20138 Stunden, feste Zeiten." }
     ],
     rules: [
-      { value: "3 + 3", label: "Training", text: "3\xD7 Kraft und 3\xD7 Cardio pro Woche, rund 5\u20136 Stunden." },
+      {
+        value: "3 + 3",
+        label: "Training",
+        text: "3\xD7 Kraft und 3\xD7 Cardio pro Woche, rund 5\u20136 Stunden."
+      },
       { value: "7\u201310k", label: "Schritte", text: "T\xE4glich; nach jedem Essen 5\u201310 min gehen." },
       { value: "1,6\u20132,2 g/kg", label: "Protein", text: "30\u201350 g je Mahlzeit, zuerst essen." },
       { value: "25\u201335 g", label: "Ballaststoffe", text: "Vor allem aus Gem\xFCse und etwas Obst." },
-      { value: "8\u201310 h", label: "Koffein-Stopp", text: "Abstand zum Schlafen, bei Empfindlichkeit 12 h." },
+      {
+        value: "8\u201310 h",
+        label: "Koffein-Stopp",
+        text: "Abstand zum Schlafen, bei Empfindlichkeit 12 h."
+      },
       { value: "7\u20138 h", label: "Schlaf", text: "K\xFChl schlafen, Regelm\xE4\xDFigkeit vor Ausschlafen." }
     ],
     sections: [
       {
         title: "Die Trainingswoche",
         items: [
-          { label: "Cardio lang", text: "45\u201375 min Zone 2: locker, ohne Pause \u2013 vergr\xF6\xDFert das Schlagvolumen." },
+          {
+            label: "Cardio lang",
+            text: "45\u201375 min Zone 2: locker, ohne Pause \u2013 vergr\xF6\xDFert das Schlagvolumen."
+          },
           { label: "Kraft Beine", text: "Quadrizeps, Beinbeuger, Waden, Ges\xE4\xDF." },
           { label: "Ruhetag", text: "Gehen, Mobilit\xE4t, erholen." },
           { label: "Kraft Oberk\xF6rper", text: "Brust, R\xFCcken, Rumpf." },
           { label: "Cardio mittel", text: "25\u201330 min z\xFCgig und gleichm\xE4\xDFig." },
-          { label: "Cardio kurz", text: "6\u201317 min Intervalle nahe am Maximum \u2013 treibt die VO2max." },
+          {
+            label: "Cardio kurz",
+            text: "6\u201317 min Intervalle nahe am Maximum \u2013 treibt die VO2max."
+          },
           { label: "Kraft Arme & Schultern", text: "Schultern, Bizeps, Trizeps, Rumpf." }
         ]
       },
       {
         title: "Schlaf und Licht",
         items: [
-          { label: "Morgens", text: "Tageslicht in den ersten 30\u201360 min \u2013 auch bei Wolken heller als drinnen." },
+          {
+            label: "Morgens",
+            text: "Tageslicht in den ersten 30\u201360 min \u2013 auch bei Wolken heller als drinnen."
+          },
           { label: "Abends", text: "Ab Sonnenuntergang dimmen; warmes oder rotes Licht." },
-          { label: "Alkohol & Cannabis", text: "Nie als Schlafhilfe \u2013 rauben Tief- und REM-Schlaf." },
-          { label: "Schlaflosigkeit", text: "Kognitive Verhaltenstherapie (CBT-I) vor Schlaftabletten." }
+          {
+            label: "Alkohol & Cannabis",
+            text: "Nie als Schlafhilfe \u2013 rauben Tief- und REM-Schlaf."
+          },
+          {
+            label: "Schlaflosigkeit",
+            text: "Kognitive Verhaltenstherapie (CBT-I) vor Schlaftabletten."
+          }
         ]
       },
       {
         title: "Stress-Werkzeuge",
         items: [
-          { label: "Physiologischer Seufzer", text: "Zweimal durch die Nase ein, lang durch den Mund aus \u2013 1\u20133\xD7." },
-          { label: "NSDR", text: "10\u201330 min tiefe Entspannung ohne Schlaf, in stressigen Phasen t\xE4glich." },
-          { label: "Bewusste K\xE4lte", text: "1\u20133 min, 3\u20137\xD7 pro Woche \u2013 vor dem Krafttraining, nicht danach." }
+          {
+            label: "Physiologischer Seufzer",
+            text: "Zweimal durch die Nase ein, lang durch den Mund aus \u2013 1\u20133\xD7."
+          },
+          {
+            label: "NSDR",
+            text: "10\u201330 min tiefe Entspannung ohne Schlaf, in stressigen Phasen t\xE4glich."
+          },
+          {
+            label: "Bewusste K\xE4lte",
+            text: "1\u20133 min, 3\u20137\xD7 pro Woche \u2013 vor dem Krafttraining, nicht danach."
+          }
         ]
       }
     ],
@@ -24144,7 +24191,12 @@ var PROTOCOLS = [
         "Physiologischer Seufzer",
         "Meditation oder NSDR"
       ],
-      optional: ["Fermentiertes 2\u20134\xD7 t\xE4glich", "Trinkplan 2,5 l", "K\xE4lte 1\u20133 min", "Rot- und Nahinfrarotlicht"]
+      optional: [
+        "Fermentiertes 2\u20134\xD7 t\xE4glich",
+        "Trinkplan 2,5 l",
+        "K\xE4lte 1\u20133 min",
+        "Rot- und Nahinfrarotlicht"
+      ]
     },
     start: [
       {
@@ -24200,27 +24252,65 @@ var PROTOCOLS = [
     ],
     day: [
       { time: "Morgen", text: "Tageslicht, Wasser; an Trainingstagen die geplante Einheit." },
-      { time: "Training", text: "Zone 2 (z. B. 45 min) oder Kraft oder Stabilit\xE4t \u2013 Wochenplan siehe unten." },
-      { time: "Mahlzeiten", text: "Protein gleichm\xE4\xDFig verteilt, je Mahlzeit eine ordentliche Portion." },
+      {
+        time: "Training",
+        text: "Zone 2 (z. B. 45 min) oder Kraft oder Stabilit\xE4t \u2013 Wochenplan siehe unten."
+      },
+      {
+        time: "Mahlzeiten",
+        text: "Protein gleichm\xE4\xDFig verteilt, je Mahlzeit eine ordentliche Portion."
+      },
       { time: "Nachmittag", text: "Bewegung zwischendurch, kein sp\xE4tes Koffein." },
       { time: "Abend", text: "Ruhige Stunde, kein Alkohol als Einschlafhilfe, feste Schlafzeit." }
     ],
     rules: [
-      { value: "~3 h", label: "Zone 2 pro Woche", text: "Z. B. 4\xD7 45 min: gerade noch in ganzen S\xE4tzen sprechen." },
-      { value: "1\xD7", label: "VO2max pro Woche", text: "Z. B. 4\xD7 4 min hart, 4 min locker dazwischen." },
-      { value: "~3\xD7", label: "Krafttraining", text: "Ganzk\xF6rper, schwer genug; Ziehen, Dr\xFCcken, Heben, Tragen." },
-      { value: "~2 g/kg", label: "Protein", text: "Deutlich \xFCber der Mindestempfehlung von 0,8 g/kg." },
-      { value: "ApoB", label: "Leitwert Lipide", text: "So niedrig wie m\xF6glich \u2013 fr\xFCh ansetzen, nicht erst ab 60." },
+      {
+        value: "~3 h",
+        label: "Zone 2 pro Woche",
+        text: "Z. B. 4\xD7 45 min: gerade noch in ganzen S\xE4tzen sprechen."
+      },
+      {
+        value: "1\xD7",
+        label: "VO2max pro Woche",
+        text: "Z. B. 4\xD7 4 min hart, 4 min locker dazwischen."
+      },
+      {
+        value: "~3\xD7",
+        label: "Krafttraining",
+        text: "Ganzk\xF6rper, schwer genug; Ziehen, Dr\xFCcken, Heben, Tragen."
+      },
+      {
+        value: "~2 g/kg",
+        label: "Protein",
+        text: "Deutlich \xFCber der Mindestempfehlung von 0,8 g/kg."
+      },
+      {
+        value: "ApoB",
+        label: "Leitwert Lipide",
+        text: "So niedrig wie m\xF6glich \u2013 fr\xFCh ansetzen, nicht erst ab 60."
+      },
       { value: "7\u20138 h", label: "Schlaf", text: "Ohne guten Schlaf wirkt der Rest schlechter." }
     ],
     sections: [
       {
         title: "Die vier Reiter",
         items: [
-          { label: "Herz-Kreislauf", text: "Arteriosklerose \u2013 Treiber ApoB, Blutdruck, Rauchen, Insulinresistenz." },
-          { label: "Krebs", text: "Fr\xFCherkennung ernst nehmen; Stoffwechselgesundheit senkt das Risiko." },
-          { label: "Neurodegeneration", text: "Demenz \u2013 Training, Schlaf, Blutzucker und Gef\xE4\xDFe sch\xFCtzen das Gehirn." },
-          { label: "Stoffwechsel", text: "Insulinresistenz und Fettleber verst\xE4rken die drei anderen." }
+          {
+            label: "Herz-Kreislauf",
+            text: "Arteriosklerose \u2013 Treiber ApoB, Blutdruck, Rauchen, Insulinresistenz."
+          },
+          {
+            label: "Krebs",
+            text: "Fr\xFCherkennung ernst nehmen; Stoffwechselgesundheit senkt das Risiko."
+          },
+          {
+            label: "Neurodegeneration",
+            text: "Demenz \u2013 Training, Schlaf, Blutzucker und Gef\xE4\xDFe sch\xFCtzen das Gehirn."
+          },
+          {
+            label: "Stoffwechsel",
+            text: "Insulinresistenz und Fettleber verst\xE4rken die drei anderen."
+          }
         ]
       },
       {
@@ -24230,16 +24320,31 @@ var PROTOCOLS = [
             label: "Idee",
             text: "Schreib auf, was du mit 90 noch k\xF6nnen willst (Enkel hochheben, Koffer verstauen, vom Boden aufstehen)."
           },
-          { label: "R\xFCckw\xE4rts planen", text: "Mit dem Alter fallen Kraft und VO2max \u2013 trainiere jetzt deutlich dar\xFCber." },
-          { label: "Stabilit\xE4t", text: "Gleichgewicht, Griffkraft, Fu\xDF- und Rumpfkontrolle verhindern St\xFCrze." }
+          {
+            label: "R\xFCckw\xE4rts planen",
+            text: "Mit dem Alter fallen Kraft und VO2max \u2013 trainiere jetzt deutlich dar\xFCber."
+          },
+          {
+            label: "Stabilit\xE4t",
+            text: "Gleichgewicht, Griffkraft, Fu\xDF- und Rumpfkontrolle verhindern St\xFCrze."
+          }
         ]
       },
       {
         title: "Ern\xE4hrung als Werkzeug",
         items: [
-          { label: "Drei Stellschrauben", text: "Weniger Energie, bestimmte Lebensmittel weglassen oder Zeitfenster." },
-          { label: "Protein", text: "Bei Fasten und Zeitfenstern wird das Proteinziel schwer erreichbar \u2013 im Blick behalten." },
-          { label: "Blutzucker", text: "Ein Glukosesensor kann zeigen, welche Mahlzeiten stark ausschlagen." }
+          {
+            label: "Drei Stellschrauben",
+            text: "Weniger Energie, bestimmte Lebensmittel weglassen oder Zeitfenster."
+          },
+          {
+            label: "Protein",
+            text: "Bei Fasten und Zeitfenstern wird das Proteinziel schwer erreichbar \u2013 im Blick behalten."
+          },
+          {
+            label: "Blutzucker",
+            text: "Ein Glukosesensor kann zeigen, welche Mahlzeiten stark ausschlagen."
+          }
         ]
       }
     ],
@@ -24291,7 +24396,14 @@ var PROTOCOLS = [
         ]
       }
     ],
-    labs: ["ApoB", "Lipoprotein(a) \u2013 einmal im Leben", "HbA1c", "Insulin (n\xFCchtern)", "Leberwerte", "hs-CRP"],
+    labs: [
+      "ApoB",
+      "Lipoprotein(a) \u2013 einmal im Leben",
+      "HbA1c",
+      "Insulin (n\xFCchtern)",
+      "Leberwerte",
+      "hs-CRP"
+    ],
     tracking: "VO2max, Griffkraft, Ruhepuls und HRV stehen im \xDCberblick; Zone-2-Minuten zeigt Training \u2192 Auswertung."
   },
   {
@@ -24315,15 +24427,28 @@ var PROTOCOLS = [
       { time: "07:00", text: "Wasser, Tee oder schwarzer Kaffee \u2013 kein Fr\xFChst\xFCck." },
       { time: "07:15", text: "N\xFCchtern laufen \u2013 anfangs kurz, jede Woche ein bisschen weiter." },
       { time: "08:00", text: "10\u201320 min Meditation oder langsames, tiefes Atmen." },
-      { time: "12:00", text: "Erste Mahlzeit: Fisch, Eier oder Fleisch, viel Gem\xFCse und Salat, Beeren." },
-      { time: "Nachmittag", text: "Krafttraining 2\u20133\xD7 pro Woche; Proteinshake nie in der Fastenphase." },
-      { time: "18:30", text: "Letzte Mahlzeit, proteinreich, ohne Brot, Nudeln, Reis, Kartoffeln." },
+      {
+        time: "12:00",
+        text: "Erste Mahlzeit: Fisch, Eier oder Fleisch, viel Gem\xFCse und Salat, Beeren."
+      },
+      {
+        time: "Nachmittag",
+        text: "Krafttraining 2\u20133\xD7 pro Woche; Proteinshake nie in der Fastenphase."
+      },
+      {
+        time: "18:30",
+        text: "Letzte Mahlzeit, proteinreich, ohne Brot, Nudeln, Reis, Kartoffeln."
+      },
       { time: "ab 19:00", text: "Fastenphase: nur Wasser oder Tee." }
     ],
     rules: [
       { value: "16\u201318 h", label: "Fasten t\xE4glich", text: "Mit 12:12 starten, dann 16:8." },
       { value: "1,2\u20132,0 g/kg", label: "Protein", text: "In 1\u20132 Mahlzeiten plus Shake." },
-      { value: "No Carb", label: "Kohlenhydrate", text: "Nur aus Gem\xFCse, Salat, N\xFCssen und Beeren." },
+      {
+        value: "No Carb",
+        label: "Kohlenhydrate",
+        text: "Nur aus Gem\xFCse, Salat, N\xFCssen und Beeren."
+      },
       { value: "t\xE4glich", label: "Laufen", text: "Bis es ein Ritual ist." },
       { value: "5\u201310 \xB5mol/l", label: "Homocystein", text: "Kontrollwert f\xFCr die Methylierung." }
     ],
@@ -24331,9 +24456,18 @@ var PROTOCOLS = [
       {
         title: "Auf den Teller \u2013 und runter",
         items: [
-          { label: "Mehr", text: "Gem\xFCse und Salat, Fisch, Eier, Fleisch, Milchprodukte, Oliven\xF6l, N\xFCsse, Beeren." },
-          { label: "Weniger", text: "Zucker, Brot, Nudeln, Reis, Kartoffeln, s\xFC\xDFes Importobst, Abgepacktes." },
-          { label: "Langsam umstellen", text: "Eine Beilage nach der anderen ersetzen statt \u201Eeine Woche Keto\u201C." }
+          {
+            label: "Mehr",
+            text: "Gem\xFCse und Salat, Fisch, Eier, Fleisch, Milchprodukte, Oliven\xF6l, N\xFCsse, Beeren."
+          },
+          {
+            label: "Weniger",
+            text: "Zucker, Brot, Nudeln, Reis, Kartoffeln, s\xFC\xDFes Importobst, Abgepacktes."
+          },
+          {
+            label: "Langsam umstellen",
+            text: "Eine Beilage nach der anderen ersetzen statt \u201Eeine Woche Keto\u201C."
+          }
         ]
       },
       {
@@ -24342,7 +24476,10 @@ var PROTOCOLS = [
           { label: "B12, Fols\xE4ure, B6, B2", text: "Homocystein recyceln \u2013 bei Mangel erg\xE4nzen." },
           { label: "Cholin, Betain", text: "Methylgruppen-Spender \u2013 Eier, Leber, Spinat." },
           { label: "Vitamin D, Omega-3", text: "Bei Mangel bzw. \xFCber Seefisch." },
-          { label: "Zink, Magnesium, Selen", text: "Helfer der Schalter-Enzyme \u2013 N\xFCsse, Kerne, Fisch." }
+          {
+            label: "Zink, Magnesium, Selen",
+            text: "Helfer der Schalter-Enzyme \u2013 N\xFCsse, Kerne, Fisch."
+          }
         ]
       },
       {
@@ -24399,7 +24536,10 @@ var PROTOCOLS = [
       {
         title: "Ab Woche 7 \xB7 Feinschliff",
         items: [
-          { id: "w7-labor", text: "Labor: Homocystein, Vitamin D, Omega-3-Index, B12, Blutfette, HbA1c" },
+          {
+            id: "w7-labor",
+            text: "Labor: Homocystein, Vitamin D, Omega-3-Index, B12, Blutfette, HbA1c"
+          },
           { id: "w7-ergaenzen", text: "Nur erg\xE4nzen, was fehlt" },
           { id: "w7-keto", text: "Optional Keto \u2013 mit Laborkontrolle" }
         ]
@@ -24423,7 +24563,10 @@ var PROTOCOLS = [
     pillars: [
       { title: "Weniger essen", text: "Seltener, weniger, mehr Pflanzen." },
       { title: "Guter Stress", text: "Intensive Bewegung, K\xE4lte und Sauna." },
-      { title: "DNA sch\xFCtzen", text: "Kein Rauch, wenig Strahlung, kein Plastik in der Mikrowelle." }
+      {
+        title: "DNA sch\xFCtzen",
+        text: "Kein Rauch, wenig Strahlung, kein Plastik in der Mikrowelle."
+      }
     ],
     day: [
       { time: "Morgen", text: "Fr\xFChst\xFCck auslassen oder klein halten; Treppen statt Lift." },
@@ -24433,7 +24576,11 @@ var PROTOCOLS = [
       { time: "Nacht", text: "K\xFChl schlafen." }
     ],
     rules: [
-      { value: "16:8 \xB7 5:2", label: "Fasten", text: "T\xE4glich, w\xF6chentlich oder 5 Tage Pseudofasten im Monat." },
+      {
+        value: "16:8 \xB7 5:2",
+        label: "Fasten",
+        text: "T\xE4glich, w\xF6chentlich oder 5 Tage Pseudofasten im Monat."
+      },
       { value: "6\u20138 km", label: "Laufen pro Woche", text: "Atemlos, aber nicht ersch\xF6pft." },
       { value: "70\u201385 %", label: "HFmax", text: "Intensit\xE4t der harten Einheiten." },
       { value: "BMI 23\u201325", label: "Gewicht", text: "Im Normalbereich bleiben." }
@@ -24442,25 +24589,43 @@ var PROTOCOLS = [
       {
         title: "Der \xDCberlebensschaltkreis",
         items: [
-          { label: "Sirtuine \u2191", text: "Reparieren DNA und halten das Epigenom in Ordnung \u2013 brauchen NAD." },
+          {
+            label: "Sirtuine \u2191",
+            text: "Reparieren DNA und halten das Epigenom in Ordnung \u2013 brauchen NAD."
+          },
           { label: "AMPK \u2191", text: "Energiesensor: schaltet bei Mangel auf Sparen und Reparatur." },
-          { label: "mTOR \u2193", text: "Wachstumsschalter gebremst \u2013 die Zelle r\xE4umt auf (Autophagie)." }
+          {
+            label: "mTOR \u2193",
+            text: "Wachstumsschalter gebremst \u2013 die Zelle r\xE4umt auf (Autophagie)."
+          }
         ]
       },
       {
         title: "Aminorichtig essen",
         items: [
-          { label: "Verarbeitetes Fleisch", text: "Wurst, Schinken, Speck \u2013 mit Darm-, Pankreas- und Prostatakrebs verbunden." },
+          {
+            label: "Verarbeitetes Fleisch",
+            text: "Wurst, Schinken, Speck \u2013 mit Darm-, Pankreas- und Prostatakrebs verbunden."
+          },
           { label: "Rotes Fleisch", text: "Wenig ist okay, viel nicht (TMAO-Verdacht)." },
-          { label: "Methionin, Leucin", text: "Aktivieren mTOR \u2013 reduzieren, wenn nicht f\xFCrs Training gebraucht." }
+          {
+            label: "Methionin, Leucin",
+            text: "Aktivieren mTOR \u2013 reduzieren, wenn nicht f\xFCrs Training gebraucht."
+          }
         ]
       },
       {
         title: "Pillen im Check",
         items: [
-          { label: "NMN, NR", text: "Heben NAD bei Tieren; belastbare Langzeitdaten beim Menschen fehlen." },
+          {
+            label: "NMN, NR",
+            text: "Heben NAD bei Tieren; belastbare Langzeitdaten beim Menschen fehlen."
+          },
           { label: "Resveratrol", text: "Humandaten zu harten Endpunkten d\xFCnn." },
-          { label: "Metformin, Aspirin", text: "Arzneimittel \u2013 nur \xE4rztlich; kein Nutzen f\xFCr Gesunde belegt." },
+          {
+            label: "Metformin, Aspirin",
+            text: "Arzneimittel \u2013 nur \xE4rztlich; kein Nutzen f\xFCr Gesunde belegt."
+          },
           { label: "Vitamin D, K2", text: "Sinnvoll bei Mangel \u2013 erst messen." }
         ]
       }
@@ -24486,7 +24651,11 @@ var PROTOCOLS = [
         "R\xF6ntgen und CT nur, wenn n\xF6tig",
         "Kein Plastik in die Mikrowelle"
       ],
-      optional: ["K\xE4lte bzw. Eisbad", "NMN oder NR (Datenlage offen)", "Resveratrol (Datenlage d\xFCnn)"]
+      optional: [
+        "K\xE4lte bzw. Eisbad",
+        "NMN oder NR (Datenlage offen)",
+        "Resveratrol (Datenlage d\xFCnn)"
+      ]
     },
     start: [
       {
@@ -24541,7 +24710,10 @@ var PROTOCOLS = [
       { time: "07:00", text: "Wasser oder gr\xFCner Tee \u2013 kein Saft, keine Limo." },
       { time: "07:30", text: "Gro\xDFes Fr\xFChst\xFCck: Haferflocken, Beeren, 1 EL Leinsamen, Waln\xFCsse." },
       { time: "Vormittag", text: "Mindestens 20\u201330 min z\xFCgig gehen, an Trainingstagen mehr." },
-      { time: "12:30", text: "Hauptmahlzeit: H\xFClsenfr\xFCchte, Vollkorn, Blattgem\xFCse, Brokkoli, \xBC TL Kurkuma." },
+      {
+        time: "12:30",
+        text: "Hauptmahlzeit: H\xFClsenfr\xFCchte, Vollkorn, Blattgem\xFCse, Brokkoli, \xBC TL Kurkuma."
+      },
       { time: "danach", text: "10\u201315 min Verdauungsspaziergang \u2013 bremst den Blutzucker." },
       { time: "14\u201316 Uhr", text: "2\u20133 Tassen gr\xFCner oder schwarzer Tee, unges\xFC\xDFt." },
       { time: "17:00", text: "Letzte, kleine Mahlzeit \u2013 danach ist das Essfenster zu." },
@@ -24550,7 +24722,11 @@ var PROTOCOLS = [
     rules: [
       { value: "90 %", label: "Pflanzlich", text: "Vollwertig, t\xE4glich H\xFClsenfr\xFCchte." },
       { value: "< 10 h", label: "Fr\xFChes Essfenster", text: "Nur fr\xFCh am Tag zeigte es Vorteile." },
-      { value: "0,8 g/kg", label: "Protein", text: "\xDCberwiegend pflanzlich; mit Trainingsziel mehr." },
+      {
+        value: "0,8 g/kg",
+        label: "Protein",
+        text: "\xDCberwiegend pflanzlich; mit Trainingsziel mehr."
+      },
       { value: "50", label: "Pflanzen pro Woche", text: "Vielfalt f\xFCrs Mikrobiom." },
       { value: "BMI 20\u201325", label: "Gewicht", text: "L\xE4ngste Studien: am besten 20\u201322." },
       { value: "\u2265 7 h", label: "Schlaf", text: "Eine Woche mit 5 h schadet den Gef\xE4\xDFen deutlich." }
@@ -24562,9 +24738,15 @@ var PROTOCOLS = [
           { label: "N\xFCsse", text: "Eine Handvoll t\xE4glich (12\u201320 g), am besten Waln\xFCsse." },
           { label: "Gr\xFCnzeug", text: "Blattgem\xFCse und Salat t\xE4glich; Bonus Brokkolisprossen." },
           { label: "Beeren", text: "T\xE4glich, je dunkler desto besser \u2013 auch tiefgek\xFChlt." },
-          { label: "Pflanzenstress", text: "Gew\xFCrze, Kr\xE4uter, bunte Sorten \u2013 milder Reiz wie Training." },
+          {
+            label: "Pflanzenstress",
+            text: "Gew\xFCrze, Kr\xE4uter, bunte Sorten \u2013 milder Reiz wie Training."
+          },
           { label: "Darmfutter", text: "50 Pflanzen pro Woche, Ballaststoffe, resistente St\xE4rke." },
-          { label: "Weniger Kalorien", text: "Mehr Volumen mit geringer Energiedichte \u2013 fr\xFCh am Tag." },
+          {
+            label: "Weniger Kalorien",
+            text: "Mehr Volumen mit geringer Energiedichte \u2013 fr\xFCh am Tag."
+          },
           { label: "Protein mit Ma\xDF", text: "Weniger tierisches Protein senkt IGF-1." },
           { label: "NAD+ nat\xFCrlich", text: "Bewegung und Ern\xE4hrung statt NR/NMN-Pillen." }
         ]
@@ -24583,7 +24765,10 @@ var PROTOCOLS = [
         items: [
           { label: "Vitamin B12", text: "Pflicht bei pflanzlicher Ern\xE4hrung und ab 50." },
           { label: "Jod", text: "Bei pflanzlicher Ern\xE4hrung bewusst einplanen." },
-          { label: "Vitamin D", text: "Kein belegter Sterblichkeitsnutzen \u2013 einen Mangel trotzdem behandeln." },
+          {
+            label: "Vitamin D",
+            text: "Kein belegter Sterblichkeitsnutzen \u2013 einen Mangel trotzdem behandeln."
+          },
           { label: "NR, NMN, Extrakte", text: "Nein \u2013 die ganze Pflanze wirkt besser." }
         ]
       }
@@ -24643,7 +24828,13 @@ var PROTOCOLS = [
         ]
       }
     ],
-    labs: ["Blutdruck", "LDL-Cholesterin", "HbA1c", "Vitamin B12", "Jod bzw. TSH bei pflanzlicher Ern\xE4hrung"],
+    labs: [
+      "Blutdruck",
+      "LDL-Cholesterin",
+      "HbA1c",
+      "Vitamin B12",
+      "Jod bzw. TSH bei pflanzlicher Ern\xE4hrung"
+    ],
     tracking: "Gewicht, Schritte und Schlaf in LIFESPAN OS; das T\xE4gliche Dutzend unten zum Abhaken."
   },
   {
@@ -24665,9 +24856,15 @@ var PROTOCOLS = [
       { title: "Bewegung", text: "Mindestens 30 min an den meisten Tagen." }
     ],
     day: [
-      { time: "Fr\xFChst\xFCck", text: "Vollkornflocken mit Apfel (mit Schale), Beeren, Leinsamen oder N\xFCssen." },
+      {
+        time: "Fr\xFChst\xFCck",
+        text: "Vollkornflocken mit Apfel (mit Schale), Beeren, Leinsamen oder N\xFCssen."
+      },
       { time: "Mittag", text: "Komplexe Kohlenhydrate (Vollkorn, H\xFClsenfr\xFCchte) mit viel Gem\xFCse." },
-      { time: "Zwischendurch", text: "Wasser, unges\xFC\xDFter Tee, 2\u20133 Tassen schwarzer Kaffee \u2013 keine Snacks." },
+      {
+        time: "Zwischendurch",
+        text: "Wasser, unges\xFC\xDFter Tee, 2\u20133 Tassen schwarzer Kaffee \u2013 keine Snacks."
+      },
       { time: "Abend", text: "Eiwei\xDF und Gem\xFCse; Omega-3-\xD6le (Lein-, Raps-, Walnuss\xF6l)." },
       { time: "Bis abends", text: "2 Liter getrunken \u2013 Ballaststoffe brauchen Wasser." }
     ],
@@ -24676,15 +24873,28 @@ var PROTOCOLS = [
       { value: "3", label: "Mahlzeiten", text: "Ohne Snacks, wenn du abnehmen willst." },
       { value: "2 l", label: "Trinken", text: "Wasser und Tee; Alkohol meiden." },
       { value: "30 min", label: "Bewegung", text: "An den meisten Tagen, jede Form z\xE4hlt." },
-      { value: "\u2265 12 Wochen", label: "Probiotika", text: "Wenn, dann ausreichend lang und hoch dosiert." }
+      {
+        value: "\u2265 12 Wochen",
+        label: "Probiotika",
+        text: "Wenn, dann ausreichend lang und hoch dosiert."
+      }
     ],
     sections: [
       {
         title: "Bakterienfutter",
         items: [
-          { label: "Pr\xE4biotika", text: "Chicor\xE9e, Spargel, Topinambur, Schwarzwurzeln, Zwiebeln, Knoblauch, Artischocken." },
-          { label: "Resistente St\xE4rke", text: "Gekochte und abgek\xFChlte Kartoffeln, Reis, Nudeln; Haferflocken, leicht gr\xFCne Bananen." },
-          { label: "Ballaststoffriesen", text: "Leinsamen, Kleie, H\xFClsenfr\xFCchte, N\xFCsse, Beeren, Vollkornbrot." }
+          {
+            label: "Pr\xE4biotika",
+            text: "Chicor\xE9e, Spargel, Topinambur, Schwarzwurzeln, Zwiebeln, Knoblauch, Artischocken."
+          },
+          {
+            label: "Resistente St\xE4rke",
+            text: "Gekochte und abgek\xFChlte Kartoffeln, Reis, Nudeln; Haferflocken, leicht gr\xFCne Bananen."
+          },
+          {
+            label: "Ballaststoffriesen",
+            text: "Leinsamen, Kleie, H\xFClsenfr\xFCchte, N\xFCsse, Beeren, Vollkornbrot."
+          }
         ]
       },
       {
@@ -24701,7 +24911,10 @@ var PROTOCOLS = [
         title: "Was der Darmflora schadet",
         items: [
           { label: "S\xFC\xDFstoffe", text: "K\xF6nnen das Mikrobiom ver\xE4ndern." },
-          { label: "Emulgatoren", text: "K\xF6nnen die Darmbarriere schw\xE4chen \u2013 Fertigprodukte meiden." },
+          {
+            label: "Emulgatoren",
+            text: "K\xF6nnen die Darmbarriere schw\xE4chen \u2013 Fertigprodukte meiden."
+          },
           { label: "Darmreinigung", text: "Verarmt das Mikrobiom nachhaltig." },
           { label: "Stress, Schlafmangel", text: "Verschieben die Bakterien und machen hungrig." }
         ]
@@ -24759,6 +24972,460 @@ var PROTOCOLS = [
     ],
     labs: ["hs-CRP", "HbA1c", "Blutfette", "Ferritin (bei viel Vollkorn und wenig Fleisch)"],
     tracking: "Ballaststoffe pro Tag zeigt Nutrition \u2192 Tagebuch; Gewicht und Bauchumfang unter Body."
+  },
+  {
+    id: "truebel",
+    name: "Tr\xFCbel",
+    author: "Hubert Tr\xFCbel",
+    book: "Longevity \u2013 Die Anti-Bullshit-Formel",
+    source: "Hubert Tr\xFCbel: Longevity \u2013 Die Anti-Bullshit-Formel, Kneipp Verlag 2026 (ISBN 978-3-99040-833-9)",
+    basis: "Buch (E-Book), Kapitel Anti-Bullshit-Formel, Strategieschrauben und 6-Wochen-Plan",
+    tagline: "Erst die Evidenz pr\xFCfen, dann investieren: Wenige Ma\xDFnahmen bringen den gr\xF6\xDFten Teil der gesunden Jahre \u2013 f\xFCnf Strategieschrauben statt Pillen-Overload.",
+    keyFigure: {
+      value: "6,3 Jahre",
+      text: "l\xE4nger in guter Gesundheit lebten die aktivsten 50- bis 75-J\xE4hrigen im Vergleich zu Inaktiven."
+    },
+    pillars: [
+      { title: "Vorbeugung", text: "Vorsorgeuntersuchungen nutzen, Risiken fr\xFCh erkennen." },
+      { title: "Bewegung", text: "150 min pro Woche plus Kraft \u2013 mit Spa\xDF, in jedem Alter." },
+      { title: "Ern\xE4hrung", text: "Pflanzenbetont, wenig Hochverarbeitetes, Essenspausen." },
+      { title: "Erholung", text: "Schlaf, Pausen, Achtsamkeit \u2013 Stress in Balance." },
+      { title: "Sinn & Kontakte", text: "Beruf(ung), starke und schwache Bindungen." }
+    ],
+    day: [
+      { time: "Aufstehen", text: "5 Minuten den Atem beobachten \u2013 der kleinste m\xF6gliche Schritt z\xE4hlt." },
+      { time: "Arbeitsweg", text: "Zu Fu\xDF, mit dem Rad oder eine Station fr\xFCher aussteigen." },
+      {
+        time: "Bei der Arbeit",
+        text: "Sitzen alle 30 min unterbrechen; Stehen oder Gehen statt Sitzen z\xE4hlt mit."
+      },
+      {
+        time: "Ab 10 Uhr",
+        text: "Erste Mahlzeit: Gem\xFCse, H\xFClsenfr\xFCchte, Vollkorn \u2013 nichts Hochverarbeitetes."
+      },
+      { time: "Getr\xE4nke", text: "Wasser, Tee, Kaffee ohne Zucker \u2013 keine fl\xFCssigen Kalorien." },
+      { time: "Nachmittag", text: "Training laut Wochenplan oder ein z\xFCgiger Spaziergang." },
+      { time: "18 Uhr", text: "Die K\xFCche macht Feierabend \u2013 Essfenster etwa 10\u201318 Uhr." },
+      { time: "Abend", text: "Eine echte Begegnung: anrufen, treffen, danke sagen." },
+      { time: "Schlafen", text: "7\u20138 Stunden, feste Zeiten; Bildschirme vorher weg." }
+    ],
+    rules: [
+      {
+        value: "150 min",
+        label: "Bewegung",
+        text: "Moderat pro Woche (oder 75 min intensiv), Kraft dazu; bis 500 min lohnt sich."
+      },
+      {
+        value: "30 min",
+        label: "Sitzen ersetzen",
+        text: "T\xE4glich 30 min Sitzen gegen moderate Bewegung tauschen."
+      },
+      { value: "6\u20138 h", label: "Essfenster", text: "Z. B. 10\u201318 Uhr \u2013 weniger Kalorien ohne Z\xE4hlen." },
+      { value: "5:2", label: "Alternative", text: "2 Tage mit 500\u2013750 kcal; mit einem leichten Tag starten." },
+      {
+        value: "10\u201320 g",
+        label: "Protein danach",
+        text: "In der ersten Stunde nach harter Belastung (ACSM)."
+      },
+      { value: "1\xD7 im Jahr", label: "Misogi", text: "Eine Herausforderung mit echtem Risiko zu scheitern." }
+    ],
+    sections: [
+      {
+        title: "Die Anti-Bullshit-Formel",
+        items: [
+          {
+            label: "Evidenz",
+            text: "Metaanalyse (E1) > einzelne randomisierte Studie (E2) > Beobachtung (E3) > Fallbericht, Meinung (E4) \u2013 Einteilung nach GRADE."
+          },
+          {
+            label: "Pareto",
+            text: "Die 20 % der Ma\xDFnahmen suchen, die 80 % des Nutzens bringen: Bewegung, Ern\xE4hrung, Schlaf, Vorsorge."
+          },
+          {
+            label: "Dosis",
+            text: "Mehr ist nicht automatisch besser \u2013 bei hoher Dosis kippt der Nutzen oft in Nebenwirkungen."
+          }
+        ]
+      },
+      {
+        title: "Evidenz-Radar",
+        items: [
+          { label: "Quelle?", text: "Werden Studien genannt und lassen sie sich finden (PubMed)?" },
+          { label: "Meinung oder Studie?", text: "Korrelation und Ursache sauber getrennt?" },
+          { label: "Gr\xF6\xDFe", text: "Unter 30 Teilnehmende, nur Zellen oder Tiere: wenig aussagekr\xE4ftig." },
+          { label: "Kontrolle", text: "Gab es eine Kontrollgruppe, idealerweise zuf\xE4llig zugeteilt?" },
+          { label: "Geld", text: "Wer hat bezahlt \u2013 profitiert jemand vom Ergebnis?" },
+          { label: "Aktualit\xE4t", text: "Gibt es neuere Arbeiten zum selben Thema?" }
+        ]
+      },
+      {
+        title: "Evidenzgrade im Buch",
+        items: [
+          { label: "E1/E2", text: "Bewegung, Sport, Fitness; Yoga." },
+          { label: "E2/E3", text: "Pflanzenbasierte, vegetarische, vegane Kost; Achtsamkeit, Tai Chi, Qigong." },
+          { label: "E3", text: "Omega-3 als Kapsel, Flavanole (Kakao)." },
+          { label: "E3/E4", text: "Schlaf als Anti-Aging-Hebel, Metformin, GLP-1, Resveratrol, NAD-Vorstufen (NMN)." },
+          {
+            label: "E4",
+            text: "Multivitamin (kein Nutzen in gro\xDFen Studien), Vitamin C/D ohne Mangel, Spermidin, Rapamycin, Senolytika, Plasmaaustausch."
+          }
+        ]
+      },
+      {
+        title: "Werkzeuge zum Dranbleiben",
+        items: [
+          { label: "WOOP", text: "Wunsch, Ergebnis, Hindernis, Plan \u2013 mit Wenn-dann-S\xE4tzen." },
+          { label: "MVP", text: "Mini-Mini-Schritt statt gro\xDFer Vorsatz: heute f\xFCnf Minuten." },
+          { label: "Erfolgskette", text: "Jeden aktiven Tag im Kalender markieren." },
+          { label: "Commitment", text: "Ziel teilen oder einen Vertrag mit sich selbst schlie\xDFen." },
+          { label: "Fresh Start", text: "An einem klaren Startpunkt beginnen: Montag, Monatsanfang." }
+        ]
+      }
+    ],
+    assessment: "Der Ansatz folgt der evidenzbasierten Medizin und passt zur Studienlage: Bewegung, Nichtrauchen, pflanzenbetonte Kost, Schlaf und soziale Einbindung sind die gro\xDFen Hebel, die meisten Supplemente und Anti-Aging-Medikamente sind beim Menschen nicht belegt. Die Evidenzgrade sind die Einsch\xE4tzung des Autors. Tests zum \u201Ebiologischen Alter\u201C eignen sich zur Motivation, nicht f\xFCr Therapieentscheidungen.",
+    caution: "Ein Misogi muss zu Alter, Fitness und Gesundheit passen \u2013 vor Extremleistungen sportmedizinisch untersuchen lassen. Einen ganzen Fastentag nur mit Erfahrung und nach \xE4rztlicher R\xFCcksprache, nicht bei Essst\xF6rungen, Schwangerschaft oder Diabetes-Medikamenten.",
+    tiers: {
+      foundation: [
+        "150 min Bewegung pro Woche, Kraft dazu",
+        "Sitzen regelm\xE4\xDFig unterbrechen",
+        "Pflanzenbetont, kaum Hochverarbeitetes",
+        "Keine fl\xFCssigen Kalorien",
+        "Nicht rauchen",
+        "7\u20138 h Schlaf",
+        "Vorsorgeuntersuchungen nach Alter",
+        "Eine echte Begegnung am Tag"
+      ],
+      addOn: [
+        "Essfenster 10\u201318 Uhr oder 5:2",
+        "Yoga (st\xE4rkste Evidenz der Entspannungsverfahren)",
+        "Achtsamkeit, Tai Chi oder Qigong",
+        "Misogi einmal im Jahr",
+        "Sinnfragen kl\xE4ren, eine neue Rolle testen"
+      ],
+      optional: [
+        "Supplemente nur bei nachgewiesenem Mangel (Vitamin D, B12 bei veganer Kost)",
+        "Biologisches Alter per Fragebogen einsch\xE4tzen",
+        "Genetische Beratung bei famili\xE4rem Risiko"
+      ]
+    },
+    start: [
+      {
+        title: "Woche 1\u20132 \xB7 Standort & Bewegung",
+        items: [
+          { id: "w1-woop", text: "WOOP: Wunsch-Altersbild, Hindernis, Wenn-dann-Plan" },
+          { id: "w1-felder", text: "Handlungsfelder w\xE4hlen und ein MVP festlegen" },
+          { id: "w1-vorsorge", text: "F\xE4llige Vorsorgeuntersuchungen planen" },
+          { id: "w2-misogi", text: "Pers\xF6nliches Misogi festlegen und eintragen" },
+          { id: "w2-bewegung", text: "Erste Woche mit 150 min Bewegung" }
+        ]
+      },
+      {
+        title: "Woche 3\u20134 \xB7 Essen & Erholung",
+        items: [
+          { id: "w3-fasten", text: "Fasten-Reset testen: 14\u201316 h Pause oder Dinner Cancelling" },
+          { id: "w3-upf", text: "Hochverarbeitetes und S\xFC\xDFgetr\xE4nke ersetzen" },
+          { id: "w4-balance", text: "Stress-Balance einsch\xE4tzen, Wunsch formulieren" },
+          { id: "w4-pause", text: "T\xE4glich 5 min Atem- oder Achtsamkeits\xFCbung" }
+        ]
+      },
+      {
+        title: "Woche 5\u20136 \xB7 Kontakte & Gewohnheit",
+        items: [
+          { id: "w5-inventur", text: "Kontakt-Inventur: 3 starke, 3 schwache Bindungen" },
+          { id: "w5-begegnung", text: "Jede Woche eine echte Begegnung ansto\xDFen" },
+          { id: "w6-gewohnheit", text: "Die wirksamste Ver\xE4nderung als Gewohnheit verankern" },
+          { id: "w6-naechster", text: "N\xE4chsten kleinen Schritt f\xFCr die kommenden Monate festlegen" }
+        ]
+      }
+    ],
+    labs: [
+      "Blutfette (LDL, HDL, Triglyceride)",
+      "HbA1c",
+      "Vitamin B12 (bei veganer Kost)",
+      "25-OH-Vitamin D (bei Mangelrisiko)"
+    ],
+    tracking: "Bewegungsminuten, Schritte, Schlaf und Gewicht zeigt LIFESPAN OS; Vorsorgetermine im Kalender, Erfolgskette im To-do."
+  },
+  {
+    id: "kompass",
+    name: "Longevity-Kompass",
+    author: "Volker Limmroth & Gerd Wirtz",
+    book: "Der Longevity-Kompass",
+    source: "Prof. Dr. Volker Limmroth, Dr. Gerd Wirtz: Der Longevity-Kompass, Ullstein 2025 (ISBN 978-3-8437-3287-1)",
+    basis: "Buch (E-Book), Kapitel \u201EDie S\xE4ulen der Langlebigkeit\u201C mit SMART- und ADVANCED-Stufen",
+    tagline: "Acht S\xE4ulen, jede mit einem einfachen SMART-Einstieg und einer ADVANCED-Stufe \u2013 erst den Alltag \xE4ndern, dann verfeinern und alles messen.",
+    keyFigure: {
+      value: "8 S\xE4ulen",
+      text: "Bewegung, Ern\xE4hrung, Gehirn, Schlaf, Soziales, Hitze & K\xE4lte, Vorsorge, Medikamente \u2013 jede selbst von 1 bis 10 bewerten."
+    },
+    pillars: [
+      { title: "Bewegung", text: "Alltag aktiv, Kraft mit Steigerung, Ausdauer, HIIT, Balance." },
+      { title: "Ern\xE4hrung & Fasten", text: "Pflanzenbetont, Vollkorn, 16 Stunden Essenspause." },
+      { title: "Schlaf & Gehirn", text: "Eigene Schlafdauer finden, Neues lernen, Blutdruck im Blick." },
+      { title: "Hitze & K\xE4lte", text: "Wechseldusche, Sauna, Eisbad \u2013 dosiert steigern." },
+      { title: "Vorsorge & Soziales", text: "Check-ups nach Kalender, Kontakte als feste Termine." }
+    ],
+    day: [
+      {
+        time: "Morgens",
+        text: "Wechseldusche: 30 s kalt, auf 60\u201390 s steigern, 1 min warm, 3 Runden, kalt enden."
+      },
+      { time: "Z\xE4hneputzen", text: "Dabei auf einem Bein stehen \u2013 Balance gegen St\xFCrze." },
+      { time: "Bei der Arbeit", text: "Alle 60\u201390 min aktive Pause; Treppe statt Aufzug." },
+      { time: "12 Uhr", text: "Erste Mahlzeit: Gem\xFCse in jede Mahlzeit, Vollkorn, gute Fette." },
+      { time: "Nachmittag", text: "Snack nur bei Hunger: Obst, N\xFCsse, Joghurt." },
+      { time: "Abends", text: "Bewegung laut Plan oder 30\u201360 min z\xFCgig gehen." },
+      { time: "Vor 20 Uhr", text: "Abendessen mit wenig schnellen Kohlenhydraten \u2013 dann 16 h Pause." },
+      { time: "30\u201360 min vorher", text: "Handy weg, lesen oder entspannen." },
+      { time: "Schlafen", text: "Schlafzimmer 17\u201318 \xB0C, dunkel und ruhig, eigene Schlafdauer." }
+    ],
+    rules: [
+      { value: "150 min", label: "Bewegung", text: "Moderat pro Woche (SMART-Stufe)." },
+      { value: "3 \xD7 45\u201360 min", label: "Kraft", text: "Grund\xFCbungen, Gewicht alle 1\u20132 Wochen steigern." },
+      { value: "70\u201380 %", label: "Ausdauer", text: "Der maximalen Herzfrequenz, 2\xD7 pro Woche 60\u201390 min." },
+      { value: "16 h", label: "Essenspause", text: "Z. B. 12\u201320 Uhr essen; sonst 14\u201315 h." },
+      { value: "10.000", label: "Schritte", text: "T\xE4glich (ADVANCED-Stufe)." },
+      { value: "17\u201318 \xB0C", label: "Schlafzimmer", text: "K\xFChl schlafen, 30\u201360 min ohne Bildschirm." },
+      { value: "2 l", label: "Wasser", text: "Als Faustregel am Tag." }
+    ],
+    sections: [
+      {
+        title: "Bewegung ADVANCED",
+        items: [
+          { label: "Kraft", text: "3\xD7 pro Woche 45\u201360 min: Kniebeugen, Kreuzheben, Bankdr\xFCcken, Klimmz\xFCge." },
+          { label: "Ausdauer", text: "2\xD7 pro Woche 60\u201390 min Laufen, Rad oder Schwimmen." },
+          { label: "HIIT", text: "1\xD7 pro Woche 20\u201330 min, z. B. 10 \xD7 30 s Sprint / 30 s Pause." },
+          { label: "Beweglichkeit", text: "T\xE4glich 15\u201320 min; vor dem Training dynamisch dehnen." },
+          { label: "Balance", text: "3\xD7 pro Woche 15 min, z. B. Einbeinstand mit geschlossenen Augen." },
+          { label: "Natur & Ruhe", text: "1\xD7 pro Woche 2 h drau\xDFen; 1\u20132 Ruhetage pro Woche." },
+          { label: "Testen", text: "Ausdauer, Kraft, K\xF6rperzusammensetzung alle 4\u20136 Wochen messen." }
+        ]
+      },
+      {
+        title: "Hitze und K\xE4lte",
+        items: [
+          { label: "Wechseldusche", text: "T\xE4glich zum Abschluss der Dusche, kalt beenden." },
+          { label: "Hand-/Fu\xDFbad", text: "Unter 15 \xB0C, 1\u20132 min; Einsteiger k\xFCrzer." },
+          { label: "Warmes Bad", text: "38\u201340 \xB0C, 15\u201320 min, 2\u20133\xD7 pro Woche \u2013 f\xF6rdert den Schlaf." },
+          { label: "Sauna", text: "8\u201315 min, 2\u20133 G\xE4nge, dazwischen abk\xFChlen und ruhen, viel trinken." },
+          { label: "Eisschwimmen", text: "1\u20132 min, Kopf \xFCber Wasser \u2013 nie allein." }
+        ]
+      },
+      {
+        title: "Vorsorge nach Kalender",
+        items: [
+          { label: "Check-up", text: "Ab 35 regelm\xE4\xDFig, mit Blutwerten und Blutdruck." },
+          { label: "Haut", text: "Hautkrebs-Screening ab 35 alle 2 Jahre." },
+          { label: "Darm", text: "Ab 50 Darmspiegelung (alle 10 Jahre)." },
+          { label: "Augen", text: "Ab 40 alle 2 Jahre, ab 60 j\xE4hrlich." },
+          { label: "Z\xE4hne", text: "2\xD7 im Jahr Kontrolle und Reinigung." },
+          { label: "Blutdruck", text: "Mindestens 1\xD7 im Jahr; \xFCber 120/80 mmHg \xF6fter." }
+        ]
+      },
+      {
+        title: "Schlaf und Gehirn",
+        items: [
+          { label: "Schlafdauer", text: "\xDCber Wochen herausfinden: kurz (5\u20136 h), mittel (7\u20138 h) oder lang (> 8 h)." },
+          { label: "Abkl\xE4ren", text: "Schnarchen, \xDCbergewicht und Tagesm\xFCdigkeit: an Schlafapnoe denken." },
+          { label: "Schlafmittel", text: "Regelm\xE4\xDFig eingenommen: \xE4rztlich pr\xFCfen lassen." },
+          { label: "Gehirn", text: "Rauchfrei, Blutdruck behandeln, Helm tragen, Neues lernen." },
+          { label: "Koordination", text: "Tennis, Tanzen, Golf erg\xE4nzen die Ausdauer." }
+        ]
+      }
+    ],
+    assessment: "Die SMART-Stufen entsprechen den g\xE4ngigen Empfehlungen und sind gut umsetzbar. In den ADVANCED-Stufen steht auch Umstrittenes: Ganzk\xF6rper-MRT oder Low-Dose-CT ohne Anlass, Telomer-Messungen, j\xE4hrliche Schlaflabor-Untersuchungen, Metformin oder NMN f\xFCr Gesunde \u2013 daf\xFCr fehlen Belege am Menschen oder Leitlinien. Die Aussage, m\xE4\xDFige Trinker lebten l\xE4nger, sehen neuere Auswertungen kritisch. Wearables sch\xE4tzen Tiefschlaf nur ungenau.",
+    caution: "K\xE4lte- und Hitzeanwendungen bei Herz-Kreislauf-Erkrankungen vorher \xE4rztlich abkl\xE4ren; Eisschwimmen nie allein. Metformin, Rapamycin oder NMN nur \xE4rztlich begleitet \u2013 NMN ist in der EU kein zugelassenes Nahrungserg\xE4nzungsmittel. Fasten nicht bei Essst\xF6rungen, in der Schwangerschaft oder mit Diabetes-Medikamenten ohne R\xFCcksprache.",
+    tiers: {
+      foundation: [
+        "150 min moderat pro Woche, Treppe und Rad im Alltag",
+        "Aktive Pausen alle 60\u201390 min",
+        "Gem\xFCse in jede Mahlzeit, Vollkorn, gute Fette",
+        "Wenig Verarbeitetes, wenig Alkohol",
+        "Eigene Schlafdauer, k\xFChles Schlafzimmer",
+        "Rauchfrei, Blutdruck kennen",
+        "Kontakte als feste Termine",
+        "Vorsorgeuntersuchungen nach Kalender"
+      ],
+      addOn: [
+        "Kraft 3\xD7 mit Steigerung, Ausdauer 2\xD7, HIIT 1\xD7",
+        "Balance und Beweglichkeit",
+        "Essenspause 16 h",
+        "Fermentiertes, Beeren, gr\xFCner Tee",
+        "Wechseldusche, Sauna",
+        "Neues lernen: Sprache oder Instrument",
+        "Ehrenamt, Verein, Kurse"
+      ],
+      optional: [
+        "Blutzucker-Sensor f\xFCr 2\u20134 Wochen",
+        "K\xE4ltekabine oder Eisbad",
+        "Erweiterte Blutwerte (Entz\xFCndung, N\xE4hrstoffe)",
+        "Medikamente nur \xE4rztlich"
+      ]
+    },
+    start: [
+      {
+        title: "Woche 1\u20132 \xB7 Standort",
+        items: [
+          { id: "w1-saeulen", text: "Alle 8 S\xE4ulen von 1 bis 10 bewerten (Ist und Soll)" },
+          { id: "w1-prio", text: "S\xE4ulen nach pers\xF6nlicher Wichtigkeit ordnen" },
+          { id: "w1-smart", text: "F\xFCr die wichtigste S\xE4ule ein SMART-Ziel formulieren" },
+          { id: "w2-baseline", text: "Ausgangswerte messen: Gewicht, Ruhepuls, Kraft, Schritte" }
+        ]
+      },
+      {
+        title: "Woche 3\u20136 \xB7 SMART-Stufe",
+        items: [
+          { id: "w3-pausen", text: "Aktive Pausen und Treppe statt Aufzug" },
+          { id: "w3-gemuese", text: "Gem\xFCse in jede Mahlzeit" },
+          { id: "w3-schlaf", text: "Schlafzimmer 17\u201318 \xB0C, Handy 30 min vorher weg" },
+          { id: "w4-dusche", text: "Wechseldusche zum Abschluss der Dusche" },
+          { id: "w5-kontakt", text: "Feste Zeit f\xFCr Anrufe und Nachrichten" },
+          { id: "w6-vorsorge", text: "Vorsorgekalender anlegen" }
+        ]
+      },
+      {
+        title: "Ab Woche 7 \xB7 ADVANCED",
+        items: [
+          { id: "w7-kraft", text: "Krafttraining 3\xD7 pro Woche mit Steigerung" },
+          { id: "w7-fasten", text: "Essenspause auf 14\u201316 h ausdehnen" },
+          { id: "w7-lernen", text: "Ein neues Wissensgebiet beginnen" },
+          { id: "w7-test", text: "Nach 4\u20136 Wochen erneut messen und anpassen" }
+        ]
+      }
+    ],
+    labs: [
+      "Blutfette (Gesamt-, LDL-, HDL-Cholesterin, Triglyceride)",
+      "N\xFCchternglukose und HbA1c",
+      "25-OH-Vitamin D",
+      "Vitamin B12",
+      "hs-CRP"
+    ],
+    tracking: "Schritte, Training, Ruhepuls, HRV, Schlaf und Gewicht erfasst LIFESPAN OS; ein- bis zweimal im Jahr Blutwerte, w\xF6chentlich wiegen."
+  },
+  {
+    id: "augen",
+    name: "Augen-Yoga",
+    author: "Kazuhiro Nakagawa",
+    book: "Augen-Yoga",
+    source: "Kazuhiro Nakagawa: Augen-Yoga, Goldmann 2017 (ISBN 978-3-641-19291-4)",
+    basis: "Buch (E-Book), Kapitel Augentraining 1\u20136 und Anti-Aging f\xFCr die Augen; Einordnung nach augen\xE4rztlicher Studienlage",
+    tagline: "Sehen ist Teamarbeit von Augen und Gehirn: Augen bewegen, zwischen nah und fern wechseln, blinzeln und aufrecht sitzen \u2013 gegen m\xFCde Bildschirm-Augen.",
+    keyFigure: {
+      value: "2\u20133 min",
+      text: "lang blinzeln manche beim Surfen oder Spielen gar nicht \u2013 trockene, m\xFCde Augen sind die Folge."
+    },
+    pillars: [
+      { title: "Beweglichkeit", text: "Augen in alle Richtungen f\xFChren, Daumen folgen." },
+      { title: "Nah und fern", text: "Fokus wechseln statt starr auf den Bildschirm." },
+      { title: "Benetzung", text: "Blinzeln, W\xE4rme, Lidrand-Massage bei trockenen Augen." },
+      { title: "Haltung & Atmung", text: "Aufrecht sitzen, nicht den Atem anhalten." }
+    ],
+    day: [
+      {
+        time: "Morgens",
+        text: "\u201EAugen zu, Augen auf\u201C: 10 s geschlossen, 10 s nach oben, unten, rechts, links \u2013 2 Runden."
+      },
+      { time: "Am Bildschirm", text: "Bewusst blinzeln, Haltung pr\xFCfen, Atem flie\xDFen lassen." },
+      { time: "St\xFCndlich", text: "Blick vom Bildschirm weg in die Ferne; ein paar Minuten Pause." },
+      {
+        time: "Pause",
+        text: "Nah-fern-Wechsel: Hand in 30\u201340 cm, Kalender an der Wand \u2013 20\u201330\xD7 abwechselnd fokussieren."
+      },
+      { time: "Mittag", text: "Drau\xDFen gehen \u2013 Tageslicht und Weitblick f\xFCr die Augen." },
+      { time: "Nachmittag", text: "Bei M\xFCdigkeit 2 min sanft um die Augen klopfen, Kopf kreisen mit Blinzeln." },
+      { time: "Abends", text: "Feuchtwarmes Tuch 3\u20135 min auf die geschlossenen Augen, danach Lider sanft massieren." },
+      { time: "Schlafen", text: "Bildschirme fr\xFCh weg, ausreichend schlafen." }
+    ],
+    rules: [
+      { value: "10 s", label: "Augen zu, Augen auf", text: "Je Richtung, 2 Runden \u2013 morgens und nach langer Bildschirmzeit." },
+      { value: "20\u201330\xD7", label: "Nah-fern-Wechsel", text: "Fokus springen lassen, mit Brille falls n\xF6tig." },
+      { value: "10\xD7", label: "Blinzeln", text: "Nach langem Fixieren zehnmal blinzeln, 5 Runden." },
+      { value: "3\u20135 min", label: "W\xE4rme", text: "Feuchtwarmes Tuch (Temperatur pr\xFCfen), dann Lider massieren." },
+      { value: "2 min", label: "Zickzack", text: "Einer Zickzacklinie mit den Augen folgen, auch quer." }
+    ],
+    sections: [
+      {
+        title: "Augentraining",
+        items: [
+          { label: "Schiel\xFCbung", text: "Daumen aus 30 cm langsam zur Nasenwurzel f\xFChren und fixieren." },
+          { label: "Augen folgen", text: "Daumen in Kreisen und Kurven bewegen, erst klein und langsam, dann gr\xF6\xDFer." },
+          { label: "Kreis, Dreieck, Quadrat", text: "Kinn festhalten, mit dem Finger gro\xDFe Formen in die Luft zeichnen und folgen." },
+          { label: "Alle Augenmuskeln", text: "Daumen 10 cm vor den Augen 15 cm nach rechts, links, oben, unten f\xFChren." },
+          { label: "Beide Augen", text: "Ein A auf dem Daumennagel abwechselnd mit einem und beiden Augen anpeilen." }
+        ]
+      },
+      {
+        title: "Bei trockenen Augen",
+        items: [
+          { label: "Tr\xE4nendr\xFCsen", text: "Einen Punkt fixieren, dann 10\xD7 blinzeln \u2013 5 Runden; bewusst g\xE4hnen." },
+          { label: "Meibom-Dr\xFCsen", text: "W\xE4rme und sanfte Massage des Lidrands l\xF6sen den Fettfilm." },
+          { label: "Umgebung", text: "Luftbefeuchter bei Heizungs- und Klimaluft." },
+          { label: "Make-up", text: "Lidrand frei halten, abends gr\xFCndlich entfernen." },
+          { label: "Lidmuskeln", text: "Kopf langsam nach hinten neigen und auf die Nase sehen, dann nach vorn und nach oben \u2013 10\xD7." }
+        ]
+      },
+      {
+        title: "Vorbeugen im Alter",
+        items: [
+          { label: "Gr\xFCner Star", text: "Oft ohne Beschwerden \u2013 Augeninnendruck und Sehnerv ab 40 pr\xFCfen lassen." },
+          { label: "Makula", text: "Nicht rauchen; viel gr\xFCnes Blattgem\xFCse." },
+          { label: "Grauer Star", text: "Sonnenbrille mit UV-Schutz, Blutzucker im Griff." },
+          { label: "Warnzeichen", text: "Pl\xF6tzliche Sehverschlechterung, Schatten, Blitze: sofort zum Augenarzt." }
+        ]
+      }
+    ],
+    assessment: "Die \xDCbungen sind harmlos und k\xF6nnen bei Bildschirmarbeit Augenm\xFCdigkeit und Verspannung lindern; Pausen mit Blick in die Ferne, Blinzeln, W\xE4rme und Lidrand-Pflege sind auch augen\xE4rztlich empfohlen. Dass Augentraining Kurz- oder Altersweitsichtigkeit r\xFCckg\xE4ngig macht, wie das Buch mit Fallberichten verspricht, ist in kontrollierten Studien nicht belegt. F\xFCr Kinder sch\xFCtzt Zeit drau\xDFen nachweislich vor Kurzsichtigkeit. Heidelbeer-Pr\xE4parate sind f\xFCr die Augen nicht belegt; der Autor vertreibt Pr\xE4parate und die Lochmaske selbst.",
+    caution: "Brille oder Kontaktlinsen nicht eigenm\xE4chtig weglassen, vor allem nicht beim Autofahren. \xDCbungen nicht bei frischer Augen-OP, Netzhautproblemen oder akuter Entz\xFCndung. Pl\xF6tzliche Sehst\xF6rungen, Lichtblitze oder Gesichtsfeldausf\xE4lle sind ein Notfall f\xFCr den Augenarzt.",
+    tiers: {
+      foundation: [
+        "Regelm\xE4\xDFig vom Bildschirm weg in die Ferne sehen",
+        "Bewusst blinzeln",
+        "Aufrecht sitzen, ruhig atmen",
+        "T\xE4glich Zeit drau\xDFen",
+        "Augenarzt ab 40 alle 2 Jahre (Druck, Sehnerv)",
+        "Nicht rauchen"
+      ],
+      addOn: [
+        "Augen zu, Augen auf \u2013 2 Runden",
+        "Nah-fern-Wechsel 20\u201330\xD7",
+        "W\xE4rme und Lidrand-Massage bei trockenen Augen",
+        "Luftbefeuchter im Winter"
+      ],
+      optional: [
+        "Zickzack- und Zahlen-\xDCbungen",
+        "3-D-Bilder (Stereogramme)",
+        "Lochmaske \u2013 nicht beim Gehen oder Fahren"
+      ]
+    },
+    start: [
+      {
+        title: "Woche 1\u20132 \xB7 Gewohnheiten",
+        items: [
+          { id: "w1-pausen", text: "St\xFCndlich Blick in die Ferne" },
+          { id: "w1-blinzeln", text: "Am Bildschirm bewusst blinzeln" },
+          { id: "w1-haltung", text: "Bildschirm auf Augenh\xF6he, Haltung pr\xFCfen" },
+          { id: "w2-draussen", text: "Mittags drau\xDFen gehen" }
+        ]
+      },
+      {
+        title: "Woche 3\u20134 \xB7 \xDCbungen",
+        items: [
+          { id: "w3-zuauf", text: "T\xE4glich \u201EAugen zu, Augen auf\u201C" },
+          { id: "w3-nahfern", text: "Nah-fern-Wechsel in jeder Pause" },
+          { id: "w4-folgen", text: "Augen folgen dem Daumen: Kreis, Dreieck, Quadrat" }
+        ]
+      },
+      {
+        title: "Ab Woche 5 \xB7 Pflege & Vorsorge",
+        items: [
+          { id: "w5-waerme", text: "Abends feuchtwarmes Tuch und Lidmassage" },
+          { id: "w5-luft", text: "Raumluft befeuchten" },
+          { id: "w6-arzt", text: "Augenarzt-Termin ab 40 (Druck, Sehnerv)" }
+        ]
+      }
+    ],
+    labs: ["HbA1c (Netzhaut bei Diabetes)", "N\xFCchternglukose", "LDL-Cholesterin"],
+    tracking: "Bildschirmpausen als To-do, Zeit drau\xDFen \xFCber Schritte; Augenarzt-Termine im Kalender. Sehsch\xE4rfe misst nur der Augenarzt oder Optiker."
   }
 ];
 var GENETICS_BASICS = {
@@ -24790,7 +25457,8 @@ var COMMON_GROUND = [
   "Viel Gem\xFCse, Beeren und N\xFCsse; Ballaststoffe f\xFCr den Darm.",
   "Regelm\xE4\xDFig 7\u20138 Stunden schlafen.",
   "Nicht rauchen, Alkohol h\xF6chstens wenig \u2013 keiner der Autoren empfiehlt ihn.",
-  "Supplemente zuletzt und gezielt \u2013 erst messen, dann erg\xE4nzen."
+  "Supplemente zuletzt und gezielt \u2013 erst messen, dann erg\xE4nzen.",
+  "Vorsorgeuntersuchungen nutzen \u2013 auch die Augen ab 40."
 ];
 var DISAGREEMENTS = [
   {
@@ -24801,7 +25469,10 @@ var DISAGREEMENTS = [
       strunz: "1,2\u20132,0 g/kg",
       sinclair: "eher weniger, wenig tierisch",
       greger: "0,8 g/kg, pflanzlich",
-      darm: "keine feste Zahl"
+      darm: "keine feste Zahl",
+      truebel: "keine feste Zahl; 10\u201320 g nach hartem Training",
+      kompass: "eiwei\xDFreich, ohne feste Zahl",
+      augen: "kein Thema"
     }
   },
   {
@@ -24812,7 +25483,10 @@ var DISAGREEMENTS = [
       strunz: "\u201ENo Carb\u201C \u2013 nur Gem\xFCse, Beeren, N\xFCsse",
       sinclair: "Zucker, Brot, Nudeln runter",
       greger: "Vollkorn und H\xFClsenfr\xFCchte t\xE4glich",
-      darm: "Vollkorn, resistente St\xE4rke"
+      darm: "Vollkorn, resistente St\xE4rke",
+      truebel: "Vollkorn, kaum Hochverarbeitetes",
+      kompass: "Vollkorn, wenig mit hohem glyk\xE4mischen Index",
+      augen: "kein Thema"
     }
   },
   {
@@ -24823,15 +25497,28 @@ var DISAGREEMENTS = [
       strunz: "16\u201318 h fasten, sp\xE4t essen",
       sinclair: "16:8, 5:2 oder Pseudofasten",
       greger: "fr\xFCh, unter 10 h",
-      darm: "3 Mahlzeiten ohne Snacks"
+      darm: "3 Mahlzeiten ohne Snacks",
+      truebel: "10\u201318 Uhr oder 5:2 testen",
+      kompass: "16:8, z. B. 12\u201320 Uhr",
+      augen: "kein Thema"
     }
   }
 ];
 var DAILY_DOZEN = [
-  { key: "beans", label: "H\xFClsenfr\xFCchte", servings: 3, example: "\xBD Tasse gekocht oder \xBC Tasse Hummus" },
+  {
+    key: "beans",
+    label: "H\xFClsenfr\xFCchte",
+    servings: 3,
+    example: "\xBD Tasse gekocht oder \xBC Tasse Hummus"
+  },
   { key: "berries", label: "Beeren", servings: 1, example: "\xBD Tasse frisch oder tiefgek\xFChlt" },
   { key: "fruits", label: "Anderes Obst", servings: 3, example: "1 mittelgro\xDFes St\xFCck" },
-  { key: "cruciferous", label: "Kreuzbl\xFCtler", servings: 1, example: "\xBD Tasse Brokkoli, Kohl, Rosenkohl" },
+  {
+    key: "cruciferous",
+    label: "Kreuzbl\xFCtler",
+    servings: 1,
+    example: "\xBD Tasse Brokkoli, Kohl, Rosenkohl"
+  },
   { key: "greens", label: "Blattgem\xFCse", servings: 2, example: "1 Tasse roh oder \xBD Tasse gekocht" },
   { key: "vegetables", label: "Anderes Gem\xFCse", servings: 2, example: "\xBD Tasse" },
   { key: "flax", label: "Leinsamen", servings: 1, example: "1 EL gemahlen" },
@@ -24839,7 +25526,12 @@ var DAILY_DOZEN = [
   { key: "spices", label: "Kr\xE4uter und Gew\xFCrze", servings: 1, example: "\xBC TL Kurkuma" },
   { key: "grains", label: "Vollkorn", servings: 3, example: "\xBD Tasse gekocht oder 1 Scheibe Brot" },
   { key: "beverages", label: "Getr\xE4nke", servings: 5, example: "1 Glas Wasser oder Tee" },
-  { key: "exercise", label: "Bewegung", servings: 1, example: "90 min moderat oder 40 min intensiv" }
+  {
+    key: "exercise",
+    label: "Bewegung",
+    servings: 1,
+    example: "90 min moderat oder 40 min intensiv"
+  }
 ];
 var DAILY_DOZEN_SOURCE = "Michael Greger, Gene Stone: Das How Not to Die Kochbuch \u2013 Kapitel \u201EDas T\xE4gliche Dutzend\u201C (Portionsgr\xF6\xDFen nach Greger)";
 var DAILY_DOZEN_TOTAL = DAILY_DOZEN.reduce((s, d) => s + d.servings, 0);
@@ -24858,13 +25550,16 @@ function parseProtocolState(raw) {
   }
   if (!v || typeof v !== "object") return out;
   const o = v;
-  if (typeof o.active === "string" && PROTOCOLS.some((p) => p.id === o.active)) out.active = o.active;
+  if (typeof o.active === "string" && PROTOCOLS.some((p) => p.id === o.active))
+    out.active = o.active;
   if (o.done && typeof o.done === "object") {
     for (const p of PROTOCOLS) {
       const list2 = o.done[p.id];
       if (!Array.isArray(list2)) continue;
       const valid = new Set(p.start.flatMap((s) => s.items.map((i) => i.id)));
-      const ids = [...new Set(list2.filter((x) => typeof x === "string" && valid.has(x)))];
+      const ids = [
+        ...new Set(list2.filter((x) => typeof x === "string" && valid.has(x)))
+      ];
       if (ids.length) out.done[p.id] = ids;
     }
   }
@@ -24874,7 +25569,8 @@ function parseProtocolState(raw) {
       const row = {};
       for (const d of DAILY_DOZEN) {
         const n2 = counts[d.key];
-        if (typeof n2 === "number" && Number.isInteger(n2) && n2 > 0) row[d.key] = Math.min(n2, d.servings);
+        if (typeof n2 === "number" && Number.isInteger(n2) && n2 > 0)
+          row[d.key] = Math.min(n2, d.servings);
       }
       if (Object.keys(row).length) out.dozen[day] = row;
     }

@@ -1,5 +1,6 @@
 // LIFESPAN OS Mobil – Body & Longevity → Protocols (1.79.0, wie am PC 1.0.165 `ProtocolsTab.tsx`).
-// Longevity-Protokolle (Huberman, Attia, Strunz, Sinclair, Greger, Darm-Diät) mit Kernidee, Tagesablauf,
+// Longevity-Protokolle (Huberman, Attia, Strunz, Sinclair, Greger, Darm-Diät; seit 1.81.0 auch Trübel,
+// Longevity-Kompass, Augen-Yoga) mit Kernidee, Tagesablauf,
 // Leitwerten, Fundament / Ergänzung / Optional, 7-Wochen-Start zum Abhaken, Einordnung und Laborwerten;
 // dazu Gemeinsamkeiten, Widersprüche, Tägliches Dutzend und Genetik-Grundlagen. Inhalte und Regeln:
 // `src/domain/protocols.ts` über pcdomain.js (D.protocols). Fortschritt in der Einstellung

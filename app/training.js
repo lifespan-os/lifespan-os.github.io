@@ -4,7 +4,7 @@
 // Hier: Rahmen, „Einheiten“ (WorkoutsTab.tsx), „Pläne“ (PlansTab.tsx) und „NEAT“ (NeatTab.tsx).
 // Auswertung, Verlauf, Cardio: trainingstats.js. Datenbank, Check-Ins: trainingdb.js.
 // Daten: trainingdata.js (Änderungen am Handy, gehen mit „Körperwerte … senden“ an den PC).
-
+// Seit 1.75.0 aufgeteilt: Pläne in trainingplans.js, Aktionen und Eingaben in trainingactions.js.
 import * as D from "./pcdomain.js";
 import * as P from "./pcdb.js";
 import * as O from "./pcoverview.js";
@@ -14,27 +14,31 @@ import * as CD from "./checklistdata.js";
 import { buildDb, today } from "./diary.js";
 import { hasWearable, workoutHeartHtml, workoutHeartOf } from "./heart.js";
 import { energyHtml, stepGoalBar } from "./overview.js";
-import { statsActions, viewCardioTab, viewProgressTab, viewReviewTab, statsChange } from "./trainingstats.js";
-import { DB_LAYOUT_KEY, dbActions, dbChange, dbInput, viewDatabaseTab } from "./trainingdb.js";
+import { REVIEW_LAYOUT_KEY, viewCardioTab, viewProgressTab, viewReviewTab } from "./trainingstats.js";
+import { DB_LAYOUT_KEY, viewDatabaseTab } from "./trainingdb.js";
 import { layoutEditing } from "./layoutedit.js";
-import { REVIEW_LAYOUT_KEY } from "./trainingstats.js";
-import { activeGymSelectHtml, planGymSelectHtml, viewGymsTab } from "./gymsui.js";
+import { activeGymSelectHtml, viewGymsTab } from "./gymsui.js";
 import * as GD from "./gymsdata.js";
 import { icon } from "./nav.js";
+import { plansTab } from "./trainingplans.js";
+export { planPickerResults } from "./trainingplans.js";
+export { trainingActions, trainingChange, trainingInput } from "./trainingactions.js";
 
-let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice, saveTrain, startPlanDay, startFree, startBackfill, startCardio, openWorkout, C }
+export let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice, saveTrain, startPlanDay, startFree, startBackfill, startCardio, openWorkout, C }
 
 /** Aktion nur als Symbol (1.63.0); der Text steht im Hinweis und für Vorleseprogramme bereit. */
-const actionBtn = (act, id, name, label, tone = "") =>
+export const actionBtn = (act, id, name, label, tone = "") =>
   `<button class="icon-act ${tone}" data-act="${act}" data-arg="${esc(id)}" aria-label="${esc(label)}" title="${esc(label)}">${icon(name)}</button>`;
 
 export function initTraining(ctx) {
   X = ctx;
 }
 
-const esc = (v) => X.esc(v);
-const F = (v, d = 0) => D.formatNumber(v, d);
-const fmtDate = (d) => D.formatDate(d);
+export const esc = (v) => X.esc(v);
+
+export const F = (v, d = 0) => D.formatNumber(v, d);
+
+export const fmtDate = (d) => D.formatDate(d);
 
 /**
  * Fünf Reiter statt acht (1.72.0, wie PC 1.0.162): Gruppe → Unterreiter. Die Unterreiter behalten
@@ -47,11 +51,13 @@ export const TRAINING_GROUPS = [
   ["cardio", "Cardio & NEAT", [["cardio", "Cardio"], ["neat", "NEAT"]]],
   ["database", "Datenbank", [["exercises", "Übungen & Maschinen"], ["gyms", "Meine Gyms"]]],
 ];
+
 /** Alle Unterreiter mit Beschriftung (früher `TRAINING_TABS`). */
 export const TRAINING_TABS = TRAINING_GROUPS.flatMap(([, , subs]) => subs);
-const groupOfTab = (tab) => TRAINING_GROUPS.find(([, , subs]) => subs.some(([v]) => v === tab)) ?? TRAINING_GROUPS[0];
 
-const KIND_LABELS = { rest: "Restday", sick: "Krankheit" };
+export const groupOfTab = (tab) => TRAINING_GROUPS.find(([, , subs]) => subs.some(([v]) => v === tab)) ?? TRAINING_GROUPS[0];
+
+export const KIND_LABELS = { rest: "Restday", sick: "Krankheit" };
 
 /** Meldung oben im Reiter (wie FormMessage am PC). */
 export function notice() {
@@ -83,7 +89,7 @@ export const fieldError = (errors, name) => (errors?.[name] ? `<p class="field-e
 // ------------------------------------------------------------------ Rahmen
 
 /** Link rechts in der Zeile des Umschalters (1.74.0): Seite anpassen; im Bearbeiten-Modus ausgeblendet */
-function subAside(tab) {
+export function subAside(tab) {
   if (tab === "review" && layoutEditing() !== REVIEW_LAYOUT_KEY) return `<button class="linkbtn small subtabs-row__aside" data-act="train-review-layout">Auswertung anpassen</button>`;
   if (tab === "exercises" && !X.S.trainExEdit && !X.S.trainSportEdit && !X.S.trainMachine && layoutEditing() !== DB_LAYOUT_KEY)
     // als Symbol (Raster wie „Übersicht anpassen“ am PC): mit Text passt es neben den Umschalter nicht in eine Zeile
@@ -143,7 +149,7 @@ export function restStreak(statuses, date) {
   return n;
 }
 
-function workoutsTab() {
+export function workoutsTab() {
   const S = X.S;
   const db = buildDb();
   const day0 = today();
@@ -250,14 +256,14 @@ function workoutsTab() {
     ${S.trainDialog ? `<section class="card dialog-card" role="alertdialog"><h3>${esc(S.trainDialog.title)}</h3><p class="small">${esc(S.trainDialog.message)}</p><button class="btn block" data-act="train-dialog-close">Verstanden</button></section>` : ""}`;
 }
 
-function adoptOffer() {
+export function adoptOffer() {
   const a = X.S.trainAdopt;
   return `<div class="adopt-offer" role="group" aria-label="Richtwerte übernehmen"><span class="small">Sätze, Gewichte und Einstellungen von „${esc(a.title)}“ als neue Richtwerte in den Trainingstag übernehmen? Beim nächsten Start sind die Sätze damit vorbelegt.</span>
     <div class="row-actions"><button class="btn sm primary" data-act="train-adopt">In den Plan übernehmen</button><button class="btn sm" data-act="train-adopt-no">Nein danke</button></div></div>`;
 }
 
 /** Restday/Krankheit für einen Tag setzen oder entfernen, mit den Meldungen wie am PC. */
-async function applyDay(date, kind) {
+export async function applyDay(date, kind) {
   const S = X.S;
   CD.setDayStatus(S.catalog, S.checklists, date, kind || null, { uuid: X.uuid, now: new Date() });
   await X.store.set("checklists", S.checklists);
@@ -278,7 +284,7 @@ async function applyDay(date, kind) {
  * Richtwerte aus einer abgeschlossenen Einheit in ihren Trainingstag übernehmen wie
  * `plan::adopt_workout`: je Übung in der Reihenfolge des Plans; Übungen ohne Gegenstück bleiben.
  */
-function adoptWorkout(w) {
+export function adoptWorkout(w) {
   const S = X.S;
   const raw = S.catalogRaw;
   const plans = TR.plansOf(raw, S.train, S.catalog.exercises);
@@ -326,9 +332,9 @@ function adoptWorkout(w) {
 
 // ------------------------------------------------------------------ NEAT (NeatTab.tsx)
 
-const HISTORY_DAYS = 14;
+export const HISTORY_DAYS = 14;
 
-function neatTab() {
+export function neatTab() {
   const S = X.S;
   const day0 = today();
   const date = S.trainNeatDate ?? day0;
@@ -414,7 +420,7 @@ function neatTab() {
     </section>`;
 }
 
-function updateNeatLive() {
+export function updateNeatLive() {
   const S = X.S;
   const d = S.trainNeatDraft;
   const date = d.date;
@@ -431,658 +437,10 @@ function updateNeatLive() {
   if (sEl) sEl.textContent = min > 0 ? `Zusammen: ${D.formatDuration(min)}` : "";
 }
 
-function neatDraftNow() {
+export function neatDraftNow() {
   const S = X.S;
   const date = S.trainNeatDate ?? today();
   const d = { date };
   for (const el of document.querySelectorAll("[data-neat]")) d[el.dataset.neat] = el.value;
   return d;
-}
-
-// ------------------------------------------------------------------ Pläne (PlansTab.tsx)
-
-const WEEKDAYS = ["", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
-
-function isCardioCheck() {
-  const ids = new Set(X.S.catalog.exercises.filter((e) => (e.category ?? "strength") === "cardio").map((e) => e.id));
-  return (id) => ids.has(id);
-}
-
-function plansHaveData() {
-  return TR.hasTable(X.S.catalogRaw, "training_plan");
-}
-
-function plansTab() {
-  const S = X.S;
-  if (!plansHaveData()) {
-    return `<section class="card"><p class="warn">Für die Pläne wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Import/Export „Neue Exportdatei laden“.</p></section>`;
-  }
-  if (S.trainPlanEdit) return planEditor();
-  const plans = TR.plansOf(S.catalogRaw, S.train, S.catalog.exercises);
-  const planGymNames = GD.gymNames(S.catalog, S.gyms);
-  const cardio = isCardioCheck();
-  return `<div class="toolbar"><p class="muted small">Pläne legen Trainingstage mit Übungen und Sätzen fest – auch Cardiopläne. Aus einem Tag startest du ein Training; die Sätze sind dann mit den Richtwerten vorbelegt. Termine (Wochentag oder Datum mit Uhrzeit) zeigen in der Übersicht das nächste Training.</p>
-      <button class="btn primary" data-act="plan-new">Neuer Plan</button></div>
-    ${notice()}
-    ${plans.length ? "" : `<section class="card card--training"><div class="empty-state"><p><strong>Noch keine Trainingspläne</strong></p><p class="muted small">Ein Plan ist optional. Einheiten kannst du auch ohne Plan erfassen.</p></div></section>`}
-    ${plans
-      .map(
-        (plan) => `<section class="card card--training">
-        <div class="wo-head"><h3 class="plan-title"><span class="plan-icon" title="${esc(D.planIconLabel(D.planIconKey(plan)))}">${D.planIconSvg(D.planIconKey(plan), 30)}</span>${esc(plan.name)} ${plan.archived ? '<span class="pill">Archiviert</span>' : ""}</h3></div>
-        <div class="row-actions icon-actions">${actionBtn("plan-edit", plan.id, "edit", `Plan „${plan.name}“ bearbeiten`)}${actionBtn("plan-copy", plan.id, "copy", `Plan „${plan.name}“ kopieren`)}${actionBtn("plan-delete", plan.id, "trash", `Plan „${plan.name}“ löschen`, "danger")}</div>
-        ${plan.description ? `<p class="muted small">${esc(plan.description)}</p>` : ""}
-        ${plan.gymId && planGymNames.get(plan.gymId) ? `<p class="muted small">Gym: ${esc(planGymNames.get(plan.gymId))}</p>` : ""}
-        ${plan.days
-          .map(
-            (day) => `<div class="meal-block"><div class="wo-head"><h4>${esc(day.name)}</h4>${
-              !plan.archived && day.exercises.length ? `<button class="btn sm" data-act="train-start-plan-day" data-arg="${esc(day.id)}" ${S.active ? "disabled" : ""}>▶ Training starten</button>` : ""
-            }</div>
-            ${(day.slots ?? []).length ? `<p class="muted small">🗓 ${esc(day.slots.map(describeSlot).join(" · "))}</p>` : ""}
-            ${day.notes ? `<p class="muted small">${esc(day.notes)}</p>` : ""}
-            ${
-              day.exercises.length
-                ? `<ul class="plan-ex-list">${day.exercises
-                    .map((e) => `<li><span>${esc(e.exerciseName)}</span><span class="muted small">${esc(D.planDraft.describePlanSets(D.workoutDraft.planExerciseToDraft(e, cardio(e.exerciseId)).sets))}</span></li>`)
-                    .join("")}</ul>`
-                : `<p class="muted small">Noch keine Übungen.</p>`
-            }</div>`,
-          )
-          .join("")}
-      </section>`,
-      )
-      .join("")}`;
-}
-
-const describeSlot = (s) => D.planSchedule.describeSlot(s);
-
-/** Symbol des Plans wählen (1.63.0): „Automatisch“ nach dem Namen oder ein festes Symbol. */
-function planIconPickerHtml(draft) {
-  const auto = D.detectPlanIcon(draft.name ?? "", draft.description ?? "");
-  const current = draft.icon || D.AUTO_ICON;
-  const opts = [{ key: D.AUTO_ICON, label: `Automatisch (${D.planIconLabel(auto)})`, icon: auto }, ...D.PLAN_ICONS.map((i) => ({ key: i.key, label: i.label, icon: i.key }))];
-  return `<div class="field"><span class="label">Symbol</span><div class="plan-icon-grid" role="radiogroup" aria-label="Symbol des Plans">${opts
-    .map(
-      (o) => `<button class="plan-icon-choice ${current === o.key ? "is-selected" : ""}" role="radio" aria-checked="${current === o.key}" data-act="plan-icon" data-arg="${esc(o.key)}"><span class="plan-icon">${D.planIconSvg(o.icon, 28)}</span><span>${esc(o.label)}</span></button>`,
-    )
-    .join("")}</div></div>`;
-}
-
-function planEditor() {
-  const S = X.S;
-  const draft = S.trainPlanEdit;
-  const errors = S.trainErrors ?? {};
-  if (S.trainPlanDayIdx !== null && S.trainPlanDayIdx !== undefined && draft.days[S.trainPlanDayIdx]) return planDayEditor(draft, S.trainPlanDayIdx, errors);
-  const byId = new Map(S.catalog.exercises.map((e) => [e.id, e]));
-  for (const e of S.localExercises ?? []) byId.set(e.id, e);
-  return `<section class="card card--training"><h3>${draft.id ? "Plan bearbeiten" : "Neuer Plan"}</h3>
-    ${notice()}
-    <div class="field"><label for="plan-name">Name</label><input id="plan-name" type="text" maxlength="80" placeholder="z. B. Push/Pull/Beine oder Cardio" value="${esc(draft.name)}" data-plan="name">${fieldError(errors, "name")}</div>
-    <label class="toggle"><input type="checkbox" data-plan="archived" ${draft.archived ? "checked" : ""}> Archiviert</label>
-    <div class="field"><label for="plan-description">Beschreibung (optional)</label><textarea id="plan-description" rows="2" maxlength="2000" data-plan="description">${esc(draft.description)}</textarea>${fieldError(errors, "description")}</div>
-    ${planGymSelectHtml(draft)}${fieldError(errors, "gymId")}
-    ${planIconPickerHtml(draft)}${fieldError(errors, "icon")}
-    <h4>Trainingstage</h4>
-    <p class="muted small">Übungen fügst du wie in einem normalen Training hinzu (Sätze, Pause, Notiz). Für einen Cardioplan wählst du Cardio-Übungen wie Laufband oder Rad.</p>
-    ${fieldError(errors, "days")}
-    ${draft.days
-      .map((day, di) => {
-        const exErr = Object.keys(errors).some((k) => k.startsWith(`days.${di}.exercises`));
-        return `<div class="exercise-block">
-          <div class="field"><label for="plan-day-${di}">Tag ${di + 1}</label><input id="plan-day-${di}" type="text" maxlength="80" value="${esc(day.name)}" data-plan-day="${di}" data-pf="name">${fieldError(errors, `days.${di}.name`)}</div>
-          <div class="row-actions"><button class="btn sm" data-act="plan-day-move" data-arg="${di}|-1" ${di === 0 ? "disabled" : ""} aria-label="Nach oben">↑</button>
-            <button class="btn sm" data-act="plan-day-move" data-arg="${di}|1" ${di === draft.days.length - 1 ? "disabled" : ""} aria-label="Nach unten">↓</button>
-            <button class="btn sm danger" data-act="plan-day-remove" data-arg="${di}" aria-label="Tag entfernen">✕ Tag entfernen</button></div>
-          ${
-            day.exercises.length
-              ? `<ul class="plan-ex-list">${day.exercises.map((ex) => `<li><span>${esc(byId.get(ex.exerciseId)?.name ?? "Unbekannte Übung")}</span><span class="muted small">${esc(D.planDraft.describePlanSets(ex.sets))}</span></li>`).join("")}</ul>`
-              : `<p class="muted small">Noch keine Übungen.</p>`
-          }
-          ${exErr ? `<p class="field-error">Bei den Übungen dieses Tages sind Felder zu prüfen – bitte „Übungen bearbeiten“ öffnen.</p>` : ""}
-          ${fieldError(errors, `days.${di}.exercises`)}
-          <button class="btn" data-act="plan-day-open" data-arg="${di}">🏋 ${day.exercises.length ? "Übungen bearbeiten" : "Übungen hinzufügen"}</button>
-          ${slotEditor(day, di, errors)}
-        </div>`;
-      })
-      .join("")}
-    <button class="btn" data-act="plan-day-add">+ Trainingstag hinzufügen</button>
-    <div class="row-actions"><button class="btn primary" data-act="plan-save">Speichern</button><button class="btn" data-act="plan-cancel">Abbrechen</button></div>
-  </section>`;
-}
-
-function slotEditor(day, di, errors) {
-  const err = (si, n) => fieldError(errors, `days.${di}.slots.${si}.${n}`);
-  return `<div class="plan-slots"><p class="small"><strong>🗓 Termine</strong> <span class="muted">– optional; der nächste Termin erscheint in der Übersicht unter „Nächstes Training“.</span></p>
-    ${day.slots.length ? "" : `<p class="muted small">Noch kein Termin.</p>`}
-    ${day.slots
-      .map(
-        (s, si) => `<div class="plan-slot">
-        <div class="field"><label>Wiederholung</label><select data-slot="${di}|${si}" data-pf="kind"><option value="weekday" ${s.kind === "weekday" ? "selected" : ""}>Jede Woche</option><option value="date" ${s.kind === "date" ? "selected" : ""}>An einem Datum</option></select></div>
-        ${
-          s.kind === "weekday"
-            ? `<div class="field"><label>Wochentag</label><select data-slot="${di}|${si}" data-pf="weekday">${[1, 2, 3, 4, 5, 6, 7].map((d) => `<option value="${d}" ${String(d) === s.weekday ? "selected" : ""}>${WEEKDAYS[d]}</option>`).join("")}</select>${err(si, "weekday")}</div>`
-            : `<div class="field"><label>Datum</label><input type="date" value="${esc(s.date)}" data-slot="${di}|${si}" data-pf="date">${err(si, "date")}${err(si, "weekday")}</div>`
-        }
-        <div class="field"><label>Uhrzeit (optional)</label><input type="time" value="${esc(s.time)}" data-slot="${di}|${si}" data-pf="time">${err(si, "time")}</div>
-        <button class="btn sm" data-act="plan-slot-remove" data-arg="${di}|${si}" aria-label="Termin ${si + 1} entfernen">✕</button>
-      </div>`,
-      )
-      .join("")}
-    ${day.slots.length < D.planDraft.MAX_SLOTS ? `<button class="btn sm" data-act="plan-slot-add" data-arg="${di}">+ Termin hinzufügen</button>` : ""}
-  </div>`;
-}
-
-/** Übungen eines Trainingstags bearbeiten (am PC: Trainingseditor im Planmodus). */
-function planDayEditor(draft, di, errors) {
-  const S = X.S;
-  const day = draft.days[di];
-  const cardio = isCardioCheck();
-  const all = [...S.catalog.exercises, ...(S.localExercises ?? [])];
-  const byId = new Map(all.map((e) => [e.id, e]));
-  const machines = new Map(S.catalog.machines.map((m) => [m.id, m]));
-  const e = (n) => fieldError(errors, `days.${di}.${n}`);
-  const q = S.trainPlanQuery ?? "";
-  return `<section class="card card--training"><h3>${esc(draft.name || "Plan")} – Übungen</h3>
-    ${notice()}
-    <div class="field"><label for="pday-name">Name des Trainingstags</label><input id="pday-name" type="text" maxlength="80" value="${esc(day.name)}" data-plan-day="${di}" data-pf="name">${e("name")}</div>
-    <div class="field"><label for="pday-notes">Notiz (optional)</label><textarea id="pday-notes" rows="2" maxlength="1000" data-plan-day="${di}" data-pf="notes">${esc(day.notes)}</textarea></div>
-    ${day.exercises
-      .map((ex, ei) => {
-        const exr = byId.get(ex.exerciseId);
-        const m = exr?.machine_id ? machines.get(exr.machine_id) : null;
-        const nr = m?.own_number || m?.gym_number || exr?.equipment || "";
-        const isC = cardio(ex.exerciseId);
-        const pe = (n) => fieldError(errors, `days.${di}.exercises.${ei}.${n}`);
-        return `<div class="exercise-block">
-          <div class="wo-head"><h4>${nr ? `<span class="num">${esc(nr)}</span> ` : ""}${esc(exr?.name ?? "Unbekannte Übung")}</h4></div>
-          <div class="row-actions"><button class="btn sm" data-act="pday-ex-move" data-arg="${ei}|-1" ${ei === 0 ? "disabled" : ""}>↑</button><button class="btn sm" data-act="pday-ex-move" data-arg="${ei}|1" ${ei === day.exercises.length - 1 ? "disabled" : ""}>↓</button><button class="btn sm danger" data-act="pday-ex-remove" data-arg="${ei}">Entfernen</button></div>
-          <table class="plan-sets"><thead><tr><th>Satz</th>${isC ? "<th>Dauer (min)</th><th>Strecke (km)</th>" : "<th>Wdh.</th><th>kg</th>"}<th>W</th><th></th></tr></thead><tbody>
-          ${ex.sets
-            .map(
-              (s, si) => `<tr><td>${si + 1}</td>
-              ${
-                isC
-                  ? `<td><input type="text" inputmode="decimal" value="${esc(s.duration)}" data-pset="${ei}|${si}" data-pf="duration"></td><td><input type="text" inputmode="decimal" value="${esc(s.distance)}" data-pset="${ei}|${si}" data-pf="distance"></td>`
-                  : `<td><input type="text" inputmode="numeric" value="${esc(s.reps)}" data-pset="${ei}|${si}" data-pf="reps"></td><td><input type="text" inputmode="decimal" value="${esc(s.weightKg)}" data-pset="${ei}|${si}" data-pf="weightKg"></td>`
-              }
-              <td><input type="checkbox" ${s.isWarmup ? "checked" : ""} data-pset="${ei}|${si}" data-pf="isWarmup" aria-label="Aufwärmsatz"></td>
-              <td><button class="btn sm" data-act="pday-set-remove" data-arg="${ei}|${si}" aria-label="Satz entfernen">✕</button></td></tr>
-              ${Object.entries(errors).filter(([k]) => k.startsWith(`days.${di}.exercises.${ei}.sets.${si}.`)).map(([, v]) => `<tr><td colspan="5"><p class="field-error">${esc(v)}</p></td></tr>`).join("")}`,
-            )
-            .join("")}</tbody></table>
-          <button class="btn sm" data-act="pday-set-add" data-arg="${ei}">+ Satz</button>
-          <div class="field"><label>Pause (Sekunden)</label><input type="text" inputmode="numeric" value="${esc(ex.restSeconds)}" data-pex="${ei}" data-pf="restSeconds">${pe("restSeconds")}</div>
-          <div class="field"><label>Notiz (optional)</label><input type="text" maxlength="500" value="${esc(ex.notes)}" data-pex="${ei}" data-pf="notes">${pe("notes")}</div>
-        </div>`;
-      })
-      .join("")}
-    <div class="field"><label for="pday-q">Übung hinzufügen</label><input id="pday-q" type="search" placeholder="Übung oder Maschine suchen, z. B. Beinpresse, 82, Latissimus …" value="${esc(q)}" data-tinput="planQuery" autocomplete="off"></div>
-    <div id="pday-results">${planPickerResults(q)}</div>
-    <div class="row-actions"><button class="btn primary" data-act="pday-done">Übernehmen</button></div>
-  </section>`;
-}
-
-export function planPickerResults(q) {
-  const S = X.S;
-  const query = String(q ?? "").trim().toLowerCase();
-  if (!query) return `<p class="muted small">Sucht in Übungen (Name, Muskelgruppe, Gerät) und Maschinen (Name, Hersteller, Nummer).</p>`;
-  const exs = [...S.catalog.exercises, ...(S.localExercises ?? [])].filter((e) => !e.archived);
-  const hit = (txt) => query.split(/\s+/).every((w) => txt.includes(w));
-  const exHits = exs
-    .filter((e) => hit(`${e.name} ${e.muscle_group ?? ""} ${e.equipment ?? ""}`.toLowerCase()))
-    .slice(0, 12)
-    .map((e) => `<button class="item" data-act="pday-ex-add" data-arg="${esc(e.id)}"><span class="main"><b>${esc(e.name)}</b><span class="muted small">${esc([e.muscle_group, e.equipment].filter(Boolean).join(" · ") || "Übung")}</span></span><span class="chev">+</span></button>`);
-  const exact = (m) => [m.own_number, m.gym_number].some((n) => n && String(n).toLowerCase() === query);
-  const mHits = S.catalog.machines
-    .filter((m) => !m.archived && (exact(m) || hit(`${m.display_name ?? m.name} ${m.manufacturer ?? ""} ${m.own_number ?? ""} ${m.gym_number ?? ""}`.toLowerCase())))
-    .sort((a, b) => Number(exact(b)) - Number(exact(a)))
-    .slice(0, 12)
-    .map((m) => `<button class="item" data-act="pday-machine-add" data-arg="${esc(m.id)}"><span class="main"><b>${esc(m.display_name ?? m.name)}</b><span class="muted small">${esc([m.manufacturer, m.own_number ? `Nr. ${m.own_number}` : "", m.gym_number ? `dasGym ${m.gym_number}` : ""].filter(Boolean).join(" · "))}</span></span><span class="chev">+</span></button>`);
-  const all = [...exHits, ...mHits];
-  return all.length ? `<div class="list">${all.join("")}</div>` : `<p class="muted small">Keine Treffer für „${esc(q)}“.</p>`;
-}
-
-/** Eingaben im Planeditor in den Entwurf übernehmen (vor jedem Neuaufbau). */
-function syncPlanInputs() {
-  const d = X.S.trainPlanEdit;
-  if (!d) return;
-  for (const el of document.querySelectorAll("[data-plan]")) {
-    const k = el.dataset.plan;
-    d[k] = el.type === "checkbox" ? el.checked : el.value;
-  }
-  for (const el of document.querySelectorAll("[data-plan-day]")) d.days[+el.dataset.planDay][el.dataset.pf] = el.value;
-  for (const el of document.querySelectorAll("[data-slot]")) {
-    const [di, si] = el.dataset.slot.split("|").map(Number);
-    const slot = d.days[di]?.slots[si];
-    if (slot) slot[el.dataset.pf] = el.value;
-  }
-  const di = X.S.trainPlanDayIdx;
-  if (di !== null && di !== undefined && d.days[di]) {
-    const day = d.days[di];
-    for (const el of document.querySelectorAll("[data-pex]")) {
-      const ex = day.exercises[+el.dataset.pex];
-      if (ex) ex[el.dataset.pf] = el.value;
-    }
-    for (const el of document.querySelectorAll("[data-pset]")) {
-      const [ei, si] = el.dataset.pset.split("|").map(Number);
-      const s = day.exercises[ei]?.sets[si];
-      if (s) s[el.dataset.pf] = el.type === "checkbox" ? el.checked : el.value;
-    }
-  }
-}
-
-function addPlanExercise(exerciseId) {
-  const S = X.S;
-  syncPlanInputs();
-  const day = S.trainPlanEdit.days[S.trainPlanDayIdx];
-  const ex = D.workoutDraft.emptyExercise(exerciseId);
-  // Vorbelegung aus der letzten Einheit (wie im Trainingseditor)
-  const last = S.catalog.last?.[exerciseId];
-  if (last?.sets?.length) {
-    ex.sets = last.sets.map((s) => ({ ...D.workoutDraft.emptySet(), reps: s.reps === null ? "" : String(s.reps), weightKg: s.weightKg === null ? "" : String(s.weightKg).replace(".", ","), isWarmup: !!s.isWarmup }));
-    if (last.restSeconds) ex.restSeconds = String(last.restSeconds);
-  }
-  day.exercises.push(ex);
-  S.trainPlanQuery = "";
-  X.rerender();
-}
-
-// ------------------------------------------------------------------ Aktionen
-
-export const trainingActions = {
-  ...statsActions,
-  ...dbActions,
-  // Gruppe der Reiterleiste: zuletzt gewählter Unterreiter dieser Gruppe, sonst der erste (1.72.0)
-  "train-group": (el) => {
-    const S = X.S;
-    const group = TRAINING_GROUPS.find(([g]) => g === el.dataset.arg);
-    if (!group) return;
-    const last = S.trainSub?.[group[0]];
-    trainingActions["train-tab"]({ dataset: { arg: group[2].some(([v]) => v === last) ? last : group[2][0][0] } });
-  },
-  "train-tab": (el) => {
-    const S = X.S;
-    syncPlanInputs();
-    S.trainTab = el.dataset.arg;
-    S.trainSub = { ...(S.trainSub ?? {}), [groupOfTab(S.trainTab)[0]]: S.trainTab };
-    S.trainNotice = null;
-    S.trainErrors = {};
-    X.rerender();
-  },
-  "train-start-day": () => X.startPlanDay(X.S.trainPlanDay),
-  "train-sort-dir": () => {
-    const S = X.S;
-    const cur = S.trainSort ?? D.workoutList.DEFAULT_WORKOUT_SORT;
-    S.trainSort = { key: cur.key, direction: cur.direction === "asc" ? "desc" : "asc" };
-    X.rerender();
-  },
-  "train-start-plan-day": (el) => X.startPlanDay(el.dataset.arg),
-  "train-backfill": () => X.startBackfill(today()),
-  "train-cardio": () => X.startCardio(X.S.trainCardio),
-  "train-open": (el) => X.openWorkout(el.dataset.arg),
-  // Herzfrequenz der Einheit ein-/ausklappen (1.44.0)
-  "train-heart": (el) => {
-    X.S.trainHeart = X.S.trainHeart === el.dataset.arg ? null : el.dataset.arg;
-    X.rerender();
-  },
-  "train-day": async (el) => {
-    try {
-      await applyDay(today(), el.dataset.arg || null);
-    } catch (e) {
-      setNotice("error", e.message);
-    }
-    X.rerender();
-  },
-  "train-day-clear": async (el) => {
-    if (!X.confirmTwice(el, "Nochmal tippen: entfernen")) return;
-    try {
-      await applyDay(el.dataset.arg, null);
-    } catch (e) {
-      setNotice("error", e.message);
-    }
-    X.rerender();
-  },
-  "train-dialog-close": () => {
-    X.S.trainDialog = null;
-    X.rerender();
-  },
-  "train-adopt": async () => {
-    const S = X.S;
-    const w = S.workouts.find((x) => x.id === S.trainAdopt?.id);
-    try {
-      if (!w) throw new Error("Die Einheit gibt es nicht mehr.");
-      const r = adoptWorkout(w);
-      await persistTrain();
-      setNotice(
-        "ok",
-        r.updated > 0
-          ? `Plan „${r.planName}“, Tag „${r.dayName}“: ${r.updated} ${r.updated === 1 ? "Übung hat" : "Übungen haben"} neue Richtwerte.${r.notInPlan.length ? ` Nicht im Plan (unverändert): ${r.notInPlan.join(", ")}.` : ""}`
-          : "Keine Übung dieser Einheit steht im Trainingstag – der Plan bleibt unverändert.",
-      );
-      S.trainAdopt = null;
-    } catch (e) {
-      setNotice("error", e.message);
-    }
-    X.rerender();
-  },
-  "train-adopt-no": () => {
-    X.S.trainAdopt = null;
-    X.rerender();
-  },
-  // NEAT
-  "train-neat-day": (el) => {
-    const S = X.S;
-    const d = P.addDays(S.trainNeatDate ?? today(), Number(el.dataset.arg));
-    if (d > today()) return;
-    S.trainNeatDate = d;
-    S.trainNeatDraft = null;
-    S.trainNotice = null;
-    S.trainErrors = {};
-    X.rerender();
-  },
-  "train-neat-pick": (el) => {
-    const S = X.S;
-    S.trainNeatDate = el.dataset.arg;
-    S.trainNeatDraft = null;
-    S.trainNotice = null;
-    S.trainErrors = {};
-    X.rerender();
-    requestAnimationFrame(() => document.getElementById("neat-title")?.scrollIntoView({ block: "start", behavior: "smooth" }));
-  },
-  "train-weigh-ok": (el) => {
-    const S = X.S;
-    S.trainWeighDismissed = [...(S.trainWeighDismissed ?? []), el.dataset.arg];
-    X.rerender();
-  },
-  "train-neat-save": async () => {
-    const S = X.S;
-    const d = neatDraftNow();
-    S.trainNeatDraft = d;
-    const r = D.neat.neatDraftToInput({
-      date: d.date,
-      exists: false,
-      steps: d.steps ?? "",
-      minutes: Object.fromEntries(TR.MINUTE_FIELDS.map(([k]) => [k, d[k] ?? ""])),
-      otherLabel: d.otherLabel ?? "",
-      notes: d.notes ?? "",
-    });
-    if (!r.ok) {
-      S.trainErrors = r.errors;
-      setNotice("error", "Bitte die markierten Felder prüfen.");
-      return X.rerender();
-    }
-    try {
-      TR.saveNeat(S.catalogRaw, S.train, r.input, { uuid: X.uuid, now: new Date() });
-      await persistTrain();
-      S.trainErrors = {};
-      S.trainNeatDraft = null;
-      setNotice("ok", `Alltagsbewegung für ${fmtDate(d.date)} gespeichert.`);
-    } catch (e) {
-      failed(e);
-    }
-    X.rerender();
-  },
-  "train-neat-delete": async (el) => {
-    const S = X.S;
-    if (!X.confirmTwice(el, "Nochmal tippen: Alltagsbewegung dieses Tages löschen")) return;
-    const date = S.trainNeatDate ?? today();
-    TR.deleteNeat(S.catalogRaw, S.train, date, new Date());
-    await persistTrain();
-    S.trainNeatDraft = null;
-    setNotice("ok", `Eintrag für ${fmtDate(date)} gelöscht.`);
-    X.rerender();
-  },
-  // Pläne
-  "plan-new": () => {
-    const S = X.S;
-    S.trainPlanEdit = D.planDraft.emptyPlanDraft();
-    S.trainPlanDayIdx = null;
-    S.trainNotice = null;
-    S.trainErrors = {};
-    X.rerender();
-  },
-  "plan-icon": (el) => {
-    const S = X.S;
-    if (!S.trainPlanEdit) return;
-    S.trainPlanEdit.icon = el.dataset.arg;
-    X.rerender();
-  },
-  "plan-edit": (el) => {
-    const S = X.S;
-    const plan = TR.plansOf(S.catalogRaw, S.train, S.catalog.exercises).find((p) => p.id === el.dataset.arg);
-    if (!plan) return;
-    S.trainPlanEdit = D.planDraft.planToDraft(plan, isCardioCheck());
-    S.trainPlanDayIdx = null;
-    S.trainNotice = null;
-    S.trainErrors = {};
-    X.rerender();
-    window.scrollTo(0, 0);
-  },
-  "plan-copy": async (el) => {
-    const S = X.S;
-    const plan = TR.plansOf(S.catalogRaw, S.train, S.catalog.exercises).find((p) => p.id === el.dataset.arg);
-    if (!plan) return;
-    try {
-      const id = TR.copyPlan(S.catalogRaw, S.train, plan, { uuid: X.uuid, now: new Date(), exercises: [...S.catalog.exercises, ...(S.localExercises ?? [])] });
-      await persistTrain();
-      const copy = TR.plansOf(S.catalogRaw, S.train, S.catalog.exercises).find((p) => p.id === id);
-      setNotice("ok", `Kopie „${copy?.name ?? ""}“ angelegt. Du kannst sie jetzt unabhängig vom Original bearbeiten.`);
-      if (copy) S.trainPlanEdit = D.planDraft.planToDraft(copy, isCardioCheck());
-      S.trainPlanDayIdx = null;
-    } catch (e) {
-      setNotice("error", e.message);
-    }
-    X.rerender();
-  },
-  "plan-delete": async (el) => {
-    const S = X.S;
-    const plan = TR.plansOf(S.catalogRaw, S.train, S.catalog.exercises).find((p) => p.id === el.dataset.arg);
-    if (!plan || !X.confirmTwice(el, `Nochmal tippen: Plan „${plan.name}“ löschen`)) return;
-    TR.deletePlan(S.catalogRaw, S.train, plan.id, new Date());
-    await persistTrain();
-    setNotice("ok", `Plan „${plan.name}“ gelöscht. Durchgeführte Einheiten bleiben erhalten.`);
-    X.rerender();
-  },
-  "plan-cancel": () => {
-    const S = X.S;
-    S.trainPlanEdit = null;
-    S.trainPlanDayIdx = null;
-    S.trainErrors = {};
-    S.trainNotice = null;
-    X.rerender();
-  },
-  "plan-day-add": () => {
-    const S = X.S;
-    syncPlanInputs();
-    const d = S.trainPlanEdit;
-    d.days.push(D.planDraft.emptyPlanDay(`Tag ${String.fromCharCode(65 + d.days.length)}`));
-    X.rerender();
-  },
-  "plan-day-move": (el) => {
-    const S = X.S;
-    syncPlanInputs();
-    const [i, dir] = el.dataset.arg.split("|").map(Number);
-    S.trainPlanEdit.days = D.planDraft.move(S.trainPlanEdit.days, i, dir);
-    X.rerender();
-  },
-  "plan-day-remove": (el) => {
-    const S = X.S;
-    syncPlanInputs();
-    if (!X.confirmTwice(el, "Nochmal tippen: Tag entfernen")) return;
-    S.trainPlanEdit.days = S.trainPlanEdit.days.filter((_, i) => i !== Number(el.dataset.arg));
-    X.rerender();
-  },
-  "plan-day-open": (el) => {
-    const S = X.S;
-    syncPlanInputs();
-    S.trainPlanDayIdx = Number(el.dataset.arg);
-    S.trainPlanQuery = "";
-    X.rerender();
-    window.scrollTo(0, 0);
-  },
-  "plan-slot-add": (el) => {
-    syncPlanInputs();
-    X.S.trainPlanEdit.days[Number(el.dataset.arg)].slots.push(D.planDraft.emptySlot());
-    X.rerender();
-  },
-  "plan-slot-remove": (el) => {
-    syncPlanInputs();
-    const [di, si] = el.dataset.arg.split("|").map(Number);
-    const day = X.S.trainPlanEdit.days[di];
-    day.slots = day.slots.filter((_, i) => i !== si);
-    X.rerender();
-  },
-  "plan-save": async () => {
-    const S = X.S;
-    syncPlanInputs();
-    const all = [...S.catalog.exercises, ...(S.localExercises ?? [])];
-    const defaults = (id) => {
-      const e = all.find((x) => x.id === id);
-      try {
-        return e?.resistance_profiles ? JSON.parse(e.resistance_profiles) : [];
-      } catch {
-        return [];
-      }
-    };
-    const r = D.planDraft.planDraftToInput(S.trainPlanEdit, defaults);
-    if (!r.ok) {
-      S.trainErrors = r.errors;
-      setNotice("error", "Bitte die markierten Felder prüfen.");
-      return X.rerender();
-    }
-    try {
-      // Übungen, die nur am Handy angelegt wurden, gehen mit dem Plan an den PC
-      for (const day of r.input.days) for (const ex of day.exercises) {
-        const local = (S.localExercises ?? []).find((e) => e.id === ex.exerciseId);
-        if (local) TR.addExerciseRow(S.catalogRaw, S.train, local);
-      }
-      TR.savePlan(S.catalogRaw, S.train, r.input, { uuid: X.uuid, now: new Date(), exercises: all });
-      await persistTrain();
-      setNotice("ok", `Plan „${r.input.name.trim()}“ gespeichert.`);
-      S.trainPlanEdit = null;
-      S.trainPlanDayIdx = null;
-      S.trainErrors = {};
-    } catch (e) {
-      failed(e);
-    }
-    X.rerender();
-    window.scrollTo(0, 0);
-  },
-  "pday-done": () => {
-    const S = X.S;
-    syncPlanInputs();
-    const di = S.trainPlanDayIdx;
-    const day = S.trainPlanEdit.days[di];
-    const r = D.planDraft.checkPlanDay(day);
-    if (!r.ok) {
-      S.trainErrors = Object.fromEntries(Object.entries(r.errors).map(([k, v]) => [`days.${di}.${k}`, v]));
-      setNotice("error", "Bitte die markierten Felder prüfen.");
-      return X.rerender();
-    }
-    S.trainErrors = Object.fromEntries(Object.entries(S.trainErrors ?? {}).filter(([k]) => !k.startsWith(`days.${di}.`)));
-    S.trainNotice = null;
-    S.trainPlanDayIdx = null;
-    X.rerender();
-    window.scrollTo(0, 0);
-  },
-  "pday-ex-add": (el) => addPlanExercise(el.dataset.arg),
-  "pday-machine-add": (el) => {
-    const S = X.S;
-    try {
-      const { exercise, created } = X.C.exerciseForMachine(S.catalog, S.localExercises, el.dataset.arg);
-      if (created) S.localExercises.push(exercise);
-      addPlanExercise(exercise.id);
-    } catch (e) {
-      X.toast(e.message, true);
-    }
-  },
-  "pday-ex-remove": (el) => {
-    const S = X.S;
-    syncPlanInputs();
-    const day = S.trainPlanEdit.days[S.trainPlanDayIdx];
-    day.exercises = day.exercises.filter((_, i) => i !== Number(el.dataset.arg));
-    X.rerender();
-  },
-  "pday-ex-move": (el) => {
-    const S = X.S;
-    syncPlanInputs();
-    const [i, dir] = el.dataset.arg.split("|").map(Number);
-    const day = S.trainPlanEdit.days[S.trainPlanDayIdx];
-    day.exercises = D.planDraft.move(day.exercises, i, dir);
-    X.rerender();
-  },
-  "pday-set-add": (el) => {
-    const S = X.S;
-    syncPlanInputs();
-    const ex = S.trainPlanEdit.days[S.trainPlanDayIdx].exercises[Number(el.dataset.arg)];
-    const prev = ex.sets[ex.sets.length - 1];
-    ex.sets.push(prev ? { ...D.workoutDraft.copySet(prev), isWarmup: false } : D.workoutDraft.emptySet());
-    X.rerender();
-  },
-  "pday-set-remove": (el) => {
-    const S = X.S;
-    syncPlanInputs();
-    const [ei, si] = el.dataset.arg.split("|").map(Number);
-    const ex = S.trainPlanEdit.days[S.trainPlanDayIdx].exercises[ei];
-    ex.sets = ex.sets.filter((_, i) => i !== si);
-    X.rerender();
-  },
-};
-
-export function trainingInput(el) {
-  if (dbInput(el)) return true;
-  if (el.dataset.tinput === "planQuery") {
-    X.S.trainPlanQuery = el.value;
-    const box = document.getElementById("pday-results");
-    if (box) box.innerHTML = planPickerResults(el.value);
-    return true;
-  }
-  if (el.dataset.neat) {
-    // Kalorien, Zielbalken und Summe live wie am PC – ohne Neuaufbau (sonst ginge der Fokus verloren)
-    X.S.trainNeatDraft = neatDraftNow();
-    updateNeatLive();
-    return true;
-  }
-  return false;
-}
-
-export function trainingChange(el) {
-  const S = X.S;
-  if (statsChange(el)) return true;
-  if (dbChange(el)) return true;
-  const k = el.dataset.tchange;
-  if (k === "sort") {
-    S.trainSort = D.workoutList.nextWorkoutSort(S.trainSort ?? D.workoutList.DEFAULT_WORKOUT_SORT, el.value);
-    X.rerender();
-    return true;
-  }
-  if (k === "planDay") {
-    S.trainPlanDay = el.value;
-    X.rerender();
-    return true;
-  }
-  if (k === "cardio") {
-    S.trainCardio = el.value;
-    X.rerender();
-    return true;
-  }
-  if (k === "neatDate") {
-    if (el.value && el.value <= today()) {
-      S.trainNeatDate = el.value;
-      S.trainNeatDraft = null;
-      S.trainNotice = null;
-      S.trainErrors = {};
-    }
-    X.rerender();
-    return true;
-  }
-  if (el.dataset.neat) {
-    S.trainNeatDraft = neatDraftNow();
-    return true;
-  }
-  if (el.dataset.slot && el.dataset.pf === "kind") {
-    syncPlanInputs();
-    X.rerender();
-    return true;
-  }
-  return false;
 }

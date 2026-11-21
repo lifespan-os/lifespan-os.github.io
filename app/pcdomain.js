@@ -16047,9 +16047,20 @@ var BOOKS = {
     parts: 8,
     edition: "Stand November 2026",
     collection: "Masterclass Blutwerte+"
+  },
+  longevity: {
+    id: "longevity",
+    title: "Die Masterclass Longevity",
+    brand: "iCoach.Me",
+    subtitle: "Das gro\xDFe Handbuch: Altern verstehen, gesunde Jahre gewinnen",
+    description: "10 Teile mit 75 Kapiteln: Grundlagen des Alterns, Bewegung, Ern\xE4hrung und Stoffwechsel, Darm und Mikrobiom, Schlaf, Atmung und Nervensystem, Organe und Systeme, Reize, Umwelt und Substanzen, Sinn und Gemeinschaft, die Programme der ausgewerteten B\xFCcher im Vergleich und die Praxis mit Standortbestimmung, Wochenpl\xE4nen, 12-Wochen-Plan und Checklisten. Dazu Glossar, Quellen- und Stichwortverzeichnis.",
+    pages: 579,
+    parts: 10,
+    edition: "Stand November 2026",
+    collection: "Masterclass Longevity"
   }
 };
-var BOOK_ORDER = ["masterclass", "blutwerte"];
+var BOOK_ORDER = ["masterclass", "blutwerte", "longevity"];
 var BOOK = BOOKS.masterclass;
 function firstPage(pages, book = "masterclass") {
   const max = BOOKS[book].pages;

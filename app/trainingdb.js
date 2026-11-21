@@ -10,6 +10,11 @@ import { esc } from "./pcview.js";
 import { exerciseModels } from "./trainingstats.js";
 import { cropPhoto } from "./photocrop.js";
 import * as MI from "./machineimages.js";
+import { cardOpen } from "./overview.js";
+import { arrangeCards, layoutEditing, setLayoutEditing } from "./layoutedit.js";
+
+/** Anordnung wie am PC (`TRAINING_DB_LAYOUT_KEY`, 1.74.0) */
+export const DB_LAYOUT_KEY = "ui.training_db_layout";
 
 let X = null;
 
@@ -86,7 +91,21 @@ export function viewDatabaseTab() {
   if (S.trainExEdit) return exerciseEditor();
   if (S.trainSportEdit) return sportEditor();
   if (S.trainMachine) return machineDetail();
-  return `${notice()}${exercisesCard()}${machinesCard()}${sportsCard()}`;
+  // 1.74.0: Bereiche auf- und zuklappen (Zustand auf diesem Handy) und wie am PC anordnen
+  const cards = [
+    { id: "exercises", node: exercisesCard() },
+    { id: "machines", node: machinesCard() },
+    { id: "sports", node: sportsCard() },
+  ];
+  let arranged = cards;
+  try {
+    arranged = arrangeCards(buildDb(), DB_LAYOUT_KEY, cards, { emptyLast: false });
+  } catch {
+    // ohne Daten vom PC: feste Reihenfolge
+  }
+  const shown = arranged.map((c) => c.node).join("");
+  const allHidden = arranged.length === 0 ? `<p class="muted">Alle Bereiche sind ausgeblendet. Über „Datenbank anpassen“ wieder einblenden.</p>` : "";
+  return `${notice()}${shown}${allHidden}`;
 }
 
 function exercisesCard() {
@@ -109,7 +128,7 @@ function exercisesCard() {
     })
     .sort((a, b) => a.name.localeCompare(b.name, "de", { sensitivity: "base" }));
   const filtered = q.trim() !== "" || disc !== "";
-  return `<section class="card card--training" id="exercises-title"><h3>Übungsdatenbank</h3>
+  return `<details class="card ov-card card--training db-card" id="exercises-title" data-card="db-exercises"${cardOpen("db-exercises") ? " open" : ""}><summary class="wo-head ov-card__head"><h3>Übungsdatenbank</h3></summary>
     <div class="row-actions"><label class="toggle"><input type="checkbox" data-dbchange="exArchived" ${showArchived ? "checked" : ""}> Archivierte anzeigen</label>
       <button class="btn sm primary" data-act="train-ex-new">Neue Übung</button></div>
     ${atMachines > 0 ? `<p class="muted small">${atMachines} ${atMachines === 1 ? "Übung gehört" : "Übungen gehören"} zu einer Maschine und ${atMachines === 1 ? "steht" : "stehen"} mit Verlauf in der Maschinendatenbank.</p>` : ""}
@@ -126,7 +145,7 @@ function exercisesCard() {
         : ""
     }
     <div id="ex-results">${exerciseRows(shown, own.length)}</div>
-  </section>`;
+  </details>`;
 }
 
 function exerciseRows(shown, total) {
@@ -237,8 +256,8 @@ function machinesCard() {
   const filtered = f.query || f.manufacturer || f.category || f.muscle || onlyUsed;
   const sel = (id, label, key, options, extra = "") =>
     `<div class="field"><label for="${id}">${label}</label><select id="${id}" data-mfilter="${key}"><option value="">Alle</option>${options.map(([v, l]) => `<option value="${esc(v)}" ${v === f[key] ? "selected" : ""}>${esc(l)}</option>`).join("")}${extra}</select></div>`;
-  return `<section class="card card--training" id="machines-title"><h3>Maschinendatenbank</h3>
-    <p class="muted small">Maschinen kommen mit der Exportdatei vom PC. Importieren, Stammdaten und Bilder ändern (Master-Editor) und Doppelte zusammenführen geht am PC.</p>
+  return `<details class="card ov-card card--training db-card" id="machines-title" data-card="db-machines"${cardOpen("db-machines") ? " open" : ""}><summary class="wo-head ov-card__head"><h3>Maschinendatenbank</h3></summary>
+    <p class="muted small card-info">Maschinen kommen mit der Exportdatei vom PC. Importieren, Stammdaten und Bilder ändern (Master-Editor) und Doppelte zusammenführen geht am PC.</p>
     <div class="field"><label for="machine-search">Maschinen durchsuchen</label><input id="machine-search" type="search" placeholder="Name, Hersteller, Nummer, Muskelgruppe …" value="${esc(f.query)}" data-dbinput="machineQuery" autocomplete="off"></div>
     ${sel("machine-manufacturer", "Hersteller", "manufacturer", manufacturers.map((x) => [x, x]))}
     ${sel("machine-category", "Kategorie", "category", categories.map((x) => [x, x]))}
@@ -246,7 +265,7 @@ function machinesCard() {
     <label class="toggle"><input type="checkbox" data-dbchange="machineUsed" ${onlyUsed ? "checked" : ""}> Nur im Training verwendete</label>
     <p class="muted small" id="machine-count">${shown.length.toLocaleString("de-DE")} von ${machines.length.toLocaleString("de-DE")}${filtered ? ` · <button class="linkbtn" data-act="train-machine-reset">Filter zurücksetzen</button>` : ""}</p>
     <div id="machine-results">${machineRows(shown, exByMachine, usage)}</div>
-  </section>`;
+  </details>`;
 }
 
 function machineRows(shown, exByMachine, usage) {
@@ -337,7 +356,7 @@ function sportsCard() {
   const shown = D.sports.filterSports(list, filter).sort((a, b) => a.name.localeCompare(b.name, "de"));
   const cats = D.sports.sportCategories(list);
   const filtered = filter.query.trim() !== "" || filter.category !== "";
-  return `<section class="card card--training" id="sports-title"><h3>Sportarten-Datenbank</h3>
+  return `<details class="card ov-card card--training db-card" id="sports-title" data-card="db-sports"${cardOpen("db-sports") ? " open" : ""}><summary class="wo-head ov-card__head"><h3>Sportarten-Datenbank</h3></summary>
     <div class="row-actions"><label class="toggle"><input type="checkbox" data-dbchange="sportArchived" ${showArchived ? "checked" : ""}> Archivierte anzeigen</label>
       <button class="btn sm primary" data-act="train-sport-new">Neue Sportart</button></div>
     <div class="field"><label for="sport-search">Sportarten durchsuchen</label><input id="sport-search" type="search" placeholder="Name, Kategorie, Beschreibung …" value="${esc(filter.query)}" data-dbinput="sportQuery" autocomplete="off"></div>
@@ -354,7 +373,7 @@ function sportsCard() {
             .join("")}</ul>${shown.length > (X.S.trainSportLimit ?? 30) ? `<button class="btn sm" data-act="train-more" data-arg="trainSportLimit">Weitere anzeigen (${shown.length - (X.S.trainSportLimit ?? 30)})</button>` : ""}`
         : `<p class="muted">Keine Sportart passt zu Suche und Filter.</p>`
     }
-  </section>`;
+  </details>`;
 }
 
 function sportEditor() {
@@ -510,6 +529,11 @@ function syncCheckin() {
 // ------------------------------------------------------------------ Aktionen
 
 export const dbActions = {
+  /** Datenbank anpassen (1.74.0): Bereiche umsortieren und ausblenden wie am PC */
+  "train-db-layout": () => {
+    setLayoutEditing(layoutEditing() === DB_LAYOUT_KEY ? null : DB_LAYOUT_KEY);
+    X.rerender();
+  },
   "train-more": (el) => {
     const k = el.dataset.arg;
     X.S[k] = (X.S[k] ?? 30) + 30;

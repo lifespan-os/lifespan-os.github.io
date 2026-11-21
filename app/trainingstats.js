@@ -11,7 +11,7 @@ import { buildDb, today } from "./diary.js";
 import { barTrendSvg, COLOR, esc, trendSvg } from "./pcview.js";
 import { focusIndex, heatmapHtml, machinesOf } from "./overview.js";
 import * as CD from "./checklistdata.js";
-import { arrangeCards, layoutEditing, setLayoutEditing } from "./layoutedit.js";
+import { arrangeCards, setLayoutEditing } from "./layoutedit.js";
 import * as MI from "./machineimages.js";
 
 /** Anordnung der Auswertung wie am PC (`ui.training_review_layout`, 1.65.0) */
@@ -143,8 +143,8 @@ export function viewReviewTab() {
   ];
   const shell = (cards) => {
     const arranged = arrangeCards(db, REVIEW_LAYOUT_KEY, cards.filter((c) => c.node), { emptyLast: false });
-    const edit = layoutEditing() === REVIEW_LAYOUT_KEY;
-    return `${edit ? "" : `<div class="toolbar-end"><button class="linkbtn small" data-act="train-review-layout">Auswertung anpassen</button></div>`}${arranged.map((c) => c.node).join("")}`;
+    // „Auswertung anpassen“ steht seit 1.74.0 in der Zeile des Umschalters (training.js)
+    return arranged.map((c) => c.node).join("");
   };
   const log = O.setLog(db);
   const exercises = exerciseModels(db, S.catalog);

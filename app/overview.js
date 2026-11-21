@@ -58,6 +58,9 @@ if (typeof document !== "undefined") {
   );
 }
 
+/** Zuklappbare Karte anderer Seiten (1.74.0, Training → Datenbank): gleicher Speicher wie die Overview. */
+export const cardOpen = (id) => !collapsedCards().has(id);
+
 function card(id, title, meta, body, { area = "", wide = false } = {}) {
   const open = !collapsedCards().has(id);
   return `<details class="card ov-card ${area ? `card--${area}` : ""} ${wide ? "ov-card--wide" : ""}" data-card="${esc(id)}"${open ? " open" : ""}>

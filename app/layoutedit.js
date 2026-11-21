@@ -13,6 +13,7 @@ export const LAYOUT_PAGES = [
   ["ui.insights_layout", "insights", "Insights"],
   ["ui.transfer_layout", "transfer", "Import/Export"],
   ["ui.training_review_layout", "training", "Training → Auswertung"],
+  ["ui.training_db_layout", "training", "Training → Datenbank"],
 ];
 
 let editing = null;

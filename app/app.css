@@ -1807,3 +1807,9 @@ body.mapzoom-open { overflow: hidden; }
 .mapzoom__inner path.is-picked { stroke: var(--blue); stroke-width: 3; }
 .mapzoom__info { margin: 0; min-height: 1.4em; text-align: center; font-size: .9rem; color: var(--fg); }
 .mapzoom .muscle-map__legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 12px; margin: 0; padding: 0; list-style: none; font-size: .76rem; color: var(--muted); }
+
+/* 1.74.0 Umschalter mit Link rechts in einer Zeile (Training → Auswertung / Datenbank); Abstand zum Inhalt = Abstand von main (14 px) */
+.subtabs-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin: 0; }
+.subtabs-row > .segmented.subtabs { margin: 0; }
+.subtabs-row__aside { margin-left: auto; }
+.subtabs-row__icon { display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--blue); }

@@ -15,7 +15,9 @@ import { buildDb, today } from "./diary.js";
 import { hasWearable, workoutHeartHtml, workoutHeartOf } from "./heart.js";
 import { energyHtml, stepGoalBar } from "./overview.js";
 import { statsActions, viewCardioTab, viewProgressTab, viewReviewTab, statsChange } from "./trainingstats.js";
-import { dbActions, dbChange, dbInput, viewDatabaseTab } from "./trainingdb.js";
+import { DB_LAYOUT_KEY, dbActions, dbChange, dbInput, viewDatabaseTab } from "./trainingdb.js";
+import { layoutEditing } from "./layoutedit.js";
+import { REVIEW_LAYOUT_KEY } from "./trainingstats.js";
 import { activeGymSelectHtml, planGymSelectHtml, viewGymsTab } from "./gymsui.js";
 import * as GD from "./gymsdata.js";
 import { icon } from "./nav.js";
@@ -80,6 +82,15 @@ export const fieldError = (errors, name) => (errors?.[name] ? `<p class="field-e
 
 // ------------------------------------------------------------------ Rahmen
 
+/** Link rechts in der Zeile des Umschalters (1.74.0): Seite anpassen; im Bearbeiten-Modus ausgeblendet */
+function subAside(tab) {
+  if (tab === "review" && layoutEditing() !== REVIEW_LAYOUT_KEY) return `<button class="linkbtn small subtabs-row__aside" data-act="train-review-layout">Auswertung anpassen</button>`;
+  if (tab === "exercises" && !X.S.trainExEdit && !X.S.trainSportEdit && !X.S.trainMachine && layoutEditing() !== DB_LAYOUT_KEY)
+    // als Symbol (Raster wie „Übersicht anpassen“ am PC): mit Text passt es neben den Umschalter nicht in eine Zeile
+    return `<button class="subtabs-row__aside subtabs-row__icon" data-act="train-db-layout" aria-label="Datenbank anpassen" title="Datenbank anpassen"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></button>`;
+  return "";
+}
+
 export function viewTrainingSection() {
   const S = X.S;
   const tab = S.trainTab ?? "workouts";
@@ -107,9 +118,9 @@ export function viewTrainingSection() {
         ([g, l]) => `<button class="tab ${g === gid ? "active" : ""}" data-act="train-group" data-arg="${g}" ${g === gid ? 'aria-current="page"' : ""}>${esc(l)}</button>`,
       ).join("")}</nav>${
         subs.length > 1
-          ? `<div class="segmented subtabs" role="radiogroup" aria-label="${esc(glabel)}">${subs
+          ? `<div class="subtabs-row"><div class="segmented subtabs" role="radiogroup" aria-label="${esc(glabel)}">${subs
               .map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === tab}" class="${v === tab ? "is-active" : ""}" data-act="train-tab" data-arg="${v}">${esc(l)}</button>`)
-              .join("")}</div>`
+              .join("")}</div>${subAside(tab)}</div>`
           : ""
       }`;
     })()}

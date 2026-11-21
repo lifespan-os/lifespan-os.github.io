@@ -11,7 +11,7 @@ import { appDay } from "./appday.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.73.0";
+export const MOBILE_VERSION = "1.74.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 

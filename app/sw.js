@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar. Speichert nur die App-Dateien,
 // niemals Trainingsdaten (die liegen in IndexedDB auf dem Gerät).
-const VERSION = "lifespan-mobil-1.73.0";
+const VERSION = "lifespan-mobil-1.74.0";
 const FILES = [
   "./",
   "index.html",
@@ -9,6 +9,17 @@ const FILES = [
   "fonts/barlow-condensed-latin-800-normal.woff2",
   "fonts/barlow-condensed-latin-800-italic.woff2",
   "app.js",
+  "appbase.js",
+  "sheets.js",
+  "navshell.js",
+  "resttimer.js",
+  "devsettings.js",
+  "accounts.js",
+  "catalogload.js",
+  "homeview.js",
+  "workoutview.js",
+  "transferview.js",
+  "appactions.js",
   "core.js",
   "store.js",
   "label.js",

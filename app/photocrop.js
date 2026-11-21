@@ -2,6 +2,8 @@
 // (`src/domain/photoCrop.ts`): quadratischer Rahmen, Bild füllt ihn („cover“), mit dem Finger
 // verschieben, mit dem Regler vergrößern. Ergebnis: verkleinertes JPEG als data-URL.
 // Der Dialog liegt als eigenes Element über der App, damit ein Neuzeichnen der Seite ihn nicht stört.
+// Seit 1.80.0 optional mehrere Rahmen zur Wahl (`frames`, Zutrittscode), Seitenverhältnis 0 = wie das Bild
+// (wie am PC 1.0.166 `frameAspect`).
 
 export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 4;
@@ -28,6 +30,15 @@ export function clampView(width, height, view, aspect = 1) {
 }
 
 export const initialView = (width, height) => ({ zoom: 1, cx: width / 2, cy: height / 2 });
+
+/** Seitenverhältnis eines Rahmens; 0 bzw. ungültig = wie das Bild (ganzes Bild bei Zoom 1). */
+export function frameAspect(aspect, width, height) {
+  if (Number.isFinite(aspect) && aspect > 0) return aspect;
+  return width > 0 && height > 0 ? width / height : 1;
+}
+
+/** Breite des Rahmens (CSS-Pixel): höchstens 300 breit und 340 hoch. */
+const frameWidth = (aspect) => Math.round(Math.min(300, 340 * aspect));
 
 export function cropRect(width, height, view, aspect = 1) {
   const v = clampView(width, height, view, aspect);
@@ -92,13 +103,21 @@ async function loadImage(source) {
  * Dialog zeigen. `source` ist eine Datei oder eine data-URL. Liefert die data-URL des
  * Ausschnitts (mit `blob: true` eine JPEG-Datei) oder null (abgebrochen). Wirft, wenn das Bild
  * nicht lesbar ist. `aspect`: Breite : Höhe des Rahmens (1 = quadratisch, 0,75 = hochkant 3 : 4).
+ * `frames`: Rahmen zur Wahl `[{ id, label, aspect }]` (statt `aspect`, der erste ist vorgewählt); `hint`:
+ * zusätzlicher Hinweis.
  */
-export async function cropPhoto(source, { title = "Ausschnitt wählen", maxSide = 800, maxChars = 550000, aspect = 1, blob = false } = {}) {
+export async function cropPhoto(source, { title = "Ausschnitt wählen", maxSide = 800, maxChars = 550000, aspect: fixedAspect = 1, blob = false, frames = null, hint = "" } = {}) {
   const loaded = await loadImage(source);
   const image = loaded.img ?? loaded; // ImageBitmap oder <img>
   const W = loaded.width;
   const H = loaded.height;
   let view = initialView(W, H);
+  let frameId = frames?.[0]?.id ?? null;
+  const aspectOf = (id) => {
+    const f = frames?.find((x) => x.id === id);
+    return f ? frameAspect(f.aspect, W, H) : fixedAspect;
+  };
+  let aspect = aspectOf(frameId);
   const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
   const root = document.createElement("div");
@@ -108,7 +127,14 @@ export async function cropPhoto(source, { title = "Ausschnitt wählen", maxSide 
   root.setAttribute("aria-label", title);
   root.innerHTML = `<div class="crop-box card">
     <h3>${esc(title)}</h3>
-    <p class="muted small">Bild mit dem Finger verschieben, mit dem Regler vergrößern.</p>
+    <p class="muted small">Bild mit dem Finger verschieben, mit dem Regler vergrößern.${hint ? ` ${esc(hint)}` : ""}</p>
+    ${
+      frames && frames.length > 1
+        ? `<div class="crop-frames" role="radiogroup" aria-label="Rahmen">${frames
+            .map((f) => `<button type="button" class="btn sm${f.id === frameId ? " is-active" : ""}" role="radio" aria-checked="${f.id === frameId}" data-frame="${esc(f.id)}">${esc(f.label)}</button>`)
+            .join("")}</div>`
+        : ""
+    }
     <canvas class="crop-frame" aria-label="Bildausschnitt"></canvas>
     <label class="crop-zoom"><span aria-hidden="true">−</span><span class="visually-hidden">Vergrößerung</span>
       <input type="range" min="${MIN_ZOOM}" max="${MAX_ZOOM}" step="0.01" value="1"><span aria-hidden="true">+</span></label>
@@ -116,7 +142,12 @@ export async function cropPhoto(source, { title = "Ausschnitt wählen", maxSide 
   </div>`;
   document.body.appendChild(root);
   const canvas = root.querySelector("canvas");
-  canvas.style.aspectRatio = String(aspect);
+  const applyFrame = () => {
+    canvas.style.aspectRatio = String(aspect);
+    // höchstens 38 % der Bildschirmhöhe, damit „Übernehmen“ sichtbar bleibt
+    canvas.style.width = `min(100%, ${frameWidth(aspect)}px, ${(38 * aspect).toFixed(2)}vh)`;
+  };
+  applyFrame();
   const range = root.querySelector("input[type=range]");
 
   const draw = () => {
@@ -160,6 +191,20 @@ export async function cropPhoto(source, { title = "Ausschnitt wählen", maxSide 
       resolve(result);
     };
     root.addEventListener("click", (e) => {
+      const fb = e.target.closest("[data-frame]");
+      if (fb) {
+        frameId = fb.dataset.frame;
+        aspect = aspectOf(frameId);
+        view = zoomView(W, H, view, view.zoom, aspect);
+        root.querySelectorAll("[data-frame]").forEach((x) => {
+          const on = x.dataset.frame === frameId;
+          x.classList.toggle("is-active", on);
+          x.setAttribute("aria-checked", String(on));
+        });
+        applyFrame();
+        draw();
+        return;
+      }
       const b = e.target.closest("[data-crop]");
       if (!b) return;
       if (b.dataset.crop !== "ok") return finish(null);

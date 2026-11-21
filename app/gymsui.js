@@ -2,6 +2,7 @@
 // und die Maschinenauswahl im Training nur mit den Maschinen des aktiven Gyms (wie am PC 1.0.159).
 // Logik in gymsdata.js; Änderungen gehen mit der Rückgabedatei an den PC.
 // Seit 1.78.0 je Gym ein Zutrittscode (Foto mit der Kamera oder Screenshot), antippen vergrößert ihn.
+// Seit 1.80.0 (wie PC 1.0.166): Ausschnitt wählen vor dem Speichern und Knopf „Zutrittscode“ im Training.
 
 import * as G from "./gymsdata.js";
 import { cropPhoto } from "./photocrop.js";
@@ -56,6 +57,16 @@ export function pickerGymNote() {
   } <button class="linkbtn" data-act="gym-all">${X.S.gymAll ? `Nur ${esc(gym.name)}` : "Alle Maschinen zeigen"}</button></p>`;
 }
 
+/**
+ * Knopf „Zutrittscode“ neben einer Gym-Auswahl im Training (1.80.0). `selectId`: die Auswahl, deren
+ * aktueller Wert beim Tippen gilt; sichtbar, wenn das gewählte Gym einen Code hat.
+ */
+function gymCodeButtonHtml(gymId, selectId) {
+  const g = G.gymList(X.S.catalog, X.S.gyms).find((x) => x.id === gymId);
+  if (!g?.access_code) return "";
+  return `<button class="btn sm gym-code-btn" data-act="gym-code-show" data-arg="${esc(selectId)}" aria-label="Zutrittscode von ${esc(g.name)} zeigen">Zutrittscode</button>`;
+}
+
 /** Auswahl „Gym“ vor „Freies Training“. */
 export function activeGymSelectHtml(blocked) {
   const S = X.S;
@@ -64,9 +75,9 @@ export function activeGymSelectHtml(blocked) {
   const id = G.activeGymId(S.catalog, S.gyms, pcActive());
   const count = (g) => G.gymEntries(S.catalog, S.gyms, g.id).length;
   return `<div class="field"><label for="w-gym">Gym</label>
-    <select id="w-gym" data-gym="active" ${blocked ? "disabled" : ""}>${list
+    <div class="gym-pick"><select id="w-gym" data-gym="active" ${blocked ? "disabled" : ""}>${list
       .map((g) => `<option value="${esc(g.id)}" ${g.id === id ? "selected" : ""}>${esc(g.name)} (${count(g)} Maschinen)</option>`)
-      .join("")}</select></div>`;
+      .join("")}</select>${gymCodeButtonHtml(id, "w-gym")}</div></div>`;
 }
 
 /** ID des aktiven Gyms (für neue Einheiten). */
@@ -84,9 +95,9 @@ export function workoutGymSelectHtml(w) {
   const options = [...list.map((g) => [g.id, g.name])];
   if (w.gymId && !list.some((g) => g.id === w.gymId)) options.push([w.gymId, names.get(w.gymId) ?? "Gym (entfernt)"]);
   return `<div class="field wo-gym"><label for="wo-gym">Gym</label>
-    <select id="wo-gym" data-wfield="gymId"><option value="">Ohne Gym</option>${options
+    <div class="gym-pick"><select id="wo-gym" data-wfield="gymId"><option value="">Ohne Gym</option>${options
       .map(([id, name]) => `<option value="${esc(id)}" ${id === w.gymId ? "selected" : ""}>${esc(name)}</option>`)
-      .join("")}</select></div>`;
+      .join("")}</select>${w.editOf || w.backfill ? "" : gymCodeButtonHtml(w.gymId, "wo-gym")}</div></div>`;
 }
 
 /** Auswahl „Gym“ eines Plans im Plan-Editor (optional). */
@@ -265,40 +276,36 @@ function accessHtml(g) {
       <input id="gym-code-cam" type="file" accept="image/*" capture="environment" data-gym="code" hidden>
       <label class="btn sm" for="gym-code-pick">Bild oder Screenshot wählen</label>
       <input id="gym-code-pick" type="file" accept="image/*" data-gym="code" hidden>
+      ${g.access_code ? `<button class="btn sm" data-act="gym-code-crop" data-arg="${esc(g.id)}">Ausschnitt ändern</button>` : ""}
       ${g.access_code ? `<button class="btn sm ghost danger" data-act="gym-code-remove" data-arg="${esc(g.id)}">Entfernen</button>` : ""}
     </div>
     ${err ? `<p class="warn small">${esc(err)}</p>` : ""}
-    <p class="muted small card-info">Das Bild wird verkleinert gespeichert (längste Seite 1.600 px) und geht mit „An den PC senden“ an den PC – nie in Studio-Pakete. Am Eingang: Code vergrößern und die Bildschirmhelligkeit hochdrehen.</p>
+    <p class="muted small card-info">Vor dem Speichern wählst du den Ausschnitt – ganzes Bild, Barcode, Karte oder QR-Code. Das Bild wird verkleinert gespeichert (längste Seite 1.600 px) und geht mit „An den PC senden“ an den PC – nie in Studio-Pakete. Im Training öffnest du ihn mit „Zutrittscode“ neben der Gym-Auswahl. Am Eingang: Code vergrößern und die Bildschirmhelligkeit hochdrehen.</p>
   </section>`;
 }
 
-/** Bild einlesen, auf höchstens 1.600 px verkleinern und als JPEG-data-URL liefern (wie am PC). */
-async function fileToAccessCode(file) {
-  const url = URL.createObjectURL(file);
+/** Ausschnitt wählen (neue Datei oder der gespeicherte Code) und als Zutrittscode speichern. */
+async function cropAccessCode(gymId, source) {
+  const S = X.S;
+  let data;
   try {
-    const img = await new Promise((resolve, reject) => {
-      const i = new Image();
-      i.onload = () => resolve(i);
-      i.onerror = () => reject(new Error("Das Bild konnte nicht gelesen werden."));
-      i.src = url;
+    data = await cropPhoto(source, {
+      title: "Ausschnitt für den Zutrittscode",
+      frames: G.ACCESS_CODE_FRAMES,
+      hint: "Am besten den Code mit etwas weißem Rand.",
+      maxSide: G.ACCESS_CODE_MAX_SIDE,
+      maxChars: G.MAX_ACCESS_CODE_CHARS,
     });
-    const { width, height } = G.accessCodeSize(img.naturalWidth, img.naturalHeight);
-    if (!width) throw new Error("Das Bild ist leer.");
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, width, height);
-    ctx.drawImage(img, 0, 0, width, height);
-    for (const q of [0.92, 0.85, 0.75, 0.6]) {
-      const data = canvas.toDataURL("image/jpeg", q);
-      if (data.length <= G.MAX_ACCESS_CODE_CHARS) return data;
-    }
-    throw new Error("Das Bild ist zu groß – bitte einen engeren Ausschnitt wählen.");
-  } finally {
-    URL.revokeObjectURL(url);
+  } catch {
+    S.gymCodeError = "Das Bild konnte nicht gelesen werden.";
+    return X.rerender();
   }
+  if (!data) return;
+  if (data.length > G.MAX_ACCESS_CODE_CHARS) {
+    S.gymCodeError = "Das Bild ist zu groß – bitte einen engeren Ausschnitt wählen.";
+    return X.rerender();
+  }
+  await storeAccessCode(gymId, data);
 }
 
 async function storeAccessCode(gymId, dataUrl) {
@@ -473,6 +480,17 @@ export const gymsActions = {
     const g = G.gymList(X.S.catalog, X.S.gyms).find((x) => x.id === el.dataset.arg);
     if (g?.access_code) openImageZoom(g.access_code, `Zutrittscode ${g.name}`);
   },
+  "gym-code-crop": async (el) => {
+    const g = G.gymList(X.S.catalog, X.S.gyms).find((x) => x.id === el.dataset.arg);
+    if (g?.access_code) await cropAccessCode(g.id, g.access_code);
+  },
+  // Training (1.80.0): Code des in der Auswahl gewählten Gyms zeigen
+  "gym-code-show": (el) => {
+    const id = document.getElementById(el.dataset.arg)?.value ?? "";
+    const g = G.gymList(X.S.catalog, X.S.gyms).find((x) => x.id === id);
+    if (g?.access_code) openImageZoom(g.access_code, `Zutrittscode ${g.name}`);
+    else X.toast(g ? `Für „${g.name}“ ist kein Zutrittscode hinterlegt (Training → Meine Gyms).` : "Kein Gym gewählt.", true);
+  },
   "gym-code-remove": async (el) => {
     if (!X.confirmTwice(el, "Nochmal tippen: entfernen")) return;
     await storeAccessCode(el.dataset.arg, null);
@@ -533,12 +551,8 @@ export function gymsChange(el) {
       X.rerender();
       return true;
     }
-    fileToAccessCode(file)
-      .then((data) => storeAccessCode(gymId, data))
-      .catch((e) => {
-        S.gymCodeError = e.message;
-        X.rerender();
-      });
+    S.gymCodeError = null;
+    void cropAccessCode(gymId, file);
     return true;
   }
   if (kind === "photo") {

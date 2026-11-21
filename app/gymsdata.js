@@ -14,6 +14,14 @@ export const MAX_PHOTO_CHARS = 600000;
 export const MAX_ACCESS_CODE_CHARS = 800000;
 /** Längste Seite des gespeicherten Zutrittscodes in Pixeln (wie `ACCESS_CODE_MAX_SIDE` am PC) */
 export const ACCESS_CODE_MAX_SIDE = 1600;
+/** Rahmen (1.80.0) beim Hinterlegen des Zutrittscodes (wie `ACCESS_CODE_FRAMES` am PC 1.0.166). */
+export const ACCESS_CODE_FRAMES = [
+  { id: "whole", label: "Ganzes Bild", aspect: 0 },
+  { id: "barcode", label: "Barcode", aspect: 3 },
+  { id: "card", label: "Karte", aspect: 85.6 / 54 },
+  { id: "qr", label: "QR-Code", aspect: 1 },
+];
+
 
 /** Zielgröße für das Bild des Zutrittscodes wie `accessCodeSize` am PC (nie vergrößern). */
 export function accessCodeSize(width, height, max = ACCESS_CODE_MAX_SIDE) {

@@ -1635,12 +1635,19 @@ body.is-searching main.wrap:has(.food-search) { padding-bottom: 100vh; }
 .gym-row__name input { width: 100%; min-width: 0; margin-top: 4px; }
 
 /* Bildausschnitt wählen (photocrop.js, 1.62.0) */
-.crop-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(10, 26, 48, .55); }
+.crop-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; overflow-y: auto; background: rgba(10, 26, 48, .55); }
 .crop-box { width: min(360px, 100%); margin: 0; }
 .crop-box h3 { margin-top: 0; }
 .crop-frame { display: block; width: min(300px, 100%); aspect-ratio: 1; margin: 12px auto; border-radius: 12px; background: var(--surface-2); box-shadow: 0 0 0 1px var(--line); touch-action: none; cursor: grab; }
 .crop-zoom { display: flex; align-items: center; gap: 10px; width: min(300px, 100%); margin: 0 auto 12px; color: var(--muted); font-weight: 700; }
 .crop-zoom input { flex: 1; }
+/* Rahmen zur Wahl im Ausschnitt (1.80.0, Zutrittscode) */
+.crop-frames { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
+.crop-frames .btn.is-active { border-color: var(--orange); box-shadow: 0 0 0 1px var(--orange); }
+/* Zutrittscode im Training neben der Gym-Auswahl (1.80.0) */
+.gym-pick { display: flex; gap: 8px; align-items: center; }
+.gym-pick select { flex: 1; min-width: 0; }
+.gym-code-btn { flex: none; min-height: 44px; }
 .pick-group { margin: 14px 0 6px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 /* Aktionen nur als Symbol (1.63.0, z. B. Pläne: Bearbeiten, Kopieren, Löschen) */
 .icon-actions { gap: 6px; }

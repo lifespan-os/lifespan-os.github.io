@@ -6,10 +6,21 @@
 // PC. Prüfregeln wie im Rust-Kern (`repo/gym.rs`). Das gewählte Gym am Handy bleibt am Handy
 // (`local.active`). Referenz-Studio „dasGym Wien“ (Paket-ID `dasgym-wien`) lässt sich nicht löschen.
 
-export const GYM_COLUMNS = ["id", "name", "address", "contact", "member_number", "website", "photo", "package_id", "sort_order", "archived", "created_at", "updated_at", "phone", "email", "social"];
+export const GYM_COLUMNS = ["id", "name", "address", "contact", "member_number", "website", "photo", "package_id", "sort_order", "archived", "created_at", "updated_at", "phone", "email", "social", "access_code"];
 export const ENTRY_COLUMNS = ["id", "gym_id", "machine_id", "number", "note", "created_at", "updated_at"];
 export const REFERENCE_PACKAGE = "dasgym-wien";
 export const MAX_PHOTO_CHARS = 600000;
+/** Zutrittscode (1.78.0, wie `gym::MAX_ACCESS_CODE_CHARS` am PC, Migration 0070): Bild als data-URL */
+export const MAX_ACCESS_CODE_CHARS = 800000;
+/** Längste Seite des gespeicherten Zutrittscodes in Pixeln (wie `ACCESS_CODE_MAX_SIDE` am PC) */
+export const ACCESS_CODE_MAX_SIDE = 1600;
+
+/** Zielgröße für das Bild des Zutrittscodes wie `accessCodeSize` am PC (nie vergrößern). */
+export function accessCodeSize(width, height, max = ACCESS_CODE_MAX_SIDE) {
+  if (!(width > 0) || !(height > 0)) return { width: 0, height: 0 };
+  const scale = Math.min(1, max / Math.max(width, height));
+  return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
+}
 export const REFERENCE_NAME = "dasGym Wien";
 /** Zeitstempel des Referenz-Studios, solange es nur am Handy besteht (der PC legt es selbst an). */
 const REFERENCE_TS = "2026-11-20T00:00:00.000Z";
@@ -251,6 +262,9 @@ export function saveGym(catalog, local, input, uuid, now = new Date()) {
   const photo = input.photo ? String(input.photo) : null;
   if (photo && !photo.startsWith("data:image/")) errors.photo = "Das Foto muss ein Bild sein.";
   if (photo && photo.length > MAX_PHOTO_CHARS) errors.photo = "Das Foto ist zu groß – bitte ein kleineres Bild wählen.";
+  const accessCode = input.access_code ? String(input.access_code).trim() || null : null;
+  if (accessCode && !accessCode.startsWith("data:image/")) errors.access_code = "Der Zutrittscode muss ein Bild sein.";
+  if (accessCode && accessCode.length > MAX_ACCESS_CODE_CHARS) errors.access_code = "Das Bild des Zutrittscodes ist zu groß – bitte ein kleineres Bild wählen.";
   if (Object.keys(errors).length) return { errors };
   const iso = now.toISOString();
   const prev = input.id ? gymList(catalog, local).find((g) => g.id === input.id) : null;
@@ -266,6 +280,7 @@ export function saveGym(catalog, local, input, uuid, now = new Date()) {
     member_number: member,
     website,
     photo,
+    access_code: accessCode,
     package_id: prev?.package_id ?? null,
     sort_order: prev?.sort_order ?? 0,
     archived: 0,
@@ -275,6 +290,16 @@ export function saveGym(catalog, local, input, uuid, now = new Date()) {
   local.gyms[row.id] = { row, sent: false };
   delete local.deleted[`gym:${row.id}`];
   return { row };
+}
+
+/**
+ * Nur den Zutrittscode eines Gyms setzen bzw. entfernen (`null`); alle anderen Angaben bleiben.
+ * Ergebnis wie `saveGym`.
+ */
+export function setAccessCode(catalog, local, id, dataUrl, uuid, now = new Date()) {
+  const g = gymList(catalog, local).find((x) => x.id === id);
+  if (!g) return { errors: { access_code: "Das Gym gibt es nicht mehr." } };
+  return saveGym(catalog, local, { ...g, id: g.id, access_code: dataUrl }, uuid, now);
 }
 
 /** Gym löschen (mit Maschinenliste); das Referenz-Studio bleibt. */

@@ -17,6 +17,8 @@ import { insightsActions } from "./insightsview.js";
 import { weeklyReportsActions } from "./weeklyreports.js";
 import { todoActions } from "./todos.js";
 import { healthActions } from "./health.js";
+import { longevityActions } from "./longevityview.js";
+import { protocolsActions } from "./protocolsview.js";
 import { superActions } from "./super.js";
 import { icoachActions } from "./icoach.js";
 import { layoutActions, settingsActions } from "./settingsview.js";
@@ -59,6 +61,8 @@ export const actions = {
   ...todoActions,
   ...icoachActions,
   ...healthActions,
+  ...longevityActions,
+  ...protocolsActions,
   ...superActions,
   ...bodyActions,
   ...extrasActions,
@@ -423,8 +427,8 @@ export const actions = {
     if (el.dataset.arg === "training") S.trainTab = el.dataset.tab ?? (el.closest(".drawer") ? "workouts" : S.trainTab ?? "workouts");
     // Body: direkt „Werte erfassen“, auf Wunsch beim Bereich (z. B. „entry:circumference“, 1.40.0)
     if (el.dataset.arg === "body" && el.dataset.tab?.startsWith("entry")) return bodyOpenEntry(el.dataset.tab.split(":")[1] ?? null);
-    // Check-Ins liegen seit 1.60.0 unter Body & Longevity; aus dem Menü immer „Erfassen“
-    if (el.dataset.arg === "body") S.bodyTab = el.dataset.tab ?? (el.closest(".drawer") ? "entry" : S.bodyTab ?? "entry");
+    // Check-Ins liegen seit 1.60.0 unter Body & Longevity; aus dem Menü seit 1.77.0 immer „Überblick“ (wie am PC)
+    if (el.dataset.arg === "body") S.bodyTab = el.dataset.tab ?? (el.closest(".drawer") ? "overview" : S.bodyTab ?? "overview");
     const sec = SECTIONS.find((x) => x.id === el.dataset.arg);
     return sec?.view ? go(sec.view) : go("pc-only", el.dataset.arg);
   },

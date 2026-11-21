@@ -1,10 +1,12 @@
 // LIFESPAN OS Mobil – Meine Gyms (1.60.0): Training → „Meine Gyms“, Gymauswahl vor „Freies Training“
 // und die Maschinenauswahl im Training nur mit den Maschinen des aktiven Gyms (wie am PC 1.0.159).
 // Logik in gymsdata.js; Änderungen gehen mit der Rückgabedatei an den PC.
+// Seit 1.78.0 je Gym ein Zutrittscode (Foto mit der Kamera oder Screenshot), antippen vergrößert ihn.
 
 import * as G from "./gymsdata.js";
 import { cropPhoto } from "./photocrop.js";
 import { thumbButton } from "./machineimages.js";
+import { openImageZoom } from "./mapzoom.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -224,6 +226,7 @@ function detailHtml(g, active) {
       ${g.package_id === G.REFERENCE_PACKAGE ? "" : `<button class="btn sm ghost danger" data-act="gym-delete" data-arg="${esc(g.id)}">Löschen</button>`}
     </div>
   </section>
+  ${accessHtml(g)}
   <section class="card">
     <div class="wo-head"><h3>Maschinen (${rows.length})</h3></div>
     <div class="field"><label for="gym-q">Maschine hinzufügen</label>
@@ -245,6 +248,70 @@ function detailHtml(g, active) {
         : `<p class="empty">Noch keine Maschinen – oben suchen und antippen.</p>`
     }
   </section>`;
+}
+
+/** Karte „Zutrittscode“ (1.78.0): Bild des Barcodes bzw. QR-Codes, antippen vergrößert. */
+function accessHtml(g) {
+  const err = X.S.gymCodeError;
+  return `<section class="card gym-code">
+    <div class="wo-head"><h3>Zutrittscode</h3></div>
+    ${
+      g.access_code
+        ? `<button class="gym-code__show" data-act="gym-code-zoom" data-arg="${esc(g.id)}" aria-label="Zutrittscode vergrößern"><img src="${esc(g.access_code)}" alt="Zutrittscode ${esc(g.name)}"><span class="muted small">Antippen zum Vergrößern</span></button>`
+        : `<p class="muted small">Noch kein Zutrittscode. Fotografiere den Barcode bzw. QR-Code deiner Mitgliedskarte oder wähle einen Screenshot aus der Studio-App.</p>`
+    }
+    <div class="row-actions">
+      <label class="btn sm" for="gym-code-cam">Mit Kamera scannen</label>
+      <input id="gym-code-cam" type="file" accept="image/*" capture="environment" data-gym="code" hidden>
+      <label class="btn sm" for="gym-code-pick">Bild oder Screenshot wählen</label>
+      <input id="gym-code-pick" type="file" accept="image/*" data-gym="code" hidden>
+      ${g.access_code ? `<button class="btn sm ghost danger" data-act="gym-code-remove" data-arg="${esc(g.id)}">Entfernen</button>` : ""}
+    </div>
+    ${err ? `<p class="warn small">${esc(err)}</p>` : ""}
+    <p class="muted small card-info">Das Bild wird verkleinert gespeichert (längste Seite 1.600 px) und geht mit „An den PC senden“ an den PC – nie in Studio-Pakete. Am Eingang: Code vergrößern und die Bildschirmhelligkeit hochdrehen.</p>
+  </section>`;
+}
+
+/** Bild einlesen, auf höchstens 1.600 px verkleinern und als JPEG-data-URL liefern (wie am PC). */
+async function fileToAccessCode(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error("Das Bild konnte nicht gelesen werden."));
+      i.src = url;
+    });
+    const { width, height } = G.accessCodeSize(img.naturalWidth, img.naturalHeight);
+    if (!width) throw new Error("Das Bild ist leer.");
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(img, 0, 0, width, height);
+    for (const q of [0.92, 0.85, 0.75, 0.6]) {
+      const data = canvas.toDataURL("image/jpeg", q);
+      if (data.length <= G.MAX_ACCESS_CODE_CHARS) return data;
+    }
+    throw new Error("Das Bild ist zu groß – bitte einen engeren Ausschnitt wählen.");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function storeAccessCode(gymId, dataUrl) {
+  const S = X.S;
+  const r = G.setAccessCode(S.catalog, S.gyms, gymId, dataUrl, X.uuid);
+  if (r.errors) {
+    S.gymCodeError = Object.values(r.errors)[0];
+    return X.rerender();
+  }
+  S.gymCodeError = null;
+  await persist();
+  X.toast(dataUrl ? "Zutrittscode gespeichert." : "Zutrittscode entfernt.");
+  X.rerender();
 }
 
 function hitsHtml(hits) {
@@ -309,6 +376,8 @@ const toDraft = (g) => ({
   member_number: g?.member_number ?? "",
   website: g?.website ?? "",
   photo: g?.photo ?? null,
+  // Zutrittscode (1.78.0): bleibt beim Bearbeiten erhalten, geändert wird er in seiner Karte
+  access_code: g?.access_code ?? null,
 });
 
 export const gymsActions = {
@@ -337,6 +406,7 @@ export const gymsActions = {
   "gym-open": (el) => {
     X.S.gymSel = el.dataset.arg;
     X.S.gymQuery = "";
+    X.S.gymCodeError = null;
     X.rerender();
   },
   "gym-back": () => {
@@ -399,6 +469,14 @@ export const gymsActions = {
     await persist();
     X.rerender();
   },
+  "gym-code-zoom": (el) => {
+    const g = G.gymList(X.S.catalog, X.S.gyms).find((x) => x.id === el.dataset.arg);
+    if (g?.access_code) openImageZoom(g.access_code, `Zutrittscode ${g.name}`);
+  },
+  "gym-code-remove": async (el) => {
+    if (!X.confirmTwice(el, "Nochmal tippen: entfernen")) return;
+    await storeAccessCode(el.dataset.arg, null);
+  },
   "gym-all": () => {
     X.S.gymAll = !X.S.gymAll;
     X.rerender();
@@ -443,6 +521,24 @@ export function gymsChange(el) {
     const file = el.files?.[0];
     el.value = "";
     if (file) file.text().then(installFromText).catch(() => X.toast("Die Datei konnte nicht gelesen werden.", true));
+    return true;
+  }
+  if (kind === "code") {
+    const file = el.files?.[0];
+    el.value = "";
+    const gymId = S.gymSel;
+    if (!file || !gymId) return true;
+    if (!file.type.startsWith("image/")) {
+      S.gymCodeError = "Bitte ein Bild wählen (Foto oder Screenshot des Codes).";
+      X.rerender();
+      return true;
+    }
+    fileToAccessCode(file)
+      .then((data) => storeAccessCode(gymId, data))
+      .catch((e) => {
+        S.gymCodeError = e.message;
+        X.rerender();
+      });
     return true;
   }
   if (kind === "photo") {

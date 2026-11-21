@@ -1813,3 +1813,74 @@ body.mapzoom-open { overflow: hidden; }
 .subtabs-row > .segmented.subtabs { margin: 0; }
 .subtabs-row__aside { margin-left: auto; }
 .subtabs-row__icon { display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--blue); }
+
+/* 1.77.0: Body & Longevity → Überblick (wie am PC 1.0.163, longevityview.js) */
+.lng__summary { font-weight: 650; }
+.lng__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.lng-tile { --tile-level: var(--muted); display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--line); border-top: 3px solid var(--tile-level); border-radius: 12px; background: var(--surface); }
+.lng-tile.is-low { --tile-level: var(--danger); }
+.lng-tile.is-below { --tile-level: var(--orange-text); }
+.lng-tile.is-average { --tile-level: var(--muted); }
+.lng-tile.is-good, .lng-tile.is-excellent { --tile-level: var(--ok); }
+.lng-tile.is-none { --tile-level: var(--line); }
+.lng-tile__open { display: flex; flex-direction: column; gap: 3px; min-height: 0; padding: 10px 12px 6px; border: 0; background: transparent; color: var(--fg); font-weight: 400; text-align: left; }
+.lng-tile__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 6px; }
+.lng-tile__title { font-size: .86rem; font-weight: 700; }
+.lng-tile__level { font-size: .74rem; font-weight: 700; color: var(--tile-level); }
+.lng-tile__value { font-size: 1.6rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.lng-tile__unit { font-size: .82rem; font-weight: 500; color: var(--muted); }
+.lng-tile__bar { position: relative; height: 6px; margin: 6px 0 3px; border-radius: 999px; background: linear-gradient(90deg, var(--danger) 0%, var(--orange) 30%, var(--line) 50%, var(--ok) 75%); }
+.lng-tile__marker { position: absolute; top: 50%; width: 12px; height: 12px; border: 2px solid var(--surface); border-radius: 50%; background: var(--fg); transform: translate(-50%, -50%); }
+.lng-tile__rank { color: var(--fg); }
+.lng-tile__trend { font-weight: 650; }
+.lng-tile__trend--better { color: var(--ok); }
+.lng-tile__trend--worse { color: var(--danger); }
+.lng-tile__trend--flat { color: var(--muted); }
+.lng-tile__spark { width: 100%; height: 34px; margin-top: 4px; color: var(--blue); }
+.lng-tile__src { padding: 0 12px 8px; color: var(--muted); font-size: .8rem; }
+.lng-tile__src summary { cursor: pointer; font-weight: 600; }
+.lng-tile__src p { margin-top: 4px; }
+.lng-labs__list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.lng-labs__row { display: grid; gap: 2px; width: 100%; min-height: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--fg); font-weight: 400; text-align: left; }
+.lng-labs__name { display: grid; }
+.lng-labs__val { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.lab-flag--normal { color: var(--ok); }
+.lab-flag--none { color: var(--muted); }
+
+/* 1.78.0: Meine Gyms → Zutrittscode (gymsui.js) und Bilder vergrößern (mapzoom.js openImageZoom) */
+.gym-code__show { display: grid; justify-items: center; gap: 6px; width: 100%; min-height: 0; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--fg); font-weight: 400; }
+.gym-code__show img { display: block; max-width: 100%; max-height: 220px; object-fit: contain; }
+.mapzoom--image .mapzoom__scroll { background: var(--surface); }
+.mapzoom--image .mapzoom__inner { justify-content: center; align-items: center; min-height: 100%; }
+.mapzoom__img { display: block; flex: none; width: var(--fit, 100%); height: auto; user-select: none; -webkit-user-select: none; }
+
+/* 1.79.0: Body & Longevity → Protocols (protocolsview.js) */
+.prot-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.prot-pick__btn { display: grid; gap: 2px; min-height: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--fg); font-weight: 400; text-align: left; }
+.prot-pick__btn.is-active { border-color: var(--orange); box-shadow: 0 0 0 1px var(--orange); }
+.prot__tagline { font-weight: 650; }
+.prot__figure { display: grid; gap: 2px; padding: 10px 12px; border-left: 4px solid var(--orange); border-radius: 10px; background: var(--surface-2); }
+.prot__figure b { font-size: 1.5rem; line-height: 1.1; }
+.prot__pillars { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.prot__pillars li { display: grid; gap: 2px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+.prot-day th { width: 6.5em; color: var(--muted); font-weight: 600; vertical-align: top; text-align: left; }
+.prot-day td { overflow-wrap: anywhere; }
+.prot-rules { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.prot-rules li { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); gap: 10px; align-items: baseline; font-size: .9rem; }
+.prot-rules__v { font-size: 1rem; }
+.prot-dl { display: grid; gap: 8px; margin: 0; font-size: .9rem; }
+.prot-dl dt { font-weight: 700; }
+.prot-dl dd { margin: 0; }
+.prot-ul { margin: 0; padding-left: 1.2em; font-size: .9rem; }
+.prot-tier { margin-top: 6px; font-size: .78rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+.prot-check { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: .95rem; }
+.prot-check input { width: 22px; height: 22px; margin: 1px 0 0; flex: none; accent-color: var(--orange); }
+.prot-caution { padding: 8px 10px; border-left: 3px solid var(--danger); border-radius: 8px; background: var(--surface-2); }
+.dozen-bar { height: 8px; overflow: hidden; border-radius: 999px; background: var(--line); }
+.dozen-bar span { display: block; height: 100%; background: var(--ok); }
+.dozen-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dozen-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; }
+.dozen-row.is-full { border-color: var(--ok); }
+.dozen-row__name { display: grid; min-width: 0; }
+.dozen-row__count { display: flex; align-items: center; gap: 6px; flex: none; font-variant-numeric: tabular-nums; }
+.dozen-row__count .btn.sm { min-width: 40px; min-height: 40px; padding: 0; }

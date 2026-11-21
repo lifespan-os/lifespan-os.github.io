@@ -323,7 +323,7 @@ function dayMacroGoals(goal, need, energy = null) {
     { key: "carbs", g: goal.carbsG, pct: goal.carbsPct ?? null, perKg: false },
     { key: "fat", g: goal.fatG, pct: goal.fatPct ?? null, perKg: false }
   ];
-  const rows = spec.flatMap((s) => {
+  const rows2 = spec.flatMap((s) => {
     if (s.pct !== null) {
       return [
         {
@@ -338,7 +338,7 @@ function dayMacroGoals(goal, need, energy = null) {
     if (s.g === null) return [];
     return [{ key: s.key, set: s.g, unit: "g", grams: Math.round(s.g * factor) }];
   });
-  const gramsOf = (key) => rows.find((r2) => r2.key === key)?.grams ?? null;
+  const gramsOf = (key) => rows2.find((r2) => r2.key === key)?.grams ?? null;
   return {
     proteinG: gramsOf("protein"),
     carbsG: gramsOf("carbs"),
@@ -346,7 +346,7 @@ function dayMacroGoals(goal, need, energy = null) {
     baseKcal,
     needKcal,
     factor,
-    rows
+    rows: rows2
   };
 }
 function withDayMacros(goal, macros) {
@@ -2830,16 +2830,16 @@ function weeklyMuscleSets(log, exercises, today, count = 4) {
   const groupOf2 = new Map(
     exercises.map((e) => [e.id, e.muscleGroup?.trim() ? e.muscleGroup.trim() : NO_MUSCLE_GROUP])
   );
-  const rows = /* @__PURE__ */ new Map();
+  const rows2 = /* @__PURE__ */ new Map();
   for (const s of log) {
     if (s.isWarmup || s.exerciseCategory !== "strength") continue;
     const index = weeks.findIndex((w) => s.date >= w.start && s.date <= w.end);
     if (index < 0) continue;
     const group = groupOf2.get(s.exerciseId) ?? NO_MUSCLE_GROUP;
-    let row = rows.get(group);
+    let row = rows2.get(group);
     if (!row) {
       row = { group, sets: weeks.map(() => 0), volumeKg: weeks.map(() => 0) };
-      rows.set(group, row);
+      rows2.set(group, row);
     }
     row.sets[index] = (row.sets[index] ?? 0) + 1;
     row.volumeKg[index] = (row.volumeKg[index] ?? 0) + setVolumeKg(s);
@@ -2848,7 +2848,7 @@ function weeklyMuscleSets(log, exercises, today, count = 4) {
   const last = count - 1;
   return {
     weeks,
-    rows: [...rows.values()].sort(
+    rows: [...rows2.values()].sort(
       (a, b) => (b.sets[last] ?? 0) - (a.sets[last] ?? 0) || sum(b.sets) - sum(a.sets) || a.group.localeCompare(b.group, "de")
     )
   };
@@ -7234,17 +7234,17 @@ function focusSummary(entries) {
   ).map((e) => `${MUSCLE_LABELS[e.muscle]} ${e.percent} %`).join(", ");
 }
 var NO_FOCUS = { machines: /* @__PURE__ */ new Map(), exercises: /* @__PURE__ */ new Map() };
-function buildFocusIndex(rows) {
+function buildFocusIndex(rows2) {
   const machines = /* @__PURE__ */ new Map();
   const exercises = /* @__PURE__ */ new Map();
-  for (const r2 of rows.machines) {
+  for (const r2 of rows2.machines) {
     if (!isMuscleId(r2.muscle)) continue;
     machines.set(r2.machineId, [
       ...machines.get(r2.machineId) ?? [],
       { muscle: r2.muscle, percent: r2.percent }
     ]);
   }
-  for (const r2 of rows.exercises) {
+  for (const r2 of rows2.exercises) {
     if (!isMuscleId(r2.muscle)) continue;
     exercises.set(r2.exerciseId, [
       ...exercises.get(r2.exerciseId) ?? [],
@@ -7320,9 +7320,7 @@ function muscleMapForWorkouts(log, exercises, machines, workoutIds, focus = NO_F
 }
 function muscleMapForOpenWorkout(sets2, running, exercises, machines, focus = NO_FOCUS) {
   const category = new Map(exercises.map((e) => [e.id, e.category]));
-  const counted = sets2.filter(
-    (s) => running ? s.isDone : s.isDone || (s.reps ?? 0) > 0 || (s.weightKg ?? 0) > 0
-  ).map((s) => ({ ...s, exerciseCategory: category.get(s.exerciseId) ?? "strength" }));
+  const counted = sets2.filter((s) => running ? s.isDone : s.isDone || (s.reps ?? 0) > 0 || (s.weightKg ?? 0) > 0).map((s) => ({ ...s, exerciseCategory: category.get(s.exerciseId) ?? "strength" }));
   return muscleMapData(counted, exercises, machines, () => true, focus);
 }
 var SCALE_MODE_LABELS = {
@@ -7752,12 +7750,12 @@ function lateSessionsRow(workouts, week) {
   };
 }
 function hrvBelowBaseline(measurements, week) {
-  const hrv = measurements.filter((m) => m.metricId === HRV_METRIC_ID);
+  const hrv2 = measurements.filter((m) => m.metricId === HRV_METRIC_ID);
   let checked = 0;
   const below = [];
-  for (const m of hrv) {
+  for (const m of hrv2) {
     if (!inWeek(m.date, week)) continue;
-    const base = hrv.filter((b) => b.date >= shiftDays(m.date, -7) && b.date < m.date).map((b) => b.value);
+    const base = hrv2.filter((b) => b.date >= shiftDays(m.date, -7) && b.date < m.date).map((b) => b.value);
     if (base.length < HRV_MIN_BASE) continue;
     checked += 1;
     const baseline = mean(base);
@@ -7826,16 +7824,16 @@ function proteinGoalRow(nutrition, goal, week) {
 function weeklyAnalysis(input) {
   const { week } = input;
   const observations = [];
-  const hrv = hrvBelowBaseline(input.measurements, week);
+  const hrv2 = hrvBelowBaseline(input.measurements, week);
   const hrvRow = {
     label: "HRV mehr als 20 % unter dem Mittel der 7 Vortage",
-    value: hrv.checked ? `${hrv.below.length} von ${hrv.checked}` : "\u2013",
-    basis: hrv.checked ? "Messungen mit mind. 3 Vergleichswerten in den 7 Vortagen" : "zu wenige Messungen f\xFCr den Vergleich",
-    note: hrv.below.length ? hrv.below.map((b) => formatDate(b.date)).join(", ") : null
+    value: hrv2.checked ? `${hrv2.below.length} von ${hrv2.checked}` : "\u2013",
+    basis: hrv2.checked ? "Messungen mit mind. 3 Vergleichswerten in den 7 Vortagen" : "zu wenige Messungen f\xFCr den Vergleich",
+    note: hrv2.below.length ? hrv2.below.map((b) => formatDate(b.date)).join(", ") : null
   };
-  if (hrv.below.length > 0) {
+  if (hrv2.below.length > 0) {
     observations.push(
-      `HRV lag an ${hrv.below.length === 1 ? "einem Tag" : `${hrv.below.length} Tagen`} mehr als 20 % unter dem Mittel der jeweils 7 Vortage: ${hrv.below.map(
+      `HRV lag an ${hrv2.below.length === 1 ? "einem Tag" : `${hrv2.below.length} Tagen`} mehr als 20 % unter dem Mittel der jeweils 7 Vortage: ${hrv2.below.map(
         (b) => `${formatDate(b.date)} ${formatNumber(b.value, 0)} ms statt \xD8 ${formatNumber(b.baseline, 0)} ms`
       ).join("; ")}. Das ist eine Rechnung, keine Bewertung \u2013 einzelne Messungen schwanken stark.`
     );
@@ -8252,7 +8250,7 @@ function weeklySummary(data, weekFrom) {
       basis: (n2) => `${n2} ${n2 === 1 ? "Messung" : "Messungen"}`
     }
   );
-  const hrv = weekValue(
+  const hrv2 = weekValue(
     "HRV (RMSSD, Mittel)",
     metricSeries(data.measurements, HRV_METRIC_ID),
     week,
@@ -8266,7 +8264,7 @@ function weeklySummary(data, weekFrom) {
   sections.push({
     area: "recovery",
     title: "Regeneration",
-    values: [readiness2, fatigue, soreness, stress, hr, hrv].filter((v) => v.count > 0 || v === readiness2).map((v) => v.item)
+    values: [readiness2, fatigue, soreness, stress, hr, hrv2].filter((v) => v.count > 0 || v === readiness2).map((v) => v.item)
   });
   if (readiness2.count + fatigue.count + soreness.count + stress.count === 0) {
     gaps.push("Regeneration: in dieser Woche keine Selbsteinsch\xE4tzung erfasst.");
@@ -8463,7 +8461,7 @@ function weeklySummary(data, weekFrom) {
       same2 ? "Schlafdauer und Erholungs-Einsch\xE4tzung haben sich gegen\xFCber der Vorwoche in dieselbe Richtung ver\xE4ndert. Eine einzelne Woche reicht nicht, um daraus einen Zusammenhang abzuleiten." : "Schlafdauer und Erholungs-Einsch\xE4tzung haben sich gegen\xFCber der Vorwoche in entgegengesetzte Richtungen ver\xE4ndert."
     );
   }
-  if (hr.count === 1 || hrv.count === 1) {
+  if (hr.count === 1 || hrv2.count === 1) {
     observations.push(
       "F\xFCr Ruhepuls bzw. HRV liegt in dieser Woche nur eine Messung vor. Einzelne Werte schwanken stark und werden hier nicht bewertet."
     );
@@ -9103,16 +9101,16 @@ function sleepEntryRows(logs, naps) {
   const dates = [.../* @__PURE__ */ new Set([...nights.keys(), ...napsByDate.keys()])].sort(
     (a, b) => b.localeCompare(a)
   );
-  const rows = [];
+  const rows2 = [];
   for (const date of dates) {
     const log = nights.get(date);
-    if (log) rows.push({ kind: "night", date, log });
+    if (log) rows2.push({ kind: "night", date, log });
     const dayNaps = [...napsByDate.get(date) ?? []].sort(
       (a, b) => a.startTime.localeCompare(b.startTime)
     );
-    for (const nap of dayNaps) rows.push({ kind: "nap", date, nap, alone: !log });
+    for (const nap of dayNaps) rows2.push({ kind: "nap", date, nap, alone: !log });
   }
-  return rows;
+  return rows2;
 }
 
 // src/domain/dayStatus.ts
@@ -9120,7 +9118,7 @@ function dayStatus(overview, supplementIntakes) {
   const day = overview.date;
   const vital = (id3) => overview.vitalsLast7Days.find((m) => m.metricId === id3 && m.date === day) ?? null;
   const weight = overview.weightLast30Days.find((m) => m.date === day) ?? null;
-  const hrv = vital(HRV_METRIC_ID);
+  const hrv2 = vital(HRV_METRIC_ID);
   const hr = vital(RESTING_HR_METRIC_ID);
   const sleep = overview.sleepToday;
   const phases = sleep ? phaseShares(sleep) : null;
@@ -9128,7 +9126,7 @@ function dayStatus(overview, supplementIntakes) {
   const food = overview.nutritionToday;
   const ate = food !== null && (food.mealCount > 0 || food.fasttracking);
   const workouts = overview.workoutsToday;
-  const rows = [
+  const rows2 = [
     {
       key: "weight",
       label: "Gewicht",
@@ -9165,9 +9163,9 @@ function dayStatus(overview, supplementIntakes) {
     {
       key: "hrv",
       label: "HRV",
-      done: hrv !== null,
+      done: hrv2 !== null,
       optional: false,
-      value: hrv ? `${formatNumber(hrv.value, 0)} ms` : null,
+      value: hrv2 ? `${formatNumber(hrv2.value, 0)} ms` : null,
       section: "recovery",
       where: "Recovery",
       tab: null,
@@ -9240,9 +9238,9 @@ function dayStatus(overview, supplementIntakes) {
       anchor: "workouts-title"
     }
   ];
-  const required = rows.filter((r2) => !r2.optional);
+  const required = rows2.filter((r2) => !r2.optional);
   return {
-    rows,
+    rows: rows2,
     done: required.filter((r2) => r2.done).length,
     open: required.filter((r2) => !r2.done).length
   };
@@ -9393,7 +9391,7 @@ function bmrMethodLabel(e) {
 }
 function energyRows(e) {
   if (e.baselineKcal === null || e.bmrKcal === null) return [];
-  const rows = [
+  const rows2 = [
     {
       key: "baseline",
       label: "Grundbedarf im Alltag",
@@ -9402,7 +9400,7 @@ function energyRows(e) {
     }
   ];
   if (e.step.kcal !== null && e.step.kcal > 0) {
-    rows.push({
+    rows2.push({
       key: "steps",
       label: "Schritte",
       detail: `${formatNumber(e.step.steps ?? 0, 0)} Schritte`,
@@ -9411,7 +9409,7 @@ function energyRows(e) {
   }
   for (const a of e.activities) {
     if (a.kcal <= 0) continue;
-    rows.push({
+    rows2.push({
       key: `activity-${a.key}`,
       label: a.label,
       detail: `${formatNumber(a.minutes, 0)} min \xB7 MET ${formatNumber(a.met, 1)}`,
@@ -9419,14 +9417,14 @@ function energyRows(e) {
     });
   }
   for (const t of e.trainings) {
-    rows.push({
+    rows2.push({
       key: `training-${t.workoutId}`,
       label: `Training: ${t.title}`,
       detail: describeTraining(t),
       kcal: t.kcal
     });
   }
-  return rows;
+  return rows2;
 }
 function describeCardioEnergy(c) {
   const parts2 = [c.exerciseName];
@@ -9538,16 +9536,16 @@ function fromDay(date, today) {
 function readiness(data, today, sleepGoalMin) {
   const factors = [];
   const missing = [];
-  const hrv = vitalFactor(data, today, HRV_METRIC_ID);
-  if (hrv.ok) {
-    const pct = (hrv.value - hrv.base) / hrv.base * 100;
+  const hrv2 = vitalFactor(data, today, HRV_METRIC_ID);
+  if (hrv2.ok) {
+    const pct = (hrv2.value - hrv2.base) / hrv2.base * 100;
     factors.push({
       key: "hrv",
       label: "HRV",
       level: pct >= -5 ? "good" : pct >= -15 ? "caution" : "low",
-      text: `${formatNumber(hrv.value, 1)} ms${fromDay(hrv.date, today)} \xB7 ${formatSigned(pct, 0)} % zu deinem Schnitt (${formatNumber(hrv.base, 1)} ms)`
+      text: `${formatNumber(hrv2.value, 1)} ms${fromDay(hrv2.date, today)} \xB7 ${formatSigned(pct, 0)} % zu deinem Schnitt (${formatNumber(hrv2.base, 1)} ms)`
     });
-  } else missing.push(`HRV (${hrv.reason})`);
+  } else missing.push(`HRV (${hrv2.reason})`);
   const hr = vitalFactor(data, today, RESTING_HR_METRIC_ID);
   if (hr.ok) {
     const diff = hr.value - hr.base;
@@ -12550,17 +12548,17 @@ function splitTile(v, row, next) {
   const w = valuesOfRow(joined);
   return w && w.previous !== null ? { v: w, raw: joined } : { v, raw: row };
 }
-function readScaleRows(rows) {
+function readScaleRows(rows2) {
   const found = /* @__PURE__ */ new Map();
-  for (let i = 0; i < rows.length; i++) {
-    const field = fieldOfRow(rows[i] ?? "");
+  for (let i = 0; i < rows2.length; i++) {
+    const field = fieldOfRow(rows2[i] ?? "");
     if (!field || found.has(field.key)) continue;
-    for (let j = i + 1; j < Math.min(rows.length, i + 4); j++) {
-      const row = rows[j] ?? "";
+    for (let j = i + 1; j < Math.min(rows2.length, i + 4); j++) {
+      const row = rows2[j] ?? "";
       if (fieldOfRow(row)) break;
       const v = valuesOfRow(row);
       if (v) {
-        found.set(field.key, splitTile(v, row, rows[j + 1] ?? ""));
+        found.set(field.key, splitTile(v, row, rows2[j + 1] ?? ""));
         break;
       }
     }
@@ -13039,21 +13037,21 @@ function stat(label, unit, decimals, values) {
   };
 }
 function metricRows(measurements, metrics, categories, from, to) {
-  const rows = [];
+  const rows2 = [];
   const list2 = [...metrics].filter((m) => categories.includes(m.category)).sort((a, b) => a.position - b.position);
   for (const m of list2) {
     const values = measurements.filter((x) => x.metricId === m.id && x.date >= from && x.date <= to).map((x) => ({ date: x.date, value: x.value }));
     const row = stat(m.name, m.unit, m.decimals, values);
-    if (row) rows.push(row);
+    if (row) rows2.push(row);
   }
-  return rows;
+  return rows2;
 }
 function labRows(draws, analytes, from, to) {
   const byId = new Map(analytes.map((a) => [a.id, a]));
   const order = new Map(analytes.map((a, i) => [a.id, i]));
   const key = (d) => d.date + (d.time ?? "");
   const sorted = [...draws].sort((a, b) => key(b).localeCompare(key(a)));
-  const rows = [];
+  const rows2 = [];
   const seen = /* @__PURE__ */ new Set();
   for (const d of sorted) {
     if (d.date < from || d.date > to) continue;
@@ -13070,7 +13068,7 @@ function labRows(draws, analytes, from, to) {
           break;
         }
       }
-      rows.push({
+      rows2.push({
         analyteId: r2.analyteId,
         category: r2.category,
         name: r2.analyteName,
@@ -13085,7 +13083,7 @@ function labRows(draws, analytes, from, to) {
     }
   }
   const catIndex = (c) => LAB_CATEGORIES.indexOf(c);
-  return rows.sort(
+  return rows2.sort(
     (a, b) => catIndex(a.category) - catIndex(b.category) || (order.get(a.analyteId) ?? 0) - (order.get(b.analyteId) ?? 0)
   );
 }
@@ -13096,13 +13094,13 @@ function hrtRows(entries, from, to) {
     const k = `${e.hormone.trim().toLowerCase()}|${e.unit}`;
     groups.set(k, [...groups.get(k) ?? [], e]);
   }
-  const rows = [];
+  const rows2 = [];
   for (const list2 of groups.values()) {
     const taken = list2.filter((e) => e.status === "taken").sort((a, b) => a.date.localeCompare(b.date));
     const first = taken[0];
     const last = taken[taken.length - 1];
     if (!first || !last) continue;
-    rows.push({
+    rows2.push({
       hormone: first.hormone,
       unit: first.unit,
       count: taken.length,
@@ -13113,7 +13111,7 @@ function hrtRows(entries, from, to) {
       missed: list2.length - taken.length
     });
   }
-  return rows.sort((a, b) => a.hormone.localeCompare(b.hormone, "de"));
+  return rows2.sort((a, b) => a.hormone.localeCompare(b.hormone, "de"));
 }
 function measuredRows(w, from, to) {
   if (!w) return [];
@@ -14138,7 +14136,7 @@ var Layout = class {
     this.page.text(M, this.y + 12, text2, { size: 9, bold: true, color: MUTED });
     this.y += 18;
   }
-  table(columns, rows) {
+  table(columns, rows2) {
     const rowH = 15;
     const total = columns.reduce((s, c) => s + c.width, 0);
     const scale = CONTENT_W / total;
@@ -14169,7 +14167,7 @@ var Layout = class {
     };
     this.ensure(rowH * 2);
     head2();
-    for (const row of rows) {
+    for (const row of rows2) {
       if (this.ensure(rowH)) head2();
       row.forEach((cell2, i) => {
         const c = columns[i];
@@ -14320,10 +14318,10 @@ function statCells(s) {
     { text: String(s.count), color: MUTED }
   ];
 }
-function statSection(l, title, rows, empty) {
+function statSection(l, title, rows2, empty) {
   l.heading(title);
-  if (rows.length === 0) l.note(empty);
-  else l.table(STAT_COLUMNS, rows.map(statCells));
+  if (rows2.length === 0) l.note(empty);
+  else l.table(STAT_COLUMNS, rows2.map(statCells));
 }
 function hrtSection(l, r2) {
   if (!r2.hrt) return;
@@ -14563,9 +14561,9 @@ function splitHeaderUnit(header2) {
   }
   return { name: h, unit: "" };
 }
-function findHeader(rows) {
-  for (let i = 0; i < Math.min(rows.length, 15); i++) {
-    const cells = (rows[i] ?? []).map(clean);
+function findHeader(rows2) {
+  for (let i = 0; i < Math.min(rows2.length, 15); i++) {
+    const cells = (rows2[i] ?? []).map(clean);
     const hasName = cells.some((c) => H.name.test(c));
     const hasValue = cells.some((c) => H.value.test(c));
     const hasDate = cells.some((c) => H.date.test(c));
@@ -14573,9 +14571,9 @@ function findHeader(rows) {
   }
   return -1;
 }
-function parseLabTable(rows, fallbackDate) {
+function parseLabTable(rows2, fallbackDate) {
   const result = { format: "long", rows: [], skipped: [] };
-  const headerIndex = findHeader(rows);
+  const headerIndex = findHeader(rows2);
   if (headerIndex < 0) {
     result.skipped.push({
       line: 1,
@@ -14584,7 +14582,7 @@ function parseLabTable(rows, fallbackDate) {
     });
     return result;
   }
-  const header2 = (rows[headerIndex] ?? []).map(clean);
+  const header2 = (rows2[headerIndex] ?? []).map(clean);
   const col = (re) => header2.findIndex((c2) => re.test(c2));
   const c = {
     date: col(H.date),
@@ -14598,7 +14596,7 @@ function parseLabTable(rows, fallbackDate) {
     lab: col(H.lab)
   };
   const cell2 = (row, i) => i >= 0 ? clean(row[i] ?? "") : "";
-  const body = rows.slice(headerIndex + 1);
+  const body = rows2.slice(headerIndex + 1);
   let lastDate = null;
   const dateOf = (row) => {
     const parsed = c.date >= 0 ? parseDateCell(cell2(row, c.date)) : null;
@@ -14780,8 +14778,8 @@ function previewRows(parsed, analytes) {
     };
   });
 }
-function toImportRows(rows) {
-  return rows.map((r2) => ({
+function toImportRows(rows2) {
+  return rows2.map((r2) => ({
     date: r2.date,
     time: r2.time,
     lab: r2.lab,
@@ -15082,7 +15080,7 @@ function parseCsv(text2) {
   const firstLine = clean2.split("\n")[0] ?? "";
   const count = (ch) => firstLine.split(ch).length - 1;
   const sep = [";", "	", ","].reduce((best, ch) => count(ch) > count(best) ? ch : best, ";");
-  const rows = [];
+  const rows2 = [];
   let row = [];
   let cell2 = "";
   let quoted = false;
@@ -15100,25 +15098,25 @@ function parseCsv(text2) {
       cell2 = "";
     } else if (ch === "\n") {
       row.push(cell2);
-      rows.push(row);
+      rows2.push(row);
       row = [];
       cell2 = "";
     } else cell2 += ch;
   }
   if (cell2 !== "" || row.length > 0) {
     row.push(cell2);
-    rows.push(row);
+    rows2.push(row);
   }
-  return rows;
+  return rows2;
 }
 var TEXT_HEADER = /^(aufgabe|aufgaben|to-?dos?|tasks?|punkt|punkte|eintrag|einträge|item|items|beschreibung|titel|bezeichnung|was|checkliste)$/i;
 var DONE_HEADER = /^(erledigt|done|status|check|checked|abgehakt|fertig)$/i;
 var DONE_VALUE = /^(x|✓|✔|✔️|☑|☒|✅|true|wahr|ja|yes|j|y|1|erledigt|done|fertig|ok)$/iu;
 var OPEN_VALUE = /^(|false|falsch|nein|no|n|0|offen|open|☐|□|-)$/iu;
 var isNumeric = (v) => /^-?\d+(?:[.,]\d+)?$/.test(v.trim());
-function rowsToChecklist(rows, name) {
+function rowsToChecklist(rows2, name) {
   const notes = [];
-  const nonEmpty = rows.filter((r2) => r2.some((c) => c.trim() !== ""));
+  const nonEmpty = rows2.filter((r2) => r2.some((c) => c.trim() !== ""));
   if (nonEmpty.length === 0) return { name, items: [], notes: ["Die Tabelle ist leer."] };
   const width = Math.max(...nonEmpty.map((r2) => r2.length));
   const header2 = nonEmpty[0].map((c) => c.trim());
@@ -15367,9 +15365,9 @@ async function readXlsx(bytes, inflateRaw) {
   const shared = [];
   const sst = file("xl/sharedStrings.xml");
   if (sst) for (const m of sst.matchAll(/<si>([\s\S]*?)<\/si>/g)) shared.push(texts(m[1] ?? ""));
-  const rows = [];
+  const rows2 = [];
   for (const rowMatch of sheetXml.matchAll(/<row\b([^>]*?)(?:\/>|>([\s\S]*?)<\/row>)/g)) {
-    const rowNumber = Number(attr(rowMatch[0], "r") ?? rows.length + 1);
+    const rowNumber = Number(attr(rowMatch[0], "r") ?? rows2.length + 1);
     const cells = [];
     const body = rowMatch[2] ?? "";
     let next = 0;
@@ -15390,10 +15388,10 @@ async function readXlsx(bytes, inflateRaw) {
       while (cells.length < index) cells.push("");
       cells[index] = value2;
     }
-    while (rows.length < rowNumber - 1) rows.push([]);
-    rows[rowNumber - 1] = cells;
+    while (rows2.length < rowNumber - 1) rows2.push([]);
+    rows2[rowNumber - 1] = cells;
   }
-  return { name: sheetName, rows };
+  return { name: sheetName, rows: rows2 };
 }
 function safeSheetName(name) {
   const clean2 = name.replace(/[:\\/?*[\]]/g, " ").trim().slice(0, 31).trim();
@@ -16488,7 +16486,7 @@ function trainingReview(log, exercises, count = REVIEW_SESSIONS) {
   }
   const groupVolume = [...groups.values()].reduce((sum, g) => sum + g.volumeKg, 0);
   const hasBefore = before.length > 0;
-  const rows = [...groups.values()].map(({ hit, ...g }) => {
+  const rows2 = [...groups.values()].map(({ hit, ...g }) => {
     const prev = hasBefore ? previous.get(g.group) ?? 0 : null;
     return {
       ...g,
@@ -16503,7 +16501,7 @@ function trainingReview(log, exercises, count = REVIEW_SESSIONS) {
   const previousVolume = hasBefore ? log.filter((s) => beforeSet.has(s.workoutId) && !s.isWarmup).reduce((sum, s) => sum + setVolumeKg(s), 0) : null;
   return {
     sessions: sessions2,
-    groups: rows,
+    groups: rows2,
     totalVolumeKg: sessions2.reduce((sum, s) => sum + s.volumeKg, 0),
     totalSets: sessions2.reduce((sum, s) => sum + s.workingSets, 0),
     previousVolumeKg: previousVolume,
@@ -16777,9 +16775,9 @@ function mergeLabeledGroups(groups, labels) {
     cur.sources.push(g.group);
   }
   const outLabels = /* @__PURE__ */ new Map();
-  const rows = [];
+  const rows2 = [];
   for (const [key, { row, sources }] of merged) {
-    rows.push(row);
+    rows2.push(row);
     if (sources.length === 1) {
       outLabels.set(row.group, labels.get(row.group) ?? { label: row.group, detail: null });
     } else {
@@ -16789,8 +16787,8 @@ function mergeLabeledGroups(groups, labels) {
       });
     }
   }
-  rows.sort((a, b) => b.volumeKg - a.volumeKg);
-  return { groups: rows, labels: outLabels };
+  rows2.sort((a, b) => b.volumeKg - a.volumeKg);
+  return { groups: rows2, labels: outLabels };
 }
 
 // src/domain/cardioReport.ts
@@ -16897,7 +16895,7 @@ function bestTrendKind(list2) {
   return best;
 }
 function bests(list2) {
-  const rows = [];
+  const rows2 = [];
   const kinds = [...new Set(list2.map((s) => s.kind))];
   const pick2 = (items, score) => items.reduce((b, s) => b === null || score(s) > score(b) ? s : b, null);
   for (const kind of kinds) {
@@ -16908,7 +16906,7 @@ function bests(list2) {
       (s) => s.distanceM
     );
     if (far) {
-      rows.push({
+      rows2.push({
         kind,
         label: `${name}: l\xE4ngste Strecke`,
         value: `${formatNumber(far.distanceM / 1e3, 2)} km`,
@@ -16921,7 +16919,7 @@ function bests(list2) {
       (s) => s.durationSeconds
     );
     if (long) {
-      rows.push({
+      rows2.push({
         kind,
         label: `${name}: l\xE4ngste Dauer`,
         value: formatDuration2(long.durationSeconds),
@@ -16936,7 +16934,7 @@ function bests(list2) {
         (s) => s.distanceM / s.durationSeconds
       );
       if (fast) {
-        rows.push({
+        rows2.push({
           kind,
           label: `${name}: schnellste \xD8 Pace`,
           value: `${formatDuration2(fast.durationSeconds * per / fast.distanceM)} /${kind === "swim" ? "100 m" : "km"}`,
@@ -16950,7 +16948,7 @@ function bests(list2) {
       (s) => s.powerAvg ?? 0
     );
     if (strong && strong.powerAvg !== null) {
-      rows.push({
+      rows2.push({
         kind,
         label: `${name}: h\xF6chste \xD8 Leistung`,
         value: `${formatNumber(strong.powerAvg, 0)} W`,
@@ -16959,7 +16957,7 @@ function bests(list2) {
       });
     }
   }
-  return rows;
+  return rows2;
 }
 function kindsIn(list2) {
   return [...new Set(list2.map((s) => s.kind))];
@@ -17298,11 +17296,11 @@ function trainingRows(workouts, statuses, limited = false) {
     null
   );
   const days3 = statuses.filter((s) => !limited || oldest === null || s.date >= oldest);
-  const rows = [
+  const rows2 = [
     ...days3.map((status) => ({ kind: "day", date: status.date, status })),
     ...workouts.map((workout) => ({ kind: "workout", date: workout.date, workout }))
   ];
-  return rows.map((row, index) => ({ row, index })).sort((a, b) => b.row.date.localeCompare(a.row.date) || a.index - b.index).map((x) => x.row);
+  return rows2.map((row, index) => ({ row, index })).sort((a, b) => b.row.date.localeCompare(a.row.date) || a.index - b.index).map((x) => x.row);
 }
 function restAlarm(info) {
   return info.status?.kind === "rest" && info.restStreak > REST_LIMIT;
@@ -17988,11 +17986,11 @@ function sleepWindowChart(nights, width = 480) {
   });
   return { w: width, h, shapes };
 }
-function hrvChart(hrv, rhr, width = 480) {
+function hrvChart(hrv2, rhr, width = 480) {
   const h = 170;
   const box2 = { x: 34, y: 22, w: width - 70, h: 112 };
   const shapes = [];
-  const n2 = hrv.length;
+  const n2 = hrv2.length;
   const xAt = (i) => box2.x + (n2 <= 1 ? box2.w / 2 : i / (n2 - 1) * box2.w);
   if (n2 >= 14) {
     shapes.push({
@@ -18004,7 +18002,7 @@ function hrvChart(hrv, rhr, width = 480) {
       c: "band"
     });
   }
-  const hv = hrv.flatMap((p) => p.value === null ? [] : [p.value]);
+  const hv = hrv2.flatMap((p) => p.value === null ? [] : [p.value]);
   const rv = rhr.flatMap((p) => p.value === null ? [] : [p.value]);
   if (hv.length + rv.length === 0) {
     shapes.push(text(width / 2, h / 2, "Keine HRV- und Ruhepuls-Werte erfasst", "middle"));
@@ -18022,9 +18020,9 @@ function hrvChart(hrv, rhr, width = 480) {
       if (s.length > 1) shapes.push({ k: "poly", pts: s, c, w: 1.6 });
     for (const p of coords) if (p) shapes.push({ k: "dot", x: p[0], y: p[1], r: 2.2, c });
   };
-  if (hv.length) draw(hrv, yA, "blue");
+  if (hv.length) draw(hrv2, yA, "blue");
   if (rv.length) draw(rhr, yB, "orange");
-  hrv.forEach((p, i) => shapes.push(text(xAt(i), box2.y + box2.h + 12, dayMonth(p.date), "middle")));
+  hrv2.forEach((p, i) => shapes.push(text(xAt(i), box2.y + box2.h + 12, dayMonth(p.date), "middle")));
   if (hv.length) shapes.push(text(4, box2.y - 8, "HRV (ms)", "start"));
   if (rv.length) shapes.push(text(width - 4, box2.y - 8, "Ruhepuls (bpm)", "end"));
   legend(shapes, box2.x, h - 6, [
@@ -18210,7 +18208,7 @@ var list = (items, cls = "wr-list") => items.length ? `<ul class="${cls}">${item
 var box = (title, body, kind = "") => `<div class="wr-box${kind ? ` wr-box--${kind}` : ""}"><h4>${esc(title)}</h4>${body}</div>`;
 var card = (title, body, note = "") => `<div class="wr-card"><h4>${esc(title)}</h4>${body}${note ? `<p class="wr-note">${esc(note)}</p>` : ""}</div>`;
 var head = (num3, title, sub) => `<div class="wr-head"><span class="wr-head__num">${num3}</span><div><h3>${esc(title)}</h3><p>${esc(sub)}</p></div></div>`;
-var table = (cols, rows, cls = "") => `<table class="wr-table${cls ? ` ${cls}` : ""}"><thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((r2) => `<tr>${r2.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+var table = (cols, rows2, cls = "") => `<table class="wr-table${cls ? ` ${cls}` : ""}"><thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows2.map((r2) => `<tr>${r2.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
 function tips(hints, areas) {
   const own = hints.filter((h) => areas.includes(h.area));
   if (own.length === 0) return `<p class="wr-muted">Keine Regel ausgel\xF6st \u2013 so weitermachen.</p>`;
@@ -18660,7 +18658,7 @@ var Writer = class {
     }
   }
   /** Tabelle mit Kopfzeile; `widths` als Anteile von `w`. */
-  table(cols, rows, widths, opts = {}) {
+  table(cols, rows2, widths, opts = {}) {
     const x0 = opts.x ?? M2;
     const w = opts.w ?? CW;
     const size = 7.8;
@@ -18682,7 +18680,7 @@ var Writer = class {
       this.y += headH;
     };
     drawHead();
-    rows.forEach((row, ri) => {
+    rows2.forEach((row, ri) => {
       const marks = [];
       const cells = row.map((c, i) => {
         const indent = opts.checkCol === i ? 11 : 0;
@@ -18945,16 +18943,16 @@ function weeklyReportToPdf(r2, opts) {
     const h1 = w.chartCard("Makros je Tag (kcal)", macroChart(r2.nutrition.macros), "", M2, hw, true);
     const x = M2 + hw + 12;
     const p = w.page;
-    const rows = r2.nutrition.body;
-    const th = 30 + 20 + rows.length * 18 + (rows.length ? 6 : 20);
+    const rows2 = r2.nutrition.body;
+    const th = 30 + 20 + rows2.length * 18 + (rows2.length ? 6 : 20);
     const h = Math.max(h1, th);
     p.rect(x, y0, hw, h, { stroke: C.line, width: 0.6, radius: 6, fill: C.white });
     p.text(x + 12, y0 + 19, "K\xF6rper (Wochenmittel)", { size: 10, bold: true, color: C.navy });
-    if (rows.length) {
+    if (rows2.length) {
       w.y = y0 + 28;
       w.table(
         ["Wert", "Vorwoche", kw],
-        rows.map((b) => [b.label, b.prev, b.cur]),
+        rows2.map((b) => [b.label, b.prev, b.cur]),
         [0.44, 0.28, 0.28],
         {
           x: x + 8,
@@ -19601,11 +19599,11 @@ function balance(input, inside) {
   };
 }
 function energyAdvice(input, inside) {
-  const fat = has(input.goals, "fat_loss");
+  const fat2 = has(input.goals, "fat_loss");
   const muscle = has(input.goals, "muscle_gain");
-  if (!fat && !muscle) return null;
+  if (!fat2 && !muscle) return null;
   const b = balance(input, inside);
-  if (fat && muscle) {
+  if (fat2 && muscle) {
     return {
       id: "energy",
       goals: ["fat_loss", "muscle_gain"],
@@ -19616,8 +19614,8 @@ function energyAdvice(input, inside) {
       source: SOURCES.surplus
     };
   }
-  const goals = fat ? ["fat_loss"] : ["muscle_gain"];
-  const title = fat ? "Kaloriendefizit" : "Kalorien\xFCberschuss";
+  const goals = fat2 ? ["fat_loss"] : ["muscle_gain"];
+  const title = fat2 ? "Kaloriendefizit" : "Kalorien\xFCberschuss";
   if (b.n < MIN_DAYS || b.diff === null || b.total === null) {
     return {
       id: "energy",
@@ -19626,11 +19624,11 @@ function energyAdvice(input, inside) {
       title,
       text: "F\xFCr die Auswertung fehlen Tage mit Ern\xE4hrung und berechnetem Verbrauch.",
       basis: `${b.n} von ${ADVICE_DAYS} Tagen mit beidem (mind. ${MIN_DAYS})`,
-      source: fat ? SOURCES.deficit : SOURCES.surplus
+      source: fat2 ? SOURCES.deficit : SOURCES.surplus
     };
   }
   const basis = `\xD8 Zufuhr minus Verbrauch ${formatSigned(b.diff, 0)} kcal an ${days2(b.n)} (\xD8 Verbrauch ${kcal2(b.total)}, berechnet)`;
-  if (fat) {
+  if (fat2) {
     const deficit = -b.diff;
     if (deficit < LIMITS.deficitMinKcal) {
       return {
@@ -19927,13 +19925,13 @@ function cardioAdvice(input, inside) {
 }
 function hrvAdvice(input) {
   if (!has(input.goals, "recovery")) return null;
-  const hrv = input.measurements.filter((m) => m.metricId === HRV_METRIC_ID && m.date <= input.to).sort((a, b) => a.date < b.date ? -1 : 1);
+  const hrv2 = input.measurements.filter((m) => m.metricId === HRV_METRIC_ID && m.date <= input.to).sort((a, b) => a.date < b.date ? -1 : 1);
   const from = shiftDays(input.to, -6);
   let checked = 0;
   const below = [];
-  for (const m of hrv.filter((x) => x.date >= from)) {
+  for (const m of hrv2.filter((x) => x.date >= from)) {
     const start = shiftDays(m.date, -7);
-    const baseVals = hrv.filter((x) => x.date >= start && x.date < m.date).map((x) => x.value);
+    const baseVals = hrv2.filter((x) => x.date >= start && x.date < m.date).map((x) => x.value);
     const b = mean3(baseVals);
     if (baseVals.length < 3 || b === null) continue;
     checked += 1;
@@ -21333,8 +21331,8 @@ function value(w, key) {
       return w.durationMin;
   }
 }
-function sortTrainingRows(rows, key, direction) {
-  const indexed = rows.map((row, index) => ({ row, index }));
+function sortTrainingRows(rows2, key, direction) {
+  const indexed = rows2.map((row, index) => ({ row, index }));
   if (key === "date") {
     return indexed.sort((a, b) => {
       const va = a.row.kind === "workout" ? value(a.row.workout, "date") : `${a.row.date} `;
@@ -21480,6 +21478,3452 @@ function formatHoursMinutes(minutes) {
   if (h === 0) return `${m} min`;
   return `${h} h ${String(m).padStart(2, "0")} min`;
 }
+
+// src/domain/longevity.ts
+var longevity_exports = {};
+__export(longevity_exports, {
+  BODY_FAT_NORMS: () => BODY_FAT_NORMS,
+  HRV_NORMS: () => HRV_NORMS,
+  LONGEVITY_LABS: () => LONGEVITY_LABS,
+  LONGEVITY_METRICS: () => LONGEVITY_METRICS,
+  NORM_LEVEL_LABELS: () => NORM_LEVEL_LABELS,
+  RESTING_HR_NORMS: () => RESTING_HR_NORMS,
+  VO2MAX_NORMS: () => VO2MAX_NORMS,
+  assess: () => assess,
+  bandFor: () => bandFor,
+  bandLabel: () => bandLabel,
+  cdf: () => cdf,
+  dailyMeans: () => dailyMeans,
+  levelOfRank: () => levelOfRank,
+  percentileOf: () => percentileOf,
+  rankText: () => rankText,
+  recentMean: () => recentMean,
+  recentValues: () => recentValues,
+  trendOf: () => trendOf
+});
+
+// src/domain/gripStrength.ts
+var CATEGORY_BOUNDS = [
+  { minPercentile: 90, category: "sehr stark" },
+  { minPercentile: 75, category: "\xFCberdurchschnittlich" },
+  { minPercentile: 25, category: "durchschnittlich" },
+  { minPercentile: 10, category: "unterdurchschnittlich" },
+  { minPercentile: 0, category: "unzureichend" }
+];
+var Z = { 10: -1.2816, 25: -0.6745, 75: 0.6745, 90: 1.2816 };
+function normalCdf(z) {
+  const t = 1 / (1 + 0.3275911 * Math.abs(z) / Math.SQRT2);
+  const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-(z * z) / 2);
+  return z >= 0 ? (1 + y) / 2 : (1 - y) / 2;
+}
+var round1 = (n2) => Math.round(n2 * 10) / 10;
+function findNorm(norms, sex, ageYears, heightCm) {
+  const group = norms.filter((n2) => n2.sex === sex && ageYears >= n2.age_min && ageYears <= n2.age_max).sort((a, b) => a.height_min_cm - b.height_min_cm);
+  if (group.length === 0) return null;
+  const exact = group.find(
+    (n2) => heightCm >= n2.height_min_cm && (n2.height_max_cm === null || heightCm < n2.height_max_cm + 1)
+  );
+  if (exact) return { norm: exact, heightClamped: false };
+  const first = group[0];
+  const last = group[group.length - 1];
+  if (!first || !last) return null;
+  const norm3 = heightCm < first.height_min_cm ? first : last;
+  return { norm: norm3, heightClamped: true };
+}
+function evaluateGrip(norms, input) {
+  const found = findNorm(norms, input.sex, input.ageYears, input.heightCm);
+  if (!found) return null;
+  const { norm: norm3, heightClamped } = found;
+  const averageKg = round1((input.leftKg + input.rightKg) / 2);
+  const zScore = (averageKg - norm3.mean_kg) / norm3.sd_kg;
+  const percentile = round1(normalCdf(zScore) * 100);
+  const category = CATEGORY_BOUNDS.find((b) => percentile >= b.minPercentile).category;
+  const nextBound = [...CATEGORY_BOUNDS].reverse().find((b) => b.minPercentile > percentile);
+  let kgToNextLevel = null;
+  if (nextBound) {
+    const target = nextBound.minPercentile === 10 ? norm3.p10_kg : nextBound.minPercentile === 90 ? norm3.p90_kg : norm3.mean_kg + (Z[nextBound.minPercentile] ?? 0) * norm3.sd_kg;
+    kgToNextLevel = round1(Math.max(0, target - averageKg));
+  }
+  return {
+    averageKg,
+    norm: norm3,
+    percentile,
+    zScore: Math.round(zScore * 100) / 100,
+    category,
+    diffToMeanKg: round1(averageKg - norm3.mean_kg),
+    percentOfMean: Math.round(averageKg / norm3.mean_kg * 100),
+    kgToNextLevel,
+    heightClamped,
+    asymmetry: evaluateAsymmetry(input.leftKg, input.rightKg, input.dominantHand)
+  };
+}
+function evaluateAsymmetry(leftKg, rightKg, dominant) {
+  const strong = Math.max(leftKg, rightKg);
+  const weak = Math.min(leftKg, rightKg);
+  const percent = weak > 0 ? round1((strong - weak) / weak * 100) : 0;
+  const strongerHand = leftKg === rightKg ? "equal" : leftKg > rightKg ? "left" : "right";
+  let message = null;
+  const shown = String(percent).replace(".", ",");
+  if (dominant && strongerHand !== "equal" && strongerHand !== dominant && percent > 3) {
+    message = `Die nicht-dominante Hand ist ${shown} % st\xE4rker \u2013 ungew\xF6hnlich, ggf. Verletzung/\xDCberlastung der dominanten Seite pr\xFCfen.`;
+  } else if (percent > 10) {
+    message = `Seitenunterschied von ${shown} % (Richtwert: max. 10 %).`;
+  }
+  return { percent, strongerHand, flagged: message !== null, message };
+}
+
+// src/domain/longevity.ts
+var P72 = [5, 10, 25, 50, 75, 90, 95];
+var rows = (ageMin, ageMax, values) => ({
+  ageMin,
+  ageMax,
+  points: P72.map((p, i) => [p, values[i] ?? NaN])
+});
+var VO2MAX_NORMS = {
+  key: "vo2max",
+  higherIsBetter: true,
+  source: "FRIEND-Register, Kaminsky et al., Mayo Clin Proc 2015",
+  url: "https://doi.org/10.1016/j.mayocp.2015.07.026",
+  caveat: "Normen aus Laufband-Spiroergometrie; Sch\xE4tzwerte von Uhren k\xF6nnen davon abweichen.",
+  bands: {
+    male: [
+      rows(20, 30, [29, 32.1, 40.1, 48, 55.2, 61.8, 66.3]),
+      rows(30, 40, [27.2, 30.2, 35.9, 42.4, 49.2, 56.5, 59.8]),
+      rows(40, 50, [24.2, 26.8, 31.9, 37.8, 45, 52.1, 55.6]),
+      rows(50, 60, [20.9, 22.8, 27.1, 32.6, 39.7, 45.6, 50.7]),
+      rows(60, 70, [17.4, 19.8, 23.7, 28.2, 34.5, 40.3, 43]),
+      rows(70, null, [16.3, 17.1, 20.4, 24.4, 30.4, 36.6, 39.7])
+    ],
+    female: [
+      rows(20, 30, [21.7, 23.9, 30.5, 37.6, 44.7, 51.3, 56]),
+      rows(30, 40, [19, 20.9, 25.3, 30.2, 36.1, 41.4, 45.8]),
+      rows(40, 50, [17, 18.8, 22.1, 26.7, 32.4, 38.4, 41.7]),
+      rows(50, 60, [16, 17.3, 19.9, 23.4, 27.6, 32, 35.9]),
+      rows(60, 70, [13.4, 14.6, 17.2, 20, 23.8, 27, 29.4]),
+      rows(70, null, [13.1, 13.6, 15.6, 18.3, 20.8, 23.1, 24.1])
+    ]
+  }
+};
+var RESTING_HR_NORMS = {
+  key: "resting_hr",
+  higherIsBetter: false,
+  source: "NHANES 1999\u20132008, Ostchega et al., NHSR Nr. 41, 2011",
+  url: "https://www.cdc.gov/nchs/data/nhsr/nhsr041.pdf",
+  caveat: "Normen aus Pulsmessung im Sitzen; der n\xE4chtliche Ruhepuls einer Uhr liegt meist niedriger.",
+  bands: {
+    male: [
+      rows(20, 40, [52, 55, 61, 69, 76, 84, 89]),
+      rows(40, 60, [52, 55, 61, 68, 77, 85, 90]),
+      rows(60, 80, [50, 54, 60, 67, 75, 84, 91]),
+      rows(80, null, [51, 54, 61, 68, 78, 86, 94])
+    ],
+    female: [
+      rows(20, 40, [57, 60, 66, 74, 82, 89, 95]),
+      rows(40, 60, [56, 59, 64, 71, 79, 86, 92]),
+      rows(60, 80, [56, 59, 64, 70, 78, 86, 92]),
+      rows(80, null, [56, 59, 64, 71, 77, 85, 93])
+    ]
+  }
+};
+var hrv = (ageMin, ageMax, p2, median, p98) => {
+  const lo = (Math.log(median) - Math.log(p2)) / 2.0537;
+  const hi = (Math.log(p98) - Math.log(median)) / 2.0537;
+  const at = (z2) => Math.exp(Math.log(median) + z2 * (z2 < 0 ? lo : hi));
+  const z = [-1.6449, -1.2816, -0.6745, 0, 0.6745, 1.2816, 1.6449];
+  const values = z.map((x) => Math.round(at(x) * 10) / 10);
+  return {
+    ageMin,
+    ageMax,
+    points: [
+      [2, p2],
+      ...P72.map((p, i) => [p, values[i] ?? NaN]),
+      [98, p98]
+    ]
+  };
+};
+var HRV_NORMS = {
+  key: "hrv",
+  higherIsBetter: true,
+  source: "Lifelines-Kohorte, Tegegne et al., Eur J Prev Cardiol 2020",
+  url: "https://doi.org/10.1177/2047487319872567",
+  caveat: "Normen aus 10-Sekunden-Ruhe-EKG am Tag; n\xE4chtliche HRV-Werte einer Uhr liegen meist h\xF6her. Am aussagekr\xE4ftigsten ist dein eigener Verlauf.",
+  bands: {
+    male: [
+      hrv(18, 20, 9.8, 59.9, 213.2),
+      hrv(20, 25, 9.6, 47.6, 174),
+      hrv(25, 30, 10.1, 42.3, 172.7),
+      hrv(30, 35, 10.2, 36.9, 140.8),
+      hrv(35, 40, 8.6, 32.8, 123.8),
+      hrv(40, 45, 8.1, 29, 105.5),
+      hrv(45, 50, 7.1, 26, 95.5),
+      hrv(50, 55, 6.7, 23.7, 87.5),
+      hrv(55, 60, 5.5, 21, 89.5),
+      hrv(60, 65, 4.8, 19.1, 86.6),
+      hrv(65, 70, 4.87, 17.7, 110.5),
+      hrv(70, 75, 4.7, 16, 161.9),
+      hrv(75, null, 3.7, 14.9, 130.3)
+    ],
+    female: [
+      hrv(18, 20, 12.4, 60.7, 225.9),
+      hrv(20, 25, 11.3, 52.1, 205.5),
+      hrv(25, 30, 11.5, 47.5, 180.7),
+      hrv(30, 35, 11.5, 42.3, 161),
+      hrv(35, 40, 10.8, 37.9, 141.9),
+      hrv(40, 45, 9.7, 33.9, 123.7),
+      hrv(45, 50, 8.3, 29.2, 109.5),
+      hrv(50, 55, 7.5, 26.6, 96.3),
+      hrv(55, 60, 6.7, 22.5, 83.6),
+      hrv(60, 65, 5.5, 20.5, 79.3),
+      hrv(65, 70, 5, 17.8, 83),
+      hrv(70, 75, 5, 18.3, 115.8),
+      hrv(75, null, 3.5, 16.1, 106.2)
+    ]
+  }
+};
+var fat = (ageMin, ageMax, values) => rows(ageMin, ageMax, values);
+var BODY_FAT_NORMS = {
+  key: "body_fat",
+  higherIsBetter: false,
+  source: "Cooper-Normen (ACLS), ACSM's Guidelines for Exercise Testing and Prescription",
+  url: "https://www.acsm.org/education-resources/books/guidelines-exercise-testing-prescription",
+  caveat: "Normen aus Hautfalten- bzw. Labormessungen; K\xF6rperfettwaagen (BIA) k\xF6nnen um mehrere Prozentpunkte abweichen. Ab 60 Jahren gilt mangels Daten die Gruppe 50\u201359. Sehr niedriges K\xF6rperfett ist nicht automatisch ges\xFCnder.",
+  bands: {
+    // Spalten: 5., 10., 25., 50., 75., 90., 95. Perzentil des Körperfettanteils (aufsteigend)
+    male: [
+      fat(18, 30, [6.3, 7.9, 11.5, 16.6, 21.9, 26.3, 28.9]),
+      fat(30, 40, [9.9, 11.9, 15.5, 19.7, 23.9, 27.8, 30.2]),
+      fat(40, 50, [12.8, 14.9, 18.4, 21.9, 25.7, 29.2, 31.2]),
+      fat(50, null, [14.4, 16.7, 19.9, 23.2, 26.8, 30.3, 32.5])
+    ],
+    female: [
+      fat(18, 30, [13.6, 14.8, 17.3, 21, 25.9, 31.4, 35.2]),
+      fat(30, 40, [14, 15.6, 18.2, 22.6, 27.7, 33, 35.8]),
+      fat(40, 50, [15.6, 17.2, 20.8, 25.6, 30.7, 35.4, 37.4]),
+      fat(50, null, [17.2, 19.4, 23.8, 28.8, 33.4, 36.7, 38.3])
+    ]
+  }
+};
+function bandFor(table2, sex, age) {
+  const bands = table2.bands[sex];
+  if (bands.length === 0) return null;
+  const hit = bands.find((b) => age >= b.ageMin && (b.ageMax === null || age < b.ageMax));
+  if (hit) return hit;
+  return age < (bands[0]?.ageMin ?? 0) ? bands[0] ?? null : bands.at(-1) ?? null;
+}
+function bandLabel(band) {
+  return band.ageMax === null ? `${band.ageMin}+ Jahre` : `${band.ageMin}\u2013${band.ageMax - 1} Jahre`;
+}
+function percentileOf(points, value2) {
+  const first = points[0];
+  const last = points.at(-1);
+  if (!first || !last) return { percentile: 50, clamped: null };
+  if (value2 <= first[1])
+    return { percentile: first[0], clamped: value2 < first[1] ? "below" : null };
+  if (value2 >= last[1]) return { percentile: last[0], clamped: value2 > last[1] ? "above" : null };
+  for (let i = 1; i < points.length; i++) {
+    const [p0, v0] = points[i - 1] ?? first;
+    const [p1, v1] = points[i] ?? last;
+    if (value2 <= v1) {
+      const t = v1 === v0 ? 0 : (value2 - v0) / (v1 - v0);
+      return { percentile: Math.round((p0 + t * (p1 - p0)) * 10) / 10, clamped: null };
+    }
+  }
+  return { percentile: last[0], clamped: null };
+}
+var NORM_LEVEL_LABELS = {
+  low: "niedrig",
+  below: "unter dem Durchschnitt",
+  average: "Durchschnitt",
+  good: "gut",
+  excellent: "sehr gut"
+};
+function levelOfRank(betterThan) {
+  if (betterThan >= 80) return "excellent";
+  if (betterThan >= 60) return "good";
+  if (betterThan >= 40) return "average";
+  if (betterThan >= 20) return "below";
+  return "low";
+}
+function assess(table2, sex, age, value2) {
+  if (!sex || age === null || !Number.isFinite(value2)) return null;
+  const band = bandFor(table2, sex, age);
+  if (!band) return null;
+  const { percentile, clamped } = percentileOf(band.points, value2);
+  const betterThan = table2.higherIsBetter ? percentile : 100 - percentile;
+  const median = band.points.find(([p]) => p === 50)?.[1] ?? NaN;
+  return { percentile, betterThan, level: levelOfRank(betterThan), band, median, clamped };
+}
+function rankText(result, sex) {
+  const group = `${sex === "male" ? "der M\xE4nner" : "der Frauen"} ${bandLabel(result.band)}`;
+  const b = Math.round(result.betterThan);
+  if (result.clamped && b >= 95) return `besser als \xFCber ${b} % ${group}`;
+  if (result.clamped && b <= 5) return `besser als unter ${Math.max(b, 1)} % ${group}`;
+  return `besser als ${b} % ${group}`;
+}
+var daysBetween4 = (a, b) => Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / 864e5);
+function trendOf(values, higherIsBetter, { days: days3 = 90, flat = 0 } = {}) {
+  const sorted = [...values].sort((a, b) => a.date.localeCompare(b.date));
+  const latest = sorted.at(-1);
+  if (!latest) return null;
+  const before = sorted.filter((v) => daysBetween4(v.date, latest.date) >= days3).at(-1) ?? null;
+  if (!before) return { latest, previous: null, delta: null, direction: null };
+  const delta = latest.value - before.value;
+  const direction = Math.abs(delta) <= flat ? "flat" : delta > 0 === higherIsBetter ? "better" : "worse";
+  return { latest, previous: before, delta, direction };
+}
+function recentValues(values, days3 = 365) {
+  const sorted = [...values].sort((a, b) => a.date.localeCompare(b.date));
+  const last = sorted.at(-1);
+  if (!last) return [];
+  return sorted.filter((v) => daysBetween4(v.date, last.date) <= days3);
+}
+function dailyMeans(values) {
+  const byDay = /* @__PURE__ */ new Map();
+  for (const v of values) byDay.set(v.date, [...byDay.get(v.date) ?? [], v.value]);
+  return [...byDay].map(([date, list2]) => ({ date, value: list2.reduce((a, b) => a + b, 0) / list2.length })).sort((a, b) => a.date.localeCompare(b.date));
+}
+function recentMean(values, n2 = 7) {
+  const days3 = dailyMeans(values);
+  const tail = days3.slice(-n2);
+  const last = tail.at(-1);
+  if (!last) return null;
+  return { date: last.date, value: tail.reduce((a, v) => a + v.value, 0) / tail.length };
+}
+var cdf = normalCdf;
+var LONGEVITY_LABS = [
+  {
+    id: "00000000-0000-7000-8000-000000000122",
+    why: "Atherogene Partikel \u2013 Herz-Kreislauf-Risiko"
+  },
+  { id: "00000000-0000-7000-8000-000000000118", why: "Herz-Kreislauf-Risiko" },
+  {
+    id: "00000000-0000-7000-8000-000000000121",
+    why: "Erblicher Risikofaktor, meist einmal im Leben messen"
+  },
+  { id: "00000000-0000-7000-8000-000000000124", why: "Blutzucker der letzten 2\u20133 Monate" },
+  { id: "00000000-0000-7000-8000-000000000123", why: "Zuckerstoffwechsel" },
+  { id: "00000000-0000-7000-8000-000000000125", why: "Insulinresistenz (mit Glukose)" },
+  { id: "00000000-0000-7000-8000-000000000139", why: "Stille Entz\xFCndung" },
+  { id: "00000000-0000-7000-8000-000000000120", why: "Fettstoffwechsel" },
+  { id: "00000000-0000-7000-8000-000000000119", why: "Fettstoffwechsel" },
+  { id: "00000000-0000-7000-8000-000000000131", why: "Nierenfunktion" },
+  { id: "00000000-0000-7000-8000-000000000140", why: "Vitamin-D-Versorgung" }
+];
+var LONGEVITY_METRICS = {
+  vo2max: "00000000-0000-7000-8000-000000000016",
+  restingHr: "00000000-0000-7000-8000-000000000018",
+  hrv: "00000000-0000-7000-8000-000000000019",
+  bodyFat: "00000000-0000-7000-8000-000000000002",
+  muscleMass: "00000000-0000-7000-8000-000000000003"
+};
+
+// src/data/grip_strength_norms.json
+var grip_strength_norms_default = {
+  meta: {
+    source: "Steiber N (2016) Strong or Weak Handgrip? Normative Reference Values for the German Population across the Life Course Stratified by Sex, Age, and Body Height. PLoS ONE 11(10): e0163917. doi:10.1371/journal.pone.0163917",
+    via: "https://www.dexdia.com/de/griffkraft-tabelle",
+    dataset: "SOEP 2006\u20132014, n=11.790 (25.285 Messungen)",
+    metric: "Mittelwert der Maximalwerte beider H\xE4nde (kg)",
+    protocol: "Stehend, Oberarm am Rumpf, Ellbogen 90\xB0, 3\u20135 s maximal dr\xFCcken; Maximum je Hand, dann Durchschnitt beider H\xE4nde",
+    notes: "Frauen 80\u201390 J. / 180\u2013184 cm hat in der Quelle keine Daten (0,0) und ist nicht enthalten."
+  },
+  norms: [
+    {
+      sex: "male",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 44.6,
+      p90_kg: 57,
+      p10_kg: 32.2,
+      sd_kg: 9.7
+    },
+    {
+      sex: "male",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 45.1,
+      p90_kg: 57.5,
+      p10_kg: 32.7,
+      sd_kg: 9.7
+    },
+    {
+      sex: "male",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 46.5,
+      p90_kg: 58.8,
+      p10_kg: 34.2,
+      sd_kg: 9.6
+    },
+    {
+      sex: "male",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 47.5,
+      p90_kg: 59.9,
+      p10_kg: 35.1,
+      sd_kg: 9.7
+    },
+    {
+      sex: "male",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 48.5,
+      p90_kg: 60.9,
+      p10_kg: 36.1,
+      sd_kg: 9.7
+    },
+    {
+      sex: "male",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 49.3,
+      p90_kg: 61.7,
+      p10_kg: 36.9,
+      sd_kg: 9.7
+    },
+    {
+      sex: "male",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 50.4,
+      p90_kg: 62.8,
+      p10_kg: 38,
+      sd_kg: 9.7
+    },
+    {
+      sex: "male",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 47,
+      p90_kg: 57.5,
+      p10_kg: 36.5,
+      sd_kg: 8.2
+    },
+    {
+      sex: "male",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 47.8,
+      p90_kg: 58.4,
+      p10_kg: 37.2,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 49.1,
+      p90_kg: 59.7,
+      p10_kg: 38.5,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 50.3,
+      p90_kg: 60.9,
+      p10_kg: 39.7,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 51.2,
+      p90_kg: 61.8,
+      p10_kg: 40.6,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 51.8,
+      p90_kg: 62.4,
+      p10_kg: 41.2,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 52.7,
+      p90_kg: 63.3,
+      p10_kg: 42.1,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 49.4,
+      p90_kg: 60,
+      p10_kg: 38.8,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 49.9,
+      p90_kg: 60.5,
+      p10_kg: 39.3,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 50.9,
+      p90_kg: 61.5,
+      p10_kg: 40.3,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 51.9,
+      p90_kg: 62.5,
+      p10_kg: 41.3,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 52.8,
+      p90_kg: 63.4,
+      p10_kg: 42.2,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 54.2,
+      p90_kg: 64.8,
+      p10_kg: 43.6,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 56.2,
+      p90_kg: 66.8,
+      p10_kg: 45.6,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 51.1,
+      p90_kg: 61.7,
+      p10_kg: 40.5,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 51.8,
+      p90_kg: 62.4,
+      p10_kg: 41.2,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 52.6,
+      p90_kg: 63.2,
+      p10_kg: 42,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 53.5,
+      p90_kg: 64.1,
+      p10_kg: 42.9,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 54.5,
+      p90_kg: 65.1,
+      p10_kg: 43.9,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 55.9,
+      p90_kg: 66.5,
+      p10_kg: 45.3,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 57.3,
+      p90_kg: 67.9,
+      p10_kg: 46.7,
+      sd_kg: 8.3
+    },
+    {
+      sex: "male",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 47.8,
+      p90_kg: 60.4,
+      p10_kg: 35.2,
+      sd_kg: 9.8
+    },
+    {
+      sex: "male",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 50.2,
+      p90_kg: 62.8,
+      p10_kg: 37.6,
+      sd_kg: 9.8
+    },
+    {
+      sex: "male",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 52,
+      p90_kg: 64.6,
+      p10_kg: 39.4,
+      sd_kg: 9.8
+    },
+    {
+      sex: "male",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 53.6,
+      p90_kg: 66.2,
+      p10_kg: 41,
+      sd_kg: 9.8
+    },
+    {
+      sex: "male",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 54.9,
+      p90_kg: 67.5,
+      p10_kg: 42.3,
+      sd_kg: 9.8
+    },
+    {
+      sex: "male",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 56.1,
+      p90_kg: 68.7,
+      p10_kg: 43.5,
+      sd_kg: 9.8
+    },
+    {
+      sex: "male",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 57.2,
+      p90_kg: 69.6,
+      p10_kg: 44.8,
+      sd_kg: 9.7
+    },
+    {
+      sex: "male",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 47.9,
+      p90_kg: 59.8,
+      p10_kg: 36,
+      sd_kg: 9.3
+    },
+    {
+      sex: "male",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 49.9,
+      p90_kg: 61.8,
+      p10_kg: 38,
+      sd_kg: 9.3
+    },
+    {
+      sex: "male",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 51.8,
+      p90_kg: 63.7,
+      p10_kg: 39.9,
+      sd_kg: 9.3
+    },
+    {
+      sex: "male",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 53.4,
+      p90_kg: 65.4,
+      p10_kg: 41.4,
+      sd_kg: 9.4
+    },
+    {
+      sex: "male",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 54.5,
+      p90_kg: 66.4,
+      p10_kg: 42.6,
+      sd_kg: 9.3
+    },
+    {
+      sex: "male",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 55.8,
+      p90_kg: 67.8,
+      p10_kg: 43.8,
+      sd_kg: 9.4
+    },
+    {
+      sex: "male",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 56.9,
+      p90_kg: 68.8,
+      p10_kg: 45,
+      sd_kg: 9.3
+    },
+    {
+      sex: "male",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 48.2,
+      p90_kg: 59.1,
+      p10_kg: 37.3,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 50,
+      p90_kg: 60.9,
+      p10_kg: 39.1,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 51.6,
+      p90_kg: 62.5,
+      p10_kg: 40.7,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 53,
+      p90_kg: 64,
+      p10_kg: 42,
+      sd_kg: 8.6
+    },
+    {
+      sex: "male",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 54.2,
+      p90_kg: 65.1,
+      p10_kg: 43.3,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 55.4,
+      p90_kg: 66.4,
+      p10_kg: 44.4,
+      sd_kg: 8.6
+    },
+    {
+      sex: "male",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 56.4,
+      p90_kg: 67.3,
+      p10_kg: 45.5,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 45.9,
+      p90_kg: 56.8,
+      p10_kg: 35,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 47.7,
+      p90_kg: 58.6,
+      p10_kg: 36.8,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 49.4,
+      p90_kg: 60.4,
+      p10_kg: 38.4,
+      sd_kg: 8.6
+    },
+    {
+      sex: "male",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 50.9,
+      p90_kg: 61.8,
+      p10_kg: 40,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 52.1,
+      p90_kg: 63,
+      p10_kg: 41.2,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 53.1,
+      p90_kg: 64.1,
+      p10_kg: 42.1,
+      sd_kg: 8.6
+    },
+    {
+      sex: "male",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 54.1,
+      p90_kg: 65.1,
+      p10_kg: 43.1,
+      sd_kg: 8.6
+    },
+    {
+      sex: "male",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 42.8,
+      p90_kg: 53.7,
+      p10_kg: 31.9,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 45.1,
+      p90_kg: 56,
+      p10_kg: 34.2,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 47.4,
+      p90_kg: 58.3,
+      p10_kg: 36.5,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 49.3,
+      p90_kg: 60.1,
+      p10_kg: 38.5,
+      sd_kg: 8.4
+    },
+    {
+      sex: "male",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 51.1,
+      p90_kg: 62,
+      p10_kg: 40.2,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 52.4,
+      p90_kg: 63.3,
+      p10_kg: 41.5,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 53.5,
+      p90_kg: 64.3,
+      p10_kg: 42.7,
+      sd_kg: 8.4
+    },
+    {
+      sex: "male",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 41,
+      p90_kg: 51.9,
+      p10_kg: 30.1,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 43.2,
+      p90_kg: 54.1,
+      p10_kg: 32.3,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 45.7,
+      p90_kg: 56.5,
+      p10_kg: 34.9,
+      sd_kg: 8.4
+    },
+    {
+      sex: "male",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 47.6,
+      p90_kg: 58.5,
+      p10_kg: 36.7,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 49.2,
+      p90_kg: 60.1,
+      p10_kg: 38.3,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 50.7,
+      p90_kg: 61.6,
+      p10_kg: 39.8,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 52,
+      p90_kg: 62.9,
+      p10_kg: 41.1,
+      sd_kg: 8.5
+    },
+    {
+      sex: "male",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 40.2,
+      p90_kg: 49.7,
+      p10_kg: 30.7,
+      sd_kg: 7.4
+    },
+    {
+      sex: "male",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 42,
+      p90_kg: 51.5,
+      p10_kg: 32.5,
+      sd_kg: 7.4
+    },
+    {
+      sex: "male",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 43.6,
+      p90_kg: 53,
+      p10_kg: 34.2,
+      sd_kg: 7.3
+    },
+    {
+      sex: "male",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 45.3,
+      p90_kg: 54.8,
+      p10_kg: 35.8,
+      sd_kg: 7.4
+    },
+    {
+      sex: "male",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 46.9,
+      p90_kg: 56.3,
+      p10_kg: 37.5,
+      sd_kg: 7.3
+    },
+    {
+      sex: "male",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 48.9,
+      p90_kg: 58.3,
+      p10_kg: 39.5,
+      sd_kg: 7.3
+    },
+    {
+      sex: "male",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 50.6,
+      p90_kg: 60.1,
+      p10_kg: 41.1,
+      sd_kg: 7.4
+    },
+    {
+      sex: "male",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 37.2,
+      p90_kg: 46.9,
+      p10_kg: 27.5,
+      sd_kg: 7.6
+    },
+    {
+      sex: "male",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 39.1,
+      p90_kg: 48.8,
+      p10_kg: 29.4,
+      sd_kg: 7.6
+    },
+    {
+      sex: "male",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 41.1,
+      p90_kg: 50.8,
+      p10_kg: 31.4,
+      sd_kg: 7.6
+    },
+    {
+      sex: "male",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 42.7,
+      p90_kg: 52.3,
+      p10_kg: 33.1,
+      sd_kg: 7.5
+    },
+    {
+      sex: "male",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 44.4,
+      p90_kg: 54.1,
+      p10_kg: 34.7,
+      sd_kg: 7.6
+    },
+    {
+      sex: "male",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 46.4,
+      p90_kg: 56,
+      p10_kg: 36.8,
+      sd_kg: 7.5
+    },
+    {
+      sex: "male",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 47.6,
+      p90_kg: 57.3,
+      p10_kg: 37.9,
+      sd_kg: 7.6
+    },
+    {
+      sex: "male",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 34.7,
+      p90_kg: 44.8,
+      p10_kg: 24.6,
+      sd_kg: 7.9
+    },
+    {
+      sex: "male",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 35.9,
+      p90_kg: 46,
+      p10_kg: 25.8,
+      sd_kg: 7.9
+    },
+    {
+      sex: "male",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 37.5,
+      p90_kg: 47.6,
+      p10_kg: 27.4,
+      sd_kg: 7.9
+    },
+    {
+      sex: "male",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 39,
+      p90_kg: 49.1,
+      p10_kg: 28.9,
+      sd_kg: 7.9
+    },
+    {
+      sex: "male",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 40.6,
+      p90_kg: 50.7,
+      p10_kg: 30.5,
+      sd_kg: 7.9
+    },
+    {
+      sex: "male",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 42.7,
+      p90_kg: 52.8,
+      p10_kg: 32.6,
+      sd_kg: 7.9
+    },
+    {
+      sex: "male",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 45.4,
+      p90_kg: 55.5,
+      p10_kg: 35.3,
+      sd_kg: 7.9
+    },
+    {
+      sex: "male",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 29.1,
+      p90_kg: 38.7,
+      p10_kg: 19.5,
+      sd_kg: 7.5
+    },
+    {
+      sex: "male",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 31.2,
+      p90_kg: 40.9,
+      p10_kg: 21.5,
+      sd_kg: 7.6
+    },
+    {
+      sex: "male",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 33,
+      p90_kg: 42.7,
+      p10_kg: 23.3,
+      sd_kg: 7.6
+    },
+    {
+      sex: "male",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 34,
+      p90_kg: 43.7,
+      p10_kg: 24.3,
+      sd_kg: 7.6
+    },
+    {
+      sex: "male",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 35.8,
+      p90_kg: 45.4,
+      p10_kg: 26.2,
+      sd_kg: 7.5
+    },
+    {
+      sex: "male",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 185,
+      height_max_cm: 189,
+      mean_kg: 39.5,
+      p90_kg: 49.1,
+      p10_kg: 29.9,
+      sd_kg: 7.5
+    },
+    {
+      sex: "male",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 190,
+      height_max_cm: null,
+      mean_kg: 40.9,
+      p90_kg: 50.6,
+      p10_kg: 31.2,
+      sd_kg: 7.6
+    },
+    {
+      sex: "female",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 27.8,
+      p90_kg: 35.7,
+      p10_kg: 19.9,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 29.2,
+      p90_kg: 37.3,
+      p10_kg: 21.1,
+      sd_kg: 6.3
+    },
+    {
+      sex: "female",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 30.2,
+      p90_kg: 38.1,
+      p10_kg: 22.3,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 31.2,
+      p90_kg: 39.1,
+      p10_kg: 23.3,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 32.2,
+      p90_kg: 40.1,
+      p10_kg: 24.3,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 33,
+      p90_kg: 41.1,
+      p10_kg: 24.9,
+      sd_kg: 6.3
+    },
+    {
+      sex: "female",
+      age_min: 17,
+      age_max: 19,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 33.8,
+      p90_kg: 41.7,
+      p10_kg: 25.9,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 29.1,
+      p90_kg: 36,
+      p10_kg: 22.2,
+      sd_kg: 5.4
+    },
+    {
+      sex: "female",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 30.2,
+      p90_kg: 37.1,
+      p10_kg: 23.3,
+      sd_kg: 5.4
+    },
+    {
+      sex: "female",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 31.5,
+      p90_kg: 38.4,
+      p10_kg: 24.6,
+      sd_kg: 5.4
+    },
+    {
+      sex: "female",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 32.5,
+      p90_kg: 39.4,
+      p10_kg: 25.6,
+      sd_kg: 5.4
+    },
+    {
+      sex: "female",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 33.4,
+      p90_kg: 40.3,
+      p10_kg: 26.5,
+      sd_kg: 5.4
+    },
+    {
+      sex: "female",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 34.5,
+      p90_kg: 41.5,
+      p10_kg: 27.5,
+      sd_kg: 5.5
+    },
+    {
+      sex: "female",
+      age_min: 20,
+      age_max: 24,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 35,
+      p90_kg: 41.9,
+      p10_kg: 28.1,
+      sd_kg: 5.4
+    },
+    {
+      sex: "female",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 30.8,
+      p90_kg: 38,
+      p10_kg: 23.6,
+      sd_kg: 5.6
+    },
+    {
+      sex: "female",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 31.5,
+      p90_kg: 38.7,
+      p10_kg: 24.3,
+      sd_kg: 5.6
+    },
+    {
+      sex: "female",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 32.3,
+      p90_kg: 39.5,
+      p10_kg: 25.1,
+      sd_kg: 5.6
+    },
+    {
+      sex: "female",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 33.3,
+      p90_kg: 40.5,
+      p10_kg: 26.1,
+      sd_kg: 5.6
+    },
+    {
+      sex: "female",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 34.2,
+      p90_kg: 41.4,
+      p10_kg: 27,
+      sd_kg: 5.6
+    },
+    {
+      sex: "female",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 35.3,
+      p90_kg: 42.5,
+      p10_kg: 28.1,
+      sd_kg: 5.6
+    },
+    {
+      sex: "female",
+      age_min: 25,
+      age_max: 29,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 36.4,
+      p90_kg: 43.6,
+      p10_kg: 29.2,
+      sd_kg: 5.6
+    },
+    {
+      sex: "female",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 31.4,
+      p90_kg: 38.8,
+      p10_kg: 24,
+      sd_kg: 5.8
+    },
+    {
+      sex: "female",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 32,
+      p90_kg: 39.4,
+      p10_kg: 24.6,
+      sd_kg: 5.8
+    },
+    {
+      sex: "female",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 32.7,
+      p90_kg: 40.1,
+      p10_kg: 25.3,
+      sd_kg: 5.8
+    },
+    {
+      sex: "female",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 33.7,
+      p90_kg: 41.1,
+      p10_kg: 26.3,
+      sd_kg: 5.8
+    },
+    {
+      sex: "female",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 34.6,
+      p90_kg: 42,
+      p10_kg: 27.2,
+      sd_kg: 5.8
+    },
+    {
+      sex: "female",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 35.8,
+      p90_kg: 43.2,
+      p10_kg: 28.4,
+      sd_kg: 5.8
+    },
+    {
+      sex: "female",
+      age_min: 30,
+      age_max: 34,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 37,
+      p90_kg: 44.4,
+      p10_kg: 29.6,
+      sd_kg: 5.8
+    },
+    {
+      sex: "female",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 31,
+      p90_kg: 38.9,
+      p10_kg: 23.1,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 32.2,
+      p90_kg: 40,
+      p10_kg: 24.4,
+      sd_kg: 6.1
+    },
+    {
+      sex: "female",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 33.2,
+      p90_kg: 41.1,
+      p10_kg: 25.3,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 34.3,
+      p90_kg: 42.1,
+      p10_kg: 26.5,
+      sd_kg: 6.1
+    },
+    {
+      sex: "female",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 35.3,
+      p90_kg: 43.2,
+      p10_kg: 27.4,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 36.5,
+      p90_kg: 44.4,
+      p10_kg: 28.6,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 35,
+      age_max: 39,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 37.6,
+      p90_kg: 45.5,
+      p10_kg: 29.7,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 31.5,
+      p90_kg: 39.4,
+      p10_kg: 23.6,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 32.7,
+      p90_kg: 40.8,
+      p10_kg: 24.6,
+      sd_kg: 6.3
+    },
+    {
+      sex: "female",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 33.7,
+      p90_kg: 41.8,
+      p10_kg: 25.6,
+      sd_kg: 6.3
+    },
+    {
+      sex: "female",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 34.8,
+      p90_kg: 42.7,
+      p10_kg: 26.9,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 35.8,
+      p90_kg: 43.7,
+      p10_kg: 27.9,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 37.1,
+      p90_kg: 45.2,
+      p10_kg: 29,
+      sd_kg: 6.3
+    },
+    {
+      sex: "female",
+      age_min: 40,
+      age_max: 44,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 38,
+      p90_kg: 45.9,
+      p10_kg: 30.1,
+      sd_kg: 6.2
+    },
+    {
+      sex: "female",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 29.8,
+      p90_kg: 37.6,
+      p10_kg: 22,
+      sd_kg: 6.1
+    },
+    {
+      sex: "female",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 31.4,
+      p90_kg: 39.2,
+      p10_kg: 23.6,
+      sd_kg: 6.1
+    },
+    {
+      sex: "female",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 32.8,
+      p90_kg: 40.6,
+      p10_kg: 25,
+      sd_kg: 6.1
+    },
+    {
+      sex: "female",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 34.1,
+      p90_kg: 41.9,
+      p10_kg: 26.3,
+      sd_kg: 6.1
+    },
+    {
+      sex: "female",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 35.2,
+      p90_kg: 43,
+      p10_kg: 27.4,
+      sd_kg: 6.1
+    },
+    {
+      sex: "female",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 36.2,
+      p90_kg: 44,
+      p10_kg: 28.4,
+      sd_kg: 6.1
+    },
+    {
+      sex: "female",
+      age_min: 45,
+      age_max: 49,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 37,
+      p90_kg: 44.8,
+      p10_kg: 29.2,
+      sd_kg: 6.1
+    },
+    {
+      sex: "female",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 28.2,
+      p90_kg: 35.8,
+      p10_kg: 20.6,
+      sd_kg: 5.9
+    },
+    {
+      sex: "female",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 30.1,
+      p90_kg: 37.7,
+      p10_kg: 22.5,
+      sd_kg: 5.9
+    },
+    {
+      sex: "female",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 31.5,
+      p90_kg: 39.1,
+      p10_kg: 23.9,
+      sd_kg: 5.9
+    },
+    {
+      sex: "female",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 32.9,
+      p90_kg: 40.5,
+      p10_kg: 25.3,
+      sd_kg: 5.9
+    },
+    {
+      sex: "female",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 33.9,
+      p90_kg: 41.5,
+      p10_kg: 26.3,
+      sd_kg: 5.9
+    },
+    {
+      sex: "female",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 35.2,
+      p90_kg: 42.8,
+      p10_kg: 27.6,
+      sd_kg: 5.9
+    },
+    {
+      sex: "female",
+      age_min: 50,
+      age_max: 54,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 35.6,
+      p90_kg: 43.2,
+      p10_kg: 28,
+      sd_kg: 5.9
+    },
+    {
+      sex: "female",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 26.9,
+      p90_kg: 33.9,
+      p10_kg: 19.9,
+      sd_kg: 5.5
+    },
+    {
+      sex: "female",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 28.8,
+      p90_kg: 35.8,
+      p10_kg: 21.8,
+      sd_kg: 5.5
+    },
+    {
+      sex: "female",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 30.2,
+      p90_kg: 37.2,
+      p10_kg: 23.2,
+      sd_kg: 5.5
+    },
+    {
+      sex: "female",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 31.2,
+      p90_kg: 38.2,
+      p10_kg: 24.2,
+      sd_kg: 5.5
+    },
+    {
+      sex: "female",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 32,
+      p90_kg: 39,
+      p10_kg: 25,
+      sd_kg: 5.5
+    },
+    {
+      sex: "female",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 32.5,
+      p90_kg: 39.5,
+      p10_kg: 25.5,
+      sd_kg: 5.5
+    },
+    {
+      sex: "female",
+      age_min: 55,
+      age_max: 59,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 32.9,
+      p90_kg: 39.9,
+      p10_kg: 25.9,
+      sd_kg: 5.5
+    },
+    {
+      sex: "female",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 25.8,
+      p90_kg: 32.6,
+      p10_kg: 19,
+      sd_kg: 5.3
+    },
+    {
+      sex: "female",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 27.4,
+      p90_kg: 34.2,
+      p10_kg: 20.6,
+      sd_kg: 5.3
+    },
+    {
+      sex: "female",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 28.9,
+      p90_kg: 35.7,
+      p10_kg: 22.1,
+      sd_kg: 5.3
+    },
+    {
+      sex: "female",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 29.9,
+      p90_kg: 36.7,
+      p10_kg: 23.1,
+      sd_kg: 5.3
+    },
+    {
+      sex: "female",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 30.6,
+      p90_kg: 37.3,
+      p10_kg: 23.9,
+      sd_kg: 5.2
+    },
+    {
+      sex: "female",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 31.3,
+      p90_kg: 38.1,
+      p10_kg: 24.5,
+      sd_kg: 5.3
+    },
+    {
+      sex: "female",
+      age_min: 60,
+      age_max: 64,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 31.5,
+      p90_kg: 38.3,
+      p10_kg: 24.7,
+      sd_kg: 5.3
+    },
+    {
+      sex: "female",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 24.5,
+      p90_kg: 31.2,
+      p10_kg: 17.8,
+      sd_kg: 5.2
+    },
+    {
+      sex: "female",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 26.2,
+      p90_kg: 32.9,
+      p10_kg: 19.5,
+      sd_kg: 5.2
+    },
+    {
+      sex: "female",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 27.5,
+      p90_kg: 34.2,
+      p10_kg: 20.8,
+      sd_kg: 5.2
+    },
+    {
+      sex: "female",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 28.6,
+      p90_kg: 35.3,
+      p10_kg: 21.9,
+      sd_kg: 5.2
+    },
+    {
+      sex: "female",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 29.5,
+      p90_kg: 36.2,
+      p10_kg: 22.8,
+      sd_kg: 5.2
+    },
+    {
+      sex: "female",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 30.3,
+      p90_kg: 37,
+      p10_kg: 23.6,
+      sd_kg: 5.2
+    },
+    {
+      sex: "female",
+      age_min: 65,
+      age_max: 69,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 30.5,
+      p90_kg: 37.2,
+      p10_kg: 23.8,
+      sd_kg: 5.2
+    },
+    {
+      sex: "female",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 23.4,
+      p90_kg: 29.7,
+      p10_kg: 17.1,
+      sd_kg: 4.9
+    },
+    {
+      sex: "female",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 24.7,
+      p90_kg: 31,
+      p10_kg: 18.4,
+      sd_kg: 4.9
+    },
+    {
+      sex: "female",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 26.1,
+      p90_kg: 32.4,
+      p10_kg: 19.8,
+      sd_kg: 4.9
+    },
+    {
+      sex: "female",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 27.3,
+      p90_kg: 33.6,
+      p10_kg: 21,
+      sd_kg: 4.9
+    },
+    {
+      sex: "female",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 28.1,
+      p90_kg: 34.4,
+      p10_kg: 21.8,
+      sd_kg: 4.9
+    },
+    {
+      sex: "female",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 28.7,
+      p90_kg: 35,
+      p10_kg: 22.4,
+      sd_kg: 4.9
+    },
+    {
+      sex: "female",
+      age_min: 70,
+      age_max: 74,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 29.2,
+      p90_kg: 35.5,
+      p10_kg: 22.9,
+      sd_kg: 4.9
+    },
+    {
+      sex: "female",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 22.7,
+      p90_kg: 28.5,
+      p10_kg: 16.9,
+      sd_kg: 4.5
+    },
+    {
+      sex: "female",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 23.3,
+      p90_kg: 29.1,
+      p10_kg: 17.5,
+      sd_kg: 4.5
+    },
+    {
+      sex: "female",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 24,
+      p90_kg: 29.8,
+      p10_kg: 18.2,
+      sd_kg: 4.5
+    },
+    {
+      sex: "female",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 24.9,
+      p90_kg: 30.7,
+      p10_kg: 19.1,
+      sd_kg: 4.5
+    },
+    {
+      sex: "female",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 26.1,
+      p90_kg: 31.9,
+      p10_kg: 20.3,
+      sd_kg: 4.5
+    },
+    {
+      sex: "female",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 27.6,
+      p90_kg: 33.4,
+      p10_kg: 21.8,
+      sd_kg: 4.5
+    },
+    {
+      sex: "female",
+      age_min: 75,
+      age_max: 79,
+      height_min_cm: 180,
+      height_max_cm: 184,
+      mean_kg: 28.9,
+      p90_kg: 34.7,
+      p10_kg: 23.1,
+      sd_kg: 4.5
+    },
+    {
+      sex: "female",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 150,
+      height_max_cm: 154,
+      mean_kg: 19.9,
+      p90_kg: 25,
+      p10_kg: 14.8,
+      sd_kg: 4
+    },
+    {
+      sex: "female",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 155,
+      height_max_cm: 159,
+      mean_kg: 20.4,
+      p90_kg: 25.5,
+      p10_kg: 15.3,
+      sd_kg: 4
+    },
+    {
+      sex: "female",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 160,
+      height_max_cm: 164,
+      mean_kg: 21.2,
+      p90_kg: 26.5,
+      p10_kg: 15.9,
+      sd_kg: 4.1
+    },
+    {
+      sex: "female",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 165,
+      height_max_cm: 169,
+      mean_kg: 22.1,
+      p90_kg: 27.4,
+      p10_kg: 16.8,
+      sd_kg: 4.1
+    },
+    {
+      sex: "female",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 170,
+      height_max_cm: 174,
+      mean_kg: 23.8,
+      p90_kg: 29.1,
+      p10_kg: 18.5,
+      sd_kg: 4.1
+    },
+    {
+      sex: "female",
+      age_min: 80,
+      age_max: 90,
+      height_min_cm: 175,
+      height_max_cm: 179,
+      mean_kg: 23,
+      p90_kg: 28.1,
+      p10_kg: 17.9,
+      sd_kg: 4
+    }
+  ]
+};
+
+// src/domain/grip.ts
+var GRIP_NORMS = grip_strength_norms_default.norms;
+var GRIP_SOURCE = grip_strength_norms_default.meta.source;
+var GRIP_DATASET = grip_strength_norms_default.meta.dataset;
+var GRIP_LEVELS = [
+  {
+    category: "unzureichend",
+    label: "Unzureichend",
+    range: "unter 10. Perzentil",
+    from: 0,
+    to: 10,
+    text: "Schw\xE4cher als 90 % deiner Vergleichsgruppe. Geringe Griffkraft h\xE4ngt in Studien mit h\xF6herem Sterbe- und Gebrechlichkeitsrisiko zusammen \u2013 ein Grund, Kraft gezielt aufzubauen."
+  },
+  {
+    category: "unterdurchschnittlich",
+    label: "Unterdurchschnittlich",
+    range: "10.\u201325. Perzentil",
+    from: 10,
+    to: 25,
+    text: "Im unteren Viertel deiner Vergleichsgruppe."
+  },
+  {
+    category: "durchschnittlich",
+    label: "Durchschnittlich",
+    range: "25.\u201375. Perzentil",
+    from: 25,
+    to: 75,
+    text: "Im mittleren Bereich deiner Vergleichsgruppe."
+  },
+  {
+    category: "\xFCberdurchschnittlich",
+    label: "\xDCberdurchschnittlich",
+    range: "75.\u201390. Perzentil",
+    from: 75,
+    to: 90,
+    text: "St\xE4rker als drei Viertel deiner Vergleichsgruppe."
+  },
+  {
+    category: "sehr stark",
+    label: "Sehr stark",
+    range: "ab 90. Perzentil",
+    from: 90,
+    to: 100,
+    text: "Unter den st\xE4rksten 10 % deiner Vergleichsgruppe."
+  }
+];
+var LEVEL_BOUNDS_MATCH = CATEGORY_BOUNDS.every(
+  (b) => GRIP_LEVELS.some((l) => l.category === b.category && l.from === b.minPercentile)
+);
+
+// src/domain/protocols.ts
+var protocols_exports = {};
+__export(protocols_exports, {
+  COMMON_GROUND: () => COMMON_GROUND,
+  DAILY_DOZEN: () => DAILY_DOZEN,
+  DAILY_DOZEN_SOURCE: () => DAILY_DOZEN_SOURCE,
+  DAILY_DOZEN_TOTAL: () => DAILY_DOZEN_TOTAL,
+  DISAGREEMENTS: () => DISAGREEMENTS,
+  DOZEN_KEEP_DAYS: () => DOZEN_KEEP_DAYS,
+  GENETICS_BASICS: () => GENETICS_BASICS,
+  PROTOCOLS: () => PROTOCOLS,
+  PROTOCOLS_SETTING: () => PROTOCOLS_SETTING,
+  dozenDone: () => dozenDone,
+  emptyProtocolState: () => emptyProtocolState,
+  parseProtocolState: () => parseProtocolState,
+  pruneDozen: () => pruneDozen,
+  serializeProtocolState: () => serializeProtocolState,
+  setDozen: () => setDozen,
+  startProgress: () => startProgress,
+  toggleStartItem: () => toggleStartItem
+});
+var PROTOCOLS = [
+  {
+    id: "huberman",
+    name: "Huberman",
+    author: "Andrew Huberman",
+    book: "Huberman Protocols",
+    source: "Andrew Huberman: Huberman Protocols, deutsche Ausgabe (ISBN 978-3-426-28487-2)",
+    basis: "Buch und iCoach.Me-Magazin \u201ELongevity \u2013 Das Protokoll\u201C (11/2026)",
+    tagline: "Licht, Bewegung, Schlaf und echtes Essen \u2013 die st\xE4rksten Hebel kosten fast nichts. Der Tag folgt der inneren Uhr.",
+    keyFigure: {
+      value: "3,7 Jahre",
+      text: "l\xE4nger lebten Menschen mit regelm\xE4\xDFigem Sport in einer gro\xDFen Auswertung \u2013 nur eine von vier S\xE4ulen."
+    },
+    pillars: [
+      { title: "Bewegung", text: "3\xD7 Kraft, 3\xD7 Cardio pro Woche, jeden Tag gehen." },
+      { title: "Schlaf & Licht", text: "Feste Zeiten, Morgensonne, dunkle Abende." },
+      { title: "Ern\xE4hrung", text: "90 % unverarbeitet, Protein und Ballaststoffe." },
+      { title: "Stress", text: "Atmung, Meditation, K\xE4lte als Training." }
+    ],
+    day: [
+      { time: "Aufstehen", text: "5 Minuten Meditation noch im Bett, dann 500\u2013750 ml Wasser." },
+      {
+        time: "+10 min",
+        text: "10\u201330 min Tageslicht drau\xDFen, ohne Sonnenbrille und nicht durchs Fenster."
+      },
+      { time: "+30\u201360 min", text: "Erster Kaffee (100\u2013400 mg Koffein) \u2013 nicht direkt nach dem Aufwachen." },
+      { time: "Vormittag", text: "Training laut Wochenplan, auf Wunsch vorher 1\u20133 min kalt duschen." },
+      { time: "Mahlzeiten", text: "Je 30\u201350 g Protein, Gem\xFCse, gute Fette \u2013 danach 5\u201310 min gehen." },
+      { time: "Mittag", text: "20\u201330 min Sonne auf m\xF6glichst viel Haut, ohne Sonnenbrand." },
+      { time: "bis 14 Uhr", text: "Letzter Kaffee (Koffein wirkt 8\u201310 Stunden nach)." },
+      { time: "Nachmittag", text: "Bei Bedarf NSDR oder Nickerchen bis 20 min; Abendlicht nach Westen." },
+      { time: "Abend", text: "Licht dimmen, warm statt wei\xDF; 1 Stunde vor dem Schlaf keine Bildschirme." },
+      { time: "Schlafen", text: "18\u201320 \xB0C, H\xE4nde und F\xFC\xDFe frei, 7\u20138 Stunden, feste Zeiten." }
+    ],
+    rules: [
+      { value: "3 + 3", label: "Training", text: "3\xD7 Kraft und 3\xD7 Cardio pro Woche, rund 5\u20136 Stunden." },
+      { value: "7\u201310k", label: "Schritte", text: "T\xE4glich; nach jedem Essen 5\u201310 min gehen." },
+      { value: "1,6\u20132,2 g/kg", label: "Protein", text: "30\u201350 g je Mahlzeit, zuerst essen." },
+      { value: "25\u201335 g", label: "Ballaststoffe", text: "Vor allem aus Gem\xFCse und etwas Obst." },
+      { value: "8\u201310 h", label: "Koffein-Stopp", text: "Abstand zum Schlafen, bei Empfindlichkeit 12 h." },
+      { value: "7\u20138 h", label: "Schlaf", text: "K\xFChl schlafen, Regelm\xE4\xDFigkeit vor Ausschlafen." }
+    ],
+    sections: [
+      {
+        title: "Die Trainingswoche",
+        items: [
+          { label: "Cardio lang", text: "45\u201375 min Zone 2: locker, ohne Pause \u2013 vergr\xF6\xDFert das Schlagvolumen." },
+          { label: "Kraft Beine", text: "Quadrizeps, Beinbeuger, Waden, Ges\xE4\xDF." },
+          { label: "Ruhetag", text: "Gehen, Mobilit\xE4t, erholen." },
+          { label: "Kraft Oberk\xF6rper", text: "Brust, R\xFCcken, Rumpf." },
+          { label: "Cardio mittel", text: "25\u201330 min z\xFCgig und gleichm\xE4\xDFig." },
+          { label: "Cardio kurz", text: "6\u201317 min Intervalle nahe am Maximum \u2013 treibt die VO2max." },
+          { label: "Kraft Arme & Schultern", text: "Schultern, Bizeps, Trizeps, Rumpf." }
+        ]
+      },
+      {
+        title: "Schlaf und Licht",
+        items: [
+          { label: "Morgens", text: "Tageslicht in den ersten 30\u201360 min \u2013 auch bei Wolken heller als drinnen." },
+          { label: "Abends", text: "Ab Sonnenuntergang dimmen; warmes oder rotes Licht." },
+          { label: "Alkohol & Cannabis", text: "Nie als Schlafhilfe \u2013 rauben Tief- und REM-Schlaf." },
+          { label: "Schlaflosigkeit", text: "Kognitive Verhaltenstherapie (CBT-I) vor Schlaftabletten." }
+        ]
+      },
+      {
+        title: "Stress-Werkzeuge",
+        items: [
+          { label: "Physiologischer Seufzer", text: "Zweimal durch die Nase ein, lang durch den Mund aus \u2013 1\u20133\xD7." },
+          { label: "NSDR", text: "10\u201330 min tiefe Entspannung ohne Schlaf, in stressigen Phasen t\xE4glich." },
+          { label: "Bewusste K\xE4lte", text: "1\u20133 min, 3\u20137\xD7 pro Woche \u2013 vor dem Krafttraining, nicht danach." }
+        ]
+      }
+    ],
+    assessment: "Bewegung, Schlafregelm\xE4\xDFigkeit, Licht am Morgen und unverarbeitetes Essen sind gut belegt. K\xE4lte, Rotlicht und viele Supplemente sind Feinschliff mit d\xFCnnerer Datenlage am Menschen. Die Proteinmenge ist f\xFCr Trainierende sinnvoll, ohne Trainingsziel reichen weniger.",
+    caution: "Neu im Training oder mit Herz-Kreislauf-Vorerkrankung: mit weniger Volumen starten und hochintensive Einheiten vorher \xE4rztlich abkl\xE4ren. Supplemente nur einzeln testen und \xE4rztlich abstimmen.",
+    tiers: {
+      foundation: [
+        "Cardio 3\xD7 pro Woche",
+        "Krafttraining 3\xD7 pro Woche",
+        "T\xE4glich 7\u201310k Schritte",
+        "Feste Schlafzeiten, 7\u20138 h",
+        "Alkohol h\xF6chstens 2 pro Woche",
+        "90 % unverarbeitet essen",
+        "Morgen- und Abendlicht",
+        "Abends Licht und Bildschirme runter",
+        "Koffein-Stopp 8\u201310 h vor dem Schlaf"
+      ],
+      addOn: [
+        "Oliven\xF6l und gute Fette",
+        "Protein 1,6\u20132,2 g/kg",
+        "Fisch oder 1 g EPA",
+        "K\xFChl schlafen, warm duschen",
+        "Mobilit\xE4t 2\u20134\xD7",
+        "Sonne auf die Haut",
+        "Physiologischer Seufzer",
+        "Meditation oder NSDR"
+      ],
+      optional: ["Fermentiertes 2\u20134\xD7 t\xE4glich", "Trinkplan 2,5 l", "K\xE4lte 1\u20133 min", "Rot- und Nahinfrarotlicht"]
+    },
+    start: [
+      {
+        title: "Woche 1\u20132 \xB7 Rhythmus",
+        items: [
+          { id: "w1-zeiten", text: "Feste Aufsteh- und Schlafenszeit" },
+          { id: "w1-licht", text: "Jeden Morgen 10 min raus ins Tageslicht" },
+          { id: "w1-kaffee", text: "Kaffee erst nach 30\u201360 min, letzter bis 14 Uhr" },
+          { id: "w1-abend", text: "Ab 22 Uhr Licht runter, Bildschirme weg" },
+          { id: "w1-gehen", text: "Nach jedem Essen gehen" }
+        ]
+      },
+      {
+        title: "Woche 3\u20136 \xB7 Bewegung & Essen",
+        items: [
+          { id: "w3-plan", text: "Wochenplan 3\xD7 Kraft, 3\xD7 Cardio" },
+          { id: "w3-schritte", text: "7.000 Schritte, dann 10.000" },
+          { id: "w3-fertig", text: "Fertigprodukte raus aus dem Einkauf" },
+          { id: "w3-protein", text: "Protein und Gem\xFCse in jede Mahlzeit" },
+          { id: "w3-alkohol", text: "Alkohol auf h\xF6chstens 2 pro Woche" }
+        ]
+      },
+      {
+        title: "Ab Woche 7 \xB7 Feinschliff",
+        items: [
+          { id: "w7-fisch", text: "Fisch oder EPA erg\xE4nzen" },
+          { id: "w7-mobil", text: "Mobilit\xE4t nach dem Training" },
+          { id: "w7-stress", text: "Seufzer, Meditation, NSDR" },
+          { id: "w7-optional", text: "Optional K\xE4lte oder Rotlicht \u2013 immer nur eins neu" }
+        ]
+      }
+    ],
+    labs: ["Blutfette (LDL, HDL, Triglyceride)", "HbA1c", "25-OH-Vitamin D", "Omega-3-Index"],
+    tracking: "Ruhepuls, HRV, Schritte, Schlaf und Kraftwerte zeigt LIFESPAN OS; einmal im Jahr ins Labor."
+  },
+  {
+    id: "attia",
+    name: "Attia",
+    author: "Peter Attia (mit Bill Gifford)",
+    book: "Outlive \u2013 Die Wissenschaft der Langlebigkeit",
+    source: "Peter Attia, Bill Gifford: Outlive (2023); peterattiamd.com",
+    basis: "Zusammenfassung nach den Ver\xF6ffentlichungen des Autors (Buch lag nicht vor) \u2013 Werte vor einer Anwendung im Original pr\xFCfen",
+    tagline: "Medizin 3.0: nicht warten, bis Krankheit da ist, sondern Jahrzehnte vorher gegensteuern \u2013 mit Training als st\xE4rkstem Werkzeug.",
+    keyFigure: {
+      value: "\u221250 bis \u221270 %",
+      text: "Gesamtsterblichkeit, wenn die VO2max vom untersten Viertel ins Mittelfeld bzw. ins obere Mittelfeld steigt."
+    },
+    pillars: [
+      { title: "Training", text: "Zone 2, VO2max, Kraft und Stabilit\xE4t \u2013 der st\xE4rkste Hebel." },
+      { title: "Ern\xE4hrung", text: "Genug Protein, Energie passend zum Ziel, Blutzucker im Blick." },
+      { title: "Schlaf", text: "Grundlage f\xFCr Erholung, Stoffwechsel und Gehirn." },
+      { title: "Emotionale Gesundheit", text: "Beziehungen, Sinn, Umgang mit Belastung." }
+    ],
+    day: [
+      { time: "Morgen", text: "Tageslicht, Wasser; an Trainingstagen die geplante Einheit." },
+      { time: "Training", text: "Zone 2 (z. B. 45 min) oder Kraft oder Stabilit\xE4t \u2013 Wochenplan siehe unten." },
+      { time: "Mahlzeiten", text: "Protein gleichm\xE4\xDFig verteilt, je Mahlzeit eine ordentliche Portion." },
+      { time: "Nachmittag", text: "Bewegung zwischendurch, kein sp\xE4tes Koffein." },
+      { time: "Abend", text: "Ruhige Stunde, kein Alkohol als Einschlafhilfe, feste Schlafzeit." }
+    ],
+    rules: [
+      { value: "~3 h", label: "Zone 2 pro Woche", text: "Z. B. 4\xD7 45 min: gerade noch in ganzen S\xE4tzen sprechen." },
+      { value: "1\xD7", label: "VO2max pro Woche", text: "Z. B. 4\xD7 4 min hart, 4 min locker dazwischen." },
+      { value: "~3\xD7", label: "Krafttraining", text: "Ganzk\xF6rper, schwer genug; Ziehen, Dr\xFCcken, Heben, Tragen." },
+      { value: "~2 g/kg", label: "Protein", text: "Deutlich \xFCber der Mindestempfehlung von 0,8 g/kg." },
+      { value: "ApoB", label: "Leitwert Lipide", text: "So niedrig wie m\xF6glich \u2013 fr\xFCh ansetzen, nicht erst ab 60." },
+      { value: "7\u20138 h", label: "Schlaf", text: "Ohne guten Schlaf wirkt der Rest schlechter." }
+    ],
+    sections: [
+      {
+        title: "Die vier Reiter",
+        items: [
+          { label: "Herz-Kreislauf", text: "Arteriosklerose \u2013 Treiber ApoB, Blutdruck, Rauchen, Insulinresistenz." },
+          { label: "Krebs", text: "Fr\xFCherkennung ernst nehmen; Stoffwechselgesundheit senkt das Risiko." },
+          { label: "Neurodegeneration", text: "Demenz \u2013 Training, Schlaf, Blutzucker und Gef\xE4\xDFe sch\xFCtzen das Gehirn." },
+          { label: "Stoffwechsel", text: "Insulinresistenz und Fettleber verst\xE4rken die drei anderen." }
+        ]
+      },
+      {
+        title: "Der Hundertj\xE4hrigen-Zehnkampf",
+        items: [
+          {
+            label: "Idee",
+            text: "Schreib auf, was du mit 90 noch k\xF6nnen willst (Enkel hochheben, Koffer verstauen, vom Boden aufstehen)."
+          },
+          { label: "R\xFCckw\xE4rts planen", text: "Mit dem Alter fallen Kraft und VO2max \u2013 trainiere jetzt deutlich dar\xFCber." },
+          { label: "Stabilit\xE4t", text: "Gleichgewicht, Griffkraft, Fu\xDF- und Rumpfkontrolle verhindern St\xFCrze." }
+        ]
+      },
+      {
+        title: "Ern\xE4hrung als Werkzeug",
+        items: [
+          { label: "Drei Stellschrauben", text: "Weniger Energie, bestimmte Lebensmittel weglassen oder Zeitfenster." },
+          { label: "Protein", text: "Bei Fasten und Zeitfenstern wird das Proteinziel schwer erreichbar \u2013 im Blick behalten." },
+          { label: "Blutzucker", text: "Ein Glukosesensor kann zeigen, welche Mahlzeiten stark ausschlagen." }
+        ]
+      }
+    ],
+    assessment: "VO2max, Kraft und Muskelmasse sind stark mit Lebenserwartung verbunden \u2013 die Trainingsempfehlungen stehen auf solider Grundlage. ApoB als Leitwert ist in Leitlinien angekommen; sehr niedrige Zielwerte ohne Erkrankung sind eine Abw\xE4gung mit der \xC4rztin oder dem Arzt. Die Proteinmenge liegt am oberen Rand dessen, was Studien st\xFCtzen.",
+    caution: "Hochintensive Intervalle und schwere Lasten erst nach \xE4rztlicher Abkl\xE4rung bei Herz-Kreislauf-Vorerkrankung. Lipid- oder Diabetesmedikamente nur \xE4rztlich.",
+    tiers: {
+      foundation: [
+        "Zone 2 rund 3 Stunden pro Woche",
+        "Krafttraining 3\xD7 pro Woche",
+        "T\xE4glich gehen",
+        "7\u20138 h Schlaf",
+        "Protein in jeder Mahlzeit",
+        "Nicht rauchen, wenig Alkohol"
+      ],
+      addOn: [
+        "1\xD7 pro Woche VO2max-Intervalle",
+        "Stabilit\xE4t und Gleichgewicht 2\xD7",
+        "Griffkraft und Tragen (Farmer's Walk)",
+        "Hundertj\xE4hrigen-Zehnkampf aufschreiben",
+        "Beziehungen und Sinn pflegen"
+      ],
+      optional: ["Glukosesensor f\xFCr 2\u20134 Wochen", "Zeitfenster f\xFCr Mahlzeiten (Protein beachten)"]
+    },
+    start: [
+      {
+        title: "Woche 1\u20132 \xB7 Bestandsaufnahme",
+        items: [
+          { id: "w1-zehnkampf", text: "10 Dinge aufschreiben, die du mit 90 k\xF6nnen willst" },
+          { id: "w1-werte", text: "VO2max, Griffkraft, Ruhepuls und Gewicht erfassen" },
+          { id: "w1-gehen", text: "Jeden Tag gehen" },
+          { id: "w1-schlaf", text: "Feste Schlafzeit, 7\u20138 h" }
+        ]
+      },
+      {
+        title: "Woche 3\u20136 \xB7 Fundament",
+        items: [
+          { id: "w3-zone2", text: "Zone 2 auf 3 Stunden pro Woche steigern" },
+          { id: "w3-kraft", text: "Krafttraining 3\xD7 pro Woche" },
+          { id: "w3-protein", text: "Protein in jede Mahlzeit" },
+          { id: "w3-stabil", text: "2\xD7 pro Woche Gleichgewicht und Rumpf" }
+        ]
+      },
+      {
+        title: "Ab Woche 7 \xB7 Spitze",
+        items: [
+          { id: "w7-vo2", text: "1\xD7 pro Woche 4\xD7 4 min hart" },
+          { id: "w7-labor", text: "Labor: ApoB, Lp(a) (einmal im Leben), HbA1c, Insulin" },
+          { id: "w7-messen", text: "VO2max und Griffkraft nach 3 Monaten neu messen" }
+        ]
+      }
+    ],
+    labs: ["ApoB", "Lipoprotein(a) \u2013 einmal im Leben", "HbA1c", "Insulin (n\xFCchtern)", "Leberwerte", "hs-CRP"],
+    tracking: "VO2max, Griffkraft, Ruhepuls und HRV stehen im \xDCberblick; Zone-2-Minuten zeigt Training \u2192 Auswertung."
+  },
+  {
+    id: "strunz",
+    name: "Strunz",
+    author: "Dr. med. Ulrich Strunz",
+    book: "Der Gen-Trick",
+    source: "Dr. med. Ulrich Strunz: Der Gen-Trick \u2013 Kapitel Ern\xE4hrung, N\xE4hrstoffe, Sport, Stress",
+    basis: "Buch und iCoach.Me-Magazin \u201ELongevity \u2013 Der Gen-Trick\u201C (11/2026)",
+    tagline: "Gene sind kein Urteil, sondern Schalter: Ern\xE4hrung, Bewegung und Denken entscheiden mit, welche laufen.",
+    keyFigure: {
+      value: "16 Stunden",
+      text: "Essenspause t\xE4glich: letzte Mahlzeit gegen 19 Uhr, die n\xE4chste zwischen 11 und 13 Uhr."
+    },
+    pillars: [
+      { title: "Ern\xE4hrung", text: "Wenig Kohlenhydrate, viel Protein und Gem\xFCse, t\xE4glich fasten." },
+      { title: "Bewegung", text: "Jeden Tag laufen, dazu Krafttraining." },
+      { title: "Denken", text: "Meditation, tiefer Atem, guter Schlaf und N\xE4he." }
+    ],
+    day: [
+      { time: "07:00", text: "Wasser, Tee oder schwarzer Kaffee \u2013 kein Fr\xFChst\xFCck." },
+      { time: "07:15", text: "N\xFCchtern laufen \u2013 anfangs kurz, jede Woche ein bisschen weiter." },
+      { time: "08:00", text: "10\u201320 min Meditation oder langsames, tiefes Atmen." },
+      { time: "12:00", text: "Erste Mahlzeit: Fisch, Eier oder Fleisch, viel Gem\xFCse und Salat, Beeren." },
+      { time: "Nachmittag", text: "Krafttraining 2\u20133\xD7 pro Woche; Proteinshake nie in der Fastenphase." },
+      { time: "18:30", text: "Letzte Mahlzeit, proteinreich, ohne Brot, Nudeln, Reis, Kartoffeln." },
+      { time: "ab 19:00", text: "Fastenphase: nur Wasser oder Tee." }
+    ],
+    rules: [
+      { value: "16\u201318 h", label: "Fasten t\xE4glich", text: "Mit 12:12 starten, dann 16:8." },
+      { value: "1,2\u20132,0 g/kg", label: "Protein", text: "In 1\u20132 Mahlzeiten plus Shake." },
+      { value: "No Carb", label: "Kohlenhydrate", text: "Nur aus Gem\xFCse, Salat, N\xFCssen und Beeren." },
+      { value: "t\xE4glich", label: "Laufen", text: "Bis es ein Ritual ist." },
+      { value: "5\u201310 \xB5mol/l", label: "Homocystein", text: "Kontrollwert f\xFCr die Methylierung." }
+    ],
+    sections: [
+      {
+        title: "Auf den Teller \u2013 und runter",
+        items: [
+          { label: "Mehr", text: "Gem\xFCse und Salat, Fisch, Eier, Fleisch, Milchprodukte, Oliven\xF6l, N\xFCsse, Beeren." },
+          { label: "Weniger", text: "Zucker, Brot, Nudeln, Reis, Kartoffeln, s\xFC\xDFes Importobst, Abgepacktes." },
+          { label: "Langsam umstellen", text: "Eine Beilage nach der anderen ersetzen statt \u201Eeine Woche Keto\u201C." }
+        ]
+      },
+      {
+        title: "Rohstoffe f\xFCr die Genschalter",
+        items: [
+          { label: "B12, Fols\xE4ure, B6, B2", text: "Homocystein recyceln \u2013 bei Mangel erg\xE4nzen." },
+          { label: "Cholin, Betain", text: "Methylgruppen-Spender \u2013 Eier, Leber, Spinat." },
+          { label: "Vitamin D, Omega-3", text: "Bei Mangel bzw. \xFCber Seefisch." },
+          { label: "Zink, Magnesium, Selen", text: "Helfer der Schalter-Enzyme \u2013 N\xFCsse, Kerne, Fisch." }
+        ]
+      },
+      {
+        title: "Kopf",
+        items: [
+          { label: "Meditation", text: "T\xE4glich, langsam einsteigen." },
+          { label: "N\xE4he", text: "Umarmungen, Gespr\xE4che, Tiere \u2013 heben Oxytocin." },
+          { label: "Weichmacher", text: "Weniger Plastikflaschen und Abgepacktes." }
+        ]
+      }
+    ],
+    assessment: "Weniger Zucker und Wei\xDFmehl, t\xE4gliche Bewegung, Krafttraining und Schlaf sind unstrittig. Strikte Ketose mit sehr viel Fett ist f\xFCr Langlebigkeit nicht belegt, bei manchen steigt das LDL deutlich. Die Wirkung von N\xE4hrstoffen auf Genschalter stammt \xFCberwiegend aus Labor- und Tierdaten \u2013 erst messen, dann gezielt ausgleichen.",
+    caution: "Bei Diabetes-Medikamenten, Nierenerkrankung, Schwangerschaft oder Essst\xF6rung: Fasten und Low Carb nur \xE4rztlich begleitet. Bei Keto nach 6\u20138 Wochen Blutfette, HbA1c und Nieren pr\xFCfen.",
+    tiers: {
+      foundation: [
+        "T\xE4glich laufen oder gehen",
+        "Krafttraining 2\u20133\xD7",
+        "Zucker und Wei\xDFmehl raus",
+        "Viel Gem\xFCse, Beeren, N\xFCsse",
+        "Protein 1,2\u20131,6 g/kg",
+        "Regelm\xE4\xDFig schlafen",
+        "N\xE4he und soziale Kontakte"
+      ],
+      addOn: [
+        "Meditation t\xE4glich",
+        "Intervallfasten 16:8",
+        "Sonnenlicht",
+        "Homocystein und B-Vitamine pr\xFCfen",
+        "Vitamin D bei Mangel",
+        "Fisch oder Omega-3",
+        "Tief atmen"
+      ],
+      optional: ["Weichmacher meiden", "Strikt ketogen (mit Laborkontrolle)", "Glutamin"]
+    },
+    start: [
+      {
+        title: "Woche 1\u20132 \xB7 Laufen & Ruhe",
+        items: [
+          { id: "w1-laufen", text: "Jeden Tag laufen oder gehen" },
+          { id: "w1-meditation", text: "10 min Meditation oder Atmen" },
+          { id: "w1-schlaf", text: "Feste Schlafzeiten" },
+          { id: "w1-zucker", text: "Zucker und S\xFC\xDFgetr\xE4nke raus" }
+        ]
+      },
+      {
+        title: "Woche 3\u20136 \xB7 Dein Teller",
+        items: [
+          { id: "w3-beilagen", text: "Beilagen durch Gem\xFCse ersetzen" },
+          { id: "w3-protein", text: "Protein in jede Mahlzeit" },
+          { id: "w3-kraft", text: "Krafttraining 2\u20133\xD7" },
+          { id: "w3-fenster", text: "Essfenster: 12:12, dann 16:8" }
+        ]
+      },
+      {
+        title: "Ab Woche 7 \xB7 Feinschliff",
+        items: [
+          { id: "w7-labor", text: "Labor: Homocystein, Vitamin D, Omega-3-Index, B12, Blutfette, HbA1c" },
+          { id: "w7-ergaenzen", text: "Nur erg\xE4nzen, was fehlt" },
+          { id: "w7-keto", text: "Optional Keto \u2013 mit Laborkontrolle" }
+        ]
+      }
+    ],
+    labs: ["Homocystein", "Vitamin B12", "25-OH-Vitamin D", "Omega-3-Index", "Blutfette", "HbA1c"],
+    tracking: "Schritte, Ruhepuls, Schlaf und Gewicht in LIFESPAN OS; das Essfenster unter Nutrition \u2192 Fasttracking."
+  },
+  {
+    id: "sinclair",
+    name: "Sinclair",
+    author: "David A. Sinclair, Matthew D. LaPlante",
+    book: "Das Ende des Alterns",
+    source: "D. A. Sinclair, M. D. LaPlante: Das Ende des Alterns",
+    basis: "iCoach.Me-Magazin \u201ELongevity \u2013 Das Ende des Alterns\u201C (11/2026)",
+    tagline: "Altern ist Informationsverlust im Epigenom \u2013 wie Kratzer auf einer CD. Ein wenig \u201Eguter Stress\u201C schaltet die Abwehr an.",
+    keyFigure: {
+      value: "\u221245 %",
+      text: "Gesamtsterblichkeit bei Menschen, die nur 6\u20138 km pro Woche laufen \u2013 weniger als eine Viertelstunde am Tag."
+    },
+    pillars: [
+      { title: "Weniger essen", text: "Seltener, weniger, mehr Pflanzen." },
+      { title: "Guter Stress", text: "Intensive Bewegung, K\xE4lte und Sauna." },
+      { title: "DNA sch\xFCtzen", text: "Kein Rauch, wenig Strahlung, kein Plastik in der Mikrowelle." }
+    ],
+    day: [
+      { time: "Morgen", text: "Fr\xFChst\xFCck auslassen oder klein halten; Treppen statt Lift." },
+      { time: "Mittag", text: "Erste Mahlzeit, viel Pflanzen, wenig S\xE4ugetier." },
+      { time: "Training", text: "Laufen bzw. Intervalle bei 70\u201385 % der maximalen Herzfrequenz." },
+      { time: "Abend", text: "Kleine Mahlzeit, keine Desserts als Regel; Sauna, danach kalt." },
+      { time: "Nacht", text: "K\xFChl schlafen." }
+    ],
+    rules: [
+      { value: "16:8 \xB7 5:2", label: "Fasten", text: "T\xE4glich, w\xF6chentlich oder 5 Tage Pseudofasten im Monat." },
+      { value: "6\u20138 km", label: "Laufen pro Woche", text: "Atemlos, aber nicht ersch\xF6pft." },
+      { value: "70\u201385 %", label: "HFmax", text: "Intensit\xE4t der harten Einheiten." },
+      { value: "BMI 23\u201325", label: "Gewicht", text: "Im Normalbereich bleiben." }
+    ],
+    sections: [
+      {
+        title: "Der \xDCberlebensschaltkreis",
+        items: [
+          { label: "Sirtuine \u2191", text: "Reparieren DNA und halten das Epigenom in Ordnung \u2013 brauchen NAD." },
+          { label: "AMPK \u2191", text: "Energiesensor: schaltet bei Mangel auf Sparen und Reparatur." },
+          { label: "mTOR \u2193", text: "Wachstumsschalter gebremst \u2013 die Zelle r\xE4umt auf (Autophagie)." }
+        ]
+      },
+      {
+        title: "Aminorichtig essen",
+        items: [
+          { label: "Verarbeitetes Fleisch", text: "Wurst, Schinken, Speck \u2013 mit Darm-, Pankreas- und Prostatakrebs verbunden." },
+          { label: "Rotes Fleisch", text: "Wenig ist okay, viel nicht (TMAO-Verdacht)." },
+          { label: "Methionin, Leucin", text: "Aktivieren mTOR \u2013 reduzieren, wenn nicht f\xFCrs Training gebraucht." }
+        ]
+      },
+      {
+        title: "Pillen im Check",
+        items: [
+          { label: "NMN, NR", text: "Heben NAD bei Tieren; belastbare Langzeitdaten beim Menschen fehlen." },
+          { label: "Resveratrol", text: "Humandaten zu harten Endpunkten d\xFCnn." },
+          { label: "Metformin, Aspirin", text: "Arzneimittel \u2013 nur \xE4rztlich; kein Nutzen f\xFCr Gesunde belegt." },
+          { label: "Vitamin D, K2", text: "Sinnvoll bei Mangel \u2013 erst messen." }
+        ]
+      }
+    ],
+    assessment: "Fasten, Bewegung, Sauna und ein normales Gewicht sind gut vereinbar mit der Studienlage am Menschen. Die Informationstheorie des Alterns ist ein Forschungsmodell. F\xFCr keine Anti-Aging-Pille gibt es strenge Langzeitstudien am Menschen \u2013 die besten Hebel bleiben kostenlos.",
+    caution: "Metformin und Aspirin sind Arzneimittel und geh\xF6ren in \xE4rztliche H\xE4nde. Fasten bei Diabetes-Medikamenten, Schwangerschaft oder Essst\xF6rung nur \xE4rztlich begleitet.",
+    tiers: {
+      foundation: [
+        "Eine Mahlzeit weniger oder 16:8",
+        "Zucker, Brot, Nudeln runter",
+        "Viel Pflanzen, wenig Wurst",
+        "Laufen 6\u20138 km pro Woche",
+        "Krafttraining",
+        "Nicht rauchen",
+        "BMI im Normalbereich",
+        "Regelm\xE4\xDFig Blutwerte"
+      ],
+      addOn: [
+        "Intensive Einheiten 70\u201385 % HFmax",
+        "Sauna regelm\xE4\xDFig",
+        "K\xFChl schlafen",
+        "Weniger tierisches Protein",
+        "R\xF6ntgen und CT nur, wenn n\xF6tig",
+        "Kein Plastik in die Mikrowelle"
+      ],
+      optional: ["K\xE4lte bzw. Eisbad", "NMN oder NR (Datenlage offen)", "Resveratrol (Datenlage d\xFCnn)"]
+    },
+    start: [
+      {
+        title: "Woche 1\u20132 \xB7 Weniger & seltener",
+        items: [
+          { id: "w1-mahlzeit", text: "Eine Mahlzeit klein halten oder weglassen" },
+          { id: "w1-suess", text: "Desserts und S\xFC\xDFes streichen" },
+          { id: "w1-wurst", text: "Wurst vom Teller" },
+          { id: "w1-treppe", text: "Jeden Tag Treppen statt Lift" }
+        ]
+      },
+      {
+        title: "Woche 3\u20136 \xB7 Guter Stress",
+        items: [
+          { id: "w3-laufen", text: "6\u20138 km Laufen pro Woche" },
+          { id: "w3-intensiv", text: "1\u20132 intensive Einheiten" },
+          { id: "w3-kraft", text: "Krafttraining am Wochenende" },
+          { id: "w3-sauna", text: "Sauna einplanen, k\xFChl schlafen" }
+        ]
+      },
+      {
+        title: "Ab Woche 7 \xB7 Messen",
+        items: [
+          { id: "w7-labor", text: "Blutwerte: HbA1c, Lipide, 25(OH)D, Entz\xFCndung" },
+          { id: "w7-justieren", text: "Mit Essen und Sport nachjustieren" },
+          { id: "w7-arzt", text: "Supplemente oder Medikamente nur nach \xE4rztlichem Gespr\xE4ch" }
+        ]
+      }
+    ],
+    labs: ["HbA1c", "Blutfette", "25-OH-Vitamin D", "hs-CRP", "IGF-1 (optional)"],
+    tracking: "Essfenster, Schritte, Training, Schlaf und Gewicht in LIFESPAN OS."
+  },
+  {
+    id: "greger",
+    name: "Greger",
+    author: "Dr. Michael Greger",
+    book: "How Not to Age",
+    source: "Dr. Michael Greger: How Not to Age, deutsche Ausgabe \u2013 Teile 1\u20134 und Schlusskapitel",
+    basis: "Buch und iCoach.Me-Magazin \u201ELongevity \u2013 How Not to Age\u201C (11/2026)",
+    tagline: "Die Anti-Aging-Pille liegt in der Gem\xFCseabteilung: vollwertig-pflanzlich essen, bewegen, fr\xFCh am Tag essen.",
+    keyFigure: {
+      value: "+13 Jahre",
+      text: "Lebenszeit brachten wenige einfache Gewohnheiten einem 50-J\xE4hrigen in einer Harvard-Analyse mit \xFCber 100.000 Menschen."
+    },
+    pillars: [
+      { title: "Pflanzen", text: "Mindestens 90 % des Tellers, so vielf\xE4ltig wie m\xF6glich." },
+      { title: "Bewegung", text: "Jeden Tag \u2013 gehen ist das Minimum." },
+      { title: "Weniger", text: "Salz, Alkohol, Wurst und tierisches Protein." },
+      { title: "Essen statt Pillen", text: "Kaum ein Supplement schafft es auf die Liste." }
+    ],
+    day: [
+      { time: "07:00", text: "Wasser oder gr\xFCner Tee \u2013 kein Saft, keine Limo." },
+      { time: "07:30", text: "Gro\xDFes Fr\xFChst\xFCck: Haferflocken, Beeren, 1 EL Leinsamen, Waln\xFCsse." },
+      { time: "Vormittag", text: "Mindestens 20\u201330 min z\xFCgig gehen, an Trainingstagen mehr." },
+      { time: "12:30", text: "Hauptmahlzeit: H\xFClsenfr\xFCchte, Vollkorn, Blattgem\xFCse, Brokkoli, \xBC TL Kurkuma." },
+      { time: "danach", text: "10\u201315 min Verdauungsspaziergang \u2013 bremst den Blutzucker." },
+      { time: "14\u201316 Uhr", text: "2\u20133 Tassen gr\xFCner oder schwarzer Tee, unges\xFC\xDFt." },
+      { time: "17:00", text: "Letzte, kleine Mahlzeit \u2013 danach ist das Essfenster zu." },
+      { time: "21:30", text: "10 min warm duschen oder Fu\xDFbad, 1\u20132 h vor dem Schlafen." }
+    ],
+    rules: [
+      { value: "90 %", label: "Pflanzlich", text: "Vollwertig, t\xE4glich H\xFClsenfr\xFCchte." },
+      { value: "< 10 h", label: "Fr\xFChes Essfenster", text: "Nur fr\xFCh am Tag zeigte es Vorteile." },
+      { value: "0,8 g/kg", label: "Protein", text: "\xDCberwiegend pflanzlich; mit Trainingsziel mehr." },
+      { value: "50", label: "Pflanzen pro Woche", text: "Vielfalt f\xFCrs Mikrobiom." },
+      { value: "BMI 20\u201325", label: "Gewicht", text: "L\xE4ngste Studien: am besten 20\u201322." },
+      { value: "\u2265 7 h", label: "Schlaf", text: "Eine Woche mit 5 h schadet den Gef\xE4\xDFen deutlich." }
+    ],
+    sections: [
+      {
+        title: "Die Anti-Aging-Acht",
+        items: [
+          { label: "N\xFCsse", text: "Eine Handvoll t\xE4glich (12\u201320 g), am besten Waln\xFCsse." },
+          { label: "Gr\xFCnzeug", text: "Blattgem\xFCse und Salat t\xE4glich; Bonus Brokkolisprossen." },
+          { label: "Beeren", text: "T\xE4glich, je dunkler desto besser \u2013 auch tiefgek\xFChlt." },
+          { label: "Pflanzenstress", text: "Gew\xFCrze, Kr\xE4uter, bunte Sorten \u2013 milder Reiz wie Training." },
+          { label: "Darmfutter", text: "50 Pflanzen pro Woche, Ballaststoffe, resistente St\xE4rke." },
+          { label: "Weniger Kalorien", text: "Mehr Volumen mit geringer Energiedichte \u2013 fr\xFCh am Tag." },
+          { label: "Protein mit Ma\xDF", text: "Weniger tierisches Protein senkt IGF-1." },
+          { label: "NAD+ nat\xFCrlich", text: "Bewegung und Ern\xE4hrung statt NR/NMN-Pillen." }
+        ]
+      },
+      {
+        title: "Dein Glas",
+        items: [
+          { label: "1 Wasser", text: "Frauen 4\u20137, M\xE4nner 6\u201311 Gl\xE4ser am Tag." },
+          { label: "2 Tee", text: "Gr\xFCn leicht vorn; verbunden mit geringerer Sterblichkeit." },
+          { label: "3 Kaffee", text: "Ohne Zucker und Wei\xDFer." },
+          { label: "\u2715", text: "Saft, Limo, Alkohol \u2013 auch Rotwein sch\xFCtzt nicht." }
+        ]
+      },
+      {
+        title: "Supplemente laut Greger",
+        items: [
+          { label: "Vitamin B12", text: "Pflicht bei pflanzlicher Ern\xE4hrung und ab 50." },
+          { label: "Jod", text: "Bei pflanzlicher Ern\xE4hrung bewusst einplanen." },
+          { label: "Vitamin D", text: "Kein belegter Sterblichkeitsnutzen \u2013 einen Mangel trotzdem behandeln." },
+          { label: "NR, NMN, Extrakte", text: "Nein \u2013 die ganze Pflanze wirkt besser." }
+        ]
+      }
+    ],
+    assessment: "Mehr H\xFClsenfr\xFCchte, Gem\xFCse, N\xFCsse, Beeren und weniger verarbeitetes Fleisch sind sehr gut belegt. Beim Protein widersprechen sich die Protokolle: 0,8 g/kg reichen ohne Trainingsziel; wer Muskeln aufbaut oder \xFCber 65 ist, liegt mit 1,2\u20131,6 g/kg (\xFCberwiegend pflanzlich) auf der sicheren Seite. Krafttraining steht im Buch nur am Rand \u2013 es geh\xF6rt dazu.",
+    caution: "Wer Warfarin nimmt: vor deutlich mehr Blattgem\xFCse (Vitamin K) mit der \xC4rztin oder dem Arzt sprechen. Kaliumsalz nur nach R\xFCcksprache bei Nieren- oder Herzerkrankung.",
+    tiers: {
+      foundation: [
+        "T\xE4glich 20\u201330 min gehen",
+        "Krafttraining 2\u20133\xD7",
+        "90 % vollwertig-pflanzlich",
+        "H\xFClsenfr\xFCchte t\xE4glich",
+        "Blattgem\xFCse t\xE4glich",
+        "Eine Handvoll N\xFCsse",
+        "Keine Wurst, kein Alkohol",
+        "Mindestens 7 h Schlaf",
+        "BMI 20\u201325, nicht nachsalzen"
+      ],
+      addOn: [
+        "Vitamin B12",
+        "Beeren t\xE4glich",
+        "2\u20133 Tassen Tee",
+        "50 Pflanzen pro Woche",
+        "Fr\xFChes Essfenster unter 10 h",
+        "Protein mit Ma\xDF",
+        "Warm duschen vor dem Schlaf"
+      ],
+      optional: ["\xBC TL Kurkuma", "30 g Brokkolisprossen"]
+    },
+    start: [
+      {
+        title: "Woche 1\u20132 \xB7 Weglassen & losgehen",
+        items: [
+          { id: "w1-gehen", text: "T\xE4glich 20\u201330 min gehen" },
+          { id: "w1-salz", text: "Salzstreuer vom Tisch" },
+          { id: "w1-saft", text: "Saft und Limo gegen Wasser oder Tee" },
+          { id: "w1-wurst", text: "Alkohol und Wurst streichen" },
+          { id: "w1-schlaf", text: "Mindestens 7 h Schlaf" }
+        ]
+      },
+      {
+        title: "Woche 3\u20136 \xB7 Dein Teller",
+        items: [
+          { id: "w3-taeglich", text: "T\xE4glich Bohnen, Gr\xFCnzeug, N\xFCsse, Beeren" },
+          { id: "w3-fruehstueck", text: "Gro\xDFes Fr\xFChst\xFCck, kleines Abendessen" },
+          { id: "w3-kraft", text: "Krafttraining 2\u20133\xD7 pro Woche" },
+          { id: "w3-b12", text: "B12, wenn pflanzlich oder \xFCber 50" }
+        ]
+      },
+      {
+        title: "Ab Woche 7 \xB7 Vielfalt",
+        items: [
+          { id: "w7-50", text: "50 Pflanzen pro Woche z\xE4hlen" },
+          { id: "w7-tee", text: "Tee als Standardgetr\xE4nk" },
+          { id: "w7-kurkuma", text: "Kurkuma und Sprossen einbauen" },
+          { id: "w7-bmi", text: "Richtung BMI 20\u201325" }
+        ]
+      }
+    ],
+    labs: ["Blutdruck", "LDL-Cholesterin", "HbA1c", "Vitamin B12", "Jod bzw. TSH bei pflanzlicher Ern\xE4hrung"],
+    tracking: "Gewicht, Schritte und Schlaf in LIFESPAN OS; das T\xE4gliche Dutzend unten zum Abhaken."
+  },
+  {
+    id: "darm",
+    name: "Darm-Di\xE4t",
+    author: "Dr. med. Michaela Axt-Gadermann",
+    book: "Schlank mit Darm \u2013 Die Darm-Di\xE4t",
+    source: "Michaela Axt-Gadermann: Schlank mit Darm \u2013 Die Darm-Di\xE4t, aktualisierte Neuausgabe, Kapitel 6\u20137",
+    basis: "Buch",
+    tagline: "Das Mikrobiom isst mit: Ballaststoffe und Pr\xE4biotika f\xFCttern die \u201Eschlanken\u201C Bakterien, Entz\xFCndung runter.",
+    keyFigure: {
+      value: "30 g",
+      text: "Ballaststoffe t\xE4glich \u2013 mindestens; langsam steigern, damit sich die Darmbakterien anpassen."
+    },
+    pillars: [
+      { title: "Ballaststoffe", text: "Mindestens 30 g am Tag, mit viel Pr\xE4biotika." },
+      { title: "Darmbarriere", text: "Butyrat aus resistenter St\xE4rke st\xE4rkt die Schleimhaut." },
+      { title: "Entz\xFCndung runter", text: "Omega-3, Kurkuma und Ingwer statt Industrie-Fett." },
+      { title: "Bewegung", text: "Mindestens 30 min an den meisten Tagen." }
+    ],
+    day: [
+      { time: "Fr\xFChst\xFCck", text: "Vollkornflocken mit Apfel (mit Schale), Beeren, Leinsamen oder N\xFCssen." },
+      { time: "Mittag", text: "Komplexe Kohlenhydrate (Vollkorn, H\xFClsenfr\xFCchte) mit viel Gem\xFCse." },
+      { time: "Zwischendurch", text: "Wasser, unges\xFC\xDFter Tee, 2\u20133 Tassen schwarzer Kaffee \u2013 keine Snacks." },
+      { time: "Abend", text: "Eiwei\xDF und Gem\xFCse; Omega-3-\xD6le (Lein-, Raps-, Walnuss\xF6l)." },
+      { time: "Bis abends", text: "2 Liter getrunken \u2013 Ballaststoffe brauchen Wasser." }
+    ],
+    rules: [
+      { value: "\u2265 30 g", label: "Ballaststoffe", text: "T\xE4glich; langsam steigern." },
+      { value: "3", label: "Mahlzeiten", text: "Ohne Snacks, wenn du abnehmen willst." },
+      { value: "2 l", label: "Trinken", text: "Wasser und Tee; Alkohol meiden." },
+      { value: "30 min", label: "Bewegung", text: "An den meisten Tagen, jede Form z\xE4hlt." },
+      { value: "\u2265 12 Wochen", label: "Probiotika", text: "Wenn, dann ausreichend lang und hoch dosiert." }
+    ],
+    sections: [
+      {
+        title: "Bakterienfutter",
+        items: [
+          { label: "Pr\xE4biotika", text: "Chicor\xE9e, Spargel, Topinambur, Schwarzwurzeln, Zwiebeln, Knoblauch, Artischocken." },
+          { label: "Resistente St\xE4rke", text: "Gekochte und abgek\xFChlte Kartoffeln, Reis, Nudeln; Haferflocken, leicht gr\xFCne Bananen." },
+          { label: "Ballaststoffriesen", text: "Leinsamen, Kleie, H\xFClsenfr\xFCchte, N\xFCsse, Beeren, Vollkornbrot." }
+        ]
+      },
+      {
+        title: "F\xFCnf Tricks f\xFCr mehr Ballaststoffe",
+        items: [
+          { label: "1", text: "Fr\xFChst\xFCck aufpeppen: Vollkornflocken, Samen, Beeren." },
+          { label: "2", text: "Vollkorn bevorzugen \u2013 nicht jedes dunkle Brot ist Vollkorn." },
+          { label: "3", text: "Zu jeder Mahlzeit Salat, Gem\xFCse oder Rohkost; N\xFCsse und Beeren." },
+          { label: "4", text: "Langsam steigern \u2013 sonst drohen Bl\xE4hungen." },
+          { label: "5", text: "Ausreichend trinken." }
+        ]
+      },
+      {
+        title: "Was der Darmflora schadet",
+        items: [
+          { label: "S\xFC\xDFstoffe", text: "K\xF6nnen das Mikrobiom ver\xE4ndern." },
+          { label: "Emulgatoren", text: "K\xF6nnen die Darmbarriere schw\xE4chen \u2013 Fertigprodukte meiden." },
+          { label: "Darmreinigung", text: "Verarmt das Mikrobiom nachhaltig." },
+          { label: "Stress, Schlafmangel", text: "Verschieben die Bakterien und machen hungrig." }
+        ]
+      }
+    ],
+    assessment: "Mehr Ballaststoffe, Vollkorn und H\xFClsenfr\xFCchte sind f\xFCr Gewicht, Blutzucker und Herz gut belegt. Die Einteilung in \u201Eschlanke\u201C und \u201Edicke\u201C Bakterien ist vereinfacht; Probiotika wirken stammabh\xE4ngig und bescheiden. Die 1.000-kcal-Variante des Buchs ist eine Abnehmphase, kein Dauerprotokoll.",
+    caution: "Bei Reizdarm, entz\xFCndlicher Darmerkrankung oder nach Darmoperationen Ballaststoffe nur in Absprache steigern. Probiotika bei Immunschw\xE4che nur \xE4rztlich.",
+    tiers: {
+      foundation: [
+        "Mindestens 30 g Ballaststoffe",
+        "Vollkorn statt Wei\xDFmehl",
+        "Zu jeder Mahlzeit Gem\xFCse oder Rohkost",
+        "2 l Wasser und Tee",
+        "30 min Bewegung",
+        "Fertigprodukte mit Emulgatoren meiden"
+      ],
+      addOn: [
+        "Pr\xE4biotika so oft wie m\xF6glich",
+        "Resistente St\xE4rke (gekocht und abgek\xFChlt)",
+        "Omega-3-\xD6le und fetter Fisch",
+        "Kurkuma und Ingwer",
+        "2\u20133 Tassen schwarzer Kaffee"
+      ],
+      optional: [
+        "Ballaststoffpulver langsam auf 10\u201315 g",
+        "Multispezies-Probiotikum mindestens 12 Wochen"
+      ]
+    },
+    start: [
+      {
+        title: "Woche 1\u20132 \xB7 Ballast aufbauen",
+        items: [
+          { id: "w1-fruehstueck", text: "Fr\xFChst\xFCck mit Vollkornflocken, Samen und Beeren" },
+          { id: "w1-trinken", text: "2 l trinken" },
+          { id: "w1-langsam", text: "Ballaststoffe langsam steigern" }
+        ]
+      },
+      {
+        title: "Woche 3\u20136 \xB7 Pr\xE4biotika",
+        items: [
+          { id: "w3-praebiotika", text: "T\xE4glich ein Pr\xE4biotikum (Zwiebel, Lauch, Chicor\xE9e \u2026)" },
+          { id: "w3-staerke", text: "Resistente St\xE4rke: Kartoffeln oder Reis vom Vortag" },
+          { id: "w3-30g", text: "30 g Ballaststoffe erreichen" },
+          { id: "w3-bewegung", text: "30 min Bewegung an den meisten Tagen" }
+        ]
+      },
+      {
+        title: "Ab Woche 7 \xB7 Entz\xFCndung",
+        items: [
+          { id: "w7-omega3", text: "Omega-3-\xD6le und Fisch einbauen" },
+          { id: "w7-gewuerz", text: "Kurkuma und Ingwer regelm\xE4\xDFig" },
+          { id: "w7-emulgator", text: "Zutatenlisten auf Emulgatoren und S\xFC\xDFstoffe pr\xFCfen" }
+        ]
+      }
+    ],
+    labs: ["hs-CRP", "HbA1c", "Blutfette", "Ferritin (bei viel Vollkorn und wenig Fleisch)"],
+    tracking: "Ballaststoffe pro Tag zeigt Nutrition \u2192 Tagebuch; Gewicht und Bauchumfang unter Body."
+  }
+];
+var GENETICS_BASICS = {
+  title: "Gene, Epigenom, Telomere \u2013 kurz erkl\xE4rt",
+  source: "DK Verlag: SIMPLY. Genetik \u2013 Abschnitte Epigenetik und nicht codierende DNA",
+  items: [
+    {
+      label: "Genom",
+      text: "Die DNA-Sequenz \u2013 sie bleibt im Leben weitgehend gleich und ist der \u201EText\u201C deiner Gene."
+    },
+    {
+      label: "Epigenom",
+      text: "Chemische Markierungen an der DNA und an den Histonen, um die sie gewickelt ist. Sie machen Gene lesbar oder verschlie\xDFen sie \u2013 ohne den Text zu \xE4ndern."
+    },
+    {
+      label: "Warum das z\xE4hlt",
+      text: "Die Markierungen reagieren auf Ern\xE4hrung, Bewegung, Schlaf und Stress. Darauf bauen Strunz (\u201EGene als Schalter\u201C) und Sinclair (\u201EKratzer auf der CD\u201C) auf."
+    },
+    {
+      label: "Telomere",
+      text: "Wiederholte DNA-Abschnitte an den Chromosomenenden; sie werden bei Zellteilungen k\xFCrzer und gelten als einer von vielen Alterungsmarkern."
+    }
+  ]
+};
+var COMMON_GROUND = [
+  "T\xE4glich bewegen \u2013 gehen ist das Minimum, Krafttraining geh\xF6rt dazu.",
+  "Ausdauer und Fitness (VO2max) z\xE4hlen zu den st\xE4rksten Hebeln f\xFCr Lebenserwartung.",
+  "Zucker, Wei\xDFmehl, Fertigprodukte und verarbeitetes Fleisch runter.",
+  "Viel Gem\xFCse, Beeren und N\xFCsse; Ballaststoffe f\xFCr den Darm.",
+  "Regelm\xE4\xDFig 7\u20138 Stunden schlafen.",
+  "Nicht rauchen, Alkohol h\xF6chstens wenig \u2013 keiner der Autoren empfiehlt ihn.",
+  "Supplemente zuletzt und gezielt \u2013 erst messen, dann erg\xE4nzen."
+];
+var DISAGREEMENTS = [
+  {
+    topic: "Protein",
+    views: {
+      huberman: "1,6\u20132,2 g/kg",
+      attia: "~2 g/kg",
+      strunz: "1,2\u20132,0 g/kg",
+      sinclair: "eher weniger, wenig tierisch",
+      greger: "0,8 g/kg, pflanzlich",
+      darm: "keine feste Zahl"
+    }
+  },
+  {
+    topic: "Kohlenhydrate",
+    views: {
+      huberman: "unverarbeitet, nach Protein",
+      attia: "nach Blutzucker-Reaktion",
+      strunz: "\u201ENo Carb\u201C \u2013 nur Gem\xFCse, Beeren, N\xFCsse",
+      sinclair: "Zucker, Brot, Nudeln runter",
+      greger: "Vollkorn und H\xFClsenfr\xFCchte t\xE4glich",
+      darm: "Vollkorn, resistente St\xE4rke"
+    }
+  },
+  {
+    topic: "Essfenster",
+    views: {
+      huberman: "feste Zeiten, kein Fasten n\xF6tig",
+      attia: "m\xF6glich, Protein beachten",
+      strunz: "16\u201318 h fasten, sp\xE4t essen",
+      sinclair: "16:8, 5:2 oder Pseudofasten",
+      greger: "fr\xFCh, unter 10 h",
+      darm: "3 Mahlzeiten ohne Snacks"
+    }
+  }
+];
+var DAILY_DOZEN = [
+  { key: "beans", label: "H\xFClsenfr\xFCchte", servings: 3, example: "\xBD Tasse gekocht oder \xBC Tasse Hummus" },
+  { key: "berries", label: "Beeren", servings: 1, example: "\xBD Tasse frisch oder tiefgek\xFChlt" },
+  { key: "fruits", label: "Anderes Obst", servings: 3, example: "1 mittelgro\xDFes St\xFCck" },
+  { key: "cruciferous", label: "Kreuzbl\xFCtler", servings: 1, example: "\xBD Tasse Brokkoli, Kohl, Rosenkohl" },
+  { key: "greens", label: "Blattgem\xFCse", servings: 2, example: "1 Tasse roh oder \xBD Tasse gekocht" },
+  { key: "vegetables", label: "Anderes Gem\xFCse", servings: 2, example: "\xBD Tasse" },
+  { key: "flax", label: "Leinsamen", servings: 1, example: "1 EL gemahlen" },
+  { key: "nuts", label: "N\xFCsse und Samen", servings: 1, example: "\xBC Tasse bzw. 2 EL Nussmus" },
+  { key: "spices", label: "Kr\xE4uter und Gew\xFCrze", servings: 1, example: "\xBC TL Kurkuma" },
+  { key: "grains", label: "Vollkorn", servings: 3, example: "\xBD Tasse gekocht oder 1 Scheibe Brot" },
+  { key: "beverages", label: "Getr\xE4nke", servings: 5, example: "1 Glas Wasser oder Tee" },
+  { key: "exercise", label: "Bewegung", servings: 1, example: "90 min moderat oder 40 min intensiv" }
+];
+var DAILY_DOZEN_SOURCE = "Michael Greger, Gene Stone: Das How Not to Die Kochbuch \u2013 Kapitel \u201EDas T\xE4gliche Dutzend\u201C (Portionsgr\xF6\xDFen nach Greger)";
+var DAILY_DOZEN_TOTAL = DAILY_DOZEN.reduce((s, d) => s + d.servings, 0);
+var PROTOCOLS_SETTING = "ui.protocols";
+var DOZEN_KEEP_DAYS = 14;
+var emptyProtocolState = () => ({ active: null, done: {}, dozen: {} });
+var ISO3 = /^\d{4}-\d{2}-\d{2}$/;
+function parseProtocolState(raw) {
+  const out = emptyProtocolState();
+  if (!raw) return out;
+  let v;
+  try {
+    v = JSON.parse(raw);
+  } catch {
+    return out;
+  }
+  if (!v || typeof v !== "object") return out;
+  const o = v;
+  if (typeof o.active === "string" && PROTOCOLS.some((p) => p.id === o.active)) out.active = o.active;
+  if (o.done && typeof o.done === "object") {
+    for (const p of PROTOCOLS) {
+      const list2 = o.done[p.id];
+      if (!Array.isArray(list2)) continue;
+      const valid = new Set(p.start.flatMap((s) => s.items.map((i) => i.id)));
+      const ids = [...new Set(list2.filter((x) => typeof x === "string" && valid.has(x)))];
+      if (ids.length) out.done[p.id] = ids;
+    }
+  }
+  if (o.dozen && typeof o.dozen === "object") {
+    for (const [day, counts] of Object.entries(o.dozen)) {
+      if (!ISO3.test(day) || !counts || typeof counts !== "object") continue;
+      const row = {};
+      for (const d of DAILY_DOZEN) {
+        const n2 = counts[d.key];
+        if (typeof n2 === "number" && Number.isInteger(n2) && n2 > 0) row[d.key] = Math.min(n2, d.servings);
+      }
+      if (Object.keys(row).length) out.dozen[day] = row;
+    }
+  }
+  return out;
+}
+function pruneDozen(dozen, today, keep = DOZEN_KEEP_DAYS) {
+  const t = Date.parse(`${today}T12:00:00Z`);
+  const out = {};
+  for (const [day, row] of Object.entries(dozen)) {
+    const d = Date.parse(`${day}T12:00:00Z`);
+    if (Number.isFinite(d) && (t - d) / 864e5 < keep && d <= t) out[day] = row;
+  }
+  return out;
+}
+function serializeProtocolState(s, today) {
+  return JSON.stringify({ active: s.active, done: s.done, dozen: pruneDozen(s.dozen, today) });
+}
+function toggleStartItem(s, protocolId, itemId) {
+  const cur = new Set(s.done[protocolId] ?? []);
+  if (cur.has(itemId)) cur.delete(itemId);
+  else cur.add(itemId);
+  const done = { ...s.done };
+  if (cur.size) done[protocolId] = [...cur];
+  else delete done[protocolId];
+  return { ...s, done };
+}
+function startProgress(p, s) {
+  const total = p.start.reduce((n2, st) => n2 + st.items.length, 0);
+  const set = new Set(s.done[p.id] ?? []);
+  const done = p.start.reduce((n2, st) => n2 + st.items.filter((i) => set.has(i.id)).length, 0);
+  return { done, total };
+}
+function setDozen(s, day, key, count) {
+  const def = DAILY_DOZEN.find((d) => d.key === key);
+  if (!def || !ISO3.test(day)) return s;
+  const n2 = Math.max(0, Math.min(def.servings, Math.round(count)));
+  const row = { ...s.dozen[day] ?? {} };
+  if (n2) row[key] = n2;
+  else delete row[key];
+  const dozen = { ...s.dozen };
+  if (Object.keys(row).length) dozen[day] = row;
+  else delete dozen[day];
+  return { ...s, dozen };
+}
+function dozenDone(s, day) {
+  const row = s.dozen[day] ?? {};
+  return DAILY_DOZEN.reduce((n2, d) => n2 + Math.min(d.servings, row[d.key] ?? 0), 0);
+}
 export {
   AKH_REFERENCES,
   ANS_INFO,
@@ -21496,6 +24940,8 @@ export {
   DISPLAY_DECIMALS,
   FASTED_LABEL,
   GLASS_SIZES_ML,
+  GRIP_NORMS,
+  GRIP_SOURCE,
   GROUP_LABELS,
   INDEPENDENT_LABEL,
   INSIGHTS_LAYOUT_KEY,
@@ -21578,6 +25024,7 @@ export {
   emptyFastDraft,
   energy_exports as energy,
   energyGoalView,
+  evaluateGrip,
   exerciseUsage_exports as exerciseUsage,
   exportReminderState,
   fastDraftToInput,
@@ -21623,6 +25070,7 @@ export {
   lifestyleCategoryLabel,
   lifetime_exports as lifetime,
   loadVsNextDay,
+  longevity_exports as longevity,
   machines_exports as machinesDomain,
   macroBaseKcal,
   macroEnergyShares,
@@ -21666,6 +25114,7 @@ export {
   profileToDraft2 as profileToDraft,
   progressText,
   protocol_exports as protocol,
+  protocols_exports as protocols,
   quickFill_exports as quickFill,
   readXlsx,
   recovery_exports as recovery,

@@ -27,6 +27,8 @@ import { initWeeklyReports } from "./weeklyreports.js";
 import { initTodos, todoChange, todoInput, viewChecklistEdit, viewTodos } from "./todos.js";
 import * as TD from "./todosdata.js";
 import { healthChange, healthInput, initHealth, viewHealth, viewLabEdit } from "./health.js";
+import { initLongevity } from "./longevityview.js";
+import { initProtocols, protocolsChange } from "./protocolsview.js";
 import * as HD from "./healthdata.js";
 import { initSuper, superChange, superInput, viewHrtEdit, viewProtocolEdit, viewSubstanceEdit, viewSuper } from "./super.js";
 import * as SD from "./superdata.js";
@@ -251,6 +253,7 @@ app.addEventListener("input", (ev) => {
 app.addEventListener("change", async (ev) => {
   const el = ev.target;
   if (foodChange(el)) return;
+  if (protocolsChange(el)) return;
   if (bodyChange(el)) return;
   if (diaryChange(el)) return;
   if (vendorChange(el)) return;
@@ -373,6 +376,8 @@ const moduleCtx = {
 };
 
 initBody(moduleCtx);
+initLongevity(moduleCtx);
+initProtocols(moduleCtx);
 
 GY.initGyms(moduleCtx);
 

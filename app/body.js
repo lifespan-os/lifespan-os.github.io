@@ -6,6 +6,8 @@ import * as D from "./pcdomain.js";
 import { appDay } from "./appday.js";
 import { notice as trainNotice } from "./training.js";
 import { viewCheckinsTab } from "./trainingdb.js";
+import { longevityTabHtml } from "./longevityview.js";
+import { protocolsTabHtml } from "./protocolsview.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -137,11 +139,18 @@ function formCard({ fixed = false } = {}) {
 
 // ------------------------------------------------------------------ Ansicht „Body & Longevity“
 
-/** Reiter „Erfassen“ und „Check-Ins“ (Check-Ins seit 1.60.0 hier statt im Training, wie am PC 1.0.159). */
+/**
+ * Reiter „Überblick“ (1.77.0, wie am PC 1.0.163: erster Reiter und Standard), „Erfassen“ und „Check-Ins“
+ * (Check-Ins seit 1.60.0 hier statt im Training, wie am PC 1.0.159).
+ */
 export const BODY_TABS = [
+  ["overview", "Überblick"],
+  // 1.79.0: Longevity-Protokolle wie am PC 1.0.165
+  ["protocols", "Protocols"],
   ["entry", "Erfassen"],
   ["checkins", "Check-Ins"],
 ];
+const BODY_TAB_IDS = new Set(BODY_TABS.map(([v]) => v));
 
 const bodyTabsHtml = (tab) =>
   `<nav class="tabs" aria-label="Body &amp; Longevity">${BODY_TABS.map(
@@ -150,9 +159,19 @@ const bodyTabsHtml = (tab) =>
 
 export function viewBody() {
   const st = S();
-  const tab = X.S.bodyTab === "checkins" ? "checkins" : "entry";
+  const tab = BODY_TAB_IDS.has(X.S.bodyTab) ? X.S.bodyTab : "overview";
   const head = X.header("Body & Longevity", { back: "home" });
   const nav = bodyTabsHtml(tab);
+  if (tab === "overview" || tab === "protocols") {
+    let body;
+    try {
+      body = tab === "protocols" ? protocolsTabHtml() : longevityTabHtml();
+    } catch (e) {
+      console.error(e);
+      body = `<section class="card"><p class="warn">Der Reiter konnte nicht angezeigt werden: ${esc(e.message)}</p></section>`;
+    }
+    return `${head}<main class="wrap">${nav}${body}</main>`;
+  }
   if (tab === "checkins") {
     let body;
     try {

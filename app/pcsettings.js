@@ -26,6 +26,8 @@ export const SYNC_KEYS = [
   "ui.insights_layout",
   "ui.training_review_layout",
   "ui.training_db_layout",
+  // Body & Longevity → Protocols (1.79.0): abgehakter 7-Wochen-Start, Tägliches Dutzend
+  "ui.protocols",
 ];
 export const DEFAULT_MEALS = ["breakfast", "lunch", "snack", "dinner"];
 export const MEAL_LABELS = { breakfast: "Frühstück", lunch: "Mittagessen", snack: "Snacks", dinner: "Abendessen" };
@@ -144,6 +146,7 @@ export function settingLabel(key) {
   if (key === "measurement_methods") return "Messmethoden";
   if (key === "secret_protocols") return "Secret Protocols";
   if (key === "ui.day_start") return "Tageswechsel";
+  if (key === "ui.protocols") return "Protocols (Fortschritt)";
   return LAYOUT_NAMES[key] ? `Seite anpassen: ${LAYOUT_NAMES[key]}` : key;
 }
 

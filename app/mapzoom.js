@@ -3,6 +3,8 @@
  * Zoomen mit zwei Fingern, Doppeltippen oder − / +; verschieben durch Wischen. Muskel antippen zeigt den Wert
  * (Text aus dem `<title>` der Fläche). Die Ansicht ist eine Kopie der Karte und liegt direkt im Body, damit
  * das Neuzeichnen der Seite sie nicht schließt.
+ * Seit 1.78.0 auch für Bilder (`openImageZoom`, z. B. Zutrittscode in Meine Gyms): heller Grund, Bild
+ * passt zuerst ganz ins Fenster.
  */
 
 const MIN = 1;
@@ -85,27 +87,20 @@ function attachGestures(scroller) {
   });
 }
 
-export function openMapZoom(map) {
+/** Gemeinsames Overlay: Titel, Inhalt (HTML), Hinweiszeile, optional Legende. */
+function openOverlay({ title, inner, info, legend = "", kind = "map" }) {
   close();
-  const views = map?.querySelector(".muscle-map__views");
-  if (!views) return;
-  const title = map.closest("section")?.querySelector("h3")?.textContent.replace(/^\s*\/\s*/, "").trim() || "Muskel-Körperkarte";
-  const legend = map.querySelector(".muscle-map__legend")?.outerHTML ?? "";
   root = document.createElement("div");
-  root.className = "mapzoom";
+  root.className = `mapzoom mapzoom--${kind}`;
   root.setAttribute("role", "dialog");
   root.setAttribute("aria-modal", "true");
   root.setAttribute("aria-label", `${title} vergrößert`);
   root.innerHTML = `<div class="mapzoom__bar"><b class="mapzoom__title"></b>
       <div class="mapzoom__btns"><button type="button" class="mapzoom__btn" data-z="out" aria-label="Verkleinern">−</button><span class="mapzoom__level" aria-live="polite">100 %</span><button type="button" class="mapzoom__btn" data-z="in" aria-label="Vergrößern">+</button><button type="button" class="mapzoom__btn mapzoom__close" data-z="close" aria-label="Schließen">✕</button></div></div>
-    <div class="mapzoom__scroll"><div class="mapzoom__inner">${views.innerHTML}</div></div>
-    <p class="mapzoom__info" aria-live="polite">Muskel antippen · mit zwei Fingern oder Doppeltippen zoomen</p>${legend}`;
+    <div class="mapzoom__scroll"><div class="mapzoom__inner">${inner}</div></div>
+    <p class="mapzoom__info" aria-live="polite"></p>${legend}`;
   root.querySelector(".mapzoom__title").textContent = title;
-  // Kopie: keine Aktionen der Seite auslösen, Auswahl der Seite nicht mitnehmen
-  root.querySelectorAll(".mapzoom__inner [data-act]").forEach((el) => {
-    el.removeAttribute("data-act");
-    el.removeAttribute("stroke");
-  });
+  root.querySelector(".mapzoom__info").textContent = info;
   scale = 1;
   document.body.appendChild(root);
   document.body.classList.add("mapzoom-open");
@@ -122,6 +117,39 @@ export function openMapZoom(map) {
   });
   attachGestures(root.querySelector(".mapzoom__scroll"));
   root.querySelector(".mapzoom__close").focus();
+  return root;
+}
+
+export function openMapZoom(map) {
+  const views = map?.querySelector(".muscle-map__views");
+  if (!views) return;
+  const title = map.closest("section")?.querySelector("h3")?.textContent.replace(/^\s*\/\s*/, "").trim() || "Muskel-Körperkarte";
+  const legend = map.querySelector(".muscle-map__legend")?.outerHTML ?? "";
+  const r = openOverlay({ title, inner: views.innerHTML, info: "Muskel antippen · mit zwei Fingern oder Doppeltippen zoomen", legend });
+  // Kopie: keine Aktionen der Seite auslösen, Auswahl der Seite nicht mitnehmen
+  r.querySelectorAll(".mapzoom__inner [data-act]").forEach((el) => {
+    el.removeAttribute("data-act");
+    el.removeAttribute("stroke");
+  });
+}
+
+/**
+ * Bild vergrößern (1.78.0): `src` als data-URL bzw. Adresse. Zuerst passt das ganze Bild ins Fenster
+ * (Breite oder Höhe), dann zoomen wie bei der Karte.
+ */
+export function openImageZoom(src, title, info = "Mit zwei Fingern oder Doppeltippen zoomen") {
+  const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const r = openOverlay({ title, inner: `<img class="mapzoom__img" src="${esc(src)}" alt="${esc(title)}" draggable="false">`, info, kind: "image" });
+  const img = r.querySelector(".mapzoom__img");
+  const fit = () => {
+    const box = r.querySelector(".mapzoom__scroll");
+    if (!img.naturalWidth || !box) return;
+    // Breite des Inhalts bei 100 %: ganzes Bild sichtbar
+    const w = Math.min(box.clientWidth, (box.clientHeight * img.naturalWidth) / img.naturalHeight);
+    r.querySelector(".mapzoom__inner").style.setProperty("--fit", `${Math.max(40, (w / box.clientWidth) * 100)}%`);
+  };
+  if (img.complete) fit();
+  else img.addEventListener("load", fit);
 }
 
 // Lupe an der Karte (`heatmapHtml`): eigener Klick-Abgriff, unabhängig von den `data-act`-Aktionen

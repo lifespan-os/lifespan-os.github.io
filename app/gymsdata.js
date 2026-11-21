@@ -6,7 +6,7 @@
 // PC. Prüfregeln wie im Rust-Kern (`repo/gym.rs`). Das gewählte Gym am Handy bleibt am Handy
 // (`local.active`). Referenz-Studio „dasGym Wien“ (Paket-ID `dasgym-wien`) lässt sich nicht löschen.
 
-export const GYM_COLUMNS = ["id", "name", "address", "contact", "member_number", "website", "photo", "package_id", "sort_order", "archived", "created_at", "updated_at", "phone", "email", "social", "access_code"];
+export const GYM_COLUMNS = ["id", "name", "address", "contact", "member_number", "website", "photo", "package_id", "sort_order", "archived", "created_at", "updated_at", "phone", "email", "social", "access_code", "access_code_back"];
 export const ENTRY_COLUMNS = ["id", "gym_id", "machine_id", "number", "note", "created_at", "updated_at"];
 export const REFERENCE_PACKAGE = "dasgym-wien";
 export const MAX_PHOTO_CHARS = 600000;
@@ -273,6 +273,10 @@ export function saveGym(catalog, local, input, uuid, now = new Date()) {
   const accessCode = input.access_code ? String(input.access_code).trim() || null : null;
   if (accessCode && !accessCode.startsWith("data:image/")) errors.access_code = "Der Zutrittscode muss ein Bild sein.";
   if (accessCode && accessCode.length > MAX_ACCESS_CODE_CHARS) errors.access_code = "Das Bild des Zutrittscodes ist zu groß – bitte ein kleineres Bild wählen.";
+  // Rückseite (1.82.0, PC 1.0.168 Migration 0071): gleiche Regeln
+  const accessBack = input.access_code_back ? String(input.access_code_back).trim() || null : null;
+  if (accessBack && !accessBack.startsWith("data:image/")) errors.access_code_back = "Die Rückseite muss ein Bild sein.";
+  if (accessBack && accessBack.length > MAX_ACCESS_CODE_CHARS) errors.access_code_back = "Das Bild der Rückseite ist zu groß – bitte ein kleineres Bild wählen.";
   if (Object.keys(errors).length) return { errors };
   const iso = now.toISOString();
   const prev = input.id ? gymList(catalog, local).find((g) => g.id === input.id) : null;
@@ -289,6 +293,7 @@ export function saveGym(catalog, local, input, uuid, now = new Date()) {
     website,
     photo,
     access_code: accessCode,
+    access_code_back: accessBack,
     package_id: prev?.package_id ?? null,
     sort_order: prev?.sort_order ?? 0,
     archived: 0,
@@ -304,10 +309,18 @@ export function saveGym(catalog, local, input, uuid, now = new Date()) {
  * Nur den Zutrittscode eines Gyms setzen bzw. entfernen (`null`); alle anderen Angaben bleiben.
  * Ergebnis wie `saveGym`.
  */
-export function setAccessCode(catalog, local, id, dataUrl, uuid, now = new Date()) {
+export function setAccessCode(catalog, local, id, dataUrl, uuid, now = new Date(), side = "front") {
   const g = gymList(catalog, local).find((x) => x.id === id);
   if (!g) return { errors: { access_code: "Das Gym gibt es nicht mehr." } };
-  return saveGym(catalog, local, { ...g, id: g.id, access_code: dataUrl }, uuid, now);
+  const key = side === "back" ? "access_code_back" : "access_code";
+  return saveGym(catalog, local, { ...g, id: g.id, [key]: dataUrl }, uuid, now);
+}
+
+/** Anzeige (1.82.0, wie `accessCodeImages` am PC): ohne Vorderseite gilt die Rückseite als einziges Bild. */
+export function accessCodeImages(g) {
+  const front = g?.access_code ?? null;
+  const back = g?.access_code_back ?? null;
+  return front ? { front, back } : { front: back, back: null };
 }
 
 /** Gym löschen (mit Maschinenliste); das Referenz-Studio bleibt. */

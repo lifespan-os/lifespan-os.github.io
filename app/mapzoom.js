@@ -137,10 +137,31 @@ export function openMapZoom(map) {
  * Bild vergrößern (1.78.0): `src` als data-URL bzw. Adresse. Zuerst passt das ganze Bild ins Fenster
  * (Breite oder Höhe), dann zoomen wie bei der Karte.
  */
-export function openImageZoom(src, title, info = "Mit zwei Fingern oder Doppeltippen zoomen") {
+export function openImageZoom(src, title, info = "Mit zwei Fingern oder Doppeltippen zoomen", { back = null, startBack = false } = {}) {
   const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const r = openOverlay({ title, inner: `<img class="mapzoom__img" src="${esc(src)}" alt="${esc(title)}" draggable="false">`, info, kind: "image" });
+  let onBack = Boolean(back && startBack);
+  const label = () => (back ? `${title} · ${onBack ? "Rückseite" : "Vorderseite"}` : title);
+  // Seite auch in der Hinweiszeile – der Titel wird am Handy neben „Umdrehen“ gekürzt
+  const sideInfo = () => (back ? `${onBack ? "Rückseite" : "Vorderseite"} · ${info}` : info);
+  const r = openOverlay({ title: label(), inner: `<img class="mapzoom__img" src="${esc(onBack ? back : src)}" alt="${esc(title)}" draggable="false">`, info: sideInfo(), kind: "image" });
   const img = r.querySelector(".mapzoom__img");
+  // Rückseite (1.82.0): Knopf „Umdrehen“ in der Leiste
+  if (back) {
+    const flip = document.createElement("button");
+    flip.type = "button";
+    flip.className = "mapzoom__btn mapzoom__flip";
+    flip.textContent = "Umdrehen";
+    flip.setAttribute("aria-label", "Karte umdrehen");
+    flip.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onBack = !onBack;
+      img.src = onBack ? back : src;
+      r.querySelector(".mapzoom__title").textContent = label();
+      r.querySelector(".mapzoom__info").textContent = sideInfo();
+      setScale(1);
+    });
+    r.querySelector(".mapzoom__btns").prepend(flip);
+  }
   const fit = () => {
     const box = r.querySelector(".mapzoom__scroll");
     if (!img.naturalWidth || !box) return;
@@ -148,8 +169,8 @@ export function openImageZoom(src, title, info = "Mit zwei Fingern oder Doppelti
     const w = Math.min(box.clientWidth, (box.clientHeight * img.naturalWidth) / img.naturalHeight);
     r.querySelector(".mapzoom__inner").style.setProperty("--fit", `${Math.max(40, (w / box.clientWidth) * 100)}%`);
   };
+  img.addEventListener("load", fit); // auch nach „Umdrehen“
   if (img.complete) fit();
-  else img.addEventListener("load", fit);
 }
 
 // Lupe an der Karte (`heatmapHtml`): eigener Klick-Abgriff, unabhängig von den `data-act`-Aktionen

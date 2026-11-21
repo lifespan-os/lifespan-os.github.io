@@ -1857,6 +1857,19 @@ body.mapzoom-open { overflow: hidden; }
 /* 1.78.0: Meine Gyms → Zutrittscode (gymsui.js) und Bilder vergrößern (mapzoom.js openImageZoom) */
 .gym-code__show { display: grid; justify-items: center; gap: 6px; width: 100%; min-height: 0; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--fg); font-weight: 400; }
 .gym-code__show img { display: block; max-width: 100%; max-height: 220px; object-fit: contain; }
+/* Vorder- und Rückseite (1.82.0): Antippen dreht die Karte um */
+.gym-code__card { display: block; width: 100%; min-height: 0; padding: 0; border: 0; background: none; perspective: 1200px; }
+.gym-code__inner { display: grid; transition: transform .5s ease; transform-style: preserve-3d; }
+.gym-code__card.is-flipped .gym-code__inner { transform: rotateY(180deg); }
+.gym-code__face { display: flex; grid-area: 1 / 1; align-items: center; justify-content: center; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.gym-code__face--back { transform: rotateY(180deg); }
+.gym-code__face img { display: block; max-width: 100%; max-height: 220px; object-fit: contain; }
+.gym-code__hint { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.gym-code__sides { display: grid; gap: 10px; margin-top: 12px; }
+.gym-code__side { padding-top: 8px; border-top: 1px solid var(--line); }
+.gym-code__side .row-actions { margin-top: 6px; }
+.mapzoom__btn.mapzoom__flip { width: auto; padding: 0 12px; font-size: .9rem; }
+@media (prefers-reduced-motion: reduce) { .gym-code__inner { transition: none; } }
 .mapzoom--image .mapzoom__scroll { background: var(--surface); }
 .mapzoom--image .mapzoom__inner { justify-content: center; align-items: center; min-height: 100%; }
 .mapzoom__img { display: block; flex: none; width: var(--fit, 100%); height: auto; user-select: none; -webkit-user-select: none; }

@@ -3,6 +3,7 @@
 // Logik in gymsdata.js; Änderungen gehen mit der Rückgabedatei an den PC.
 // Seit 1.78.0 je Gym ein Zutrittscode (Foto mit der Kamera oder Screenshot), antippen vergrößert ihn.
 // Seit 1.80.0 (wie PC 1.0.166): Ausschnitt wählen vor dem Speichern und Knopf „Zutrittscode“ im Training.
+// Seit 1.82.0 (wie PC 1.0.168): Vorder- und Rückseite, Antippen dreht die Karte um.
 
 import * as G from "./gymsdata.js";
 import { cropPhoto } from "./photocrop.js";
@@ -63,7 +64,7 @@ export function pickerGymNote() {
  */
 function gymCodeButtonHtml(gymId, selectId) {
   const g = G.gymList(X.S.catalog, X.S.gyms).find((x) => x.id === gymId);
-  if (!g?.access_code) return "";
+  if (!G.accessCodeImages(g).front) return "";
   return `<button class="btn sm gym-code-btn" data-act="gym-code-show" data-arg="${esc(selectId)}" aria-label="Zutrittscode von ${esc(g.name)} zeigen">Zutrittscode</button>`;
 }
 
@@ -261,36 +262,56 @@ function detailHtml(g, active) {
   </section>`;
 }
 
-/** Karte „Zutrittscode“ (1.78.0): Bild des Barcodes bzw. QR-Codes, antippen vergrößert. */
+/** Karte „Zutrittscode“ (1.78.0): Bild des Barcodes bzw. QR-Codes, antippen vergrößert.
+ *  Seit 1.82.0 Vorder- und Rückseite: angezeigt wird die Vorderseite, Antippen dreht die Karte um;
+ *  „Vergrößern“ zeigt die sichtbare Seite (mit „Umdrehen“). */
 function accessHtml(g) {
   const err = X.S.gymCodeError;
+  const { front, back } = G.accessCodeImages(g);
+  const flipped = Boolean(back && X.S.gymCodeFlip === g.id);
+  const sideHtml = (side, label, stored) => `<div class="gym-code__side">
+      <b>${label}</b>
+      <div class="row-actions">
+        <label class="btn sm" for="gym-code-cam-${side}">Kamera</label>
+        <input id="gym-code-cam-${side}" type="file" accept="image/*" capture="environment" data-gym="code" data-side="${side}" hidden>
+        <label class="btn sm" for="gym-code-pick-${side}">${stored ? "Anderes Bild" : "Bild wählen"}</label>
+        <input id="gym-code-pick-${side}" type="file" accept="image/*" data-gym="code" data-side="${side}" hidden>
+        ${stored ? `<button class="btn sm" data-act="gym-code-crop" data-arg="${esc(g.id)}" data-side="${side}">Ausschnitt</button>` : ""}
+        ${stored ? `<button class="btn sm ghost danger" data-act="gym-code-remove" data-arg="${esc(g.id)}" data-side="${side}">Entfernen</button>` : ""}
+      </div>
+    </div>`;
   return `<section class="card gym-code">
     <div class="wo-head"><h3>Zutrittscode</h3></div>
     ${
-      g.access_code
-        ? `<button class="gym-code__show" data-act="gym-code-zoom" data-arg="${esc(g.id)}" aria-label="Zutrittscode vergrößern"><img src="${esc(g.access_code)}" alt="Zutrittscode ${esc(g.name)}"><span class="muted small">Antippen zum Vergrößern</span></button>`
-        : `<p class="muted small">Noch kein Zutrittscode. Fotografiere den Barcode bzw. QR-Code deiner Mitgliedskarte oder wähle einen Screenshot aus der Studio-App.</p>`
+      front
+        ? `<button class="gym-code__card${flipped ? " is-flipped" : ""}" data-act="${back ? "gym-code-flip" : "gym-code-zoom"}" data-arg="${esc(g.id)}" aria-label="${back ? (flipped ? "Karte umdrehen – Vorderseite zeigen" : "Karte umdrehen – Rückseite zeigen") : "Zutrittscode vergrößern"}">
+            <span class="gym-code__inner">
+              <span class="gym-code__face"><img src="${esc(front)}" alt="Zutrittscode ${esc(g.name)}"></span>
+              ${back ? `<span class="gym-code__face gym-code__face--back"><img src="${esc(back)}" alt="Zutrittscode ${esc(g.name)}, Rückseite"></span>` : ""}
+            </span>
+          </button>
+          <div class="gym-code__hint"><span class="muted small">${back ? `${flipped ? "Rückseite" : "Vorderseite"} – antippen dreht die Karte um.` : "Antippen vergrößert den Code."}</span>
+            ${back ? `<button class="btn sm" data-act="gym-code-zoom" data-arg="${esc(g.id)}">Vergrößern</button>` : ""}</div>`
+        : `<p class="muted small">Noch kein Zutrittscode. Fotografiere deine Mitgliedskarte bzw. den Barcode oder QR-Code oder wähle einen Screenshot aus der Studio-App – auf Wunsch Vorder- und Rückseite.</p>`
     }
-    <div class="row-actions">
-      <label class="btn sm" for="gym-code-cam">Mit Kamera scannen</label>
-      <input id="gym-code-cam" type="file" accept="image/*" capture="environment" data-gym="code" hidden>
-      <label class="btn sm" for="gym-code-pick">Bild oder Screenshot wählen</label>
-      <input id="gym-code-pick" type="file" accept="image/*" data-gym="code" hidden>
-      ${g.access_code ? `<button class="btn sm" data-act="gym-code-crop" data-arg="${esc(g.id)}">Ausschnitt ändern</button>` : ""}
-      ${g.access_code ? `<button class="btn sm ghost danger" data-act="gym-code-remove" data-arg="${esc(g.id)}">Entfernen</button>` : ""}
+    <div class="gym-code__sides">
+      ${sideHtml("front", "Vorderseite", g.access_code)}
+      ${sideHtml("back", "Rückseite", g.access_code_back)}
     </div>
     ${err ? `<p class="warn small">${esc(err)}</p>` : ""}
-    <p class="muted small card-info">Vor dem Speichern wählst du den Ausschnitt – ganzes Bild, Barcode, Karte oder QR-Code. Das Bild wird verkleinert gespeichert (längste Seite 1.600 px) und geht mit „An den PC senden“ an den PC – nie in Studio-Pakete. Im Training öffnest du ihn mit „Zutrittscode“ neben der Gym-Auswahl. Am Eingang: Code vergrößern und die Bildschirmhelligkeit hochdrehen.</p>
+    <p class="muted small card-info">Vorderseite z. B. die Mitgliedskarte, Rückseite der Barcode – oder nur ein Bild. Vor dem Speichern wählst du den Ausschnitt (ganzes Bild, Barcode, Karte oder QR-Code). Die Bilder werden verkleinert gespeichert (längste Seite 1.600 px) und gehen mit „An den PC senden“ an den PC – nie in Studio-Pakete. Im Training öffnest du sie mit „Zutrittscode“ neben der Gym-Auswahl. Am Eingang: vergrößern und die Bildschirmhelligkeit hochdrehen.</p>
   </section>`;
 }
 
-/** Ausschnitt wählen (neue Datei oder der gespeicherte Code) und als Zutrittscode speichern. */
-async function cropAccessCode(gymId, source) {
+const SIDE_LABEL = { front: "Vorderseite", back: "Rückseite" };
+
+/** Ausschnitt wählen (neue Datei oder das gespeicherte Bild) und als Vorder- bzw. Rückseite speichern. */
+async function cropAccessCode(gymId, source, side = "front") {
   const S = X.S;
   let data;
   try {
     data = await cropPhoto(source, {
-      title: "Ausschnitt für den Zutrittscode",
+      title: `Ausschnitt für den Zutrittscode – ${SIDE_LABEL[side] ?? "Vorderseite"}`,
       frames: G.ACCESS_CODE_FRAMES,
       hint: "Am besten den Code mit etwas weißem Rand.",
       maxSide: G.ACCESS_CODE_MAX_SIDE,
@@ -305,20 +326,28 @@ async function cropAccessCode(gymId, source) {
     S.gymCodeError = "Das Bild ist zu groß – bitte einen engeren Ausschnitt wählen.";
     return X.rerender();
   }
-  await storeAccessCode(gymId, data);
+  await storeAccessCode(gymId, data, side);
 }
 
-async function storeAccessCode(gymId, dataUrl) {
+async function storeAccessCode(gymId, dataUrl, side = "front") {
   const S = X.S;
-  const r = G.setAccessCode(S.catalog, S.gyms, gymId, dataUrl, X.uuid);
+  const r = G.setAccessCode(S.catalog, S.gyms, gymId, dataUrl, X.uuid, new Date(), side);
   if (r.errors) {
     S.gymCodeError = Object.values(r.errors)[0];
     return X.rerender();
   }
   S.gymCodeError = null;
+  if (side === "back" && !dataUrl) S.gymCodeFlip = null;
   await persist();
-  X.toast(dataUrl ? "Zutrittscode gespeichert." : "Zutrittscode entfernt.");
+  X.toast(dataUrl ? `${SIDE_LABEL[side]} gespeichert.` : `${SIDE_LABEL[side]} entfernt.`);
   X.rerender();
+}
+
+/** Zutrittscode vergrößert zeigen (mit „Umdrehen“, wenn es eine Rückseite gibt). */
+function zoomAccessCode(g, startBack = false) {
+  const { front, back } = G.accessCodeImages(g);
+  if (front) openImageZoom(front, `Zutrittscode ${g.name}`, undefined, { back, startBack });
+  return Boolean(front);
 }
 
 function hitsHtml(hits) {
@@ -385,6 +414,8 @@ const toDraft = (g) => ({
   photo: g?.photo ?? null,
   // Zutrittscode (1.78.0): bleibt beim Bearbeiten erhalten, geändert wird er in seiner Karte
   access_code: g?.access_code ?? null,
+  // Rückseite (1.82.0): bleibt beim Bearbeiten ebenfalls erhalten
+  access_code_back: g?.access_code_back ?? null,
 });
 
 export const gymsActions = {
@@ -478,22 +509,33 @@ export const gymsActions = {
   },
   "gym-code-zoom": (el) => {
     const g = G.gymList(X.S.catalog, X.S.gyms).find((x) => x.id === el.dataset.arg);
-    if (g?.access_code) openImageZoom(g.access_code, `Zutrittscode ${g.name}`);
+    if (g) zoomAccessCode(g, X.S.gymCodeFlip === g.id);
+  },
+  "gym-code-flip": (el) => {
+    X.S.gymCodeFlip = X.S.gymCodeFlip === el.dataset.arg ? null : el.dataset.arg;
+    // ohne Neuzeichnen, damit die Drehung sichtbar abläuft
+    el.classList.toggle("is-flipped", X.S.gymCodeFlip === el.dataset.arg);
+    const on = X.S.gymCodeFlip === el.dataset.arg;
+    el.setAttribute("aria-label", on ? "Karte umdrehen – Vorderseite zeigen" : "Karte umdrehen – Rückseite zeigen");
+    const hint = el.parentElement?.querySelector(".gym-code__hint .muted");
+    if (hint) hint.textContent = `${on ? "Rückseite" : "Vorderseite"} – antippen dreht die Karte um.`;
   },
   "gym-code-crop": async (el) => {
     const g = G.gymList(X.S.catalog, X.S.gyms).find((x) => x.id === el.dataset.arg);
-    if (g?.access_code) await cropAccessCode(g.id, g.access_code);
+    const side = el.dataset.side === "back" ? "back" : "front";
+    const img = side === "back" ? g?.access_code_back : g?.access_code;
+    if (img) await cropAccessCode(g.id, img, side);
   },
   // Training (1.80.0): Code des in der Auswahl gewählten Gyms zeigen
   "gym-code-show": (el) => {
     const id = document.getElementById(el.dataset.arg)?.value ?? "";
     const g = G.gymList(X.S.catalog, X.S.gyms).find((x) => x.id === id);
-    if (g?.access_code) openImageZoom(g.access_code, `Zutrittscode ${g.name}`);
-    else X.toast(g ? `Für „${g.name}“ ist kein Zutrittscode hinterlegt (Training → Meine Gyms).` : "Kein Gym gewählt.", true);
+    if (g && zoomAccessCode(g)) return;
+    X.toast(g ? `Für „${g.name}“ ist kein Zutrittscode hinterlegt (Training → Meine Gyms).` : "Kein Gym gewählt.", true);
   },
   "gym-code-remove": async (el) => {
     if (!X.confirmTwice(el, "Nochmal tippen: entfernen")) return;
-    await storeAccessCode(el.dataset.arg, null);
+    await storeAccessCode(el.dataset.arg, null, el.dataset.side === "back" ? "back" : "front");
   },
   "gym-all": () => {
     X.S.gymAll = !X.S.gymAll;
@@ -552,7 +594,7 @@ export function gymsChange(el) {
       return true;
     }
     S.gymCodeError = null;
-    void cropAccessCode(gymId, file);
+    void cropAccessCode(gymId, file, el.dataset.side === "back" ? "back" : "front");
     return true;
   }
   if (kind === "photo") {

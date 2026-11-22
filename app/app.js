@@ -2,6 +2,7 @@
 // Oberfläche seit 1.74.0 auf Module verteilt (appbase, sheets, navshell, workoutview, transferview, appactions …).
 import "./sheets.js";
 import { bodyParityChange } from "./bodyparity.js";
+import { goalsParityChange } from "./goalsparity.js";
 import * as PR from "./paritydata.js";
 import { parityChangeB as parityChange } from "./parity.js";
 import "./navshell.js";
@@ -269,6 +270,7 @@ app.addEventListener("change", async (ev) => {
   if (overviewChange(el)) return;
   if (parityChange(el)) return;
   if (bodyParityChange(el)) return;
+  if (goalsParityChange(el)) return;
   if (logsChange(el)) return;
   if (todoChange(el)) return;
   if (icoachChange(el)) return;

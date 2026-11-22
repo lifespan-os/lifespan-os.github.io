@@ -14,7 +14,8 @@ import * as O from "./pcoverview.js";
 import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
 import { weeklyReportsCard } from "./weeklyreports.js";
-import { dataQualityCard, goalAdviceCard, targetGoalsCard } from "./extras.js";
+import { dataQualityCard, goalAdviceCard } from "./extras.js";
+import { targetGoalsCard } from "./goalsparity.js";
 
 let X = null; // { S, esc, header, rerender }
 
@@ -288,7 +289,7 @@ export function viewInsights() {
   const arranged = arrangeCards(db, D.INSIGHTS_LAYOUT_KEY, cards);
   const layout = D.parseLayout(db.settings.get(D.INSIGHTS_LAYOUT_KEY) ?? null);
   return `${X.header("Insights")}<main class="wrap">
-    <p class="muted small">Wochenrückblick und vorsichtige Beobachtungen – ausschließlich aus deinen tatsächlich erfassten Daten. Die Auswertungen ersetzen keine ärztliche Beratung. Empfehlungen und Bewertungen gibt es nur in „Empfehlungen zu deinen Hauptzielen“ – mit deiner Einwilligung am PC, aus festen Regeln mit Fundstelle in der Masterclass.</p>
+    <p class="muted small">Wochenrückblick und vorsichtige Beobachtungen – ausschließlich aus deinen tatsächlich erfassten Daten. Die Auswertungen ersetzen keine ärztliche Beratung. Empfehlungen und Bewertungen gibt es nur in „Empfehlungen zu deinen Hauptzielen“ – mit deiner Einwilligung (Settings → Hauptziele), aus festen Regeln mit Fundstelle in der Masterclass.</p>
     <section class="card day-nav">
       <button class="btn sm" data-act="ins-week" data-arg="-7" aria-label="Vorherige Woche">‹</button>
       <div class="day-nav__date"><strong>KW ${kw}</strong><span class="muted small">${esc(D.trends.formatRange(week, weekEnd))}</span>

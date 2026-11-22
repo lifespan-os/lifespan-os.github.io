@@ -4,10 +4,11 @@
 //   Messmethoden, Tageswechsel, Seiten anpassen, Secret Protocols
 // - nur für dieses Handy (devprefs.js): Darstellung, Erinnerungen, Schnellerfassung, Import/Export
 // - Konten am Handy (anlegen, umbenennen, wechseln, löschen) stehen in app.js (`accountsCard`).
-// Tagesziele haben eine eigene Ansicht (goalsui.js), Wochenziele zeigt die App wie vom PC.
+// Tagesziele haben eine eigene Ansicht (goalsui.js); Wochen- und Hauptziele: goalsparity.js (1.91.0).
 
 import * as PS from "./pcsettings.js";
 import { cardioSettingsCard } from "./parity.js";
+import { mainGoalsCard, weekGoalsCard } from "./goalsparity.js";
 import * as DP from "./devprefs.js";
 import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
@@ -265,20 +266,6 @@ function transferCard(db) {
   </section>`;
 }
 
-/** Wochenziele: wie am PC eingetragen (nur ansehen). */
-function weekGoalsCard(db) {
-  const wg = D.dashboard.parseWeekGoals(setting(db, D.dashboard.WEEK_GOALS_KEY));
-  const rows = [
-    ["Einheiten je Woche", wg.trainings, ""],
-    ["Cardio je Woche", wg.cardioMin, " min"],
-    ["Tage mit Proteinziel", wg.proteinDays, ""],
-    ["Ø Schlaf je Nacht", wg.sleepMin === null ? null : D.formatDuration(wg.sleepMin), ""],
-  ]
-    .map(([l, v, u]) => `<li>${esc(l)}: <strong>${v === null ? "nicht eingetragen" : esc(`${v}${u}`)}</strong></li>`)
-    .join("");
-  return `<section class="card"><h3>Wochenziele</h3><ul class="plain-list small">${rows}</ul><p class="muted small">Ändern am PC unter Settings → Wochenziele.</p></section>`;
-}
-
 /** Ganze Settings-Seite. */
 export function viewSettings() {
   const S = X.S;
@@ -298,6 +285,7 @@ export function viewSettings() {
       <button class="btn block" data-act="goals-open">Tagesziele festlegen</button>
     </section>
     ${db ? weekGoalsCard(db) : ""}
+    ${db ? mainGoalsCard(db) : ""}
     ${db ? cardioSettingsCard(db) : ""}
     ${db ? mealsCard(db) : ""}
     ${db ? methodsCard(db) : ""}

@@ -30,6 +30,10 @@ export const SYNC_KEYS = [
   "ui.protocols",
   // Settings → Cardio in der Körperkarte (1.89.0)
   "ui.cardio_muscles",
+  // Settings → Wochenziele, Hauptziele und Einwilligung (1.91.0)
+  "ui.week_goals",
+  "ui.main_goals",
+  "ui.ai_consent",
 ];
 export const DEFAULT_MEALS = ["breakfast", "lunch", "snack", "dinner"];
 export const MEAL_LABELS = { breakfast: "Frühstück", lunch: "Mittagessen", snack: "Snacks", dinner: "Abendessen" };
@@ -149,6 +153,10 @@ export function settingLabel(key) {
   if (key === "secret_protocols") return "Secret Protocols";
   if (key === "ui.day_start") return "Tageswechsel";
   if (key === "ui.protocols") return "Protocols (Fortschritt)";
+  if (key === "ui.cardio_muscles") return "Cardio in der Körperkarte";
+  if (key === "ui.week_goals") return "Wochenziele";
+  if (key === "ui.main_goals") return "Hauptziele";
+  if (key === "ui.ai_consent") return "Einwilligung (Empfehlungen)";
   return LAYOUT_NAMES[key] ? `Seite anpassen: ${LAYOUT_NAMES[key]}` : key;
 }
 

@@ -316,7 +316,7 @@ export function goalAdviceCard(db, card, t = today()) {
   const link = (s) =>
     `<button class="linkbtn small" data-act="icoach-ask" data-arg="${esc(`masterclass|${s.question}`)}">Masterclass: „${esc(s.title)}“ · ${esc(D.describePages ? D.describePages(s.pages) : `S. ${s.pages.join(", ")}`)}</button>`;
   if (!goals.length) {
-    return card("goal-advice", title, "", `<p class="muted">Noch keine Hauptziele gewählt – am PC unter Settings → Hauptziele (z. B. Fettabbau, Muskelaufbau).</p>`, { wide: true });
+    return card("goal-advice", title, "", `<p class="muted">Noch keine Hauptziele gewählt – unter Settings → Hauptziele (z. B. Fettabbau, Muskelaufbau).</p>`, { wide: true });
   }
   const labels = goals.map((g) => G.MAIN_GOAL_LABELS[g]).join(", ");
   if (!consent) {
@@ -324,7 +324,7 @@ export function goalAdviceCard(db, card, t = today()) {
       "goal-advice",
       title,
       labels,
-      `<p class="muted small">Empfehlungen und Bewertungen deiner Werte gibt es erst mit Einwilligung am PC unter Settings → Hauptziele. Bis dahin die passenden Stellen aus der Masterclass:</p>
+      `<p class="muted small">Empfehlungen und Bewertungen deiner Werte gibt es erst mit Einwilligung unter Settings → Hauptziele. Bis dahin die passenden Stellen aus der Masterclass:</p>
       ${G.goalReading(goals)
         .map((r) => `<h4 class="logs-sub">${esc(G.MAIN_GOAL_LABELS[r.goal])}</h4><ul class="plain-list">${r.sources.map((s) => `<li>${link(s)}</li>`).join("")}</ul>`)
         .join("")}`,
@@ -360,60 +360,7 @@ export function goalAdviceCard(db, card, t = today()) {
   );
 }
 
-// ------------------------------------------------------------------ Insights: Ziele
-
-function goalRows(db) {
-  return (db.pc.goal ?? [])
-    .filter((g) => !g.archived)
-    .map((g) => {
-      let milestones = [];
-      try {
-        milestones = JSON.parse(g.milestones ?? "[]");
-      } catch {
-        milestones = [];
-      }
-      return {
-        id: g.id,
-        title: g.title,
-        kind: g.kind,
-        exerciseId: g.exercise_id ?? null,
-        metricId: g.metric_id ?? null,
-        startDate: g.start_date,
-        startValue: g.start_value ?? null,
-        targetValue: g.target_value,
-        targetDate: g.target_date ?? null,
-        milestones,
-      };
-    });
-}
-
-export function targetGoalsCard(db, card, t = today()) {
-  const goals = goalRows(db);
-  if (!goals.length) return card("goals", "Ziele", "", `<p class="muted">Noch keine Ziele. Ziele legst du am PC unter Insights → Ziele an (z. B. „Kniebeuge 140 kg“).</p>`, { wide: true });
-  const T = D.targetGoals;
-  const log = O.setLog(db);
-  const measurements = O.measurementsBetween(db, null, "1900-01-01", t);
-  const metrics = new Map((X.S.catalog?.body?.metrics ?? []).map((m) => [m.id, m]));
-  return card(
-    "goals",
-    "Ziele",
-    `${goals.length}`,
-    goals
-      .map((g) => {
-        const series = g.kind === "body_metric" ? T.metricSeries(measurements, g.metricId) : T.exerciseSeries(log, g.exerciseId, g.kind);
-        const unit = g.kind === "body_metric" ? metrics.get(g.metricId)?.unit ?? "" : "kg";
-        const dec = g.kind === "body_metric" ? metrics.get(g.metricId)?.decimals ?? 1 : 1;
-        const p = T.goalProgress(g, series, t, dec);
-        const pct = p.share === null ? null : Math.round(p.share * 100);
-        const cur = p.current ? `${F(p.current.value, dec)} ${unit}` : "–";
-        return `<div class="goal-row"><div class="goal-row__head"><strong>${esc(g.title)}</strong><span class="muted small">${pct === null ? "noch kein Wert" : `${pct} %`}</span></div>
-          <div class="goal-bar"><span class="goal-bar__fill" style="width:${pct ?? 0}%;background:var(--orange)"></span></div>
-          <p class="muted small">Aktuell ${esc(cur)} · Ziel ${esc(F(g.targetValue, dec))} ${esc(unit)}${p.reachedOn ? ` · erreicht am ${esc(D.formatDate(p.reachedOn))}` : ""}${p.perWeekNeeded ? ` · nötig ${esc(F(p.perWeekNeeded, 2))} ${esc(unit)} pro Woche` : ""}${g.targetDate ? ` · bis ${esc(D.formatDate(g.targetDate))}` : ""}</p></div>`;
-      })
-      .join(""),
-    { wide: true },
-  );
-}
+// Insights → Ziele: seit 1.91.0 mit Bearbeiten in goalsparity.js
 
 // ------------------------------------------------------------------ Insights: Datenqualität
 

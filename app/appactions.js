@@ -1,6 +1,7 @@
 // LIFESPAN OS Mobil – Aktionen der Knöpfe (`data-act`) der Handy-App (aus app.js, 1.74.0).
 import * as C from "./core.js";
 import { bodyParityActions } from "./bodyparity.js";
+import { goalsParityActions } from "./goalsparity.js";
 import * as store from "./store.js";
 import { foodActions } from "./food.js";
 import { bodyActions, bodyOpenEntry } from "./body.js";
@@ -59,6 +60,7 @@ export const actions = {
   ...overviewActions,
   ...parityActions,
   ...bodyParityActions,
+  ...goalsParityActions,
   ...logsActions,
   ...insightsActions,
   ...weeklyReportsActions,

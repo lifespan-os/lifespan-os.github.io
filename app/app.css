@@ -1963,3 +1963,28 @@ html[data-theme="dark"] .muscle-map__hatch-line { stroke: #e8eef6; }
 .bp-metrics li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
 .bp-metrics li.is-archived { opacity: .6; }
 .bp-metrics .row-actions { gap: 12px; }
+
+/* Ziele, Wochen- und Hauptziele bearbeiten (1.91.0) */
+.tg-form { margin: 0 0 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--c-sunken); }
+.tg-form textarea { width: 100%; }
+.tg-list { margin-top: 10px; }
+.tg-goal { padding: 10px 0; border-top: 1px solid var(--line); }
+.tg-goal:first-child { border-top: 0; }
+.tg-goal.is-archived { opacity: .65; }
+.tg-goal p { margin: 6px 0 0; }
+.tg-track { position: relative; height: 10px; margin-top: 8px; border-radius: 999px; background: var(--c-sunken); border: 1px solid var(--line); }
+.tg-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--orange); }
+.tg-mark { position: absolute; top: -3px; width: 3px; height: 14px; margin-left: -1px; border-radius: 2px; background: var(--muted); }
+.tg-mark.is-reached { background: var(--orange-text); }
+.tg-milestones { list-style: none; margin: 6px 0 0; padding: 0; }
+.tg-milestones li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 2px 0; color: var(--muted); }
+.tg-milestones li.is-reached { color: inherit; }
+.mg-list { display: grid; gap: 8px; margin: 8px 0 12px; }
+.mg-item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+.mg-item input { margin-top: 3px; }
+.mg-item > span { display: grid; gap: 2px; }
+.tg-form .grid2, #set-week-goals .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tg-form .field, #set-week-goals .field { min-width: 0; }
+.tg-form input, .tg-form select, #set-week-goals input { width: 100%; min-width: 0; box-sizing: border-box; }
+.tg-goal .goal-row__head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+.tg-goal .goal-row__head .linkbtn { white-space: nowrap; }

@@ -223,7 +223,7 @@ function dashboardCards(data, w, isToday) {
           )
         : ""
     }
-    ${note("Alle Wochenziele bearbeiten: Settings → Wochenziele (am PC).")}`,
+    ${note("Alle Wochenziele bearbeiten: Settings → Wochenziele.")}`,
     { area: "training" },
   );
 

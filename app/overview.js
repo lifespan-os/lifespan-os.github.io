@@ -11,6 +11,7 @@ import { barTrendSvg, COLOR, dayChartHtml, esc, trendSvg } from "./pcview.js";
 import { REGIONS } from "./musclemap/regions.js";
 import { stepsDayHtml } from "./heart.js";
 import { overviewCaffeine } from "./icoach.js";
+import * as CM from "./cardiomap.js";
 
 let X = null; // { S, buildDb, rerender, today }
 
@@ -132,6 +133,7 @@ export function overviewData(db, catalog, date) {
       sex: db.profile?.sex === "female" || db.profile?.sex === "male" ? db.profile.sex : null,
       focus: focusIndex(catalog),
       mapSettings: D.parseMuscleMapSettings(db.settings.get(D.MUSCLE_MAP_SETTINGS_KEY) ?? null),
+      db,
     },
   };
 }
@@ -446,8 +448,11 @@ function storedMode(fallback) {
 const setsText = (n) => `${F(n, 1)} ${n === 1 ? "Satz" : "Sätze"}`;
 
 /** Muskel-Körperkarte (Vorder- und Rückansicht, Legende) wie `MuscleHeatmap.tsx`. */
-export function heatmapHtml({ levels, describe, sex, active = null, act, legend }) {
+export function heatmapHtml({ levels, describe, sex, active = null, act, legend, cardioShare = null }) {
   const model = REGIONS[sex] ?? REGIONS.male;
+  // Cardio-Anteil schraffiert (1.85.0, wie MuscleHeatmap.tsx am PC)
+  const hatch = CM.hasHatch(cardioShare);
+  const hatchId = `hatch-${act}`;
   const views = ["front", "back"]
     .map((v) => {
       const vd = model.views[v];
@@ -461,13 +466,15 @@ export function heatmapHtml({ levels, describe, sex, active = null, act, legend 
             const fill = level > 0 ? HEAT[level - 1] : COLOR.training;
             return `<path d="${r.d}" fill="${fill}" fill-opacity="${level > 0 ? (on ? 1 : 0.85) : 0}" stroke="${on ? COLOR.training : "none"}" stroke-width="3" data-act="${act}" data-arg="${esc(r.muscle)}"><title>${esc(describe(r.muscle))}</title></path>`;
           })
-          .join("")}</g></svg>`;
+          .join("")}</g>${hatch ? CM.hatchLayer(vd.regions, levels, cardioShare, `${hatchId}-${v}`) : ""}</svg>`;
     })
     .join("");
   // 1.73.0: angetippter Muskel ohne Belastung nur als Umriss (blaue Füllung sah wie ein Wert aus); Lupe öffnet `mapzoom.js`
   return `<div class="muscle-map"><div class="muscle-map__views">${views}<button type="button" class="muscle-map__zoom" data-map-zoom aria-label="Karte vergrößern" title="Vergrößern"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/><path d="M11 8v6M8 11h6"/></svg></button></div>
       <p class="muscle-map__hover" aria-live="polite">${esc(active ? describe(active) : "Muskel antippen")}</p>
-      <ul class="muscle-map__legend" aria-label="Legende">${legend.map((l, i) => `<li><span class="muscle-map__swatch" style="background:${HEAT[i]}"></span>${esc(l)}</li>`).join("")}</ul></div>`;
+      <ul class="muscle-map__legend" aria-label="Legende">${legend.map((l, i) => `<li><span class="muscle-map__swatch" style="background:${HEAT[i]}"></span>${esc(l)}</li>`).join("")}${
+        hatch ? `<li><span class="muscle-map__swatch muscle-map__swatch--hatch"></span>Anteil aus Cardio</li>` : ""
+      }</ul></div>`;
 }
 
 function bodyMapCard(w, today) {
@@ -479,9 +486,12 @@ function bodyMapCard(w, today) {
   const mode = storedMode(w.mapSettings.mode);
   const targets = w.mapSettings.targets;
   const data = D.muscleMapForRange(w.log, w.exercises, w.machines, from, to, w.focus);
-  const levels = D.muscleLevels(data.sets, mode, targets);
+  // Cardio als Satz-Äquivalente (1.85.0, wie PC 1.0.172)
+  const cardio = CM.withCardio(w.db, w.log, data.sets, (s) => s.date >= from && s.date <= to, today);
+  const values = cardio.values;
+  const levels = D.muscleLevels(values, mode, targets);
   const describe = (m) => {
-    let t = `${D.MUSCLE_LABELS[m]} · ${setsText(data.sets[m])}`;
+    let t = `${D.MUSCLE_LABELS[m]} · ${setsText(values[m])}${CM.cardioPart(cardio, m)}`;
     if (levels[m] > 0) t += ` · ${D.LEVEL_NAMES[levels[m] - 1]}`;
     if (mode === "individual") t += ` · Aufbau ab ${F(D.targetFor(m, "individual", targets).build, 1)}`;
     return t;
@@ -510,12 +520,15 @@ function bodyMapCard(w, today) {
       Object.entries(D.SCALE_MODE_LABELS),
       mode,
       "ov-body-mode",
-    )}</div>
-    ${data.totalSets === 0 ? `<p class="muted small">Im Zeitraum keine Arbeitssätze von Kraftübungen.</p>` : ""}
-    ${heatmapHtml({ levels, describe, sex, active, act: "ov-muscle", legend })}
+    )}${cardio.settings ? CM.cardioSwitchHtml(cardio.settings.show, "ov-body-cardio") : ""}</div>
+    ${data.totalSets === 0 && !cardio.on ? `<p class="muted small">Im Zeitraum keine Arbeitssätze von Kraftübungen.</p>` : ""}
+    ${heatmapHtml({ levels, describe, sex, active, act: "ov-muscle", legend, cardioShare: cardio.share })}
+    ${cardio.settings?.show ? CM.cardioSummaryHtml(cardio.load, cardio.settings) : ""}
     ${note(
       esc(
-        `Arbeitssätze von Kraftübungen (Montag–Sonntag). Mit Muskelfokus (bei Maschine bzw. Übung in Prozent eingetragen) zählt jeder Muskelteil mit seinem Anteil; sonst Hauptmuskel = erste Muskelgruppe der Übung (bzw. der Maschine), weitere Muskelgruppen zählen als halber Satz.${
+        `Arbeitssätze von Kraftübungen (Montag–Sonntag)${
+          cardio.settings?.show ? ", dazu Cardio als Satz-Äquivalente (Minuten × Intensität, schraffiert; Einstellungen am PC unter Settings → Cardio in der Körperkarte)" : ""
+        }. Mit Muskelfokus (bei Maschine bzw. Übung in Prozent eingetragen) zählt jeder Muskelteil mit seinem Anteil; sonst Hauptmuskel = erste Muskelgruppe der Übung (bzw. der Maschine), weitere Muskelgruppen zählen als halber Satz.${
           mode === "standard" ? " Standard: eine Skala für alle Muskeln." : mode === "individual" ? " Individuell: Stufen nach deinen Zielwerten je Muskel (am PC einstellbar)." : " Relativ: Anteil am meisttrainierten Muskel."
         }${data.setsWithoutMuscle > 0 ? ` ${data.setsWithoutMuscle} ${data.setsWithoutMuscle === 1 ? "Satz" : "Sätze"} ohne zuordenbare Muskelgruppe.` : ""}${
           data.unmapped.length > 0 ? ` Nicht zugeordnet: ${data.unmapped.map((u) => u.term).join(", ")}.` : ""
@@ -939,6 +952,10 @@ export const overviewActions = {
     } catch {
       // ohne Speicher gilt die Wahl bis zum Schließen
     }
+    X.rerender();
+  },
+  "ov-body-cardio": (el) => {
+    CM.setCardioShow(el.dataset.arg === "1");
     X.rerender();
   },
   "ov-muscle": (el) => {

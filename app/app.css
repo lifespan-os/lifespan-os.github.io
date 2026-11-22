@@ -1904,3 +1904,14 @@ body.mapzoom-open { overflow: hidden; }
 .dozen-row__name { display: grid; min-width: 0; }
 .dozen-row__count { display: flex; align-items: center; gap: 6px; flex: none; font-variant-numeric: tabular-nums; }
 .dozen-row__count .btn.sm { min-width: 40px; min-height: 40px; padding: 0; }
+
+/* 1.85.0: Cardio in der Muskel-Körperkarte (wie PC 1.0.172) */
+.muscle-map__hatch { pointer-events: none; }
+.muscle-map__hatch-line { stroke: #0b2a4a; stroke-width: 3; }
+.muscle-map__swatch--hatch { background: repeating-linear-gradient(45deg, #0b2a4a 0, #0b2a4a 1.5px, var(--surface) 1.5px, var(--surface) 4px); }
+.cardio-map { padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+.cardio-map__values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; margin: 0; }
+.cardio-map__values dt { font-size: .76rem; color: var(--muted); }
+.cardio-map__values dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; font-size: .88rem; }
+.cardio-map__notes { margin: 8px 0 0; font-size: .76rem; color: var(--muted); }
+html[data-theme="dark"] .muscle-map__hatch-line { stroke: #e8eef6; }

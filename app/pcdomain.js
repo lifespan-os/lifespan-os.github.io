@@ -9272,23 +9272,6 @@ function shiftMonth(month, n2) {
   const mm = (m % 12 + 12) % 12;
   return `${String(year).padStart(4, "0")}-${String(mm + 1).padStart(2, "0")}`;
 }
-var MONTHS2 = [
-  "Januar",
-  "Februar",
-  "M\xE4rz",
-  "April",
-  "Mai",
-  "Juni",
-  "Juli",
-  "August",
-  "September",
-  "Oktober",
-  "November",
-  "Dezember"
-];
-function monthLabel(month) {
-  return `${MONTHS2[Number(month.slice(5, 7)) - 1] ?? ""} ${month.slice(0, 4)}`;
-}
 function repeatDates(start, end, repeat) {
   if (end < start) return [];
   const out = [];
@@ -10688,8 +10671,8 @@ function levelSeries(events, measurand, nowMs, rangeDays) {
   const stepMs = stepHoursFor(rangeDays) * 36e5;
   const raw = [];
   for (let t = fromMs; t <= toMs; t += stepMs) raw.push({ atMs: t, value: levelAt2(own, t) });
-  const inRange6 = own.filter((e) => e.atMs >= fromMs && e.atMs <= toMs);
-  const peakCandidates = inRange6.map((e) => {
+  const inRange7 = own.filter((e) => e.atMs >= fromMs && e.atMs <= toMs);
+  const peakCandidates = inRange7.map((e) => {
     const s = substanceById(e.substanceId);
     return s ? levelAt2(own, e.atMs + s.tmaxDays * MS_PER_DAY) : 0;
   });
@@ -10702,7 +10685,7 @@ function levelSeries(events, measurand, nowMs, rangeDays) {
     toMs,
     nowMs,
     points: raw.map((p) => ({ atMs: p.atMs, percent: pct(p.value) })),
-    doses: inRange6.map((event) => ({ event, percent: pct(levelAt2(own, event.atMs)) })),
+    doses: inRange7.map((event) => ({ event, percent: pct(levelAt2(own, event.atMs)) })),
     nowPercent: own.length > 0 && peak > 0 ? pct(nowValue) : null,
     peak
   };
@@ -13088,9 +13071,9 @@ function labRows(draws, analytes, from, to) {
   );
 }
 function hrtRows(entries, from, to) {
-  const inRange6 = entries.filter((e) => e.date >= from && e.date <= to);
+  const inRange7 = entries.filter((e) => e.date >= from && e.date <= to);
   const groups = /* @__PURE__ */ new Map();
-  for (const e of inRange6) {
+  for (const e of inRange7) {
     const k = `${e.hormone.trim().toLowerCase()}|${e.unit}`;
     groups.set(k, [...groups.get(k) ?? [], e]);
   }
@@ -13115,8 +13098,8 @@ function hrtRows(entries, from, to) {
 }
 function measuredRows(w, from, to) {
   if (!w) return [];
-  const inRange6 = (list2) => list2.filter((x) => x.date >= from && x.date <= to);
-  const pick2 = (list2, f) => inRange6(list2).flatMap((x) => {
+  const inRange7 = (list2) => list2.filter((x) => x.date >= from && x.date <= to);
+  const pick2 = (list2, f) => inRange7(list2).flatMap((x) => {
     const v = f(x);
     return v === null || !Number.isFinite(v) ? [] : [{ date: x.date, value: v }];
   });
@@ -15430,6 +15413,7 @@ function fileStem(name) {
 // src/domain/schedule.ts
 var schedule_exports = {};
 __export(schedule_exports, {
+  MONTH_VIEW_WEEKS: () => MONTH_VIEW_WEEKS,
   SCHEDULE_KIND_LABELS: () => SCHEDULE_KIND_LABELS,
   buildSchedule: () => buildSchedule,
   dayLabel: () => dayLabel,
@@ -15438,7 +15422,8 @@ __export(schedule_exports, {
   periodRange: () => periodRange,
   plannedTrainings: () => plannedTrainings,
   scheduleCounts: () => scheduleCounts,
-  shiftPeriod: () => shiftPeriod
+  shiftPeriod: () => shiftPeriod,
+  splitWeeks: () => splitWeeks
 });
 
 // src/domain/appointments.ts
@@ -15510,14 +15495,11 @@ function addDays2(date, days3) {
   const t = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + days3));
   return `${t.getUTCFullYear()}-${pad2(t.getUTCMonth() + 1)}-${pad2(t.getUTCDate())}`;
 }
+var MONTH_VIEW_WEEKS = 4;
 function periodRange(date, mode) {
-  if (mode === "week") {
-    const from = addDays2(date, 1 - isoWeekday(date));
-    return { from, to: addDays2(from, 6) };
-  }
-  const y = Number(date.slice(0, 4));
-  const m = Number(date.slice(5, 7));
-  return { from: `${date.slice(0, 7)}-01`, to: `${date.slice(0, 7)}-${pad2(daysInMonth(y, m))}` };
+  const from = addDays2(date, 1 - isoWeekday(date));
+  const weeks = mode === "week" ? 1 : MONTH_VIEW_WEEKS;
+  return { from, to: addDays2(from, 7 * weeks - 1) };
 }
 function periodDays(date, mode) {
   const { from, to } = periodRange(date, mode);
@@ -15526,18 +15508,24 @@ function periodDays(date, mode) {
   return out;
 }
 function shiftPeriod(date, mode, step) {
-  if (mode === "week") return addDays2(periodRange(date, "week").from, 7 * step);
-  const y = Number(date.slice(0, 4));
-  const m = Number(date.slice(5, 7)) - 1 + step;
-  const year = y + Math.floor(m / 12);
-  const month = (m % 12 + 12) % 12;
-  return `${year}-${pad2(month + 1)}-01`;
+  const weeks = mode === "week" ? 1 : MONTH_VIEW_WEEKS;
+  return addDays2(periodRange(date, "week").from, 7 * weeks * step);
 }
+var shortDate = (d) => `${d.slice(8, 10)}.${d.slice(5, 7)}.`;
 function periodLabel(date, mode) {
-  if (mode === "month") return monthLabel(date.slice(0, 7));
-  const { from, to } = periodRange(date, "week");
-  const short = (d) => `${d.slice(8, 10)}.${d.slice(5, 7)}.`;
-  return `${short(from)}\u2013${short(to)}${to.slice(0, 4)}`;
+  const { from, to } = periodRange(date, mode);
+  return `${shortDate(from)}\u2013${shortDate(to)}${to.slice(0, 4)}`;
+}
+function splitWeeks(days3) {
+  const out = [];
+  for (let i = 0; i < days3.length; i += 7) {
+    const part = days3.slice(i, i + 7);
+    const first = part[0];
+    const last = part[part.length - 1];
+    if (!first || !last) continue;
+    out.push({ label: `${shortDate(first.date)}\u2013${shortDate(last.date)}`, days: part });
+  }
+  return out;
 }
 function dayLabel(date) {
   return `${WEEKDAY_SHORT[isoWeekday(date)] ?? ""}, ${date.slice(8, 10)}.${date.slice(5, 7)}.`;
@@ -15579,10 +15567,10 @@ var STATUS_TITLE = {
   sick: "Krank"
 };
 function buildSchedule(input) {
-  const inRange6 = new Set(input.days);
+  const inRange7 = new Set(input.days);
   const items = [];
   for (const s of input.dayStatus) {
-    if (!inRange6.has(s.date)) continue;
+    if (!inRange7.has(s.date)) continue;
     items.push({
       key: `status:${s.date}`,
       date: s.date,
@@ -15596,7 +15584,7 @@ function buildSchedule(input) {
   }
   items.push(...plannedTrainings(input.plans, input.days));
   for (const w of input.workouts) {
-    if (!inRange6.has(w.date)) continue;
+    if (!inRange7.has(w.date)) continue;
     items.push({
       key: `workout:${w.id}`,
       date: w.date,
@@ -15608,7 +15596,7 @@ function buildSchedule(input) {
     });
   }
   for (const due of input.hrtDue) {
-    if (!inRange6.has(due.next)) continue;
+    if (!inRange7.has(due.next)) continue;
     items.push({
       key: `hrt:${due.hormone}:${due.next}`,
       date: due.next,
@@ -15620,7 +15608,7 @@ function buildSchedule(input) {
     });
   }
   for (const a of input.appointments ?? []) {
-    if (inRange6.has(a.date)) {
+    if (inRange7.has(a.date)) {
       items.push({
         key: `appointment:${a.id}`,
         date: a.date,
@@ -15632,7 +15620,7 @@ function buildSchedule(input) {
       });
     }
     const remind = reminderStart(a);
-    if (remind && remind !== a.date && !a.done && inRange6.has(remind)) {
+    if (remind && remind !== a.date && !a.done && inRange7.has(remind)) {
       items.push({
         key: `appointment-reminder:${a.id}`,
         date: remind,
@@ -15645,7 +15633,7 @@ function buildSchedule(input) {
     }
   }
   for (const t of input.todos) {
-    if (!inRange6.has(t.date)) continue;
+    if (!inRange7.has(t.date)) continue;
     items.push({
       key: `todo:${t.id}`,
       date: t.date,
@@ -16656,9 +16644,10 @@ function lastCompletedWeeks(today, count) {
     return { from, to: shiftDays(from, 6) };
   });
 }
-function underTargetMuscles(log, exercises, machines, targets, today, focus = NO_FOCUS, weeksCount = UNDER_TARGET_WEEKS) {
+function underTargetMuscles(log, exercises, machines, targets, today, focus = NO_FOCUS, weeksCount = UNDER_TARGET_WEEKS, extraSets) {
   const weeks = lastCompletedWeeks(today, weeksCount);
   const maps = weeks.map((w) => muscleMapForRange(log, exercises, machines, w.from, w.to, focus));
+  const extra = weeks.map((w) => extraSets?.(w) ?? null);
   const weeksWithTraining = maps.filter((m) => m.totalSets > 0).length;
   if (weeksWithTraining < weeksCount) return { kind: "insufficient", weeksWithTraining, weeks };
   const groupLabel = /* @__PURE__ */ new Map();
@@ -16668,7 +16657,7 @@ function underTargetMuscles(log, exercises, machines, targets, today, focus = NO
   for (const id3 of MUSCLE_IDS) {
     const target = targets[id3]?.build ?? 0;
     if (!(target > 0)) continue;
-    const weekly = maps.map((m) => Math.round(m.sets[id3] * 10) / 10);
+    const weekly = maps.map((m, i) => Math.round((m.sets[id3] + (extra[i]?.[id3] ?? 0)) * 10) / 10);
     if (!weekly.every((v) => v < target)) continue;
     const average = weekly.reduce((a, b) => a + b, 0) / weekly.length;
     const entry = {
@@ -17048,6 +17037,566 @@ function heartInput(draft) {
 function describeMaxFormula(p) {
   if (!p || p.age === null || p.formula === null) return null;
   return p.formula === "gulati" ? `Gulati (Frauen): 206 \u2212 0,88 \xD7 ${p.age} Jahre` : `Tanaka (M\xE4nner): 208 \u2212 0,7 \xD7 ${p.age} Jahre`;
+}
+
+// src/domain/cardioMuscles.ts
+var cardioMuscles_exports = {};
+__export(cardioMuscles_exports, {
+  ALL_CARDIO_PROFILES: () => ALL_CARDIO_PROFILES,
+  ASSUMED_ZONE: () => ASSUMED_ZONE,
+  CARDIO_MUSCLE_SETTINGS_KEY: () => CARDIO_MUSCLE_SETTINGS_KEY,
+  DEFAULT_CARDIO_MUSCLE_SETTINGS: () => DEFAULT_CARDIO_MUSCLE_SETTINGS,
+  NO_CARDIO_CONTEXT: () => NO_CARDIO_CONTEXT,
+  ZONE_INTENSITY_LABELS: () => ZONE_INTENSITY_LABELS,
+  addMuscleValues: () => addMuscleValues,
+  blockIntensity: () => blockIntensity,
+  cardioLoadHasData: () => cardioLoadHasData,
+  cardioMuscleLoad: () => cardioMuscleLoad,
+  compileCardioProfile: () => compileCardioProfile,
+  emptyCardioLoad: () => emptyCardioLoad,
+  parseCardioMuscleSettings: () => parseCardioMuscleSettings,
+  serializeCardioMuscleSettings: () => serializeCardioMuscleSettings,
+  setEquivalents: () => setEquivalents,
+  sharesForKind: () => sharesForKind,
+  sharesForSport: () => sharesForSport,
+  zoneOfPulse: () => zoneOfPulse,
+  zoneOfRpe: () => zoneOfRpe
+});
+var CARDIO_MUSCLE_SETTINGS_KEY = "ui.cardio_muscles";
+var DEFAULT_CARDIO_MUSCLE_SETTINGS = {
+  show: true,
+  countInTargets: false,
+  cap: 10,
+  minutesPerSet: 3,
+  zoneFactors: [0.05, 0.1, 0.3, 0.7, 1]
+};
+var ASSUMED_ZONE = 2;
+var ZONE_INTENSITY_LABELS = [
+  "Zone 1 \xB7 sehr leicht",
+  "Zone 2 \xB7 leicht",
+  "Zone 3 \xB7 moderat",
+  "Zone 4 \xB7 hart",
+  "Zone 5 \xB7 maximal"
+];
+var inRange4 = (v, min, max) => typeof v === "number" && Number.isFinite(v) && v >= min && v <= max;
+function parseCardioMuscleSettings(json) {
+  const d = DEFAULT_CARDIO_MUSCLE_SETTINGS;
+  if (!json) return d;
+  try {
+    const v = JSON.parse(json);
+    const f = Array.isArray(v.zoneFactors) ? v.zoneFactors : [];
+    const zoneFactors = d.zoneFactors.map(
+      (def, i) => inRange4(f[i], 0, 2) ? f[i] : def
+    );
+    return {
+      show: typeof v.show === "boolean" ? v.show : d.show,
+      countInTargets: typeof v.countInTargets === "boolean" ? v.countInTargets : d.countInTargets,
+      cap: inRange4(v.cap, 1, 100) ? v.cap : d.cap,
+      minutesPerSet: inRange4(v.minutesPerSet, 0.5, 60) ? v.minutesPerSet : d.minutesPerSet,
+      zoneFactors
+    };
+  } catch {
+    return d;
+  }
+}
+function serializeCardioMuscleSettings(s) {
+  return JSON.stringify(s);
+}
+function zoneOfPulse(hr, zones) {
+  let zone = 0;
+  zones.forEach((z, i) => {
+    if (z && hr >= z.from) zone = i + 1;
+  });
+  return Math.min(zone, 5);
+}
+function zoneOfRpe(rpe) {
+  if (rpe <= 3) return 1;
+  if (rpe <= 5) return 2;
+  if (rpe <= 6) return 3;
+  if (rpe <= 8) return 4;
+  return 5;
+}
+function blockIntensity(block, zones) {
+  const hasZones = zones.some((z) => z !== null);
+  if (hasZones && block.hrAvg != null && block.hrAvg > 0) {
+    return { zone: zoneOfPulse(block.hrAvg, zones), source: "pulse" };
+  }
+  if (block.rpe != null && block.rpe > 0) return { zone: zoneOfRpe(block.rpe), source: "rpe" };
+  return { zone: ASSUMED_ZONE, source: "assumed" };
+}
+function setEquivalents(minutes, zone, s) {
+  if (zone < 1 || !(minutes > 0) || !(s.minutesPerSet > 0)) return 0;
+  return minutes * (s.zoneFactors[Math.min(zone, 5) - 1] ?? 0) / s.minutesPerSet;
+}
+var RUN = [
+  ["Quadrizeps", 100],
+  ["Waden", 100],
+  ["Ges\xE4\xDF", 80],
+  ["Beinbeuger", 70],
+  ["Tibialis", 50],
+  ["H\xFCftbeuger", 40],
+  ["Adduktoren", 40],
+  ["Rumpf", 20]
+];
+var WALK = [
+  ["Waden", 100],
+  ["Quadrizeps", 70],
+  ["Ges\xE4\xDF", 70],
+  ["Beinbeuger", 50],
+  ["Tibialis", 50],
+  ["Rumpf", 10]
+];
+var CYCLE = [
+  ["Quadrizeps", 100],
+  ["Ges\xE4\xDF", 70],
+  ["Beinbeuger", 40],
+  ["Waden", 40],
+  ["H\xFCftbeuger", 30]
+];
+var ROW = [
+  ["Latissimus", 100],
+  ["Quadrizeps", 80],
+  ["Mittlerer Trapez", 70],
+  ["Ges\xE4\xDF", 70],
+  ["Hintere Schulter", 60],
+  ["Beinbeuger", 50],
+  ["Bizeps", 50],
+  ["Rumpf", 50],
+  ["Unterarme", 40]
+];
+var SKI = [
+  ["Latissimus", 100],
+  ["Trizeps", 70],
+  ["Bauch", 70],
+  ["Schulter", 40],
+  ["Ges\xE4\xDF", 40],
+  ["Quadrizeps", 30]
+];
+var SWIM = [
+  ["Latissimus", 100],
+  ["Schulter", 80],
+  ["Trizeps", 60],
+  ["Brust", 50],
+  ["Rumpf", 40],
+  ["Beine", 30]
+];
+var ELLIPTICAL = [
+  ["Quadrizeps", 100],
+  ["Ges\xE4\xDF", 80],
+  ["Beinbeuger", 50],
+  ["Waden", 40],
+  ["Latissimus", 20],
+  ["Brust", 20],
+  ["Schulter", 20],
+  ["Arme", 20]
+];
+var STAIRS = [
+  ["Ges\xE4\xDF", 100],
+  ["Quadrizeps", 100],
+  ["Waden", 70],
+  ["Beinbeuger", 50]
+];
+var TEAM = [
+  ["Quadrizeps", 100],
+  ["Waden", 90],
+  ["Ges\xE4\xDF", 80],
+  ["Beinbeuger", 80],
+  ["Adduktoren", 60],
+  ["H\xFCftbeuger", 50],
+  ["Rumpf", 40]
+];
+var TEAM_THROW = [...TEAM, ["Schulter", 50], ["Trizeps", 30], ["Brust", 20]];
+var RACKET = [
+  ["Quadrizeps", 100],
+  ["Waden", 90],
+  ["Ges\xE4\xDF", 70],
+  ["Schulter", 60],
+  ["Unterarme", 50],
+  ["Rumpf", 50],
+  ["Beinbeuger", 50],
+  ["Adduktoren", 40]
+];
+var NORDIC = [...WALK, ["Latissimus", 40], ["Trizeps", 30]];
+var JUMP = [
+  ["Quadrizeps", 100],
+  ["Waden", 100],
+  ["Ges\xE4\xDF", 90]
+];
+var THROW = [
+  ["Schulter", 100],
+  ["Rumpf", 80],
+  ["Brust", 60],
+  ["Trizeps", 60],
+  ["Ges\xE4\xDF", 60],
+  ["Quadrizeps", 50]
+];
+var TRIATHLON = [
+  ["Quadrizeps", 100],
+  ["Ges\xE4\xDF", 75],
+  ["Waden", 75],
+  ["Beinbeuger", 55],
+  ["Latissimus", 30],
+  ["Schulter", 25]
+];
+var MTB = [...CYCLE, ["Rumpf", 30], ["Unterarme", 30], ["Schulter", 20]];
+var PADDLE = [
+  ["Latissimus", 100],
+  ["Schulter", 70],
+  ["Rumpf", 70],
+  ["Unterarme", 40],
+  ["Bizeps", 40],
+  ["Trizeps", 30]
+];
+var SUP = [...PADDLE, ["Beine", 30]];
+var BOARD = [
+  ["Rumpf", 100],
+  ["Quadrizeps", 70],
+  ["Unterarme", 60],
+  ["Latissimus", 50],
+  ["Ges\xE4\xDF", 50]
+];
+var NORDIC_SKI = [
+  ["Quadrizeps", 100],
+  ["Ges\xE4\xDF", 90],
+  ["Latissimus", 70],
+  ["Trizeps", 60],
+  ["Waden", 50],
+  ["Rumpf", 50],
+  ["Schulter", 40]
+];
+var ALPINE = [
+  ["Quadrizeps", 100],
+  ["Ges\xE4\xDF", 80],
+  ["Adduktoren", 60],
+  ["Rumpf", 60],
+  ["Beinbeuger", 40]
+];
+var SKATE = [
+  ["Quadrizeps", 100],
+  ["Ges\xE4\xDF", 100],
+  ["Adduktoren", 70],
+  ["Beinbeuger", 50],
+  ["Rumpf", 40]
+];
+var STRIKE = [
+  ["Schulter", 100],
+  ["Rumpf", 90],
+  ["Quadrizeps", 60],
+  ["Waden", 60],
+  ["Ges\xE4\xDF", 60],
+  ["Trizeps", 50],
+  ["Brust", 40]
+];
+var GRAPPLE = [
+  ["Unterarme", 100],
+  ["Latissimus", 90],
+  ["Rumpf", 90],
+  ["Ges\xE4\xDF", 70],
+  ["Quadrizeps", 70],
+  ["Bizeps", 60],
+  ["Trapez", 60],
+  ["Schulter", 50]
+];
+var FENCING = [
+  ["Quadrizeps", 100],
+  ["Ges\xE4\xDF", 80],
+  ["Waden", 60],
+  ["Schulter", 40]
+];
+var GYMNASTICS = [
+  ["Schulter", 100],
+  ["Rumpf", 100],
+  ["Latissimus", 70],
+  ["Trizeps", 70],
+  ["Quadrizeps", 60],
+  ["Ges\xE4\xDF", 60],
+  ["Brust", 50],
+  ["Waden", 50]
+];
+var CROSSFIT = [
+  ["Quadrizeps", 100],
+  ["Ges\xE4\xDF", 90],
+  ["Schulter", 70],
+  ["Rumpf", 70],
+  ["Latissimus", 60],
+  ["Brust", 50],
+  ["Trizeps", 50],
+  ["Beinbeuger", 50]
+];
+var HYROX = [
+  ["Quadrizeps", 100],
+  ["Ges\xE4\xDF", 90],
+  ["Waden", 70],
+  ["Beinbeuger", 60],
+  ["Latissimus", 50],
+  ["Schulter", 50],
+  ["Rumpf", 50],
+  ["Unterarme", 40]
+];
+var HIKE = [
+  ["Quadrizeps", 100],
+  ["Ges\xE4\xDF", 100],
+  ["Waden", 80],
+  ["Beinbeuger", 50],
+  ["Rumpf", 30]
+];
+var CLIMB = [
+  ["Unterarme", 100],
+  ["Latissimus", 90],
+  ["Bizeps", 70],
+  ["Rumpf", 60],
+  ["Schulter", 50],
+  ["Trapez", 40]
+];
+var DANCE = [
+  ["Waden", 100],
+  ["Quadrizeps", 90],
+  ["Ges\xE4\xDF", 80],
+  ["Rumpf", 50],
+  ["Beinbeuger", 50],
+  ["Schulter", 30]
+];
+var YOGA = [
+  ["Rumpf", 100],
+  ["Schulter", 50],
+  ["Ges\xE4\xDF", 50],
+  ["Quadrizeps", 40]
+];
+var RIDING = [
+  ["Adduktoren", 100],
+  ["Rumpf", 90],
+  ["Ges\xE4\xDF", 60],
+  ["Quadrizeps", 40]
+];
+var ROPE = [
+  ["Waden", 100],
+  ["Quadrizeps", 60],
+  ["Ges\xE4\xDF", 40],
+  ["Schulter", 30],
+  ["Unterarme", 30]
+];
+var NONE = null;
+var KIND_PROFILES = {
+  run: RUN,
+  walk: WALK,
+  cycle: CYCLE,
+  row: ROW,
+  ski: SKI,
+  swim: SWIM,
+  elliptical: ELLIPTICAL,
+  stairs: STAIRS,
+  other: NONE
+};
+var CATEGORY_PROFILES = {
+  mannschaftssport: TEAM,
+  r\u00FCckschlagsport: RACKET,
+  "laufen & leichtathletik": RUN,
+  mehrkampf: TRIATHLON,
+  radsport: CYCLE,
+  wassersport: SWIM,
+  wintersport: ALPINE,
+  kampfsport: STRIKE,
+  "turnen & akrobatik": GYMNASTICS,
+  "kraft & fitness": NONE,
+  "berg & outdoor": HIKE,
+  pr\u00E4zisionssport: NONE,
+  "tanz & k\xF6rperarbeit": DANCE,
+  rollsport: SKATE,
+  reitsport: RIDING,
+  sonstiges: NONE
+};
+var SPORT_PROFILES = {
+  // Mannschaftssport mit Wurf bzw. Sprung
+  basketball: TEAM_THROW,
+  handball: TEAM_THROW,
+  volleyball: TEAM_THROW,
+  beachvolleyball: TEAM_THROW,
+  netball: TEAM_THROW,
+  faustball: TEAM_THROW,
+  korfball: TEAM_THROW,
+  baseball: TEAM_THROW,
+  cricket: TEAM_THROW,
+  wasserball: SWIM,
+  // Laufen & Leichtathletik
+  walking: WALK,
+  "nordic walking": NORDIC,
+  hochsprung: JUMP,
+  weitsprung: JUMP,
+  stabhochsprung: JUMP,
+  speerwurf: THROW,
+  kugelsto\u00DFen: THROW,
+  diskuswurf: THROW,
+  hammerwurf: THROW,
+  zehnkampf: RUN,
+  // Radsport
+  mountainbiken: MTB,
+  gravelbiken: MTB,
+  bmx: MTB,
+  "e-mountainbike": MTB,
+  // Wassersport
+  rudern: ROW,
+  "kanu & kajak": PADDLE,
+  "stand-up-paddling": SUP,
+  wellenreiten: BOARD,
+  windsurfen: BOARD,
+  kitesurfen: BOARD,
+  "wasserski & wakeboard": BOARD,
+  wasserspringen: NONE,
+  segeln: NONE,
+  tauchen: NONE,
+  // Wintersport
+  skilanglauf: NORDIC_SKI,
+  skitouren: NORDIC_SKI,
+  biathlon: NORDIC_SKI,
+  eisschnelllauf: SKATE,
+  eiskunstlauf: SKATE,
+  schneeschuhwandern: HIKE,
+  skispringen: NONE,
+  rodeln: NONE,
+  bob: NONE,
+  curling: NONE,
+  // Kampfsport
+  judo: GRAPPLE,
+  "brazilian jiu-jitsu": GRAPPLE,
+  ringen: GRAPPLE,
+  sumo: GRAPPLE,
+  fechten: FENCING,
+  // Kraft & Fitness (Krafttraining zählt über die Sätze, nicht als Sportart)
+  crossfit: CROSSFIT,
+  zirkeltraining: CROSSFIT,
+  hyrox: HYROX,
+  // Berg & Outdoor
+  sportklettern: CLIMB,
+  bouldern: CLIMB,
+  klettersteig: CLIMB,
+  hochseilgarten: CLIMB,
+  // Tanz & Körperarbeit
+  yoga: YOGA,
+  pilates: YOGA,
+  "tai chi": NONE,
+  // Sonstiges
+  seilspringen: ROPE
+};
+function compile(profile) {
+  const out = {};
+  for (const [term, percent] of profile) {
+    const ids = muscleIdsForTerm(term);
+    if (!ids) throw new Error(`Cardio-Muskelverteilung: unbekannter Begriff \u201E${term}\u201C`);
+    for (const id3 of ids) out[id3] = Math.max(out[id3] ?? 0, percent / 100);
+  }
+  return out;
+}
+var compiled = /* @__PURE__ */ new Map();
+var sharesOf = (p) => {
+  if (!p) return null;
+  let s = compiled.get(p);
+  if (!s) {
+    s = compile(p);
+    compiled.set(p, s);
+  }
+  return s;
+};
+var ALL_CARDIO_PROFILES = [
+  ...Object.values(KIND_PROFILES),
+  ...Object.values(CATEGORY_PROFILES),
+  ...Object.values(SPORT_PROFILES)
+].filter((p) => p !== null);
+function compileCardioProfile(p) {
+  return compile(p);
+}
+function sharesForKind(kind) {
+  return sharesOf(kind ? KIND_PROFILES[kind] : null);
+}
+function sharesForSport(sport) {
+  const name = sport.name.trim().toLowerCase();
+  if (name in SPORT_PROFILES) return sharesOf(SPORT_PROFILES[name] ?? null);
+  const plain = name.replace(/\s*\(.*\)\s*$/, "");
+  if (plain in SPORT_PROFILES) return sharesOf(SPORT_PROFILES[plain] ?? null);
+  const category = sport.category.trim().toLowerCase();
+  if (category in CATEGORY_PROFILES) return sharesOf(CATEGORY_PROFILES[category] ?? null);
+  return void 0;
+}
+var NO_CARDIO_CONTEXT = {
+  exercises: [],
+  sports: [],
+  zones: [],
+  settings: DEFAULT_CARDIO_MUSCLE_SETTINGS
+};
+function emptyCardioLoad() {
+  return {
+    sets: emptyMuscleValues(),
+    blocks: 0,
+    minutes: 0,
+    equivalents: 0,
+    capped: false,
+    minutesBySource: { pulse: 0, rpe: 0, assumed: 0 },
+    minutesByZone: [0, 0, 0, 0, 0, 0],
+    withoutProfile: []
+  };
+}
+function cardioMuscleLoad(log, ctx, include) {
+  const out = emptyCardioLoad();
+  const exerciseById = new Map(ctx.exercises.map((e) => [e.id, e]));
+  const sportById = new Map(ctx.sports.map((s) => [s.id, s]));
+  const sharesByExercise = /* @__PURE__ */ new Map();
+  const sharesFor = (s) => {
+    const cached = sharesByExercise.get(s.exerciseId);
+    if (cached !== void 0) return cached;
+    const ex = exerciseById.get(s.exerciseId);
+    const sport = ex?.sportId ? sportById.get(ex.sportId) : void 0;
+    let shares = sport ? sharesForSport(sport) : void 0;
+    if (shares === void 0) {
+      shares = sharesForKind(s.cardioKind ?? ex?.cardioKindEffective ?? ex?.cardioKind);
+    }
+    sharesByExercise.set(s.exerciseId, shares);
+    return shares;
+  };
+  const perWorkout = /* @__PURE__ */ new Map();
+  const skipped = /* @__PURE__ */ new Map();
+  for (const s of log) {
+    if (s.exerciseCategory !== "cardio" || s.isWarmup || !include(s)) continue;
+    const minutes = (s.durationSeconds ?? 0) / 60;
+    if (!(minutes > 0)) continue;
+    const shares = sharesFor(s);
+    if (!shares) {
+      const name = exerciseById.get(s.exerciseId)?.name ?? "Unbekannte \xDCbung";
+      skipped.set(name, (skipped.get(name) ?? 0) + 1);
+      continue;
+    }
+    const { zone, source } = blockIntensity(s, ctx.zones);
+    const eq = setEquivalents(minutes, zone, ctx.settings);
+    out.blocks += 1;
+    out.minutes += minutes;
+    out.minutesBySource[source] += minutes;
+    out.minutesByZone[zone] = (out.minutesByZone[zone] ?? 0) + minutes;
+    out.equivalents += eq;
+    if (eq <= 0) continue;
+    let sum = perWorkout.get(s.workoutId);
+    if (!sum) {
+      sum = {};
+      perWorkout.set(s.workoutId, sum);
+    }
+    for (const [id3, share] of Object.entries(shares)) {
+      sum[id3] = (sum[id3] ?? 0) + eq * share;
+    }
+  }
+  for (const sum of perWorkout.values()) {
+    for (const id3 of MUSCLE_IDS) {
+      const v = sum[id3] ?? 0;
+      if (v > ctx.settings.cap) out.capped = true;
+      out.sets[id3] += Math.min(v, ctx.settings.cap);
+    }
+  }
+  out.withoutProfile = [...skipped.entries()].map(([name, blocks]) => ({ name, blocks })).sort((a, b) => b.blocks - a.blocks || a.name.localeCompare(b.name, "de"));
+  return out;
+}
+function addMuscleValues(a, b) {
+  const out = emptyMuscleValues();
+  for (const id3 of MUSCLE_IDS) out[id3] = a[id3] + b[id3];
+  return out;
+}
+function cardioLoadHasData(load) {
+  return load.blocks > 0;
 }
 
 // src/domain/planDraft.ts
@@ -20046,7 +20595,7 @@ var RULES = {
   /** Lücken erst ab so vielen fehlenden Tagen am Stück melden */
   gapMinDays: 1
 };
-var inRange4 = (date, from, to) => date >= from && date <= to;
+var inRange5 = (date, from, to) => date >= from && date <= to;
 function dayDiff(a, b) {
   const t = (d) => {
     const [y, m, day] = d.split("-").map(Number);
@@ -20066,7 +20615,7 @@ function fromWeekly(i) {
   };
 }
 function missingRuns(dates, from, to) {
-  const present = [...dates].filter((d) => inRange4(d, from, to)).sort();
+  const present = [...dates].filter((d) => inRange5(d, from, to)).sort();
   const start = present[0];
   if (!start) return [];
   const runs = [];
@@ -20091,7 +20640,7 @@ function runText(r2, one, many) {
 function sleepIssues(sleep, from, to, gapTo = to) {
   const out = [];
   for (const s of sleep) {
-    if (!inRange4(s.date, from, to)) continue;
+    if (!inRange5(s.date, from, to)) continue;
     const ref = { kind: "sleep", id: s.id, date: s.date };
     if (s.sleepMin < RULES.sleepMinMin) {
       out.push({
@@ -20130,7 +20679,7 @@ function nutritionIssues(days3, from, to, gapTo = to) {
   const out = [];
   const logged = days3.filter((d) => d.mealCount > 0 || d.energyKcal > 0);
   for (const d of logged) {
-    if (!inRange4(d.date, from, to)) continue;
+    if (!inRange5(d.date, from, to)) continue;
     const ref = { kind: "nutrition", date: d.date };
     const kcal3 = formatNumber(d.energyKcal, 0);
     if (d.energyKcal > RULES.energyMaxKcal) {
@@ -20176,7 +20725,7 @@ function bodyIssues(measurements, from, to) {
     for (let i = 1; i < list2.length; i++) {
       const cur = list2[i];
       const prev = list2[i - 1];
-      if (!inRange4(cur.date, from, to)) continue;
+      if (!inRange5(cur.date, from, to)) continue;
       const days3 = Math.max(1, dayDiff(prev.date, cur.date));
       const delta = cur.value - prev.value;
       if (Math.abs(delta) / days3 <= limit.perDay) continue;
@@ -20193,7 +20742,7 @@ function bodyIssues(measurements, from, to) {
   }
   const seen = /* @__PURE__ */ new Map();
   for (const m of measurements) {
-    if (!inRange4(m.date, from, to)) continue;
+    if (!inRange5(m.date, from, to)) continue;
     const k = `${m.metricId}|${m.date}|${m.time ?? ""}|${m.value}`;
     const first = seen.get(k);
     if (!first) {
@@ -20213,7 +20762,7 @@ function bodyIssues(measurements, from, to) {
 }
 function workoutIssues(workouts, from, to) {
   return workouts.filter(
-    (w) => w.status === "done" && inRange4(w.date, from, to) && w.durationMin !== null && w.durationMin > RULES.workoutMaxMin
+    (w) => w.status === "done" && inRange5(w.date, from, to) && w.durationMin !== null && w.durationMin > RULES.workoutMaxMin
   ).map((w) => ({
     key: `w.long.${w.id}`,
     date: w.date,
@@ -20224,7 +20773,7 @@ function workoutIssues(workouts, from, to) {
   }));
 }
 function neatIssues(neat, from, to) {
-  return neat.filter((n2) => inRange4(n2.date, from, to) && n2.steps !== null && n2.steps > RULES.stepsMax).map((n2) => ({
+  return neat.filter((n2) => inRange5(n2.date, from, to) && n2.steps !== null && n2.steps > RULES.stepsMax).map((n2) => ({
     key: `neat.${n2.date}`,
     date: n2.date,
     area: "Alltagsbewegung",
@@ -20238,7 +20787,7 @@ function glucoseIssues(readings, from, to) {
   const seen = /* @__PURE__ */ new Set();
   for (const g of readings) {
     const date = g.measuredAt.slice(0, 10);
-    if (!inRange4(date, from, to)) continue;
+    if (!inRange5(date, from, to)) continue;
     const time = g.measuredAt.slice(11, 16);
     const ref = { kind: "glucose", date };
     if (g.mgDl < RULES.glucoseLow || g.mgDl > RULES.glucoseHigh) {
@@ -20471,11 +21020,11 @@ function usualAmount(amounts) {
   const m = list2.length % 2 ? list2[mid] : (list2[mid - 1] + list2[mid]) / 2;
   return m >= 10 ? Math.round(m) : Math.round(m * 10) / 10;
 }
-var inRange5 = (date, today, days3) => date < today && date >= addDaysIso(today, -days3);
+var inRange6 = (date, today, days3) => date < today && date >= addDaysIso(today, -days3);
 function mealSuggestions(history, key, today, { days: days3 = 60, limit = 5 } = {}) {
   const byDay = /* @__PURE__ */ new Map();
   for (const m of history) {
-    if (m.key !== key || !inRange5(m.date, today, days3)) continue;
+    if (m.key !== key || !inRange6(m.date, today, days3)) continue;
     const list2 = byDay.get(m.date) ?? [];
     list2.push(...m.items.filter((i) => i.amount > 0));
     byDay.set(m.date, list2);
@@ -20501,7 +21050,7 @@ function mealSuggestions(history, key, today, { days: days3 = 60, limit = 5 } = 
 function favoriteFoods(history, today, { days: days3 = 90, limit = 15 } = {}) {
   const stats2 = /* @__PURE__ */ new Map();
   for (const m of history) {
-    if (!inRange5(m.date, today, days3)) continue;
+    if (!inRange6(m.date, today, days3)) continue;
     for (const i of m.items) {
       if (!(i.amount > 0)) continue;
       const s = stats2.get(i.foodId) ?? { amounts: [], last: "" };
@@ -25809,6 +26358,7 @@ export {
   buildLibrary,
   caffeine_exports as caffeine,
   cardio_exports as cardio,
+  cardioMuscles_exports as cardioMuscles,
   cardioReport_exports as cardioReport,
   checkin_exports as checkin,
   checklistToPdf,

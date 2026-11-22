@@ -502,6 +502,7 @@ export function setLog(db) {
           durationSeconds: n(s.duration_seconds),
           distanceM: n(s.distance_m),
           rpe: n(s.rpe),
+          hrAvg: n(s.hr_avg),
           isWarmup: Boolean(s.is_warmup),
           notes: n(s.notes),
           isFailure: Boolean(s.is_failure),

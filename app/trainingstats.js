@@ -13,6 +13,7 @@ import { focusIndex, heatmapHtml, machinesOf } from "./overview.js";
 import * as CD from "./checklistdata.js";
 import { arrangeCards, setLayoutEditing } from "./layoutedit.js";
 import * as MI from "./machineimages.js";
+import * as CM from "./cardiomap.js";
 
 /** Anordnung der Auswertung wie am PC (`ui.training_review_layout`, 1.65.0) */
 export const REVIEW_LAYOUT_KEY = "ui.training_review_layout";
@@ -182,11 +183,14 @@ export function viewReviewTab() {
   // Körperkarte
   const metric = S.trainReviewMetric ?? "volume";
   const map = D.muscleMapAll.muscleMapForWorkouts(log, exercises, machines, ids, focus);
-  const values = metric === "volume" ? map.volumeKg : map.sets;
+  // Cardio nur bei „Arbeitssätze“ (Satz-Äquivalente der gleichen Einheiten, 1.85.0 wie PC 1.0.172)
+  const idSet = new Set(ids);
+  const cardio = metric === "sets" ? CM.withCardio(db, log, map.sets, (s) => idSet.has(s.workoutId), today()) : { on: false, values: map.sets, share: null, load: null, settings: null };
+  const values = metric === "volume" ? map.volumeKg : cardio.values;
   const levels = D.muscleLevels(values, "relative");
   const describe = (m) => {
     const level = levels[m];
-    const value = metric === "volume" ? fv(map.volumeKg[m]) : `${F(map.sets[m], 1)} ${map.sets[m] === 1 ? "Satz" : "Sätze"}`;
+    const value = metric === "volume" ? fv(map.volumeKg[m]) : `${F(values[m], 1)} ${values[m] === 1 ? "Satz" : "Sätze"}${CM.cardioPart(cardio, m)}`;
     return `${D.MUSCLE_LABELS[m]} · ${value}${level > 0 ? ` · ${D.LEVEL_NAMES[level - 1]}` : ""}`;
   };
   const sexRaw = db.profile?.sex;
@@ -217,8 +221,11 @@ export function viewReviewTab() {
         .join("")}</ul>
     </section>` },
     { id: "bodymap", node: `<section class="card card--training"><div class="wo-head"><h3>Muskel-Körperkarte</h3><span class="tag">letzte ${n} ${n === 1 ? "Einheit" : "Einheiten"}</span></div>
-      <div class="muscle-map__tools">${seg([["volume", "Volumen"], ["sets", "Arbeitssätze"]], metric, "train-review-metric")}</div>
-      ${heatmapHtml({ levels, describe, sex: sex ?? "male", active: S.trainMuscle ?? null, act: "train-muscle", legend: D.legendLabels("relative") })}
+      <div class="muscle-map__tools">${seg([["volume", "Volumen"], ["sets", "Arbeitssätze"]], metric, "train-review-metric")}${
+        metric === "sets" && cardio.settings ? CM.cardioSwitchHtml(cardio.settings.show, "train-review-cardio") : ""
+      }</div>
+      ${heatmapHtml({ levels, describe, sex: sex ?? "male", active: S.trainMuscle ?? null, act: "train-muscle", legend: D.legendLabels("relative"), cardioShare: cardio.share })}
+      ${metric === "sets" && cardio.settings?.show ? CM.cardioSummaryHtml(cardio.load, cardio.settings) : ""}
       <p class="muted small">Farbe = Anteil am meisttrainierten Muskel (${metric === "volume" ? "Volumen" : "Arbeitssätze"}). Hauptmuskel = erste Muskelgruppe der Übung bzw. der Maschine, weitere zählen zur Hälfte. Maschinen mit Bewegungsprofil werden nach diesem Profil verteilt, Griffbreite/Fußstellung und Griffstellung verfeinern es.${
         map.setsWithoutMuscle > 0 ? ` ${map.setsWithoutMuscle} ${map.setsWithoutMuscle === 1 ? "Satz" : "Sätze"} ohne zuordenbare Muskelgruppe.` : ""
       }${map.unmapped.length > 0 ? ` Nicht zugeordnet: ${esc(map.unmapped.map((u) => u.term).join(", "))}.` : ""}${sex === null ? " Ohne Geschlecht im Profil wird das männliche Modell gezeigt – Profil am PC in Settings ergänzen." : ""}</p>
@@ -708,6 +715,10 @@ export const statsActions = {
     setLayoutEditing(REVIEW_LAYOUT_KEY);
     X.rerender();
     window.scrollTo(0, 0);
+  },
+  "train-review-cardio": (el) => {
+    CM.setCardioShow(el.dataset.arg === "1");
+    X.rerender();
   },
   "train-review-metric": (el) => {
     X.S.trainReviewMetric = el.dataset.arg;

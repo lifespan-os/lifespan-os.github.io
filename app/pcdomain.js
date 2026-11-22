@@ -16030,8 +16030,8 @@ var BOOKS = {
     title: "Die Masterclass Blutwerte+",
     brand: "iCoach.Me",
     subtitle: "Das gro\xDFe Buch der Blutwerte, Hormone und Blutgruppen",
-    description: "8 Teile: Grundlagen und Vorbereitung, jeder wichtige Laborwert einzeln erkl\xE4rt, alle Hormonachsen und ihre Zusammenh\xE4nge, Muster und Fallbeispiele, Sportler, Hormontherapie und Longevity, die Blutgruppen ABO, Rhesus und Kell, die Praxis vom Befund bis zum Basis-Check und ein Lexikon von A bis Z.",
-    pages: 128,
+    description: "8 Teile: Grundlagen und Vorbereitung, jeder wichtige Laborwert einzeln und in Alltagssprache erkl\xE4rt, alle Hormonachsen und ihre Zusammenh\xE4nge, Muster und Fallbeispiele, Sportler, Hormontherapie und Longevity, die Blutgruppen ABO, Rhesus und Kell, die Praxis vom Befund bis zum Basis-Check und ein Lexikon mit \xFCber 100 Blutwerten von A bis Z.",
+    pages: 145,
     parts: 8,
     edition: "Stand November 2026",
     collection: "Masterclass Blutwerte+"

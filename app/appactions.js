@@ -4,6 +4,9 @@ import { bodyParityActions } from "./bodyparity.js";
 import { goalsParityActions } from "./goalsparity.js";
 import { planParityActions } from "./planparity.js";
 import { searchActions } from "./searchview.js";
+import { pdfParityActions } from "./pdfparity.js";
+import { watchParityActions } from "./watchparity.js";
+import { setupActions } from "./setupparity.js";
 import * as store from "./store.js";
 import { foodActions } from "./food.js";
 import { bodyActions, bodyOpenEntry } from "./body.js";
@@ -65,6 +68,9 @@ export const actions = {
   ...goalsParityActions,
   ...planParityActions,
   ...searchActions,
+  ...pdfParityActions,
+  ...watchParityActions,
+  ...setupActions,
   ...logsActions,
   ...insightsActions,
   ...weeklyReportsActions,

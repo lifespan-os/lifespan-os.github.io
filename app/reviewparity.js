@@ -2,11 +2,12 @@
 // - Insights → Monats- und Jahresrückblick wie `PeriodReviewCard.tsx` (Kennzahlen mit Vergleich zum
 //   Vorzeitraum, Aufteilung nach Wochen bzw. Monaten, neue Rekorde, erfasste Tage),
 // - Training → Datenbank → Maschinen: „Vermutlich doppelt“ wie `MachinesCard.tsx`.
-// Rechnung aus pcdomain.js (`periodReview`, `duplicates`). Das PDF zum Rückblick kommt mit Paket F.
+// Rechnung aus pcdomain.js (`periodReview`, `duplicates`); PDF seit 1.93.0 (pdfparity.js).
 
 import * as D from "./pcdomain.js";
 import * as O from "./pcoverview.js";
 import { X, today } from "./diary.js";
+import { reviewPdfResult } from "./pdfparity.js";
 
 const esc = (v) => X.esc(v);
 const F = (v, d = 0) => D.formatNumber(v, d);
@@ -30,6 +31,25 @@ export function reviewChoices(kind, t) {
   });
 }
 
+/** Rückblick für die gewählte Auswahl (auch für das PDF). */
+export function periodReviewNow(db, t = today()) {
+  const S = X.S;
+  const R = D.periodReview;
+  const kind = S.prKind === "year" ? "year" : "month";
+  const key = S.prKey ?? (kind === "year" ? t.slice(0, 4) : t.slice(0, 7));
+  const range = R.reviewRange(kind, key);
+  const data = O.insightsFor(db, range.prevFrom, range.to);
+  return R.periodReview({
+    range,
+    workouts: data.workouts,
+    nutrition: data.nutrition,
+    sleep: data.sleep,
+    neat: data.neat ?? [],
+    measurements: O.measurementsBetween(db, null, range.prevFrom, range.to),
+    setLog: O.setLog(db),
+  });
+}
+
 export function periodReviewCard(db, card, t = today()) {
   const S = X.S;
   const R = D.periodReview;
@@ -38,16 +58,7 @@ export function periodReviewCard(db, card, t = today()) {
   const range = R.reviewRange(kind, key);
   let review;
   try {
-    const data = O.insightsFor(db, range.prevFrom, range.to);
-    review = R.periodReview({
-      range,
-      workouts: data.workouts,
-      nutrition: data.nutrition,
-      sleep: data.sleep,
-      neat: data.neat ?? [],
-      measurements: O.measurementsBetween(db, null, range.prevFrom, range.to),
-      setLog: O.setLog(db),
-    });
+    review = periodReviewNow(db, t);
   } catch (e) {
     return card("period-review", "Monats- und Jahresrückblick", "", `<p class="warn small">${esc(e.message || "Der Rückblick konnte nicht berechnet werden.")}</p>`, { wide: true });
   }
@@ -78,8 +89,10 @@ export function periodReviewCard(db, card, t = today()) {
     `<div class="bp-tools">${sel("kind", "Rückblick", [["month", "Monat"], ["year", "Jahr"]], kind)}${sel("key", kind === "year" ? "Jahr" : "Monat", reviewChoices(kind, t), key)}</div>
     ${running ? `<p class="muted small">Der Zeitraum läuft noch – der Rückblick zeigt den Stand bis heute.</p>` : ""}
     ${kpis}${rows}${records}
+    <button class="btn primary block" data-act="pr-pdf" ${S.prPdf?.busy ? "disabled" : ""}>${S.prPdf?.busy ? "Erstellt PDF …" : "PDF erstellen"}</button>
+    ${reviewPdfResult()}
     <p class="muted small">${review.records.length} neue ${review.records.length === 1 ? "Rekord" : "Rekorde"} · ${esc(review.coverage.join(" · "))}</p>
-    <p class="card__note">Wie der Weekly Report, über einen Monat bzw. ein Jahr: nur erfasste Werte, Mittelwerte über die Tage mit Einträgen, Vergleich mit dem Vormonat bzw. Vorjahr (${esc(range.prevLabel)}).</p>`,
+    <p class="card__note">Wie der Weekly Report, über einen Monat bzw. ein Jahr: nur erfasste Werte, Mittelwerte über die Tage mit Einträgen, Vergleich mit dem Vormonat bzw. Vorjahr (${esc(range.prevLabel)}). Das PDF enthält zusätzlich die Aufteilung nach Wochen bzw. Monaten und alle neuen Rekorde.</p>`,
     { wide: true },
   );
 }
@@ -93,6 +106,7 @@ export function reviewChange(el) {
     S.prKind = el.value;
     S.prKey = null;
   } else S.prKey = el.value;
+  if (S.prPdf) S.prPdf = { message: null, pdf: null, busy: false };
   X.rerender();
   return true;
 }

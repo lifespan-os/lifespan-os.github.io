@@ -1,4 +1,5 @@
 // LIFESPAN OS Mobil – Start, Overview-Grundgerüst, Pläne und Hilfe (aus app.js, 1.74.0).
+import { setupCardHtml } from "./setupparity.js";
 import * as C from "./core.js";
 import { barChoices, barSlots, pcOnlyHtml, SECTIONS } from "./nav.js";
 import { buildDb, today as todayIso } from "./diary.js";
@@ -84,6 +85,7 @@ export function viewHome() {
         : ""
     }
     ${date === today ? remindersCardHtml() : ""}
+    ${date === today && c.pc ? setupCardHtml() : ""}
     ${cards}
     <p class="muted small ov-source">Stand der Daten vom PC: ${fmtDateTime(c.exportedAt)} – plus alles, was du seitdem am Handy erfasst hast. Anordnung der Karten wie am PC (Overview → Übersicht anpassen).</p>
   </main>`;

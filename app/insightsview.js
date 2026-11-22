@@ -17,6 +17,7 @@ import { weeklyReportsCard } from "./weeklyreports.js";
 import { dataQualityCard, goalAdviceCard } from "./extras.js";
 import { targetGoalsCard } from "./goalsparity.js";
 import { periodReviewCard } from "./reviewparity.js";
+import { reportCard } from "./pdfparity.js";
 
 let X = null; // { S, esc, header, rerender }
 
@@ -287,6 +288,8 @@ export function viewInsights() {
   const readings = readingsOf(S.catalog, S.glucose);
   const glucoseNode = readings.length ? glucoseContextHtml(S.catalog, readings) : "";
   if (glucoseNode) cards.push({ id: "glucose", node: glucoseNode });
+  // Datenauszug mit PDF (1.93.0, wie ReportCard.tsx am PC)
+  cards.push({ id: "report", node: reportCard(db, card) });
 
   const arranged = arrangeCards(db, D.INSIGHTS_LAYOUT_KEY, cards);
   const layout = D.parseLayout(db.settings.get(D.INSIGHTS_LAYOUT_KEY) ?? null);

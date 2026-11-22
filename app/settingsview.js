@@ -301,6 +301,7 @@ export function viewSettings() {
       <h3>Hilfe</h3>
       <p class="muted small">Version ${esc(X.version)} · Bedienung, Datenschutz und Datenaustausch.</p>
       <button class="btn block" data-go="help">Hilfe öffnen</button>
+      ${S.catalog?.startpaket && S.prefs.setup?.dismissed ? `<button class="linkbtn small" data-act="setup-show">„Erste Schritte“ wieder in der Overview zeigen</button>` : ""}
     </section>
   </main>`;
 }

@@ -54,6 +54,8 @@ import { initExtras, quickFillInput, viewQuickFill } from "./extras.js";
 import { viewMealPlan } from "./planparity.js";
 import { viewSearch, searchInput } from "./searchview.js";
 import { reviewChange } from "./reviewparity.js";
+import { pdfParityChange } from "./pdfparity.js";
+import { watchParityChange } from "./watchparity.js";
 import { app, esc, go, header, refreshCatalog, render, restEl, S, saveNow, saveSoon, setRender, toast } from "./appbase.js";
 import { foldTabs, sheetRoot } from "./sheets.js";
 import { measureHead, renderNav, rerenderKeepScroll } from "./navshell.js";
@@ -277,6 +279,8 @@ app.addEventListener("change", async (ev) => {
   if (bodyParityChange(el)) return;
   if (goalsParityChange(el)) return;
   if (reviewChange(el)) return;
+  if (pdfParityChange(el)) return;
+  if (watchParityChange(el)) return;
   if (logsChange(el)) return;
   if (todoChange(el)) return;
   if (icoachChange(el)) return;

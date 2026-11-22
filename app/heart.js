@@ -10,6 +10,7 @@ import * as W from "./wearabledata.js";
 import { buildDb, today } from "./diary.js";
 import { COLOR, esc, trendSvg } from "./pcview.js";
 import { heartOn } from "./trainingstats.js";
+import { watchAdoptHtml } from "./watchparity.js";
 
 const DAY_MS = 86400000;
 const shift = (iso, n) => new Date(Date.parse(`${iso}T12:00:00Z`) + n * DAY_MS).toISOString().slice(0, 10);
@@ -153,6 +154,7 @@ function exerciseItem(e) {
         : ""
     }
     <p class="muted small">${facts.length ? esc(facts.join(" · ")) : "Keine weiteren Angaben der Uhr."}</p>
+    ${watchAdoptHtml(e)}
   </details></li>`;
 }
 
@@ -449,7 +451,7 @@ export function heartTabHtml(catalog, state = {}) {
       exercises.length
         ? `<section class="card"><div class="wo-head"><h3>Trainings der Uhr</h3></div><ul class="list">${exercises
             .map(exerciseItem)
-            .join("")}</ul>${note("Antippen für Herzfrequenz-Verlauf und Zonen. Ins Training übernehmen geht am PC (Health → Heart).")}</section>`
+            .join("")}</ul>${note("Antippen für Herzfrequenz-Verlauf und Zonen. „Ins Training übernehmen“ legt eine Cardio-Einheit an (nur auf Tippen, damit nichts doppelt entsteht); sie geht mit „An den PC senden“ an den PC.")}</section>`
         : ""
     }
     ${loadHtml(w, from)}

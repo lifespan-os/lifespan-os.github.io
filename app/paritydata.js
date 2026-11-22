@@ -6,7 +6,7 @@
 // Ablage (Speicher „parity“): { rows: { "tabelle:id": { table, row, sent } }, deleted: { "tabelle:id": { at, sent } } }
 
 /** Tabellen, die diese Ablage führen darf (alle stehen in `import.rs::DATA_TABLES` am PC). */
-export const PARITY_TABLES = ["lifestyle_note", "body_metric", "goal", "meal_plan_entry"];
+export const PARITY_TABLES = ["lifestyle_note", "body_metric", "goal", "meal_plan_entry", "wearable_exercise"];
 
 export function emptyParity() {
   return { rows: {}, deleted: {} };
@@ -62,7 +62,7 @@ export function overlayCatalog(catalog, local) {
   const l = normParity(local);
   if (!Object.keys(l.rows).length && !Object.keys(l.deleted).length) return catalog;
   const pc = { ...(catalog.pc ?? {}) };
-  for (const t of ["lifestyle_note", "goal", "meal_plan_entry"]) pc[t] = mergeRows(pc[t] ?? [], l, t);
+  for (const t of ["lifestyle_note", "goal", "meal_plan_entry", "wearable_exercise"]) pc[t] = mergeRows(pc[t] ?? [], l, t);
   const out = { ...catalog, pc };
   if (catalog.body) {
     const metrics = mergeRows(catalog.body.metrics ?? [], l, "body_metric")

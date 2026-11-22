@@ -21,6 +21,7 @@ import { fastCard, supplementsCard } from "./diarysupp.js";
 export { viewFastEntry, viewSuppIntake } from "./diarysupp.js";
 export { diaryActions, diaryChange, diaryInput } from "./diaryactions.js";
 
+import { diaryExportHtml } from "./pdfparity.js";
 export let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice, buildReturnTables }
 
 export function initDiary(ctx) {
@@ -217,6 +218,7 @@ export function viewDiary() {
     ${nutritionTabs("diary")}
     ${dayNav(date, "diary-shift")}
     ${ordered.map((c) => c.node).join("")}
+    ${diaryExportHtml(date)}
     <p class="muted small">Stand vom PC: Export vom ${esc(S.catalog.exportedAt ? D.formatDate(S.catalog.exportedAt.slice(0, 10)) : "–")}. Am Handy Erfasstes ist schon eingerechnet; Anordnung der Karten wie am PC (Tagebuch anpassen).</p>
   </main>`;
 }

@@ -2019,3 +2019,33 @@ html[data-theme="dark"] .muscle-map__hatch-line { stroke: #e8eef6; }
 .drawer__search svg { width: 18px; height: 18px; flex: none; }
 .top__search { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 10px; background: none; color: inherit; cursor: pointer; }
 .top__search svg { width: 22px; height: 22px; }
+
+/* Paket F (1.93.0): Datenauszug, Tagebuch-Export, Uhr-Trainings, Erste Schritte */
+.rep-range { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rep-range .field { min-width: 0; }
+.rep-range input { width: 100%; min-width: 0; box-sizing: border-box; }
+.rep-quick { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+.rep-areas { display: grid; gap: 6px; margin: 0 0 10px; padding: 0; border: 0; }
+.rep-areas legend { margin-bottom: 4px; color: var(--muted); }
+.rep-result { margin-top: 12px; }
+.rep-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 8px 0; }
+.rep-fact { padding: 8px 10px; border: 1px solid var(--line); border-left-width: 4px; border-radius: 10px; }
+.rep-fact h4 { margin: 0 0 4px; font-size: .82rem; }
+.rep-fact p { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; margin: 2px 0; font-size: .8rem; }
+.rep-days > li { padding: 8px 0; border-top: 1px solid var(--line); }
+.rep-day { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 8px; margin-top: 4px; }
+.rep-changes td .sub { display: block; font-size: .76rem; color: var(--muted); }
+.dx-card .wo-head { align-items: center; }
+.wx-pick { margin-top: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--c-sunken); }
+.wx-pick select { width: 100%; }
+.setup-card .goal-bar { margin: 6px 0 10px; }
+.setup-steps { list-style: none; margin: 0; padding: 0; }
+.setup-step { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.setup-step:first-child { border-top: 0; }
+.setup-step__check { width: 28px; height: 28px; border: 2px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--orange-text); font-weight: 800; cursor: pointer; }
+.setup-step.is-done .setup-step__check { border-color: var(--orange); background: var(--orange); color: var(--orange-ink); }
+.setup-step__check:disabled { cursor: default; opacity: 1; }
+.setup-step__text { display: grid; gap: 2px; min-width: 0; }
+.setup-step.is-done .setup-step__text strong { color: var(--muted); text-decoration: line-through; }
+.setup-step__text .linkbtn { justify-self: start; }
+.rep-fact p span { min-width: 0; }

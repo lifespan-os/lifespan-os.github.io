@@ -523,16 +523,16 @@ function goalProgress(goal, actual, decimals) {
   return { kind: "over", value: -diff };
 }
 function describeGoalProgress(p, unit) {
-  const fmt2 = (v) => unit === "kcal" ? formatKcal(v) : formatGrams(v);
+  const fmt3 = (v) => unit === "kcal" ? formatKcal(v) : formatGrams(v);
   switch (p.kind) {
     case "none":
       return "";
     case "remaining":
-      return `noch ${fmt2(p.value)}`;
+      return `noch ${fmt3(p.value)}`;
     case "reached":
       return "Ziel erreicht";
     case "over":
-      return `${fmt2(p.value)} \xFCber dem Ziel`;
+      return `${fmt3(p.value)} \xFCber dem Ziel`;
   }
 }
 
@@ -7713,13 +7713,13 @@ var signedMin = (d) => {
   return r2 === 0 ? "\xB10 min" : `${r2 > 0 ? "+" : "\u2212"}${Math.abs(r2)} min`;
 };
 function sleepTimingRow(sleep, week, key) {
-  const pick2 = (w) => sleep.flatMap((s) => {
+  const pick3 = (w) => sleep.flatMap((s) => {
     if (!inWeek(s.date, w)) return [];
     const v = key === "bedTime" ? nightMinutes(s.bedTime) : minutesOfDay(s.wakeTime);
     return v === null ? [] : [v];
   });
-  const cur = pick2(week);
-  const prev = pick2(prevWeek(week));
+  const cur = pick3(week);
+  const prev = pick3(prevWeek(week));
   const label = key === "bedTime" ? "Zu Bett (Mittel)" : "Aufgestanden (Mittel)";
   const m = mean(cur);
   if (m === null) return { label, value: "\u2013", basis: "keine Nacht erfasst", note: null };
@@ -7985,13 +7985,13 @@ function measurementIssues(measurements, categoryOf, week) {
       if (prev.value < MIN_JUMP_BASE) continue;
       const change2 = relativeChange(cur.value, prev.value);
       if (change2 === null || Math.abs(change2) <= MEASUREMENT_JUMP) continue;
-      const fmt2 = (v) => `${formatNumber(v, cur.decimals)} ${cur.unit}`;
+      const fmt3 = (v) => `${formatNumber(v, cur.decimals)} ${cur.unit}`;
       issues.push({
         key: `m.${cur.id}`,
         date: cur.date,
         area: "K\xF6rper",
         ref: { kind: "measurement", id: cur.id, date: cur.date },
-        text: `${cur.metricName}: ${fmt2(cur.value)} am ${formatDate(cur.date)} nach ${fmt2(prev.value)} am ${formatDate(prev.date)} (${formatSigned(change2 * 100, 0)} %) \u2013 Tippfehler oder andere Messgr\xF6\xDFe?`
+        text: `${cur.metricName}: ${fmt3(cur.value)} am ${formatDate(cur.date)} nach ${fmt3(prev.value)} am ${formatDate(prev.date)} (${formatSigned(change2 * 100, 0)} %) \u2013 Tippfehler oder andere Messgr\xF6\xDFe?`
       });
     }
   }
@@ -9011,8 +9011,8 @@ function dailyLoadSeries(loads, from, to) {
   return out;
 }
 function loadVsNextDay(workouts, values, from, to, wording) {
-  const series = dailyLoadSeries(trainingLoadByDay(workouts), from, to);
-  return describeAssociation(pairByDate(series, values, 1), {
+  const series2 = dailyLoadSeries(trainingLoadByDay(workouts), from, to);
+  return describeAssociation(pairByDate(series2, values, 1), {
     x: "Eine h\xF6here Trainingsbelastung an einem Tag",
     ...wording
   });
@@ -9065,11 +9065,11 @@ function afterDoseComparison(days3, values, meta) {
     otherMean: mean2(other)
   };
 }
-function describeDoseComparison(c, fmt2) {
+function describeDoseComparison(c, fmt3) {
   if (c.afterCount < MIN_GROUP_DAYS || c.otherCount < MIN_GROUP_DAYS || c.afterMean === null || c.otherMean === null) {
     return `Noch zu wenige Tage f\xFCr den Vergleich (je mindestens ${MIN_GROUP_DAYS}, vorhanden: ${c.afterCount} nach einer Gabe, ${c.otherCount} andere).`;
   }
-  const f = fmt2 ?? ((v) => `${formatNumber(v, c.decimals)}${c.unit ? ` ${c.unit}` : ""}`);
+  const f = fmt3 ?? ((v) => `${formatNumber(v, c.decimals)}${c.unit ? ` ${c.unit}` : ""}`);
   return `Im Mittel ${f(c.afterMean)} am Tag nach einer Gabe, ${f(c.otherMean)} an anderen Tagen (${c.afterCount} bzw. ${c.otherCount} Tage).`;
 }
 
@@ -9212,18 +9212,18 @@ function sleepEntryRows(logs, naps) {
 }
 
 // src/domain/dayStatus.ts
-function dayStatus(overview, supplementIntakes) {
-  const day = overview.date;
-  const vital = (id3) => overview.vitalsLast7Days.find((m) => m.metricId === id3 && m.date === day) ?? null;
-  const weight = overview.weightLast30Days.find((m) => m.date === day) ?? null;
+function dayStatus(overview2, supplementIntakes) {
+  const day = overview2.date;
+  const vital = (id3) => overview2.vitalsLast7Days.find((m) => m.metricId === id3 && m.date === day) ?? null;
+  const weight = overview2.weightLast30Days.find((m) => m.date === day) ?? null;
   const hrv2 = vital(HRV_METRIC_ID);
   const hr = vital(RESTING_HR_METRIC_ID);
-  const sleep = overview.sleepToday;
+  const sleep = overview2.sleepToday;
   const phases = sleep ? phaseShares(sleep) : null;
-  const neat = overview.neatToday;
-  const food = overview.nutritionToday;
+  const neat = overview2.neatToday;
+  const food = overview2.nutritionToday;
   const ate = food !== null && (food.mealCount > 0 || food.fasttracking);
-  const workouts = overview.workoutsToday;
+  const workouts = overview2.workoutsToday;
   const rows2 = [
     {
       key: "weight",
@@ -9283,9 +9283,9 @@ function dayStatus(overview, supplementIntakes) {
     {
       key: "recovery",
       label: "Selbsteinsch\xE4tzung (Erholung)",
-      done: overview.recoveryToday !== null,
+      done: overview2.recoveryToday !== null,
       optional: false,
-      value: overview.recoveryToday?.readiness != null ? `${overview.recoveryToday.readiness} / 10` : null,
+      value: overview2.recoveryToday?.readiness != null ? `${overview2.recoveryToday.readiness} / 10` : null,
       section: "recovery",
       where: "Recovery",
       tab: null,
@@ -10805,10 +10805,10 @@ function levelSeries(events, measurand, nowMs, rangeDays) {
     peak
   };
 }
-function percentAt(events, series, atMs) {
-  if (series.peak <= 0) return 0;
-  const own = events.filter((e) => e.measurand === series.measurand);
-  return Math.min(100, levelAt2(own, atMs) / series.peak * 100);
+function percentAt(events, series2, atMs) {
+  if (series2.peak <= 0) return 0;
+  const own = events.filter((e) => e.measurand === series2.measurand);
+  return Math.min(100, levelAt2(own, atMs) / series2.peak * 100);
 }
 function lastDose(events, measurand, nowMs) {
   return [...events].reverse().find((e) => e.measurand === measurand && e.atMs <= nowMs) ?? null;
@@ -13214,29 +13214,29 @@ function hrtRows(entries, from, to) {
 function measuredRows(w, from, to) {
   if (!w) return [];
   const inRange9 = (list2) => list2.filter((x) => x.date >= from && x.date <= to);
-  const pick2 = (list2, f) => inRange9(list2).flatMap((x) => {
+  const pick3 = (list2, f) => inRange9(list2).flatMap((x) => {
     const v = f(x);
     return v === null || !Number.isFinite(v) ? [] : [{ date: x.date, value: v }];
   });
   return [
-    stat("Niedrigste Herzfrequenz der Nacht", "/min", 0, pick2(w.sleep, nightLowestHr)),
+    stat("Niedrigste Herzfrequenz der Nacht", "/min", 0, pick3(w.sleep, nightLowestHr)),
     stat(
       "HRV der Nacht (RMSSD)",
       "ms",
       0,
-      pick2(w.recovery, (r2) => r2.hrvMs)
+      pick3(w.recovery, (r2) => r2.hrvMs)
     ),
     stat(
       "Atemfrequenz der Nacht",
       "/min",
       1,
-      pick2(w.recovery, (r2) => r2.breathingAvg)
+      pick3(w.recovery, (r2) => r2.breathingAvg)
     ),
     stat(
       "Schlafdauer gemessen",
       "Std.",
       1,
-      pick2(w.sleep, (s) => {
+      pick3(w.sleep, (s) => {
         const m = measuredSleepMin(s);
         return m === null ? null : m / 60;
       })
@@ -13400,7 +13400,7 @@ function checklistPdf(doc) {
   const text2 = (x, yy, font, size, value2, gray = 0) => ops.push(
     `${n(gray)} g BT /${font} ${size} Tf ${n(x)} ${n(yy)} Td (${pdfText(value2)}) Tj ET 0 g`
   );
-  const header2 = (first) => {
+  const header3 = (first) => {
     if (first) {
       for (const line of wrapText(doc.title, 50)) {
         y -= 18;
@@ -13423,9 +13423,9 @@ function checklistPdf(doc) {
     pages.push(ops);
     ops = [];
     y = PAGE_H - MARGIN;
-    header2(false);
+    header3(false);
   };
-  header2(true);
+  header3(true);
   if (doc.items.length === 0) {
     y -= LINE;
     text2(MARGIN, y, "F1", ITEM_SIZE, "Keine Punkte.", 0.4);
@@ -14649,13 +14649,13 @@ function parseTimeCell(text2) {
   }
   return null;
 }
-function splitHeaderUnit(header2) {
-  const h = clean(header2);
+function splitHeaderUnit(header3) {
+  const h = clean(header3);
   const square = /^(.*?)\s*\[([^\]]+)\]$/.exec(h);
   if (square) return { name: clean(square[1] ?? ""), unit: clean(square[2] ?? "") };
-  const round4 = /^(.*?)\s*\(([^)]+)\)$/.exec(h);
-  if (round4 && /[/%µ]|^(mg|g|ng|pg|µg|u|iu|ie|mmol|nmol|pmol|mu)\b/i.test(round4[2] ?? "")) {
-    return { name: clean(round4[1] ?? ""), unit: clean(round4[2] ?? "") };
+  const round5 = /^(.*?)\s*\(([^)]+)\)$/.exec(h);
+  if (round5 && /[/%µ]|^(mg|g|ng|pg|µg|u|iu|ie|mmol|nmol|pmol|mu)\b/i.test(round5[2] ?? "")) {
+    return { name: clean(round5[1] ?? ""), unit: clean(round5[2] ?? "") };
   }
   return { name: h, unit: "" };
 }
@@ -14680,8 +14680,8 @@ function parseLabTable(rows2, fallbackDate) {
     });
     return result;
   }
-  const header2 = (rows2[headerIndex] ?? []).map(clean);
-  const col = (re) => header2.findIndex((c2) => re.test(c2));
+  const header3 = (rows2[headerIndex] ?? []).map(clean);
+  const col = (re) => header3.findIndex((c2) => re.test(c2));
   const c = {
     date: col(H.date),
     time: col(H.time),
@@ -14763,7 +14763,7 @@ function parseLabTable(rows2, fallbackDate) {
   }
   result.format = "wide";
   const skip = new Set([c.date, c.time, c.lab].filter((i) => i >= 0));
-  const analyteCols = header2.map((h, i) => ({ i, ...splitHeaderUnit(h) })).filter((h) => !skip.has(h.i) && h.name !== "");
+  const analyteCols = header3.map((h, i) => ({ i, ...splitHeaderUnit(h) })).filter((h) => !skip.has(h.i) && h.name !== "");
   body.forEach((row, i) => {
     const line = headerIndex + i + 2;
     if (row.every((x) => clean(x) === "")) return;
@@ -15217,9 +15217,9 @@ function rowsToChecklist(rows2, name) {
   const nonEmpty = rows2.filter((r2) => r2.some((c) => c.trim() !== ""));
   if (nonEmpty.length === 0) return { name, items: [], notes: ["Die Tabelle ist leer."] };
   const width = Math.max(...nonEmpty.map((r2) => r2.length));
-  const header2 = nonEmpty[0].map((c) => c.trim());
-  let textCol = header2.findIndex((h) => TEXT_HEADER.test(h));
-  let doneCol = header2.findIndex((h) => DONE_HEADER.test(h));
+  const header3 = nonEmpty[0].map((c) => c.trim());
+  let textCol = header3.findIndex((h) => TEXT_HEADER.test(h));
+  let doneCol = header3.findIndex((h) => DONE_HEADER.test(h));
   const hasHeader = textCol >= 0 || doneCol >= 0;
   const body = hasHeader ? nonEmpty.slice(1) : nonEmpty;
   const column = (c) => body.map((r2) => (r2[c] ?? "").trim());
@@ -15257,7 +15257,7 @@ function rowsToChecklist(rows2, name) {
     });
   }
   if (hasHeader)
-    notes.push(`Kopfzeile erkannt: Aufgaben aus Spalte \u201E${header2[textCol] || textCol + 1}\u201C.`);
+    notes.push(`Kopfzeile erkannt: Aufgaben aus Spalte \u201E${header3[textCol] || textCol + 1}\u201C.`);
   return { name, items, notes };
 }
 
@@ -17002,11 +17002,11 @@ function bestTrendKind(list2) {
 function bests(list2) {
   const rows2 = [];
   const kinds = [...new Set(list2.map((s) => s.kind))];
-  const pick2 = (items, score) => items.reduce((b, s) => b === null || score(s) > score(b) ? s : b, null);
+  const pick3 = (items, score) => items.reduce((b, s) => b === null || score(s) > score(b) ? s : b, null);
   for (const kind of kinds) {
     const items = list2.filter((s) => s.kind === kind);
     const name = cardioKindLabel(kind);
-    const far = pick2(
+    const far = pick3(
       items.filter((s) => s.distanceM > 0),
       (s) => s.distanceM
     );
@@ -17019,7 +17019,7 @@ function bests(list2) {
         exerciseName: far.exerciseName
       });
     }
-    const long = pick2(
+    const long = pick3(
       items.filter((s) => s.durationSeconds > 0),
       (s) => s.durationSeconds
     );
@@ -17034,7 +17034,7 @@ function bests(list2) {
     }
     if (kind === "run" || kind === "walk" || kind === "swim") {
       const per = kind === "swim" ? 100 : 1e3;
-      const fast = pick2(
+      const fast = pick3(
         items.filter((s) => s.distanceM >= per && s.durationSeconds > 0),
         (s) => s.distanceM / s.durationSeconds
       );
@@ -17048,7 +17048,7 @@ function bests(list2) {
         });
       }
     }
-    const strong = pick2(
+    const strong = pick3(
       items.filter((s) => s.powerAvg !== null),
       (s) => s.powerAvg ?? 0
     );
@@ -18420,10 +18420,10 @@ function filterMachines(list2, f) {
     return words.every((w) => text2.includes(w));
   });
 }
-function distinct(list2, pick2) {
+function distinct(list2, pick3) {
   const set = /* @__PURE__ */ new Set();
   for (const m of list2) {
-    const v = pick2(m);
+    const v = pick3(m);
     for (const x of Array.isArray(v) ? v : [v]) if (x) set.add(x);
   }
   return [...set].sort((a, b) => a.localeCompare(b, "de", { sensitivity: "base" }));
@@ -20844,14 +20844,14 @@ function bodyIssues(measurements, from, to) {
       const days3 = Math.max(1, dayDiff(prev.date, cur.date));
       const delta = cur.value - prev.value;
       if (Math.abs(delta) / days3 <= limit.perDay) continue;
-      const fmt2 = (v) => `${formatNumber(v, cur.decimals)} ${cur.unit}`;
+      const fmt3 = (v) => `${formatNumber(v, cur.decimals)} ${cur.unit}`;
       out.push({
         key: `m.day.${cur.id}`,
         date: cur.date,
         area: "K\xF6rper",
         kind: "outlier",
         ref: { kind: "measurement", id: cur.id, date: cur.date },
-        text: `${cur.metricName}: ${fmt2(cur.value)} am ${formatDate(cur.date)} nach ${fmt2(prev.value)} am ${formatDate(prev.date)} (${formatSigned(delta, cur.decimals)} in ${days3} ${days3 === 1 ? "Tag" : "Tagen"}, Grenze ${formatNumber(limit.perDay, 0)} ${limit.unit} je Tag) \u2013 Tippfehler?`
+        text: `${cur.metricName}: ${fmt3(cur.value)} am ${formatDate(cur.date)} nach ${fmt3(prev.value)} am ${formatDate(prev.date)} (${formatSigned(delta, cur.decimals)} in ${days3} ${days3 === 1 ? "Tag" : "Tagen"}, Grenze ${formatNumber(limit.perDay, 0)} ${limit.unit} je Tag) \u2013 Tippfehler?`
       });
     }
   }
@@ -21033,9 +21033,9 @@ function milestoneValues(start, target, own, decimals = 1) {
   const sorted = [...new Set(inner)].sort((a, b) => target >= start ? a - b : b - a);
   return [...sorted, target];
 }
-function goalProgress2(goal, series, today, decimals = 1) {
-  const before = series.filter((p) => p.date <= goal.startDate);
-  const after = series.filter((p) => p.date >= goal.startDate);
+function goalProgress2(goal, series2, today, decimals = 1) {
+  const before = series2.filter((p) => p.date <= goal.startDate);
+  const after = series2.filter((p) => p.date >= goal.startDate);
   let start = goal.startValue;
   let startSource = start !== null ? "saved" : null;
   if (start === null) {
@@ -26722,14 +26722,14 @@ function stepSeries(json) {
 
 // src/domain/stepsByTime.ts
 function stepsByTime(json, size = 60) {
-  const series = stepSeries(json);
-  if (series.length === 0) return null;
+  const series2 = stepSeries(json);
+  if (series2.length === 0) return null;
   const count = 1440 / size;
   const buckets = Array.from({ length: count }, (_, i) => ({
     start: i * size,
     steps: 0
   }));
-  for (const s of series) {
+  for (const s of series2) {
     const b = buckets[Math.floor(s.minute / size)];
     if (b) b.steps += s.steps;
   }
@@ -27227,12 +27227,12 @@ function periodReview(i) {
     const start = valueAt(i.measurements, metricId, r2.from, "after");
     const end = valueAt(i.measurements, metricId, r2.to, "before");
     if (!start || !end || end.date < r2.from) continue;
-    const fmt2 = (m) => `${formatNumber(m.value, m.decimals)} ${m.unit}`;
+    const fmt3 = (m) => `${formatNumber(m.value, m.decimals)} ${m.unit}`;
     add(
       label,
-      fmt2(end),
+      fmt3(end),
       `${formatSigned(end.value - start.value, end.decimals)} ${end.unit} im Zeitraum`,
-      `${fmt2(start)} am ${start.date.slice(8, 10)}.${start.date.slice(5, 7)}. bis ${end.date.slice(8, 10)}.${end.date.slice(5, 7)}.`
+      `${fmt3(start)} am ${start.date.slice(8, 10)}.${start.date.slice(5, 7)}. bis ${end.date.slice(8, 10)}.${end.date.slice(5, 7)}.`
     );
   }
   const rows2 = sections(r2).map((s) => {
@@ -27744,6 +27744,1846 @@ function summarizeRange(values) {
     days: days3
   };
 }
+
+// src/domain/report.ts
+var report_exports = {};
+__export(report_exports, {
+  MIN_DAILY_FOR_CHANGE: () => MIN_DAILY_FOR_CHANGE,
+  REPORT_AREAS: () => REPORT_AREAS,
+  areaLabel: () => areaLabel,
+  buildReport: () => buildReport,
+  changeOf: () => changeOf,
+  dayLabel: () => dayLabel2,
+  daysBetween: () => daysBetween5,
+  formatChange: () => formatChange,
+  formatValue: () => formatValue,
+  unitSuffix: () => unitSuffix
+});
+var REPORT_AREAS = [
+  { key: "nutrition", label: "Nutrition", hint: "Energie, Makros, Wasser, Supplements" },
+  { key: "training", label: "Training", hint: "Einheiten, Volumen, Restdays, Alltagsbewegung" },
+  { key: "sleep", label: "Schlaf", hint: "Dauer, Qualit\xE4t, Phasen, Nickerchen" },
+  { key: "recovery", label: "Recovery", hint: "Erholung, M\xFCdigkeit, Muskelkater, Stress" },
+  {
+    key: "body",
+    label: "Body & Longevity",
+    hint: "alle Messwerte, Griffkraft, Lebensstil-Notizen"
+  },
+  { key: "health", label: "Health", hint: "Gesundheitsakte" },
+  { key: "superhuman", label: "Superhuman", hint: "Protokolleintr\xE4ge" }
+];
+var areaLabel = (a) => REPORT_AREAS.find((x) => x.key === a)?.label ?? a;
+var MIN_DAILY_FOR_CHANGE = 4;
+var fmt2 = (v, d = 0) => formatNumber(v, d);
+var round4 = (v, d) => Math.round(v * 10 ** d) / 10 ** d;
+function daysBetween5(from, to) {
+  const out = [];
+  const d = /* @__PURE__ */ new Date(`${from}T12:00:00Z`);
+  const end = /* @__PURE__ */ new Date(`${to}T12:00:00Z`);
+  while (d <= end && out.length < 5e3) {
+    out.push(d.toISOString().slice(0, 10));
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return out;
+}
+function dayLabel2(date) {
+  const names = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+  const wd = (/* @__PURE__ */ new Date(`${date}T12:00:00Z`)).getUTCDay();
+  const [y, m, d] = date.split("-");
+  return `${names[wd]} ${d}.${m}.${y}`;
+}
+function changeOf(series2) {
+  const pts = [...series2.points].sort((a, b) => a.date.localeCompare(b.date));
+  const first = pts[0];
+  const last = pts[pts.length - 1];
+  if (!first || !last) return null;
+  let min = first;
+  let max = first;
+  let sum = 0;
+  for (const p of pts) {
+    if (p.value < min.value) min = p;
+    if (p.value > max.value) max = p;
+    sum += p.value;
+  }
+  const mean9 = sum / pts.length;
+  let change2 = null;
+  let base = null;
+  let basis;
+  if (series2.kind === "level") {
+    basis = "letzter gegen\xFCber erstem Wert";
+    if (pts.length >= 2) {
+      change2 = last.value - first.value;
+      base = first.value;
+    }
+  } else {
+    basis = "\xD8 zweite gegen\xFCber \xD8 erster H\xE4lfte der Tage mit Wert";
+    if (pts.length >= MIN_DAILY_FOR_CHANGE) {
+      const half = Math.floor(pts.length / 2);
+      const a = pts.slice(0, half);
+      const b = pts.slice(pts.length - half);
+      const ma = a.reduce((s, p) => s + p.value, 0) / a.length;
+      const mb = b.reduce((s, p) => s + p.value, 0) / b.length;
+      change2 = mb - ma;
+      base = ma;
+    }
+  }
+  return {
+    series: series2,
+    count: pts.length,
+    first,
+    last,
+    min,
+    max,
+    mean: mean9,
+    change: change2,
+    changePercent: change2 !== null && base !== null && base !== 0 ? change2 / Math.abs(base) * 100 : null,
+    basis
+  };
+}
+function formatChange(c) {
+  if (c.change === null) return "zu wenige Werte f\xFCr einen Vergleich";
+  const unit = unitSuffix(c.series.unit);
+  const pct = c.changePercent !== null ? ` (${formatSigned(c.changePercent, 1)} %)` : "";
+  return `${formatSigned(c.change, c.series.decimals)}${unit}${pct}`;
+}
+var unitSuffix = (unit) => unit === "" ? "" : unit.startsWith("/") ? unit : ` ${unit}`;
+var formatValue = (s, v) => `${fmt2(v, s.decimals)}${unitSuffix(s.unit)}`;
+function series(area, key, label, unit, decimals, kind, points2, group) {
+  return { area, key, label, unit, decimals, kind, points: points2, ...group ? { group } : {} };
+}
+var pick2 = (rows2, f) => rows2.flatMap((r2) => {
+  const v = f(r2);
+  return v === null || v === void 0 || !Number.isFinite(v) ? [] : [{ date: r2.date, value: v }];
+});
+function namesShort(names, max = 6) {
+  const shown = names.slice(0, max).join(", ");
+  return names.length > max ? `${shown} (+${names.length - max} weitere)` : shown;
+}
+function buildReport(data, wanted) {
+  const areas = REPORT_AREAS.map((a) => a.key).filter(
+    (k) => wanted.includes(k) && (k !== "superhuman" || data.protocolEnabled)
+  );
+  const has2 = (a) => areas.includes(a);
+  const lines = /* @__PURE__ */ new Map();
+  const add = (date, area, line) => {
+    if (date < data.from || date > data.to) return;
+    const day = lines.get(date) ?? /* @__PURE__ */ new Map();
+    const list2 = day.get(area) ?? [];
+    list2.push(line);
+    day.set(area, list2);
+    lines.set(date, day);
+  };
+  const all = [];
+  const facts = [];
+  const notes = {};
+  if (has2("nutrition")) {
+    for (const n2 of data.nutrition) {
+      add(
+        n2.date,
+        "nutrition",
+        `${fmt2(n2.energyKcal)} kcal \xB7 Protein ${fmt2(n2.proteinG)} g \xB7 KH ${fmt2(n2.carbsG)} g \xB7 Fett ${fmt2(n2.fatG)} g` + (n2.mealCount > 0 ? ` (${n2.mealCount} ${n2.mealCount === 1 ? "Mahlzeit" : "Mahlzeiten"})` : "") + (n2.fasttracking ? " \xB7 Fasttracking" : "")
+      );
+    }
+    for (const w of data.water) {
+      add(
+        w.date,
+        "nutrition",
+        `Wasser ${fmt2(w.ml / 1e3, 2)} l (${w.glasses} ${w.glasses === 1 ? "Glas" : "Gl\xE4ser"})`
+      );
+    }
+    for (const s of data.supplements)
+      add(s.date, "nutrition", `Supplements: ${namesShort(s.names)}`);
+    all.push(
+      series(
+        "nutrition",
+        "kcal",
+        "Energie",
+        "kcal",
+        0,
+        "daily",
+        pick2(data.nutrition, (n2) => n2.energyKcal)
+      ),
+      series(
+        "nutrition",
+        "protein",
+        "Protein",
+        "g",
+        0,
+        "daily",
+        pick2(data.nutrition, (n2) => n2.proteinG)
+      ),
+      series(
+        "nutrition",
+        "carbs",
+        "Kohlenhydrate",
+        "g",
+        0,
+        "daily",
+        pick2(data.nutrition, (n2) => n2.carbsG)
+      ),
+      series(
+        "nutrition",
+        "fat",
+        "Fett",
+        "g",
+        0,
+        "daily",
+        pick2(data.nutrition, (n2) => n2.fatG)
+      ),
+      series(
+        "nutrition",
+        "water",
+        "Wasser",
+        "l",
+        2,
+        "daily",
+        pick2(data.water, (w) => w.ml / 1e3)
+      ),
+      series(
+        "nutrition",
+        "supplements",
+        "Supplements je Tag",
+        "",
+        0,
+        "daily",
+        pick2(data.supplements, (s) => s.count)
+      )
+    );
+    facts.push(
+      { area: "nutrition", label: "Tage mit Ern\xE4hrung", value: String(data.nutrition.length) },
+      { area: "nutrition", label: "Tage mit Supplements", value: String(data.supplements.length) }
+    );
+  }
+  if (has2("training")) {
+    const perDay = /* @__PURE__ */ new Map();
+    for (const w of data.workouts) {
+      const parts2 = [
+        `${w.setCount} ${w.setCount === 1 ? "Arbeitssatz" : "Arbeitss\xE4tze"}`,
+        w.volumeKg > 0 ? `${fmt2(w.volumeKg)} kg Volumen` : null,
+        w.durationMin !== null ? formatDuration(w.durationMin) : null,
+        w.perceivedExertion !== null ? `Anstrengung ${w.perceivedExertion}/10` : null
+      ].filter(Boolean);
+      add(w.date, "training", `${w.title}: ${parts2.join(" \xB7 ")}`);
+      const d = perDay.get(w.date) ?? { volume: 0, sets: 0, minutes: 0, hasMinutes: false };
+      d.volume += w.volumeKg;
+      d.sets += w.setCount;
+      if (w.durationMin !== null) {
+        d.minutes += w.durationMin;
+        d.hasMinutes = true;
+      }
+      perDay.set(w.date, d);
+    }
+    for (const s of data.dayStatus) {
+      add(
+        s.date,
+        "training",
+        s.kind === "rest" ? "Restday (Regeneration)" : "Krankheit \u2013 kein Training"
+      );
+    }
+    for (const n2 of data.neat ?? []) {
+      const p = [
+        n2.steps !== null ? `${fmt2(n2.steps)} Schritte` : null,
+        n2.totalMin > 0 ? `${formatDuration(n2.totalMin)} Alltagsbewegung` : null
+      ].filter(Boolean);
+      if (p.length > 0) add(n2.date, "training", `NEAT: ${p.join(" \xB7 ")}`);
+    }
+    const days4 = [...perDay.entries()].sort(([a], [b]) => a.localeCompare(b));
+    all.push(
+      series(
+        "training",
+        "volume",
+        "Trainingsvolumen je Trainingstag",
+        "kg",
+        0,
+        "daily",
+        days4.map(([date, d]) => ({ date, value: d.volume }))
+      ),
+      series(
+        "training",
+        "sets",
+        "Arbeitss\xE4tze je Trainingstag",
+        "",
+        0,
+        "daily",
+        days4.map(([date, d]) => ({ date, value: d.sets }))
+      ),
+      series(
+        "training",
+        "minutes",
+        "Trainingsdauer je Trainingstag",
+        "min",
+        0,
+        "daily",
+        days4.filter(([, d]) => d.hasMinutes).map(([date, d]) => ({ date, value: d.minutes }))
+      ),
+      series(
+        "training",
+        "rpe",
+        "Anstrengung",
+        "/10",
+        1,
+        "daily",
+        pick2(data.workouts, (w) => w.perceivedExertion)
+      ),
+      series(
+        "training",
+        "steps",
+        "Schritte",
+        "",
+        0,
+        "daily",
+        pick2(data.neat ?? [], (n2) => n2.steps)
+      )
+    );
+    const totalVolume = data.workouts.reduce((s, w) => s + w.volumeKg, 0);
+    facts.push(
+      { area: "training", label: "Trainingseinheiten", value: String(data.workouts.length) },
+      { area: "training", label: "Volumen", value: `${fmt2(totalVolume)} kg` },
+      {
+        area: "training",
+        label: "Restdays",
+        value: String(data.dayStatus.filter((s) => s.kind === "rest").length)
+      },
+      {
+        area: "training",
+        label: "Krankheitstage",
+        value: String(data.dayStatus.filter((s) => s.kind === "sick").length)
+      }
+    );
+  }
+  if (has2("sleep")) {
+    for (const s of data.sleep) {
+      const p = [
+        `${formatDuration(s.sleepMin)} (${s.bedTime}\u2013${s.wakeTime})`,
+        s.quality !== null ? `Qualit\xE4t ${s.quality}/10` : null,
+        s.efficiencyPct !== null ? `Effizienz ${s.efficiencyPct} %` : null,
+        s.deepMin !== null ? `Tiefschlaf ${formatDuration(s.deepMin)}` : null,
+        s.remMin !== null ? `REM ${formatDuration(s.remMin)}` : null
+      ].filter(Boolean);
+      add(s.date, "sleep", p.join(" \xB7 "));
+    }
+    for (const n2 of data.naps)
+      add(
+        n2.date,
+        "sleep",
+        `Nickerchen ${formatDuration(n2.durationMin)} (${n2.startTime}\u2013${n2.endTime})`
+      );
+    all.push(
+      series(
+        "sleep",
+        "duration",
+        "Schlafdauer",
+        "h",
+        1,
+        "daily",
+        pick2(data.sleep, (s) => round4(s.sleepMin / 60, 2))
+      ),
+      series(
+        "sleep",
+        "quality",
+        "Schlafqualit\xE4t",
+        "/10",
+        1,
+        "daily",
+        pick2(data.sleep, (s) => s.quality)
+      ),
+      series(
+        "sleep",
+        "efficiency",
+        "Schlafeffizienz",
+        "%",
+        0,
+        "daily",
+        pick2(data.sleep, (s) => s.efficiencyPct)
+      ),
+      series(
+        "sleep",
+        "deep",
+        "Tiefschlaf",
+        "min",
+        0,
+        "daily",
+        pick2(data.sleep, (s) => s.deepMin)
+      ),
+      series(
+        "sleep",
+        "rem",
+        "REM-Schlaf",
+        "min",
+        0,
+        "daily",
+        pick2(data.sleep, (s) => s.remMin)
+      )
+    );
+    facts.push({ area: "sleep", label: "N\xE4chte erfasst", value: String(data.sleep.length) });
+  }
+  if (has2("recovery")) {
+    for (const r2 of data.recovery) {
+      const p = [
+        r2.readiness !== null ? `Erholung ${r2.readiness}/10` : null,
+        r2.fatigue !== null ? `M\xFCdigkeit ${r2.fatigue}/10` : null,
+        r2.soreness !== null ? `Muskelkater ${r2.soreness}/10` : null,
+        r2.stress !== null ? `Stress ${r2.stress}/10` : null
+      ].filter(Boolean);
+      if (p.length > 0) add(r2.date, "recovery", p.join(" \xB7 "));
+      if (r2.notes) add(r2.date, "recovery", `Notiz: ${r2.notes}`);
+    }
+    all.push(
+      series(
+        "recovery",
+        "readiness",
+        "Erholung",
+        "/10",
+        1,
+        "daily",
+        pick2(data.recovery, (r2) => r2.readiness)
+      ),
+      series(
+        "recovery",
+        "fatigue",
+        "M\xFCdigkeit",
+        "/10",
+        1,
+        "daily",
+        pick2(data.recovery, (r2) => r2.fatigue)
+      ),
+      series(
+        "recovery",
+        "soreness",
+        "Muskelkater",
+        "/10",
+        1,
+        "daily",
+        pick2(data.recovery, (r2) => r2.soreness)
+      ),
+      series(
+        "recovery",
+        "stress",
+        "Stress",
+        "/10",
+        1,
+        "daily",
+        pick2(data.recovery, (r2) => r2.stress)
+      )
+    );
+    facts.push({ area: "recovery", label: "Tage erfasst", value: String(data.recovery.length) });
+  }
+  if (has2("body")) {
+    const byMetric = /* @__PURE__ */ new Map();
+    const metrics = [...data.metrics].sort(
+      (a, b) => a.position - b.position || a.name.localeCompare(b.name)
+    );
+    const order = new Map(metrics.map((m, i) => [m.id, i]));
+    const categoryOf = new Map(metrics.map((m) => [m.id, m.category]));
+    const sorted = [...data.measurements].sort(
+      (a, b) => a.date.localeCompare(b.date) || (order.get(a.metricId) ?? 999) - (order.get(b.metricId) ?? 999)
+    );
+    const dayParts = /* @__PURE__ */ new Map();
+    for (const m of sorted) {
+      const list2 = byMetric.get(m.metricId) ?? [];
+      list2.push({ date: m.date, value: m.value });
+      byMetric.set(m.metricId, list2);
+      const cat = categoryOf.get(m.metricId) ?? "other";
+      const day = dayParts.get(m.date) ?? /* @__PURE__ */ new Map();
+      const parts2 = day.get(cat) ?? [];
+      parts2.push(`${m.metricName} ${fmt2(m.value, m.decimals)}${unitSuffix(m.unit)}`);
+      day.set(cat, parts2);
+      dayParts.set(m.date, day);
+    }
+    for (const [date, cats] of dayParts) {
+      for (const c of METRIC_CATEGORIES) {
+        const parts2 = cats.get(c.value);
+        if (parts2) add(date, "body", `${c.label}: ${parts2.join(" \xB7 ")}`);
+      }
+    }
+    for (const metric of metrics) {
+      const pts = byMetric.get(metric.id);
+      if (!pts) continue;
+      const group = METRIC_CATEGORIES.find((c) => c.value === metric.category)?.label;
+      all.push(
+        series(
+          "body",
+          `metric-${metric.id}`,
+          metric.name,
+          metric.unit,
+          metric.decimals,
+          "level",
+          pts,
+          group
+        )
+      );
+    }
+    for (const g of data.grip) {
+      add(
+        g.date,
+        "body",
+        `Griffkraft links ${fmt2(g.leftKg, 1)} kg \xB7 rechts ${fmt2(g.rightKg, 1)} kg (\xD8 ${fmt2((g.leftKg + g.rightKg) / 2, 1)} kg)` + (g.method ? ` \xB7 ${g.method}` : "")
+      );
+    }
+    if (data.grip.length > 0) {
+      const grp = "Griffkraft";
+      all.push(
+        series(
+          "body",
+          "grip-avg",
+          "Griffkraft \xD8 beider H\xE4nde",
+          "kg",
+          1,
+          "level",
+          data.grip.map((g) => ({ date: g.date, value: round4((g.leftKg + g.rightKg) / 2, 1) })),
+          grp
+        ),
+        series(
+          "body",
+          "grip-left",
+          "Griffkraft links",
+          "kg",
+          1,
+          "level",
+          pick2(data.grip, (g) => g.leftKg),
+          grp
+        ),
+        series(
+          "body",
+          "grip-right",
+          "Griffkraft rechts",
+          "kg",
+          1,
+          "level",
+          pick2(data.grip, (g) => g.rightKg),
+          grp
+        )
+      );
+    }
+    for (const n2 of data.lifestyle) add(n2.date, "body", `Lebensstil: ${n2.text}`);
+    facts.push({
+      area: "body",
+      label: "Messwerte",
+      value: String(data.measurements.length + data.grip.length)
+    });
+  }
+  if (has2("health")) {
+    notes.health = "F\xFCr Health gibt es noch keine erfassten Daten \u2013 der Bereich (Blutbilder, Befunde, Dokumente) ist im Aufbau.";
+  }
+  if (has2("superhuman")) {
+    const bySubstance = /* @__PURE__ */ new Map();
+    for (const e of data.protocol) {
+      const extra = [e.route ? ROUTE_LABELS[e.route] : null, e.site].filter(Boolean).join(", ");
+      add(
+        e.date,
+        "superhuman",
+        `${e.substanceName} ${fmt2(e.amount, e.amount % 1 === 0 ? 0 : 2)} ${e.unit}${extra ? ` (${extra})` : ""}${e.time ? ` um ${e.time}` : ""}`
+      );
+      const s = bySubstance.get(e.substanceName) ?? {
+        unit: e.unit,
+        days: /* @__PURE__ */ new Map()
+      };
+      s.days.set(e.date, (s.days.get(e.date) ?? 0) + e.amount);
+      bySubstance.set(e.substanceName, s);
+    }
+    for (const [name, s] of [...bySubstance.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+      const pts = [...s.days.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, value2]) => ({ date, value: value2 }));
+      all.push(series("superhuman", `sub-${name}`, `${name} je Tag`, s.unit, 2, "daily", pts));
+    }
+    facts.push({
+      area: "superhuman",
+      label: "Protokolleintr\xE4ge",
+      value: String(data.protocol.length)
+    });
+  }
+  const used = all.filter((s) => s.points.length > 0);
+  for (const a of areas) {
+    if (a !== "health" && !used.some((s) => s.area === a) && ![...lines.values()].some((d) => d.has(a))) {
+      notes[a] = `Keine Eintr\xE4ge in ${areaLabel(a)} im gew\xE4hlten Zeitraum.`;
+    }
+  }
+  const days3 = [...lines.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, m]) => ({
+    date,
+    entries: areas.flatMap((a) => {
+      const l = m.get(a);
+      return l && l.length > 0 ? [{ area: a, lines: l }] : [];
+    })
+  })).filter((d) => d.entries.length > 0);
+  return {
+    from: data.from,
+    to: data.to,
+    areas,
+    dayCount: daysBetween5(data.from, data.to).length,
+    days: days3,
+    series: used,
+    changes: used.flatMap((s) => {
+      const c = changeOf(s);
+      return c ? [c] : [];
+    }),
+    facts,
+    notes
+  };
+}
+
+// src/domain/reportPdf.ts
+var reportPdf_exports = {};
+__export(reportPdf_exports, {
+  AREA_COLORS: () => AREA_COLORS,
+  reportFileName: () => reportFileName,
+  reportToPdf: () => reportToPdf
+});
+var M4 = 40;
+var CONTENT_W2 = A4_W - 2 * M4;
+var BOTTOM4 = A4_H - 52;
+var INK3 = hex("#14233B");
+var MUTED3 = hex("#55657C");
+var SUBTLE2 = hex("#7A889D");
+var LINE4 = hex("#DCE3EC");
+var SOFT3 = hex("#F5F7FA");
+var NAVY3 = hex("#0B1F3A");
+var WHITE3 = [1, 1, 1];
+var AREA_COLORS = {
+  nutrition: "#9A6210",
+  training: "#2B59C3",
+  sleep: "#5446B8",
+  recovery: "#1E7A72",
+  body: "#A8415F",
+  health: "#55657C",
+  superhuman: "#6B3FA0"
+};
+var areaColor = (a) => hex(AREA_COLORS[a]);
+var tint2 = (c, amount) => [0, 1, 2].map((i) => c[i] + (1 - c[i]) * amount);
+var Layout2 = class {
+  constructor(title) {
+    __publicField(this, "title", title);
+    __publicField(this, "doc", new PdfDoc());
+    __publicField(this, "page");
+    __publicField(this, "y", 0);
+    this.newPage(true);
+  }
+  newPage(first = false) {
+    this.page = this.doc.addPage();
+    if (first) {
+      this.y = M4;
+    } else {
+      this.page.rect(0, 0, A4_W, 28, { fill: NAVY3 });
+      this.page.text(M4, 18, "LIFESPAN OS", { size: 8, bold: true, color: WHITE3 });
+      this.page.text(A4_W - M4, 18, this.title, { size: 8, color: tint2(NAVY3, 0.7), align: "right" });
+      this.y = 48;
+    }
+  }
+  /** Sorgt für `h` Punkt Platz, sonst neue Seite. Gibt true zurück, wenn umbrochen wurde. */
+  ensure(h) {
+    if (this.y + h > BOTTOM4) {
+      this.newPage();
+      return true;
+    }
+    return false;
+  }
+  heading(text2, color = INK3) {
+    this.ensure(40);
+    this.y += 8;
+    this.page.rect(M4, this.y, 4, 18, { fill: color, radius: 2 });
+    this.page.text(M4 + 12, this.y + 14, text2, { size: 15, bold: true, color: INK3 });
+    this.y += 30;
+  }
+};
+function fitText(text2, max, size, bold = false) {
+  if (textWidth(text2, size, bold) <= max) return text2;
+  let t = text2;
+  while (t.length > 1 && textWidth(`${t}\u2026`, size, bold) > max) t = t.slice(0, -1);
+  return `${t.trimEnd()}\u2026`;
+}
+function header2(l, report, opts) {
+  const p = l.page;
+  p.rect(0, 0, A4_W, 132, { fill: NAVY3 });
+  const w = A4_W / Math.max(1, report.areas.length);
+  report.areas.forEach((a, i) => p.rect(i * w, 128, w, 4, { fill: areaColor(a) }));
+  p.text(M4, 38, "LIFESPAN OS", { size: 9, bold: true, color: tint2(NAVY3, 0.6) });
+  p.text(M4, 70, "Datenauszug", { size: 28, bold: true, color: WHITE3 });
+  p.text(
+    M4,
+    94,
+    `${formatDate(report.from)} \u2013 ${formatDate(report.to)} \xB7 ${report.dayCount} ${report.dayCount === 1 ? "Tag" : "Tage"}, davon ${report.days.length} mit Eintr\xE4gen`,
+    { size: 11, color: tint2(NAVY3, 0.85) }
+  );
+  p.text(M4, 112, `${opts.person ? `${opts.person} \xB7 ` : ""}erstellt am ${opts.createdAt}`, {
+    size: 9,
+    color: tint2(NAVY3, 0.6)
+  });
+  p.text(A4_W - M4, 112, report.areas.map(areaLabel).join(" \xB7 "), {
+    size: 8,
+    color: tint2(NAVY3, 0.6),
+    align: "right"
+  });
+  l.y = 152;
+  const tiles = report.areas.map((a) => ({
+    area: a,
+    facts: report.facts.filter((f) => f.area === a)
+  }));
+  const cols = Math.min(4, Math.max(1, tiles.length));
+  const gap = 10;
+  const tw = (CONTENT_W2 - gap * (cols - 1)) / cols;
+  for (let i = 0; i < tiles.length; i += cols) {
+    const row = tiles.slice(i, i + cols);
+    const rows2 = Math.max(1, ...row.map((t) => t.facts.length));
+    const th = 30 + rows2 * 15;
+    l.ensure(th + gap);
+    row.forEach((t, j) => {
+      const x = M4 + j * (tw + gap);
+      const c = areaColor(t.area);
+      l.page.rect(x, l.y, tw, th, { fill: tint2(c, 0.92), radius: 8 });
+      l.page.rect(x, l.y, 4, th, { fill: c, radius: 2 });
+      l.page.text(x + 12, l.y + 18, areaLabel(t.area), { size: 10, bold: true, color: c });
+      if (t.facts.length === 0) {
+        l.page.text(x + 12, l.y + 34, report.notes[t.area] ? "keine Daten" : "\u2013", {
+          size: 8.5,
+          color: MUTED3
+        });
+      }
+      t.facts.forEach((f, k) => {
+        const yy = l.y + 34 + k * 15;
+        const room = tw - 30 - textWidth(f.value, 9, true);
+        l.page.text(x + 12, yy, fitText(f.label, room, 8.5), { size: 8.5, color: MUTED3 });
+        l.page.text(x + tw - 10, yy, f.value, { size: 9, bold: true, color: INK3, align: "right" });
+      });
+    });
+    l.y += th + gap;
+  }
+}
+function dailySection(l, report) {
+  l.heading("Tageswerte", NAVY3);
+  if (report.days.length === 0) {
+    l.page.text(
+      M4,
+      l.y + 4,
+      "Im gew\xE4hlten Zeitraum gibt es keine Eintr\xE4ge in den gew\xE4hlten Bereichen.",
+      {
+        size: 10,
+        color: MUTED3
+      }
+    );
+    l.y += 20;
+    return;
+  }
+  const dateW = 92;
+  const labelW = 92;
+  const textX = M4 + dateW + labelW;
+  const textW = CONTENT_W2 - dateW - labelW;
+  const size = 8.5;
+  const lh = 11.5;
+  report.days.forEach((day, i) => {
+    const blocks = day.entries.map((e) => ({
+      area: e.area,
+      lines: e.lines.flatMap((line) => wrapToWidth(line, textW, size))
+    }));
+    const height = blocks.reduce((s, b) => s + b.lines.length * lh + 4, 0) + 10;
+    if (l.ensure(Math.min(height, BOTTOM4 - 60))) {
+      l.page.text(M4, l.y + 2, "Tageswerte (Fortsetzung)", { size: 9, bold: true, color: MUTED3 });
+      l.y += 14;
+    }
+    const top = l.y;
+    if (i % 2 === 0)
+      l.page.rect(M4 - 6, top - 2, CONTENT_W2 + 12, Math.min(height, BOTTOM4 - top), {
+        fill: SOFT3,
+        radius: 6
+      });
+    l.page.text(M4, top + 11, dayLabel2(day.date), { size: 9, bold: true, color: INK3 });
+    let y = top + 11;
+    for (const b of blocks) {
+      if (y + lh > BOTTOM4) {
+        l.newPage();
+        y = l.y + 11;
+        l.page.text(M4, y, `${dayLabel2(day.date)} (Fortsetzung)`, {
+          size: 9,
+          bold: true,
+          color: INK3
+        });
+      }
+      const c = areaColor(b.area);
+      l.page.circle(M4 + dateW + 3, y - 3, 2.6, c);
+      l.page.text(M4 + dateW + 10, y, areaLabel(b.area), { size, bold: true, color: c });
+      b.lines.forEach((line, k) => {
+        if (k > 0 && y + lh > BOTTOM4) {
+          l.newPage();
+          y = l.y + 11 - lh;
+        }
+        if (k > 0) y += lh;
+        l.page.text(textX, y, line, { size, color: INK3 });
+      });
+      y += lh + 4;
+    }
+    l.y = y + 2;
+  });
+}
+function sparkline(p, c, from, to, x, y, w, h, color) {
+  const t0 = Date.parse(from);
+  const t1 = Date.parse(to);
+  const span = Math.max(1, t1 - t0);
+  const pts = [...c.series.points].sort((a, b) => a.date.localeCompare(b.date));
+  const lo = c.min.value;
+  const hi = c.max.value;
+  const range = hi - lo || Math.max(1, Math.abs(hi) * 0.1);
+  const px = (d) => x + (Date.parse(d) - t0) / span * w;
+  const py = (v) => hi === lo ? y + h / 2 : y + h - (v - lo) / range * h;
+  p.line(x, y + h, x + w, y + h, LINE4, 0.5);
+  const coords = pts.map((pt) => [px(pt.date), py(pt.value)]);
+  if (coords.length === 1) {
+    p.circle(coords[0][0], coords[0][1], 2.4, color);
+    return;
+  }
+  p.polyline(coords, color, 1.4, { baseY: y + h, fill: tint2(color, 0.85) });
+  p.circle(px(c.min.date), py(c.min.value), 1.8, tint2(color, 0.3));
+  p.circle(px(c.max.date), py(c.max.value), 1.8, tint2(color, 0.3));
+  const last = coords[coords.length - 1];
+  p.circle(last[0], last[1], 2.6, color);
+}
+function changeCard(l, c, report, x, y, w, h) {
+  const p = l.page;
+  const color = areaColor(c.series.area);
+  p.rect(x, y, w, h, { fill: WHITE3, stroke: LINE4, width: 0.6, radius: 8 });
+  const title = wrapToWidth(c.series.label, w - 24, 9, true)[0] ?? c.series.label;
+  p.text(x + 12, y + 17, title, { size: 9, bold: true, color: INK3 });
+  if (c.series.group)
+    p.text(x + w - 12, y + 17, c.series.group, { size: 7, color: SUBTLE2, align: "right" });
+  const isLevel = c.series.kind === "level";
+  const main = isLevel ? formatValue(c.series, c.last.value) : `\xD8 ${formatValue(c.series, c.mean)}`;
+  p.text(x + 12, y + 40, main, { size: 16, bold: true, color: INK3 });
+  const sub = isLevel ? `zuletzt am ${formatDate(c.last.date)}` : `Mittel aus ${c.count} ${c.count === 1 ? "Tag" : "Tagen"}`;
+  p.text(x + 12, y + 52, sub, { size: 7.5, color: MUTED3 });
+  const pill = formatChange(c);
+  const pw = Math.min(w / 2 - 6, textWidth(pill, 8, true) + (c.change !== null ? 22 : 14));
+  const pxr = x + w - 12 - pw;
+  const up = (c.change ?? 0) > 0;
+  const flat = c.change === null || Math.abs(c.change) < 10 ** -c.series.decimals / 2;
+  p.rect(pxr, y + 29, pw, 16, { fill: c.change === null ? SOFT3 : tint2(color, 0.88), radius: 8 });
+  if (!flat) {
+    const ax = pxr + 9;
+    const ay = y + 37;
+    if (up)
+      p.triangle(
+        [
+          [ax - 3.5, ay + 2.5],
+          [ax + 3.5, ay + 2.5],
+          [ax, ay - 3]
+        ],
+        color
+      );
+    else
+      p.triangle(
+        [
+          [ax - 3.5, ay - 2.5],
+          [ax + 3.5, ay - 2.5],
+          [ax, ay + 3]
+        ],
+        color
+      );
+  }
+  const shown = wrapToWidth(pill, pw - (flat ? 12 : 20), 8, true)[0] ?? pill;
+  p.text(pxr + (flat ? 7 : 16), y + 40, shown, {
+    size: 8,
+    bold: true,
+    color: c.change === null ? MUTED3 : color
+  });
+  p.text(
+    x + w - 12,
+    y + 52,
+    c.change === null ? "" : c.series.kind === "level" ? "letzter vs. erster Wert" : "2. vs. 1. H\xE4lfte der Tage",
+    {
+      size: 6.5,
+      color: SUBTLE2,
+      align: "right"
+    }
+  );
+  sparkline(p, c, report.from, report.to, x + 12, y + 60, w - 24, h - 82, color);
+  const foot = `${c.count} ${c.count === 1 ? "Wert" : "Werte"} \xB7 min ${formatValue(c.series, c.min.value)} \xB7 max ${formatValue(c.series, c.max.value)}`;
+  p.text(x + 12, y + h - 9, wrapToWidth(foot, w - 24, 7)[0] ?? foot, { size: 7, color: MUTED3 });
+}
+function changesSection(l, report) {
+  l.newPage();
+  l.heading("Ver\xE4nderungen im Zeitraum", NAVY3);
+  l.page.text(
+    M4 + 12,
+    l.y - 2,
+    "Messwerte: letzter gegen\xFCber erstem Wert. Tagessummen: Mittel der zweiten gegen\xFCber der ersten H\xE4lfte der Tage mit Wert.",
+    { size: 7.5, color: MUTED3 }
+  );
+  l.y += 12;
+  const gap = 12;
+  const cw = (CONTENT_W2 - gap) / 2;
+  const ch = 128;
+  for (const area of report.areas) {
+    const list2 = report.changes.filter((c) => c.series.area === area);
+    const color = areaColor(area);
+    l.ensure(40 + (list2.length > 0 ? ch : 20));
+    l.y += 6;
+    l.page.rect(M4, l.y, 4, 14, { fill: color, radius: 2 });
+    l.page.text(M4 + 12, l.y + 11, areaLabel(area), { size: 12, bold: true, color });
+    l.y += 24;
+    if (list2.length === 0) {
+      l.page.text(M4 + 12, l.y + 2, report.notes[area] ?? "Keine Verl\xE4ufe im Zeitraum.", {
+        size: 9,
+        color: MUTED3
+      });
+      l.y += 18;
+      continue;
+    }
+    for (let i = 0; i < list2.length; i += 2) {
+      l.ensure(ch + gap);
+      changeCard(l, list2[i], report, M4, l.y, cw, ch);
+      if (list2[i + 1]) changeCard(l, list2[i + 1], report, M4 + cw + gap, l.y, cw, ch);
+      l.y += ch + gap;
+    }
+  }
+}
+function footers2(doc, title) {
+  const n2 = doc.pages.length;
+  doc.pages.forEach((p, i) => {
+    p.line(M4, A4_H - 36, A4_W - M4, A4_H - 36, LINE4, 0.5);
+    p.text(M4, A4_H - 24, `LIFESPAN OS \xB7 ${title} \xB7 nur eigene Eintr\xE4ge, keine Diagnose`, {
+      size: 7,
+      color: SUBTLE2
+    });
+    p.text(A4_W - M4, A4_H - 24, `Seite ${i + 1} von ${n2}`, {
+      size: 7,
+      color: SUBTLE2,
+      align: "right"
+    });
+  });
+}
+function reportToPdf(report, opts) {
+  const title = `Datenauszug ${formatDate(report.from)} \u2013 ${formatDate(report.to)}`;
+  const l = new Layout2(title);
+  header2(l, report, opts);
+  dailySection(l, report);
+  changesSection(l, report);
+  footers2(l.doc, title);
+  return l.doc.toBytes(`LIFESPAN OS \u2013 ${title}`);
+}
+var reportFileName = (r2) => `Datenauszug ${r2.from} bis ${r2.to}`;
+
+// src/domain/reportRanges.ts
+var reportRanges_exports = {};
+__export(reportRanges_exports, {
+  previousMonth: () => previousMonth,
+  previousWeek: () => previousWeek
+});
+function previousWeek(today) {
+  const thisMonday = weekStart2(today);
+  return { from: shiftDays(thisMonday, -7), to: shiftDays(thisMonday, -1) };
+}
+function previousMonth(today) {
+  const firstThis = `${today.slice(0, 7)}-01`;
+  const to = shiftDays(firstThis, -1);
+  return { from: `${to.slice(0, 7)}-01`, to };
+}
+
+// src/domain/nutritionExport.ts
+var nutritionExport_exports = {};
+__export(nutritionExport_exports, {
+  MAX_EXPORT_DAYS: () => MAX_EXPORT_DAYS,
+  averageNeed: () => averageNeed,
+  averageTotals: () => averageTotals,
+  balanceText: () => balanceText,
+  buildDiaryExportDay: () => buildDiaryExportDay,
+  energyBalance: () => energyBalance,
+  exportDates: () => exportDates,
+  exportDayTitle: () => exportDayTitle,
+  exportFileName: () => exportFileName,
+  percentText: () => percentText2,
+  periodSums: () => periodSums
+});
+var MAX_EXPORT_DAYS = 366;
+var MACRO_LABELS = {
+  energyKcal: "Energie",
+  proteinG: "Protein",
+  carbsG: "Kohlenhydrate",
+  fatG: "Fett"
+};
+var OPTIONALS = ["fiberG", "sugarG", "saturatedFatG", "saltG"];
+function withValue(t, value2) {
+  if (value2 === void 0) return t;
+  return { ...t, value: (t.value ?? 0) + value2 };
+}
+function exportDates(from, to) {
+  const iso2 = /^\d{4}-\d{2}-\d{2}$/;
+  if (!iso2.test(from) || !iso2.test(to))
+    return { ok: false, error: "Bitte zwei g\xFCltige Daten w\xE4hlen." };
+  if (from > to) return { ok: false, error: "Das Startdatum liegt nach dem Enddatum." };
+  const dates = [];
+  for (let d = from; d <= to; d = addDaysIso(d, 1)) {
+    dates.push(d);
+    if (dates.length > MAX_EXPORT_DAYS) {
+      return {
+        ok: false,
+        error: `Bitte h\xF6chstens ${MAX_EXPORT_DAYS} Tage auf einmal exportieren.`
+      };
+    }
+  }
+  return { ok: true, dates };
+}
+function exportFileName(from, to) {
+  return from === to ? `Ern\xE4hrungstagebuch ${from}` : `Ern\xE4hrungstagebuch ${from} bis ${to}`;
+}
+var WEEKDAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+function exportDayTitle(date) {
+  const [y, m, d] = date.split("-").map(Number);
+  const weekday2 = WEEKDAYS[new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1).getDay()] ?? "";
+  return `${weekday2}, ${formatDate(date)}`;
+}
+function macroText(key, value2) {
+  return key === "energyKcal" ? formatKcal(value2) : formatGrams(value2);
+}
+var kcalText = (v) => `${formatNumber(Math.round(v), 0)} kcal`;
+function dayTargets(goal, energy, totals4) {
+  const g = goal ? withProteinFromWeight(goal, energy?.step.weightKg ?? null) : null;
+  const need = dailyNeed(g, energy?.step.kcal ?? null, energy);
+  const macros = g ? dayMacroGoals(g, need, energy) : null;
+  let base = null;
+  if (need) {
+    base = {
+      kcal: need.total,
+      label: "Tagesbedarf",
+      detail: describeNeed(need)?.replace(/^Tagesbedarf: /, "") ?? `Kalorienziel ${kcalText(need.total)}`
+    };
+  } else if (energy && energy.totalKcal !== null) {
+    const calibrated = energy.calibratedTotalKcal !== null;
+    const kcal3 = energy.calibratedTotalKcal ?? energy.totalKcal;
+    base = {
+      kcal: kcal3,
+      label: "Gesamtverbrauch",
+      detail: `berechneter Gesamtverbrauch${calibrated ? " (kalibriert)" : ""} \u2013 kein Kalorienziel festgelegt`
+    };
+  }
+  let exportNeed = null;
+  if (base && base.kcal > 0) {
+    const view = energyGoalView(totals4, base.kcal);
+    exportNeed = {
+      ...base,
+      consumed: view.consumed,
+      diff: Math.round(base.kcal - view.consumed),
+      percent: view.percentOfGoal,
+      segments: view.segments,
+      markerPercent: view.goalMarkerPercent
+    };
+  }
+  const goalOf = (key) => {
+    if (key === "energyKcal") return need ? need.total : null;
+    if (!macros) return null;
+    return key === "proteinG" ? macros.proteinG : key === "carbsG" ? macros.carbsG : macros.fatG;
+  };
+  return { need: exportNeed, goalOf };
+}
+function buildDiaryExportDay(input, catalog, profile = null) {
+  const { day, fast, intakes, water, goal } = input;
+  const energy = input.energy ?? null;
+  const meals = day.meals;
+  const supps = addNutrientValues(intakes.map((i) => i.nutrients));
+  const suppMacros = macrosOf(supps);
+  const mealValues = addNutrientValues(meals.map((m) => m.values ?? {}));
+  const totals4 = sumNutrients([...meals, fastNutrients(fast), suppMacros]);
+  const sources = [];
+  if (meals.some((m) => m.items.length > 0)) sources.push("Mahlzeiten");
+  if (fast || Object.keys(mealValues).length > 0) sources.push("Fasttracking");
+  if (Object.values(suppMacros).some((v) => v > 0)) sources.push("Supplements");
+  const targets = dayTargets(goal, energy, totals4);
+  const macros = Object.keys(MACRO_LABELS).map((key) => {
+    const g = targets.goalOf(key);
+    return {
+      key,
+      label: MACRO_LABELS[key],
+      value: totals4[key],
+      text: macroText(key, totals4[key]),
+      goal: g,
+      goalText: g === null ? null : macroText(key, g)
+    };
+  });
+  const allItems = meals.flatMap((m) => m.items);
+  const optional = OPTIONALS.map((key) => {
+    const total = key === "saltG" ? sumOptional(allItems, key) : withValue(
+      withValue(
+        withValue(sumOptional(allItems, key), fast?.values[OPTIONAL_KEYS[key]]),
+        optionalOf(supps, key)
+      ),
+      mealValues[OPTIONAL_KEYS[key]]
+    );
+    return { label: OPTIONAL_LABELS[key], value: describeOptional(total) };
+  });
+  const micro = microValues(catalog, [supps, fast?.values ?? {}, mealValues]);
+  const refGroup = referenceGroup(profile, input.date);
+  const microGroups = groupedValues(catalog, { values: micro }).map((g) => ({
+    label: g.label,
+    items: g.items.map(({ def, value: value2 }) => {
+      const p = nutrientPercents(def.key, value2, def.unit, refGroup);
+      return {
+        label: def.label,
+        value: formatNutrient(value2, def.unit),
+        reference: formatPercent(p.reference.percent),
+        limit: formatPercent(p.limit.percent)
+      };
+    })
+  }));
+  const referenceNote = refGroup.ok ? `Referenzwerte f\xFCr: ${GROUP_LABELS[refGroup.group]} (Profil)` : refGroup.reason;
+  const filledMeals = daySlots(day).filter(
+    (s) => s.meal !== null && mealHasContent(s.meal)
+  ).map(({ meal, title }) => ({
+    title,
+    time: meal.time,
+    summary: `${formatKcal(meal.energyKcal)} \xB7 P ${formatGrams(meal.proteinG)} \xB7 KH ${formatGrams(meal.carbsG)} \xB7 F ${formatGrams(meal.fatG)}`,
+    items: meal.items.map((i) => ({
+      name: i.foodName,
+      brand: i.foodBrand,
+      amount: formatAmount(i.amount, i.basisUnit),
+      energy: formatKcal(i.energyKcal),
+      protein: formatGrams(i.proteinG),
+      carbs: formatGrams(i.carbsG),
+      fat: formatGrams(i.fatG)
+    })),
+    direct: groupedValues(catalog, { values: meal.values ?? {} }).flatMap(
+      (g) => g.items.map(({ def, value: value2 }) => ({
+        label: def.label,
+        value: formatNutrient(value2, def.unit)
+      }))
+    ),
+    notes: meal.notes
+  }));
+  const supplements = groupIntakes(intakes).map((g) => ({
+    label: g.label,
+    items: g.intakes.flatMap(
+      (intake) => intake.items.map((item2, index) => ({
+        name: item2.name,
+        amount: formatSupplementAmount(item2.amount, item2.unit),
+        time: intake.time,
+        stack: intake.stackId && index === 0 ? intake.name : null
+      }))
+    ),
+    notes: g.intakes.map((i) => i.notes).filter((n2) => !!n2)
+  }));
+  const totalMl = water?.totalMl ?? 0;
+  const goalL = goal?.waterL ?? null;
+  const glasses = water?.glasses.length ?? 0;
+  const drinks = water?.drinks.length ?? 0;
+  const waterInfo = {
+    totalMl,
+    glasses,
+    goalL,
+    text: glasses === 0 && drinks === 0 ? "nichts eingetragen" : `${formatLiters(totalMl)} (${waterSummary(water ?? { glasses: [], drinks: [] })})`,
+    percent: goalL && goalL > 0 ? Math.round(totalMl / (goalL * 1e3) * 100) : null
+  };
+  const fastDay = fast ? {
+    groups: groupedValues(catalog, fast).map((g) => ({
+      label: g.label,
+      items: g.items.map(({ def, value: value2 }) => ({
+        label: def.label,
+        value: formatNutrient(value2, def.unit)
+      }))
+    })),
+    notes: fast.notes
+  } : null;
+  return {
+    date: input.date,
+    hasEntries: filledMeals.length > 0 || fast !== null || intakes.length > 0 || glasses > 0 || drinks > 0,
+    totals: totals4,
+    macros,
+    sources,
+    optional,
+    water: waterInfo,
+    micro: microGroups,
+    referenceNote,
+    meals: filledMeals,
+    supplements,
+    fast: fastDay,
+    need: targets.need
+  };
+}
+function averageNeed(days3) {
+  const used = days3.filter((d) => d.hasEntries && d.need !== null);
+  if (used.length === 0) return null;
+  const n2 = used.length;
+  return {
+    need: used.reduce((s, d) => s + d.need.kcal, 0) / n2,
+    consumed: used.reduce((s, d) => s + d.need.consumed, 0) / n2,
+    days: n2
+  };
+}
+function averageTotals(days3) {
+  const used = days3.filter((d) => d.hasEntries);
+  if (used.length === 0) return null;
+  const sum = sumNutrients(used.map((d) => d.totals));
+  const n2 = used.length;
+  return {
+    energyKcal: sum.energyKcal / n2,
+    proteinG: sum.proteinG / n2,
+    carbsG: sum.carbsG / n2,
+    fatG: sum.fatG / n2,
+    days: n2
+  };
+}
+var percentText2 = (p) => `${formatNumber(p, 0)} %`;
+function energyBalance(d) {
+  return d.hasEntries && d.need ? d.need.consumed - d.need.kcal : null;
+}
+function balanceText(kcal3) {
+  const r2 = Math.round(kcal3);
+  if (r2 === 0) return "\xB10 kcal";
+  return `${r2 > 0 ? "+" : "-"}${formatNumber(Math.abs(r2), 0)} kcal`;
+}
+function periodSums(days3) {
+  const used = days3.filter((d) => d.hasEntries);
+  if (used.length === 0) return null;
+  const withNeed = used.filter((d) => d.need !== null);
+  const totals4 = sumNutrients(used.map((d) => d.totals));
+  return {
+    ...totals4,
+    days: used.length,
+    waterMl: used.reduce((s, d) => s + d.water.totalMl, 0),
+    meals: used.reduce((s, d) => s + d.meals.length, 0),
+    supplements: used.reduce(
+      (s, d) => s + d.supplements.reduce((n2, g) => n2 + g.items.length, 0),
+      0
+    ),
+    needDays: withNeed.length,
+    need: withNeed.length > 0 ? withNeed.reduce((s, d) => s + d.need.kcal, 0) : null,
+    balance: withNeed.length > 0 ? withNeed.reduce((s, d) => s + (energyBalance(d) ?? 0), 0) : null
+  };
+}
+
+// src/domain/nutritionExportPdf.ts
+var nutritionExportPdf_exports = {};
+__export(nutritionExportPdf_exports, {
+  OVERVIEW_COLUMNS: () => OVERVIEW_COLUMNS,
+  nutritionExportPdf: () => nutritionExportPdf
+});
+var M5 = 40;
+var CONTENT_W3 = A4_W - 2 * M5;
+var BOTTOM5 = A4_H - 50;
+var INK4 = hex("#14233B");
+var MUTED4 = hex("#55657C");
+var LINE5 = hex("#DCE3EC");
+var SOFT4 = hex("#F5F7FA");
+var NAVY4 = hex("#0B1F3A");
+var ACCENT2 = hex("#9A6210");
+var WATER = hex("#2B6CB0");
+var WHITE4 = [1, 1, 1];
+var MACRO_COLORS = {
+  protein: hex("#2B59C3"),
+  carbs: hex("#9A6210"),
+  fat: hex("#1E7A72"),
+  other: hex("#A9B4C2")
+};
+var MACRO_NAMES = {
+  protein: "Protein",
+  carbs: "Kohlenhydrate",
+  fat: "Fett",
+  other: "Sonstiges"
+};
+var tint3 = (c, amount) => [0, 1, 2].map((i) => c[i] + (1 - c[i]) * amount);
+function fit3(text2, max, size, bold = false) {
+  if (textWidth(text2, size, bold) <= max) return text2;
+  let t = text2;
+  while (t.length > 1 && textWidth(`${t}\u2026`, size, bold) > max) t = t.slice(0, -1);
+  return `${t.trimEnd()}\u2026`;
+}
+var Layout3 = class {
+  constructor() {
+    __publicField(this, "doc", new PdfDoc());
+    __publicField(this, "page");
+    __publicField(this, "y", 0);
+    /** Laufender Seitentitel (Datum des Tages) für Folgeseiten */
+    __publicField(this, "running", "");
+    this.page = this.doc.addPage();
+    this.y = M5;
+  }
+  newPage() {
+    this.page = this.doc.addPage();
+    this.page.rect(0, 0, A4_W, 26, { fill: NAVY4 });
+    this.page.text(M5, 17, "LIFESPAN OS \xB7 Ern\xE4hrungstagebuch", {
+      size: 8,
+      bold: true,
+      color: WHITE4
+    });
+    if (this.running) {
+      this.page.text(A4_W - M5, 17, this.running, {
+        size: 8,
+        color: tint3(NAVY4, 0.7),
+        align: "right"
+      });
+    }
+    this.y = 44;
+  }
+  ensure(h) {
+    if (this.y + h > BOTTOM5) this.newPage();
+  }
+  /** Abschnittsüberschrift; `keep` = Platz, der mit ihr auf derselben Seite stehen soll. */
+  section(title, color = ACCENT2, keep = 72) {
+    this.ensure(keep);
+    this.y += 10;
+    this.page.rect(M5, this.y, 3, 14, { fill: color, radius: 1.5 });
+    this.page.text(M5 + 10, this.y + 11.5, title, { size: 11.5, bold: true, color: INK4 });
+    this.y += 24;
+  }
+  muted(text2) {
+    for (const line of wrapToWidth(text2, CONTENT_W3, 9)) {
+      this.ensure(14);
+      this.page.text(M5, this.y + 9, line, { size: 9, color: MUTED4 });
+      this.y += 13;
+    }
+  }
+};
+function cover(l, days3, opts) {
+  const p = l.page;
+  p.rect(0, 0, A4_W, 124, { fill: NAVY4 });
+  p.rect(0, 120, A4_W, 4, { fill: ACCENT2 });
+  p.text(M5, 36, "LIFESPAN OS", { size: 9, bold: true, color: tint3(NAVY4, 0.6) });
+  p.text(M5, 68, "Ern\xE4hrungstagebuch", { size: 26, bold: true, color: WHITE4 });
+  const used = days3.filter((d) => d.hasEntries).length;
+  const range = opts.from === opts.to ? formatDate(opts.from) : `${formatDate(opts.from)} \u2013 ${formatDate(opts.to)}`;
+  p.text(
+    M5,
+    90,
+    `${range} \xB7 ${days3.length} ${days3.length === 1 ? "Tag" : "Tage"}, davon ${used} mit Eintr\xE4gen`,
+    { size: 11, color: tint3(NAVY4, 0.85) }
+  );
+  p.text(M5, 108, `${opts.person ? `${opts.person} \xB7 ` : ""}erstellt am ${opts.createdAt}`, {
+    size: 9,
+    color: tint3(NAVY4, 0.6)
+  });
+  l.y = 142;
+}
+var ROW_PAD = 6;
+var OVERVIEW_COLUMNS = [
+  { label: "Datum", w: 78, align: "left" },
+  { label: "Energie", w: 55, align: "right" },
+  { label: "Bedarf", w: 55, align: "right" },
+  { label: "Bilanz", w: 58, align: "right" },
+  { label: "Protein", w: 46, align: "right" },
+  { label: "KH", w: 51, align: "right" },
+  { label: "Fett", w: 46, align: "right" },
+  { label: "Wasser", w: 41, align: "right" },
+  { label: "Mahlz.", w: 35, align: "right" },
+  { label: "Suppl.", w: CONTENT_W3 - 2 * ROW_PAD - 465, align: "right" }
+];
+function overview(l, days3) {
+  l.section("\xDCbersicht");
+  const cols = OVERVIEW_COLUMNS;
+  const head2 = () => {
+    l.page.rect(M5, l.y, CONTENT_W3, 18, { fill: SOFT4, radius: 3 });
+    let x = M5 + ROW_PAD;
+    for (const c of cols) {
+      const tx = c.align === "right" ? x + c.w : x;
+      l.page.text(tx, l.y + 12.5, c.label, { size: 8, bold: true, color: MUTED4, align: c.align });
+      x += c.w;
+    }
+    l.y += 20;
+  };
+  head2();
+  const row = (cells, opts = {}) => {
+    if (l.y + 16 > BOTTOM5) {
+      l.newPage();
+      head2();
+    }
+    if (opts.fill) l.page.rect(M5, l.y - 1, CONTENT_W3, 16, { fill: opts.fill, radius: 3 });
+    let x = M5 + ROW_PAD;
+    cells.forEach((cell2, i) => {
+      const c = cols[i];
+      const span = opts.span && i === 1;
+      const tx = c.align === "right" && !span ? x + c.w : x + (span ? 8 : 0);
+      l.page.text(tx, l.y + 10.5, span ? cell2 : fit3(cell2, c.w - 4, 8.5, opts.bold), {
+        size: 8.5,
+        bold: opts.bold,
+        color: opts.colors?.[i] ?? (opts.muted ? MUTED4 : INK4),
+        align: span ? "left" : c.align
+      });
+      x += c.w;
+    });
+    l.y += 16;
+    l.page.line(M5, l.y - 1, M5 + CONTENT_W3, l.y - 1, LINE5, 0.4);
+  };
+  const balanceColor = (v) => v === null || Math.round(v) === 0 ? null : v > 0 ? ACCENT2 : NAVY4;
+  const balanceColors = (v) => cols.map((_, i) => i === 3 ? balanceColor(v) : null);
+  for (const d of days3) {
+    const date = exportDayTitle(d.date).replace(/^(\w{2})\w*,/, "$1,");
+    if (!d.hasEntries) {
+      row([date, "keine Eintr\xE4ge", "", "", "", "", "", "", "", ""], { muted: true, span: true });
+      continue;
+    }
+    const suppCount = d.supplements.reduce((n2, g) => n2 + g.items.length, 0);
+    const balance2 = energyBalance(d);
+    row(
+      [
+        date,
+        formatKcal(d.totals.energyKcal),
+        d.need ? formatKcal(d.need.kcal) : "\u2013",
+        balance2 === null ? "\u2013" : balanceText(balance2),
+        formatGrams(d.totals.proteinG),
+        formatGrams(d.totals.carbsG),
+        formatGrams(d.totals.fatG),
+        d.water.glasses > 0 ? d.water.text.replace(/ \(.*\)$/, "") : "\u2013",
+        String(d.meals.length),
+        String(suppCount)
+      ],
+      { colors: balanceColors(balance2) }
+    );
+  }
+  const sums = periodSums(days3);
+  const avg = averageTotals(days3);
+  const avgNeed = averageNeed(days3);
+  const dayCount2 = (n2) => `${n2} ${n2 === 1 ? "Tag" : "Tage"}`;
+  if (sums) {
+    row(
+      [
+        `Summe (${dayCount2(sums.days)})`,
+        formatKcal(sums.energyKcal),
+        sums.need === null ? "\u2013" : formatKcal(sums.need),
+        sums.balance === null ? "\u2013" : balanceText(sums.balance),
+        formatGrams(sums.proteinG),
+        formatGrams(sums.carbsG),
+        formatGrams(sums.fatG),
+        sums.waterMl > 0 ? formatLiters(sums.waterMl) : "\u2013",
+        formatNumber(sums.meals, 0),
+        formatNumber(sums.supplements, 0)
+      ],
+      { bold: true, fill: tint3(NAVY4, 0.92), colors: balanceColors(sums.balance) }
+    );
+  }
+  if (avg) {
+    const avgBalance = sums && sums.balance !== null ? sums.balance / sums.needDays : null;
+    row(
+      [
+        `\xD8 (${dayCount2(avg.days)})`,
+        formatKcal(avg.energyKcal),
+        avgNeed ? formatKcal(avgNeed.need) : "\u2013",
+        avgBalance === null ? "\u2013" : balanceText(avgBalance),
+        formatGrams(avg.proteinG),
+        formatGrams(avg.carbsG),
+        formatGrams(avg.fatG),
+        "",
+        "",
+        ""
+      ],
+      { bold: true, fill: tint3(ACCENT2, 0.9), colors: balanceColors(avgBalance) }
+    );
+  }
+  l.y += 6;
+  l.muted(
+    "Tagessumme = Mahlzeiten + Fasttracking + Supplements (Energie und Makron\xE4hrstoffe). Bedarf = Tagesbedarf wie in der Tagessumme der App (festes Ziel + Schritte bzw. Gesamtverbrauch \xB1 Ziel), ohne Kalorienziel der berechnete Gesamtverbrauch. Bilanz = Energie \u2212 Bedarf: negativ = Defizit, positiv = \xDCberschuss. Summen aus ungerundeten Werten; angezeigt auf ganze kcal und 0,1 g gerundet. Summe und Durchschnitt z\xE4hlen nur Tage mit Eintr\xE4gen."
+  );
+  if (sums && sums.need !== null && sums.needDays < sums.days) {
+    l.muted(
+      `Bedarf und Bilanz in Summe und Durchschnitt: nur die ${dayCount2(sums.needDays)} mit Tagesbedarf (an ${dayCount2(sums.days - sums.needDays)} lie\xDF sich kein Bedarf berechnen).`
+    );
+  }
+}
+function dayHeader(l, d) {
+  l.running = exportDayTitle(d.date);
+  l.newPage();
+  l.page.rect(M5, l.y, CONTENT_W3, 34, { fill: tint3(ACCENT2, 0.9), radius: 6 });
+  l.page.rect(M5, l.y, 5, 34, { fill: ACCENT2, radius: 2.5 });
+  l.page.text(M5 + 16, l.y + 22, l.running, { size: 15, bold: true, color: INK4 });
+  if (d.sources.length > 0) {
+    l.page.text(M5 + CONTENT_W3 - 12, l.y + 21, `Enth\xE4lt: ${d.sources.join(", ")}`, {
+      size: 8.5,
+      color: MUTED4,
+      align: "right"
+    });
+  }
+  l.y += 46;
+}
+function totalsTiles(l, d) {
+  l.section("Tagessumme");
+  const gap = 10;
+  const tw = (CONTENT_W3 - gap * 3) / 4;
+  const th = 62;
+  l.ensure(th + 6);
+  d.macros.forEach((m, i) => {
+    const x = M5 + i * (tw + gap);
+    l.page.rect(x, l.y, tw, th, { fill: SOFT4, radius: 6 });
+    l.page.text(x + 10, l.y + 16, m.label, { size: 8.5, bold: true, color: MUTED4 });
+    l.page.text(x + 10, l.y + 36, m.text, { size: 15, bold: true, color: INK4 });
+    if (m.goal !== null && m.goalText) {
+      const share2 = m.goal > 0 ? Math.min(1, m.value / m.goal) : 0;
+      const bw = tw - 20;
+      l.page.rect(x + 10, l.y + 44, bw, 4, { fill: LINE5, radius: 2 });
+      if (share2 > 0)
+        l.page.rect(x + 10, l.y + 44, Math.max(4, bw * share2), 4, { fill: ACCENT2, radius: 2 });
+      l.page.text(x + 10, l.y + 57, `Ziel ${m.goalText}`, { size: 7.5, color: MUTED4 });
+    }
+  });
+  l.y += th + 4;
+}
+function needBlock(l, d) {
+  const n2 = d.need;
+  if (!n2) return;
+  const h = 112;
+  l.ensure(h + 16);
+  l.y += 10;
+  const top = l.y;
+  const p = l.page;
+  p.rect(M5, top, CONTENT_W3, h, { fill: tint3(NAVY4, 0.94), radius: 6 });
+  p.text(M5 + 12, top + 18, `${n2.label} und Tagessumme`, { size: 10.5, bold: true, color: INK4 });
+  const status = n2.diff > 0 ? `Defizit: noch ${formatKcal(n2.diff)} offen` : n2.diff < 0 ? `\xDCberschuss: ${formatKcal(-n2.diff)} \xFCber dem Bedarf` : "Bedarf genau erreicht";
+  const statusColor = n2.diff < 0 ? ACCENT2 : NAVY4;
+  const sw = textWidth(status, 8.5, true) + 16;
+  p.rect(M5 + CONTENT_W3 - 12 - sw, top + 7, sw, 16, { fill: tint3(statusColor, 0.85), radius: 8 });
+  p.text(M5 + CONTENT_W3 - 12 - sw / 2, top + 18.5, status, {
+    size: 8.5,
+    bold: true,
+    color: statusColor,
+    align: "center"
+  });
+  const labelW = 74;
+  const valueW = 112;
+  const barX = M5 + 12 + labelW;
+  const barW = CONTENT_W3 - 24 - labelW - valueW;
+  const barH = 13;
+  const scale = (pct) => barW * pct / 100;
+  const needY = top + 34;
+  const intakeY = top + 56;
+  p.text(M5 + 12, needY + 9.5, n2.label, { size: 8.5, bold: true, color: MUTED4 });
+  p.rect(barX, needY, barW, barH, { fill: WHITE4, radius: 3 });
+  p.rect(barX, needY, Math.max(6, scale(n2.markerPercent)), barH, {
+    fill: tint3(NAVY4, 0.45),
+    radius: 3
+  });
+  p.text(M5 + CONTENT_W3 - 12, needY + 10, formatKcal(n2.kcal), {
+    size: 10,
+    bold: true,
+    color: INK4,
+    align: "right"
+  });
+  p.text(M5 + 12, intakeY + 9.5, "Aufgenommen", { size: 8.5, bold: true, color: MUTED4 });
+  p.rect(barX, intakeY, barW, barH, { fill: WHITE4, radius: 3 });
+  let x = barX;
+  for (const seg of n2.segments) {
+    const w = scale(seg.percent);
+    if (w <= 0) continue;
+    p.rect(x, intakeY, w, barH, { fill: MACRO_COLORS[seg.key] ?? MUTED4 });
+    x += w;
+  }
+  p.text(
+    M5 + CONTENT_W3 - 12,
+    intakeY + 10,
+    `${formatKcal(n2.consumed)} \xB7 ${percentText2(n2.percent)}`,
+    {
+      size: 10,
+      bold: true,
+      color: INK4,
+      align: "right"
+    }
+  );
+  const mx = barX + scale(n2.markerPercent);
+  p.line(mx, needY - 3, mx, intakeY + barH + 3, INK4, 1, 2);
+  let lx = barX;
+  const ly = intakeY + barH + 15;
+  for (const seg of n2.segments) {
+    const text2 = `${MACRO_NAMES[seg.key] ?? seg.key} ${formatKcal(seg.kcal)}`;
+    p.rect(lx, ly - 6.5, 7, 7, { fill: MACRO_COLORS[seg.key] ?? MUTED4, radius: 1.5 });
+    p.text(lx + 10, ly, text2, { size: 7.5, color: MUTED4 });
+    lx += 10 + textWidth(text2, 7.5) + 12;
+  }
+  p.line(lx, ly - 7, lx, ly + 1, INK4, 1, 2);
+  p.text(lx + 5, ly, n2.label, { size: 7.5, color: MUTED4 });
+  p.text(M5 + 12, top + h - 9, fit3(n2.detail, CONTENT_W3 - 24, 8), { size: 8, color: MUTED4 });
+  l.y = top + h + 2;
+}
+function optionalAndWater(l, d) {
+  const colW = (CONTENT_W3 - 16) / 2;
+  const valueW = colW - 100;
+  const wrapped = d.optional.map((o) => ({
+    label: o.label,
+    lines: wrapToWidth(o.value, valueW, 8.5)
+  }));
+  const listH = wrapped.reduce((n2, o) => n2 + o.lines.length * 11 + 3, 0);
+  const h = 22 + Math.max(listH, 52) + 8;
+  l.ensure(h + 20);
+  l.y += 10;
+  const top = l.y;
+  l.page.text(M5, top + 10, "Weitere N\xE4hrwerte", { size: 10.5, bold: true, color: INK4 });
+  let yy = top + 28;
+  for (const o of wrapped) {
+    l.page.text(M5, yy, o.label, { size: 8.5, color: MUTED4 });
+    o.lines.forEach((line, i) => {
+      l.page.text(M5 + colW, yy + i * 11, line, { size: 8.5, color: INK4, align: "right" });
+    });
+    yy += o.lines.length * 11 + 3;
+  }
+  const x = M5 + colW + 16;
+  l.page.rect(x, top, colW, h - 8, { fill: tint3(WATER, 0.92), radius: 6 });
+  l.page.text(x + 12, top + 16, "Wasserhaushalt", { size: 10.5, bold: true, color: WATER });
+  l.page.text(x + 12, top + 36, d.water.text, { size: 12, bold: true, color: INK4 });
+  if (d.water.goalL !== null && d.water.percent !== null) {
+    const bw = colW - 24;
+    const share2 = Math.min(1, d.water.percent / 100);
+    l.page.rect(x + 12, top + 44, bw, 5, { fill: tint3(WATER, 0.7), radius: 2.5 });
+    if (share2 > 0)
+      l.page.rect(x + 12, top + 44, Math.max(5, bw * share2), 5, { fill: WATER, radius: 2.5 });
+    l.page.text(
+      x + 12,
+      top + 60,
+      `Ziel ${String(d.water.goalL).replace(".", ",")} l \xB7 ${percentText2(d.water.percent)}`,
+      { size: 8, color: MUTED4 }
+    );
+  } else {
+    l.page.text(x + 12, top + 54, "kein Trinkziel festgelegt", { size: 8, color: MUTED4 });
+  }
+  l.y = top + h;
+}
+function valueColumns(l, items) {
+  const colW = (CONTENT_W3 - 24) / 2;
+  const rows2 = Math.ceil(items.length / 2);
+  for (let r2 = 0; r2 < rows2; r2++) {
+    l.ensure(14);
+    for (let c = 0; c < 2; c++) {
+      const it = items[r2 + c * rows2];
+      if (!it) continue;
+      const x = M5 + c * (colW + 24);
+      l.page.text(x, l.y + 9, fit3(it.label, colW - 80, 8.5), { size: 8.5, color: MUTED4 });
+      l.page.text(x + colW, l.y + 9, it.value, {
+        size: 8.5,
+        bold: true,
+        color: INK4,
+        align: "right"
+      });
+    }
+    l.page.line(M5, l.y + 12.5, M5 + CONTENT_W3, l.y + 12.5, tint3(LINE5, 0.4), 0.3);
+    l.y += 14;
+  }
+}
+function microTable(l, items) {
+  const pctW = 78;
+  const amountW = 90;
+  const nameW = CONTENT_W3 - amountW - 2 * pctW;
+  const xs = {
+    amount: M5 + nameW + amountW,
+    reference: M5 + nameW + amountW + pctW,
+    limit: M5 + CONTENT_W3
+  };
+  const head2 = () => {
+    l.page.text(M5, l.y + 9, "Stoff", { size: 7.5, bold: true, color: MUTED4 });
+    l.page.text(xs.amount, l.y + 9, "Menge", {
+      size: 7.5,
+      bold: true,
+      color: MUTED4,
+      align: "right"
+    });
+    l.page.text(xs.reference, l.y + 9, "% Ref. DGE", {
+      size: 7.5,
+      bold: true,
+      color: MUTED4,
+      align: "right"
+    });
+    l.page.text(xs.limit, l.y + 9, "% Max. EFSA", {
+      size: 7.5,
+      bold: true,
+      color: MUTED4,
+      align: "right"
+    });
+    l.y += 13;
+  };
+  head2();
+  for (const it of items) {
+    if (l.y + 14 > BOTTOM5) {
+      l.newPage();
+      head2();
+    }
+    l.page.text(M5, l.y + 9, fit3(it.label, nameW - 10, 8.5), { size: 8.5, color: MUTED4 });
+    l.page.text(xs.amount, l.y + 9, it.value, {
+      size: 8.5,
+      bold: true,
+      color: INK4,
+      align: "right"
+    });
+    l.page.text(xs.reference, l.y + 9, it.reference, { size: 8.5, color: INK4, align: "right" });
+    l.page.text(xs.limit, l.y + 9, it.limit, { size: 8.5, color: INK4, align: "right" });
+    l.page.line(M5, l.y + 12.5, M5 + CONTENT_W3, l.y + 12.5, tint3(LINE5, 0.4), 0.3);
+    l.y += 14;
+  }
+}
+function microBlock(l, d) {
+  l.section("Mikron\xE4hrstoffe und weitere Stoffe");
+  if (d.micro.length === 0) {
+    l.muted(
+      "An diesem Tag keine Vitamine, Mineralstoffe oder weiteren Stoffe erfasst (sie kommen aus Supplements und Fasttracking)."
+    );
+    return;
+  }
+  for (const g of d.micro) {
+    l.ensure(46);
+    l.page.text(M5, l.y + 9, g.label, { size: 9, bold: true, color: ACCENT2 });
+    l.y += 14;
+    microTable(l, g.items);
+    l.y += 6;
+  }
+  l.muted(
+    "Summe aus Supplements und Fasttracking. Lebensmittel aus Mahlzeiten liefern hier nur Makron\xE4hrstoffe, Ballaststoffe, Zucker und Salz."
+  );
+  l.muted(
+    `${d.referenceNote}. \u201E% Ref. DGE\u201C = Anteil am Referenzwert der DGE/\xD6GE (empfohlene Zufuhr, Sch\xE4tz- oder Richtwert; Bereiche: unterer Wert; Zink: mittlere Phytatzufuhr). \u201E% Max. EFSA\u201C = Anteil an der tolerierbaren H\xF6chstmenge (UL) bzw. sicheren Aufnahmemenge der EFSA (Stand August 2025; bei Magnesium, Fols\xE4ure und Vitamin A nur f\xFCr zugesetzte Mengen). \u201E-\u201C = kein Wert festgelegt.`
+  );
+}
+function mealsBlock(l, d) {
+  l.section("Mahlzeiten");
+  if (d.meals.length === 0) {
+    l.muted(
+      d.fast ? "Keine einzelnen Mahlzeiten \u2013 die Tageswerte stehen unter \u201EFasttracking\u201C." : "Keine Mahlzeiten eingetragen."
+    );
+    return;
+  }
+  const cols = [
+    { w: 206, align: "left", label: "Lebensmittel" },
+    { w: 62, align: "right", label: "Menge" },
+    { w: 62, align: "right", label: "Energie" },
+    { w: 56, align: "right", label: "Protein" },
+    { w: 56, align: "right", label: "KH" },
+    { w: CONTENT_W3 - 442, align: "right", label: "Fett" }
+  ];
+  const tableHead = () => {
+    let x = M5 + 8;
+    for (const c of cols) {
+      l.page.text(c.align === "right" ? x + c.w - 10 : x, l.y + 9, c.label, {
+        size: 7.5,
+        bold: true,
+        color: MUTED4,
+        align: c.align
+      });
+      x += c.w;
+    }
+    l.y += 13;
+  };
+  for (const m of d.meals) {
+    l.ensure(40 + Math.min(m.items.length, 3) * 14);
+    l.page.rect(M5, l.y, CONTENT_W3, 22, { fill: SOFT4, radius: 5 });
+    const title = m.time ? `${m.title} \xB7 ${m.time} Uhr` : m.title;
+    l.page.text(M5 + 8, l.y + 15, fit3(title, CONTENT_W3 * 0.45, 10, true), {
+      size: 10,
+      bold: true,
+      color: INK4
+    });
+    l.page.text(M5 + CONTENT_W3 - 8, l.y + 15, m.summary, {
+      size: 8.5,
+      color: MUTED4,
+      align: "right"
+    });
+    l.y += 26;
+    if (m.items.length > 0) {
+      tableHead();
+      for (const it of m.items) {
+        if (l.y + 14 > BOTTOM5) {
+          l.newPage();
+          tableHead();
+        }
+        const name = it.brand ? `${it.name} (${it.brand})` : it.name;
+        const cells = [name, it.amount, it.energy, it.protein, it.carbs, it.fat];
+        let x = M5 + 8;
+        cells.forEach((cell2, i) => {
+          const c = cols[i];
+          l.page.text(c.align === "right" ? x + c.w - 10 : x, l.y + 9, fit3(cell2, c.w - 10, 8.5), {
+            size: 8.5,
+            color: INK4,
+            align: c.align
+          });
+          x += c.w;
+        });
+        l.page.line(M5 + 8, l.y + 12.5, M5 + CONTENT_W3 - 8, l.y + 12.5, tint3(LINE5, 0.4), 0.3);
+        l.y += 14;
+      }
+    }
+    if (m.direct.length > 0) {
+      const text2 = `Fasttracking: ${m.direct.map((v) => `${v.label} ${v.value}`).join(" \xB7 ")}`;
+      for (const line of wrapToWidth(text2, CONTENT_W3 - 16, 8)) {
+        l.ensure(12);
+        l.page.text(M5 + 8, l.y + 9, line, { size: 8, color: MUTED4 });
+        l.y += 11;
+      }
+    }
+    if (m.notes) {
+      for (const line of wrapToWidth(`Notiz: ${m.notes}`, CONTENT_W3 - 16, 8)) {
+        l.ensure(12);
+        l.page.text(M5 + 8, l.y + 9, line, { size: 8, color: MUTED4 });
+        l.y += 11;
+      }
+    }
+    l.y += 8;
+  }
+}
+function fastBlock(l, d) {
+  if (!d.fast) return;
+  l.section("Fasttracking (ganzer Tag)");
+  for (const g of d.fast.groups) {
+    l.ensure(30);
+    l.page.text(M5, l.y + 9, g.label, { size: 9, bold: true, color: ACCENT2 });
+    l.y += 14;
+    valueColumns(l, g.items);
+    l.y += 4;
+  }
+  if (d.fast.notes) l.muted(`Notiz: ${d.fast.notes}`);
+}
+function supplementsBlock(l, d) {
+  l.section("Supplements");
+  if (d.supplements.length === 0) {
+    l.muted("Keine Supplements eingetragen.");
+    return;
+  }
+  for (const g of d.supplements) {
+    l.ensure(34);
+    l.page.text(M5, l.y + 9, `Einnahme ${g.label}`, { size: 9, bold: true, color: ACCENT2 });
+    l.y += 15;
+    for (const it of g.items) {
+      l.ensure(14);
+      l.page.circle(M5 + 4, l.y + 6, 1.6, MUTED4);
+      l.page.text(M5 + 12, l.y + 9, fit3(it.name, 250, 8.5), { size: 8.5, color: INK4 });
+      l.page.text(M5 + 330, l.y + 9, it.amount, {
+        size: 8.5,
+        bold: true,
+        color: INK4,
+        align: "right"
+      });
+      const extra = [it.time ? `${it.time} Uhr` : "", it.stack ? `Stack \u201E${it.stack}\u201C` : ""].filter(Boolean).join(" \xB7 ");
+      if (extra)
+        l.page.text(M5 + 344, l.y + 9, fit3(extra, CONTENT_W3 - 344, 8), { size: 8, color: MUTED4 });
+      l.y += 14;
+    }
+    for (const note of g.notes) l.muted(`Notiz: ${note}`);
+    l.y += 4;
+  }
+}
+function nutritionExportPdf(days3, opts) {
+  const l = new Layout3();
+  cover(l, days3, opts);
+  overview(l, days3);
+  for (const d of days3) {
+    if (!d.hasEntries) continue;
+    dayHeader(l, d);
+    totalsTiles(l, d);
+    needBlock(l, d);
+    optionalAndWater(l, d);
+    microBlock(l, d);
+    mealsBlock(l, d);
+    fastBlock(l, d);
+    supplementsBlock(l, d);
+  }
+  const total = l.doc.pages.length;
+  l.doc.pages.forEach((p, i) => {
+    p.line(M5, A4_H - 34, A4_W - M5, A4_H - 34, LINE5, 0.4);
+    p.text(
+      M5,
+      A4_H - 22,
+      "LIFESPAN OS \xB7 Ern\xE4hrungstagebuch \xB7 Werte wie eingetragen, keine Bewertung",
+      {
+        size: 7.5,
+        color: MUTED4
+      }
+    );
+    p.text(A4_W - M5, A4_H - 22, `Seite ${i + 1} von ${total}`, {
+      size: 7.5,
+      color: MUTED4,
+      align: "right"
+    });
+  });
+  if (opts.watermark) {
+    const name = l.doc.addImage(opts.watermark);
+    const w = A4_W * 0.8;
+    const h = w * opts.watermark.height / opts.watermark.width;
+    for (const p of l.doc.pages)
+      p.image(name, (A4_W - w) / 2, (A4_H - h) / 2 + 20, w, h, { multiply: true });
+  }
+  return l.doc.toBytes("Ern\xE4hrungstagebuch");
+}
 export {
   AKH_REFERENCES,
   ANS_INFO,
@@ -27921,6 +29761,8 @@ export {
   nextHrtDoses,
   nutrientPercents,
   nutrientsFor,
+  nutritionExport_exports as nutritionExport,
+  nutritionExportPdf_exports as nutritionExportPdf,
   onboarding_exports as onboarding,
   optionalOf,
   parseChecklistText,
@@ -27954,6 +29796,9 @@ export {
   recovery_exports as recovery,
   referenceGroup,
   repeatDates,
+  report_exports as report,
+  reportPdf_exports as reportPdf,
+  reportRanges_exports as reportRanges,
   resistance_exports as resistance,
   roman,
   roundAmount,

@@ -33,6 +33,7 @@ import { layoutActions, settingsActions } from "./settingsview.js";
 import { trainingActions } from "./training.js";
 import * as TR from "./trainingdata.js";
 import * as PD from "./pending.js";
+import * as N from "./nutrition.js";
 import * as HX from "./hyrox.js";
 import * as GY from "./gymsui.js";
 import { extrasActions } from "./extras.js";
@@ -329,7 +330,7 @@ export const actions = {
     const all = PD.pendingItems(S);
     const it = all.find((x) => x.key === el.dataset.arg);
     if (!it) return;
-    if (!confirmTwice(el, it.status === "Löschung" ? "Nochmal tippen: wiederherstellen" : "Nochmal tippen: verwerfen")) return;
+    if (!el.dataset.swiped && !confirmTwice(el, it.status === "Löschung" ? "Nochmal tippen: wiederherstellen" : "Nochmal tippen: verwerfen")) return;
     let stores;
     try {
       stores = PD.discardItem(S, it, all);
@@ -343,10 +344,51 @@ export const actions = {
     render();
   },
   "pending-wo-discard": async (el) => {
-    if (!confirmTwice(el, "Nochmal tippen: Training verwerfen")) return;
+    if (!el.dataset.swiped && !confirmTwice(el, "Nochmal tippen: Training verwerfen")) return;
     S.workouts = S.workouts.filter((w) => w.id !== el.dataset.arg);
     await saveNow();
     toast("Training verworfen");
+    render();
+  },
+  // Offene Daten (1.94.0): ganze Rubrik nach Wischen nach rechts und Rückfrage verwerfen
+  "pending-area-cancel": () => {
+    S.pendingAreaConfirm = null;
+    render();
+  },
+  "pending-area-discard": async (el) => {
+    const area = el.dataset.arg;
+    S.pendingAreaConfirm = null;
+    const changed = new Set();
+    let n = 0;
+    let kept = 0;
+    // Einträge einzeln verwerfen (Reihenfolge neu ermitteln, weil Teile zusammenhängen können)
+    for (let guard = 0; guard < 2000; guard++) {
+      const all = PD.pendingItems(S);
+      const next = all.filter((x) => x.area === area).find((x) => !x._skip && !(S._pendingSkip ?? new Set()).has(x.key));
+      if (!next) break;
+      try {
+        for (const s of PD.discardItem(S, next, all)) changed.add(s);
+        n++;
+      } catch {
+        (S._pendingSkip ??= new Set()).add(next.key);
+        kept++;
+      }
+    }
+    S._pendingSkip = null;
+    for (const name of changed) await store.set(name, name === "body" ? S.body.local : S[name]);
+    if (changed.has("train")) refreshCatalog();
+    if (area === "training") {
+      const before = S.workouts.length;
+      S.workouts = S.workouts.filter((w) => !(w.status === "done" && !w.exported));
+      n += before - S.workouts.length;
+      await saveNow();
+    }
+    if (area === "nutrition" && S.food) {
+      n += N.discardUnsentFood(S.food.local);
+      await store.set("nutrition", S.food.local);
+    }
+    S.pendingOpen = null;
+    toast(`${n} ${n === 1 ? "Eintrag" : "Einträge"} verworfen${kept ? ` – ${kept} bleiben, weil sie noch verwendet werden` : ""}`);
     render();
   },
   "account-new": () => {

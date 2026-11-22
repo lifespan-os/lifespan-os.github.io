@@ -159,17 +159,14 @@ export function viewPending() {
       }
       ${!it.fields.length && !it.details.length ? `<p class="muted small">${it.status === "Löschung" ? "Wird am PC gelöscht." : "Keine weiteren Angaben."}</p>` : ""}
     </div>`;
-  const itemHtml = (it) => `<li class="pending-item">
-      <div class="pending-item__head">
+  const itemHtml = (it) => `<li class="pending-item swipe-row" data-swipe-left="pending-discard" data-swipe-arg="${esc(it.key)}" data-swipe-label="${it.status === "Löschung" ? "Wiederherstellen" : "Verwerfen"}">
+      <div class="swipe-row__body">
+      <div class="pending-item__head" data-act="pending-toggle" data-arg="${esc(it.key)}" role="button" tabindex="0" aria-expanded="${open === it.key}">
         <span class="pending-item__main"><b>${esc(it.title)}</b>
           <span class="muted small">${esc([it.label, it.date ? fmtDate(it.date) : "", ...it.parts].filter(Boolean).join(" · "))}</span></span>
         <span class="tag ${it.status === "Löschung" ? "tag--del" : it.status === "Neu" ? "tag--new" : ""}">${esc(it.status)}</span>
       </div>
-      ${open === it.key ? detailsHtml(it) : ""}
-      <div class="row-actions">
-        <button class="linkbtn" data-act="pending-toggle" data-arg="${esc(it.key)}" aria-expanded="${open === it.key}">${open === it.key ? "Weniger" : "Ansehen"}</button>
-        ${it.edit ? `<button class="linkbtn" data-act="pending-edit" data-arg="${esc(it.key)}">Bearbeiten</button>` : ""}
-        <button class="linkbtn danger" data-act="pending-discard" data-arg="${esc(it.key)}">${it.status === "Löschung" ? "Löschen zurücknehmen" : "Verwerfen"}</button>
+      ${open === it.key ? `${detailsHtml(it)}${it.edit ? `<button class="btn sm" data-act="pending-edit" data-arg="${esc(it.key)}">Bearbeiten</button>` : ""}` : ""}
       </div></li>`;
   const byArea = new Map();
   for (const it of items) {
@@ -179,16 +176,14 @@ export function viewPending() {
   const woHtml = (w) => {
     const sets = w.exercises.reduce((a, e) => a + e.sets.length, 0);
     const names = w.exercises.map((e) => ex.get(e.exerciseId)?.name).filter(Boolean);
-    return `<li class="pending-item">
-      <div class="pending-item__head">
+    return `<li class="pending-item swipe-row" data-swipe-left="pending-wo-discard" data-swipe-arg="${esc(w.id)}" data-swipe-label="Verwerfen">
+      <div class="swipe-row__body">
+      <div class="pending-item__head" data-go="detail" data-arg="${esc(w.id)}" role="button" tabindex="0">
         <span class="pending-item__main"><b>${esc(w.title)}</b>
           <span class="muted small">${esc([`Training`, fmtDate(w.date), `${w.exercises.length} Übungen`, `${sets} Sätze`, w.durationMin ? `${w.durationMin} min` : ""].filter(Boolean).join(" · "))}</span>
           ${names.length ? `<span class="muted small">${esc(names.slice(0, 6).join(", "))}${names.length > 6 ? " …" : ""}</span>` : ""}</span>
         <span class="tag ${w.extra ? "" : "tag--new"}">${w.extra ? "Geändert" : "Neu"}</span>
       </div>
-      <div class="row-actions">
-        <button class="linkbtn" data-go="detail" data-arg="${esc(w.id)}">Ansehen und bearbeiten</button>
-        <button class="linkbtn danger" data-act="pending-wo-discard" data-arg="${esc(w.id)}">Verwerfen</button>
       </div></li>`;
   };
   const areaCards = PD.AREAS.map(([area, label]) => {
@@ -197,7 +192,14 @@ export function viewPending() {
     const extraFood = area === "nutrition" ? foodN : 0;
     if (!list.length && !extraWo.length && !extraFood) return "";
     const count = list.length + extraWo.length + extraFood;
-    return `<section class="card"><div class="wo-head"><h3>${esc(label)}</h3><span class="tag">${count} offen</span></div>
+    const confirm = S.pendingAreaConfirm === area;
+    return `<section class="card pending-area${confirm ? " is-confirm" : ""}" data-swipe-area="${area}"><div class="wo-head"><h3>${esc(label)}</h3><span class="tag">${count} offen</span></div>
+      ${
+        confirm
+          ? `<div class="pending-confirm" role="alertdialog" aria-label="${esc(`Alle ${count} aus ${label} verwerfen?`)}"><p class="small"><b>Alle ${count} aus „${esc(label)}“ verwerfen?</b> Es gilt dann wieder der Stand vom PC.</p>
+              <div class="row-actions"><button class="btn danger sm" data-act="pending-area-discard" data-arg="${area}">Alle verwerfen</button><button class="btn sm" data-act="pending-area-cancel">Abbrechen</button></div></div>`
+          : ""
+      }
       ${
         extraFood
           ? `<p class="muted small">${extraFood} ${extraFood === 1 ? "Ernährungseintrag" : "Ernährungseinträge"} (Mahlzeiten, Lebensmittel, Rezepte, Strichcodes).</p>
@@ -209,7 +211,7 @@ export function viewPending() {
   }).join("");
   return `${header("Offene Daten", { back: "transfer" })}<main class="wrap">
     <section class="card">
-      <p class="small">Alles, was du am Handy erfasst oder geändert hast und noch nicht an den PC gesendet ist. <b>Bearbeiten</b> öffnet den Eintrag im jeweiligen Bereich. <b>Verwerfen</b> nimmt die Änderung am Handy zurück – dann gilt wieder der Stand vom PC.</p>
+      <p class="small card-info">Alles, was du am Handy erfasst oder geändert hast und noch nicht an den PC gesendet ist. <b>Antippen</b> zeigt den Eintrag mit „Bearbeiten“. <b>Nach links wischen</b> verwirft den Eintrag, <b>nach rechts wischen</b> die ganze Rubrik (mit Rückfrage) – dann gilt wieder der Stand vom PC.</p>
       ${total ? `<button class="btn primary block" data-go="send">An den PC senden</button>` : `<p class="empty">Alles übertragen – keine offenen Daten.</p>`}
     </section>
     ${areaCards}

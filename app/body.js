@@ -398,64 +398,74 @@ async function loadSource(file, loadImage) {
   return c;
 }
 
+/**
+ * Waagen-Auswertung (Bild oder PDF) lesen und den Messgrößen `bounds` zuordnen (1.94.0 ausgelagert,
+ * auch für den Upload in „Werte nachtragen“). `onStatus(text)` meldet den Fortschritt.
+ * Rückgabe: Werte wie `scaleScan.scaleValues` (ohne Gesundheitspunktzahl, BMR, Herzfrequenz).
+ */
+export async function readScaleFile(file, bounds, onStatus = () => {}) {
+  const { loadImage, recognizeRows } = await import("./ocr.js");
+  onStatus("Bild wird vorbereitet …");
+  const img = await loadSource(file, loadImage);
+  const w0 = img.naturalWidth || img.width;
+  const h0 = img.naturalHeight || img.height;
+  const base = w0 < 1000 ? Math.min(3, 1400 / w0) : Math.min(1, 1600 / w0);
+  /** Graustufen-Abschnitte des Bildes in einer Größe (Faktor `f`). */
+  const canvasesAt = (f) => {
+    const w = Math.round(w0 * f);
+    const h = Math.round(h0 * f);
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, 0, 0, w, h);
+    const gray = D.scaleScan.prepareGray(ctx.getImageData(0, 0, w, h).data);
+    return D.scaleScan.sliceRanges(gray, w, h, 2000).map(([y0, y1]) => {
+      const part = document.createElement("canvas");
+      part.width = w;
+      part.height = y1 - y0;
+      const pctx = part.getContext("2d");
+      const out = pctx.createImageData(w, y1 - y0);
+      for (let i = 0, j = y0 * w; j < y1 * w; i += 4, j++) {
+        out.data[i] = out.data[i + 1] = out.data[i + 2] = gray[j];
+        out.data[i + 3] = 255;
+      }
+      pctx.putImageData(out, 0, 0);
+      return part;
+    });
+  };
+  // Drei Durchgänge (Textblock, Spalten, kleinere Bildgröße): die Mehrheit zählt, Widersprüche
+  // werden markiert
+  const PASSES = [
+    { zoom: 1, psm: "6" },
+    { zoom: 1, psm: "4" },
+    { zoom: 0.7, psm: "6" },
+  ];
+  const results = [];
+  for (const [i, pass] of PASSES.entries()) {
+    const rows = await recognizeRows(
+      canvasesAt(base * pass.zoom),
+      (text, p) => onStatus(`Durchgang ${i + 1} von ${PASSES.length}: ${text} ${Math.round((p ?? 0) * 100)} %`),
+      pass.psm,
+    );
+    results.push(D.scaleScan.scaleValues(D.scaleScan.readScaleRows(rows), bounds));
+  }
+  // Gesundheitspunktzahl, BMR und Herzfrequenz erscheinen nicht (Festlegung 14.11.2026)
+  return D.scaleScan.visibleValues(D.scaleScan.combinePasses(results));
+}
+
 /** Screenshot lesen: Graustufen (dunkel umgekehrt), lange Bilder geteilt, Texterkennung. */
 async function readScale(file) {
   const st = S();
   st.scale = { busy: true, status: "Bild wird vorbereitet …", rows: null };
   X.rerender();
   try {
-    const { loadImage, recognizeRows } = await import("./ocr.js");
-    const img = await loadSource(file, loadImage);
-    const w0 = img.naturalWidth || img.width;
-    const h0 = img.naturalHeight || img.height;
-    const base = w0 < 1000 ? Math.min(3, 1400 / w0) : Math.min(1, 1600 / w0);
-    /** Graustufen-Abschnitte des Bildes in einer Größe (Faktor `f`). */
-    const canvasesAt = (f) => {
-      const w = Math.round(w0 * f);
-      const h = Math.round(h0 * f);
-      const c = document.createElement("canvas");
-      c.width = w;
-      c.height = h;
-      const ctx = c.getContext("2d", { willReadFrequently: true });
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(img, 0, 0, w, h);
-      const gray = D.scaleScan.prepareGray(ctx.getImageData(0, 0, w, h).data);
-      return D.scaleScan.sliceRanges(gray, w, h, 2000).map(([y0, y1]) => {
-        const part = document.createElement("canvas");
-        part.width = w;
-        part.height = y1 - y0;
-        const pctx = part.getContext("2d");
-        const out = pctx.createImageData(w, y1 - y0);
-        for (let i = 0, j = y0 * w; j < y1 * w; i += 4, j++) {
-          out.data[i] = out.data[i + 1] = out.data[i + 2] = gray[j];
-          out.data[i + 3] = 255;
-        }
-        pctx.putImageData(out, 0, 0);
-        return part;
-      });
-    };
     const bounds = metrics().map((m) => ({ id: m.id, name: m.name, unit: m.unit, minValue: m.min_value ?? null, maxValue: m.max_value ?? null, decimals: m.decimals ?? 1 }));
-    // Drei Durchgänge (Textblock, Spalten, kleinere Bildgröße): die Mehrheit zählt, Widersprüche
-    // werden markiert
-    const PASSES = [
-      { zoom: 1, psm: "6" },
-      { zoom: 1, psm: "4" },
-      { zoom: 0.7, psm: "6" },
-    ];
-    const results = [];
-    for (const [i, pass] of PASSES.entries()) {
-      const rows = await recognizeRows(
-        canvasesAt(base * pass.zoom),
-        (text, p) => {
-          const el = document.getElementById("scale-status");
-          if (el) el.textContent = `Durchgang ${i + 1} von ${PASSES.length}: ${text} ${Math.round((p ?? 0) * 100)} %`;
-        },
-        pass.psm,
-      );
-      results.push(D.scaleScan.scaleValues(D.scaleScan.readScaleRows(rows), bounds));
-    }
-    // Gesundheitspunktzahl, BMR und Herzfrequenz erscheinen nicht (Festlegung 14.11.2026)
-    const vals = D.scaleScan.visibleValues(D.scaleScan.combinePasses(results));
+    const vals = await readScaleFile(file, bounds, (text) => {
+      const el = document.getElementById("scale-status");
+      if (el) el.textContent = text;
+    });
     const found = vals.filter((v) => v.value !== null).length;
     st.scale = {
       busy: false,

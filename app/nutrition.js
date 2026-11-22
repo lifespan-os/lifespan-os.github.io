@@ -501,6 +501,33 @@ export function discardBarcode(local, code) {
   if (local.barcodes[code] && !local.barcodes[code].sent) delete local.barcodes[code];
 }
 
+/**
+ * Alles noch nicht Gesendete der Ernährung verwerfen (1.94.0, Offene Daten → Rubrik wischen):
+ * Einträge, Rezepte, Strichcodes und eigene Lebensmittel, soweit sie nicht mehr verwendet werden.
+ * Rückgabe: Zahl der verworfenen Teile.
+ */
+export function discardUnsentFood(local) {
+  let n = 0;
+  for (const [id, m] of Object.entries(local.meals)) {
+    const before = m.items.length;
+    m.items = m.items.filter((i) => i.sent);
+    n += before - m.items.length;
+    if (!m.items.length) delete local.meals[id];
+  }
+  for (const [id, r] of Object.entries(local.recipes)) if (!r.sent) (delete local.recipes[id], n++);
+  for (const [code, c] of Object.entries(local.barcodes)) if (!c.sent) (delete local.barcodes[code], n++);
+  for (const [id, f] of Object.entries(local.foods)) {
+    if (f.sent || f.pkg) continue;
+    try {
+      discardFood(local, id);
+      n++;
+    } catch {
+      // noch im Gericht verwendet – bleibt
+    }
+  }
+  return n;
+}
+
 /** Noch nicht gesendeten Eintrag entfernen. */
 export function removeItem(local, mealId, itemId) {
   const meal = local.meals[mealId];

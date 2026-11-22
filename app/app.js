@@ -3,6 +3,7 @@
 import "./sheets.js";
 import { bodyParityChange } from "./bodyparity.js";
 import { goalsParityChange } from "./goalsparity.js";
+import { initRowSwipe } from "./swiperow.js";
 import * as PR from "./paritydata.js";
 import { parityChangeB as parityChange } from "./parity.js";
 import "./navshell.js";
@@ -50,7 +51,7 @@ import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
 import * as TR from "./trainingdata.js";
 import * as HX from "./hyrox.js";
 import * as GY from "./gymsui.js";
-import { initExtras, quickFillInput, viewQuickFill } from "./extras.js";
+import { initExtras, quickFillInput, quickFillUpload, viewQuickFill } from "./extras.js";
 import { viewMealPlan } from "./planparity.js";
 import { viewSearch, searchInput } from "./searchview.js";
 import { reviewChange } from "./reviewparity.js";
@@ -263,6 +264,7 @@ app.addEventListener("input", (ev) => {
 
 app.addEventListener("change", async (ev) => {
   const el = ev.target;
+  if (el.dataset?.qfUpload !== undefined) return void quickFillUpload(el);
   if (foodChange(el)) return;
   if (protocolsChange(el)) return;
   if (bodyChange(el)) return;
@@ -428,6 +430,16 @@ initOff(moduleCtx);
 initOverview({ ...moduleCtx, S, today: todayIso });
 
 // Overview: Tag per Wischen wechseln (1.66.0); nie in die Zukunft
+// Zeilen wischen (1.94.0, Offene Daten): links = Aktion der Zeile, rechts = ganze Rubrik mit Rückfrage
+initRowSwipe({
+  left: (act, arg) => actions[act]?.({ dataset: { arg, swiped: "1" }, closest: () => null }),
+  right: (area) => {
+    S.pendingAreaConfirm = area;
+    render();
+    requestAnimationFrame(() => document.querySelector(`[data-swipe-area="${area}"]`)?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  },
+});
+
 initDaySwipe(
   {
     ov: {

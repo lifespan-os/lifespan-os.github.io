@@ -2049,3 +2049,17 @@ html[data-theme="dark"] .muscle-map__hatch-line { stroke: #e8eef6; }
 .setup-step.is-done .setup-step__text strong { color: var(--muted); text-decoration: line-through; }
 .setup-step__text .linkbtn { justify-self: start; }
 .rep-fact p span { min-width: 0; }
+
+/* Zeilen wischen (1.94.0, Offene Daten) */
+.swipe-row { position: relative; overflow: hidden; touch-action: pan-y; }
+.swipe-row::before { content: attr(data-swipe-label); position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-end; padding: 0 16px; background: var(--danger); color: #fff; font-weight: 700; opacity: 0; }
+.swipe-row[data-swipe-dir="left"]::before { opacity: 1; }
+.swipe-row[data-swipe-dir="right"]::before { content: "Ganze Rubrik"; justify-content: flex-start; opacity: 1; background: var(--orange); color: var(--orange-ink); }
+.swipe-row__body { position: relative; background: var(--surface); }
+.pending-item__head { cursor: pointer; }
+.pending-item .btn.sm { margin-top: 6px; }
+.pending-confirm { margin: 0 0 10px; padding: 10px 12px; border: 1px solid var(--danger); border-radius: 12px; }
+.pending-confirm p { margin: 0 0 8px; }
+/* Werte nachtragen: Upload neben „alle überspringen“ (1.94.0) */
+.qf-head-actions { display: inline-flex; align-items: center; gap: 12px; }
+.qf-head-actions .btn.sm { min-height: 34px; }

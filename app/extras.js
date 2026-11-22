@@ -150,7 +150,12 @@ export function viewQuickFill() {
     : "";
   const valuesHtml = [...groups.entries()]
     .map(
-      ([title, list]) => `<section class="card"><div class="wo-head"><h3>${esc(title)}</h3><button class="linkbtn" data-act="qf-skip-group" data-arg="${esc(list.map(valueKey).join(","))}">alle überspringen</button></div>
+      ([title, list]) => `<section class="card"><div class="wo-head"><h3>${esc(title)}</h3><span class="qf-head-actions">${
+        title === "Heute fällig"
+          ? `<label class="btn sm ${f.reading ? "is-busy" : ""}">${f.reading ? "Liest …" : "Upload"}<input type="file" accept="image/*,application/pdf,.pdf" data-qf-upload="${esc(list.map(valueKey).join(","))}" hidden ${f.reading ? "disabled" : ""}></label>`
+          : ""
+      }<button class="linkbtn" data-act="qf-skip-group" data-arg="${esc(list.map(valueKey).join(","))}">alle überspringen</button></span></div>
+      ${title === "Heute fällig" && (f.upload || f.reading) ? `<p class="${f.upload?.tone === "error" ? "warn" : "muted"} small" id="qf-upload-status" role="status">${esc(f.reading ? f.readStatus ?? "Datei wird gelesen …" : f.upload.text)}</p>` : ""}
       ${list
         .map(
           (m) => `<div class="qf-row"><div><strong>${esc(m.name)}</strong><span class="muted small">${
@@ -167,6 +172,52 @@ export function viewQuickFill() {
     ${empty ? `<section class="card"><p class="ok-note">Alles erfasst – es fehlt gerade kein Wert.</p></section>` : `${sleepHtml}${gripHtml}${valuesHtml}`}
   </main>
   ${empty ? "" : `<div class="bottom"><div class="inner"><button class="btn primary" data-act="qf-save">Speichern</button></div></div>`}`;
+}
+
+/**
+ * Upload (1.94.0, wie am PC): Foto oder PDF der Waagen-Auswertung lesen (wie „Aus Bild übernehmen“)
+ * und die erkannten Werte in die Felder der heute fälligen Messgrößen eintragen. Gespeichert wird
+ * erst mit „Speichern“, nach Prüfung.
+ */
+export async function quickFillUpload(el) {
+  if (el.dataset?.qfUpload === undefined || el.type !== "file") return false;
+  const file = el.files?.[0];
+  if (!file) return true;
+  const f = (X.S.qf ??= { inputs: {}, errors: {} });
+  const keys = new Set(String(el.dataset.qfUpload).split(","));
+  const list = missingAll().values.filter((m) => keys.has(valueKey(m)));
+  f.reading = true;
+  f.readStatus = "Datei wird gelesen …";
+  f.upload = null;
+  X.rerender();
+  try {
+    const { readScaleFile } = await import("./body.js");
+    const bounds = list.map((m) => ({ id: m.metricId, name: m.name, unit: m.unit, minValue: m.minValue, maxValue: m.maxValue, decimals: m.decimals }));
+    const vals = await readScaleFile(file, bounds, (text) => {
+      f.readStatus = text;
+      const s = document.getElementById("qf-upload-status");
+      if (s) s.textContent = text;
+    });
+    let n = 0;
+    const check = [];
+    for (const v of vals) {
+      if (!v.metric || v.value === null) continue;
+      const m = list.find((x) => x.metricId === v.metric.id);
+      if (!m) continue;
+      f.inputs[valueKey(m)] = String(Math.round(v.value * 10 ** m.decimals) / 10 ** m.decimals).replace(".", ",");
+      n++;
+      if (!v.ok) check.push(v.note ? `${m.name} (${v.note})` : m.name);
+    }
+    f.upload = n
+      ? { tone: "ok", text: `${n} ${n === 1 ? "Wert" : "Werte"} aus der Datei eingetragen – bitte prüfen und speichern.${check.length ? ` Besonders prüfen: ${check.join(", ")}.` : ""}` }
+      : { tone: "error", text: "In der Datei wurden keine Werte für die heute fälligen Messgrößen erkannt." };
+  } catch (e) {
+    f.upload = { tone: "error", text: e?.message || "Die Datei lässt sich nicht lesen." };
+  } finally {
+    f.reading = false;
+    X.rerender();
+  }
+  return true;
 }
 
 /** Eingabe im Quick-Fill-Formular (ohne neu zu zeichnen). */

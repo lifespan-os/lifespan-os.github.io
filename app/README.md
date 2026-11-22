@@ -1518,3 +1518,9 @@ Alle Bereiche und Reiter bei iPhone-Breite (390 px) durchgesehen; kein Bereich i
 - Steht der Schalter auf „Kraft“, zeigt die Körperkarte einer Cardio-Einheit jetzt den Hinweis „Cardio ist
   ausgeblendet – „Kraft + Cardio“ wählen …“ statt „Noch keine Arbeitssätze“ (wie PC 1.0.174, dort ist der Schalter
   jetzt auch in der Einheitskarte). Geändert: `trainingstats.js`, `core.js`, `sw.js`.
+
+## Version 1.98.2 (22.11.2026): ANS-Werte ohne „(optional)“
+
+- ANS-Werte erfassen: Die Felder Ruhepuls, HRV, Atemfrequenz, Ø Schlag-zu-Schlag-Intervall und ANS-Status
+  heißen ohne „(optional)“; der Einleitungssatz sagt jetzt „Alle Werte sind freiwillig“ (wie PC 1.0.174).
+  Geändert: `logs.js`, `core.js`, `sw.js`.

@@ -518,11 +518,11 @@ function editVitalsView(f) {
   const hasMetric = (id) => (S.catalog?.body?.metrics ?? []).some((m) => m.id === id);
   const vf = (v) =>
     hasMetric(v.id)
-      ? field(`v-${v.id}`, `${v.label} (optional)`, d.values[v.id] ?? "", { unit: v.unit, mode: v.decimals === 0 ? "numeric" : "decimal", hint: v.hint, error: e[v.id] })
+      ? field(`v-${v.id}`, v.label, d.values[v.id] ?? "", { unit: v.unit, mode: v.decimals === 0 ? "numeric" : "decimal", hint: v.hint, error: e[v.id] })
       : "";
   return `${X.header("ANS-Werte erfassen", { back: "recovery", sub: D.ANS_TITLE })}<main class="wrap">
     <section class="card card--recovery ov-card logs-form">
-      <p class="muted small">Manuell übertragene Messwerte, z. B. von Uhr, Brustgurt oder App. Sie werden unter Body &amp; Longevity gespeichert. Werte vom PC entfernst du am PC; ein geleertes Feld entfernt einen hier erfassten, noch nicht gesendeten Wert.</p>
+      <p class="muted small">Manuell übertragene Messwerte, z. B. von Uhr, Brustgurt oder App. Sie werden unter Body &amp; Longevity gespeichert. Alle Werte sind freiwillig. Werte vom PC entfernst du am PC; ein geleertes Feld entfernt einen hier erfassten, noch nicht gesendeten Wert.</p>
       ${field("date", "Messdatum", d.date, { type: "date", error: e.date })}
       ${selectField("method", "Messmethode", d.method, [["", "Keine Angabe"], ...methods.map((m) => [m, m])], {
         hint: methods.length ? "Gilt für alle Werte dieses Messdatums." : "Messmethoden legst du am PC unter Settings → Messmethoden (Vitalwerte) an.",

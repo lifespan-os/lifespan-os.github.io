@@ -1557,3 +1557,18 @@ Alle Bereiche und Reiter bei iPhone-Breite (390 px) durchgesehen; kein Bereich i
 - Lebensmittel eintragen: Bei einer neuen Mahlzeit von heute steht die **aktuelle Uhrzeit** schon im Feld
   und wird ohne Rückfrage übernommen. An anderen Tagen fragt die App wie bisher. `food.js`.
 - Geändert außerdem: `core.js`, `sw.js`.
+
+## Version 1.101.0 (22.11.2026): Mahlzeiten als Tagesverlauf, Planen per Ziehen
+
+- Tagebuch → Mahlzeiten zeigt den Tag jetzt als **Tagesverlauf** (Umschalter „Tagesverlauf | Liste“, die
+  Liste wie bisher bleibt): Mahlzeiten mit kcal und Balken für Eiweiß, Kohlenhydrate und Fett, dazu
+  Koffein, Supplements und Wasser auf einer senkrechten Zeitachse.
+- Der orange Knopf lässt sich mit dem Finger an jede Uhrzeit **ziehen** (5-Minuten-Schritte, am Rand
+  scrollt die Seite mit): davor = gegessen eintragen, danach = **planen**. Beim Loslassen: Mahlzeit
+  wählen, „+ Lebensmittel“ oder „Koffein“.
+- **Geplante Mahlzeiten** aus einzelnen Lebensmitteln (wie PC 1.0.175, Tabellen `planned_meal`,
+  `planned_meal_item`, Schema 74): zählen nicht zu den gegessenen Nährwerten, bis „✓ Gegessen“ sie
+  einträgt (früher gegessen: mit der aktuellen Uhrzeit). Ergänzen, auf die Uhrzeit des Knopfes
+  verschieben, löschen. Gehen mit „Lebensmittel senden“ an den PC.
+- Neu: `mealtimeline.js`, `plannedmeals.test.mjs`; geändert: `nutrition.js`, `diary.js`, `food.js`,
+  `pcdb.js`, `app.js`, `appactions.js`, `app.css`, `core.js`, `sw.js`.

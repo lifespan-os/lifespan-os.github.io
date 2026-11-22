@@ -120,7 +120,7 @@ export function nutritionFromRows(rows, exportedAt = null) {
 }
 
 export function emptyLocal() {
-  return { foods: {}, barcodes: {}, meals: {}, recipes: {}, dish: emptyDish() };
+  return { foods: {}, barcodes: {}, meals: {}, recipes: {}, dish: emptyDish(), planned: {}, plannedDeleted: {} };
 }
 
 export function emptyDish() {
@@ -663,6 +663,8 @@ export function dishPortionItems(catalog, local, dish, eatenText) {
 /** Anzahl noch nicht gesendeter Einträge (Lebensmittel, Strichcodes, Mahlzeiten, Rezepte). */
 export function unsentCount(local) {
   return (
+    Object.values(local.planned ?? {}).filter((p) => !p.sent).length +
+    Object.values(local.plannedDeleted ?? {}).filter((d) => !d.sent).length +
     Object.values(local.foods).filter((f) => !f.sent && !f.pkg).length +
     Object.values(local.barcodes).filter((b) => !b.sent).length +
     Object.values(local.meals).reduce((n, m) => n + m.items.filter((i) => !i.sent).length, 0) +
@@ -679,7 +681,7 @@ const clean = ({ sent: _sent, ...row }) => row;
  */
 export function nutritionTables(catalog, local, { all = false } = {}) {
   const foods = allFoods(catalog, local);
-  const out = { food: new Map(), meal: [], meal_item: [], recipe: [], recipe_item: [], settings: [] };
+  const out = { food: new Map(), meal: [], meal_item: [], recipe: [], recipe_item: [], settings: [], planned_meal: [], planned_meal_item: [], deleted_record: [] };
   const needFood = (id) => {
     const f = foods.get(id);
     if (!f) throw new Error("Ein Lebensmittel fehlt. Bitte neue Daten vom PC laden.");
@@ -708,6 +710,23 @@ export function nutritionTables(catalog, local, { all = false } = {}) {
       out.recipe_item.push({ ...it });
     }
   }
+  // Geplante Mahlzeiten (1.100.0, Schema 74): die ganze Mahlzeit mit allen Lebensmitteln; am PC
+  // entfallene Lebensmittel löscht der Abgleich über die Löschvermerke der Einträge
+  for (const p of Object.values(local.planned ?? {})) {
+    if (!all && p.sent) continue;
+    out.planned_meal.push({ ...p.row });
+    for (const it of p.items) {
+      needFood(it.food_id);
+      out.planned_meal_item.push({ ...it });
+    }
+    for (const [id, at] of Object.entries(p.removedItems ?? {})) {
+      out.deleted_record.push({ id: `planned_meal_item:${id}`, table_name: "planned_meal_item", record_id: id, deleted_at: at });
+    }
+  }
+  for (const [id, d] of Object.entries(local.plannedDeleted ?? {})) {
+    if (!all && d.sent) continue;
+    out.deleted_record.push({ id: `planned_meal:${id}`, table_name: "planned_meal", record_id: id, deleted_at: d.at });
+  }
   const tables = {};
   for (const [name, val] of Object.entries(out)) {
     const list = Array.isArray(val) ? val : [...val.values()];
@@ -725,6 +744,8 @@ export function markNutritionSent(local) {
     for (const i of m.items) i.sent = true;
   }
   for (const r of Object.values(local.recipes)) r.sent = true;
+  for (const p of Object.values(local.planned ?? {})) p.sent = true;
+  for (const d of Object.values(local.plannedDeleted ?? {})) d.sent = true;
 }
 
 /**
@@ -748,7 +769,149 @@ export function pruneLocal(catalog, local, today = localDate()) {
   for (const [id, r] of Object.entries(local.recipes)) {
     if (r.sent && (catalog.nutrition?.recipeNames ?? []).some((n) => norm(n) === norm(r.row.name))) delete local.recipes[id];
   }
+  // Geplante Mahlzeiten: Übertragenes, das der PC (mindestens so neu) hat bzw. gelöscht hat, entfällt
+  const pcPlanned = new Map((catalog.pc?.planned_meal ?? []).map((r) => [r.id, r]));
+  for (const [id, p] of Object.entries(local.planned ?? {})) {
+    const pc = pcPlanned.get(id);
+    if (p.sent && (!pc || String(pc.updated_at) >= String(p.row.updated_at))) delete local.planned[id];
+  }
+  for (const [id, d] of Object.entries(local.plannedDeleted ?? {})) if (d.sent && !pcPlanned.has(id)) delete local.plannedDeleted[id];
   return local;
+}
+
+// ------------------------------------------------------------------ Geplante Mahlzeiten (1.100.0)
+// Wie `repo/planned_meal.rs` am PC: im Tagesverlauf zu einer späteren Uhrzeit geplant, zählt nicht
+// zu den gegessenen Nährwerten. „Gegessen“ trägt die Lebensmittel in die Mahlzeit ein.
+
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** Geplante Mahlzeiten eines Tages (vom PC und vom Handy), nach Uhrzeit, mit Nährwerten. */
+export function plannedOn(catalog, local, date) {
+  const foods = allFoods(catalog, local);
+  for (const f of catalog.pc?.archived_food ?? []) if (!foods.has(f.id)) foods.set(f.id, f);
+  const gone = local.plannedDeleted ?? {};
+  const mine = local.planned ?? {};
+  const pcItems = new Map();
+  for (const it of catalog.pc?.planned_meal_item ?? []) {
+    if (!pcItems.has(it.planned_meal_id)) pcItems.set(it.planned_meal_id, []);
+    pcItems.get(it.planned_meal_id).push(it);
+  }
+  const list = [];
+  for (const r of catalog.pc?.planned_meal ?? []) {
+    if (r.date !== date || gone[r.id] || mine[r.id]) continue;
+    list.push({ row: r, items: pcItems.get(r.id) ?? [], phone: false });
+  }
+  for (const p of Object.values(mine)) if (p.row.date === date) list.push({ row: p.row, items: p.items, phone: true });
+  return list
+    .map(({ row, items, phone }) => {
+      const its = [...items]
+        .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+        .flatMap((it) => {
+          const f = foods.get(it.food_id);
+          if (!f) return [];
+          const n = nutrientsFor(f, it.amount);
+          return [{ id: it.id, foodId: it.food_id, foodName: f.name, basisUnit: f.basis_unit ?? "g", amount: it.amount, energyKcal: n.kcal, proteinG: n.protein, carbsG: n.carbs, fatG: n.fat }];
+        });
+      const sum = (k) => its.reduce((s, i) => s + i[k], 0);
+      return {
+        id: row.id,
+        date: row.date,
+        mealType: row.meal_type,
+        name: row.name ?? null,
+        key: mealKeyOf(row),
+        time: row.time,
+        notes: row.notes ?? null,
+        items: its,
+        energyKcal: sum("energyKcal"),
+        proteinG: sum("proteinG"),
+        carbsG: sum("carbsG"),
+        fatG: sum("fatG"),
+        phone,
+      };
+    })
+    .sort((a, b) => String(a.time).localeCompare(String(b.time)));
+}
+
+/** Aktuellen Stand einer geplanten Mahlzeit als Handy-Eintrag holen (vom PC übernehmen). */
+function plannedEntry(catalog, local, id) {
+  local.planned ??= {};
+  if (local.planned[id]) return local.planned[id];
+  const row = (catalog.pc?.planned_meal ?? []).find((r) => r.id === id);
+  if (!row || local.plannedDeleted?.[id]) return null;
+  const items = (catalog.pc?.planned_meal_item ?? []).filter((it) => it.planned_meal_id === id).map((it) => ({ ...it }));
+  local.planned[id] = { row: { ...row }, items, sent: false, removedItems: {} };
+  return local.planned[id];
+}
+
+/**
+ * Speichern: neue geplante Mahlzeit oder Lebensmittel ergänzen. `input` = { id?, date, mealKey,
+ * time, items: [{ foodId, amount }] } (Mengen in g/ml).
+ */
+export function savePlanned(catalog, local, input, { uuid, now = new Date() }) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date ?? "")) throw new Error("Bitte einen gültigen Tag angeben.");
+  if (!validKey(input.mealKey)) throw new Error("Unbekannte Mahlzeit.");
+  const time = String(input.time ?? "").trim();
+  if (!TIME_RE.test(time)) throw new Error("Bitte eine Uhrzeit für die geplante Mahlzeit angeben (HH:MM).");
+  const items = input.items ?? [];
+  for (const it of items) {
+    if (!(it.amount >= 0.1 && it.amount <= 10000)) throw new Error("Menge muss zwischen 0,1 und 10.000 g/ml liegen.");
+  }
+  const iso = now.toISOString();
+  const { type, name } = parseMealKey(input.mealKey);
+  let p = input.id ? plannedEntry(catalog, local, input.id) : null;
+  if (!p) {
+    if (!items.length) throw new Error("Bitte mindestens ein Lebensmittel für die geplante Mahlzeit wählen.");
+    const id = input.id ?? uuid();
+    p = { row: { id, date: input.date, meal_type: type, name, time, notes: null, created_at: iso, updated_at: iso }, items: [], sent: false, removedItems: {} };
+    local.planned ??= {};
+    local.planned[id] = p;
+  }
+  p.row = { ...p.row, date: input.date, meal_type: type, name, time, updated_at: iso };
+  for (const it of items) {
+    p.items.push({ id: uuid(), planned_meal_id: p.row.id, food_id: it.foodId, amount: Math.round(it.amount * 10) / 10, position: p.items.length, created_at: iso, updated_at: iso });
+  }
+  p.sent = false;
+  return p;
+}
+
+/** Ein Lebensmittel aus einer geplanten Mahlzeit entfernen (die letzte bleibt; dann ganz löschen). */
+export function removePlannedItem(catalog, local, id, itemId, now = new Date()) {
+  const p = plannedEntry(catalog, local, id);
+  if (!p) return;
+  if (p.items.length <= 1) return deletePlanned(catalog, local, id, now);
+  p.items = p.items.filter((it) => it.id !== itemId);
+  p.removedItems = { ...(p.removedItems ?? {}), [itemId]: now.toISOString() };
+  p.row = { ...p.row, updated_at: now.toISOString() };
+  p.sent = false;
+}
+
+/** Verschieben im Tagesverlauf. */
+export function movePlanned(catalog, local, id, time, now = new Date()) {
+  if (!TIME_RE.test(String(time ?? ""))) throw new Error("Bitte eine gültige Uhrzeit eingeben (HH:MM).");
+  const p = plannedEntry(catalog, local, id);
+  if (!p) throw new Error("Die geplante Mahlzeit gibt es nicht mehr.");
+  p.row = { ...p.row, time, updated_at: now.toISOString() };
+  p.sent = false;
+}
+
+/** Löschen; vom PC oder schon gesendet → Löschvermerk. */
+export function deletePlanned(catalog, local, id, now = new Date()) {
+  const own = local.planned?.[id];
+  if (own) delete local.planned[id];
+  const onPc = (catalog.pc?.planned_meal ?? []).some((r) => r.id === id);
+  if (onPc || own?.sent) {
+    local.plannedDeleted ??= {};
+    local.plannedDeleted[id] = { at: now.toISOString(), sent: false };
+  }
+}
+
+/** Als gegessen bestätigen: Lebensmittel in die Mahlzeit eintragen, Plan löschen. */
+export function confirmPlanned(catalog, local, id, { time = null, uuid, now = new Date() }) {
+  const plan = plannedOn(catalog, local, plannedEntry(catalog, local, id)?.row.date ?? "").find((p) => p.id === id);
+  if (!plan) throw new Error("Die geplante Mahlzeit gibt es nicht mehr.");
+  const meal = addToMeal(catalog, local, { date: plan.date, mealType: plan.key, items: plan.items.map((i) => ({ foodId: i.foodId, amount: i.amount })), time: time || plan.time }, { uuid, now });
+  deletePlanned(catalog, local, id, now);
+  return meal;
 }
 
 /** „Heute“ für die Ernährung: mit dem Tageswechsel wie am PC (1.48.0). */

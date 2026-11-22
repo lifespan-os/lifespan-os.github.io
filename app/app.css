@@ -2114,3 +2114,41 @@ a.btn { color: var(--fg); text-decoration: none; }
 .muscle-targets__table .mt-input { width: 3.6rem; min-width: 0; padding: 6px 8px; text-align: right; }
 .muscle-targets__table tr.is-invalid th { color: var(--danger); }
 .confirm-box { margin: 12px 0; display: grid; gap: 8px; }
+
+/* Tagesverlauf der Mahlzeiten (1.100.0): senkrechte Zeitachse mit ziehbarem Knopf */
+.mtl-wrap { display: grid; gap: 8px; margin-top: 6px; }
+.mtl { position: relative; user-select: none; -webkit-user-select: none; }
+.mtl-axis { position: absolute; top: 0; bottom: 0; left: 51px; width: 2px; background: var(--line); }
+.mtl-hour { position: absolute; left: 0; width: 38px; margin-top: -7px; text-align: right; font-size: .7rem; color: var(--muted); }
+.mtl-now { position: absolute; left: 48px; right: 0; border-top: 2px solid rgba(242,138,26,.45); }
+.mtl-row { position: absolute; left: 0; right: 0; display: flex; align-items: flex-start; gap: 8px; }
+.mtl-time { flex: none; width: 38px; padding-top: 2px; text-align: right; font-size: .8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mtl-row--caffeine .mtl-time, .mtl-row--supplement .mtl-time, .mtl-row--water .mtl-time { font-weight: 400; color: var(--muted); }
+.mtl-dot { flex: none; width: 12px; height: 12px; margin: 4px 0 0 1px; border-radius: 50%; background: var(--orange); }
+.mtl-row--caffeine .mtl-dot { background: #7a4a21; }
+.mtl-row--supplement .mtl-dot { background: var(--ok); }
+.mtl-row--water .mtl-dot { background: #1f6e9c; }
+.mtl-row--planned .mtl-dot { background: var(--surface); border: 2px dashed var(--orange); box-sizing: border-box; }
+.mtl-card { flex: 1; min-width: 0; display: grid; gap: 4px; padding: 8px 10px; text-align: left; font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.mtl-card--planned { border: 1.5px dashed var(--orange); background: var(--surface-2); }
+.mtl-card__head { display: flex; justify-content: space-between; gap: 8px; }
+.mtl-card__actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.mtl-kcal { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mtl-macros { display: flex; height: 5px; border-radius: 3px; overflow: hidden; background: var(--surface-2); }
+.mtl-macro { height: 100%; }
+.mtl-macro--p { background: #2b59c3; }
+.mtl-macro--c { background: #9a6210; }
+.mtl-macro--f { background: #1e7a72; }
+.mtl-foods { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mtl-chip { display: inline-block; max-width: calc(100% - 64px); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 4px 10px; border-radius: 999px; font-size: .82rem; background: var(--surface-2); }
+.mtl-chip--caffeine { background: #f6eee6; }
+.mtl-chip--water { background: #d6ecf8; }
+.mtl-chip--supplement { color: var(--ok); }
+.mtl-handle { position: absolute; left: 0; right: 0; z-index: 3; display: flex; align-items: center; gap: 8px; }
+.mtl-time--handle { position: relative; z-index: 1; padding: 2px 0; color: var(--orange-text); font-weight: 800; background: var(--surface); }
+.mtl-grip { flex: 1; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 2px solid var(--orange); border-radius: 24px; background: var(--orange); color: var(--orange-ink); font: inherit; font-weight: 800; touch-action: none; cursor: grab; box-shadow: 0 2px 6px rgba(15,27,45,.15); }
+.mtl-handle.is-planned .mtl-grip { border-style: dashed; background: var(--surface); }
+.mtl-handle.is-dragging .mtl-grip { cursor: grabbing; transform: scale(1.03); box-shadow: 0 6px 18px rgba(15,27,45,.25); }
+.mtl-panel { position: absolute; left: 46px; right: 0; z-index: 4; display: grid; gap: 8px; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 24px rgba(15,27,45,.18); }
+html[data-theme="dark"] .mtl-chip--caffeine { background: #3a2a1c; }
+html[data-theme="dark"] .mtl-chip--water { background: #12324a; }

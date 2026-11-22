@@ -13,7 +13,7 @@ import { foodChange, foodInput, foodState, initFood, viewDish, viewFood, viewFoo
 import { bodyChange, bodyInput, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
 import { barSlots } from "./nav.js";
 import * as P from "./pcdb.js";
-import { diaryCaffeineChange, diaryChange, diaryInput, initDiary, today as todayIso, viewDiary, viewFastEntry, viewNutritionHistory, viewSuppIntake } from "./diary.js";
+import { diaryCaffeineChange, diaryChange, diaryInput, initDiary, initTimelineDrag, timelineChange, today as todayIso, viewDiary, viewFastEntry, viewNutritionHistory, viewSuppIntake } from "./diary.js";
 import * as FT from "./fastdata.js";
 import * as SP from "./supplements.js";
 import { initVendor, vendorChange, viewVendor } from "./vendorui.js";
@@ -279,6 +279,7 @@ app.addEventListener("change", async (ev) => {
   if (protocolsChange(el)) return;
   if (bodyChange(el)) return;
   if (diaryCaffeineChange(el)) return;
+  if (timelineChange(el)) return;
   if (diaryChange(el)) return;
   if (vendorChange(el)) return;
   if (MI.machineImageChange(el)) return;
@@ -419,6 +420,7 @@ initProtocols(moduleCtx);
 GY.initGyms(moduleCtx);
 
 initDiary(moduleCtx);
+initTimelineDrag();
 
 initVendor(moduleCtx);
 

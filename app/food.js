@@ -211,6 +211,7 @@ function multiHtml() {
 /** Mehrere Einträge auf einmal in die gewählte Mahlzeit, mit „Rückgängig“. */
 async function quickTrack(items, label) {
   const s = F();
+  if (s.planAt) return planItems(items, s.mealType, label);
   const date = trackDate();
   let res;
   try {
@@ -447,7 +448,8 @@ export function viewFood() {
   const oldExport = !X.S.catalog.nutrition;
   return `${X.header("Nutrition")}<main class="wrap">
     ${nutritionTabs("food")}
-    ${s.trackDate && s.trackDate !== today() ? `<p class="warn small">Einträge gehen in den ${esc(trackDayLabel())} (aus dem Tagebuch). <button class="btn sm ghost" data-act="food-track-today">Lieber heute</button></p>` : ""}
+    ${s.planAt ? `<p class="warn small">Wird geplant: ${esc(N.mealLabel(s.mealType))} um ${esc(s.planAt)} Uhr${s.trackDate && s.trackDate !== today() ? ` (${esc(trackDayLabel())})` : ""} – zählt erst nach „Gegessen“. <button class="btn sm ghost" data-act="food-plan-cancel">Doch jetzt eintragen</button></p>` : ""}
+    ${!s.planAt && s.trackDate && s.trackDate !== today() ? `<p class="warn small">Einträge gehen in den ${esc(trackDayLabel())} (aus dem Tagebuch). <button class="btn sm ghost" data-act="food-track-today">Lieber heute</button></p>` : ""}
     ${oldExport ? `<p class="warn">Deine Lebensmittel vom PC fehlen noch: Bitte am PC neu exportieren und hier „Neue Exportdatei laden“. Scannen und Tracken geht trotzdem.</p>` : ""}
     ${s.selected && !s.form ? trackCard() : ""}
     ${quickCard()}
@@ -820,8 +822,33 @@ function trackDayLabel() {
   return d === today() ? "heute" : `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
 }
 
+/**
+ * Aus dem Tagesverlauf geplant (1.100.0): Lebensmittel kommen in eine geplante Mahlzeit statt ins
+ * Tagebuch; danach zurück zum Tagesverlauf.
+ */
+async function planItems(items, mealType, label) {
+  const s = F();
+  try {
+    const p = N.savePlanned(X.S.catalog, s.local, { id: s.planId, date: trackDate(), mealKey: mealType, time: s.planAt, items }, { uuid: () => X.uuid(), now: new Date() });
+    await persist();
+    X.toast(`Geplant: ${label} – ${N.mealLabel(mealType)} um ${p.row.time} Uhr`);
+  } catch (e) {
+    X.toast(e.message, true);
+    return false;
+  }
+  s.planAt = null;
+  s.planId = null;
+  s.trackDate = null;
+  s.selected = null;
+  const to = s.returnTo ?? "diary";
+  s.returnTo = null;
+  X.go(to);
+  return false;
+}
+
 async function track(items, mealType, label, { time = "", kind = "track", skipTime = false, date = trackDate() } = {}) {
   const s = F();
+  if (s.planAt) return planItems(items, mealType, label);
   const known = N.mealTimeFor(X.S.catalog, s.local, date, mealType);
   if (!time && !skipTime && !known) time = defaultTime(date);
   if (!time && !skipTime && !known) {
@@ -865,6 +892,11 @@ export const foodActions = {
     s.query = el.dataset.arg ?? "";
     X.rerender();
     document.getElementById("food-search")?.scrollIntoView({ block: "start" });
+  },
+  "food-plan-cancel": () => {
+    F().planAt = null;
+    F().planId = null;
+    X.rerender();
   },
   "food-track-today": () => {
     F().trackDate = null;

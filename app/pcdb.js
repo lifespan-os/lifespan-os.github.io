@@ -32,6 +32,8 @@ export const BODY_FAT_METRIC_ID = "00000000-0000-7000-8000-000000000002";
 /** Tabellen, die die Handy-App für die Ansichten wie am PC aufhebt (vollständig). */
 export const KEEP_TABLES = [
   "meal",
+  "planned_meal",
+  "planned_meal_item",
   "meal_item",
   "meal_value",
   "meal_day",

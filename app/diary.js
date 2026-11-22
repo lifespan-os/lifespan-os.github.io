@@ -19,6 +19,8 @@ import * as QM from "./quickmeal.js";
 import * as GLD from "./glucosedata.js";
 import { fastCard, supplementsCard } from "./diarysupp.js";
 import { caffeineSlotHtml } from "./diarycaffeine.js";
+import { timelineHtml } from "./mealtimeline.js";
+export { initTimelineDrag, timelineActions, timelineChange } from "./mealtimeline.js";
 export { diaryCaffeineActions, diaryCaffeineChange } from "./diarycaffeine.js";
 export { viewFastEntry, viewSuppIntake } from "./diarysupp.js";
 export { diaryActions, diaryChange, diaryInput } from "./diaryactions.js";
@@ -434,11 +436,25 @@ export function mealsCard(slots, fast, date, db) {
     </div>`;
   };
   const anyContent = slots.some((s) => s.meal && D.mealHasContent(s.meal));
-  return `<section class="card card--nutrition meals-card"><h3>Mahlzeiten</h3>
+  if (!X.S.mealsView) {
+    try {
+      X.S.mealsView = localStorage.getItem("lifespan.mealsView") === "list" ? "list" : "timeline";
+    } catch {
+      X.S.mealsView = "timeline";
+    }
+  }
+  const timeline = X.S.mealsView !== "list";
+  const glucoseText = (m) => {
+    if (!m.time || !D.glucoseMeal) return "";
+    const g = D.glucoseMeal.mealGlucose(date, m.time, GLD.allReadings(X.S.catalog, X.S.glucose));
+    return g ? g.text : "";
+  };
+  return `<section class="card card--nutrition meals-card"><div class="card__head"><h3>Mahlzeiten</h3>
+      <span class="segmented" role="group" aria-label="Darstellung"><button class="${timeline ? "is-active" : ""}" data-act="meals-view" data-arg="timeline" aria-pressed="${timeline}">Tagesverlauf</button><button class="${timeline ? "" : "is-active"}" data-act="meals-view" data-arg="list" aria-pressed="${!timeline}">Liste</button></span></div>
     ${!anyContent && fast ? `<p class="muted">Keine einzelnen Mahlzeiten – die Tageswerte stehen unter „Fasttracking“.</p>` : ""}
     ${planCardHtml(db, date, slots)}
-    ${slots.map(slotHtml).join("")}
-    ${slots.length === 0 ? `<p class="muted small">An diesem Tag sind keine Mahlzeiten angelegt.</p>` : ""}
+    ${timeline ? timelineHtml(db, date, slots, glucoseText) : slots.map(slotHtml).join("")}
+    ${!timeline && slots.length === 0 ? `<p class="muted small">An diesem Tag sind keine Mahlzeiten angelegt.</p>` : ""}
     ${caffeineSlotHtml(date, today())}
     ${fast ? "" : `<button class="btn sm ghost" data-act="fast-open" data-arg="">Fasttracking für den ganzen Tag</button>`}
     <p class="card__note">Einträge vom PC bearbeitest du am PC; am Handy Eingetragenes kannst du hier entfernen oder unter „Vor dem Senden prüfen“ ändern.${

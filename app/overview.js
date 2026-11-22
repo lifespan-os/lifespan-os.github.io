@@ -567,12 +567,17 @@ export function energyHtml(energy) {
     ${note("Schätzung aus Formeln, keine Messung. PAL = Gesamtverbrauch ÷ Grundumsatz.")}`;
 }
 
-export function stepGoalBar(steps, goal) {
+/** Knopf-Attribute „zur Schritteingabe“ (Training → NEAT, Tag `date`, Feld Schritte), 1.87.0 */
+export const stepsEntryAttrs = (date) => `data-act="menu-go" data-arg="training" data-tab="neat" data-neat-date="${esc(date)}" data-focus="neat-steps"`;
+
+export function stepGoalBar(steps, goal, entryDate = null) {
   const p = D.neat.stepProgress(steps, goal);
+  // 1.87.0: in der Overview ist „Schritte“ ein Link zur Schritteingabe (wie PC 1.0.173)
+  const word = entryDate ? `<button type="button" class="linkbtn steps-link" ${stepsEntryAttrs(entryDate)}>Schritte</button>` : "Schritte";
   if (p.goal === null || p.percent === null) {
-    return `<p class="muted small">${steps !== null ? `${F(steps)} Schritte. ` : ""}Kein Tagesschrittziel festgelegt – am PC in den Tageszielen eintragen.</p>`;
+    return `<p class="muted small">${steps !== null ? `${F(steps)} ${word}. ` : ""}Kein Tagesschrittziel festgelegt – am PC in den Tageszielen eintragen.</p>`;
   }
-  return `<div class="neat-steps"><div class="macro-goal__head"><span class="macro-goal__label">${F(p.steps)} Schritte</span><span class="muted">von ${F(p.goal)}</span>
+  return `<div class="neat-steps"><div class="macro-goal__head"><span class="macro-goal__label">${F(p.steps)} ${word}</span><span class="muted">von ${F(p.goal)}</span>
     <span class="macro-goal__status ${p.reached ? "is-reached" : ""}">${p.reached ? `Ziel erreicht (${Math.round(p.percent)} %)` : `${Math.round(p.percent)} % · noch ${F(p.remaining ?? 0)}`}</span></div>
     <div class="goal-bar goal-bar--energy" role="img" aria-label="${esc(`${F(p.steps)} von ${F(p.goal)} Schritten`)}"><span class="goal-bar__fill" style="width:${Math.min(100, p.percent)}%;background:${COLOR.training}"></span></div></div>`;
 }
@@ -736,7 +741,7 @@ function liveCards(data, week, widgets, isToday) {
     "Alltagsbewegung (NEAT)",
     dayMeta,
     neat
-      ? `<div class="neat-overview"><div>${stepGoalBar(neat.steps, stepGoal)}
+      ? `<div class="neat-overview"><div>${stepGoalBar(neat.steps, stepGoal, data.date)}
           ${
             minutes.length
               ? `${keepNote(`Weitere Alltagsbewegung: ${dur(neat.totalMin)}`)}<ul class="neat-bars" aria-label="Minuten je Tätigkeit">${minutes
@@ -877,7 +882,7 @@ export function overviewHero(db, catalog, date, today) {
         <div class="hero__kcal"><span class="hero__num">${F(kcal)}</span><span class="hero__goal">${target !== null ? `/ ${F(target)} kcal` : "kcal"}</span></div>
         ${target !== null ? `<div class="hero__bar" role="img" aria-label="${esc(`${F(kcal)} von ${F(target)} kcal`)}"><span style="flex-grow:${share}"></span><span style="flex-grow:${1 - share}"></span></div>` : ""}
       </div>
-      ${heroSteps(data.neatToday?.steps ?? null, goal?.steps ?? data.goal?.steps ?? null)}
+      ${heroSteps(data.neatToday?.steps ?? null, goal?.steps ?? data.goal?.steps ?? null, date)}
     </div>
     <div class="hero__macros">${macro(n?.proteinG, macros?.proteinG, "P")}${macro(n?.carbsG, macros?.carbsG, "KH")}${macro(n?.fatG, macros?.fatG, "F")}</div>
   </div>`;
@@ -887,15 +892,17 @@ export function overviewHero(db, catalog, date, today) {
  * Schritte zum Schrittziel im Kopf der Overview (1.53.0), im Stil der kcal zum Tagesbedarf:
  * große Zahl, Ziel daneben, Balken. Ohne Schritte und ohne Ziel entfällt der Block.
  */
-export function heroSteps(steps, goal) {
+export function heroSteps(steps, goal, entryDate = null) {
   if (steps === null && (goal === null || goal <= 0)) return "";
   const s = steps ?? 0;
   const share = goal > 0 ? Math.max(0, Math.min(1, s / goal)) : 0;
-  return `<div class="hero__steps">
+  // 1.87.0: Antippen öffnet die Schritteingabe dieses Tages
+  const tag = entryDate ? "button" : "div";
+  return `<${tag} ${entryDate ? `type="button" class="hero__steps hero__steps--link" ${stepsEntryAttrs(entryDate)} aria-label="${esc(`${F(s)} Schritte – Schritte eintragen`)}"` : `class="hero__steps"`}>
         <div class="hero__kcal"><span class="hero__num hero__num--steps">${F(s)}</span>${goal > 0 ? `<span class="hero__goal">/ ${F(goal)}</span>` : ""}</div>
         <span class="hero__unit">Schritte</span>
-        ${goal > 0 ? `<div class="hero__bar hero__bar--steps" role="img" aria-label="${esc(`${F(s)} von ${F(goal)} Schritten`)}"><span style="flex-grow:${share}"></span><span style="flex-grow:${1 - share}"></span></div>` : ""}
-      </div>`;
+        ${goal > 0 ? `<${entryDate ? "span" : "div"} class="hero__bar hero__bar--steps"${entryDate ? "" : ` role="img" aria-label="${esc(`${F(s)} von ${F(goal)} Schritten`)}"`}><span style="flex-grow:${share}"></span><span style="flex-grow:${1 - share}"></span></${entryDate ? "span" : "div"}>` : ""}
+      </${tag}>`;
 }
 
 /** Alle Karten der Overview in der Anordnung vom PC (ausgeblendete fehlen, leere ans Ende). */

@@ -1915,3 +1915,9 @@ body.mapzoom-open { overflow: hidden; }
 .cardio-map__values dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; font-size: .88rem; }
 .cardio-map__notes { margin: 8px 0 0; font-size: .76rem; color: var(--muted); }
 html[data-theme="dark"] .muscle-map__hatch-line { stroke: #e8eef6; }
+
+/* 1.87.0: Schritte in der Overview führen zur Schritteingabe */
+.hero__steps--link { padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.hero__steps--link .hero__bar--steps { display: flex; }
+.hero__steps--link:active { opacity: .75; }
+.steps-link { font: inherit; font-weight: inherit; color: inherit; text-decoration: underline; text-underline-offset: 3px; padding: 0; }

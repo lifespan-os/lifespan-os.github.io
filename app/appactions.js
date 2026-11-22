@@ -425,6 +425,20 @@ export const actions = {
     S.menuOpen = false;
     // Links auf einen Reiter (wie #/training?tab=neat am PC); aus dem Menü immer der erste Reiter
     if (el.dataset.arg === "training") S.trainTab = el.dataset.tab ?? (el.closest(".drawer") ? "workouts" : S.trainTab ?? "workouts");
+    // Schritte aus der Overview (1.87.0): Tag der Overview öffnen und zum Feld „Schritte am Tag“ springen
+    if (el.dataset.neatDate) {
+      S.trainNeatDate = el.dataset.neatDate === todayIso() ? null : el.dataset.neatDate;
+      S.trainErrors = null;
+    }
+    const focusId = el.dataset.focus ?? null;
+    if (focusId) {
+      setTimeout(() => {
+        const f = document.getElementById(focusId);
+        if (!f) return;
+        f.scrollIntoView({ block: "center" });
+        f.focus({ preventScroll: true });
+      }, 80);
+    }
     // Body: direkt „Werte erfassen“, auf Wunsch beim Bereich (z. B. „entry:circumference“, 1.40.0)
     if (el.dataset.arg === "body" && el.dataset.tab?.startsWith("entry")) return bodyOpenEntry(el.dataset.tab.split(":")[1] ?? null);
     // Check-Ins liegen seit 1.60.0 unter Body & Longevity; aus dem Menü seit 1.77.0 immer „Überblick“ (wie am PC)

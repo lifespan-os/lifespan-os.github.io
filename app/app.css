@@ -2154,5 +2154,51 @@ a.btn { color: var(--fg); text-decoration: none; }
 .mtl-handle.is-planned .mtl-grip { border-style: dashed; background: var(--surface); }
 .mtl-handle.is-dragging .mtl-grip { cursor: grabbing; transform: scale(1.03); box-shadow: 0 6px 18px rgba(15,27,45,.25); }
 .mtl-panel { position: absolute; left: 46px; right: 0; z-index: 4; display: grid; gap: 8px; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 8px 24px rgba(15,27,45,.18); }
+/* Tagesverlauf 1.103.0: Spalten mit Verbindungslinien, Zoom mit zwei Fingern, Wischen */
+.mtl { touch-action: pan-y; transition: none; }
+.mtl-tools { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.mtl-links { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.mtl-links line { stroke: var(--muted); stroke-opacity: .55; stroke-width: 1.5; stroke-dasharray: 3 3; }
+.mtl-marker { position: absolute; left: 46px; width: 12px; height: 12px; }
+.mtl-marker .mtl-dot { display: block; margin: 4px 0 0 0; }
+.mtl-row--side { gap: 4px; }
+.mtl-card { grid-template-columns: minmax(0, 1fr); }
+.mtl-row > .mtl-card, .mtl-row > .mtl-chip { min-width: 0; }
+.mtl-card__head { flex-wrap: wrap; row-gap: 0; }
+.mtl-card__head b { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mtl-row--side .mtl-chip { max-width: 100%; }
+.mtl-ctime { flex: none; padding-top: 3px; font-size: .7rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mtl [data-swipe], [data-mswipe] { touch-action: pan-y; transition: transform .15s ease; }
+[data-mswipe].is-swiping { transition: none; }
+.mtl [data-swipe].is-swiping { transition: none; z-index: 2; }
+.mtl [data-swipe].swipe-edit .mtl-card, .mtl [data-swipe].swipe-edit .mtl-chip { box-shadow: -6px 0 0 var(--blue); }
+.mtl [data-swipe].swipe-delete .mtl-card, .mtl [data-swipe].swipe-delete .mtl-chip { box-shadow: 6px 0 0 var(--danger); }
+.mtl-ask { display: grid; gap: 6px; padding: 12px; border: 1px solid var(--danger); border-radius: 14px; background: var(--surface); }
 html[data-theme="dark"] .mtl-chip--caffeine { background: #3a2a1c; }
 html[data-theme="dark"] .mtl-chip--water { background: #12324a; }
+
+/* Training → Einheiten als Kalender (1.103.0) */
+.tcal { display: grid; gap: 8px; }
+.tcal__head { display: flex; align-items: center; gap: 8px; }
+.tcal__head .muted { margin-left: auto; }
+.tcal__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.tcal__wd { text-align: center; font-size: .7rem; font-weight: 700; color: var(--muted); }
+.tcal__day { display: grid; justify-items: center; align-content: start; gap: 2px; min-height: 46px; padding: 4px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font: inherit; font-size: .85rem; color: var(--fg); }
+.tcal__day.is-outside { opacity: .45; }
+.tcal__day.is-today { border-color: var(--orange); }
+.tcal__day.is-selected { background: var(--surface-2); box-shadow: inset 0 0 0 2px var(--blue); }
+.tcal__dots { display: flex; gap: 2px; }
+.tcal__dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); }
+.tcal__dots i.is-active { background: var(--orange); }
+.tcal__st { font-size: .7rem; }
+.tcal__detail { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; }
+.tcal__entry { width: 100%; text-align: left; font: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; color: var(--fg); }
+
+/* FAQ in Settings und in der Suche (1.103.0) */
+.faq-list { display: grid; gap: 6px; margin-top: 8px; }
+.faq-area__title { margin: 10px 0 2px; font-size: .85rem; color: var(--muted); }
+.faq-item { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.faq-item summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; cursor: pointer; }
+.faq-item__q { font-weight: 600; }
+.faq-item__a { margin: 0; padding: 0 12px 12px; line-height: 1.5; font-size: .92rem; }
+.gs-faq { display: grid; gap: 6px; margin: 8px 0; padding: 10px; border-radius: 12px; background: var(--surface-2); }

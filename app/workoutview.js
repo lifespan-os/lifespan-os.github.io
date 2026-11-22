@@ -396,7 +396,7 @@ export function hitHtml(h) {
         const m = h.machine;
         const nr = m.own_number || m.gym_number;
         const key = `machine:${m.id}`;
-        return `<div class="item-row"><button class="item" data-act="pick-machine" data-arg="${esc(m.id)}">
+        return `<div class="item-row" data-mswipe="${esc(m.id)}"><button class="item" data-act="pick-machine" data-arg="${esc(m.id)}">
           <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>${MI.thumbButton(m.id, m.display_name, { inner: true })}
           <span class="main"><b>${esc(m.display_name)}</b>${same}<span class="muted small">${esc([m.manufacturer, m.series, C.machineMuscles(m).slice(0, 3).join(", ")].filter(Boolean).join(" · "))}</span>${
             h.exercises.length ? `<span class="small">Übungen: ${esc(h.exercises.map((e) => e.name).join(" · "))}</span>` : ""
@@ -496,6 +496,7 @@ export function viewMachine() {
       .join("")}</div>
     <section class="card"><h3>Weitere Übung an dieser Maschine</h3>
       <p class="small muted">Zum Beispiel „Butterfly“ und „Rear Delt“ an derselben Maschine. Die Übung wird gespeichert, steht hier beim nächsten Mal zur Auswahl und kommt mit „An den PC senden“ auch in die Desktop-App.</p>
+      <p class="small muted">Die Muskelfokusgruppe ergibt sich aus Schlagwörtern im Namen: „Wadenheben stehend“ (auch aufrecht, gestreckt) → Wade stehend, „Wadenheben sitzend“ (auch angewinkelt, abgeknickt, 90 Grad) → Wade sitzend.</p>
       <div class="new-ex"><input id="new-ex-name" type="text" placeholder="Name der Übung, z. B. Butterfly" autocomplete="off" enterkeyhint="done" maxlength="80">
       <button class="btn primary" data-act="new-machine-ex" data-arg="${esc(m.id)}">Übung anlegen und hinzufügen</button></div>
     </section>

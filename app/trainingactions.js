@@ -39,6 +39,29 @@ export const trainingActions = {
   },
   "train-start-plan-day": (el) => X.startPlanDay(el.dataset.arg),
   "train-backfill": () => X.startBackfill(today()),
+  // Kalender der Einheiten (1.103.0)
+  "train-backfill-on": (el) => X.startBackfill(el.dataset.arg || today()),
+  "train-view": (el) => {
+    X.S.trainView = el.dataset.arg === "calendar" ? "calendar" : "list";
+    try {
+      localStorage.setItem("lifespan.workoutsView", X.S.trainView);
+    } catch {
+      // nur für diese Sitzung
+    }
+    X.rerender();
+  },
+  "train-cal-month": (el) => {
+    const t = today();
+    const cur = X.S.trainMonth ?? { year: Number(t.slice(0, 4)), month: Number(t.slice(5, 7)) };
+    const n = cur.year * 12 + cur.month - 1 + Number(el.dataset.arg || 0);
+    X.S.trainMonth = { year: Math.floor(n / 12), month: (n % 12) + 1 };
+    X.S.trainCalDay = null;
+    X.rerender();
+  },
+  "train-cal-day": (el) => {
+    X.S.trainCalDay = X.S.trainCalDay === el.dataset.arg ? null : el.dataset.arg;
+    X.rerender();
+  },
   "train-cardio": () => X.startCardio(X.S.trainCardio),
   "train-open": (el) => X.openWorkout(el.dataset.arg),
   // Herzfrequenz der Einheit ein-/ausklappen (1.44.0)

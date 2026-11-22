@@ -25,7 +25,7 @@ export function nowLabel() {
 }
 
 /** Name aus dem Profil (für den Kopf der PDFs). */
-const personOf = (db) => db.profile?.name ?? null;
+export const personOf = (db) => db.profile?.name ?? null;
 
 /**
  * PDF weitergeben: „Teilen“ am Handy, sonst ein Link zum Öffnen/Sichern. `st` bekommt
@@ -213,7 +213,7 @@ export function diaryExportHtml(date) {
   </section>`;
 }
 
-function diaryDays(from, to) {
+export function diaryDays(from, to) {
   const range = D.nutritionExport.exportDates(from, to);
   if (!range.ok) throw new Error(range.error);
   const db = buildDb();

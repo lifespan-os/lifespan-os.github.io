@@ -9,9 +9,14 @@
 
 import * as P from "./pcdb.js";
 import * as N from "./nutrition.js";
-import { X, today } from "./diary.js";
+import { X, today, buildDb } from "./diary.js";
 import { caffeineIntakesOn } from "./icoach.js";
 import { dayStartMinutesOn } from "./appday.js";
+import * as SP from "./supplements.js";
+import * as CF from "./caffeinedata.js";
+import { persistSupp } from "./diarysupp.js";
+import { diaryCaffeineActions } from "./diarycaffeine.js";
+import { diaryActions } from "./diaryactions.js";
 
 // ------------------------------------------------------------------ Anordnung (wie mealTimeline.ts)
 
@@ -34,32 +39,63 @@ export const axisMinuteOf = (t, dayStart = 0) => {
 export const snapMinute = (minute, step = 1, dayStart = 0) =>
   Math.max(dayStart, Math.min(dayStart + DAY - 1, Math.round(minute / step) * step));
 
-/** Bis zu so vielen Minuten bekommt der Abstand zwischen zwei Einträgen `minPxPerMin` dazu */
-const ROOM_MINUTES = 10;
+/** Zoom (zwei Finger): kleinster und größter Faktor wie am PC */
+export const ZOOM_MIN = 0.25;
+export const ZOOM_MAX = 4;
+export const clampZoom = (z) => (Number.isFinite(z) ? Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z)) * 100) / 100 : 1);
 
-export function layoutTimeline(list, { pxPerMin = 1, gap = 8, dayStart = 0, minPxPerMin = 4 } = {}) {
+/**
+ * Anordnung wie `layoutTimeline` am PC (1.103.0): maßstabsgetreu; überdeckte Einträge rücken in die
+ * nächste Spalte (Verbindungslinie zur Uhrzeit), der Knopf hat zuerst die erste Spalte. Sind alle
+ * Spalten belegt, rutscht ein Eintrag in der freiesten nach unten (`shifted`).
+ */
+export function layoutTimeline(list, { pxPerMin = 1, gap = 8, dayStart = 0, maxCols = 3, firstKey = null } = {}) {
   const start = dayStart;
   const end = start + DAY - 1;
+  const cols = Math.max(1, Math.floor(maxCols));
   const clamp = (m) => Math.max(start, Math.min(end, m));
-  const items = [...list].map((i) => ({ ...i, minute: clamp(i.minute) })).sort((a, b) => a.minute - b.minute || String(a.key).localeCompare(String(b.key)));
-  const anchors = [{ minute: start, y: 0 }];
+  const timeY = (m) => (clamp(m) - start) * pxPerMin;
+  const sorted = [...list].map((i) => ({ ...i, minute: clamp(i.minute) })).sort((a, b) => a.minute - b.minute || String(a.key).localeCompare(String(b.key)));
+  const order = [...sorted.filter((i) => i.key === firstKey), ...sorted.filter((i) => i.key !== firstKey)];
+  const taken = Array.from({ length: cols }, () => []);
+  const free = (c, y, h) => taken[c].every(([a, b]) => y + h + gap <= a || y >= b);
   const placed = [];
-  let top = { minute: start, y: 0 };
-  let bottom = null;
-  const below = (minute) => (bottom === null ? 0 : bottom + gap + Math.min(minute - top.minute, ROOM_MINUTES) * minPxPerMin);
-  for (const item of items) {
-    const y = Math.max(top.y + (item.minute - top.minute) * pxPerMin, below(item.minute));
-    anchors.push({ minute: item.minute, y });
-    anchors.push({ minute: item.minute, y: y + item.height });
-    placed.push({ ...item, y });
-    top = { minute: item.minute, y };
-    bottom = y + item.height;
+  for (const item of order) {
+    const ty = timeY(item.minute);
+    let col = -1;
+    for (let c = 0; c < cols; c++) {
+      if (free(c, ty, item.height)) {
+        col = c;
+        break;
+      }
+    }
+    let y = ty;
+    let shifted = false;
+    if (col < 0) {
+      let best = { col: 0, y: Infinity };
+      for (let c = 0; c < cols; c++) {
+        let cy = ty;
+        while (!free(c, cy, item.height)) cy = Math.max(...taken[c].filter(([a, b]) => !(cy + item.height + gap <= a || cy >= b)).map(([, b]) => b));
+        if (cy < best.y) best = { col: c, y: cy };
+      }
+      col = best.col;
+      y = best.y;
+      shifted = true;
+    }
+    taken[col].push([y, y + item.height + gap]);
+    placed.push({ ...item, y, timeY: ty, col, shifted });
   }
-  const endY = Math.max(top.y + (end - top.minute) * pxPerMin, below(end));
-  anchors.push({ minute: end, y: endY });
+  placed.sort((a, b) => a.minute - b.minute || a.col - b.col || String(a.key).localeCompare(String(b.key)));
+  const endY = (end - start) * pxPerMin;
+  const height = Math.max(endY, ...placed.map((x) => x.y + x.height));
+  const anchors = [
+    { minute: start, y: 0 },
+    { minute: end, y: endY },
+  ];
   const hours = [];
-  for (let h = Math.ceil(start / 60); h * 60 <= end; h++) hours.push({ label: clockOf(h * 60), y: yAt(anchors, h * 60) });
-  return { start, end, height: endY, items: placed, anchors, hours };
+  for (let h = Math.ceil(start / 60); h * 60 <= end; h++) hours.push({ label: clockOf(h * 60), y: timeY(h * 60) });
+  const used = placed.length ? Math.max(...placed.map((x) => x.col)) + 1 : 1;
+  return { start, end, height, items: placed, anchors, hours, cols: used };
 }
 
 export function yAt(anchors, minute) {
@@ -111,6 +147,32 @@ export function groupWater(glasses, dayStart = 0, withinMin = 45) {
 // ------------------------------------------------------------------ Ansicht
 
 const PX = 0.9;
+/** Spalten: linker Rand der ersten (Uhrzeit + Punkt), Mitte des Punkts, Abstand, schmalste Spalte */
+const COL_LEFT = 66;
+const DOT_X = 52;
+const COL_GAP = 8;
+const COL_MIN = 104;
+const ZOOM_KEY = "lifespan.mealsZoom";
+/** Zoom dieses Handys (zwei Finger), gemerkt im Browser */
+function zoomNow() {
+  const S = X.S;
+  if (typeof S.mtlZoom !== "number") {
+    try {
+      S.mtlZoom = clampZoom(Number(localStorage.getItem(ZOOM_KEY) ?? "1"));
+    } catch {
+      S.mtlZoom = 1;
+    }
+  }
+  return S.mtlZoom;
+}
+function setZoom(z) {
+  X.S.mtlZoom = clampZoom(z);
+  try {
+    localStorage.setItem(ZOOM_KEY, String(X.S.mtlZoom));
+  } catch {
+    // ohne Speicher gilt der Zoom bis zum Neustart
+  }
+}
 /** Höhe des Knopfes; er belegt auf der Achse Platz wie ein Eintrag, damit er nichts verdeckt. */
 const HANDLE_H = 52;
 const clockMinute = () => {
@@ -156,6 +218,15 @@ const foodsLine = (items) => {
   return names.length > 3 ? `${names.slice(0, 3).join(" · ")} · +${names.length - 3}` : names.join(" · ");
 };
 
+/** Schlüssel für Wischen: Art|ID|Name */
+function swipeKey(it) {
+  if (it.kind === "meal") return `meal|${it.slot.ref.name ? N.extraKey(it.slot.ref.name) : it.slot.ref.mealType}|${it.slot.title}`;
+  if (it.kind === "planned") return `planned|${it.plan.id}|${N.mealLabel(it.plan.key)} (geplant)`;
+  if (it.kind === "caffeine") return `caffeine|${it.id}|${it.label}`;
+  if (it.kind === "supplement") return `supplement|${it.id}|${it.label}`;
+  return "";
+}
+
 /**
  * Tagesverlauf als HTML. `slots` = Mahlzeiten des Tages wie im Tagebuch (D.daySlots),
  * `glucoseOf(meal)` = Text zum Blutzucker nach der Mahlzeit oder "".
@@ -181,7 +252,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
       untimed.push(slot);
       continue;
     }
-    list.push({ key: `meal:${slot.key}`, kind: "meal", minute, time: m.time, height: 78 + (glucoseOf(m) ? 18 : 0), slot, meal: m });
+    list.push({ key: `meal:${slot.key}`, kind: "meal", minute, time: m.time, height: 96 + (glucoseOf(m) ? 18 : 0), slot, meal: m });
   }
   const planned = local ? N.plannedOn(S.catalog, local, date) : [];
   for (const p of planned) {
@@ -196,7 +267,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
   }
   for (const c of caffeine) {
     const minute = ax(c.time);
-    if (minute !== null) list.push({ key: `caf:${c.id}`, kind: "caffeine", minute, time: c.time, height: 32, text: `${c.label} · ${Math.round(c.mg)} mg Koffein` });
+    if (minute !== null) list.push({ key: `caf:${c.id}`, kind: "caffeine", id: c.id, label: c.label, minute, time: c.time, height: 32, text: `${c.label} · ${Math.round(c.mg)} mg Koffein` });
   }
   const mealTimes = new Map(slots.filter((s) => s.meal).map((s) => [s.meal.id, s.meal.time]));
   // Supplement-Einträge der Koffein-Erfassung stehen schon als Koffein da
@@ -205,13 +276,22 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
     if (fromCaffeine.has(i.id)) continue;
     const t = i.time ?? (i.mealId ? mealTimes.get(i.mealId) : null) ?? null;
     const minute = ax(t);
-    if (minute !== null) list.push({ key: `sup:${i.id}`, kind: "supplement", minute, time: t, height: 32, text: `${i.name}${i.items.length > 1 ? ` · ${i.items.length} Supplements` : ""}` });
+    if (minute !== null) list.push({ key: `sup:${i.id}`, kind: "supplement", id: i.id, label: i.name, minute, time: t, height: 32, text: `${i.name}${i.items.length > 1 ? ` · ${i.items.length} Supplements` : ""}` });
   }
   for (const [n, g] of groupWater(P.waterDay(db, date).glasses, dayStart).entries()) {
     list.push({ key: `water:${n}`, kind: "water", minute: g.minute, time: clockOf(g.minute), height: 32, text: `Wasser · ${g.count} ${g.count === 1 ? "Glas" : "Gläser"} (${String(Math.round(g.ml / 10) / 100).replace(".", ",")} l)` });
   }
   list.push({ key: "!handle", kind: "handle", minute: hMinute, time: clockOf(hMinute), height: HANDLE_H });
-  const layout = layoutTimeline(list, { pxPerMin: PX, gap: 8, dayStart });
+  const zoom = zoomNow();
+  const px = PX * zoom;
+  // Breite der Achse: gemessen an der bisherigen Ansicht, sonst geschätzt
+  const measured = document.querySelector(".mtl")?.clientWidth ?? 0;
+  const width = Math.max(260, measured > 0 ? measured : Math.min(window.innerWidth || 390, 760) - 72);
+  const maxCols = Math.max(1, Math.min(3, Math.floor((width - COL_LEFT + COL_GAP) / (COL_MIN + COL_GAP))));
+  const layout = layoutTimeline(list, { pxPerMin: px, gap: 8, dayStart, maxCols, firstKey: "!handle" });
+  const colW = (width - COL_LEFT - (layout.cols - 1) * COL_GAP) / Math.max(1, layout.cols);
+  const colLeft = (c) => COL_LEFT + c * (colW + COL_GAP);
+  const side = (it) => it.col > 0 || it.shifted;
   const handleItem = layout.items.find((i) => i.kind === "handle");
   const handlePlanned = plannedAt(date, hMinute);
   const hy = handleItem.y + 24;
@@ -222,6 +302,8 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
   const chosen = h.key && options.some((o) => o.key === h.key) ? h.key : suggested;
   const chosenTitle = options.find((o) => o.key === chosen)?.title ?? "Mahlzeit";
 
+  // schmale Spalten: geplante Karten nur mit „Gegessen“ (Rest per Wischen)
+  const narrow = colW < 200;
   const rowHtml = (it) => {
     let body = "";
     if (it.kind === "meal") {
@@ -234,12 +316,24 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
       const p = it.plan;
       body = `<div class="mtl-card mtl-card--planned"><span class="mtl-card__head"><b>${esc(N.mealLabel(p.key))} · geplant</b><span class="mtl-kcal">${Math.round(p.energyKcal)} kcal</span></span>
         <span class="muted small mtl-foods">${esc(foodsLine(p.items))}</span>
-        <span class="mtl-card__actions"><button class="btn sm primary" data-act="mtl-confirm" data-arg="${esc(p.id)}">✓ Gegessen</button><button class="btn sm" data-act="mtl-plan-add" data-arg="${esc(p.id)}">+ Lebensmittel</button>${
+        ${narrow ? `<span class="mtl-card__actions"><button class="btn sm primary" data-act="mtl-confirm" data-arg="${esc(p.id)}" aria-label="Gegessen">✓</button></span>` : `<span class="mtl-card__actions"><button class="btn sm primary" data-act="mtl-confirm" data-arg="${esc(p.id)}">✓ Gegessen</button><button class="btn sm" data-act="mtl-plan-add" data-arg="${esc(p.id)}">+ Lebensmittel</button>${
           handleClock !== p.time ? `<button class="btn sm ghost" data-act="mtl-plan-move" data-arg="${esc(p.id)}">Auf ${handleClock}</button>` : ""
-        }<button class="btn sm ghost" data-act="mtl-plan-del" data-arg="${esc(p.id)}" aria-label="Geplante Mahlzeit löschen">✕</button></span></div>`;
+        }<button class="btn sm ghost" data-act="mtl-plan-del" data-arg="${esc(p.id)}" aria-label="Geplante Mahlzeit löschen">✕</button></span>`}</div>`;
     } else body = `<span class="mtl-chip mtl-chip--${it.kind}">${esc(it.text)}</span>`;
-    return `<div class="mtl-row mtl-row--${it.kind}" style="top:${it.y.toFixed(1)}px"><span class="mtl-time">${esc(it.time)}</span><span class="mtl-dot" aria-hidden="true"></span>${body}</div>`;
+    // Wischen: nach rechts = bearbeiten, nach links = löschen (Wasser nicht)
+    const swipe = it.kind === "water" ? "" : ` data-swipe="${esc(swipeKey(it))}"`;
+    if (side(it)) {
+      return `<span class="mtl-marker mtl-row--${it.kind}" style="top:${it.timeY.toFixed(1)}px" aria-hidden="true"><span class="mtl-dot"></span></span>
+        <div class="mtl-row mtl-row--side mtl-row--${it.kind}" style="top:${it.y.toFixed(1)}px;left:${colLeft(it.col).toFixed(1)}px;width:${colW.toFixed(1)}px"${swipe}><span class="mtl-ctime">${esc(it.time)}</span>${body}</div>`;
+    }
+    return `<div class="mtl-row mtl-row--${it.kind}" style="top:${it.y.toFixed(1)}px;width:${(COL_LEFT + colW).toFixed(1)}px"${swipe}><span class="mtl-time">${esc(it.time)}</span><span class="mtl-dot" aria-hidden="true"></span>${body}</div>`;
   };
+  const links = layout.items
+    .filter((it) => it.kind !== "handle" && side(it))
+    .map((it) => `<line x1="${DOT_X}" y1="${(it.timeY + 10).toFixed(1)}" x2="${colLeft(it.col).toFixed(1)}" y2="${(it.y + (it.kind === "meal" || it.kind === "planned" ? 10 : 15)).toFixed(1)}"/>`)
+    .join("");
+  const col0 = layout.items.filter((i) => i.col === 0).map((i) => i.timeY);
+  const ask = S.mtlAsk && S.mtlAsk.date === date ? S.mtlAsk : null;
 
   const panel =
     h.panel && options.length
@@ -254,18 +348,25 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
 
   return `<div class="mtl-wrap">
     ${untimed.length ? `<p class="muted small">Ohne Uhrzeit: ${untimed.map((s) => `<button class="linkbtn" data-act="mtl-open" data-arg="${esc(s.ref.name ? N.extraKey(s.ref.name) : s.ref.mealType)}">${esc(s.title)} · ${Math.round(s.meal.energyKcal)} kcal</button>`).join(" ")}</p>` : ""}
-    <div class="mtl" style="height:${Math.ceil(Math.max(layout.height + 24, h.panel ? handleItem.y + HANDLE_H + 250 : 0))}px" data-anchors="${esc(JSON.stringify(layout.anchors.map((a) => [a.minute, Math.round(a.y * 10) / 10])))}" data-now="${now ?? ""}" data-future="${future ? 1 : 0}" data-start="${dayStart}" data-minute="${hMinute}" data-pinned="${h.pinned === null ? "" : 1}">
+    <div class="mtl-tools"><span class="muted small">Zoom ${Math.round(zoom * 100)} %</span><button class="btn sm ghost" data-act="mtl-zoom" data-arg="0.8" aria-label="Verkleinern">−</button><button class="btn sm ghost" data-act="mtl-zoom" data-arg="1.25" aria-label="Vergrößern">+</button></div>
+    ${
+      ask
+        ? `<div class="mtl-ask" role="alertdialog" aria-label="Löschen bestätigen"><b>„${esc(ask.label)}“ löschen?</b>${ask.note ? `<span class="muted small">${esc(ask.note)}</span>` : ""}<div class="row"><button class="btn sm danger" data-act="mtl-ask-yes">Löschen</button><button class="btn sm ghost" data-act="mtl-ask-no">Abbrechen</button></div></div>`
+        : ""
+    }
+    <div class="mtl" style="height:${Math.ceil(Math.max(layout.height + 24, h.panel ? handleItem.y + HANDLE_H + 250 : 0))}px" data-anchors="${esc(JSON.stringify(layout.anchors.map((a) => [a.minute, Math.round(a.y * 10) / 10])))}" data-now="${now ?? ""}" data-future="${future ? 1 : 0}" data-start="${dayStart}" data-minute="${hMinute}" data-pinned="${h.pinned === null ? "" : 1}" data-zoom="${zoom}">
       <span class="mtl-axis" aria-hidden="true"></span>
-      ${layout.hours.filter((x) => !layout.items.some((i) => Math.abs(i.y - x.y) < 14)).map((x) => `<span class="mtl-hour" style="top:${x.y.toFixed(1)}px" aria-hidden="true">${x.label}</span>`).join("")}
-      ${now !== null ? `<span class="mtl-now" style="top:${yAt(layout.anchors, now).toFixed(1)}px" aria-hidden="true"></span>` : ""}
+      <svg class="mtl-links" aria-hidden="true">${links}</svg>
+      ${layout.hours.filter((x) => !col0.some((y) => Math.abs(y - x.y) < 14)).map((x) => `<span class="mtl-hour" style="top:${x.y.toFixed(1)}px" aria-hidden="true">${x.label}</span>`).join("")}
+      ${now !== null ? `<span class="mtl-now" style="top:${((now - dayStart) * px).toFixed(1)}px" aria-hidden="true"></span>` : ""}
       ${layout.items.filter((i) => i.kind !== "handle").map(rowHtml).join("")}
-      <div class="mtl-handle ${handlePlanned ? "is-planned" : ""}" style="top:${handleItem.y.toFixed(1)}px">
+      <div class="mtl-handle ${handlePlanned ? "is-planned" : ""}" style="top:${handleItem.y.toFixed(1)}px;width:${(COL_LEFT + colW).toFixed(1)}px">
         <span class="mtl-time mtl-time--handle">${handleClock}</span>
         <button type="button" class="mtl-grip" aria-label="Neuer Eintrag um ${handleClock} Uhr – zum Verschieben ziehen">＋ <span class="mtl-grip__text">${handlePlanned ? "Planen" : now !== null && Math.abs(hMinute - now) <= 1 ? "Jetzt eintragen" : "Eintragen"}</span></button>
       </div>
       ${panel}
     </div>
-    <p class="muted small">Den orangen Knopf antippen oder an die passende Uhrzeit ziehen: davor = gegessen, danach = geplant. Eine Mahlzeit antippen öffnet sie in der Liste.</p>
+    <p class="muted small">Den orangen Knopf antippen oder an die passende Uhrzeit ziehen: davor = gegessen, danach = geplant. Eintrag nach rechts wischen = bearbeiten, nach links = löschen. Mit zwei Fingern zoomen.</p>
   </div>`;
 }
 
@@ -309,16 +410,17 @@ export function initTimelineDrag() {
       now: box.dataset.now === "" ? null : Number(box.dataset.now),
       future: box.dataset.future === "1",
     };
+    g.lastY = ev.clientY;
+    g.frame = requestAnimationFrame(edgeScroll);
     grip.setPointerCapture?.(ev.pointerId);
     handle.classList.add("is-dragging");
     ev.preventDefault();
   });
-  document.addEventListener("pointermove", (ev) => {
+  // Knopf an die Höhe des Fingers setzen (auch nach dem Mitscrollen)
+  const follow = () => {
     if (!g) return;
-    if (!g.moved && Math.abs(ev.clientY - g.startY) < 4) return;
-    g.moved = true;
     const rect = g.box.getBoundingClientRect();
-    const minute = snapMinute(minuteAt(g.anchors, ev.clientY - rect.top - 24), 1, g.start);
+    const minute = snapMinute(minuteAt(g.anchors, g.lastY - rect.top - 24), 1, g.start);
     if (minute !== g.minute) {
       g.minute = minute;
       setLabel(g, minute);
@@ -330,13 +432,34 @@ export function initTimelineDrag() {
         }
       }
     }
-    // am Bildschirmrand mitscrollen
-    if (ev.clientY > window.innerHeight - 60) window.scrollBy(0, 12);
-    else if (ev.clientY < 90) window.scrollBy(0, -12);
+  };
+  // am Bildschirmrand läuft die Seite mit, solange der Finger dort bleibt (1.103.0)
+  const edgeScroll = () => {
+    if (!g) return;
+    if (g.moved) {
+      const lower = window.innerHeight - 90;
+      const upper = 130;
+      let dy = 0;
+      if (g.lastY > lower) dy = Math.min(22, Math.ceil((g.lastY - lower) / 5) + 3);
+      else if (g.lastY < upper) dy = -Math.min(22, Math.ceil((upper - g.lastY) / 5) + 3);
+      if (dy) {
+        window.scrollBy(0, dy);
+        follow();
+      }
+    }
+    g.frame = requestAnimationFrame(edgeScroll);
+  };
+  document.addEventListener("pointermove", (ev) => {
+    if (!g) return;
+    g.lastY = ev.clientY;
+    if (!g.moved && Math.abs(ev.clientY - g.startY) < 4) return;
+    g.moved = true;
+    follow();
     ev.preventDefault();
   });
   const end = () => {
     if (!g) return;
+    cancelAnimationFrame(g.frame);
     const S = X.S;
     S.mtl = { ...(S.mtl ?? {}), pinned: g.minute, panel: true, key: null };
     g.handle.classList.remove("is-dragging");
@@ -345,6 +468,8 @@ export function initTimelineDrag() {
   };
   document.addEventListener("pointerup", end);
   document.addEventListener("pointercancel", end);
+  initSwipe();
+  initPinch();
   // Knopf folgt der Uhr, solange er nicht gewählt ist und niemand gerade tippt
   setInterval(() => {
     if (g || document.hidden) return;
@@ -356,6 +481,183 @@ export function initTimelineDrag() {
     if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) return;
     X.rerender();
   }, 30000);
+}
+
+/**
+ * Wischen auf einem Eintrag (1.103.0): nach rechts = bearbeiten, nach links = löschen (mit Rückfrage).
+ * Waagrecht ab 70 px; senkrechtes Scrollen bleibt unberührt.
+ */
+function initSwipe() {
+  let w = null;
+  document.addEventListener("pointerdown", (ev) => {
+    const row = ev.target.closest?.(".mtl [data-swipe], [data-mswipe]");
+    if (!row || ev.target.closest(".mtl-grip") || (ev.pointerType === "mouse" && ev.button !== 0)) return;
+    w = { row, x: ev.clientX, y: ev.clientY, dx: 0, active: false, id: ev.pointerId };
+  });
+  document.addEventListener("pointermove", (ev) => {
+    if (!w || ev.pointerId !== w.id) return;
+    const dx = ev.clientX - w.x;
+    const dy = ev.clientY - w.y;
+    if (!w.active) {
+      if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) {
+        w = null;
+        return;
+      }
+      if (Math.abs(dx) < 12) return;
+      w.active = true;
+      try {
+        w.row.setPointerCapture?.(ev.pointerId);
+      } catch {
+        // Zeiger schon weg (z. B. simulierte Eingabe)
+      }
+      w.row.classList.add("is-swiping");
+    }
+    w.dx = dx;
+    w.row.style.transform = `translateX(${Math.max(-120, Math.min(120, dx))}px)`;
+    w.row.classList.toggle("swipe-edit", dx > 70);
+    w.row.classList.toggle("swipe-delete", dx < -70);
+    ev.preventDefault();
+  });
+  const end = () => {
+    if (!w) return;
+    const { row, dx, active } = w;
+    w = null;
+    if (!active) return;
+    row.style.transform = "";
+    row.classList.remove("is-swiping", "swipe-edit", "swipe-delete");
+    // der Klick nach dem Wischen öffnet nichts
+    const stop = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    };
+    document.addEventListener("click", stop, { capture: true, once: true });
+    setTimeout(() => document.removeEventListener("click", stop, { capture: true }), 350);
+    // Maschine in der Übungsauswahl (1.103.0): nach links oder rechts = ihre Übungen ansehen/anlegen
+    if (row.dataset.mswipe) {
+      if (Math.abs(dx) > 70) X.go("machine", row.dataset.mswipe);
+      return;
+    }
+    const [kind, id, ...rest] = String(row.dataset.swipe).split("|");
+    const label = rest.join("|");
+    if (dx > 70) void swipeEdit(kind, id);
+    else if (dx < -70) askDelete(kind, id, label);
+  };
+  document.addEventListener("pointerup", end);
+  document.addEventListener("pointercancel", end);
+}
+
+/** Zoom mit zwei Fingern auf der Zeitachse: Vorschau als Streckung, beim Loslassen neu anordnen. */
+function initPinch() {
+  let p = null;
+  const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  document.addEventListener(
+    "touchstart",
+    (ev) => {
+      if (ev.touches.length !== 2) return;
+      const box = ev.target.closest?.(".mtl");
+      if (!box) return;
+      const rect = box.getBoundingClientRect();
+      const midY = (ev.touches[0].clientY + ev.touches[1].clientY) / 2;
+      p = { box, d0: dist(ev.touches), z0: Number(box.dataset.zoom) || 1, ratio: 1, origin: midY - rect.top, mid: midY };
+      box.style.transformOrigin = `0 ${p.origin}px`;
+    },
+    { passive: true },
+  );
+  document.addEventListener(
+    "touchmove",
+    (ev) => {
+      if (!p || ev.touches.length !== 2) return;
+      ev.preventDefault();
+      const z = clampZoom(p.z0 * (dist(ev.touches) / p.d0));
+      p.ratio = z / p.z0;
+      p.box.style.transform = `scaleY(${p.ratio})`;
+    },
+    { passive: false },
+  );
+  const end = () => {
+    if (!p) return;
+    const { box, z0, ratio, origin, mid } = p;
+    p = null;
+    box.style.transform = "";
+    if (Math.abs(ratio - 1) < 0.02) return;
+    setZoom(z0 * ratio);
+    X.rerender();
+    // die Stelle zwischen den Fingern bleibt stehen
+    requestAnimationFrame(() => {
+      const nb = document.querySelector(".mtl");
+      if (!nb) return;
+      const top = nb.getBoundingClientRect().top;
+      window.scrollBy(0, top + origin * (X.S.mtlZoom / z0) - mid);
+    });
+  };
+  document.addEventListener("touchend", end);
+  document.addEventListener("touchcancel", end);
+}
+
+/** Bearbeiten nach Wischen nach rechts. */
+async function swipeEdit(kind, id) {
+  const fake = { dataset: { arg: id } };
+  if (kind === "meal") timelineActions["mtl-open"](fake);
+  else if (kind === "planned") timelineActions["mtl-plan-add"](fake);
+  else if (kind === "caffeine") {
+    diaryCaffeineActions["dcf-edit"](fake);
+    requestAnimationFrame(() => document.getElementById("dcf-drink")?.scrollIntoView({ block: "center" }));
+  } else if (kind === "supplement") diaryActions["supp-edit"](fake);
+}
+
+/** Nach Wischen nach links: Rückfrage im Tagesverlauf. */
+function askDelete(kind, id, label) {
+  const S = X.S;
+  let note = "";
+  if (kind === "meal") note = "Entfernt die noch nicht an den PC gesendeten Lebensmittel dieser Mahlzeit. Was schon am PC ist, löschst du am PC.";
+  S.mtlAsk = { date: S.diaryDate ?? today(), kind, id, label, note };
+  X.rerender();
+  requestAnimationFrame(() => document.querySelector(".mtl-ask")?.scrollIntoView({ block: "center", behavior: "smooth" }));
+}
+
+async function doDelete(a) {
+  const S = X.S;
+  const date = S.diaryDate ?? today();
+  try {
+    if (a.kind === "planned") {
+      N.deletePlanned(S.catalog, S.food.local, a.id, new Date());
+      await persistFood();
+    } else if (a.kind === "caffeine") {
+      CF.deleteIntake(S.catalog, S.caffeine, a.id);
+      await X.store.set("caffeine", S.caffeine);
+    } else if (a.kind === "supplement") {
+      SP.deleteIntake(buildDb(), S.supp, a.id, new Date());
+      await persistSupp();
+    } else if (a.kind === "meal") {
+      const local = S.food.local;
+      let removed = 0;
+      let kept = 0;
+      for (const m of Object.values(local.meals)) {
+        if (m.row.date !== date) continue;
+        const key = m.row.name ? N.extraKey(m.row.name) : m.row.meal_type;
+        if (key !== a.id) continue;
+        for (const it of [...m.items]) {
+          if (it.sent) kept++;
+          else {
+            N.removeItem(local, m.row.id, it.id);
+            removed++;
+          }
+        }
+      }
+      await persistFood();
+      if (!removed) {
+        X.toast("Diese Mahlzeit ist schon am PC – dort löschen.", true);
+        return;
+      }
+      if (kept) {
+        X.toast(`${removed} Lebensmittel entfernt; ${kept} schon gesendete bleiben (am PC löschen).`);
+        return;
+      }
+    }
+    X.toast(`„${a.label}“ gelöscht.`);
+  } catch (e) {
+    X.toast(e.message, true);
+  }
 }
 
 /** Fenster schließen: Knopf springt zurück auf die aktuelle Uhrzeit. */
@@ -378,6 +680,20 @@ async function persistFood() {
 }
 
 export const timelineActions = {
+  "mtl-zoom": (el) => {
+    setZoom(zoomNow() * Number(el.dataset.arg || 1));
+    X.rerender();
+  },
+  "mtl-ask-no": () => {
+    X.S.mtlAsk = null;
+    X.rerender();
+  },
+  "mtl-ask-yes": async () => {
+    const a = X.S.mtlAsk;
+    X.S.mtlAsk = null;
+    if (a) await doDelete(a);
+    X.rerender();
+  },
   "meals-view": (el) => {
     X.S.mealsView = el.dataset.arg === "list" ? "list" : "timeline";
     try {

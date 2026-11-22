@@ -82,11 +82,26 @@ export function viewSearch() {
   </main>`;
 }
 
+/** Antworten aus den FAQ (1.103.0, wie PC 1.0.177): z. B. „Gym anlegen“ zeigt die Anleitung. */
+export function faqHtml(list, openFirst = true) {
+  const F = D.appFaq;
+  return list
+    .map(
+      (it, i) =>
+        `<details class="faq-item" ${openFirst && i === 0 ? "open" : ""}><summary><span class="faq-item__q">${esc(it.question)}</span><span class="tag">${esc(F.FAQ_DEVICE_LABELS[it.device])}</span></summary><p class="faq-item__a">${esc(it.answer)}</p></details>`,
+    )
+    .join("");
+}
+
 function resultsHtml(q) {
   if (!String(q).trim()) return "";
   const hits = G().searchAll(cache ?? [], q, today(), 20);
-  if (!hits.length) return `<p class="muted">Keine Treffer.</p>`;
-  return `<ul class="plain-list gs-list">${hits
+  const faq = String(q).trim().length >= 3 ? D.appFaq.searchFaq(q, undefined, 3).map((h) => h.item) : [];
+  const answers = faq.length
+    ? `<div class="gs-faq"><b class="small">Antwort aus den FAQ</b>${faqHtml(faq)}<button class="linkbtn small" data-act="faq-open" data-arg="${esc(String(q).trim())}">Alle passenden Antworten unter Settings → FAQ</button></div>`
+    : "";
+  if (!hits.length) return answers || `<p class="muted">Keine Treffer.</p>`;
+  return `${answers}<ul class="plain-list gs-list">${hits
     .map(
       (h) =>
         `<li><button class="gs-hit" data-act="gs-go" data-arg="${esc(h.kind === "day" ? `day|${h.id.slice(4)}` : h.href)}"><span class="tag">${esc(G().HIT_KIND_LABELS[h.kind])}</span><span class="gs-hit__text"><strong>${esc(h.label)}</strong>${h.detail ? `<span class="muted small">${esc(h.detail)}</span>` : ""}</span></button></li>`,
@@ -96,6 +111,12 @@ function resultsHtml(q) {
 
 /** Eingabe in der Suche; true = behandelt. */
 export function searchInput(el) {
+  if (el.id === "faq-q") {
+    X.S.faqQuery = el.value;
+    const box = document.getElementById("faq-results");
+    if (box) box.innerHTML = faqListHtml(el.value);
+    return true;
+  }
   if (el.id !== "gs-q") return false;
   X.S.gsQuery = el.value;
   const box = document.getElementById("gs-results");
@@ -190,4 +211,34 @@ export const searchActions = {
     setTimeout(() => document.getElementById("gs-q")?.focus(), 60);
   },
   "gs-go": (el) => goTarget(el.dataset.arg ?? ""),
+  // Aus der Suche zu Settings → FAQ mit derselben Frage (1.103.0)
+  "faq-open": (el) => {
+    X.S.faqQuery = el.dataset.arg ?? "";
+    X.go("settings");
+    setTimeout(() => document.getElementById("set-faq")?.scrollIntoView({ block: "start" }), 80);
+  },
 };
+
+/** Settings → FAQ: Liste nach Bereichen bzw. Treffer zur Eingabe. */
+export function faqListHtml(q) {
+  const F = D.appFaq;
+  if (String(q ?? "").trim()) {
+    const hits = F.searchFaq(q, undefined, 25).map((h) => h.item);
+    return hits.length
+      ? `<p class="muted small">${hits.length} ${hits.length === 1 ? "Antwort" : "Antworten"}</p>${faqHtml(hits)}`
+      : `<p class="muted small">Keine passende Antwort. Versuche ein anderes Wort – z. B. „Studio“ statt „Gym“ wird ebenfalls erkannt.</p>`;
+  }
+  return `<p class="muted small">${F.APP_FAQ.length} Fragen in ${F.FAQ_AREAS.length} Bereichen – antippen zum Aufklappen.</p>${F.FAQ_AREAS.map(
+    (a) => `<h4 class="faq-area__title">${esc(a)}</h4>${faqHtml(F.APP_FAQ.filter((f) => f.area === a), false)}`,
+  ).join("")}`;
+}
+
+/** Karte „FAQ“ in Settings (1.103.0). */
+export function faqCardHtml() {
+  const q = X.S.faqQuery ?? "";
+  return `<section class="card" id="set-faq"><h3>FAQ – Fragen zur App</h3>
+    <label class="sr-only" for="faq-q">FAQ durchsuchen</label>
+    <input id="faq-q" type="search" placeholder="Frage oder Stichwort, z. B. Gym anlegen" value="${esc(q)}" autocomplete="off" enterkeyhint="search">
+    <div id="faq-results" class="faq-list">${faqListHtml(q)}</div>
+  </section>`;
+}

@@ -4,6 +4,7 @@
 
 import * as D from "./pcdomain.js";
 import * as PS from "./pcsettings.js";
+import { diaryDays, nowLabel, personOf } from "./pdfparity.js";
 
 let X = null; // { S, esc, rerender }
 
@@ -99,7 +100,18 @@ async function sharePdf(report) {
   X.rerender();
   try {
     const name = D.weeklyReportFileName(report);
-    const bytes = D.weeklyReportToPdf(report, { logo: await logoImage(), showSuperhuman: secretOn() });
+    // Anhang (1.103.0, wie PC 1.0.177): Ernährungstagebuch der Woche, Montag bis Sonntag
+    const doc = D.weeklyReportDoc(report, { logo: await logoImage(), showSuperhuman: secretOn() });
+    let all = doc;
+    try {
+      const { db, days } = diaryDays(report.weekStart, report.weekEnd);
+      if (days.some((d) => d.hasEntries)) {
+        all = D.mergePdfDocs(doc, D.nutritionExportPdf.nutritionExportDoc(days, { from: report.weekStart, to: report.weekEnd, person: personOf(db), createdAt: nowLabel(), watermark: null }));
+      }
+    } catch {
+      // ohne Tagebuch bleibt der Bericht allein
+    }
+    const bytes = all.toBytes(D.weeklyReportTitle(report).replace(/–/g, "-"));
     const blob = new Blob([bytes], { type: "application/pdf" });
     const file = new File([blob], name, { type: "application/pdf" });
     if (navigator.canShare?.({ files: [file] })) {

@@ -801,7 +801,7 @@ function getMealNames() {
 }
 var defaultMealTypeLabel = (v) => labelOf(MEAL_TYPES, v);
 var mealTypeLabel = (v) => customMealNames[v] ?? labelOf(MEAL_TYPES, v);
-var mealTypeOptions = (current) => MEAL_TYPES.filter((t) => t.value === current || !hiddenMealTypes.includes(t.value)).map((t) => ({
+var mealTypeOptions = (current2) => MEAL_TYPES.filter((t) => t.value === current2 || !hiddenMealTypes.includes(t.value)).map((t) => ({
   value: t.value,
   label: mealTypeLabel(t.value)
 }));
@@ -1169,8 +1169,8 @@ var LABELS2 = {
   longestDuration: "L\xE4ngste Dauer in einer Einheit",
   profileHeaviest: "H\xF6chstes Gewicht"
 };
-function better(current, next) {
-  return current === null || next.value > current.value ? next : current;
+function better(current2, next) {
+  return current2 === null || next.value > current2.value ? next : current2;
 }
 function personalRecords(log, category) {
   let heaviest = null;
@@ -2053,10 +2053,10 @@ function weekStart(isoDate) {
   return `${date.getFullYear()}-${mm}-${dd}`;
 }
 function weeklyTotals(workouts, today, weeks) {
-  const current = weekStart(today);
+  const current2 = weekStart(today);
   const result = [];
   for (let i = weeks - 1; i >= 0; i -= 1) {
-    const [y, m, d] = current.split("-").map(Number);
+    const [y, m, d] = current2.split("-").map(Number);
     const start = new Date(y ?? 1970, (m ?? 1) - 1, (d ?? 1) - i * 7);
     const iso2 = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
     result.push({ date: iso2, value: 0, workouts: 0 });
@@ -2070,7 +2070,7 @@ function weeklyTotals(workouts, today, weeks) {
   }
   return result;
 }
-function adoptIds(current, sent, saved) {
+function adoptIds(current2, sent, saved) {
   const exIds = /* @__PURE__ */ new Map();
   const setIds = /* @__PURE__ */ new Map();
   sent.exercises.forEach((e, i) => {
@@ -2083,9 +2083,9 @@ function adoptIds(current, sent, saved) {
     });
   });
   return {
-    ...current,
-    id: current.id ?? saved.id,
-    exercises: current.exercises.map((e) => ({
+    ...current2,
+    id: current2.id ?? saved.id,
+    exercises: current2.exercises.map((e) => ({
       ...e,
       id: e.id ?? exIds.get(e.key) ?? null,
       sets: e.sets.map((s) => ({ ...s, id: s.id ?? setIds.get(s.key) ?? null }))
@@ -2560,6 +2560,30 @@ function formatPercent(percent) {
   return `${Math.round(percent).toLocaleString("de-DE")} %`;
 }
 
+// src/lib/appDay.ts
+var DAY_START_KEY = "lifespan.dayStart";
+var DEFAULT_DAY_START = "00:00";
+var LATEST_DAY_START = "12:00";
+var TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
+function minutesOf(time) {
+  const m = TIME.exec(time.trim());
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+}
+function validDayStart(time) {
+  const minutes = minutesOf(time);
+  const latest = minutesOf(LATEST_DAY_START) ?? 720;
+  return minutes !== null && minutes <= latest ? time.trim() : null;
+}
+var current = DEFAULT_DAY_START;
+function load() {
+  try {
+    return validDayStart(localStorage.getItem(DAY_START_KEY) ?? "") ?? DEFAULT_DAY_START;
+  } catch {
+    return DEFAULT_DAY_START;
+  }
+}
+current = typeof window === "undefined" ? DEFAULT_DAY_START : load();
+
 // src/domain/mealDraft.ts
 function mealHasContent(m) {
   return m !== null && (m.items.length > 0 || Object.keys(m.values ?? {}).length > 0);
@@ -2866,8 +2890,8 @@ function e1rmBySession(log) {
     if (s.isWarmup) continue;
     const value2 = epley1RM(s.weightKg, s.reps);
     if (value2 === null) continue;
-    const current = best.get(s.workoutId);
-    if (!current || value2 > current.value) {
+    const current2 = best.get(s.workoutId);
+    if (!current2 || value2 > current2.value) {
       best.set(s.workoutId, {
         date: s.date,
         workoutId: s.workoutId,
@@ -6804,6 +6828,9 @@ var COMBO_MACHINES = [
     fallback: "deadlift"
   }
 ];
+var SITTING_WORDS = "(?:sitzend|sitzen|im sitzen|seated|sitting|abgeknickt|angewinkelt|gebeugt\\w*|gewinkelt|90 ?(?:\xB0|grad))";
+var CALF_WORDS = "(?:wade|waden|calf|calves|zehenstand|zehenheben|fersenheb|wadendr\xFCck|wadenpress)";
+var CURL_WORDS = "(?:beincurl|leg[- ]?curl|beinbeuger|hamstring[- ]?curl)";
 var NAME_PATTERNS = [
   [
     /beinheben|knieheben|leg[- ]?raise|knee[- ]?raise|knee[- ]?up|captain|toes[- ]to[- ]bar|hüftbeug|hip[- ]?flex/i,
@@ -6821,13 +6848,16 @@ var NAME_PATTERNS = [
   [/nacken|\bneck\b/i, "neck"],
   [/nordic|glute[- ]?ham/i, "leg_curl_lying"],
   [
-    /(beincurl|leg[- ]?curl|beinbeuger).*(sitzend|seated)|(sitzend|seated).*(beincurl|leg[- ]?curl|beinbeuger)/i,
+    new RegExp(`${CURL_WORDS}.*${SITTING_WORDS}|${SITTING_WORDS}.*${CURL_WORDS}`, "i"),
     "leg_curl_seated"
   ],
   [/beincurl|leg[- ]?curl|beinbeuger/i, "leg_curl_lying"],
   [/beinstreck|leg[- ]?extension/i, "leg_extension"],
-  [/wadenheben sitzend|seated calf/i, "calf_seated"],
-  [/wadenheben|calf[- ]?raise|\bwade/i, "calf_standing"],
+  [
+    new RegExp(`${CALF_WORDS}\\w*.*${SITTING_WORDS}|${SITTING_WORDS}.*${CALF_WORDS}`, "i"),
+    "calf_seated"
+  ],
+  [new RegExp(`${CALF_WORDS}|calf[- ]?raise`, "i"), "calf_standing"],
   [/hip[- ]?thrust|glute[- ]?bridge|beckenheben|hüftheben/i, "hip_thrust"],
   [/rumänisch|romanian|\brdl\b|kreuzheben|deadlift|good[- ]?morning/i, "deadlift"],
   [/ausfallschritt|lunge|split[- ]?squat|bulgar|step[- ]?up|aufsteiger|pistol|shrimp/i, "step_up"],
@@ -6913,6 +6943,10 @@ function gripPatternOf(machineId, exerciseName, machineNames = []) {
       return combo.fallback;
     }
     const pattern = PATTERN_OF.get(machineId);
+    if (pattern && machineNames.length > 0) {
+      const own = nameHint(exerciseName, machineNames);
+      for (const [rule, p] of NAME_PATTERNS) if (rule.test(own)) return p;
+    }
     if (pattern) return pattern;
   }
   const name = nameHint(exerciseName, machineId ? machineNames : []);
@@ -7678,8 +7712,8 @@ var METRIC_INFO = {
 };
 
 // src/domain/methods.ts
-function methodChoices(list2, current) {
-  const c = current?.trim() ?? "";
+function methodChoices(list2, current2) {
+  const c = current2?.trim() ?? "";
   if (c === "" || list2.some((m) => m.toLowerCase() === c.toLowerCase())) return [...list2];
   return [...list2, c];
 }
@@ -8377,7 +8411,7 @@ function weeklySummary(data, weekFrom) {
   const sum = (ls, k) => ls.reduce((a, l) => a + l[k], 0);
   const sessions2 = sum(weekLoads, "sessions");
   const prevSessions = sum(prevLoads, "sessions");
-  const load = sum(weekLoads, "load");
+  const load2 = sum(weekLoads, "load");
   const prevLoad = sum(prevLoads, "load");
   const incomplete = sum(weekLoads, "incomplete");
   const prevIncomplete = sum(prevLoads, "incomplete");
@@ -8407,9 +8441,9 @@ function weeklySummary(data, weekFrom) {
       },
       {
         label: "Belastung (Dauer \xD7 Anstrengung)",
-        value: load > 0 ? formatNumber(load, 0) : "\u2013",
+        value: load2 > 0 ? formatNumber(load2, 0) : "\u2013",
         basis: sessions2 === 0 ? "keine abgeschlossene Einheit" : incomplete > 0 ? `${incomplete} ${incomplete === 1 ? "Einheit" : "Einheiten"} ohne Dauer oder Anstrengung nicht enthalten` : "alle Einheiten enthalten",
-        change: loadComparable ? `${formatSigned((load - prevLoad) / prevLoad * 100, 0)} % zur Vorwoche` : sessions2 > 0 ? "Kein Vorwochenvergleich (Angaben unvollst\xE4ndig oder Vorwoche ohne Training)" : null
+        change: loadComparable ? `${formatSigned((load2 - prevLoad) / prevLoad * 100, 0)} % zur Vorwoche` : sessions2 > 0 ? "Kein Vorwochenvergleich (Angaben unvollst\xE4ndig oder Vorwoche ohne Training)" : null
       }
     ]
   });
@@ -8540,8 +8574,8 @@ function weeklySummary(data, weekFrom) {
   );
   sections2.push({ area: "body", title: "K\xF6rper", values: [weight.item] });
   if (loadComparable && readiness2.diff !== null) {
-    const loadUp = load > prevLoad * 1.2;
-    const loadDown = load < prevLoad * 0.8;
+    const loadUp = load2 > prevLoad * 1.2;
+    const loadDown = load2 < prevLoad * 0.8;
     if (loadUp && readiness2.diff <= -1) {
       observations.push(
         "In dieser Woche war deine Trainingsbelastung deutlich h\xF6her als in der Vorwoche, gleichzeitig lag deine Erholungs-Einsch\xE4tzung niedriger. Das kann zusammenh\xE4ngen, muss es aber nicht \u2013 auch Schlaf, Stress und Alltag spielen eine Rolle."
@@ -8824,7 +8858,7 @@ var CLEARED_BELOW_MG = 1;
 var MAX_ML = 3e3;
 var MAX_MG = 1e3;
 var DAY_MIN = 24 * 60;
-var TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
+var TIME2 = /^([01]\d|2[0-3]):([0-5]\d)$/;
 function findDrink(id3) {
   return CAFFEINE_DRINKS.find((d) => d.id === id3);
 }
@@ -8833,7 +8867,7 @@ function mgPer100Ml(drink) {
   return drink.portionMg / drink.portionMl * 100;
 }
 function parseClock(time) {
-  const m = TIME.exec(time.trim());
+  const m = TIME2.exec(time.trim());
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 }
 function formatClock2(minutes) {
@@ -9199,9 +9233,9 @@ __export(sleep_exports, {
   totalSleepWithNaps: () => totalSleepWithNaps,
   typicalShareText: () => typicalShareText
 });
-var TIME2 = /^([01]\d|2[0-3]):([0-5]\d)$/;
+var TIME3 = /^([01]\d|2[0-3]):([0-5]\d)$/;
 function toMinutes(time) {
-  const m = TIME2.exec(time);
+  const m = TIME3.exec(time);
   if (!m) {
     throw new Error(`Ung\xFCltige Uhrzeit: "${time}" (erwartet HH:MM)`);
   }
@@ -9541,11 +9575,11 @@ function mean3(values) {
   if (values.length === 0) return Number.NaN;
   return values.reduce((a, b) => a + b, 0) / values.length;
 }
-function movingAverage(values, window) {
-  if (window < 1 || !Number.isInteger(window)) {
+function movingAverage(values, window2) {
+  if (window2 < 1 || !Number.isInteger(window2)) {
     throw new Error("Das Fenster muss eine positive ganze Zahl sein.");
   }
-  return values.map((_, i) => i + 1 < window ? null : mean3(values.slice(i + 1 - window, i + 1)));
+  return values.map((_, i) => i + 1 < window2 ? null : mean3(values.slice(i + 1 - window2, i + 1)));
 }
 function roundTo(value2, digits) {
   const f = 10 ** digits;
@@ -9797,11 +9831,11 @@ function readiness(data, today, sleepGoalMin, grip = []) {
     });
   } else missing.push("Schlaf der letzten Nacht");
   const loads = trainingLoadByDay(data.workouts);
-  const window = loads.filter((d) => inRange2(d.date, from, shiftDays(today, -1)));
+  const window2 = loads.filter((d) => inRange2(d.date, from, shiftDays(today, -1)));
   const withLoad = data.workouts.filter(
     (w) => w.status === "done" && inRange2(w.date, from, today) && w.durationMin !== null && w.perceivedExertion !== null
   ).length;
-  const chronic3 = window.reduce((a, d) => a + d.load, 0) / BASELINE_DAYS * 3;
+  const chronic3 = window2.reduce((a, d) => a + d.load, 0) / BASELINE_DAYS * 3;
   if (withLoad >= 4 && chronic3 > 0) {
     const acute = loads.filter((d) => inRange2(d.date, shiftDays(today, -2), today)).reduce((a, d) => a + d.load, 0);
     const ratio = acute / chronic3;
@@ -9954,10 +9988,10 @@ function weeklyGoals(input) {
 function streakOf(met, today, days3) {
   const first = shiftDays(today, -(days3 - 1));
   const todayMet = met(today);
-  let current = 0;
+  let current2 = 0;
   let day = todayMet ? today : shiftDays(today, -1);
   while (day >= first && met(day)) {
-    current += 1;
+    current2 += 1;
     day = shiftDays(day, -1);
   }
   let best = 0;
@@ -9966,7 +10000,7 @@ function streakOf(met, today, days3) {
     run = met(d) ? run + 1 : 0;
     best = Math.max(best, run);
   }
-  return { current, best, today: todayMet, atLimit: current > 0 && day < first };
+  return { current: current2, best, today: todayMet, atLimit: current2 > 0 && day < first };
 }
 function streaks(input) {
   const { today, days: days3, data, dashboard } = input;
@@ -12739,13 +12773,13 @@ function valuesOfRow(row) {
   if (arrow) {
     const left = numbersIn(row.slice(0, arrow.index))[0] ?? null;
     const rest = row.slice(arrow.index + arrow[0].length);
-    const current = numbersIn(rest)[0] ?? null;
-    if (current) {
+    const current2 = numbersIn(rest)[0] ?? null;
+    if (current2) {
       return {
         previous: left?.value ?? null,
-        current: current.value,
+        current: current2.value,
         previousText: left?.text ?? null,
-        currentText: current.text,
+        currentText: current2.text,
         restText: rest
       };
     }
@@ -14301,6 +14335,21 @@ ${xref}
     return bytes;
   }
 };
+function mergePdfDocs(first, second) {
+  const out = new PdfDoc();
+  for (const img of first.images) out.images.push(img);
+  const offset = first.images.length;
+  for (const img of second.images) out.images.push(img);
+  for (const p of first.pages) out.pages.push(p);
+  for (const p of second.pages) {
+    const copy = new PdfPage();
+    for (const op of p.ops) {
+      copy.ops.push(op.replace(/\/Im(\d+) Do/g, (_, n2) => `/Im${Number(n2) + offset} Do`));
+    }
+    out.pages.push(copy);
+  }
+  return out;
+}
 
 // src/domain/doctorReportPdf.ts
 var M = 40;
@@ -15926,9 +15975,9 @@ var DEFAULT_REMINDERS = {
   hrt: { on: false, time: "09:00" }
 };
 var HRT_INTERVAL_SAMPLES = 4;
-var TIME3 = /^([01]\d|2[0-3]):([0-5]\d)$/;
+var TIME4 = /^([01]\d|2[0-3]):([0-5]\d)$/;
 function validTime(time) {
-  return TIME3.test(time.trim());
+  return TIME4.test(time.trim());
 }
 function parseReminderSettings(raw) {
   const out = {
@@ -17860,8 +17909,8 @@ function addMuscleValues(a, b) {
   for (const id3 of MUSCLE_IDS) out[id3] = a[id3] + b[id3];
   return out;
 }
-function cardioLoadHasData(load) {
-  return load.blocks > 0;
+function cardioLoadHasData(load2) {
+  return load2.blocks > 0;
 }
 
 // src/domain/cardioMachines.ts
@@ -17876,8 +17925,8 @@ __export(cardioMachines_exports, {
 });
 var CARDIO_MACHINE_CATEGORY = "Cardio";
 var byName = (a, b) => a.manufacturer.localeCompare(b.manufacturer, "de") || (a.displayName || a.name).localeCompare(b.displayName || b.name, "de");
-function cardioMachineOptions(machines, kind, current = null, recent = []) {
-  const cardio = machines.filter((m) => m.category === CARDIO_MACHINE_CATEGORY && (!m.archived || m.id === current)).sort(byName);
+function cardioMachineOptions(machines, kind, current2 = null, recent = []) {
+  const cardio = machines.filter((m) => m.category === CARDIO_MACHINE_CATEGORY && (!m.archived || m.id === current2)).sort(byName);
   const fits = (m) => kind !== "other" && sameCardioDevice(machineCardioKind(m), kind);
   const label = (m) => m.displayName || m.name;
   const byId = new Map(cardio.map((m) => [m.id, m]));
@@ -17893,9 +17942,9 @@ function cardioMachineOptions(machines, kind, current = null, recent = []) {
     ...rest.filter(fits).map((m) => ({ value: m.id, label: label(m), group: m.manufacturer })),
     ...rest.filter((m) => !fits(m)).map((m) => ({ value: m.id, label: label(m), group: `Weitere Ger\xE4te \xB7 ${m.manufacturer}` }))
   ];
-  if (current && !out.some((o) => o.value === current)) {
-    const m = machines.find((x) => x.id === current);
-    out.unshift({ value: current, label: m ? label(m) : "Bisheriges Ger\xE4t", group: "Gew\xE4hlt" });
+  if (current2 && !out.some((o) => o.value === current2)) {
+    const m = machines.find((x) => x.id === current2);
+    out.unshift({ value: current2, label: m ? label(m) : "Bisheriges Ger\xE4t", group: "Gew\xE4hlt" });
   }
   return out;
 }
@@ -18639,11 +18688,11 @@ function smartFilter(options, query, limit = 8) {
     const terms = (idx) => idx.flatMap((i) => COMPACT_GROUPS[i]);
     const synonyms = terms(groups);
     const related = terms(relatedGroups(groups));
-    const has2 = (p, t) => t.length >= 4 ? p.compact.includes(t) : p.words.includes(t);
+    const has3 = (p, t) => t.length >= 4 ? p.compact.includes(t) : p.words.includes(t);
     for (const p of prepared) {
       if (kinds.has(p)) continue;
-      if (synonyms.some((t) => has2(p, t))) kinds.set(p, "synonym");
-      else if (related.some((t) => has2(p, t))) kinds.set(p, "related");
+      if (synonyms.some((t) => has3(p, t))) kinds.set(p, "synonym");
+      else if (related.some((t) => has3(p, t))) kinds.set(p, "related");
     }
     const found = [...kinds.values()].some((k) => k === "exact" || k === "synonym");
     if (!found) {
@@ -18716,9 +18765,9 @@ function sortExercises(list2, key, direction) {
     (a, b) => compareValues(exerciseValue(a, key), exerciseValue(b, key), direction) || compareValues(a.name, b.name, "asc")
   );
 }
-function nextSort(current, clicked) {
-  if (current.key !== clicked) return { key: clicked, direction: "asc" };
-  return { key: clicked, direction: current.direction === "asc" ? "desc" : "asc" };
+function nextSort(current2, clicked) {
+  if (current2.key !== clicked) return { key: clicked, direction: "asc" };
+  return { key: clicked, direction: current2.direction === "asc" ? "desc" : "asc" };
 }
 
 // src/domain/machines.ts
@@ -18891,7 +18940,9 @@ function filterMachines(list2, f) {
     const text2 = haystack(m);
     if (words.every((w) => text2.includes(w))) return true;
     const compact = compactSearch(text2);
-    return synonyms.some((t) => t.length >= 4 ? compact.includes(t) : text2.split(/[^a-z0-9]+/).includes(t));
+    return synonyms.some(
+      (t) => t.length >= 4 ? compact.includes(t) : text2.split(/[^a-z0-9]+/).includes(t)
+    );
   });
 }
 function distinct(list2, pick3) {
@@ -19890,6 +19941,9 @@ var Writer = class {
   }
 };
 function weeklyReportToPdf(r2, opts) {
+  return weeklyReportDoc(r2, opts).toBytes(weeklyReportTitle(r2).replace(/–/g, "-"));
+}
+function weeklyReportDoc(r2, opts) {
   const w = new Writer(r2, opts.logo);
   const kw = `KW ${r2.week}`;
   const next = isoWeek(shiftDays(r2.weekStart, 7)).week;
@@ -20223,7 +20277,7 @@ function weeklyReportToPdf(r2, opts) {
   w.y += 8;
   w.paragraph(`Hinweis zur Datenbasis. ${r2.basis}`, 7.5, C.ink);
   w.footers();
-  return w.doc.toBytes(weeklyReportTitle(r2).replace(/–/g, "-"));
+  return w.doc;
 }
 
 // src/domain/quickFill.ts
@@ -21525,7 +21579,7 @@ function goalProgress2(goal, series2, today, decimals = 1) {
   const better2 = (a, b) => direction === "up" ? a > b : a < b;
   let best = null;
   for (const p of after) if (!best || better2(p.value, best.value)) best = p;
-  const current = after[after.length - 1] ?? before[before.length - 1] ?? null;
+  const current2 = after[after.length - 1] ?? before[before.length - 1] ?? null;
   const milestones = start === null ? [{ value: target, share: 1, reachedOn: null, isTarget: true }] : milestoneValues(start, target, goal.milestones, decimals).map((value2, i, all) => ({
     value: value2,
     share: target === start ? 1 : (value2 - start) / (target - start),
@@ -21544,7 +21598,7 @@ function goalProgress2(goal, series2, today, decimals = 1) {
     direction,
     start,
     startSource,
-    current,
+    current: current2,
     best,
     share: share2,
     milestones,
@@ -21713,8 +21767,8 @@ function favoriteFoods(history, today, { days: days3 = 90, limit = 15 } = {}) {
 var AMOUNT_PRESETS = [50, 100, 150, 200];
 var PORTION_PRESETS = [0.5, 1, 2];
 var AMOUNT_STEP = 10;
-function stepAmount(current, delta) {
-  const base = Number.isFinite(current) && current > 0 ? current : 0;
+function stepAmount(current2, delta) {
+  const base = Number.isFinite(current2) && current2 > 0 ? current2 : 0;
   const next = Math.round((base + delta) * 10) / 10;
   return Math.min(MAX_AMOUNT, Math.max(1, next));
 }
@@ -22339,9 +22393,9 @@ function sortTrainingRows(rows2, key, direction) {
   days3.sort((a, b) => b.row.date.localeCompare(a.row.date) || a.index - b.index);
   return [...workouts, ...days3].map((x) => x.row);
 }
-function nextWorkoutSort(current, key) {
-  if (current.key === key) {
-    return { key, direction: current.direction === "asc" ? "desc" : "asc" };
+function nextWorkoutSort(current2, key) {
+  if (current2.key === key) {
+    return { key, direction: current2.direction === "asc" ? "desc" : "asc" };
   }
   return { key, direction: key === "title" || key === "gym" ? "asc" : "desc" };
 }
@@ -22406,15 +22460,15 @@ function totals2(workouts, statuses, from, to) {
     withoutDuration: done.filter((w) => w.durationMin === null).length
   };
 }
-function percentChange(current, previous) {
+function percentChange(current2, previous) {
   if (previous === null || previous === void 0 || previous <= 0) return null;
-  return Math.round((current - previous) / previous * 100);
+  return Math.round((current2 - previous) / previous * 100);
 }
 function yearReview(workouts, statuses, year, today) {
   const from = `${year}-01-01`;
   const yearEnd = `${year}-12-31`;
-  const current = today.slice(0, 4) === String(year);
-  const to = current ? today : yearEnd;
+  const current2 = today.slice(0, 4) === String(year);
+  const to = current2 ? today : yearEnd;
   const now = totals2(workouts, statuses, from, to);
   const monthly = Array.from({ length: 12 }, () => 0);
   for (const w of workouts) {
@@ -22423,11 +22477,11 @@ function yearReview(workouts, statuses, year, today) {
     if (m >= 0 && m < 12) monthly[m] = (monthly[m] ?? 0) + w.volumeKg;
   }
   const total = daysInYear(year);
-  const elapsed = today < from ? 0 : current ? dayOfYear(today) : total;
+  const elapsed = today < from ? 0 : current2 ? dayOfYear(today) : total;
   const upcoming = total - elapsed;
   const untracked = Math.max(0, elapsed - now.trainingDays - now.restDays - now.sickDays);
   const prevFrom = `${year - 1}-01-01`;
-  const compareUntil = current ? sameDayPreviousYear(today) : null;
+  const compareUntil = current2 ? sameDayPreviousYear(today) : null;
   const prevTo = compareUntil ?? `${year - 1}-12-31`;
   const prevTotals = totals2(workouts, statuses, prevFrom, prevTo);
   const hasPrevious = prevTotals.sessions + prevTotals.restDays + prevTotals.sickDays > 0 ? prevTotals : null;
@@ -26767,9 +26821,9 @@ function labDoseContext(draws, entries, events, measurand) {
     const atMs = wallClockMs(draw.date, draw.time);
     const before = taken.filter((t) => t.atMs <= atMs);
     const last = before.at(-1) ?? null;
-    const window = before.filter((t) => t.atMs > atMs - WEEKLY_DOSE_DAYS * MS_PER_DAY2);
+    const window2 = before.filter((t) => t.atMs > atMs - WEEKLY_DOSE_DAYS * MS_PER_DAY2);
     const unit = last?.entry.unit ?? null;
-    const sameUnit = window.filter((t) => t.entry.unit === unit);
+    const sameUnit = window2.filter((t) => t.entry.unit === unit);
     const weeklyDose2 = sameUnit.length > 0 ? sameUnit.reduce((s, t) => s + t.entry.amount, 0) / (WEEKLY_DOSE_DAYS / 7) : null;
     let doseChange = null;
     if (weeklyDose2 !== null && previousWeekly !== null) {
@@ -27120,7 +27174,7 @@ var AFTER_WINDOW = 120;
 var TWO_HOUR_TOLERANCE = 20;
 var MIN_READINGS = 2;
 var DAY_MIN2 = 1440;
-function minutesOf(measuredAt, date) {
+function minutesOf2(measuredAt, date) {
   const t = minutesOfDay(measuredAt.slice(11, 16));
   if (t === null) return null;
   const d = measuredAt.slice(0, 10);
@@ -27131,7 +27185,7 @@ function minutesOf(measuredAt, date) {
 function mealGlucose(date, time, readings) {
   const start = minutesOfDay(time);
   if (start === null) return null;
-  const points2 = readings.map((r2) => ({ at: minutesOf(r2.measuredAt, date), v: r2.mgDl })).filter((p) => p.at !== null).sort((a, b) => a.at - b.at);
+  const points2 = readings.map((r2) => ({ at: minutesOf2(r2.measuredAt, date), v: r2.mgDl })).filter((p) => p.at !== null).sort((a, b) => a.at - b.at);
   const before = points2.filter((p) => p.at >= start - BASE_WINDOW && p.at <= start);
   const after = points2.filter((p) => p.at > start && p.at <= start + AFTER_WINDOW);
   if (after.length < MIN_READINGS) return null;
@@ -27919,8 +27973,8 @@ function parseSetupState(raw) {
   }
 }
 function toggleManual(state, id3) {
-  const has2 = state.manual.includes(id3);
-  return { ...state, manual: has2 ? state.manual.filter((m) => m !== id3) : [...state.manual, id3] };
+  const has3 = state.manual.includes(id3);
+  return { ...state, manual: has3 ? state.manual.filter((m) => m !== id3) : [...state.manual, id3] };
 }
 function setupProgress(status, state) {
   const steps = SETUP_STEPS.map((s) => {
@@ -28110,7 +28164,7 @@ function buildReport(data, wanted) {
   const areas = REPORT_AREAS.map((a) => a.key).filter(
     (k) => wanted.includes(k) && (k !== "superhuman" || data.protocolEnabled)
   );
-  const has2 = (a) => areas.includes(a);
+  const has3 = (a) => areas.includes(a);
   const lines = /* @__PURE__ */ new Map();
   const add = (date, area, line) => {
     if (date < data.from || date > data.to) return;
@@ -28123,7 +28177,7 @@ function buildReport(data, wanted) {
   const all = [];
   const facts = [];
   const notes = {};
-  if (has2("nutrition")) {
+  if (has3("nutrition")) {
     for (const n2 of data.nutrition) {
       add(
         n2.date,
@@ -28201,7 +28255,7 @@ function buildReport(data, wanted) {
       { area: "nutrition", label: "Tage mit Supplements", value: String(data.supplements.length) }
     );
   }
-  if (has2("training")) {
+  if (has3("training")) {
     const perDay = /* @__PURE__ */ new Map();
     for (const w of data.workouts) {
       const parts2 = [
@@ -28298,7 +28352,7 @@ function buildReport(data, wanted) {
       }
     );
   }
-  if (has2("sleep")) {
+  if (has3("sleep")) {
     for (const s of data.sleep) {
       const p = [
         `${formatDuration(s.sleepMin)} (${s.bedTime}\u2013${s.wakeTime})`,
@@ -28364,7 +28418,7 @@ function buildReport(data, wanted) {
     );
     facts.push({ area: "sleep", label: "N\xE4chte erfasst", value: String(data.sleep.length) });
   }
-  if (has2("recovery")) {
+  if (has3("recovery")) {
     for (const r2 of data.recovery) {
       const p = [
         r2.readiness !== null ? `Erholung ${r2.readiness}/10` : null,
@@ -28415,7 +28469,7 @@ function buildReport(data, wanted) {
     );
     facts.push({ area: "recovery", label: "Tage erfasst", value: String(data.recovery.length) });
   }
-  if (has2("body")) {
+  if (has3("body")) {
     const byMetric = /* @__PURE__ */ new Map();
     const metrics = [...data.metrics].sort(
       (a, b) => a.position - b.position || a.name.localeCompare(b.name)
@@ -28509,10 +28563,10 @@ function buildReport(data, wanted) {
       value: String(data.measurements.length + data.grip.length)
     });
   }
-  if (has2("health")) {
+  if (has3("health")) {
     notes.health = "F\xFCr Health gibt es noch keine erfassten Daten \u2013 der Bereich (Blutbilder, Befunde, Dokumente) ist im Aufbau.";
   }
-  if (has2("superhuman")) {
+  if (has3("superhuman")) {
     const bySubstance = /* @__PURE__ */ new Map();
     for (const e of data.protocol) {
       const extra = [e.route ? ROUTE_LABELS[e.route] : null, e.site].filter(Boolean).join(", ");
@@ -29194,6 +29248,7 @@ function periodSums(days3) {
 var nutritionExportPdf_exports = {};
 __export(nutritionExportPdf_exports, {
   OVERVIEW_COLUMNS: () => OVERVIEW_COLUMNS,
+  nutritionExportDoc: () => nutritionExportDoc,
   nutritionExportPdf: () => nutritionExportPdf
 });
 var M5 = 40;
@@ -29790,6 +29845,9 @@ function supplementsBlock(l, d) {
   }
 }
 function nutritionExportPdf(days3, opts) {
+  return nutritionExportDoc(days3, opts).toBytes("Ern\xE4hrungstagebuch");
+}
+function nutritionExportDoc(days3, opts) {
   const l = new Layout3();
   cover(l, days3, opts);
   overview(l, days3);
@@ -29829,7 +29887,892 @@ function nutritionExportPdf(days3, opts) {
     for (const p of l.doc.pages)
       p.image(name, (A4_W - w) / 2, (A4_H - h) / 2 + 20, w, h, { multiply: true });
   }
-  return l.doc.toBytes("Ern\xE4hrungstagebuch");
+  return l.doc;
+}
+
+// src/domain/appFaq.ts
+var appFaq_exports = {};
+__export(appFaq_exports, {
+  APP_FAQ: () => APP_FAQ,
+  FAQ_AREAS: () => FAQ_AREAS,
+  FAQ_DEVICE_LABELS: () => FAQ_DEVICE_LABELS,
+  SYNONYMS: () => SYNONYMS,
+  expandWord: () => expandWord,
+  foldFaq: () => foldFaq,
+  searchFaq: () => searchFaq2
+});
+var FAQ_DEVICE_LABELS = {
+  beide: "PC und Handy",
+  pc: "PC",
+  handy: "Handy"
+};
+var APP_FAQ = [
+  {
+    id: "was-ist-lifespan-os",
+    area: "Erste Schritte",
+    device: "beide",
+    question: "Was ist LIFESPAN OS?",
+    answer: "LIFESPAN OS sammelt Training, Ern\xE4hrung, Schlaf, Erholung, K\xF6rperwerte, Laborwerte und Gewohnheiten an einem Ort. Die Desktop-App am PC ist die Hauptdatenbank; die Handy-App erfasst unterwegs und schickt ihre Eintr\xE4ge mit \u201EAn den PC senden\u201C zur\xFCck. Alle Daten bleiben lokal bei dir.",
+    keywords: ["\xFCberblick", "funktion", "wozu", "was kann"]
+  },
+  {
+    id: "wo-fange-ich-am-besten-an",
+    area: "Erste Schritte",
+    device: "beide",
+    question: "Wo fange ich am besten an?",
+    answer: "Lege unter Settings \u2192 Profil Geschlecht, Geburtsdatum und Gr\xF6\xDFe an, trage unter Settings \u2192 Tagesziele deine Ziele f\xFCr Kalorien und Makros ein und erfasse dein Gewicht unter Body & Longevity \u2192 Erfassen. Danach kannst du Training und Mahlzeiten eintragen \u2013 die Overview zeigt dann den Tag auf einen Blick.",
+    keywords: ["start", "einrichten", "beginnen", "anfangen", "setup"]
+  },
+  {
+    id: "was-zeigt-die-overview",
+    area: "Erste Schritte",
+    device: "pc",
+    question: "Was zeigt die Overview?",
+    answer: "Die Overview fasst den Tag zusammen: Trainingsbereitschaft, Ern\xE4hrung, Energieverbrauch, Schritte, Wochenziele, Muskel-K\xF6rperkarte, Schlaf und mehr. \xDCber \u201E\xDCbersicht anpassen\u201C legst du fest, welche Karten in welcher Reihenfolge erscheinen.",
+    keywords: ["startseite", "dashboard", "\xFCbersicht", "tag"]
+  },
+  {
+    id: "wie-passe-ich-die-karten-der-overview-an",
+    area: "Erste Schritte",
+    device: "pc",
+    question: "Wie passe ich die Karten der Overview an?",
+    answer: "In der Overview oben rechts \u201E\xDCbersicht anpassen\u201C w\xE4hlen. Dort Karten ein- und ausblenden und verschieben. Dasselbe gibt es in vielen Bereichen (z. B. Tagebuch, Sleep, Recovery) \xFCber \u201E\u2026 anpassen\u201C.",
+    keywords: ["karten", "widgets", "reihenfolge", "ausblenden", "anordnen", "layout"]
+  },
+  {
+    id: "wie-funktioniert-die-suche",
+    area: "Erste Schritte",
+    device: "pc",
+    question: "Wie funktioniert die Suche?",
+    answer: "Oben in der Kopfzeile \u201ESuchen\u201C oder Strg+K \xF6ffnet die Suche. Sie findet Bereiche, \xDCbungen, Lebensmittel, Laborwerte, Einheiten, Notizen, Ziele, Termine und Tage (z. B. \u201E17.11.\u201C oder \u201Egestern\u201C) \u2013 und beantwortet Fragen aus diesen FAQ, z. B. \u201EGym anlegen\u201C.",
+    keywords: ["suchen", "finden", "strg k", "suchfeld"]
+  },
+  {
+    id: "was-macht-schnell-erfassen",
+    area: "Erste Schritte",
+    device: "pc",
+    question: "Was macht \u201ESchnell erfassen\u201C?",
+    answer: "\u201ESchnell erfassen\u201C oben rechts (Strg+Umschalt+L) tr\xE4gt h\xE4ufige Dinge mit wenigen Klicks ein: Gewicht, Wasser, Koffein, Supplements, Schritte und mehr. Was dort erscheint, stellst du unter Settings \u2192 Schnellerfassung ein.",
+    keywords: ["schnellerfassung", "quick", "schnell eintragen", "abk\xFCrzung"]
+  },
+  {
+    id: "wo-finde-ich-diese-fragen-und-antworten",
+    area: "Erste Schritte",
+    device: "beide",
+    question: "Wo finde ich diese Fragen und Antworten?",
+    answer: "Unter Settings \u2192 FAQ mit Suchfeld. Am PC beantwortet auch die Suche (Strg+K) diese Fragen direkt, am Handy findest du sie unter Settings \u2192 FAQ.",
+    keywords: ["faq", "hilfe", "anleitung", "fragen", "support"]
+  },
+  {
+    id: "sind-meine-daten-in-der-cloud",
+    area: "Erste Schritte",
+    device: "beide",
+    question: "Sind meine Daten in der Cloud?",
+    answer: "Nein. Die Desktop-App speichert alles in einer Datenbank auf deinem PC, die Handy-App im Speicher des Handys. Daten wandern nur, wenn du selbst exportierst, \u201EAn den PC senden\u201C nutzt oder eine Sicherung anlegst.",
+    keywords: ["datenschutz", "cloud", "server", "privat", "lokal", "sicherheit"]
+  },
+  {
+    id: "wie-installiere-ich-die-handy-app",
+    area: "Handy & PC",
+    device: "handy",
+    question: "Wie installiere ich die Handy-App?",
+    answer: "\xD6ffne lifespan-os.github.io/app im Browser deines Handys. Auf dem iPhone in Safari \u201ETeilen \u2192 Zum Home-Bildschirm\u201C, auf Android im Chrome-Men\xFC \u201EApp installieren\u201C bzw. \u201EZum Startbildschirm hinzuf\xFCgen\u201C. Danach startet die App wie eine normale App, auch ohne Internet.",
+    keywords: ["installieren", "homebildschirm", "pwa", "iphone", "android", "herunterladen", "download"]
+  },
+  {
+    id: "wie-kommen-meine-pc-daten-aufs-handy",
+    area: "Handy & PC",
+    device: "beide",
+    question: "Wie kommen meine PC-Daten aufs Handy?",
+    answer: "Am PC unter Import/Export \u2192 \u201EF\xFCr die Handy-App exportieren\u201C die Exportdatei erzeugen und aufs Handy bringen (z. B. per AirDrop, Cloud-Ordner oder Kabel). In der Handy-App unter Settings bzw. Import/Export die Datei laden. Ohne PC startet die Handy-App mit dem Startpaket (\xDCbungen, Maschinen, Lebensmittel).",
+    keywords: ["\xFCbertragen", "synchronisieren", "sync", "exportdatei", "abgleich"]
+  },
+  {
+    id: "wie-kommen-eintraege-vom-handy-an-den-pc",
+    area: "Handy & PC",
+    device: "beide",
+    question: "Wie kommen Eintr\xE4ge vom Handy an den PC?",
+    answer: "In der Handy-App \u201EAn den PC senden\u201C w\xE4hlen \u2013 es entsteht eine Datei mit allen noch nicht gesendeten Eintr\xE4gen. Diese am PC unter Import/Export \u2192 Daten importieren einlesen. Danach markiert das Handy die Eintr\xE4ge als gesendet.",
+    keywords: ["an den pc senden", "\xFCbertragen", "synchronisieren", "sync", "zur\xFCckspielen"]
+  },
+  {
+    id: "kann-ich-die-handy-app-ohne-pc-benutzen",
+    area: "Handy & PC",
+    device: "handy",
+    question: "Kann ich die Handy-App ohne PC benutzen?",
+    answer: "Ja. Ohne Exportdatei startet sie mit dem Startpaket (\xDCbungen, \xFCber 2.400 Maschinen, Lebensmittel). Maschinen lassen sich am Handy aktualisieren, eigene Maschinen anlegen und Datensicherungen erstellen.",
+    keywords: ["ohne pc", "alleine", "standalone", "startpaket"]
+  },
+  {
+    id: "wie-sichere-ich-die-daten-der-handy-app",
+    area: "Handy & PC",
+    device: "handy",
+    question: "Wie sichere ich die Daten der Handy-App?",
+    answer: "In der Handy-App unter Settings \u2192 Datensicherung eine Sicherung erstellen und die Datei an einem sicheren Ort ablegen. \xDCber \u201EWiederherstellen\u201C spielst du sie wieder ein \u2013 z. B. auf einem neuen Handy.",
+    keywords: ["backup", "sicherung", "sichern", "wiederherstellen", "neues handy"]
+  },
+  {
+    id: "was-mache-ich-bei-einem-neuen-handy",
+    area: "Handy & PC",
+    device: "handy",
+    question: "Was mache ich bei einem neuen Handy?",
+    answer: "Am alten Handy eine Datensicherung erstellen (Settings \u2192 Datensicherung) und alles mit \u201EAn den PC senden\u201C \xFCbertragen. Am neuen Handy die App installieren und die Sicherung wiederherstellen oder die Exportdatei vom PC laden.",
+    keywords: ["handywechsel", "neues telefon", "umziehen", "\xFCbertragen"]
+  },
+  {
+    id: "die-handy-app-zeigt-eine-alte-version-was-tun",
+    area: "Handy & PC",
+    device: "handy",
+    question: "Die Handy-App zeigt eine alte Version \u2013 was tun?",
+    answer: "Die App l\xE4dt Updates beim n\xE4chsten Start. Schlie\xDFe sie ganz und \xF6ffne sie neu (ggf. zweimal). Die Version steht in der Handy-App unter Settings.",
+    keywords: ["update", "aktualisieren", "version", "cache", "alt"]
+  },
+  {
+    id: "kann-ich-mehrere-konten-am-handy-haben",
+    area: "Handy & PC",
+    device: "handy",
+    question: "Kann ich mehrere Konten am Handy haben?",
+    answer: "Ja. In der Handy-App unter Settings \u2192 Konten kannst du Konten anlegen, umbenennen, wechseln und l\xF6schen \u2013 z. B. f\xFCr eine zweite Person.",
+    keywords: ["konto", "benutzer", "profil", "mehrere personen", "account"]
+  },
+  {
+    id: "wie-aktualisiere-ich-die-desktop-app",
+    area: "Handy & PC",
+    device: "pc",
+    question: "Wie aktualisiere ich die Desktop-App?",
+    answer: "Unter Settings \u2192 Updates siehst du die installierte Version. Neue Versionen kommen als Installationspaket (LIFESPAN-OS-Setup.exe); einfach ausf\xFChren \u2013 deine Daten bleiben erhalten.",
+    keywords: ["update", "aktualisieren", "neue version", "installieren", "setup"]
+  },
+  {
+    id: "wie-starte-ich-ein-training",
+    area: "Training",
+    device: "beide",
+    question: "Wie starte ich ein Training?",
+    answer: "Unter Training \u2192 Einheiten \u201EFreies Training\u201C w\xE4hlen oder einen Trainingstag aus deinem Plan ausw\xE4hlen und \u201ETag starten\u201C. Dann \xDCbungen hinzuf\xFCgen und S\xE4tze mit Gewicht und Wiederholungen eintragen; am Ende \u201EAbschlie\xDFen\u201C.",
+    keywords: ["workout", "einheit", "beginnen", "starten", "freies training"]
+  },
+  {
+    id: "wie-trage-ich-ein-vergangenes-training-nach",
+    area: "Training",
+    device: "beide",
+    question: "Wie trage ich ein vergangenes Training nach?",
+    answer: "Unter Training \u2192 Einheiten \u201ENachtragen\u201C w\xE4hlen und Datum, \xDCbungen und S\xE4tze eintragen. In der Kalender-Ansicht kannst du auch direkt einen leeren Tag anklicken (Handy: Tag antippen \u2192 \u201EEinheit nachtragen\u201C).",
+    keywords: ["nachtragen", "vergessen", "fr\xFCher", "nachtr\xE4glich", "gestern"]
+  },
+  {
+    id: "gibt-es-einen-kalender-meiner-trainingseinheiten",
+    area: "Training",
+    device: "beide",
+    question: "Gibt es einen Kalender meiner Trainingseinheiten?",
+    answer: "Ja. Unter Training \u2192 Einheiten oben \u201EKalender\u201C statt \u201EListe\u201C w\xE4hlen. Du siehst den Monat mit allen Einheiten, Restdays und Krankheitstagen; eine Einheit anklicken \xF6ffnet sie. Mit den Pfeilen wechselst du den Monat.",
+    keywords: ["kalender", "monat", "\xFCbersicht", "monatsansicht", "trainingstage"]
+  },
+  {
+    id: "wie-fuege-ich-eine-uebung-an-einer-maschine-hinz",
+    area: "Training",
+    device: "beide",
+    question: "Wie f\xFCge ich eine \xDCbung an einer Maschine hinzu?",
+    answer: "Im laufenden Training unter \u201EMaschinen\u201C die Maschine suchen (Name, Nummer, Hersteller oder Muskel) und anklicken. Gibt es an der Maschine mehrere \xDCbungen, w\xE4hlst du eine davon.",
+    keywords: ["maschine", "ger\xE4t", "\xFCbung hinzuf\xFCgen", "suchen"]
+  },
+  {
+    id: "wie-lege-ich-eine-neue-uebung-an-einer-maschine",
+    area: "Training",
+    device: "beide",
+    question: "Wie lege ich eine neue \xDCbung an einer Maschine an (z. B. Wadenheben an der Beinpresse)?",
+    answer: "Am PC im laufenden Training die Maschine suchen und mit der rechten Maustaste anklicken; am Handy den Treffer nach links oder rechts wischen. Es erscheinen die \xDCbungen an dieser Maschine und ein Feld f\xFCr eine neue. Die Muskelfokusgruppe ergibt sich aus den Schlagw\xF6rtern im Namen, z. B. \u201EWadenheben stehend\u201C \u2192 Wade stehend.",
+    keywords: ["\xFCbung anlegen", "variante", "maschine", "rechtsklick", "wischen", "wadenheben"]
+  },
+  {
+    id: "wie-wird-die-muskelfokusgruppe-einer-uebung-best",
+    area: "Training",
+    device: "beide",
+    question: "Wie wird die Muskelfokusgruppe einer \xDCbung bestimmt?",
+    answer: "Aus dem Bewegungsmuster der Maschine \u2013 bei eigenen \xDCbungen an einer Maschine aus Schlagw\xF6rtern im Namen. Gleichbedeutende W\xF6rter werden erkannt: stehend = aufrecht, gestreckt, durchgestreckt; sitzend = angewinkelt, abgeknickt, 90 Grad. Das Info-Symbol (\u24D8) bei der \xDCbung zeigt die Verteilung.",
+    keywords: ["muskelfokus", "muskelverteilung", "bewegungsmuster", "prozent", "zuordnung"]
+  },
+  {
+    id: "wie-lege-ich-eine-eigene-uebung-ohne-maschine-an",
+    area: "Training",
+    device: "pc",
+    question: "Wie lege ich eine eigene \xDCbung ohne Maschine an?",
+    answer: "Unter Training \u2192 Datenbank \u2192 \u201E\xDCbungen, Maschinen, Sportarten\u201C eine neue \xDCbung anlegen: Name, Kategorie, Muskelgruppe und Ger\xE4t. Sie steht danach im Training unter \u201E\xDCbungen\u201C zur Auswahl.",
+    keywords: ["\xFCbung anlegen", "eigene \xFCbung", "freihantel", "k\xF6rpergewicht", "neue \xFCbung"]
+  },
+  {
+    id: "wie-trage-ich-restday-oder-krankheit-ein",
+    area: "Training",
+    device: "beide",
+    question: "Wie trage ich Restday oder Krankheit ein?",
+    answer: "Unter Training \u2192 Einheiten \u201ERestday\u201C bzw. \u201EKrankheit\u201C w\xE4hlen. Das z\xE4hlt f\xFCr die Trainingsbereitschaft und die Wochenziele; \u201ER\xFCckg\xE4ngig\u201C nimmt es wieder heraus.",
+    keywords: ["ruhetag", "pause", "krank", "restday", "erholungstag"]
+  },
+  {
+    id: "wie-erfasse-ich-cardio-laufband-rad-rudern",
+    area: "Training",
+    device: "beide",
+    question: "Wie erfasse ich Cardio (Laufband, Rad, Rudern)?",
+    answer: "Unter Training \u2192 Einheiten bei \u201ECardio erfassen\u201C die \xDCbung w\xE4hlen und \u201EErfassen\u201C bzw. \u201ECardio erfassen\u201C. Je Block tr\xE4gst du Dauer, Strecke, Puls oder Leistung ein. Im laufenden Training gibt es daf\xFCr den Reiter \u201ECardio\u201C.",
+    keywords: ["cardio", "ausdauer", "laufen", "laufband", "fahrrad", "ergometer", "rudern"]
+  },
+  {
+    id: "wie-erstelle-ich-einen-trainingsplan",
+    area: "Training",
+    device: "pc",
+    question: "Wie erstelle ich einen Trainingsplan?",
+    answer: "Unter Training \u2192 Pl\xE4ne einen Plan anlegen, Trainingstage hinzuf\xFCgen und je Tag \xDCbungen mit Richtwerten (S\xE4tze, Wiederholungen, Gewicht) eintragen. Den Tag startest du dann unter Einheiten mit \u201ETag starten\u201C.",
+    keywords: ["plan", "trainingsplan", "programm", "split", "routine"]
+  },
+  {
+    id: "kann-ich-werte-aus-einem-training-in-den-plan-ue",
+    area: "Training",
+    device: "beide",
+    question: "Kann ich Werte aus einem Training in den Plan \xFCbernehmen?",
+    answer: "Ja. Nach dem Abschlie\xDFen einer Einheit aus einem Plan fragt die App, ob die S\xE4tze, Gewichte und Einstellungen als neue Richtwerte in den Trainingstag \xFCbernommen werden sollen.",
+    keywords: ["richtwerte", "\xFCbernehmen", "progression", "plan aktualisieren"]
+  },
+  {
+    id: "wo-sehe-ich-meinen-fortschritt-je-uebung",
+    area: "Training",
+    device: "pc",
+    question: "Wo sehe ich meinen Fortschritt je \xDCbung?",
+    answer: "Unter Training \u2192 Auswertung \u2192 Verlauf eine \xDCbung w\xE4hlen: Gewicht, Wiederholungen, gesch\xE4tztes Maximum und Volumen im Zeitverlauf.",
+    keywords: ["fortschritt", "verlauf", "rekord", "entwicklung", "kraft", "1rm"]
+  },
+  {
+    id: "was-zeigt-die-muskel-koerperkarte",
+    area: "Training",
+    device: "beide",
+    question: "Was zeigt die Muskel-K\xF6rperkarte?",
+    answer: "Sie f\xE4rbt die Muskeln nach den erledigten Arbeitss\xE4tzen \u2013 in der Einheit, der Woche oder dem gew\xE4hlten Zeitraum. \u201EStandard\u201C, \u201EIndividuell\u201C (eigene Zielwerte je Muskel) und \u201ERelativ\u201C sind w\xE4hlbar.",
+    keywords: ["k\xF6rperkarte", "muskelkarte", "heatmap", "muskeln", "belastung"]
+  },
+  {
+    id: "wie-lege-ich-zielwerte-je-muskel-fuer-die-koerpe",
+    area: "Training",
+    device: "pc",
+    question: "Wie lege ich Zielwerte je Muskel f\xFCr die K\xF6rperkarte fest?",
+    answer: "In der K\xF6rperkarte \u201EIndividuell\u201C w\xE4hlen und je Muskel einen Zielwert an S\xE4tzen pro Woche eintragen. Die Farben zeigen dann, wie weit du davon entfernt bist.",
+    keywords: ["zielwerte", "individuell", "s\xE4tze pro woche", "muskel ziel"]
+  },
+  {
+    id: "was-ist-der-pausentimer",
+    area: "Training",
+    device: "beide",
+    question: "Was ist der Pausentimer?",
+    answer: "Nach einem abgehakten Satz l\xE4uft die Pause mit. Der Pausentimer steht oben auf jeder Seite, solange er l\xE4uft, und meldet das Ende mit einem Signal.",
+    keywords: ["pause", "timer", "satzpause", "stoppuhr"]
+  },
+  {
+    id: "wie-werte-ich-schritte-und-alltagsbewegung-neat",
+    area: "Training",
+    device: "pc",
+    question: "Wie werte ich Schritte und Alltagsbewegung (NEAT) aus?",
+    answer: "Unter Training \u2192 Cardio & NEAT \u2192 NEAT siehst du Schritte, Alltagsbewegung und den Kalorienverbrauch daraus. Schritte kommen aus dem Import von Uhr oder Handy oder werden von Hand eingetragen.",
+    keywords: ["schritte", "neat", "alltagsbewegung", "gehen", "schrittz\xE4hler"]
+  },
+  {
+    id: "wie-lege-ich-ein-neues-gym-an",
+    area: "Gyms & Maschinen",
+    device: "pc",
+    question: "Wie lege ich ein neues Gym an?",
+    answer: "Unter Training \u2192 Datenbank \u2192 Meine Gyms \u201ENeues Gym\u201C w\xE4hlen, Name, Adresse, Website und optional ein Foto eintragen und speichern. Danach f\xFCgst du die Maschinen des Studios mit ihrer Studionummer hinzu.",
+    keywords: ["gym anlegen", "studio", "fitnessstudio", "neues gym", "hinzuf\xFCgen"]
+  },
+  {
+    id: "wie-lege-ich-am-handy-ein-gym-an",
+    area: "Gyms & Maschinen",
+    device: "handy",
+    question: "Wie lege ich am Handy ein Gym an?",
+    answer: "In der Handy-App unter Training \u2192 Meine Gyms ein neues Gym anlegen und Maschinen hinzuf\xFCgen. Mit \u201EAn den PC senden\u201C kommt es auch in die Desktop-App.",
+    keywords: ["gym anlegen", "studio", "handy", "neues gym"]
+  },
+  {
+    id: "wie-waehle-ich-das-gym-in-dem-ich-gerade-trainie",
+    area: "Gyms & Maschinen",
+    device: "beide",
+    question: "Wie w\xE4hle ich das Gym, in dem ich gerade trainiere?",
+    answer: "Unter Training \u2192 Einheiten neben \u201EFreies Training\u201C das Gym w\xE4hlen. Im Training stehen dann zuerst dessen Maschinen mit Studionummer; \u201EAlle Maschinen zeigen\u201C schaltet die \xFCbrigen dazu.",
+    keywords: ["aktives gym", "gym wechseln", "auswahl", "trainieren in"]
+  },
+  {
+    id: "wie-hinterlege-ich-den-zutrittscode-meines-gyms",
+    area: "Gyms & Maschinen",
+    device: "beide",
+    question: "Wie hinterlege ich den Zutrittscode meines Gyms?",
+    answer: "In der Gym-Ansicht unter Meine Gyms den Zutrittscode eintragen. Danach erscheint im Training neben der Gym-Auswahl der Knopf \u201EZutrittscode\u201C zum schnellen Anzeigen.",
+    keywords: ["zutrittscode", "code", "pin", "eingang", "t\xFCrcode", "zugang"]
+  },
+  {
+    id: "wie-fuege-ich-einem-gym-maschinen-hinzu",
+    area: "Gyms & Maschinen",
+    device: "beide",
+    question: "Wie f\xFCge ich einem Gym Maschinen hinzu?",
+    answer: "In Meine Gyms das Gym \xF6ffnen, Maschinen suchen (Name, Hersteller, Nummer) und mit Studionummer und Notiz hinzuf\xFCgen.",
+    keywords: ["maschinen hinzuf\xFCgen", "studionummer", "ger\xE4t zuordnen"]
+  },
+  {
+    id: "eine-maschine-fehlt-in-der-datenbank-was-nun",
+    area: "Gyms & Maschinen",
+    device: "beide",
+    question: "Eine Maschine fehlt in der Datenbank \u2013 was nun?",
+    answer: "Lege sie selbst an: am PC unter Training \u2192 Datenbank \u2192 \xDCbungen, Maschinen, Sportarten, am Handy unter Training \u2192 Datenbank (eigene Maschinen mit Nummer, Notiz und Schlagworten). Eigene Maschinen vom Handy kommen mit \u201EAn den PC senden\u201C auf den PC; Bilder und Doppelte zusammenf\xFChren gehen am PC.",
+    keywords: ["maschine fehlt", "eigene maschine", "neue maschine", "nicht gefunden", "ger\xE4t anlegen"]
+  },
+  {
+    id: "wie-finde-ich-eine-maschine-schneller",
+    area: "Gyms & Maschinen",
+    device: "beide",
+    question: "Wie finde ich eine Maschine schneller?",
+    answer: "Die Suche versteht Namen, Hersteller, Serie, Nummern und Muskelgruppen \u2013 auch englisch (\u201EChest Press\u201C), mit Tippfehlern und \xE4hnlichen Ger\xE4ten. Maschinen deines aktiven Gyms und solche mit eigenem Verlauf stehen oben.",
+    keywords: ["maschine suchen", "finden", "suche", "nummer"]
+  },
+  {
+    id: "wie-tausche-ich-ein-gym-mit-anderen-aus",
+    area: "Gyms & Maschinen",
+    device: "pc",
+    question: "Wie tausche ich ein Gym mit anderen aus?",
+    answer: "In der Gym-Ansicht unter Meine Gyms das Studio-Paket exportieren. Es enth\xE4lt Name, Anschrift, Website und die Maschinen mit Nummern \u2013 keine Mitgliedsnummer, keinen Kontakt, kein Foto und keine Notizen. Jemand anders liest es \xFCber \u201EStudio-Paket installieren \u2026\u201C ein.",
+    keywords: ["gym teilen", "exportieren", "paket", "austauschen"]
+  },
+  {
+    id: "wie-aktualisiere-ich-die-maschinen-am-handy-ohne",
+    area: "Gyms & Maschinen",
+    device: "handy",
+    question: "Wie aktualisiere ich die Maschinen am Handy ohne PC?",
+    answer: "Maschinen kommen mit der Exportdatei vom PC \u2013 ohne PC in der Handy-App unter Import/Export \u2192 \u201EMaschinen aktualisieren\u201C. Eigene Maschinen und Nummern bleiben erhalten.",
+    keywords: ["maschinen aktualisieren", "master", "update", "datenbank"]
+  },
+  {
+    id: "wie-trage-ich-eine-mahlzeit-ein",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Wie trage ich eine Mahlzeit ein?",
+    answer: "Unter Nutrition \u2192 Tagebuch im Tagesverlauf den orangen Knopf \u201EJetzt eintragen\u201C anklicken (oder an die gew\xFCnschte Uhrzeit ziehen), die Mahlzeit w\xE4hlen und Lebensmittel hinzuf\xFCgen. In der Ansicht \u201EListe\u201C geht es \xFCber \u201EHinzuf\xFCgen\u201C bei der Mahlzeit.",
+    keywords: ["mahlzeit", "essen", "eintragen", "fr\xFChst\xFCck", "mittagessen", "abendessen", "snack", "erfassen"]
+  },
+  {
+    id: "was-ist-der-tagesverlauf-im-tagebuch",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Was ist der Tagesverlauf im Tagebuch?",
+    answer: "Eine Zeitachse vom Tageswechsel bis eine Minute davor mit Mahlzeiten, geplanten Mahlzeiten, Koffein, Supplements und Wasser. \xDCberlappen sich Eintr\xE4ge, r\xFCckt einer mit einer Verbindungslinie in eine zweite Spalte. Oben schaltest du zwischen \u201ETagesverlauf\u201C und \u201EListe\u201C um.",
+    keywords: ["tagesverlauf", "zeitachse", "timeline", "ansicht"]
+  },
+  {
+    id: "wie-plane-ich-eine-mahlzeit-fuer-spaeter",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Wie plane ich eine Mahlzeit f\xFCr sp\xE4ter?",
+    answer: "Im Tagesverlauf den orangen Knopf an eine Uhrzeit nach \u201Ejetzt\u201C ziehen \u2013 er zeigt dann \u201EPlanen\u201C. Lebensmittel w\xE4hlen und speichern. Geplante Mahlzeiten z\xE4hlen erst, wenn du \u201EGegessen\u201C antippst, und erscheinen hellgrau in der Tagessumme.",
+    keywords: ["planen", "vorplanen", "geplante mahlzeit", "sp\xE4ter", "meal prep"]
+  },
+  {
+    id: "wie-verschiebe-ich-den-knopf-im-tagesverlauf-min",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Wie verschiebe ich den Knopf im Tagesverlauf minutengenau?",
+    answer: "Den Knopf mit Maus oder Finger ziehen \u2013 er rastet minutengenau ein. Am Bildschirmrand scrollt die Seite mit. Am PC gehen auch die Pfeiltasten (1 Minute, mit Umschalt 30 Minuten). Nach dem Eintragen oder \u201EAbbrechen\u201C springt er auf die aktuelle Uhrzeit zur\xFCck.",
+    keywords: ["knopf", "ziehen", "verschieben", "minute", "uhrzeit w\xE4hlen"]
+  },
+  {
+    id: "wie-zoome-ich-im-tagesverlauf",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Wie zoome ich im Tagesverlauf?",
+    answer: "Am PC mit STRG + Mausrad \xFCber der Zeitachse oder mit \u201E\u2212\u201C/\u201E+\u201C, am Handy mit zwei Fingern (Zoomgeste) oder den Kn\xF6pfen \u201E\u2212\u201C/\u201E+\u201C. So passt der ganze Tag auf den Bildschirm oder du siehst dichte Zeiten genauer.",
+    keywords: ["zoom", "vergr\xF6\xDFern", "verkleinern", "ganzer tag", "pinch"]
+  },
+  {
+    id: "wie-bearbeite-oder-loesche-ich-einen-eintrag-im",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Wie bearbeite oder l\xF6sche ich einen Eintrag im Tagesverlauf?",
+    answer: "Am PC mit der rechten Maustaste auf Mahlzeit, Koffein oder Supplement klicken: \u201EBearbeiten\u201C oder \u201EL\xF6schen\u201C (mit R\xFCckfrage). Am Handy den Eintrag nach rechts wischen = bearbeiten, nach links = l\xF6schen (mit R\xFCckfrage).",
+    keywords: ["bearbeiten", "l\xF6schen", "rechtsklick", "wischen", "\xE4ndern", "entfernen"]
+  },
+  {
+    id: "wie-setze-ich-die-uhrzeit-einer-mahlzeit",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Wie setze ich die Uhrzeit einer Mahlzeit?",
+    answer: "Neue Mahlzeiten von heute bekommen automatisch die aktuelle Uhrzeit. Im Tagesverlauf bestimmt die Position des Knopfes die Uhrzeit; im Bearbeiten-Fenster kannst du sie \xE4ndern.",
+    keywords: ["uhrzeit", "zeit", "mahlzeit zeit"]
+  },
+  {
+    id: "wie-lege-ich-ein-eigenes-lebensmittel-an",
+    area: "Ern\xE4hrung",
+    device: "pc",
+    question: "Wie lege ich ein eigenes Lebensmittel an?",
+    answer: "Unter Nutrition \u2192 Datenbanken \u2192 Lebensmitteldatenbank ein neues Lebensmittel mit N\xE4hrwerten je 100 g bzw. 100 ml anlegen. Alternativ den Barcode scannen oder ein Etikett fotografieren.",
+    keywords: ["lebensmittel anlegen", "eigenes lebensmittel", "n\xE4hrwerte", "produkt"]
+  },
+  {
+    id: "wie-scanne-ich-einen-barcode",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Wie scanne ich einen Barcode?",
+    answer: "Unter Nutrition \u2192 Scanner den Barcode scannen. Gefundene Produkte (Open Food Facts) \xFCbernimmst du mit ihren N\xE4hrwerten in deine Lebensmittel.",
+    keywords: ["barcode", "scannen", "strichcode", "ean", "kamera"]
+  },
+  {
+    id: "wie-lese-ich-ein-naehrwert-etikett-per-foto-ein",
+    area: "Ern\xE4hrung",
+    device: "pc",
+    question: "Wie lese ich ein N\xE4hrwert-Etikett per Foto ein?",
+    answer: "Im Scanner bzw. beim Anlegen eines Lebensmittels ein Foto des Etiketts w\xE4hlen \u2013 die Texterkennung liest die N\xE4hrwerte aus. Pr\xFCfe die Werte vor dem Speichern.",
+    keywords: ["etikett", "foto", "texterkennung", "ocr", "n\xE4hrwerttabelle"]
+  },
+  {
+    id: "was-ist-die-bls-datenbank",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Was ist die BLS-Datenbank?",
+    answer: "Der Bundeslebensmittelschl\xFCssel \u2013 eine gro\xDFe Datenbank mit N\xE4hrwerten unverarbeiteter Lebensmittel. Unter Nutrition \u2192 Datenbanken \u2192 BLS-Datenbank suchen und ins eigene Verzeichnis \xFCbernehmen.",
+    keywords: ["bls", "bundeslebensmittelschl\xFCssel", "n\xE4hrwertdatenbank"]
+  },
+  {
+    id: "wie-speichere-ich-ein-rezept-oder-eine-vorlage",
+    area: "Ern\xE4hrung",
+    device: "pc",
+    question: "Wie speichere ich ein Rezept oder eine Vorlage?",
+    answer: "Unter Nutrition \u2192 Rezepte & Planen \u2192 Vorlagen & Rezepte ein Rezept aus Zutaten anlegen. Eine eingetragene Mahlzeit kannst du auch \u201EAls Gericht speichern\u201C.",
+    keywords: ["rezept", "vorlage", "gericht", "kochen", "wiederverwenden"]
+  },
+  {
+    id: "was-ist-fasttracking",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Was ist Fasttracking?",
+    answer: "Wenn du nur Tageswerte (Kalorien, Makros) statt einzelner Lebensmittel eintragen willst. Die Werte stehen im Tagebuch unter \u201EFasttracking\u201C und z\xE4hlen zur Tagessumme.",
+    keywords: ["fasttracking", "tageswerte", "schnell", "nur kalorien"]
+  },
+  {
+    id: "was-zeigt-die-tagessumme",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Was zeigt die Tagessumme?",
+    answer: "Energie und Makron\xE4hrstoffe des Tages gegen deine Tagesziele, mit Defizit bzw. \xDCberschuss. Geplante Mahlzeiten stehen hellgrau dahinter (mehrere durch einen Strich getrennt) und z\xE4hlen erst nach \u201EGegessen\u201C.",
+    keywords: ["tagessumme", "kalorien", "makros", "defizit", "\xFCberschuss", "ziel"]
+  },
+  {
+    id: "wo-sehe-ich-meine-ernaehrung-ueber-wochen",
+    area: "Ern\xE4hrung",
+    device: "pc",
+    question: "Wo sehe ich meine Ern\xE4hrung \xFCber Wochen?",
+    answer: "Unter Nutrition \u2192 Verlauf: Kalorien und Makros je Tag und Woche, gegen deine Ziele.",
+    keywords: ["verlauf", "woche", "statistik", "durchschnitt"]
+  },
+  {
+    id: "wie-trage-ich-wasser-ein",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Wie trage ich Wasser ein?",
+    answer: "Im Tagebuch in der Karte \u201EWasserhaushalt\u201C ein Glas antippen (Gr\xF6\xDFe w\xE4hlbar) oder \xFCber \u201ESchnell erfassen\u201C. Getr\xE4nke mit Koffein z\xE4hlen mit ihrer Menge zum Wasser.",
+    keywords: ["wasser", "trinken", "glas", "fl\xFCssigkeit", "hydration"]
+  },
+  {
+    id: "was-bedeutet-der-tageswechsel-tagesende",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Was bedeutet der Tageswechsel (Tagesende)?",
+    answer: "Bis zu dieser Uhrzeit z\xE4hlt alles noch zum Vortag \u2013 z. B. 03:00 f\xFCr den sp\xE4ten Snack. Einstellen unter Settings \u2192 Darstellung. Eine \xC4nderung gilt ab dem aktuellen Tag; vergangene Tage behalten ihren Tageswechsel.",
+    keywords: ["tageswechsel", "tagesende", "mitternacht", "nachteule", "sp\xE4ter snack"]
+  },
+  {
+    id: "wie-trage-ich-koffein-ein",
+    area: "Supplements & Koffein",
+    device: "beide",
+    question: "Wie trage ich Koffein ein?",
+    answer: "\xDCber \u201ESchnell erfassen\u201C \u2192 Koffein oder im Tagebuch unter der Zeile \u201EKoffein\u201C bzw. im Tagesverlauf \xFCber den Knopf \u2192 \u201EKoffein\u201C. Getr\xE4nk, Menge und Uhrzeit w\xE4hlen. Der Koffeinspiegel erscheint bei Sleep.",
+    keywords: ["koffein", "kaffee", "espresso", "energydrink", "tee"]
+  },
+  {
+    id: "wie-aendere-ich-eine-koffein-portion",
+    area: "Supplements & Koffein",
+    device: "beide",
+    question: "Wie \xE4ndere ich eine Koffein-Portion?",
+    answer: "Im Tagebuch in der Zeile \u201EKoffein\u201C bei der Portion \u201EBearbeiten\u201C w\xE4hlen \u2013 oder im Tagesverlauf rechtsklicken bzw. nach rechts wischen.",
+    keywords: ["koffein \xE4ndern", "bearbeiten", "korrigieren"]
+  },
+  {
+    id: "wie-lege-ich-ein-supplement-an",
+    area: "Supplements & Koffein",
+    device: "beide",
+    question: "Wie lege ich ein Supplement an?",
+    answer: "Unter Nutrition \u2192 Datenbanken \u2192 Supplementdatenbank ein Supplement mit Wirkstoffen und Menge je Portion anlegen. Danach tr\xE4gst du die Einnahme im Tagebuch bei \u201ESupplements\u201C ein.",
+    keywords: ["supplement anlegen", "nahrungserg\xE4nzung", "vitamin", "pr\xE4parat"]
+  },
+  {
+    id: "was-ist-ein-stack",
+    area: "Supplements & Koffein",
+    device: "beide",
+    question: "Was ist ein Stack?",
+    answer: "Eine Gruppe von Supplements, die du gemeinsam nimmst (z. B. \u201EMorgens\u201C). Mit einem Klick tr\xE4gst du den ganzen Stack f\xFCr den Tag ein.",
+    keywords: ["stack", "kombination", "morgens", "gruppe supplements"]
+  },
+  {
+    id: "wie-trage-ich-meinen-schlaf-ein",
+    area: "Schlaf & Recovery",
+    device: "beide",
+    question: "Wie trage ich meinen Schlaf ein?",
+    answer: "Unter Sleep Einschlaf- und Aufwachzeit sowie deine Einsch\xE4tzung der Schlafqualit\xE4t eintragen \u2013 oder Schlafdaten von Uhr oder Ring importieren.",
+    keywords: ["schlaf", "schlafen", "einschlafen", "aufwachen", "schlafqualit\xE4t"]
+  },
+  {
+    id: "was-zeigt-recovery",
+    area: "Schlaf & Recovery",
+    device: "beide",
+    question: "Was zeigt Recovery?",
+    answer: "Erholung, M\xFCdigkeit, Muskelkater und Stress als Selbsteinsch\xE4tzung, dazu Ruhepuls und HRV, wenn vorhanden. Daraus ergibt sich die Trainingsbereitschaft in der Overview.",
+    keywords: ["recovery", "erholung", "hrv", "ruhepuls", "muskelkater", "stress", "bereitschaft"]
+  },
+  {
+    id: "wie-importiere-ich-daten-von-uhr-ring-oder-waage",
+    area: "Schlaf & Recovery",
+    device: "beide",
+    question: "Wie importiere ich Daten von Uhr, Ring oder Waage?",
+    answer: "Am PC unter Import/Export \u2192 \u201EWerte von Uhr, Ring oder Waage importieren\u201C die Exportdatei des Herstellers w\xE4hlen (z. B. Apple Health, Garmin, Samsung Health, Fitbit, Huawei, Withings, Xiaomi/Zepp). Zu jedem Hersteller steht dort, wie du den Export anforderst. F\xFCr Polar gibt es zus\xE4tzlich eine eigene Anbindung.",
+    keywords: ["uhr", "smartwatch", "ring", "waage", "garmin", "apple health", "polar", "fitbit", "samsung", "huawei", "withings", "xiaomi", "import"]
+  },
+  {
+    id: "wie-trage-ich-mein-gewicht-ein",
+    area: "Body & Longevity",
+    device: "beide",
+    question: "Wie trage ich mein Gewicht ein?",
+    answer: "Unter Body & Longevity \u2192 Erfassen oder \xFCber \u201ESchnell erfassen\u201C \u2192 Gewicht. Werte einer smarten Waage kommen \xFCber den Import von Uhr, Ring oder Waage.",
+    keywords: ["gewicht", "wiegen", "waage", "k\xF6rpergewicht", "kilo"]
+  },
+  {
+    id: "wie-lege-ich-eine-eigene-messgroesse-an-z-b-bauc",
+    area: "Body & Longevity",
+    device: "pc",
+    question: "Wie lege ich eine eigene Messgr\xF6\xDFe an (z. B. Bauchumfang)?",
+    answer: "Unter Body & Longevity \u2192 Messgr\xF6\xDFen eine neue Messgr\xF6\xDFe mit Einheit anlegen. Danach kannst du sie unter \u201EErfassen\u201C eintragen und im Verlauf sehen.",
+    keywords: ["messgr\xF6\xDFe", "umfang", "taille", "bauchumfang", "k\xF6rperfett", "eigene werte"]
+  },
+  {
+    id: "was-sind-check-ins",
+    area: "Body & Longevity",
+    device: "beide",
+    question: "Was sind Check-Ins?",
+    answer: "Regelm\xE4\xDFige Fortschrittsfotos und Angaben unter Body & Longevity \u2192 Check-Ins, um Ver\xE4nderungen \xFCber Wochen zu vergleichen.",
+    keywords: ["check-in", "fotos", "fortschrittsfoto", "vergleich"]
+  },
+  {
+    id: "was-sind-die-protocols",
+    area: "Body & Longevity",
+    device: "beide",
+    question: "Was sind die Protocols?",
+    answer: "Unter Body & Longevity \u2192 Protocols findest du Programme wie den 7-Wochen-Start oder das \u201ET\xE4gliche Dutzend\u201C zum Abhaken \u2013 der Fortschritt wird gespeichert.",
+    keywords: ["protocols", "programm", "t\xE4gliches dutzend", "7 wochen", "abhaken"]
+  },
+  {
+    id: "wie-vergleiche-ich-zwei-zeitraeume",
+    area: "Body & Longevity",
+    device: "pc",
+    question: "Wie vergleiche ich zwei Zeitr\xE4ume?",
+    answer: "Unter Body & Longevity \u2192 Zeitr\xE4ume vergleichen zwei Zeitr\xE4ume w\xE4hlen \u2013 die App stellt Mittelwerte und Unterschiede gegen\xFCber.",
+    keywords: ["vergleichen", "zeitraum", "vorher nachher", "unterschied"]
+  },
+  {
+    id: "wie-trage-ich-laborwerte-blutwerte-ein",
+    area: "Health",
+    device: "pc",
+    question: "Wie trage ich Laborwerte (Blutwerte) ein?",
+    answer: "Unter Health \u2192 Blutabnahmen eine Blutabnahme mit Datum anlegen und die Werte eintragen, oder unter Health \u2192 Import einen Laborbefund einlesen. Referenzbereiche und Verlauf stehen unter Health \u2192 Verlauf.",
+    keywords: ["blutwerte", "laborwerte", "labor", "blutbild", "befund", "eintragen"]
+  },
+  {
+    id: "was-ist-der-arztbericht",
+    area: "Health",
+    device: "pc",
+    question: "Was ist der Arztbericht?",
+    answer: "Unter Health \u2192 Arztbericht einen Zeitraum w\xE4hlen, die Vorschau pr\xFCfen und als PDF speichern. Das PDF liegt unter Dokumente\\LIFESPAN OS\\Export\\Berichte.",
+    keywords: ["arztbericht", "bericht", "arzt", "pdf", "ausdrucken"]
+  },
+  {
+    id: "wie-trage-ich-arzttermine-ein",
+    area: "Health",
+    device: "beide",
+    question: "Wie trage ich Arzttermine ein?",
+    answer: "Unter Health \u2192 Termine einen Termin mit Datum, Ort und Notiz anlegen. Anstehende Termine erscheinen auch in der Overview.",
+    keywords: ["termin", "arzttermin", "vorsorge", "untersuchung"]
+  },
+  {
+    id: "wie-erfasse-ich-blutzucker",
+    area: "Health",
+    device: "beide",
+    question: "Wie erfasse ich Blutzucker?",
+    answer: "Unter Health \u2192 Blutzucker Messwerte eintragen oder von einem Sensor importieren. Im Tagebuch erscheint der Verlauf nach einer Mahlzeit bei der Mahlzeit.",
+    keywords: ["blutzucker", "glukose", "cgm", "sensor", "zucker"]
+  },
+  {
+    id: "was-zeigt-der-wochenbericht",
+    area: "Insights & Ziele",
+    device: "pc",
+    question: "Was zeigt der Wochenbericht?",
+    answer: "Unter Insights stehen die Wochenberichte (Montag bis Sonntag) mit Training, Ern\xE4hrung, Schlaf, Erholung und Gewicht \u2013 angeh\xE4ngt ist das Ern\xE4hrungstagebuch der Woche. Als PDF l\xE4sst er sich speichern.",
+    keywords: ["wochenbericht", "bericht", "woche", "r\xFCckblick", "zusammenfassung"]
+  },
+  {
+    id: "wie-lege-ich-ein-ziel-an-z-b-kniebeuge-140-kg",
+    area: "Insights & Ziele",
+    device: "beide",
+    question: "Wie lege ich ein Ziel an (z. B. Kniebeuge 140 kg)?",
+    answer: "Unter Insights \u2192 Ziele \u201EZiel anlegen\u201C: Name, Art (Messgr\xF6\xDFe oder \xDCbung), Zielwert, Beginn und optional Zieldatum und Zwischenziele. Der Fortschritt kommt automatisch aus deinen Daten.",
+    keywords: ["ziel anlegen", "zielwert", "ziel setzen", "kniebeuge", "abnehmen"]
+  },
+  {
+    id: "wie-lege-ich-meine-tagesziele-fest",
+    area: "Insights & Ziele",
+    device: "beide",
+    question: "Wie lege ich meine Tagesziele fest?",
+    answer: "Unter Settings \u2192 Tagesziele Kalorien (fest oder dynamisch aus dem Verbrauch) sowie Protein, Kohlenhydrate und Fett in Gramm oder Prozent eintragen. Neue Ziele gelten ab dem gew\xE4hlten Datum.",
+    keywords: ["tagesziel", "kalorienziel", "makros", "protein ziel", "ern\xE4hrungsziel"]
+  },
+  {
+    id: "was-sind-wochenziele-und-hauptziele",
+    area: "Insights & Ziele",
+    device: "beide",
+    question: "Was sind Wochenziele und Hauptziele?",
+    answer: "Wochenziele (Settings \u2192 Wochenziele) z\xE4hlen z. B. Einheiten, Cardio-Minuten, Protein-Tage oder Schlaf pro Woche. Hauptziele (Settings \u2192 Hauptziele) wie Fettabbau oder Muskelaufbau steuern die Empfehlungen in Insights \u2013 nur mit deiner Einwilligung.",
+    keywords: ["wochenziel", "hauptziel", "empfehlung", "fettabbau", "muskelaufbau"]
+  },
+  {
+    id: "wie-erstelle-ich-einen-datenauszug-fuer-einen-ze",
+    area: "Insights & Ziele",
+    device: "pc",
+    question: "Wie erstelle ich einen Datenauszug f\xFCr einen Zeitraum?",
+    answer: "Unter Insights den Datenauszug \xF6ffnen, Zeitraum w\xE4hlen und alle Bereiche als \xDCbersicht bzw. Datei ausgeben.",
+    keywords: ["datenauszug", "auszug", "zeitraum", "export bericht"]
+  },
+  {
+    id: "wie-lege-ich-eine-checkliste-oder-ein-to-do-an",
+    area: "Checklisten",
+    device: "beide",
+    question: "Wie lege ich eine Checkliste oder ein To-do an?",
+    answer: "Unter Checklisten eine eigene Checkliste anlegen oder eine Liste aus Excel bzw. Apple Notizen importieren. To-dos des Tages und was heute noch einzutragen ist, stehen dort ebenfalls.",
+    keywords: ["checkliste", "todo", "aufgabe", "liste", "erinnerung"]
+  },
+  {
+    id: "wie-erstelle-ich-eine-datensicherung-am-pc",
+    area: "Import/Export & Sicherung",
+    device: "pc",
+    question: "Wie erstelle ich eine Datensicherung am PC?",
+    answer: "Unter Import/Export eine Sicherung (Backup) erstellen. Die App legt au\xDFerdem vor gr\xF6\xDFeren Importen automatisch eine Sicherung an. Wiederherstellen geht ebenfalls dort.",
+    keywords: ["backup", "sicherung", "datensicherung", "sichern", "wiederherstellen"]
+  },
+  {
+    id: "wo-speichert-die-app-meine-daten",
+    area: "Import/Export & Sicherung",
+    device: "pc",
+    question: "Wo speichert die App meine Daten?",
+    answer: "In einer Datenbank im Benutzerordner (AppData\\\\Roaming\\\\de.performanceos.app). Unter Import/Export \u2192 Speicherorte siehst du die genauen Ordner.",
+    keywords: ["speicherort", "ordner", "datenbank", "wo gespeichert", "appdata"]
+  },
+  {
+    id: "wie-ziehe-ich-auf-einen-neuen-pc-um",
+    area: "Import/Export & Sicherung",
+    device: "pc",
+    question: "Wie ziehe ich auf einen neuen PC um?",
+    answer: "Am alten PC eine Sicherung erstellen, die App auf dem neuen PC installieren und die Sicherung dort unter Import/Export wiederherstellen.",
+    keywords: ["neuer pc", "umziehen", "umzug", "computer wechseln", "laptop"]
+  },
+  {
+    id: "wie-importiere-ich-daten-aus-einer-tabelle-csv-e",
+    area: "Import/Export & Sicherung",
+    device: "pc",
+    question: "Wie importiere ich Daten aus einer Tabelle (CSV/Excel)?",
+    answer: "Unter Import/Export \u2192 Daten importieren die Datei w\xE4hlen. Die App zeigt vor dem \xDCbernehmen, welche Werte erkannt wurden.",
+    keywords: ["csv", "excel", "tabelle", "import", "einlesen"]
+  },
+  {
+    id: "wie-schalte-ich-den-dark-mode-ein",
+    area: "Einstellungen",
+    device: "beide",
+    question: "Wie schalte ich den Dark Mode ein?",
+    answer: "Unter Settings \u2192 Darstellung den Schalter \u201EDark Mode (dunkles Design)\u201C einschalten. Am Handy steht die Auswahl unter Settings \u2192 Darstellung \u2192 Design.",
+    keywords: ["dark mode", "dunkel", "nachtmodus", "design", "hell"]
+  },
+  {
+    id: "wie-benenne-ich-mahlzeiten-um-oder-fuege-eine-hi",
+    area: "Einstellungen",
+    device: "beide",
+    question: "Wie benenne ich Mahlzeiten um oder f\xFCge eine hinzu?",
+    answer: "Unter Settings \u2192 Mahlzeiten die Namen \xE4ndern, Mahlzeiten ausblenden oder weitere hinzuf\xFCgen (bis zu zehn). Das gilt f\xFCr PC und Handy.",
+    keywords: ["mahlzeiten umbenennen", "mahlzeit hinzuf\xFCgen", "meal namen"]
+  },
+  {
+    id: "wie-richte-ich-erinnerungen-ein",
+    area: "Einstellungen",
+    device: "beide",
+    question: "Wie richte ich Erinnerungen ein?",
+    answer: "Unter Settings \u2192 Erinnerungen festlegen, woran die App erinnert (z. B. Wiegen, Supplements). Am Handy daf\xFCr Benachrichtigungen erlauben.",
+    keywords: ["erinnerung", "benachrichtigung", "notification", "reminder"]
+  },
+  {
+    id: "wie-lege-ich-weitere-benutzer-an",
+    area: "Einstellungen",
+    device: "pc",
+    question: "Wie lege ich weitere Benutzer an?",
+    answer: "Unter Settings \u2192 Benutzer weitere Personen anlegen; jede hat ihre eigenen Daten.",
+    keywords: ["benutzer", "person", "familie", "mehrere nutzer", "konto"]
+  },
+  {
+    id: "was-ist-quick-fill",
+    area: "Einstellungen",
+    device: "pc",
+    question: "Was ist Quick Fill?",
+    answer: "Unter Settings \u2192 Quick Fill lassen sich fehlende Werte (z. B. vergessene Tage) gesammelt nachtragen.",
+    keywords: ["quick fill", "fehlende werte", "l\xFCcken", "nachtragen"]
+  },
+  {
+    id: "wie-melde-ich-einen-fehler",
+    area: "Einstellungen",
+    device: "pc",
+    question: "Wie melde ich einen Fehler?",
+    answer: "Unter Settings \u2192 Fehler melden beschreiben, was passiert ist. Mitgeschickt werden nur technische Angaben wie Version und Windows-Version \u2013 keine Trainings- oder Gesundheitsdaten. Abgeschickt wird erst, wenn du es best\xE4tigst.",
+    keywords: ["fehler", "bug", "problem melden", "absturz"]
+  },
+  {
+    id: "die-app-startet-nicht-oder-bleibt-weiss-was-tun",
+    area: "Probleme l\xF6sen",
+    device: "pc",
+    question: "Die App startet nicht oder bleibt wei\xDF \u2013 was tun?",
+    answer: "PC neu starten und die App erneut \xF6ffnen. Hilft das nicht, die aktuelle Version von LIFESPAN-OS-Setup.exe erneut installieren \u2013 deine Daten bleiben erhalten. Unter Settings \u2192 Systemstatus siehst du, ob die Datenbank in Ordnung ist.",
+    keywords: ["startet nicht", "wei\xDF", "h\xE4ngt", "absturz", "l\xE4dt nicht"]
+  },
+  {
+    id: "ein-eintrag-ist-am-falschen-tag-gelandet-warum",
+    area: "Probleme l\xF6sen",
+    device: "beide",
+    question: "Ein Eintrag ist am falschen Tag gelandet \u2013 warum?",
+    answer: "Pr\xFCfe den Tageswechsel unter Settings \u2192 Darstellung: Bis zu dieser Uhrzeit z\xE4hlt alles zum Vortag. Eintr\xE4ge kannst du bearbeiten und das Datum \xE4ndern.",
+    keywords: ["falscher tag", "datum falsch", "gestern", "tageswechsel"]
+  },
+  {
+    id: "meine-eintraege-vom-handy-fehlen-am-pc",
+    area: "Probleme l\xF6sen",
+    device: "handy",
+    question: "Meine Eintr\xE4ge vom Handy fehlen am PC.",
+    answer: "Erst \u201EAn den PC senden\u201C in der Handy-App w\xE4hlen und die Datei am PC unter Import/Export einlesen. Unter \u201EOffene Daten\u201C zeigt das Handy, was noch nicht gesendet wurde.",
+    keywords: ["fehlen", "nicht \xFCbertragen", "sync fehlt", "offene daten"]
+  },
+  {
+    id: "ich-finde-eine-funktion-nicht",
+    area: "Probleme l\xF6sen",
+    device: "beide",
+    question: "Ich finde eine Funktion nicht.",
+    answer: "Nutze die Suche (am PC Strg+K) oder Settings \u2192 FAQ und gib einen Begriff ein, z. B. \u201EGym anlegen\u201C oder \u201EKoffein\u201C. Bereiche lassen sich \xFCber \u201E\u2026 anpassen\u201C ein- und ausblenden \u2013 vielleicht ist eine Karte ausgeblendet.",
+    keywords: ["finde nicht", "wo ist", "ausgeblendet", "versteckt", "fehlt"]
+  }
+];
+var FAQ_AREAS = [...new Set(APP_FAQ.map((f) => f.area))];
+var SYNONYMS = [
+  [
+    "gym",
+    "studio",
+    "fitnessstudio",
+    "fitness-studio",
+    "fitnesscenter",
+    "fitnessclub",
+    "trainingscenter",
+    "trainingszentrum",
+    "trainingshalle",
+    "sporthalle",
+    "sportst\xE4tte",
+    "sportanlage",
+    "sportstudio",
+    "kraftraum",
+    "muckibude"
+  ],
+  ["anlegen", "erstellen", "hinzuf\xFCgen", "neu", "neues", "neue", "einrichten", "hinterlegen", "machen", "erfassen", "eintragen", "trage", "tr\xE4gst", "lege", "speichern", "aufnehmen"],
+  ["l\xF6schen", "entfernen", "rausnehmen", "wegmachen", "streichen"],
+  ["bearbeiten", "\xE4ndern", "korrigieren", "editieren", "anpassen", "umbenennen", "verschieben"],
+  ["maschine", "maschinen", "ger\xE4t", "ger\xE4te", "apparat", "station"],
+  ["\xFCbung", "\xFCbungen", "exercise", "bewegung", "variante"],
+  ["mahlzeit", "mahlzeiten", "essen", "meal", "fr\xFChst\xFCck", "mittagessen", "abendessen", "snack", "gericht"],
+  ["lebensmittel", "nahrungsmittel", "food", "produkt", "zutat"],
+  ["training", "workout", "einheit", "einheiten", "trainingseinheit", "session", "trainieren"],
+  ["gewicht", "k\xF6rpergewicht", "waage", "wiegen", "kilo"],
+  ["handy", "smartphone", "iphone", "android", "telefon", "mobil", "mobile", "app"],
+  ["pc", "computer", "laptop", "desktop", "rechner", "windows"],
+  ["sicherung", "backup", "datensicherung", "sichern", "wiederherstellen"],
+  ["import", "importieren", "einlesen", "\xFCbernehmen", "laden", "hochladen"],
+  ["export", "exportieren", "senden", "\xFCbertragen", "teilen", "synchronisieren", "sync"],
+  ["schlaf", "schlafen", "sleep", "nacht"],
+  ["uhr", "smartwatch", "wearable", "garmin", "polar", "fitbit", "ring", "tracker"],
+  ["koffein", "kaffee", "espresso", "coffee", "energydrink", "tee"],
+  ["wasser", "trinken", "fl\xFCssigkeit", "getr\xE4nk", "glas"],
+  ["ziel", "ziele", "vorsatz", "zielwert"],
+  ["blutwerte", "laborwerte", "labor", "blut", "blutbild", "befund"],
+  ["plan", "trainingsplan", "programm", "split", "routine"],
+  ["kalender", "monat", "monatsansicht"],
+  ["supplement", "supplements", "nahrungserg\xE4nzung", "nem", "vitamin", "pr\xE4parat", "tablette"],
+  ["zoom", "zoomen", "vergr\xF6\xDFern", "verkleinern", "gr\xF6\xDFer", "kleiner"],
+  ["dunkel", "dark", "nachtmodus", "darkmode"],
+  ["tageswechsel", "tagesende", "mitternacht", "neuer tag"],
+  ["stehend", "aufrecht", "gestreckt", "durchgestreckt", "standing"],
+  ["sitzend", "angewinkelt", "abgeknickt", "gebeugt", "seated"],
+  ["wade", "waden", "wadenheben", "calf"],
+  ["problem", "fehler", "geht nicht", "funktioniert nicht", "kaputt", "hilfe"],
+  ["finden", "suchen", "suche", "wo"]
+];
+var STOP2 = new Set(
+  "wie wo was wann warum kann ich man mein meine meinen meiner mich mir ein eine einen einem einer der die das den dem des und oder mit in im am an auf aus bei f\xFCr zu zum zur von vom ist sind wird werden es sich ob bitte gibt geht l\xE4sst lassen soll muss will dann nicht noch auch nur hier dort da so".split(
+    " "
+  )
+);
+function foldFaq(text2) {
+  return text2.toLowerCase().replace(/ß/g, "ss").replace(/ae/g, "\xE4").replace(/oe/g, "\xF6").replace(/ue/g, "\xFC").replace(/[„“”"'’()?!.,:;/→–-]+/g, " ").replace(/\s+/g, " ").trim();
+}
+var FOLDED_SYNONYMS = SYNONYMS.map((g) => g.map(foldFaq));
+function expandWord(word) {
+  const w = foldFaq(word);
+  const out = /* @__PURE__ */ new Set([w]);
+  for (const group of FOLDED_SYNONYMS) {
+    const hit = group.some(
+      (s) => s === w || w.length >= 4 && s.startsWith(w) || s.length >= 4 && w.startsWith(s)
+    );
+    if (hit) for (const s of group) out.add(s);
+  }
+  return [...out];
+}
+function fieldOf2(text2) {
+  const t = foldFaq(text2);
+  return { text: t, words: t.split(" ") };
+}
+function has2(f, alt) {
+  if (alt.includes(" ")) return f.text.includes(alt);
+  return alt.length < 4 ? f.words.includes(alt) : f.words.some((w) => w.startsWith(alt));
+}
+function searchFaq2(query, items = APP_FAQ, limit = 10) {
+  const words = foldFaq(query).split(" ").filter((w) => w.length > 1 && !STOP2.has(w));
+  if (words.length === 0) return [];
+  const expanded = words.map(expandWord);
+  const hits = [];
+  for (const item2 of items) {
+    const head2 = fieldOf2(`${item2.question} ${item2.keywords.join(" ")}`);
+    const area = fieldOf2(item2.area);
+    const body = fieldOf2(item2.answer);
+    let score = 0;
+    let matched = 0;
+    for (const alts of expanded) {
+      let best = 0;
+      for (const a of alts) {
+        if (has2(head2, a)) best = Math.max(best, a === alts[0] ? 3.2 : 3);
+        else if (has2(area, a)) best = Math.max(best, 1.5);
+        else if (has2(body, a)) best = Math.max(best, 1);
+      }
+      if (best > 0) matched++;
+      score += best;
+    }
+    if (matched >= Math.ceil(words.length / 2)) {
+      hits.push({ item: item2, score: score + (matched === words.length ? 2 : 0) });
+    }
+  }
+  return hits.sort((a, b) => b.score - a.score).slice(0, limit);
 }
 export {
   AKH_REFERENCES,
@@ -29880,6 +30823,7 @@ export {
   addNutrients,
   amountFromPortions,
   ansPercent,
+  appFaq_exports as appFaq,
   appointments_exports as appointments,
   arrange,
   associationItem,
@@ -30000,6 +30944,7 @@ export {
   mealPlan_exports as mealPlan,
   mealQuick_exports as mealQuick,
   mealTypeLabel,
+  mergePdfDocs,
   methodChoices,
   microValues,
   muscleLevels,
@@ -30091,6 +31036,7 @@ export {
   weeklyAnalysis,
   weeklyMuscleSets,
   rangeText2 as weeklyRangeText,
+  weeklyReportDoc,
   weeklyReportFileName,
   weeklyReportHtml,
   weeklyReportTitle,

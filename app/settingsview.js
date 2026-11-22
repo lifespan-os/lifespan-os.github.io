@@ -16,6 +16,7 @@ import { buildDb, today } from "./diary.js";
 import { cropPhoto } from "./photocrop.js";
 import { QUICK } from "./nav.js";
 import { LAYOUT_PAGES, setLayoutEditing } from "./layoutedit.js";
+import { faqCardHtml } from "./searchview.js";
 
 let X = null; // { S, esc, header, toast, store, rerender, go, saveNow, accountsCard, applyPrefs, pageTitle }
 
@@ -313,6 +314,7 @@ export function viewSettings() {
     ${db ? transferCard(db) : ""}
     ${db ? secretCard(db) : ""}
     ${open ? `<section class="card hl"><p class="small">${open === 1 ? "1 Änderung" : `${open} Änderungen`} an den Einstellungen noch nicht am PC.</p><button class="btn block" data-go="send">An den PC senden</button></section>` : ""}
+    ${faqCardHtml()}
     <section class="card">
       <h3>Hilfe</h3>
       <p class="muted small">Version ${esc(X.version)} · Bedienung, Datenschutz und Datenaustausch.</p>

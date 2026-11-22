@@ -82,10 +82,9 @@ export function activeGymSelectHtml(blocked) {
   const list = G.gymList(S.catalog, S.gyms);
   if (!list.length) return "";
   const id = G.activeGymId(S.catalog, S.gyms, pcActive());
-  const count = (g) => G.gymEntries(S.catalog, S.gyms, g.id).length;
   return `<div class="field"><label for="w-gym">Gym</label>
     <div class="gym-pick"><select id="w-gym" data-gym="active" ${blocked ? "disabled" : ""}>${list
-      .map((g) => `<option value="${esc(g.id)}" ${g.id === id ? "selected" : ""}>${esc(g.name)} (${count(g)} Maschinen)</option>`)
+      .map((g) => `<option value="${esc(g.id)}" ${g.id === id ? "selected" : ""}>${esc(g.name)}</option>`)
       .join("")}</select>${gymCodeButtonHtml(id, "w-gym")}</div></div>`;
 }
 

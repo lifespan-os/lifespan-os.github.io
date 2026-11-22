@@ -245,16 +245,87 @@ export function workoutsTab() {
         })
         .join("")}</ul>`
     : `<div class="empty-state"><p><strong>Noch keine Einheiten</strong></p><p class="muted small">Starte dein erstes Training mit „Freies Training“${dayOptions.length ? ", starte einen Trainingstag aus deinem Plan" : ""} oder trage eine frühere Einheit mit „Nachtragen“ ein.</p></div>`;
+  const view = trainView();
   return `<section class="card card--training" id="workouts-title">
-      <h3>Trainingseinheiten</h3>
+      <div class="card__head"><h3>Trainingseinheiten</h3><div class="segmented" role="group" aria-label="Darstellung der Einheiten"><button type="button" class="${view === "list" ? "is-active" : ""}" data-act="train-view" data-arg="list" aria-pressed="${view === "list"}">Liste</button><button type="button" class="${view === "calendar" ? "is-active" : ""}" data-act="train-view" data-arg="calendar" aria-pressed="${view === "calendar"}">Kalender</button></div></div>
       ${actions}
       ${banner}
       ${activeBanner}
       ${notice()}
       ${S.trainAdopt ? adoptOffer() : ""}
-      ${list}
+      ${view === "calendar" ? calendarHtml(summaries, statuses, blocked) : list}
     </section>
     ${S.trainDialog ? `<section class="card dialog-card" role="alertdialog"><h3>${esc(S.trainDialog.title)}</h3><p class="small">${esc(S.trainDialog.message)}</p><button class="btn block" data-act="train-dialog-close">Verstanden</button></section>` : ""}`;
+}
+
+/** Liste oder Kalender (1.103.0, wie PC 1.0.177), gemerkt auf diesem Handy */
+export function trainView() {
+  const S = X.S;
+  if (!S.trainView) {
+    try {
+      S.trainView = localStorage.getItem("lifespan.workoutsView") === "calendar" ? "calendar" : "list";
+    } catch {
+      S.trainView = "list";
+    }
+  }
+  return S.trainView;
+}
+
+const MONTHS = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+const pad2 = (n) => String(n).padStart(2, "0");
+
+/** Monatsraster ab Montag wie `domain/monthGrid.ts`. */
+export function monthGrid(year, month) {
+  const first = new Date(year, month - 1, 1);
+  const lead = (first.getDay() + 6) % 7;
+  const d = new Date(year, month - 1, 1 - lead);
+  const weeks = [];
+  do {
+    const week = [];
+    for (let i = 0; i < 7; i++) {
+      week.push({ date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, day: d.getDate(), inMonth: d.getMonth() === month - 1 });
+      d.setDate(d.getDate() + 1);
+    }
+    weeks.push(week);
+  } while (d.getMonth() === month - 1);
+  return weeks;
+}
+
+/** Kalender der Einheiten: Monat, Tag antippen zeigt seine Einheiten darunter. */
+function calendarHtml(summaries, statuses, blocked) {
+  const S = X.S;
+  const t = today();
+  const ym = S.trainMonth ?? { year: Number(t.slice(0, 4)), month: Number(t.slice(5, 7)) };
+  const byDate = new Map();
+  for (const w of summaries) {
+    if (!byDate.has(w.date)) byDate.set(w.date, []);
+    byDate.get(w.date).push(w);
+  }
+  const statusOf = new Map(statuses.map((s) => [s.date, s]));
+  const prefix = `${ym.year}-${pad2(ym.month)}`;
+  const count = summaries.filter((w) => w.date.startsWith(prefix)).length;
+  const sel = S.trainCalDay && S.trainCalDay.startsWith(prefix) ? S.trainCalDay : null;
+  const cells = monthGrid(ym.year, ym.month)
+    .flat()
+    .map((c) => {
+      const list = byDate.get(c.date) ?? [];
+      const st = statusOf.get(c.date);
+      const marks = list.length ? `<span class="tcal__dots">${list.map((w) => `<i class="${w.status === "active" ? "is-active" : ""}"></i>`).join("")}</span>` : st ? `<span class="tcal__st">${st.kind === "rest" ? "🛏" : "🌡"}</span>` : "";
+      return `<button type="button" class="tcal__day ${c.inMonth ? "" : "is-outside"} ${c.date === t ? "is-today" : ""} ${c.date === sel ? "is-selected" : ""}" data-act="train-cal-day" data-arg="${c.date}" aria-label="${fmtDate(c.date)}${list.length ? `: ${list.length} ${list.length === 1 ? "Einheit" : "Einheiten"}` : ""}"><span>${c.day}</span>${marks}</button>`;
+    })
+    .join("");
+  let detail = "";
+  if (sel) {
+    const list = byDate.get(sel) ?? [];
+    const st = statusOf.get(sel);
+    detail = `<div class="tcal__detail"><b>${fmtDate(sel)}</b>${list
+      .map((w) => `<button class="train-row tcal__entry" data-act="train-open" data-arg="${esc(w.id)}"><span class="train-row__main"><strong>${esc(w.title)}</strong>${w.status === "active" ? ' <span class="status-pill status-pill--active">läuft</span>' : ""}<span class="muted small">${w.startTime ? `${esc(w.startTime)} Uhr · ` : ""}${w.exerciseCount} ${w.exerciseCount === 1 ? "Übung" : "Übungen"}${w.volumeKg > 0 ? ` · ${F(w.volumeKg)} kg` : ""}${w.durationMin !== null ? ` · ${w.durationMin} min` : ""}</span></span><span aria-hidden="true">›</span></button>`)
+      .join("")}${st ? `<span class="day-pill day-pill--${st.kind}">${st.kind === "rest" ? "🛏 Restday" : "🌡 Krankheit"}</span>` : ""}${
+      !list.length && !st ? `<span class="muted small">Keine Einheit an diesem Tag.</span>` : ""
+    }${sel <= t ? `<button class="btn sm" data-act="train-backfill-on" data-arg="${sel}" ${blocked ? "disabled" : ""}>+ Einheit nachtragen</button>` : ""}</div>`;
+  }
+  return `<div class="tcal"><div class="tcal__head"><button class="btn sm ghost" data-act="train-cal-month" data-arg="-1" aria-label="Vorheriger Monat">‹</button><b>${MONTHS[ym.month - 1]} ${ym.year}</b><button class="btn sm ghost" data-act="train-cal-month" data-arg="1" aria-label="Nächster Monat">›</button><span class="muted small">${count} ${count === 1 ? "Einheit" : "Einheiten"}</span></div>
+    <div class="tcal__grid">${["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((d) => `<span class="tcal__wd">${d}</span>`).join("")}${cells}</div>${detail}</div>`;
 }
 
 export function adoptOffer() {

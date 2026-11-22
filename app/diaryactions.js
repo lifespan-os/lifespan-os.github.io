@@ -76,7 +76,9 @@ export const diaryActions = {
     const slots = D.daySlots(P.mealDay(db, date));
     const now = new Date();
     const isToday = date === today();
-    X.S.suppEdit = { draft: SP.emptyDraft(date, SP.suggestTiming(slots, isToday ? now.getHours() : 8), isToday ? nowTime() : ""), query: "", error: null };
+    const timing = SP.suggestTiming(slots, isToday ? now.getHours() : 8);
+    const time = SP.mealTimeForTiming(timing, slots) ?? (isToday ? nowTime() : "");
+    X.S.suppEdit = { draft: SP.emptyDraft(date, timing, time), query: "", error: null };
     X.go("supp-intake");
   },
   "supp-edit": (el) => {
@@ -113,6 +115,8 @@ export const diaryActions = {
     const d = st.draft;
     const slots = D.daySlots(P.mealDay(db, d.date));
     const label = SP.timingOptions(slots).find((o) => o.value === d.timing)?.label;
+    // Ohne eigene Uhrzeit gilt die Uhrzeit der Mahlzeit (wie am PC)
+    if (!String(d.time ?? "").trim()) d.time = SP.mealTimeForTiming(d.timing, slots) ?? "";
     const opts = { uuid: X.uuid, now: new Date() };
     try {
       SP.saveIntake(db, X.S.supp, d, {
@@ -293,6 +297,13 @@ export function diaryChange(el) {
   }
   if (k === "supp-timing") {
     readSuppForm();
+    // Zu einer Mahlzeit: deren Uhrzeit übernehmen (1.96.0)
+    const st = X.S.suppEdit;
+    if (st) {
+      const slots = D.daySlots(P.mealDay(buildDb(), st.draft.date));
+      const t = SP.mealTimeForTiming(st.draft.timing, slots);
+      if (t) st.draft.time = t;
+    }
     X.rerender();
     return true;
   }

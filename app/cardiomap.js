@@ -7,6 +7,7 @@
 import * as D from "./pcdomain.js";
 import { esc } from "./pcview.js";
 import { heartOn } from "./trainingstats.js";
+import { focusIndex, machinesOf } from "./overview.js";
 
 const CM = () => D.cardioMuscles;
 const F = (v, d = 0) => D.formatNumber(v, d);
@@ -47,10 +48,19 @@ export function cardioContext(db, date) {
     zones = [];
   }
   return {
-    exercises: [...db.exercises.values()].map((e) => ({ id: e.id, name: e.name, sportId: e.sport_id ?? null, cardioKind: e.cardio_kind ?? null })),
+    exercises: [...db.exercises.values()].map((e) => ({
+      id: e.id,
+      name: e.name,
+      sportId: e.sport_id ?? null,
+      cardioKind: e.cardio_kind ?? null,
+      machineId: e.machine_id ?? null,
+    })),
     sports: [...(db.sports?.values?.() ?? [])].map((s) => ({ id: s.id, name: s.name, category: s.category })),
     zones,
     settings: cardioSettings(db),
+    // Gerät der Übung (1.96.0): Anteile nach dessen Muskelgruppen und eigenem Fokus
+    machines: machinesOf({ machines: db.catalogMachines ?? [] }),
+    focus: focusIndex({ focus: db.catalogFocus ?? { machines: {}, exercises: {} } }),
   };
 }
 

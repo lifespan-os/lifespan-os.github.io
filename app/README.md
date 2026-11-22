@@ -10,7 +10,16 @@ damit die Dateien direkt auf GitHub Pages laufen.
 | Datei | Inhalt |
 |---|---|
 | `core.js` | Reine Logik: Export einlesen, Übung zu Maschine, Suche, Training, Rückgabedatei (mit Tests) |
-| `app.js` | Oberfläche (Ansichten, Eingaben, Pausentimer, Bildschirm anlassen) |
+| `app.js` | Einstieg: Tabelle der Ansichten, Eingaben (Klick, Eingabe, Änderung), Start (seit 1.74.0 nur noch ~19 KB) |
+| `appbase.js` | Zustand `S`, Formatierung, Meldungen, Speichern, Seitenwechsel `go`, Kopfzeilen, `render` (Hook von app.js) |
+| `appactions.js` | Aktionen der Knöpfe (`data-act`), sammelt die Aktionen der Bereichs-Module |
+| `workoutview.js` | Laufendes Training, Übungsauswahl, Maschine, Abschluss, Detail einer Einheit |
+| `transferview.js` | Import/Export, Senden an den PC, offene Einträge, Dateien bauen |
+| `homeview.js` / `sheets.js` / `navshell.js` | Start und Hilfe / Fächer von unten / Menü, untere Leiste, Tastatur |
+| `resttimer.js` / `accounts.js` / `devsettings.js` / `catalogload.js` | Pausentimer und Bildschirm anlassen / Konten / Einstellungen je Gerät und Erinnerungen / Exportdatei laden |
+| `protocolsview.js` | Body & Longevity → Protocols: Longevity-Protokolle, 7-Wochen-Start, Tägliches Dutzend (1.79.0) |
+| `cardiomap.js` | Cardio in der Muskel-Körperkarte: Satz-Äquivalente, Schalter „Kraft + Cardio“, Schraffur, Kennzahlen (1.85.0) |
+| `longevityview.js` | Body & Longevity → Überblick: Leitwerte gegen Altersnormen, Laborwerte (1.77.0) |
 | `store.js` | Speicher auf dem Gerät (IndexedDB) |
 | `sw.js` | Service Worker: App offline verfügbar (nur App-Dateien, nie Nutzerdaten) |
 | `core.test.mjs` | Tests: `node --test core.test.mjs nutrition.test.mjs body.test.mjs focus.test.mjs pcdb.test.mjs` |
@@ -1106,3 +1115,376 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
 - Training → Verlauf: Bild der Übung (eigenes Maschinenfoto bzw. eigenes Sportbild), Antippen = Großansicht.
 - Fehler behoben: Abhaken des letzten Satzes einer Übung rief das seit 1.40.0 entfernte `resetZoom()` auf
   (Fehlermeldung im Hintergrund, Anzeige war trotzdem richtig).
+
+## Version 1.69.0 (20.11.2026): Bilder in der Suche, Koffein im Overview, HRT-Formular
+
+- Suche „Übung hinzufügen“ und Gym → „Maschine hinzufügen“: Treffer mit Miniaturbild der Maschine (Lupe unten rechts).
+  Antippen des Bildes öffnet die Großansicht, ohne die Maschine auszuwählen (`machineimages.js` `thumbButton`, im
+  Treffer als `<span data-act="mimg-show">`; die Klick-Verteilung nimmt das innerste `data-act`). Freie Übungen mit
+  Maschine zeigen deren Bild.
+- Meine Gyms → Gym → Maschinen: Bild rechts vor dem ✕, Antippen vergrößert (`.gym-row__img`).
+- Overview: neue Kachel „Koffein“ (Kennzahlen und Zeitstrahl wie im Koffein-Widget); am heutigen Tag zeigt eine
+  senkrechte Linie den Stand jetzt mit Wert (`icoach.js` `overviewCaffeine`, `overview.js` `minutesSince`). Die Kachel
+  wird jede Minute nachgezogen, ohne die Seite neu zu zeichnen.
+- Superhuman → HRT → Hormongabe erfassen: Felder nebeneinander (`.lab-row__grid`) stehen auf gleicher Höhe – ein
+  Hinweis unter nur einem Feld oder eine zweizeilige Bezeichnung verschiebt das Nachbarfeld nicht mehr (Subgrid).
+
+## Version 1.70.0 (20.11.2026): Hauptmuskel = 100 %
+
+- Muskelfokus zählt neu (wie am PC 1.0.160, Festlegung des Nutzers): Der Hauptmuskel einer Übung zählt einen vollen
+  Satz, alle anderen Muskeln im Verhältnis dazu. Hauptmuskel ist der größte Muskelteil – außer seine Muskelgruppe ist
+  nicht die stärkste, dann zählt die Summe der stärksten Gruppe als 100 % (z. B. Beinpresse: Quadrizeps 52 % statt
+  Gesäß 24 %). Regel `focusReference`/`relativeFocus` in `src/domain/muscleMap.ts`, am Handy über `pcdomain.js`
+  (`pcdomain-erzeugen.cmd`) – Körperkarte und Info-Symbol rechnen damit.
+- Info-Symbol „Muskelverteilung“: je Muskel der neue Wert, dahinter „(Anteil … %)“ wie eingetragen; Gruppenkopf zeigt
+  den Anteil. `focusinfo.js` `grouped` liefert `relative`.
+
+## Version 1.70.1 (20.11.2026): nach dem Eintragen bei der Mahlzeit bleiben
+
+- Wunsch des Nutzers: Wer im Tagebuch „+ Lebensmittel eintragen“ (oder „Schnell erfassen“ → Mahlzeit) antippt und ein
+  Lebensmittel oder Gericht einträgt, landet danach wieder bei dieser Mahlzeit statt am Seitenanfang. `food.js` `track`
+  merkt sich die Mahlzeit (`S.diaryFocus`), `go()` springt nach dem Zeichnen zur `.meal-slot[data-meal-key]`
+  (unter den Kopf, `scroll-padding-top`).
+- Die Mahlzeit ist danach aufgeklappt, damit der neue Eintrag zu sehen ist – auch bei „Wie gestern“, Vorschlägen und
+  Planeinträgen direkt im Tagebuch (`diary.js` `quickAdd`, Ansicht bleibt dort ohnehin stehen).
+
+## Version 1.71.0 (20.11.2026): Muskel-Körperkarte in der Einheit
+
+- Wunsch des Nutzers: Unter „+ Übung oder Maschine hinzufügen“ steht in jeder Einheit (laufend, Bearbeiten,
+  Nachtragen) die Muskel-Körperkarte dieser Einheit – wie am PC 1.0.161. Laufendes Training: nur abgehakte Sätze, die
+  Karte füllt sich mit jedem erledigten Satz; Bearbeiten/Nachtragen: alle Sätze mit Werten.
+- Rechnung `muscleMapForOpenWorkout` aus `src/domain/muscleMap.ts` über `pcdomain.js` (`muscleMapAll`), Darstellung
+  relativ zum meistbelasteten Muskel der Einheit; Muskel antippen zeigt Sätze und Volumen (`wo-muscle`).
+- `trainingstats.js` `workoutBodyMapHtml`, eingebunden in `viewWorkout` (app.js). Im Testbrowser (iPhone 13) geprüft:
+  freies Training, Brustpresse, ein Satz abgehakt → Brust, vordere Schulter und Trizeps eingefärbt.
+
+## Version 1.72.0 (20.11.2026): Aufgeräumter („cleaner“)
+
+- Weniger Reiter: Training in fünf Gruppen (Einheiten, Pläne, Auswertung, Cardio & NEAT, Datenbank), Gruppen mit
+  mehreren Unterseiten bekommen einen Umschalter darunter; die zuletzt gewählte Unterseite bleibt je Gruppe gemerkt
+  (`TRAINING_GROUPS`, Aktion `train-group`). Am PC 1.0.162 genauso, zusätzlich Ernährung.
+- Kleingedrucktes (Erklärsätze unter Karten) liegt hinter dem ⓘ neben der Überschrift (`card-info`), Werte und
+  Leerhinweise bleiben sichtbar.
+- Untere Leiste: Schnell-Eintragen (+) und Unterseiten-Knopf sitzen in der Leiste statt darüber (`tabbar--inline`);
+  Meldungen („Eingetragen · Rückgängig“) erscheinen kompakt über der Leiste statt oben.
+- Stil-Durchgang (iPhone 13 und iPhone SE, alle Bereiche): „Wie letzten …“ und Vorschläge im Tagebuch sowie der
+  Profilbild-Knopf ragten über den Kartenrand – brechen jetzt um.
+
+## Version 1.73.0 (20.11.2026): Körperkarte in abgeschlossenen Einheiten, Karte vergrößern
+
+- Wunsch des Nutzers: Die Muskel-Körperkarte steht jetzt auch in jeder abgeschlossenen Einheit (Detailansicht, vor
+  „Training bearbeiten“) – wie am PC. Gezählt werden alle Arbeitssätze mit Werten (`workoutBodyMapHtml(w, rows,
+  { finished: true })`).
+- Lupe oben rechts an jeder Körperkarte (Overview, Einheit, Auswertung) öffnet sie bildschirmfüllend (`mapzoom.js`):
+  zwei Finger oder Doppeltippen zoomen, − / + bis 400 %, Muskel antippen zeigt Sätze und Volumen. Die Ansicht liegt
+  direkt im Body, damit das Neuzeichnen der Seite sie nicht schließt.
+- Angetippter Muskel ohne Belastung nur noch als Umriss (vorher blaue Füllung, sah aus wie ein Wert – Nutzer hielt
+  den mittleren Trapez bei 3025 Butterfly Reverse für belastet, obwohl noch kein Satz abgehakt war). Auswahl gilt je
+  Einheit (`S.woMuscleFor`). Geprüft: ein abgehakter Satz an 3025 Butterfly Reverse → hintere Schulter 100 %.
+
+## Version 1.74.0 (21.11.2026): app.js aufgeteilt, Training → Datenbank anpassbar
+
+- Technische Pflege (Wunsch des Nutzers): `app.js` (142 KB, fast 3.000 Zeilen) ist auf elf Module verteilt (Tabelle
+  oben), app.js selbst hat noch ~19 KB. Zerlegt per Skript entlang der Funktionen, Importe aus der ESLint-Prüfung
+  `no-undef` ergänzt, keine Zuweisung an importierte Bindungen (`no-import-assign`). `render` liegt als Hook in
+  appbase.js (`setRender`), damit kein Modul die Einstiegsdatei importiert (die lädt mit `?v=` und würde sonst doppelt
+  laufen). Geprüft: alte und neue Fassung im Testbrowser mit denselben Klickfolgen – 40 Momentaufnahmen (alle
+  Bereiche, Senden, Offene Daten, Hilfe, Pläne, Detail, Übungsauswahl, Training, Abschluss, Settings) im HTML
+  gleich, dazu Abhaken → Pausentimer → Training beenden, Tagebuch eintragen, Körperkarte mit Zoom.
+- Nebenbei behoben: Import/Export rief `arrangeCards` ohne Import auf (Fehler wurde still abgefangen) – die eigene
+  Anordnung dieser Seite greift jetzt.
+- Training → Datenbank: Übungs-, Maschinen- und Sportarten-Datenbank lassen sich auf- und zuklappen (Zustand auf
+  diesem Handy, wie die Overview-Karten) und über das Raster-Symbol neben dem Umschalter neu anordnen bzw.
+  ausblenden (`ui.training_db_layout` wie am PC, geht mit „An den PC senden“ zurück).
+- „Auswertung anpassen“ steht in der Zeile des Umschalters Auswertung/Verlauf (`.subtabs-row`), Abstand zum Inhalt
+  wie überall 14 px.
+
+## Version 1.82.0 (21.11.2026): Zutrittscode mit Vorder- und Rückseite
+
+- Wunsch des Nutzers: je Gym zwei Bilder – Vorderseite (z. B. Mitgliedskarte) und Rückseite (z. B. Barcode), jeweils
+  per Kamera oder Bild, mit Ausschnitt, „Ausschnitt“ und „Entfernen“ je Seite. Angezeigt wird die Vorderseite;
+  Antippen dreht die Karte um (3-D-Drehung, ohne Neuzeichnen), „Vergrößern“ zeigt die sichtbare Seite mit
+  „Umdrehen“ in der Leiste (`mapzoom.js` `openImageZoom(…, { back, startBack })`). Im Training zeigt „Zutrittscode“
+  die Vorderseite mit „Umdrehen“.
+- Neue Spalte `access_code_back` (PC 1.0.168, Migration 0071) in `GYM_COLUMNS`, Prüfung wie `access_code`,
+  `G.setAccessCode(…, side)`, `G.accessCodeImages` (ohne Vorderseite gilt die Rückseite als einziges Bild).
+
+## Version 1.81.0 (21.11.2026): drei weitere Protocols
+
+- Wunsch des Nutzers: Body & Longevity → Protocols um drei Bücher erweitert (wie PC 1.0.167, Inhalte in
+  `src/domain/protocols.ts`, am Handy über `pcdomain.js` `D.protocols`): Hubert Trübel „Longevity – Die
+  Anti-Bullshit-Formel“, Limmroth/Wirtz „Der Longevity-Kompass“ und Nakagawa „Augen-Yoga“ – jeweils mit
+  Tagesablauf, Leitwerten, Abschnitten, Stufen, Start zum Abhaken, Einordnung und Vorsicht.
+
+## Version 1.80.0 (21.11.2026): Zutrittscode – Ausschnitt wählen und im Training öffnen
+
+- Wunsch des Nutzers: Beim Hinterlegen des Zutrittscodes (Kamera oder Bild) öffnet sich zuerst „Ausschnitt für den
+  Zutrittscode“ mit den Rahmen Ganzes Bild (vorgewählt), Barcode (3 : 1), Karte (85,6 × 54) und QR-Code (1 : 1);
+  verschieben mit dem Finger, vergrößern mit dem Regler. Auch nachträglich: „Ausschnitt ändern“.
+  `photocrop.js` kann jetzt Rahmen zur Wahl (`frames`, `frameAspect`; Seitenverhältnis 0 = wie das Bild),
+  Rahmenliste `gymsdata.js` `ACCESS_CODE_FRAMES` (wie PC 1.0.166).
+- Training: Knopf „Zutrittscode“ neben der Gym-Auswahl vor „Freies Training“ und in der laufenden Einheit (nicht beim
+  Nachtragen oder Bearbeiten); öffnet den Code des gewählten Gyms vergrößert (`gymsui.js` `gymCodeButtonHtml`,
+  Aktion `gym-code-show`).
+
+## Version 1.79.0 (21.11.2026): Body & Longevity → Protocols
+
+- Wunsch des Nutzers: Reiter „Protocols“ neben dem Überblick, wie am PC 1.0.165 (`protocolsview.js`, Inhalte aus
+  `src/domain/protocols.ts` über `pcdomain.js` `D.protocols`). Protokolle Huberman, Attia, Strunz, Sinclair, Greger
+  und Darm-Diät mit Kernidee, Tagesablauf, Leitwerten, Abschnitten (aufklappbar), Fundament/Ergänzung/Optional,
+  7-Wochen-Start zum Abhaken, Einordnung und Laborwerten; dazu Gemeinsamer Nenner, Widersprüche, Tägliches Dutzend
+  (bei Greger, − / + je Gruppe) und Genetik-Grundlagen.
+- Fortschritt in der Einstellung `ui.protocols` (neu in `pcsettings.js` `SYNC_KEYS`): geht mit „An den PC senden“ an
+  den PC und kommt mit der Exportdatei zurück.
+
+## Version 1.78.0 (21.11.2026): Zutrittscode in Meine Gyms
+
+- Wunsch des Nutzers: je Gym ein Zutrittscode (Barcode bzw. QR-Code) – „Mit Kamera scannen“ (Foto) oder „Bild oder
+  Screenshot wählen“. Das Bild wird auf höchstens 1.600 px (längste Seite) als JPEG verkleinert, weißer Grund für
+  durchsichtige Screenshots (`gymsui.js` `fileToAccessCode`, `gymsdata.js` `accessCodeSize`, `setAccessCode`).
+- Antippen vergrößert den Code bildschirmfüllend auf hellem Grund: zuerst passt das ganze Bild ins Fenster, dann
+  zoomen mit zwei Fingern, Doppeltippen oder − / + (`mapzoom.js` `openImageZoom`, gleiche Gesten wie die Körperkarte).
+- Spalte `access_code` (PC Schema 70, 1.0.165) geht mit „An den PC senden“ an den PC und kommt mit der Exportdatei
+  zurück; Bearbeiten des Gyms behält den Code. Nie in Studio-Paketen.
+
+## Version 1.77.0 (21.11.2026): Body & Longevity → Überblick
+
+- Wunsch des Nutzers: der Longevity-Überblick vom PC (1.0.163) jetzt auch am Handy, als erster Reiter und Standard
+  unter Body & Longevity (aus dem Menü öffnet „Body“ den Überblick). Neues Modul `longevityview.js`.
+- Kacheln VO2max, Griffkraft, Ruhepuls, HRV (je Mittel der letzten 7 Messtage), Körperfett und Skelettmuskelmasse:
+  letzter Wert, Leiste „besser als x %“ gegen Altersnormen, Verlauf seit dem jüngsten Wert, der mindestens 90 Tage
+  älter ist, Verlaufslinie über ein Jahr; Quelle und Median hinter „Quelle“. Tippen öffnet den Verlauf der
+  Messgröße (Griffkraft: Werte erfassen). Rechnung wie am PC über `pcdomain.js` (`D.longevity`, `D.evaluateGrip`,
+  `D.GRIP_NORMS`; `scripts/tools/handy/pcdomain-entry.ts` ergänzt).
+- Laborwerte für die Lebensspanne (ApoB, LDL, Lp(a), HbA1c, Glukose, Insulin, hs-CRP, TG, HDL, eGFR, Vitamin D):
+  letzter Wert mit Lage zum Referenzbereich und vorherigem Wert; Tippen öffnet den Verlauf unter Health.
+
+## Version 1.76.0 (21.11.2026): Schulter als Sichel in der Muskel-Körperkarte
+
+- Wunsch des Nutzers: Der seitliche Deltakopf ist jetzt eine Sichel entlang der Außenkante der Schulter (vorne und
+  hinten), der vordere bzw. hintere Kopf liegt innen daneben. Vorher trennte eine senkrechte Linie nach dem Abstand zur
+  Körpermitte (Dreieck-Form). `musclemap/regions.js` neu aus `src/data/muscle-map/*.regions.json` (PC 1.0.164),
+  nur die acht Schulterflächen je Modell geändert, Muskel-IDs gleich.
+
+## Version 1.75.0 (21.11.2026): weitere große Dateien aufgeteilt
+
+- `diary.js` (58 KB) → `diary.js` (Tagebuch-Ansichten, 32 KB), `diarysupp.js` (Supplements, Fasttracking),
+  `diaryactions.js` (Aktionen, Eingaben). `super.js` (62 KB) → `super.js` (16 KB), `supertabs.js` (HRT,
+  Wirkstoffspiegel, Rechner, Checkliste), `superactions.js`. `training.js` (57 KB) → `training.js` (Einheiten, NEAT,
+  28 KB), `trainingplans.js` (Pläne), `trainingactions.js`.
+- Hauptmodule reichen die verschobenen Exporte weiter (`export { … } from`), andere Module bleiben unverändert.
+  Werkzeug `split2.cjs`: Zeilenbereiche je Teil, Importe über ESLint `no-undef`, Prüfung auf Zuweisung an Importe und
+  auf Nutzung von Geschwister-Importen beim Laden (zyklische Importe).
+- Geprüft im Testbrowser gegen 1.74.0 mit gleichen Klickfolgen: 55 Momentaufnahmen (alle Bereiche, Tagebuch,
+  Supplements, alle Training-Reiter, Plan-Editor, Settings …) plus alle sieben Superhuman-Reiter – HTML gleich.
+
+## Version 1.83.0 (21.11.2026): Die Masterclass Blutwerte+
+
+- **iCoach.me → Downloads:** „Die Masterclass Blutwerte+“ (128 Seiten, 8 Teile) ersetzt die Bücher „Blutwerte“ und
+  „Blutgruppen“. PDF auf GitHub Pages unter `media/icoach/books/iCoachMe_Die_Masterclass_Blutwerte_Plus.pdf`
+  (wie die anderen Bücher mit qpdf AES-256 und Benutzerpasswort verschlüsselt).
+- **Ask iCoach.me:** Gruppe „Masterclass Blutwerte+“ aus `icoach/icoachme-faq-blutwerte-plus.json` (545 Fragen, IDs
+  P<Teil>-<Nr>, Teil VI = Blutgruppen). Buchliste, Module und `KELL_QUESTION` kommen aus `pcdomain.js` (PC 1.0.169).
+- Die alten Dateien `icoachme-faq-blutwerte.json`, `icoachme-faq-blutgruppen.json` und die beiden alten Buch-PDFs
+  auf Pages werden nicht mehr verwendet.
+
+## Version 1.84.0 (21.11.2026): Die Masterclass Longevity
+
+- **iCoach.me → Downloads:** drittes Buch „Die Masterclass Longevity“ (das große Handbuch, 579 Seiten, 10 Teile).
+  PDF auf GitHub Pages unter `media/icoach/books/iCoachMe_Die_Masterclass_Longevity.pdf` (wie die anderen Bücher mit
+  qpdf AES-256 und Benutzerpasswort verschlüsselt).
+- **Ask iCoach.me:** Gruppe „Masterclass Longevity“ aus `icoach/icoachme-faq-longevity.json` (835 Fragen, IDs
+  L<Teil>-<Nr>). Buchliste und Buchangaben kommen aus `pcdomain.js` (PC 1.0.170).
+- Geändert: `icoach.js` (`BOOK_FILES`, `FAQ_FILES`, Einleitungstext), `pcdomain.js` neu erzeugt, `sw.js`.
+
+## Version 1.85.0 (22.11.2026): Cardio in der Muskel-Körperkarte
+
+- Wie PC 1.0.172/1.0.173 (vom Nutzer am PC freigegeben): Cardio zählt als **Satz-Äquivalente** = Minuten × Faktor
+  der Zone ÷ Minuten je Satz × Anteil des Muskels (Verteilung je Gerät bzw. Sportart, Obergrenze je Einheit und
+  Muskel). Faktoren Zone 1–5: 0,05 · 0,1 · 0,3 · 0,7 · 1,0; unter Zone 1 zählt nicht; 3 Minuten je Satz.
+- **Overview → Muskel-Körperkarte** und **Training → Auswertung → Muskel-Körperkarte** (nur „Arbeitssätze“):
+  Schalter „Kraft | Kraft + Cardio“ (gilt je Gerät, `localStorage` `lifespan.cardioMap.show`), Cardio-Anteil
+  schraffiert (ab 10 % Anteil), Legende „Anteil aus Cardio“, beim Antippen „(davon Cardio …)“, darunter Cardio im
+  Zeitraum, Satz-Äquivalente, Minuten je Zone und Herkunft der Intensität.
+- Intensität aus dem Ø Puls des Blocks (`workout_set.hr_avg`, jetzt im Satzprotokoll `setLog`) und den
+  Herzfrequenz-Zonen (`heartOn`), sonst aus RPE, ohne beides als Zone 2 (geschätzt).
+- Einstellungen (Anrechnung, Obergrenze, Minuten je Satz, Faktoren) am PC unter Settings → „Cardio in der
+  Körperkarte“ (`ui.cardio_muscles`, kommt mit dem Export).
+- Rechnung aus `src/domain/cardioMuscles.ts` über `pcdomain.js` (`D.cardioMuscles`, `pcdomain-entry.ts` ergänzt).
+  Neues Modul `cardiomap.js` (in `sw.js` FILES); geändert `overview.js`, `trainingstats.js`, `pcoverview.js`,
+  `app.css`, `sw.js`.
+
+## Version 1.86.0 (22.11.2026): Cardio auch in der Einheit und im Zielvolumen
+
+- **Körperkarte der Einheit** (laufendes Training, Nachtragen, abgeschlossene Einheit): Cardio-Blöcke zählen als
+  Satz-Äquivalente wie am PC (`draftCardioSets` in `WorkoutBodyMap.tsx`) – laufend nur abgehakte Blöcke, sonst alle
+  mit Dauer. Intensität aus RPE bzw. Ø Puls, sonst Zone 2. Schalter „Kraft | Kraft + Cardio“ und Kennzahlen nur, wenn
+  die Einheit Cardio enthält (Datenbank wird nur dann aufgebaut). Cardio-Art über `effectiveKind` aus `pcdb.js`.
+- **Training → Auswertung → Muskeln unter dem Zielvolumen:** Ist am PC „Auch auf die Wochenziele je Muskel“
+  gewählt (`ui.cardio_muscles` `countInTargets`), zählen die Satz-Äquivalente aus Cardio je Woche mit
+  (`underTargetMuscles(…, extraSets)` wie `UnderTargetCard.tsx`).
+- Geändert: `trainingstats.js`, `sw.js`. Testbrowser: 30 min abgehakt mit RPE 7 = 7,0 Satz-Äquivalente (Zone 4),
+  abgeschlossen mit weiteren 15 min RPE 9 = 12,0, Obergrenze-Hinweis, keine Fehler.
+- Nachtrag: `MOBILE_VERSION` in `core.js` (Anzeige unter Settings → Hilfe) stand seit 1.82.0 still und zeigt jetzt
+  1.86.0. Bei jeder neuen Version zusammen mit `VERSION` in `sw.js` erhöhen.
+
+## Version 1.87.0 (22.11.2026): Schritte direkt eintragen
+
+- Overview: Antippen der Schritte oben im Kopf (`heroSteps`, jetzt ein Knopf) bzw. des Worts „Schritte“ in der Karte
+  Alltagsbewegung (`stepGoalBar(…, entryDate)`) öffnet Training → NEAT für den Tag der Overview und springt zum Feld
+  „Schritte am Tag“ (`menu-go` mit `data-neat-date` und `data-focus`, `appactions.js`). Wie PC 1.0.173.
+- Geändert: `overview.js`, `appactions.js`, `app.css`, `core.js` (`MOBILE_VERSION`), `sw.js`.
+
+## Version 1.88.0 (22.11.2026): Masterclass Blutwerte+ leichter verständlich
+
+- Das Buch „Die Masterclass Blutwerte+“ ist erweitert: 145 statt 128 Seiten, Kästen „Einfach erklärt“ in Teil II und III,
+  jede Lexikon-Zeile beginnt mit „Einfach gesagt“, 20 neue Steckbriefe (101). Neues verschlüsseltes PDF unter
+  `media/icoach/books/`, neue Fragen-Datei `icoach/icoachme-faq-blutwerte-plus.json` (602 Fragen, Lexikon in A–E, F–L, M–Z).
+- Geändert: `pcdomain.js` (Seitenzahl im Buch), `core.js` (`MOBILE_VERSION`), `sw.js`. Wie PC 1.0.173.
+
+## Version 1.89.0 (22.11.2026): Angleichung an den PC, Pakete A und B
+
+Auftrag des Nutzers (22.11. 10:08): Handy an den PC angleichen (alles außer 3D-Karte, Tastenkürzel, Updates,
+Systemstatus, Datensicherung, Fehler melden; Polar am Handy vorerst nicht – Polar erlaubt keine Abrufe aus einer
+Web-App). Neues Modul `parity.js` für die Bausteine; Rechnung immer aus `pcdomain.js` (Einstieg um 16 Module ergänzt).
+
+- **Superhuman → Wirkstoffspiegel:** Karte „Blutwerte und Hormongabe“ (`labDoseContext`) mit Auswahl der Blutwerte.
+- **Superhuman → Zeitachse** (neuer Reiter): Gaben (HRT und Protokoll), ein Laborwert und ein Körperwert im selben
+  Zeitraum (90 Tage / 6 Monate / 1 Jahr), SVG-Diagramm.
+- **Buch-Symbol am Messwert** (`masterclassLinks`): Body & Longevity → Überblick (Kacheln, Laborwerte), Health →
+  Blutabnahmen und Verlauf; öffnet Ask iCoach.me mit dem Suchwort (`openAskSearch` in `icoach.js`).
+- **Training → NEAT:** „Schritte über 24 Stunden“ (Stunden / Viertelstunden, `stepsByTime`).
+- **Insights:** Ernährung rund ums Training, Supplemente und Schlaf, Koffein und Schlaf, Hormongaben und Erholung
+  (nur mit Secret Protocols), Tag und folgende Nacht (Uhr, aus `heart.js`), Blutzucker und Alltag (aus `glucose.js`).
+- **Nutrition → Tagebuch:** Blutzucker nach der Mahlzeit im Kopf jeder Mahlzeit mit Uhrzeit (`glucoseMeal`).
+- **Settings → Cardio in der Körperkarte:** Anrechnung, Obergrenze, Minuten je Satz, Faktor je Zone, Knopf
+  „Standardwerte wiederherstellen“; Schlüssel `ui.cardio_muscles` geht mit „An den PC senden“ zurück
+  (`SYNC_KEYS` in `pcsettings.js`).
+- Geändert: `parity.js` (neu), `icoach.js`, `longevityview.js`, `health.js`, `super.js`, `supertabs.js`, `training.js`,
+  `insightsview.js`, `diary.js`, `settingsview.js`, `heart.js`, `glucose.js`, `pcsettings.js`, `appactions.js`,
+  `app.js`, `app.css`, `core.js`, `sw.js`, `pcdomain.js`, `scripts/tools/handy/pcdomain-entry.ts`.
+
+## Version 1.90.0 (22.11.2026): Angleichung an den PC, Paket C (Body & Longevity)
+
+- **Body & Longevity** hat vier neue Reiter wie am PC:
+  - **Verlauf:** Messgröße, Zeitraum und Darstellung wählen; Kennzahlen (`historyRange`), Monatsmittel oder
+    Gewichtstrend bzw. 7-Punkte-Mittel, Wertetabelle, Knopf zum Eintragen.
+  - **Zeiträume vergleichen:** zwei Zeiträume einer Messgröße (`trends.comparePeriods`, Vorgaben wie am PC).
+  - **Lebensstil:** Notizen anlegen, ändern, löschen.
+  - **Messgrößen:** eigene Messgrößen anlegen, ändern, archivieren; löschen nur ohne Werte.
+- Neue Ablage `paritydata.js` (Speicher „parity“) für Tabellen, die am Handy bearbeitet werden
+  (`lifestyle_note`, `body_metric`, später `goal`, `meal_plan_entry`). Geht mit „An den PC senden“ zurück,
+  Löschungen als `deleted_record`; nach dem nächsten PC-Export räumt `pruneParity` auf.
+- Messgrößen-Auswahl mit Gruppen (`<optgroup>`), damit die Namen kurz bleiben.
+- Geändert: `paritydata.js` (neu), `bodyparity.js` (neu), `body.js`, `appbase.js`, `app.js`, `appactions.js`,
+  `catalogload.js`, `transferview.js`, `app.css`, `core.js`, `sw.js`.
+
+## Version 1.91.0 (22.11.2026): Angleichung an den PC, Paket D (Ziele, Wochen- und Hauptziele)
+
+- **Insights → Ziele** wie am PC (`GoalsCard.tsx`): Ziel anlegen (Übung: geschätztes 1RM oder höchstes Gewicht,
+  oder Messgröße), bearbeiten, archivieren, löschen; Fortschrittsbalken mit Meilenstein-Marken, Liste der
+  Meilensteine, Verlauf seit Beginn, archivierte ein-/ausblenden. Prüfregeln wie Migration 0063. Ablage in
+  `paritydata.js` (Tabelle `goal`).
+- **Settings → Wochenziele** jetzt bearbeitbar (`weekGoalsFromInput`, Schlüssel `ui.week_goals`).
+- **Settings → Hauptziele** neu: Auswahl der Hauptziele (`ui.main_goals`) und Einwilligung für Empfehlungen
+  (`ui.ai_consent`, gleiche Version wie am PC). Im Einwilligungstext heißt es am Handy „nur auf dem jeweiligen
+  Gerät (PC oder Handy)“ statt „nur auf diesem PC“.
+- Alles geht mit „An den PC senden“ zurück (`SYNC_KEYS` in `pcsettings.js` erweitert).
+- Neues Modul `goalsparity.js`; Zielkarte aus `extras.js` dorthin verschoben. Tests `paritydata.test.mjs`.
+- Geändert: `goalsparity.js` (neu), `paritydata.test.mjs` (neu), `extras.js`, `insightsview.js`, `settingsview.js`,
+  `pcsettings.js`, `overview.js`, `appactions.js`, `app.js`, `app.css`, `core.js`, `sw.js`.
+
+## Version 1.92.0 (22.11.2026): Angleichung an den PC, Paket E (Rückblick, Planen, Duplikate, Suche)
+
+- **Insights → Monats- und Jahresrückblick** wie am PC (`PeriodReviewCard.tsx`): Monat (letzte 24) oder Jahr
+  (letzte 5), Kennzahlen mit Vergleich zum Vorzeitraum und Grundlage, Aufteilung nach Wochen bzw. Monaten,
+  neue Rekorde, erfasste Tage (`reviewparity.js`). Das PDF folgt mit Paket F.
+- **Nutrition → Planen** bearbeitbar (`planparity.js`, wie `MealPlanTab.tsx`): Wochen blättern, Gericht aus
+  Vorlagen/Rezepten vom PC einplanen (Mahlzeit, Portionen), entfernen, geplante Nährwerte je Tag, „Auf nächste
+  Woche kopieren“, Einkaufsliste mit „In die Zwischenablage“ und „Als To-dos anlegen“. Planeinträge über
+  `paritydata.js` (Tabelle `meal_plan_entry`, Prüfregeln wie Migration 0064). `pcdomain.js` neu mit `mealPlan`.
+- **Vermutlich doppelt** wie am PC (`duplicates`): Training → Datenbank → Maschinendatenbank (Tippen öffnet die
+  Details); Nutrition → Scanner & Tracken unter der Suche (Tippen sucht den Eintrag) und im Formular eines
+  Lebensmittels („Gibt es vermutlich schon: …“, aktualisiert beim Tippen).
+- **Suche** (`searchview.js`, wie `GlobalSearch.tsx`): im Menü oben und als Lupe im Kopf der Overview. Bereiche und
+  Reiter, Übungen (→ Verlauf bzw. Übungsdatenbank), Lebensmittel, Laborwerte, Einheiten, Lebensstil-Notizen,
+  Ziele, Termine und Tage („17.11.“, „heute“, „gestern“ → Ernährung, Schlaf, Körperwerte, Alltagsbewegung).
+- Geändert: `planparity.js`, `reviewparity.js`, `searchview.js` (neu), `food.js`, `extras.js`, `trainingdb.js`,
+  `nav.js`, `appbase.js`, `app.js`, `appactions.js`, `insightsview.js`, `app.css`, `pcdomain.js`, `core.js`, `sw.js`,
+  `scripts/tools/handy/pcdomain-entry.ts`.
+
+## Version 1.93.0 (22.11.2026): Angleichung an den PC, Paket F (PDFs, Uhr-Trainings, Erste Schritte)
+
+- **PDFs am Handy** (`pdfparity.js`, Bausteine aus `pcdomain.js`: `report`, `reportPdf`, `reportRanges`,
+  `nutritionExport`, `nutritionExportPdf`, `periodReviewPdf`). Ausgabe über „Teilen“, sonst als Link zum Sichern:
+  - **Insights → Datenauszug** wie `ReportCard.tsx`: Zeitraum (Schnellwahl 7/30/90 Tage, 12 Monate, letzte
+    Woche/letzter Monat), Bereiche, Kennzahlen, Tageswerte, Veränderungen, „PDF erstellen“. Daten wie
+    `repo::report::data` (Wasser, Supplements, Griffkraft, Nickerchen, Restdays, Protokoll mit Secret Protocols).
+  - **Nutrition → Tagebuch → „Tagebuch exportieren (PDF)“** wie `DiaryExportPanel.tsx` (ohne Wasserzeichen).
+  - **Insights → Monats- und Jahresrückblick → „PDF erstellen“**.
+- **Health → Heart → Trainings der Uhr → „Ins Training übernehmen“** (`watchparity.js`, wie
+  `wearable_adopt.rs`): Cardio-Einheit mit Dauer, Strecke, Ø/max Puls und kcal der Uhr; Übung nach Sportart
+  vorgewählt und änderbar. Die Verknüpfung (`wearable_exercise.workout_id`) geht über `paritydata.js` an den PC.
+  Hinweis: Die Zeile kommt ohne `raw_json` (wird fürs Handy nicht exportiert) – am PC wird dieses Feld der einen
+  Zeile dabei leer; gelesen wird es nirgends.
+- **Erste Schritte** für Konten am Handy (`setupparity.js`, wie der Einrichtungs-Assistent am PC): Profil,
+  Tagesziele, erste Einheit, erste Mahlzeit, Home-Bildschirm, Konto sichern; automatisch erkannt oder von Hand
+  abgehakt; ausblendbar, unter Settings → Hilfe wieder einblendbar. Stand in `S.prefs.setup`.
+- Geändert: `pdfparity.js`, `watchparity.js`, `setupparity.js` (neu), `reviewparity.js`, `paritydata.js`,
+  `heart.js`, `diary.js`, `insightsview.js`, `homeview.js`, `settingsview.js`, `app.js`, `appactions.js`, `app.css`,
+  `pcdomain.js`, `core.js`, `sw.js`, `scripts/tools/handy/pcdomain-entry.ts`.
+
+## Version 1.94.0 (22.11.2026): Offene Daten wischen, Upload in „Werte nachtragen“
+
+- **Import/Export → Offene Daten:** statt „Ansehen · Bearbeiten · Verwerfen“ je Eintrag:
+  Antippen zeigt den Eintrag mit „Bearbeiten“, **nach links wischen** verwirft ihn, **nach rechts wischen**
+  verwirft die ganze Rubrik (Training, Body & Longevity …) nach einer Rückfrage in der Karte. Neues Modul
+  `swiperow.js` (Zeile folgt dem Finger, rot „Verwerfen“ bzw. „Ganze Rubrik“). Für Nutrition verwirft die Rubrik
+  auch alle ungesendeten Ernährungseinträge (`nutrition.js` `discardUnsentFood`); Teile, die noch verwendet
+  werden, bleiben und werden gemeldet.
+- **Werte nachtragen → Heute fällig → „Upload“** (wie am PC 1.0.174): Foto oder PDF der Waagen-Auswertung
+  wählen; die Texterkennung liest die Werte (wie „Aus Bild übernehmen“, `body.js` `readScaleFile`) und trägt sie
+  in die Felder der heute fälligen Messgrößen ein. Gespeichert wird erst mit „Speichern“.
+- Geändert: `swiperow.js` (neu), `transferview.js`, `appactions.js`, `app.js`, `nutrition.js`, `extras.js`,
+  `body.js`, `app.css`, `core.js`, `sw.js`.
+
+## Version 1.95.0 (22.11.2026): Layout-Durchgang Handy
+
+Alle Bereiche und Reiter bei iPhone-Breite (390 px) durchgesehen; kein Bereich ist mehr breiter als der Bildschirm.
+
+- **Infotexte hinter ⓘ:** Erklärsätze in Karten (Etikett scannen, Check-In, Zeiträume vergleichen, Lebensstil,
+  Messgrößen, Arztbericht, Laborimport, Laborparameter, Wirkstoffrechner, Checkliste Injektion, Meine Gyms,
+  Studio-Pakete, NEAT, Trainingspläne) stehen jetzt hinter dem Info-Symbol. Seitentexte über dem Inhalt
+  (Checklisten, Sleep, Recovery, Health-Reiter, Superhuman, Insights, iCoach.me, Import/Export, Werte nachtragen,
+  Vor dem Senden prüfen) liegen in der Einleitung hinter der Figur im Kopf (`header(title, { intro })`).
+- **Spalten und Zeilen:** Mahlzeit-Knöpfe „+ Lebensmittel · Fasttracking“ nebeneinander; Start-Knöpfe unter
+  Training → Einheiten als 2×2-Raster; Plan- und Cardio-Auswahl mit Knopf in einer Zeile; Zeiträume im
+  Arztbericht und im Datenauszug in gleich breiten Spalten; Messgrößen zweispaltig (Name links, Aktion rechts);
+  To-dos mit Titel oben und Tageswahl darunter; Lifespan-Kern-Kacheln mit bündigem Fuß (Masterclass, Quelle);
+  Magazin-Karten mit Titelbild neben dem Titel und Text in voller Breite; fehlende Nacht in „Werte nachtragen“
+  mit zwei breiten Uhrzeitfeldern.
+- **Ausrichtung:** Aufklapp-Pfeil der Karten immer oben rechts; Knöpfe im Kartenkopf bleiben rechts; Felder in
+  Rastern nie breiter als ihre Spalte (Cardio in der Körperkarte lief über den Rand); Eingaben ohne Typ und
+  Datum-mit-Uhrzeit haben jetzt denselben Rahmen wie alle Felder; Häkchen in Schaltern und Hauptzielen in voller
+  Größe; Silbentrennung statt Zeichenbruch in schmalen Kacheln; Links als Knopf ohne Unterstreichung.
+- Entfernt: veralteter Hinweis „Datenauszug und Rückblick folgen“ in Insights.
+- Geändert: `app.css`, `appbase.js`, `infonotes.js`, `body.js`, `bodyparity.js`, `diary.js`, `extras.js`, `food.js`,
+  `gymsui.js`, `health.js`, `icoach.js`, `insightsview.js`, `logs.js`, `reviewparity.js`, `super.js`, `supertabs.js`,
+  `todos.js`, `training.js`, `trainingdb.js`, `trainingplans.js`, `transferview.js`, `core.js`, `sw.js`.
+
+## Version 1.96.0 (22.11.2026): Gerät für Cardio-Übungen, Uhrzeit der Mahlzeit für Stacks
+
+- **Supplement-Stack zu einer Mahlzeit:** Wer bei „Einnahme“ eine Mahlzeit wählt, bekommt deren Uhrzeit ins
+  Feld „Uhrzeit“ (auch beim Vorschlag für eine neue Einnahme). Ohne eingetragene Uhrzeit gilt beim Speichern die
+  der Mahlzeit – wie am PC (1.0.174, auch im Rust-Kern für Einnahmen ohne Uhrzeit).
+- **Gerät für Cardio-Übungen:** Im laufenden Training und beim Bearbeiten hat jede Cardio-Übung das Feld
+  „Gerät (optional)“. Geräte zur Cardio-Art der Übung (z. B. Rudern → Ruderergometer) stehen oben, je Hersteller
+  gruppiert, danach „Weitere Geräte“. Die Körperkarte verteilt die Cardio-Belastung dann nach den Muskelgruppen
+  und dem eigenen Muskelfokus des Geräts; ohne Gerät wie bisher nach der Cardio-Art. Das Gerät vom letzten Mal
+  wird vorbelegt und geht mit der Rückgabedatei an den PC (`workout_exercise.machine_id`, PC Schema 72; ältere
+  PC-Stände ohne die Spalte bekommen die Einheit ohne Gerät).
+- Rechnung und Auswahl kommen aus `src/domain/cardioMuscles.ts` und `cardioMachines.ts` (in `pcdomain.js`, neu
+  erzeugt).
+- Geändert: `app.js`, `cardiomap.js`, `core.js`, `diaryactions.js`, `pcdb.js`, `pcoverview.js`, `pcdomain.js`,
+  `supplements.js`, `trainingstats.js`, `workoutview.js`, `sw.js`; Tests `core.test.mjs`, `pcoverview.test.mjs`,
+  `supplements.test.mjs`.

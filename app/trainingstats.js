@@ -137,6 +137,7 @@ export function workoutBodyMapHtml(w, exerciseRows, { finished = false } = {}) {
         rpe: s.rpe ?? null,
         hrAvg: s.hrAvg ?? null,
         cardioKind: kind,
+        machineId: we.machineId ?? null,
       }));
   });
   const cardio = db ? CM.withCardio(db, cardioSets, map.sets, () => true, today()) : { on: false, values: map.sets, share: null, load: null, settings: null };

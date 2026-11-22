@@ -10,6 +10,7 @@ import * as HX from "./hyrox.js";
 import * as GY from "./gymsui.js";
 import { esc, exById, fmtDate, fmtSec, go, header, machineById, S, saveNow, saveSoon, toast } from "./appbase.js";
 import { wakeLock } from "./resttimer.js";
+import { effectiveKind } from "./pcdb.js";
 import { viewHome } from "./homeview.js";
 
 export function exLabel(ex, machines) {
@@ -217,7 +218,7 @@ export function exerciseCard(we, i, exs, machines) {
           <input id="rest-${we.id}" type="text" inputmode="numeric" value="${we.restSeconds ?? ""}" data-we="${we.id}" data-field="restSeconds"></div>
       </div>
     </details>
-    ${cardio ? "" : profilePicker(we, ex)}
+    ${cardio ? cardioMachinePicker(we, ex) : profilePicker(we, ex)}
     <details class="settings ex-notes"${we.notes ? " open" : ""}>
       <summary>Notiz zur Übung${we.notes ? "" : " (optional)"}</summary>
       <textarea id="note-${we.id}" rows="2" maxlength="500" placeholder="z. B. Sitz zu tief, nächstes Mal mehr Gewicht" data-we="${we.id}" data-field="notes">${esc(we.notes ?? "")}</textarea>
@@ -232,6 +233,62 @@ export function exerciseCard(we, i, exs, machines) {
       <button class="btn sm danger" data-act="remove-ex" data-we="${we.id}">Entfernen</button>
     </div>
   </section>`;
+}
+
+const jsonList = (v) => {
+  if (Array.isArray(v)) return v.map(String);
+  try {
+    const a = JSON.parse(v ?? "[]");
+    return Array.isArray(a) ? a.map(String) : [];
+  } catch {
+    return [];
+  }
+};
+
+/** Cardiogeräte des Katalogs in der Form von `CardioMachineInfo` (PC `cardioMachines.ts`). */
+function cardioMachineInfos() {
+  return (S.catalog?.machines ?? []).map((m) => ({
+    id: m.id,
+    manufacturer: m.manufacturer ?? "",
+    name: m.name ?? "",
+    displayName: m.display_name ?? "",
+    category: m.category ?? "",
+    features: jsonList(m.features),
+    muscleGroups: C.machineMuscles(m),
+    archived: Boolean(m.archived),
+  }));
+}
+
+/**
+ * Gerät einer Cardio-Übung (1.96.0, wie PC 1.0.174 `CardioMachineField.tsx`): passende Geräte zur
+ * Cardio-Art oben, je Hersteller gruppiert; die Muskelgruppen des Geräts gelten in der Körperkarte.
+ */
+export function cardioMachinePicker(we, ex) {
+  const CMA = PDOM.cardioMachines;
+  if (!CMA?.cardioMachineOptions) return "";
+  const sport = ex?.sport_id ? (S.catalog?.sports ?? []).find((x) => x.id === ex.sport_id) : null;
+  const kind = effectiveKind("cardio", ex?.cardio_kind ?? null, ex?.name ?? "", ex?.equipment ?? null, sport?.category ?? null) ?? "other";
+  const infos = cardioMachineInfos();
+  const options = CMA.cardioMachineOptions(infos, kind ?? "other", we.machineId ?? null);
+  const groups = [];
+  for (const o of options) {
+    const g = groups.at(-1);
+    if (g && g.label === o.group) g.items.push(o);
+    else groups.push({ label: o.group, items: [o] });
+  }
+  const chosen = infos.find((m) => m.id === we.machineId);
+  return `<div class="field ex-machine"><label for="mach-${we.id}">Gerät (optional)</label>
+      <select id="mach-${we.id}" data-we="${we.id}" data-field="machineId">
+        <option value="">ohne Gerät</option>
+        ${groups
+          .map(
+            (g) => `<optgroup label="${esc(g.label)}">${g.items
+              .map((o) => `<option value="${esc(o.value)}"${o.value === we.machineId ? " selected" : ""}>${esc(o.label)}</option>`)
+              .join("")}</optgroup>`,
+          )
+          .join("")}
+      </select>
+      <p class="muted small">${esc(CMA.cardioMachineHint(chosen))}</p></div>`;
 }
 
 export function profilePicker(we, ex) {

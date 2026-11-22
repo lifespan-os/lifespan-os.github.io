@@ -1461,7 +1461,9 @@ __export(cardio_exports, {
   cardioMethodLabel: () => cardioMethodLabel,
   cardioPace: () => cardioPace,
   formatDuration: () => formatDuration2,
-  parseDuration: () => parseDuration
+  machineCardioKind: () => machineCardioKind,
+  parseDuration: () => parseDuration,
+  sameCardioDevice: () => sameCardioDevice
 });
 var CARDIO_KINDS = [
   { value: "run", label: "Laufen" },
@@ -1580,6 +1582,28 @@ function cardioMethodLabel(method) {
   }
 }
 var CARDIO_KCAL_INFO = "Kalorien je Block mit der genauesten Methode, f\xFCr die Werte da sind: 1. Leistung in Watt (Rudern/SkiErg auch aus Strecke und Dauer), 2. bei Laufen/Gehen Tempo und Steigung, 3. \xD8 Puls (mit Geschlecht und Alter aus dem Profil), 4. Geschwindigkeit (Rad, Schwimmen), 5. Art und Anstrengung (RPE). Gez\xE4hlt wird nur der Mehrverbrauch \xFCber Ruhe \u2013 der Grundbedarf steckt schon im Tagesbedarf.";
+var MACHINE_KIND_WORDS = [
+  ["row", ["ruder", "rowing", "rower", "skillrow", " row"]],
+  ["ski", ["skierg", "ski-erg", "ski erg", "langlauf"]],
+  [
+    "elliptical",
+    ["crosstrainer", "cross trainer", "cross-trainer", "cross personal", "ellip", "ascent", "arc trainer", "synchro", "vario"]
+  ],
+  ["stairs", ["treppe", "stair", "stepper", "climb", "stepmill"]],
+  ["cycle", ["fahrrad", "liegerad", "ergometer", "bike", "cycle", "cycling", "spinning", "recline", " ride"]],
+  ["run", ["laufband", "treadmill", "skillmill", "lauf", "run"]]
+];
+function machineCardioKind(m) {
+  const text2 = ` ${[...m.features ?? [], m.displayName ?? "", m.name].join(" ").toLowerCase()}`;
+  for (const [kind, words] of MACHINE_KIND_WORDS) {
+    if (words.some((w) => text2.includes(w))) return kind;
+  }
+  return "other";
+}
+function sameCardioDevice(a, b) {
+  const norm3 = (k) => k === "walk" ? "run" : k;
+  return norm3(a) === norm3(b);
+}
 
 // src/domain/workoutDraft.ts
 var counter = 0;
@@ -1691,6 +1715,7 @@ function emptyExercise(exerciseId = "") {
     profiles: null,
     settings: emptySettingsDraft(),
     restSeconds: "",
+    machineId: null,
     sets: [emptySet()]
   };
 }
@@ -1823,6 +1848,7 @@ function workoutToDraft(w) {
       profiles: null,
       settings: settingsToDraft(e.settings),
       restSeconds: e.restSeconds === null || e.restSeconds === void 0 ? "" : String(e.restSeconds),
+      machineId: e.machineId ?? null,
       sets: e.sets.map((s) => ({
         key: newKey(),
         id: s.id,
@@ -1896,6 +1922,7 @@ function draftToInput(d, defaults = noDefaults) {
       notes: textOrNull(e.notes),
       settings: settingsToInput(e.settings),
       restSeconds: p.integer(`exercises.${i}.restSeconds`, e.restSeconds),
+      machineId: e.machineId || null,
       sets: e.sets.map((s, j) => {
         const f = (name) => `exercises.${i}.sets.${j}.${name}`;
         const profile = parseProfile(p, f, s.rp);
@@ -14856,8 +14883,8 @@ var ALIASES = {
 var normalizeName2 = (s) => clean(s).toLowerCase().replace(/\s*,\s*/g, ", ").replace(/\s+/g, " ");
 function matchAnalyte(name, analytes) {
   const n2 = normalizeName2(name);
-  const byName = analytes.find((a) => normalizeName2(a.name) === n2);
-  if (byName) return byName;
+  const byName2 = analytes.find((a) => normalizeName2(a.name) === n2);
+  if (byName2) return byName2;
   for (const a of analytes) {
     const aliases = ALIASES[normalizeName2(a.name)] ?? [];
     if (aliases.includes(n2)) return a;
@@ -17173,6 +17200,7 @@ __export(cardioMuscles_exports, {
   serializeCardioMuscleSettings: () => serializeCardioMuscleSettings,
   setEquivalents: () => setEquivalents,
   sharesForKind: () => sharesForKind,
+  sharesForMachine: () => sharesForMachine,
   sharesForSport: () => sharesForSport,
   zoneOfPulse: () => zoneOfPulse,
   zoneOfRpe: () => zoneOfRpe
@@ -17619,6 +17647,12 @@ var ALL_CARDIO_PROFILES = [
 function compileCardioProfile(p) {
   return compile(p);
 }
+function sharesForMachine(machine, focus) {
+  if (!machine) return null;
+  const machineFocus = focus?.machines.get(machine.id);
+  const { factors } = exerciseMuscles(null, machine.muscleGroups, void 0, machineFocus);
+  return Object.keys(factors).length > 0 ? factors : null;
+}
 function sharesForKind(kind) {
   return sharesOf(kind ? KIND_PROFILES[kind] : null);
 }
@@ -17653,8 +17687,19 @@ function cardioMuscleLoad(log, ctx, include) {
   const out = emptyCardioLoad();
   const exerciseById = new Map(ctx.exercises.map((e) => [e.id, e]));
   const sportById = new Map(ctx.sports.map((s) => [s.id, s]));
+  const machineById = new Map((ctx.machines ?? []).map((m) => [m.id, m]));
+  const sharesByMachine = /* @__PURE__ */ new Map();
   const sharesByExercise = /* @__PURE__ */ new Map();
   const sharesFor = (s) => {
+    const machineId = s.machineId || exerciseById.get(s.exerciseId)?.machineId;
+    if (machineId) {
+      let byMachine = sharesByMachine.get(machineId);
+      if (byMachine === void 0) {
+        byMachine = sharesForMachine(machineById.get(machineId), ctx.focus);
+        sharesByMachine.set(machineId, byMachine);
+      }
+      if (byMachine) return byMachine;
+    }
     const cached = sharesByExercise.get(s.exerciseId);
     if (cached !== void 0) return cached;
     const ex = exerciseById.get(s.exerciseId);
@@ -17712,6 +17757,37 @@ function addMuscleValues(a, b) {
 }
 function cardioLoadHasData(load) {
   return load.blocks > 0;
+}
+
+// src/domain/cardioMachines.ts
+var cardioMachines_exports = {};
+__export(cardioMachines_exports, {
+  CARDIO_MACHINE_CATEGORY: () => CARDIO_MACHINE_CATEGORY,
+  cardioMachineHint: () => cardioMachineHint,
+  cardioMachineOptions: () => cardioMachineOptions
+});
+var CARDIO_MACHINE_CATEGORY = "Cardio";
+var byName = (a, b) => a.manufacturer.localeCompare(b.manufacturer, "de") || (a.displayName || a.name).localeCompare(b.displayName || b.name, "de");
+function cardioMachineOptions(machines, kind, current = null) {
+  const cardio = machines.filter((m) => m.category === CARDIO_MACHINE_CATEGORY && (!m.archived || m.id === current)).sort(byName);
+  const fits = (m) => kind !== "other" && sameCardioDevice(machineCardioKind(m), kind);
+  const label = (m) => m.displayName || m.name;
+  const out = [
+    ...cardio.filter(fits).map((m) => ({ value: m.id, label: label(m), group: m.manufacturer })),
+    ...cardio.filter((m) => !fits(m)).map((m) => ({ value: m.id, label: label(m), group: `Weitere Ger\xE4te \xB7 ${m.manufacturer}` }))
+  ];
+  if (current && !out.some((o) => o.value === current)) {
+    const m = machines.find((x) => x.id === current);
+    out.unshift({ value: current, label: m ? label(m) : "Bisheriges Ger\xE4t", group: "Gew\xE4hlt" });
+  }
+  return out;
+}
+function cardioMachineHint(machine) {
+  if (!machine) return "Ohne Ger\xE4t verteilt die K\xF6rperkarte nach der Cardio-Art der \xDCbung.";
+  if (machine.muscleGroups.length === 0) {
+    return "F\xFCr dieses Ger\xE4t sind keine Muskelgruppen hinterlegt \u2013 es gilt die Cardio-Art.";
+  }
+  return `K\xF6rperkarte nach dem Ger\xE4t: ${machine.muscleGroups.join(", ")}.`;
 }
 
 // src/domain/planDraft.ts
@@ -26684,13 +26760,13 @@ function superhumanTimeline(input) {
   for (const m of [...ms].filter((x) => x.metricId === input.metricId).sort((a, b) => `${a.date} ${a.time ?? ""}`.localeCompare(`${b.date} ${b.time ?? ""}`)))
     byDay.set(m.date, m.value);
   const body = [...byDay.entries()].map(([date, value2]) => ({ date, value: value2 })).sort((a, b) => a.date.localeCompare(b.date));
-  const byName = (a, b) => a.name.localeCompare(b.name);
+  const byName2 = (a, b) => a.name.localeCompare(b.name);
   return {
     doses,
     lab,
     body,
-    analytes: [...analytes.values()].sort(byName),
-    metrics: [...metrics.values()].sort(byName)
+    analytes: [...analytes.values()].sort(byName2),
+    metrics: [...metrics.values()].sort(byName2)
   };
 }
 
@@ -29642,6 +29718,7 @@ export {
   buildLibrary,
   caffeine_exports as caffeine,
   cardio_exports as cardio,
+  cardioMachines_exports as cardioMachines,
   cardioMuscles_exports as cardioMuscles,
   cardioReport_exports as cardioReport,
   checkin_exports as checkin,

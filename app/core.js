@@ -11,7 +11,7 @@ import { appDay } from "./appday.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.95.0";
+export const MOBILE_VERSION = "1.96.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -375,6 +375,7 @@ export function lastSessionsFromRows(workouts, wexRows, wsetRows) {
       date: w.date,
       settings: settingsFromRow(we),
       restSeconds: we.rest_seconds ?? null,
+      machineId: we.machine_id ?? null,
       sets: (setsByWex.get(we.id) || []).sort(byPosition).map((s) => ({
         reps: s.reps ?? null,
         weightKg: s.weight_kg ?? null,
@@ -438,7 +439,7 @@ export function lastSessionFor(catalog, localWorkouts, exerciseId, excludeWorkou
     if (!we) continue;
     const key = `${w.date} ${w.startTime ?? "00:00"} ${w.createdAt}`;
     if (best && best.key >= key) continue;
-    best = { key, date: w.date, settings: we.settings, restSeconds: we.restSeconds, sets: we.sets };
+    best = { key, date: w.date, settings: we.settings, restSeconds: we.restSeconds, machineId: we.machineId ?? null, sets: we.sets };
   }
   return best;
 }
@@ -656,6 +657,8 @@ export function workoutExercise({ exerciseId, planExercise = null, last = null }
     notes: null,
     settings: { ...emptySettings(), ...(fromPlan ? planExercise.settings : last?.settings ?? {}) },
     restSeconds: planExercise?.restSeconds ?? last?.restSeconds ?? 90,
+    // Gerät vom letzten Mal (Cardio, 1.96.0)
+    machineId: last?.machineId ?? null,
     profiles: null, // null = Standardprofile der Übung
     sets,
   };
@@ -808,6 +811,8 @@ export function workoutFromPc(w, wexRows, setsByWex) {
         notes: we.notes ?? null,
         settings: settingsFromRow(we),
         restSeconds: we.rest_seconds ?? null,
+        // Gerät der Übung (PC Schema 72, 1.96.0): Cardio nach dessen Muskelgruppen in der Körperkarte
+        machineId: we.machine_id ?? null,
         profiles: null,
         extra: { ...we },
         sets: [...(setsByWex.get(we.id) ?? [])].sort(byPosition).map((s) => ({
@@ -914,6 +919,7 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
       if (!ex) throw new Error(`Übung fehlt (${we.exerciseId}). Bitte neue Daten vom PC laden.`);
       out.exercise.set(ex.id, ex);
       if (ex.machine_id && machineById.has(ex.machine_id)) out.machine.set(ex.machine_id, machineById.get(ex.machine_id));
+      if (we.machineId && machineById.has(we.machineId)) out.machine.set(we.machineId, machineById.get(we.machineId));
       if (ex.sport_id && sportById.has(ex.sport_id)) out.sport.set(ex.sport_id, sportById.get(ex.sport_id));
       const st = we.settings || {};
       out.workout_exercise.push({
@@ -934,6 +940,7 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
         footrest: txt(st.footrest, 40),
         rest_seconds: nn(we.restSeconds),
         grip_position: st.gripPosition || null,
+        machine_id: we.machineId ?? null,
       });
       we.sets.forEach((s, si) => {
         const total = profileTotal(s.rp);

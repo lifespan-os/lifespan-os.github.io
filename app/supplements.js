@@ -126,6 +126,17 @@ export function suggestTiming(slots, hour) {
 
 // ------------------------------------------------------------------ Entwurf
 
+/**
+ * Uhrzeit der Mahlzeit zur Auswahl „Einnahme“ (`meal:<id>`), sonst null – wird beim Zuordnen
+ * übernommen (1.96.0, wie `mealTimeForTiming` am PC). `slots` aus `daySlots`.
+ */
+export function mealTimeForTiming(timing, slots) {
+  const t = String(timing ?? "");
+  if (!t.startsWith("meal:")) return null;
+  const meal = (slots ?? []).find((s) => s.meal?.id === t.slice(5))?.meal;
+  return meal?.time ?? null;
+}
+
 /** Neuer Entwurf für einen Tag. */
 export function emptyDraft(date, timing = "independent", time = "") {
   return { id: null, date, stackId: null, name: "", timing, time, notes: "", items: [] };

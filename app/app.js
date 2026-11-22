@@ -232,6 +232,14 @@ app.addEventListener("input", (ev) => {
     saveSoon();
     return;
   }
+  if (el.dataset.field === "machineId") {
+    // Gerät einer Cardio-Übung (1.96.0): Körperkarte nach dessen Muskelgruppen
+    const we = findWe(el.dataset.we);
+    we.machineId = el.value || null;
+    saveSoon();
+    rerenderKeepScroll();
+    return;
+  }
   if (el.dataset.field === "restSeconds") {
     const we = findWe(el.dataset.we);
     const v = C.parseNum(el.value);

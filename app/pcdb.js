@@ -240,6 +240,9 @@ export function makeDb(catalog, phone = {}) {
 
   return {
     foods,
+    // Maschinen und eigener Muskelfokus (1.96.0): Gerät einer Cardio-Übung in der Körperkarte
+    catalogMachines: catalog?.machines ?? [],
+    catalogFocus: catalog?.focus ?? null,
     meals,
     mealsByDate: groupBy(meals, "date"),
     itemsByMeal: groupBy(mealItems, "meal_id"),
@@ -644,6 +647,8 @@ export function workoutOf(db, w) {
         exerciseCategory: category,
         muscleGroup: ex?.muscle_group ?? null,
         machineId: ex?.machine_id ?? null,
+        // gewähltes Gerät dieser Übung in der Einheit (PC Schema 72)
+        workoutMachineId: we.machine_id ?? null,
         cardioKind: effectiveKind(category, ex?.cardio_kind ?? null, ex?.name ?? "", ex?.equipment ?? null, sport?.category ?? null),
         gripWidth: we.grip_width ?? null,
         gripPosition: we.grip_position ?? null,

@@ -507,6 +507,7 @@ export function setLog(db) {
           notes: n(s.notes),
           isFailure: Boolean(s.is_failure),
           cardioKind: e.cardioKind,
+          machineId: e.workoutMachineId ?? null,
           gripWidth: e.gripWidth,
           gripPosition: e.gripPosition,
         });

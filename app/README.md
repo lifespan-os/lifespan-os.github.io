@@ -1512,3 +1512,9 @@ Alle Bereiche und Reiter bei iPhone-Breite (390 px) durchgesehen; kein Bereich i
   sich nicht mehr wie ein hartes Training.
 - Geändert: `core.js`, `gymsdata.js`, `gymsui.js`, `trainingstats.js`, `workoutview.js`, `pcdomain.js`, `sw.js`,
   `studios/index.json`, neu `studios/gruenblick-private-gym.json`; Tests `core.test.mjs`, `gymsdata.test.mjs`.
+
+## Version 1.98.1 (22.11.2026): Hinweis, wenn Cardio in der Einheitskarte ausgeblendet ist
+
+- Steht der Schalter auf „Kraft“, zeigt die Körperkarte einer Cardio-Einheit jetzt den Hinweis „Cardio ist
+  ausgeblendet – „Kraft + Cardio“ wählen …“ statt „Noch keine Arbeitssätze“ (wie PC 1.0.174, dort ist der Schalter
+  jetzt auch in der Einheitskarte). Geändert: `trainingstats.js`, `core.js`, `sw.js`.

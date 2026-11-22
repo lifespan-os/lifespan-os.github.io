@@ -178,7 +178,7 @@ export function workoutBodyMapHtml(w, exerciseRows, { finished = false } = {}) {
   const n = map.totalSets;
   return `<section class="card card--training wo-bodymap"><div class="wo-head"><h3>Muskel-Körperkarte dieser Einheit</h3><span class="tag">${n} ${n === 1 ? "Arbeitssatz" : "Arbeitssätze"}${running ? " abgehakt" : ""}</span></div>
     <div class="muscle-map__tools">${modeSwitch}${cardio.settings && cardioSets.length > 0 ? CM.cardioSwitchHtml(cardio.settings.show, "wo-cardio") : ""}</div>
-    ${n === 0 && !cardio.on ? `<p class="muted small">${running ? "Noch kein Arbeitssatz abgehakt – die Karte füllt sich mit jedem erledigten Satz." : "Noch keine Arbeitssätze von Kraftübungen eingetragen."}</p>` : ""}
+    ${n === 0 && !cardio.on ? `<p class="muted small">${cardioSets.length > 0 && cardio.settings && !cardio.settings.show ? "Cardio ist ausgeblendet – „Kraft + Cardio“ wählen, dann zeigt die Karte die Belastung der Cardio-Blöcke." : running ? "Noch kein Arbeitssatz abgehakt – die Karte füllt sich mit jedem erledigten Satz." : "Noch keine Arbeitssätze von Kraftübungen eingetragen."}</p>` : ""}
     ${heatmapHtml({ levels, describe, sex, active: S.woMuscle ?? null, act: "wo-muscle", legend, cardioShare: cardio.share })}
     ${cardio.settings?.show && cardioSets.length > 0 ? CM.cardioSummaryHtml(cardio.load, cardio.settings) : ""}
     <p class="muted small">${modeText} Gezählt werden Arbeitssätze (Hauptmuskel = 1 Satz, die übrigen anteilig nach Muskelfokus${cardio.settings?.show ? "; Cardio als Satz-Äquivalente, schraffiert" : ""}). ${running ? "Während des Trainings zählen die abgehakten Sätze." : "Gezählt werden alle Sätze mit Werten."}${

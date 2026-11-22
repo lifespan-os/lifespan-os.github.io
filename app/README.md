@@ -1572,3 +1572,9 @@ Alle Bereiche und Reiter bei iPhone-Breite (390 px) durchgesehen; kein Bereich i
   verschieben, löschen. Gehen mit „Lebensmittel senden“ an den PC.
 - Neu: `mealtimeline.js`, `plannedmeals.test.mjs`; geändert: `nutrition.js`, `diary.js`, `food.js`,
   `pcdb.js`, `app.js`, `appactions.js`, `app.css`, `core.js`, `sw.js`.
+
+## Version 1.101.1 (22.11.2026): Feinschliff Tagesverlauf
+
+- Stundenmarken stehen nicht mehr unter den Uhrzeiten der Einträge; Koffein aus der PC-Schnellerfassung
+  erscheint nicht zusätzlich als Supplement; das Fenster des Knopfes passt in die Achse. `mealtimeline.js`,
+  `core.js`, `sw.js`.

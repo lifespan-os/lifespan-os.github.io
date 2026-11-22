@@ -164,7 +164,10 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
     if (minute !== null) list.push({ key: `caf:${c.id}`, kind: "caffeine", minute, time: c.time, height: 32, text: `${c.label} · ${Math.round(c.mg)} mg Koffein` });
   }
   const mealTimes = new Map(slots.filter((s) => s.meal).map((s) => [s.meal.id, s.meal.time]));
+  // Supplement-Einträge der Koffein-Erfassung stehen schon als Koffein da
+  const fromCaffeine = new Set(caffeine.map((c) => c.supplementIntakeId).filter(Boolean));
   for (const i of P.intakesOn(db, date)) {
+    if (fromCaffeine.has(i.id)) continue;
     const t = i.time ?? (i.mealId ? mealTimes.get(i.mealId) : null) ?? null;
     const minute = minuteOf(t);
     if (minute !== null) list.push({ key: `sup:${i.id}`, kind: "supplement", minute, time: t, height: 32, text: `${i.name}${i.items.length > 1 ? ` · ${i.items.length} Supplements` : ""}` });
@@ -217,9 +220,9 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
 
   return `<div class="mtl-wrap">
     ${untimed.length ? `<p class="muted small">Ohne Uhrzeit: ${untimed.map((s) => `<button class="linkbtn" data-act="mtl-open" data-arg="${esc(s.ref.name ? N.extraKey(s.ref.name) : s.ref.mealType)}">${esc(s.title)} · ${Math.round(s.meal.energyKcal)} kcal</button>`).join(" ")}</p>` : ""}
-    <div class="mtl" style="height:${Math.ceil(layout.height) + 24}px" data-anchors="${esc(JSON.stringify(layout.anchors.map((a) => [a.minute, Math.round(a.y * 10) / 10])))}" data-now="${now ?? ""}" data-future="${future ? 1 : 0}">
+    <div class="mtl" style="height:${Math.ceil(Math.max(layout.height + 24, h.panel ? handleItem.y + HANDLE_H + 250 : 0))}px" data-anchors="${esc(JSON.stringify(layout.anchors.map((a) => [a.minute, Math.round(a.y * 10) / 10])))}" data-now="${now ?? ""}" data-future="${future ? 1 : 0}">
       <span class="mtl-axis" aria-hidden="true"></span>
-      ${layout.hours.map((x) => `<span class="mtl-hour" style="top:${x.y.toFixed(1)}px" aria-hidden="true">${x.label}</span>`).join("")}
+      ${layout.hours.filter((x) => !layout.items.some((i) => Math.abs(i.y - x.y) < 14)).map((x) => `<span class="mtl-hour" style="top:${x.y.toFixed(1)}px" aria-hidden="true">${x.label}</span>`).join("")}
       ${now !== null ? `<span class="mtl-now" style="top:${yAt(layout.anchors, now).toFixed(1)}px" aria-hidden="true"></span>` : ""}
       ${layout.items.filter((i) => i.kind !== "handle").map(rowHtml).join("")}
       <div class="mtl-handle ${handlePlanned ? "is-planned" : ""}" style="top:${handleItem.y.toFixed(1)}px">

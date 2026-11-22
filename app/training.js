@@ -6,6 +6,7 @@
 // Daten: trainingdata.js (Änderungen am Handy, gehen mit „Körperwerte … senden“ an den PC).
 // Seit 1.75.0 aufgeteilt: Pläne in trainingplans.js, Aktionen und Eingaben in trainingactions.js.
 import * as D from "./pcdomain.js";
+import { stepsDayHtml } from "./parity.js";
 import * as P from "./pcdb.js";
 import * as O from "./pcoverview.js";
 import * as TR from "./trainingdata.js";
@@ -397,6 +398,7 @@ export function neatTab() {
       <div class="field"><label for="neat-notes">Notizen (optional)</label><textarea id="neat-notes" rows="2" maxlength="1000" data-neat="notes">${esc(val("notes", "notes"))}</textarea>${fieldError(errors, "notes")}</div>
       <div class="row-actions"><button class="btn primary" data-act="train-neat-save">Speichern</button>${row ? `<button class="btn danger" data-act="train-neat-delete">Eintrag löschen</button>` : ""}</div>
     </section>
+    ${stepsDayHtml(date)}
     ${
       energy
         ? `<section class="card card--training"><div class="wo-head"><h3>Energieverbrauch am ${fmtDate(date)}</h3><span class="tag">Grundumsatz, NEAT, Training und PAL</span></div>${energyHtml(energy)}</section>`

@@ -1921,3 +1921,31 @@ html[data-theme="dark"] .muscle-map__hatch-line { stroke: #e8eef6; }
 .hero__steps--link .hero__bar--steps { display: flex; }
 .hero__steps--link:active { opacity: .75; }
 .steps-link { font: inherit; font-weight: inherit; color: inherit; text-decoration: underline; text-underline-offset: 3px; padding: 0; }
+
+/* 1.89.0: Angleichung an den PC (parity.js) */
+.mc-link { display: inline-flex; align-items: center; gap: 4px; flex: none; min-width: 36px; min-height: 36px; justify-content: center; padding: 0 6px; border: 0; border-radius: 8px; background: none; color: var(--blue); font-size: .8rem; font-weight: 600; }
+.mc-link:active { background: var(--surface-2); }
+.lab-values li:has(> .mc-link), .lng-labs__list li:has(> .mc-link) { display: flex; align-items: center; gap: 2px; }
+.lab-values li > .lab-values__row, .lng-labs__list li > .lng-labs__row { flex: 1; min-width: 0; }
+.lng-tile__mc { display: flex; justify-content: flex-end; padding: 0 6px; }
+.lab-trend .wo-head .mc-link { margin-left: auto; }
+.dose-ctx__sub { display: block; font-weight: 400; }
+.dose-ctx th, .dose-ctx td { white-space: nowrap; vertical-align: top; }
+.tl-pick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 10px 0 4px; }
+.tl-pick select { width: 100%; }
+.tl-chart, .steps24 { display: block; width: 100%; height: auto; margin: 8px 0 4px; }
+.tl-chart__axis, .steps24__axis { stroke: var(--line); }
+.tl-chart__tick, .tl-chart__lbl, .steps24__tick { font-size: 10px; fill: var(--muted); }
+.tl-chart__dose { stroke: var(--orange); stroke-width: 2; }
+.tl-chart__body { fill: none; stroke: var(--blue); stroke-width: 2; }
+.tl-chart__lab { fill: #1f8a70; }
+.tl-chart__lbl--body { fill: var(--blue); }
+.tl-chart__lbl--lab { fill: #1f8a70; }
+.tl-key { display: inline-block; width: 12px; height: 3px; vertical-align: middle; border-radius: 2px; }
+.tl-key--body { background: var(--blue); }
+.tl-key--lab { width: 8px; height: 8px; border-radius: 50%; background: #1f8a70; }
+.tl-key--dose { width: 2px; height: 10px; background: var(--orange); }
+.steps24__bar { fill: var(--blue); fill-opacity: .55; }
+.steps24__bar.is-peak { fill-opacity: 1; }
+.cm-zones { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.meal-glucose { margin-top: 2px; }

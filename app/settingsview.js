@@ -7,6 +7,7 @@
 // Tagesziele haben eine eigene Ansicht (goalsui.js), Wochenziele zeigt die App wie vom PC.
 
 import * as PS from "./pcsettings.js";
+import { cardioSettingsCard } from "./parity.js";
 import * as DP from "./devprefs.js";
 import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
@@ -297,6 +298,7 @@ export function viewSettings() {
       <button class="btn block" data-act="goals-open">Tagesziele festlegen</button>
     </section>
     ${db ? weekGoalsCard(db) : ""}
+    ${db ? cardioSettingsCard(db) : ""}
     ${db ? mealsCard(db) : ""}
     ${db ? methodsCard(db) : ""}
     ${appearanceCard()}

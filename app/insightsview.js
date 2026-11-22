@@ -5,6 +5,11 @@
 // Regeln aus pcdomain.js (= src/domain), Daten aus pcoverview.js (wie insights.rs).
 
 import { arrangeCards } from "./layoutedit.js";
+import * as PA from "./parity.js";
+import * as CF from "./caffeinedata.js";
+import * as SD from "./superdata.js";
+import { associationsHtml, wearableOf } from "./heart.js";
+import { contextHtml as glucoseContextHtml, readingsOf } from "./glucose.js";
 import * as O from "./pcoverview.js";
 import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
@@ -265,6 +270,20 @@ export function viewInsights() {
   const longData = O.insightsFor(db, D.trends.shiftDays(currentWeek, -7 * (ASSOCIATION_WEEKS - 1)), t);
   cards.push({ id: "associations", node: associationsCard(longData, t) });
   cards.push({ id: "coverage", node: coverageCard(longData, t) });
+  // 1.89.0 wie am PC: weitere Auswertungen (parity.js)
+  cards.push({ id: "training-nutrition", node: PA.trainingNutritionCard(card, db, week, weekData.workouts) });
+  cards.push({ id: "supplement-sleep", node: PA.supplementSleepCard(card, db, O.insightsFor(db, D.trends.shiftDays(t, -84), t)) });
+  const caffeineNode = PA.caffeineSleepCard(card, longData, (d) => CF.intakesOn(S.catalog, S.caffeine, d));
+  if (caffeineNode) cards.push({ id: "caffeine", node: caffeineNode });
+  if (db.settings.get("secret_protocols") === "1") {
+    const hrtNode = PA.hrtRecoveryCard(card, longData, SD.hrtEntriesOf(S.catalog, S.super));
+    if (hrtNode) cards.push({ id: "hrt", node: hrtNode });
+  }
+  const watchNode = associationsHtml(wearableOf(S.catalog));
+  if (watchNode) cards.push({ id: "watch", node: watchNode });
+  const readings = readingsOf(S.catalog, S.glucose);
+  const glucoseNode = readings.length ? glucoseContextHtml(S.catalog, readings) : "";
+  if (glucoseNode) cards.push({ id: "glucose", node: glucoseNode });
 
   const arranged = arrangeCards(db, D.INSIGHTS_LAYOUT_KEY, cards);
   const layout = D.parseLayout(db.settings.get(D.INSIGHTS_LAYOUT_KEY) ?? null);
@@ -278,7 +297,7 @@ export function viewInsights() {
     </section>
     <div class="ov-grid">${arranged.map((c) => (c.empty && layout.emptyLast ? `<div class="overview-card--empty">${c.node}</div>` : c.node)).join("")}</div>
     ${hasAny ? "" : `<section class="card"><h3>Keine Daten in dieser und der Vorwoche</h3><p class="muted">Sobald du Schlaf, Regeneration, Training, Ernährung oder Körperwerte erfasst, entsteht hier ein Wochenrückblick. Es werden keine Werte geschätzt oder ergänzt.</p></section>`}
-    <p class="muted small ov-source">Koffein und Schlaf, Hormongaben und der Datenauszug (PDF) gibt es bisher nur am PC. Die Weekly Reports erstellt der PC.</p>
+    <p class="muted small ov-source">Der Datenauszug (PDF) und der Monats- und Jahresrückblick folgen. Die Weekly Reports erstellt der PC.</p>
   </main>`;
 }
 

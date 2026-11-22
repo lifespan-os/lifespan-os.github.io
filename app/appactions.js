@@ -12,6 +12,7 @@ import { goalActions } from "./goalsui.js";
 import { blsActions } from "./blsui.js";
 import { offActions } from "./offui.js";
 import { overviewActions } from "./overview.js";
+import { parityActions } from "./parity.js";
 import { logsActions } from "./logs.js";
 import { insightsActions } from "./insightsview.js";
 import { weeklyReportsActions } from "./weeklyreports.js";
@@ -55,6 +56,7 @@ export const actions = {
   ...blsActions,
   ...offActions,
   ...overviewActions,
+  ...parityActions,
   ...logsActions,
   ...insightsActions,
   ...weeklyReportsActions,

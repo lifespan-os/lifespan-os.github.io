@@ -16,6 +16,7 @@ import { CATALOG, GROUPS } from "./nutrientcatalog.js";
 import { barTrendSvg, COLOR, compareHtml, dayGoalHtml, macroBreakdownHtml } from "./pcview.js";
 import * as FT from "./fastdata.js";
 import * as QM from "./quickmeal.js";
+import * as GLD from "./glucosedata.js";
 import { fastCard, supplementsCard } from "./diarysupp.js";
 export { viewFastEntry, viewSuppIntake } from "./diarysupp.js";
 export { diaryActions, diaryChange, diaryInput } from "./diaryactions.js";
@@ -401,6 +402,7 @@ export function mealsCard(slots, fast, date, db) {
       <div class="meal-slot__head"><button type="button" class="meal-slot__toggle" data-act="meal-toggle" data-arg="${esc(key)}|${expanded ? 0 : 1}" aria-expanded="${expanded}" title="${expanded ? "Zuklappen" : "Aufklappen"}"><span class="meal-slot__chevron" aria-hidden="true">${expanded ? "▾" : "▸"}</span><b>${esc(slot.title)}</b>${m?.time ? ` <span class="muted small">${esc(m.time)}</span>` : ""}</button>
         ${has ? `<span class="meal-slot__kcal">${esc(D.formatKcal(m.energyKcal))}</span>` : ""}</div>
       ${has ? `<p class="muted small">Protein ${esc(D.formatGrams(m.proteinG))} · KH ${esc(D.formatGrams(m.carbsG))} · Fett ${esc(D.formatGrams(m.fatG))}</p>` : ""}
+      ${has && m.time && D.glucoseMeal ? (() => { const g = D.glucoseMeal.mealGlucose(date, m.time, GLD.allReadings(X.S.catalog, X.S.glucose)); return g ? `<p class="muted small meal-glucose">${esc(g.text)}</p>` : ""; })() : ""}
       ${
         !expanded
           ? ""

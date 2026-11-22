@@ -120,7 +120,7 @@ function mealsOf(catalog, day) {
  * Blutzucker und Alltag (1.45.0, wie GlucoseInsightsCard am PC): Anstieg nach Mahlzeiten nach
  * Kohlenhydraten (aus meal + meal_item + Lebensmitteln des Exports), Training und Schlaf.
  */
-function contextHtml(catalog, readings) {
+export function contextHtml(catalog, readings) {
   const pc = catalog?.pc ?? {};
   const days = new Set(readings.map((r) => r.measuredAt.slice(0, 10)));
   const foods = N.allFoods(catalog, N.emptyLocal());

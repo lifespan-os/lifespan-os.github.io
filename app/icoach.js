@@ -220,6 +220,15 @@ function askTab() {
 }
 
 /** Ziel aus einem Modul: Buch und Teil (Thema) aufklappen. */
+/** Ask mit Suchwort öffnen – Buch-Symbol am Messwert (1.89.0, wie PC `MasterclassLink`, Parameter `suche`). */
+export function openAskSearch(query) {
+  const st = askState();
+  Object.assign(st, { q: String(query ?? ""), group: null, part: null, chapter: null, question: null, shown: PAGE });
+  X.S.icTab = "ask";
+  X.go("icoach");
+  window.scrollTo(0, 0);
+}
+
 function openTarget(target) {
   const st = askState();
   Object.assign(st, { q: "", group: null, part: null, chapter: null, question: null, shown: PAGE });

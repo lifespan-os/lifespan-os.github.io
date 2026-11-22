@@ -8,6 +8,7 @@
 import * as PS from "./pcsettings.js";
 import * as H from "./healthdata.js";
 import * as D from "./pcdomain.js";
+import { masterclassLinkHtml } from "./parity.js";
 import { buildDb, today } from "./diary.js";
 import * as O from "./pcoverview.js";
 import * as SD from "./superdata.js";
@@ -179,7 +180,7 @@ function drawDetails(draw, byId) {
               <span class="lab-values__name">${esc(r.analyteName)}${r.notes ? `<span class="muted small"> · ${esc(r.notes)}</span>` : ""}</span>
               <span class="lab-values__val"><strong>${esc(L().formatLabValue(r.value, r.comparator))}</strong> ${flagMark(flag)} <span class="muted small">${esc(r.unit)}</span></span>
               <span class="lab-values__ref muted small">${rangeText ? `Ref. ${esc(rangeText)}` : "ohne Bereich"}</span>
-            </button></li>`;
+            </button>${masterclassLinkHtml(r.analyteName)}</li>`;
         })
         .join("")}</ul>`,
       )
@@ -256,7 +257,7 @@ function trendTab({ analytes, draws }) {
   const outside = inUnit.filter((p) => p.flag === "low" || p.flag === "high").length;
   return `<section class="card lab-trend">
     <label class="field"><span class="muted small">Parameter</span><select data-health="trend">${analyteOptions(withValues, analyte.id, analyte.id)}</select></label>
-    <h3>Verlauf ${esc(analyte.name)}</h3>
+    <div class="wo-head"><h3>Verlauf ${esc(analyte.name)}</h3>${masterclassLinkHtml(analyte.name, { withText: true })}</div>
     <p class="muted small">${inUnit.length} ${inUnit.length === 1 ? "Wert" : "Werte"}${unit ? ` in ${esc(unit)}` : ""}${range ? ` · Referenzbereich ${esc(L().formatRange(range))}` : " · Bereich wechselt bzw. fehlt – je Wert in der Tabelle"}${outside ? ` · ${outside} außerhalb` : ""}</p>
     ${inUnit.length >= 2 ? labChart(inUnit, range, `Verlauf ${analyte.name}${unit ? ` in ${unit}` : ""}`) : `<p class="muted small">Ab zwei Werten erscheint hier das Diagramm.</p>`}
     <div class="table-scroll"><table class="data-table"><thead><tr><th>Datum</th><th class="tnum">Wert</th><th>Einheit</th><th>Referenz</th></tr></thead><tbody>

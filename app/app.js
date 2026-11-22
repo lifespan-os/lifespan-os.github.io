@@ -1,6 +1,7 @@
 // LIFESPAN OS Mobil – Einstieg: Ansichten-Tabelle, Eingaben, Start. Logik in core.js, Speicher in store.js;
 // Oberfläche seit 1.74.0 auf Module verteilt (appbase, sheets, navshell, workoutview, transferview, appactions …).
 import "./sheets.js";
+import { parityChangeB as parityChange } from "./parity.js";
 import "./navshell.js";
 import * as C from "./core.js";
 import * as store from "./store.js";
@@ -264,6 +265,7 @@ app.addEventListener("change", async (ev) => {
   if (layoutChange(el)) return;
   if (blsChange(el)) return;
   if (overviewChange(el)) return;
+  if (parityChange(el)) return;
   if (logsChange(el)) return;
   if (todoChange(el)) return;
   if (icoachChange(el)) return;

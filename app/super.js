@@ -10,6 +10,7 @@ import * as D from "./pcdomain.js";
 import { today } from "./diary.js";
 import { barTrendSvg } from "./pcview.js";
 import { calculatorTab, checklistTab, fromFor, hrtTab, levelsTab } from "./supertabs.js";
+import { timelineTab } from "./parity.js";
 export { viewHrtEdit } from "./supertabs.js";
 export { superActions, superChange, superInput } from "./superactions.js";
 
@@ -34,6 +35,7 @@ export const PR = () => D.protocol;
 export const TABS = [
   ["log", "Protokoll"],
   ["analysis", "Auswertung"],
+  ["timeline", "Zeitachse"],
   ["substances", "Substanzen"],
   ["hrt", "HRT"],
   ["levels", "Wirkstoffspiegel"],
@@ -93,7 +95,7 @@ export function viewSuper() {
   }
   const tab = S.superTab ?? "log";
   const pending = SD.unsentSuper(S.super);
-  const views = { log: logTab, analysis: analysisTab, substances: substancesTab, levels: levelsTab, calculator: calculatorTab, checklist: checklistTab };
+  const views = { log: logTab, analysis: analysisTab, timeline: () => timelineTab(entries()), substances: substancesTab, levels: levelsTab, calculator: calculatorTab, checklist: checklistTab };
   const body = (views[tab] ?? hrtTab)();
   return `${X.header("Superhuman")}<main class="wrap">
     <p class="muted small">PEDs (Performance Enhancing Drugs), Medikamente und Peptide erfassen, protokollieren und auswerten; Hormongaben (HRT) mit Charge, Injektionsort und Präparat dokumentieren. Hier stehen deine Einträge und Rechnungen daraus; Bewertungen und Dosierungsempfehlungen gibt es in diesem Bereich noch nicht.</p>

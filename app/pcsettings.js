@@ -28,6 +28,8 @@ export const SYNC_KEYS = [
   "ui.training_db_layout",
   // Body & Longevity → Protocols (1.79.0): abgehakter 7-Wochen-Start, Tägliches Dutzend
   "ui.protocols",
+  // Settings → Cardio in der Körperkarte (1.89.0)
+  "ui.cardio_muscles",
 ];
 export const DEFAULT_MEALS = ["breakfast", "lunch", "snack", "dinner"];
 export const MEAL_LABELS = { breakfast: "Frühstück", lunch: "Mittagessen", snack: "Snacks", dinner: "Abendessen" };

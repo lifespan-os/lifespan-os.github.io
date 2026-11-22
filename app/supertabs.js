@@ -3,6 +3,7 @@ import * as SD from "./superdata.js";
 import * as H from "./healthdata.js";
 import * as D from "./pcdomain.js";
 import { today } from "./diary.js";
+import { doseContextHtml } from "./parity.js";
 import { CL, CUSTOM, DC, entries, esc, fmt, HL, HR, numberToInput, positive, products, RANGES, viewSuper, X } from "./super.js";
 
 // ------------------------------------------------------------------ HRT
@@ -277,6 +278,7 @@ export function levelsTab() {
       <p class="muted small">Das Modell wird an die gemessenen Werte angepasst (ein Wert: nur Faktor; ab zwei Werten zusätzlich ein Grundspiegel). Trotzdem eine Schätzung, keine Messung.</p></section>`
         : ""
     }
+    ${doseContextHtml(entries(), events, measurand)}
     <section class="card"><div class="wo-head"><h3>Gerechnet mit</h3><span class="tag">Richtwerte</span></div>
       <div class="table-scroll"><table class="data-table"><thead><tr><th>Art</th><th class="tnum">Wirkstoffanteil</th><th class="tnum">Höchstwert nach</th><th class="tnum">Halbwertszeit</th></tr></thead><tbody>
       ${subs.map((s) => `<tr><td>${esc(s.name)}${s.note ? `<br><span class="muted small">${esc(s.note)}</span>` : ""}</td><td class="tnum">${esc(D.formatNumber(s.esterFraction * s.bioavailability * 100, 0))} %</td><td class="tnum">${esc(durationText(s.tmaxDays))}</td><td class="tnum">${esc(durationText(s.halfLifeDays))}</td></tr>`).join("")}

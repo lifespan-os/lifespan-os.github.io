@@ -7,6 +7,7 @@
 import * as D from "./pcdomain.js";
 import * as H from "./healthdata.js";
 import { buildDb, today } from "./diary.js";
+import { masterclassLinkHtml } from "./parity.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -155,6 +156,7 @@ function tileHtml(tile) {
       <span class="lng-tile__head"><span class="lng-tile__title">${esc(tile.label)}</span>${tile.rank ? `<span class="lng-tile__level">${esc(LG().NORM_LEVEL_LABELS[tile.rank.level])}</span>` : ""}</span>
       ${body}
     </button>
+    ${masterclassLinkHtml(tile.label, { withText: true }) ? `<div class="lng-tile__mc">${masterclassLinkHtml(tile.label, { withText: true })}</div>` : ""}
     <details class="lng-tile__src"><summary>Quelle</summary><p class="small">${tile.rank?.median ? `${esc(tile.rank.median)}. ` : ""}${tile.source ? `Quelle: ${esc(tile.source)}. ` : ""}${esc(tile.caveat)}</p></details>
   </article>`;
 }
@@ -236,7 +238,7 @@ export function longevityTabHtml() {
                 <span class="lng-labs__val"><b>${esc(L.formatLabValue(last.value, last.comparator))}</b> <span class="muted small">${esc(last.unit)}</span>
                   <span class="lab-flag lab-flag--${last.flag}">${esc(L.FLAG_MARKS[last.flag])} ${esc(L.FLAG_LABELS[last.flag])}</span></span>
                 <span class="muted small">${esc(D.formatDate(last.date))} · Ref. ${esc(L.formatRange(last.range))}${prev ? ` · vorher ${esc(L.formatLabValue(prev.value, prev.comparator))} (${esc(D.formatDate(prev.date))})` : ""}</span>
-              </button></li>`,
+              </button>${masterclassLinkHtml(analyte.name)}</li>`,
               )
               .join("")}</ul>`
           : `<p class="muted">Noch keine dieser Laborwerte eingetragen.</p><button class="btn block" data-act="lng-labs">Zu den Laborwerten</button>`

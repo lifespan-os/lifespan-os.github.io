@@ -196,7 +196,7 @@ function biosensingHtml(list) {
 }
 
 /** Tag und folgende Nacht (wie WatchAssociationsCard am PC, ohne Trainings- und Ernährungssummen). */
-function associationsHtml(w) {
+export function associationsHtml(w) {
   const targets = W.nightTargets(w);
   const nights = targets.reduce((a, t) => Math.max(a, t.series.length), 0);
   if (!nights) return "";

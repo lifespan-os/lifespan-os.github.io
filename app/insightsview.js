@@ -16,6 +16,7 @@ import { buildDb, today } from "./diary.js";
 import { weeklyReportsCard } from "./weeklyreports.js";
 import { dataQualityCard, goalAdviceCard } from "./extras.js";
 import { targetGoalsCard } from "./goalsparity.js";
+import { periodReviewCard } from "./reviewparity.js";
 
 let X = null; // { S, esc, header, rerender }
 
@@ -226,6 +227,7 @@ export function viewInsights() {
   cards.push({ id: "weekly-reports", node: weeklyReportsCard(card) });
   // 1.54.0 wie am PC: Ziele, Empfehlungen zu den Hauptzielen, Datenqualität
   cards.push({ id: "goals", node: targetGoalsCard(db, card, t) });
+  cards.push({ id: "period-review", node: periodReviewCard(db, card, t) });
   cards.push({ id: "goal-advice", node: goalAdviceCard(db, card, t) });
   cards.push({ id: "data-quality", node: dataQualityCard(db, card, t) });
   if (hasAny) {

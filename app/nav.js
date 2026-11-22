@@ -20,6 +20,7 @@ const ICONS = {
   transfer: svg('<path d="M7 4l-4 4 4 4"/><path d="M3 8h13"/><path d="M17 12l4 4-4 4"/><path d="M21 16H8"/>'),
   settings: svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
   info: svg('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>'),
+  search: svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
   menu: svg('<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>'),
   more: svg('<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>'),
   plus: svg('<path d="M12 5v14"/><path d="M5 12h14"/>'),
@@ -68,6 +69,7 @@ export function setHiddenSections(ids) {
   hiddenSections = new Set(ids);
 }
 const shown = (s) => !hiddenSections.has(s.id);
+export const sectionHidden = (id) => hiddenSections.has(id);
 
 /** Bereich einer Ansicht (für die Markierung im Menü). */
 export function sectionOf(view, arg, back = null) {
@@ -84,6 +86,7 @@ export function drawerHtml({ view, arg, open, esc, back = null }) {
     <div class="drawer__brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b><small>Alle Bereiche</small></div>
       <button class="drawer__transfer ${current === "transfer" ? "active" : ""}" data-act="menu-go" data-arg="transfer" ${current === "transfer" ? 'aria-current="page"' : ""}>${icon("transfer")}<span>Import/Export</span></button>
       <button class="drawer__close" data-act="menu-close" aria-label="Menü schließen">${svg('<path d="M6 6l12 12"/><path d="M18 6L6 18"/>')}</button></div>
+    <button class="drawer__search" data-act="gs-open">${icon("search")}<span>Suchen …</span></button>
     <ul>
       ${SECTIONS.filter((s) => !s.header && shown(s)).map(
         (s) => `<li><button class="drawer__item ${s.id === current ? "active" : ""} ${s.view ? "" : "pc-only"}" data-act="menu-go" data-arg="${s.id}" ${s.id === current ? 'aria-current="page"' : ""}>

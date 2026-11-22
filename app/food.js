@@ -4,6 +4,7 @@ import { blsResultsHtml } from "./blsui.js";
 import { offReady, offResultsHtml, openOffForm } from "./offui.js";
 import * as OFF from "./off.js";
 import * as N from "./nutrition.js";
+import * as D from "./pcdomain.js";
 import * as L from "./label.js";
 import { buildDb, nutritionTabs } from "./diary.js";
 import * as QM from "./quickmeal.js";
@@ -273,6 +274,41 @@ function updateWarnings() {
   }
 }
 
+// Vermutlich doppelte Lebensmittel (1.92.0, wie FoodsTab.tsx am PC: Name + Marke + Bezugsgröße)
+function foodKeyRows() {
+  const s = F();
+  return [...N.allFoods(X.S.catalog, s.local).values()].map((r) => ({ id: r.id, name: r.name ?? "", brand: r.brand ?? null, basisUnit: r.basis_unit ?? "g", archived: Boolean(r.archived) }));
+}
+
+function dupHint() {
+  const f = F().form;
+  if (!f || !D.duplicates?.sameAs) return "";
+  const Dp = D.duplicates;
+  const same = Dp.sameAs(foodKeyRows(), Dp.foodKey, Dp.foodKey({ name: f.name ?? "", brand: f.brand || null, basisUnit: f.basis ?? "g", archived: false }), f.id ?? null);
+  return same.length ? `⚠ Gibt es vermutlich schon: ${same.map((x) => (x.brand ? `${x.name} (${x.brand})` : x.name)).join(", ")}` : "";
+}
+
+function updateDupHint() {
+  const el = document.getElementById("ff-dup");
+  if (!el) return;
+  const t = dupHint();
+  el.hidden = !t;
+  el.textContent = t;
+}
+
+/** Hinweis in der Suche: Gruppen vermutlich doppelter Lebensmittel; Tippen sucht nach dem Namen. */
+function foodDupHtml() {
+  if (!D.duplicates?.duplicateGroups) return "";
+  const groups = D.duplicates.duplicateGroups(foodKeyRows(), D.duplicates.foodKey);
+  if (!groups.length) return "";
+  return `<details class="dup-list"><summary class="small">Vermutlich doppelt: ${esc(D.duplicates.describeGroups(groups))}</summary>
+    <p class="muted small">Gleicher Name, gleiche Marke und gleiche Bezugsgröße (ohne Groß-/Kleinschreibung, Leer- und Satzzeichen; archivierte zählen nicht). Prüfen und eines davon am PC archivieren oder löschen – automatisch geändert wird nichts. Tippen sucht nach dem Eintrag.</p>
+    <ul class="plain-list">${groups
+      .slice(0, 50)
+      .map((g) => `<li>${g.map((x) => `<button class="linkbtn small" data-act="food-dup-search" data-arg="${esc(x.name)}">${esc(x.brand ? `${x.name} (${x.brand})` : x.name)}</button>`).join(" · ")}</li>`)
+      .join("")}</ul></details>`;
+}
+
 function formCard() {
   const s = F();
   const f = s.form;
@@ -293,6 +329,7 @@ function formCard() {
     <div class="nf-grid">
       ${field("name", "Name", f.name, { mode: "text", wide: true })}
       ${field("brand", "Marke (optional)", f.brand, { mode: "text" })}
+      <p class="field-warn small wide" id="ff-dup" ${dupHint() ? "" : "hidden"}>${esc(dupHint())}</p>
       <div class="field"><label for="ff-basis">Werte je</label>
         <select id="ff-basis" data-ff="basis"><option value="g" ${f.basis === "g" ? "selected" : ""}>100 g</option><option value="ml" ${f.basis === "ml" ? "selected" : ""}>100 ml</option></select></div>
       ${L.LABEL_KEYS.map((k) => field(`v.${k}`, L.LABEL_NAMES[k] + hint(k), f.values[k], { unit: k === "energyKcal" ? "kcal" : "g" })).join("")}
@@ -406,6 +443,7 @@ export function viewFood() {
       <input id="food-q" type="search" placeholder="Name, Marke oder Strichcode" value="${esc(s.query)}" autocomplete="off" enterkeyhint="search">
       <div class="list" id="food-results">${foodResults(s.query, resultAct())}</div>
       <div id="qm-multi">${multiHtml()}</div>
+      ${foodDupHtml()}
     </section>
     ${freeTextCard()}
     <section class="card">
@@ -808,6 +846,12 @@ async function track(items, mealType, label, { time = "", kind = "track", skipTi
 }
 
 export const foodActions = {
+  "food-dup-search": (el) => {
+    const s = F();
+    s.query = el.dataset.arg ?? "";
+    X.rerender();
+    document.getElementById("food-search")?.scrollIntoView({ block: "start" });
+  },
   "food-track-today": () => {
     F().trackDate = null;
     F().returnTo = null;
@@ -1110,7 +1154,10 @@ export function foodInput(el) {
     if (k.startsWith("v.")) {
       s.form.values[k.slice(2)] = el.value;
       updateWarnings();
-    } else s.form[k] = el.value;
+    } else {
+      s.form[k] = el.value;
+      if (k === "name" || k === "brand" || k === "basis") updateDupHint();
+    }
     return true;
   }
   if (el.dataset.ft) {

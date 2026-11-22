@@ -172,7 +172,7 @@ export function brandHeader(hero = "") {
   return `<header class="top${hero ? " top--hero" : ""}"><div class="wrap">
     ${menuButton()}
     <div class="brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b><small class="brand__date">${esc(new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" }))}</small></div></div>
-    ${S.catalog ? "" : `<button class="back" data-go="help">Hilfe</button>`}
+    ${S.catalog ? `<button class="top__search" data-act="gs-open" aria-label="Suchen">${icon("search")}</button>` : `<button class="back" data-go="help">Hilfe</button>`}
   </div>${hero ? `<div class="wrap top__hero">${hero}</div>${proButton("Overview", { hero: true })}${introPanel("Overview")}` : ""}</header>`;
 }
 

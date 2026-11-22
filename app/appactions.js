@@ -2,6 +2,8 @@
 import * as C from "./core.js";
 import { bodyParityActions } from "./bodyparity.js";
 import { goalsParityActions } from "./goalsparity.js";
+import { planParityActions } from "./planparity.js";
+import { searchActions } from "./searchview.js";
 import * as store from "./store.js";
 import { foodActions } from "./food.js";
 import { bodyActions, bodyOpenEntry } from "./body.js";
@@ -61,6 +63,8 @@ export const actions = {
   ...parityActions,
   ...bodyParityActions,
   ...goalsParityActions,
+  ...planParityActions,
+  ...searchActions,
   ...logsActions,
   ...insightsActions,
   ...weeklyReportsActions,

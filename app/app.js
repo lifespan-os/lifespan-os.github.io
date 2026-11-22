@@ -50,7 +50,10 @@ import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
 import * as TR from "./trainingdata.js";
 import * as HX from "./hyrox.js";
 import * as GY from "./gymsui.js";
-import { initExtras, quickFillInput, viewMealPlan, viewQuickFill } from "./extras.js";
+import { initExtras, quickFillInput, viewQuickFill } from "./extras.js";
+import { viewMealPlan } from "./planparity.js";
+import { viewSearch, searchInput } from "./searchview.js";
+import { reviewChange } from "./reviewparity.js";
 import { app, esc, go, header, refreshCatalog, render, restEl, S, saveNow, saveSoon, setRender, toast } from "./appbase.js";
 import { foldTabs, sheetRoot } from "./sheets.js";
 import { measureHead, renderNav, rerenderKeepScroll } from "./navshell.js";
@@ -115,6 +118,7 @@ const VIEWS = {
   help: viewHelp,
   quickfill: viewQuickFill,
   "meal-plan": viewMealPlan,
+  search: viewSearch,
 };
 
 function renderApp() {
@@ -165,6 +169,7 @@ restEl.addEventListener("click", (ev) => {
 
 app.addEventListener("input", (ev) => {
   const el = ev.target;
+  if (searchInput(el)) return;
   if (foodInput(el)) return;
   if (diaryInput(el)) return;
   if (blsInput(el)) return;
@@ -271,6 +276,7 @@ app.addEventListener("change", async (ev) => {
   if (parityChange(el)) return;
   if (bodyParityChange(el)) return;
   if (goalsParityChange(el)) return;
+  if (reviewChange(el)) return;
   if (logsChange(el)) return;
   if (todoChange(el)) return;
   if (icoachChange(el)) return;

@@ -435,33 +435,4 @@ export function appointmentsHtml(db, t = today()) {
 
 // ------------------------------------------------------------------ Nutrition: Wochenplan
 
-export function mealPlanHtml(db, t = today()) {
-  const week = D.trends.weekStart(t);
-  const days = Array.from({ length: 7 }, (_, i) => D.trends.shiftDays(week, i));
-  const recipes = new Map((X.S.catalog?.pc?.recipe ?? db.pc.recipe ?? []).map((r) => [r.id, r]));
-  const entries = (db.pc.meal_plan_entry ?? []).filter((e) => e.date >= days[0] && e.date <= days[6]);
-  if (!entries.length) return `<p class="muted">Für diese Woche ist nichts geplant. Den Wochenplan legst du am PC unter Nutrition → Planen an.</p>`;
-  const slotIndex = (s) => {
-    const i = D.PLAN_SLOTS.indexOf(s);
-    return i < 0 ? 99 : i;
-  };
-  return days
-    .map((d) => {
-      const own = entries.filter((e) => e.date === d).sort((a, b) => slotIndex(a.slot) - slotIndex(b.slot));
-      if (!own.length) return "";
-      const wd = new Date(`${d}T12:00:00`).toLocaleDateString("de-DE", { weekday: "short" });
-      return `<h4 class="logs-sub${d === t ? " is-today" : ""}">${esc(wd)} ${esc(D.formatDate(d))}</h4><ul class="plain-list">${own
-        .map((e) => `<li><span class="muted small">${esc(e.slot)}</span> ${esc(recipes.get(e.recipe_id)?.name ?? "Rezept")} · ${esc(F(e.servings, e.servings % 1 ? 1 : 0))} ${e.servings === 1 ? "Portion" : "Portionen"}</li>`)
-        .join("")}</ul>`;
-    })
-    .join("");
-}
-
-/** Nutrition → Planen (1.54.0): Wochenplan vom PC, nur Ansicht. */
-export function viewMealPlan() {
-  const db = buildDb();
-  return `${X.header("Nutrition")}<main class="wrap">${nutritionTabs("meal-plan")}
-    <section class="card"><h3>Wochenplan</h3><p class="muted small">${esc(D.trends.formatRange(D.trends.weekStart(today()), D.trends.shiftDays(D.trends.weekStart(today()), 6)))}</p>
-    ${mealPlanHtml(db)}
-    <p class="card__note">Geplante Gerichte aus Vorlagen und Rezepten vom PC. Planen, kopieren und die Einkaufsliste gibt es am PC unter Nutrition → Planen.</p></section></main>`;
-}
+// Nutrition → Planen: seit 1.92.0 mit Bearbeiten in planparity.js

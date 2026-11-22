@@ -10094,7 +10094,7 @@ function extrasCheck(extras) {
   const items = days3.reduce((a, d) => a + d.items, 0);
   const avg = (f) => mean3(days3.map(f));
   const kcal3 = avg((d) => d.energyKcal);
-  const share = (missing) => days3.reduce((a, d) => a + missing(d), 0) / items;
+  const share2 = (missing) => days3.reduce((a, d) => a + missing(d), 0) / items;
   const fiber = avg((d) => d.fiberG);
   const salt = avg((d) => d.saltG);
   const sugarPct = kcal3 > 0 ? avg((d) => d.sugarG) * 4 / kcal3 * 100 : 0;
@@ -10108,7 +10108,7 @@ function extrasCheck(extras) {
         level: fiber >= 30 ? "good" : fiber >= 20 ? "caution" : "low",
         value: `\xD8 ${formatNumber(fiber, 0)} g am Tag`,
         reference: "mindestens 30 g (DGE)",
-        missingShare: share((d) => d.fiberMissing)
+        missingShare: share2((d) => d.fiberMissing)
       },
       {
         key: "sugar",
@@ -10119,7 +10119,7 @@ function extrasCheck(extras) {
           0
         )} g \xB7 ${formatNumber(sugarPct, 0)} % der Energie`,
         reference: "unter 10 % der Energie (WHO, freie Zucker)",
-        missingShare: share((d) => d.sugarMissing)
+        missingShare: share2((d) => d.sugarMissing)
       },
       {
         key: "saturatedFat",
@@ -10130,7 +10130,7 @@ function extrasCheck(extras) {
           0
         )} g \xB7 ${formatNumber(satPct, 0)} % der Energie`,
         reference: "unter 10 % der Energie (WHO)",
-        missingShare: share((d) => d.saturatedFatMissing)
+        missingShare: share2((d) => d.saturatedFatMissing)
       },
       {
         key: "salt",
@@ -10138,7 +10138,7 @@ function extrasCheck(extras) {
         level: salt <= 6 ? "good" : salt <= 8 ? "caution" : "low",
         value: `\xD8 ${formatNumber(salt, 1)} g am Tag`,
         reference: "h\xF6chstens 6 g (DGE)",
-        missingShare: share((d) => d.saltMissing)
+        missingShare: share2((d) => d.saltMissing)
       }
     ]
   };
@@ -16841,10 +16841,10 @@ function reviewGroupLabels(groups, log, exercises, machines, workoutIds, focus =
     const total = entries.reduce((sum, [, v]) => sum + v, 0);
     const top = entries.sort((a, b) => b[1] - a[1])[0];
     if (!top || total <= 0 || top[1] / total < FOCUS_SHARE) continue;
-    const share = Math.round(top[1] / total * 100);
+    const share2 = Math.round(top[1] / total * 100);
     out.set(g, {
       label: MUSCLE_LABELS[top[0]],
-      detail: `Muskelgruppe \u201E${g}\u201C \xB7 Schwerpunkt ${share} %`
+      detail: `Muskelgruppe \u201E${g}\u201C \xB7 Schwerpunkt ${share2} %`
     });
   }
   const count = /* @__PURE__ */ new Map();
@@ -17691,8 +17691,8 @@ function cardioMuscleLoad(log, ctx, include) {
       sum = {};
       perWorkout.set(s.workoutId, sum);
     }
-    for (const [id3, share] of Object.entries(shares)) {
-      sum[id3] = (sum[id3] ?? 0) + eq * share;
+    for (const [id3, share2] of Object.entries(shares)) {
+      sum[id3] = (sum[id3] ?? 0) + eq * share2;
     }
   }
   for (const sum of perWorkout.values()) {
@@ -21059,9 +21059,9 @@ function goalProgress2(goal, series, today, decimals = 1) {
     isTarget: i === all.length - 1
   }));
   const reachedOn = milestones[milestones.length - 1]?.reachedOn ?? null;
-  let share = null;
+  let share2 = null;
   if (start !== null && best) {
-    share = target === start ? 1 : Math.min(1, Math.max(0, (best.value - start) / (target - start)));
+    share2 = target === start ? 1 : Math.min(1, Math.max(0, (best.value - start) / (target - start)));
   }
   const remaining = best && !reachedOn ? round3(Math.abs(target - best.value), decimals) : reachedOn ? 0 : null;
   const daysLeft = goal.targetDate ? dayNumber4(goal.targetDate) - dayNumber4(today) : null;
@@ -21072,7 +21072,7 @@ function goalProgress2(goal, series, today, decimals = 1) {
     startSource,
     current,
     best,
-    share,
+    share: share2,
     milestones,
     reachedOn,
     points: after,
@@ -21083,7 +21083,67 @@ function goalProgress2(goal, series, today, decimals = 1) {
 }
 
 // src/domain/mealPlan.ts
+var mealPlan_exports = {};
+__export(mealPlan_exports, {
+  PLAN_SLOTS: () => PLAN_SLOTS,
+  plannedDays: () => plannedDays,
+  share: () => share,
+  shoppingLine: () => shoppingLine,
+  shoppingList: () => shoppingList
+});
 var PLAN_SLOTS = ["Fr\xFChst\xFCck", "Mittagessen", "Abendessen", "Snack"];
+function share(entry2, recipe) {
+  return recipe.servings > 0 ? entry2.servings / recipe.servings : 0;
+}
+function plannedDays(days3, entries, recipes) {
+  return days3.map((date) => {
+    const own = entries.filter((e) => e.date === date);
+    const sum = { energyKcal: 0, proteinG: 0, carbsG: 0, fatG: 0 };
+    for (const e of own) {
+      const r2 = recipes.get(e.recipeId);
+      if (!r2) continue;
+      const f = share(e, r2);
+      sum.energyKcal += r2.energyKcal * f;
+      sum.proteinG += r2.proteinG * f;
+      sum.carbsG += r2.carbsG * f;
+      sum.fatG += r2.fatG * f;
+    }
+    return { date, entries: own, ...sum };
+  });
+}
+function shoppingList(entries, recipes, foods = /* @__PURE__ */ new Map()) {
+  const out = /* @__PURE__ */ new Map();
+  for (const e of entries) {
+    const r2 = recipes.get(e.recipeId);
+    if (!r2) continue;
+    const f = share(e, r2);
+    for (const item2 of r2.items) {
+      const cur = out.get(item2.foodId) ?? {
+        foodId: item2.foodId,
+        name: item2.foodName,
+        brand: item2.foodBrand,
+        unit: item2.basisUnit,
+        amount: 0,
+        portions: null,
+        usedIn: []
+      };
+      cur.amount += item2.amount * f;
+      if (!cur.usedIn.includes(r2.name)) cur.usedIn.push(r2.name);
+      out.set(item2.foodId, cur);
+    }
+  }
+  const list2 = [...out.values()].map((s) => {
+    const food = foods.get(s.foodId);
+    const amount = Math.round(s.amount);
+    const portions = food?.portionAmount && food.portionAmount > 0 && food.portionName ? `\u2248 ${formatNumber(Math.round(s.amount / food.portionAmount * 10) / 10, 1).replace(/,0$/, "")} ${food.portionName}` : null;
+    return { ...s, amount, portions };
+  });
+  return list2.sort((a, b) => a.name.localeCompare(b.name, "de"));
+}
+function shoppingLine(s) {
+  const amount = s.amount >= 1e3 ? `${formatNumber(s.amount / 1e3, 2).replace(/,?0+$/, "")} ${s.unit === "g" ? "kg" : "l"}` : `${formatNumber(s.amount, 0)} ${s.unit}`;
+  return `${s.name}${s.brand ? ` (${s.brand})` : ""}: ${amount}${s.portions ? ` (${s.portions})` : ""}`;
+}
 
 // src/domain/mealQuick.ts
 var mealQuick_exports = {};
@@ -27849,6 +27909,7 @@ export {
   matchingGroups,
   mealDisplayName,
   mealHasContent,
+  mealPlan_exports as mealPlan,
   mealQuick_exports as mealQuick,
   mealTypeLabel,
   methodChoices,

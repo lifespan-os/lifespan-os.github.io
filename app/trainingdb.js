@@ -16,6 +16,7 @@ import { arrangeCards, layoutEditing, setLayoutEditing } from "./layoutedit.js";
 /** Anordnung wie am PC (`TRAINING_DB_LAYOUT_KEY`, 1.74.0) */
 export const DB_LAYOUT_KEY = "ui.training_db_layout";
 
+import { machineDupHtml } from "./reviewparity.js";
 let X = null;
 
 export function initTrainingDb(ctx) {
@@ -264,6 +265,7 @@ function machinesCard() {
     ${sel("machine-muscle", "Muskelgruppe", "muscle", muscles.map((x) => [x, x]), `<option value="${M.NO_MUSCLE}" ${f.muscle === M.NO_MUSCLE ? "selected" : ""}>Ohne Muskelgruppe</option>`)}
     <label class="toggle"><input type="checkbox" data-dbchange="machineUsed" ${onlyUsed ? "checked" : ""}> Nur im Training verwendete</label>
     <p class="muted small" id="machine-count">${shown.length.toLocaleString("de-DE")} von ${machines.length.toLocaleString("de-DE")}${filtered ? ` · <button class="linkbtn" data-act="train-machine-reset">Filter zurücksetzen</button>` : ""}</p>
+    ${machineDupHtml(machines)}
     <div id="machine-results">${machineRows(shown, exByMachine, usage)}</div>
   </details>`;
 }

@@ -344,7 +344,7 @@ export function calculatorTab() {
   ];
   return `<section class="card">
       <h3>Wirkstoffe der Lösung</h3>
-      <p class="muted small">Konzentration je Wirkstoff in mg je ml – bei Mischungen mehrere Zeilen. Ein gespeichertes Präparat aus dem Reiter „HRT“ lässt sich übernehmen.</p>
+      <p class="card__note">Konzentration je Wirkstoff in mg je ml – bei Mischungen mehrere Zeilen. Ein gespeichertes Präparat aus dem Reiter „HRT“ lässt sich übernehmen.</p>
       ${prods.length ? `<div class="field"><label for="calc-product">Gespeichertes Präparat übernehmen</label><select id="calc-product" data-calc="product"><option value="">Präparat wählen …</option>${prods.map((p) => `<option value="${esc(p.id)}">${esc(HR().productLabel(p) + (p.concentrationMgMl !== null ? ` – ${fmt(p.concentrationMgMl)} mg/ml` : " – ohne Konzentration"))}</option>`).join("")}</select></div>` : ""}
       ${c.rows
         .map(
@@ -374,7 +374,7 @@ export function calculatorTab() {
       ${neededMl !== null ? `<p>${esc(fmt(targetMg ?? 0))} mg ÷ ${esc(fmt(total))} mg/ml = <strong>${esc(D.formatNumber(neededMl, 2))} ml</strong> <span class="muted small">(${esc(fmt(neededMl))} ml · ${esc(fmt(DC().insulinUnits(neededMl), 1))} Einheiten auf einer U-100-Insulinspritze)</span></p>` : `<p class="muted small">Konzentration oben und gewünschte Wirkstoffmenge eintragen.</p>`}
     </section>
     <section class="card"><h3>Wochendosis und Injektionsintervall</h3>
-      <p class="muted small">Wochendosis = Wirkstoffmenge je Injektion × 7 ÷ Intervall (alle X Tage). Mit einer Konzentration oben wird zusätzlich das Volumen angezeigt.</p>
+      <p class="card__note">Wochendosis = Wirkstoffmenge je Injektion × 7 ÷ Intervall (alle X Tage). Mit einer Konzentration oben wird zusätzlich das Volumen angezeigt.</p>
       <div class="segmented" role="radiogroup">${modes.map(([v, l]) => `<button role="radio" aria-checked="${v === wm}" class="${v === wm ? "is-active" : ""}" data-act="calc-mode" data-arg="${v}">${l}</button>`).join("")}</div>
       ${wm !== "perInjection" ? calcInput("perInjection", "Wirkstoffmenge je Injektion", c.perInjection, "mg") : ""}
       ${wm !== "weekly" ? calcInput("weeklyTarget", "Gewünschte Wochendosis", c.weeklyTarget, "mg") : ""}
@@ -403,8 +403,8 @@ export function calculatorTab() {
       <p class="muted small">Konzentration nach dem Auflösen = Pulvermenge ÷ Lösungsmittel.</p>
       <div class="lab-row__grid">${calcInput("powderMg", "Pulvermenge (Wirkstoff)", c.powderMg, "mg")}${calcInput("solventMl", "Lösungsmittel", c.solventMl, "ml")}</div>
       ${powderConc !== null ? `<p>Konzentration: <strong>${esc(fmt(powderConc))} mg je ml</strong> <button class="linkbtn" data-act="calc-powder-take" data-arg="${esc(numberToInput(powderConc, 3))}">Als Konzentration oben übernehmen</button></p>` : ""}
-    </section>
-    <p class="muted small">Reiner Rechner: Es wird nichts gespeichert und nichts empfohlen. Ergebnisse auf 0,001 gerundet (Volumen zusätzlich auf 0,01 ml); U-100: 100 Einheiten = 1 ml.</p>`;
+      <p class="card__note">Reiner Rechner: Es wird nichts gespeichert und nichts empfohlen. Ergebnisse auf 0,001 gerundet (Volumen zusätzlich auf 0,01 ml); U-100: 100 Einheiten = 1 ml.</p>
+    </section>`;
 }
 
 // ------------------------------------------------------------------ Checkliste
@@ -453,6 +453,6 @@ export function checklistTab() {
     .join("");
   return `<section class="card">
       <div class="wo-head"><h3>Checkliste Injektion</h3>${anyDone ? `<button class="btn sm" data-act="chk-reset" data-arg="">Alle Häkchen zurücksetzen</button>` : ""}</div>
-      <p class="muted small">Allgemeine Punkte zu Hygiene und Sicherheit – keine ärztliche Anleitung und keine Dosierungsangaben. Maßgeblich sind die Anweisungen deiner Ärztin bzw. deines Arztes und die Packungsbeilage. Alle Punkte lassen sich über „Bearbeiten“ ändern, ergänzen, sortieren und löschen; Häkchen bleiben gespeichert, bis du sie zurücksetzt. Im Notfall: 112.</p>
+      <p class="card__note">Allgemeine Punkte zu Hygiene und Sicherheit – keine ärztliche Anleitung und keine Dosierungsangaben. Maßgeblich sind die Anweisungen deiner Ärztin bzw. deines Arztes und die Packungsbeilage. Alle Punkte lassen sich über „Bearbeiten“ ändern, ergänzen, sortieren und löschen; Häkchen bleiben gespeichert, bis du sie zurücksetzt. Im Notfall: 112.</p>
     </section>${sections}`;
 }

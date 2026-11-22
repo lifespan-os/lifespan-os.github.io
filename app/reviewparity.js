@@ -86,7 +86,7 @@ export function periodReviewCard(db, card, t = today()) {
     "period-review",
     "Monats- und Jahresrückblick",
     `${D.formatDate(range.from)} – ${D.formatDate(range.to)}`,
-    `<div class="bp-tools">${sel("kind", "Rückblick", [["month", "Monat"], ["year", "Jahr"]], kind)}${sel("key", kind === "year" ? "Jahr" : "Monat", reviewChoices(kind, t), key)}</div>
+    `<div class="bp-tools pr-tools">${sel("kind", "Rückblick", [["month", "Monat"], ["year", "Jahr"]], kind)}${sel("key", kind === "year" ? "Jahr" : "Monat", reviewChoices(kind, t), key)}</div>
     ${running ? `<p class="muted small">Der Zeitraum läuft noch – der Rückblick zeigt den Stand bis heute.</p>` : ""}
     ${kpis}${rows}${records}
     <button class="btn primary block" data-act="pr-pdf" ${S.prPdf?.busy ? "disabled" : ""}>${S.prPdf?.busy ? "Erstellt PDF …" : "PDF erstellen"}</button>

@@ -158,7 +158,7 @@ export function compareTab() {
               .join("")}</tbody></table></div>`
           : ""
     }
-    <p class="muted small">Verglichen werden die Mittelwerte der tatsächlich erfassten Messungen (Anzahl in Klammern). Ein Unterschied wird erst ab zwei Messungen je Zeitraum angegeben. Er beschreibt nur deine Werte und ist keine medizinische Bewertung.</p>
+    <p class="card__note">Verglichen werden die Mittelwerte der tatsächlich erfassten Messungen (Anzahl in Klammern). Ein Unterschied wird erst ab zwei Messungen je Zeitraum angegeben. Er beschreibt nur deine Werte und ist keine medizinische Bewertung.</p>
   </section>`;
 }
 
@@ -191,7 +191,7 @@ export function lifestyleTab() {
             .join("")}</ul>`
         : `<p class="muted">${filter ? "Keine Notizen zu diesem Thema." : "Noch keine Notizen. Halte fest, was du an deinen Gewohnheiten änderst – Insights zeigt sie in der jeweiligen Woche."}</p>`
     }
-    <p class="muted small">Freie Notizen zu Gewohnheiten und Lebensstil. Die App wertet die Texte nicht aus. Neue und geänderte Notizen gehen mit „An den PC senden“ an den PC.</p>
+    <p class="card__note">Freie Notizen zu Gewohnheiten und Lebensstil. Die App wertet die Texte nicht aus. Neue und geänderte Notizen gehen mit „An den PC senden“ an den PC.</p>
   </section>`;
 }
 
@@ -218,7 +218,7 @@ export function metricsTab() {
       <div class="field"><label for="bp-m-dec">Nachkommastellen</label><select id="bp-m-dec" data-bpm="decimals">${["0", "1", "2", "3"].map((v) => `<option ${v === String(ed.decimals) ? "selected" : ""}>${v}</option>`).join("")}</select></div>
       ${f("min", "Kleinster erlaubter Wert", 'inputmode="decimal"')}${f("max", "Größter erlaubter Wert", 'inputmode="decimal"')}</div>
       <div class="field"><label for="bp-m-desc">Beschreibung (optional)</label><textarea id="bp-m-desc" rows="2" maxlength="500" data-bpm="description">${esc(ed.description ?? "")}</textarea></div>
-      <p class="muted small">Der erlaubte Bereich schützt vor Tippfehlern, z. B. 840 statt 84,0. Er ist kein Referenz- oder Normbereich – die App bewertet deine Werte nicht.</p>
+      <p class="card__note">Der erlaubte Bereich schützt vor Tippfehlern, z. B. 840 statt 84,0. Er ist kein Referenz- oder Normbereich – die App bewertet deine Werte nicht.</p>
       <div class="row-actions"><button class="btn primary" data-act="bp-metric-save">Speichern</button><button class="btn" data-act="bp-metric-cancel">Abbrechen</button></div>
     </section>`;
   }
@@ -238,7 +238,7 @@ export function metricsTab() {
           .join("")}</ul>`,
       )
       .join("")}
-    <p class="muted small">Vorgegebene Messgrößen lassen sich nur archivieren. Eigene Messgrößen ohne Werte lassen sich löschen. Archivierte Messgrößen vom PC erscheinen hier erst nach dem nächsten Export. Änderungen gehen mit „An den PC senden“ an den PC.</p>
+    <p class="card__note">Vorgegebene Messgrößen lassen sich nur archivieren. Eigene Messgrößen ohne Werte lassen sich löschen. Archivierte Messgrößen vom PC erscheinen hier erst nach dem nächsten Export. Änderungen gehen mit „An den PC senden“ an den PC.</p>
   </section>`;
 }
 

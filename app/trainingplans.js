@@ -27,8 +27,8 @@ export function plansTab() {
   const plans = TR.plansOf(S.catalogRaw, S.train, S.catalog.exercises);
   const planGymNames = GD.gymNames(S.catalog, S.gyms);
   const cardio = isCardioCheck();
-  return `<div class="toolbar"><p class="muted small">Pläne legen Trainingstage mit Übungen und Sätzen fest – auch Cardiopläne. Aus einem Tag startest du ein Training; die Sätze sind dann mit den Richtwerten vorbelegt. Termine (Wochentag oder Datum mit Uhrzeit) zeigen in der Übersicht das nächste Training.</p>
-      <button class="btn primary" data-act="plan-new">Neuer Plan</button></div>
+  return `<section class="card card--training"><div class="wo-head"><h3>Trainingspläne</h3><button class="btn primary sm" data-act="plan-new">Neuer Plan</button></div>
+      <p class="card__note">Pläne legen Trainingstage mit Übungen und Sätzen fest – auch Cardiopläne. Aus einem Tag startest du ein Training; die Sätze sind dann mit den Richtwerten vorbelegt. Termine (Wochentag oder Datum mit Uhrzeit) zeigen in der Übersicht das nächste Training.</p></section>
     ${notice()}
     ${plans.length ? "" : `<section class="card card--training"><div class="empty-state"><p><strong>Noch keine Trainingspläne</strong></p><p class="muted small">Ein Plan ist optional. Einheiten kannst du auch ohne Plan erfassen.</p></div></section>`}
     ${plans

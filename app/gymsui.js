@@ -129,7 +129,7 @@ export function viewGymsTab() {
   const open = G.unsentGyms(S.gyms);
   return `<section class="card">
     <div class="wo-head"><h3>Meine Gyms</h3><button class="btn sm primary" data-act="gym-new">+ Neues Gym</button></div>
-    <p class="muted small">Im Training wählst du unter „Einheiten“ das Gym – dann stehen nur dessen Maschinen mit der Nummer im Studio zur Auswahl.</p>
+    <p class="card__note">Im Training wählst du unter „Einheiten“ das Gym – dann stehen nur dessen Maschinen mit der Nummer im Studio zur Auswahl.</p>
     ${open ? `<p class="muted small">${open} ${open === 1 ? "Änderung" : "Änderungen"} noch nicht am PC · <button class="linkbtn" data-go="send">An den PC senden</button></p>` : ""}
     <div class="list">${list
       .map(
@@ -168,7 +168,7 @@ function packagesHtml(list) {
   const idx = S.studioIndex;
   return `<section class="card">
     <h3>Studio-Pakete</h3>
-    <p class="muted small">Ein Studio mit seiner Maschinenliste und den Nummern im Studio auf einmal übernehmen. Deine Mitgliedsnummer, Fotos und Notizen bleiben unverändert; fehlende Maschinen werden genannt.</p>
+    <p class="card__note">Ein Studio mit seiner Maschinenliste und den Nummern im Studio auf einmal übernehmen. Deine Mitgliedsnummer, Fotos und Notizen bleiben unverändert; fehlende Maschinen werden genannt.</p>
     ${S.gymPkgReport ? `<p class="ok-note">${esc(S.gymPkgReport)}</p>` : ""}
     ${
       idx === undefined

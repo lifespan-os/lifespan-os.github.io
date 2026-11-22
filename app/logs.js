@@ -203,7 +203,6 @@ export function viewSleep() {
   const open = L.unsentLogs(S.logs);
 
   let out = `${X.header("Sleep")}<main class="wrap">
-    <p class="muted small">Schlafzeiten, Schlafdauer, Schlafphasen, Nickerchen und deine eigene Einschätzung der Schlafqualität.</p>
     <section class="card logs-toolbar">
       ${select("sleep-days", days, [
         [7, "7 Nächte"],
@@ -562,7 +561,6 @@ export function viewRecovery() {
   const open = L.unsentLogs(S.logs) + BD.unsentBody(S.body.local);
 
   let out = `${X.header("Recovery")}<main class="wrap">
-    <p class="muted small">Deine tägliche Selbsteinschätzung (Erholung, Müdigkeit, Muskelkater, Stress) sowie optional die ANS-Werte (Ruhepuls, HRV, Atemfrequenz, Schlag-zu-Schlag-Intervall, ANS-Status) – im Vergleich mit Schlaf und Trainingsbelastung.</p>
     <section class="card logs-toolbar">
       ${select("recovery-days", days, [
         [14, "14 Tage"],

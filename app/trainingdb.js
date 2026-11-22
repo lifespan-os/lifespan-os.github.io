@@ -464,8 +464,8 @@ export function viewCheckinsTab() {
   const info = C.poseInfo(draft.pose);
   return `<section class="card card--training" id="checkin-new-title">
       <h3>${draft.id ? "Check-In bearbeiten" : "Neues Check-In"}</h3>
-      <details class="small"><summary>Information</summary><p>${esc(C.CHECKIN_INFO)}</p></details>
-      <p class="muted small">Formbild aufnehmen oder wählen und mit Datum, Uhrzeit und Pose speichern. Für gute Vergleiche: gleiches Licht, gleiche Pose, gleicher Abstand. Das Foto wird verkleinert und bleibt auf diesem Handy, bis du es an den PC sendest.</p>
+      <p class="card__note">${esc(C.CHECKIN_INFO)}</p>
+      <p class="card__note">Formbild aufnehmen oder wählen und mit Datum, Uhrzeit und Pose speichern. Für gute Vergleiche: gleiches Licht, gleiche Pose, gleicher Abstand. Das Foto wird verkleinert und bleibt auf diesem Handy, bis du es an den PC sendest.</p>
       ${notice()}
       ${
         draft.id

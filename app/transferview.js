@@ -88,7 +88,6 @@ export function viewTransfer() {
     // ohne Daten vom PC: feste Reihenfolge
   }
   return `${header("Import/Export")}<main class="wrap">
-    <p class="muted small">Alle Daten bleiben auf diesem Gerät. Dateien verlassen es nur, wenn du sie selbst weitergibst (z. B. über Google Drive an den PC).</p>
     ${arranged.map((x) => x.node).join("")}
   </main>`;
 }

@@ -30,26 +30,27 @@ export const PAGE_INTROS = {
   Training: "Einheiten mit Übungen und Sätzen, Alltagsbewegung (NEAT), Trainingspläne sowie deine Übungs-, Maschinen- und Sportarten-Datenbank.",
   Nutrition: "Mahlzeiten, Lebensmittel mit Nährwerten, Supplements und deine Tagessummen.",
   Sleep: "Schlafzeiten, Schlafdauer, Schlafphasen, Nickerchen und deine eigene Einschätzung der Schlafqualität – ergänzt um die gemessenen Nächte deiner Uhr.",
-  Recovery: "Deine tägliche Selbsteinschätzung (Erholung, Müdigkeit, Muskelkater, Stress) sowie die ANS-Werte (Ruhepuls, HRV, Atemfrequenz) – im Vergleich mit Schlaf und Trainingsbelastung.",
+  Recovery: "Deine tägliche Selbsteinschätzung (Erholung, Müdigkeit, Muskelkater, Stress) sowie optional die ANS-Werte (Ruhepuls, HRV, Atemfrequenz, Schlag-zu-Schlag-Intervall, ANS-Status) – im Vergleich mit Schlaf und Trainingsbelastung.",
   "Body & Longevity": "Körpergewicht, Umfänge, Körperfett mit Messmethode, Vitalwerte und eigene Gesundheitsmarker – dazu langfristige Trends und Check-Ins.",
   Health: "Laborwerte mit Referenzbereichen, Verläufe mit Normbereich und markierten Ausreißern, Termine, dazu unter „Heart“ die Herzdaten deiner Uhr und unter „Blutzucker“ die Werte deines Sensors – alles lokal auf diesem Gerät.",
-  Superhuman: "PEDs (Performance Enhancing Drugs), Medikamente und Peptide erfassen, protokollieren und auswerten; Hormongaben (HRT) mit Charge, Injektionsort und Präparat dokumentieren.",
-  Insights: "Wochenrückblick und vorsichtige Beobachtungen – ausschließlich aus deinen tatsächlich erfassten Daten.",
-  "iCoach.me": "Wissen für Training, Ernährung und Gesundheit: Module, Antworten auf deine Fragen und die Bücher „Die Masterclass“.",
-  "Import/Export": "Daten vom PC laden und deine Einträge an den PC senden – der Austausch läuft nur über Dateien, die du selbst weitergibst.",
+  Superhuman: "PEDs (Performance Enhancing Drugs), Medikamente und Peptide erfassen, protokollieren und auswerten; Hormongaben (HRT) mit Charge, Injektionsort und Präparat dokumentieren. Hier stehen deine Einträge und Rechnungen daraus; Bewertungen und Dosierungsempfehlungen gibt es in diesem Bereich noch nicht.",
+  Insights: "Wochenrückblick und vorsichtige Beobachtungen – ausschließlich aus deinen tatsächlich erfassten Daten. Die Auswertungen ersetzen keine ärztliche Beratung. Empfehlungen und Bewertungen gibt es nur in „Empfehlungen zu deinen Hauptzielen“ – mit deiner Einwilligung (Settings → Hauptziele), aus festen Regeln mit Fundstelle in der Masterclass.",
+  "iCoach.me": "Wissen für Training, Ernährung und Gesundheit: Module, Antworten auf deine Fragen, die Bücher „Die Masterclass“, „Die Masterclass Blutwerte+“ und „Die Masterclass Longevity“ und Magazine zum Lesen.",
+  "Import/Export": "Alle Daten bleiben auf diesem Gerät. Dateien verlassen es nur, wenn du sie selbst weitergibst (z. B. über Google Drive an den PC).",
   Settings: "Profil, Tagesziele, Darstellung, Erinnerungen und weitere Einstellungen dieses Geräts.",
 };
 
 /** Figur „Pro“ als Knopf für den Kopf; leer, wenn es zur Seite keinen Text gibt. */
-export function proButton(title, { hero = false } = {}) {
-  const text = PAGE_INTROS[title];
+export function proButton(title, { hero = false, intro = "" } = {}) {
+  const text = intro || PAGE_INTROS[title];
   if (!text) return "";
   return `<button type="button" class="top__pro${hero ? " top__pro--hero" : ""}" data-pro aria-expanded="false" aria-controls="page-intro" aria-label="Pro: Worum geht es auf dieser Seite?"></button>`;
 }
 
 /** Einleitungstext unter dem Kopf (zunächst verborgen). */
-export function introPanel(title) {
-  const text = PAGE_INTROS[title];
+export function introPanel(title, intro = "") {
+  // 1.95.0: Seiten und Reiter können einen eigenen Text mitgeben (statt Absatz über dem Inhalt)
+  const text = intro || PAGE_INTROS[title];
   if (!text) return "";
   const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   return `<div class="top__intro" id="page-intro" hidden><div class="wrap">${esc(text)}</div></div>`;

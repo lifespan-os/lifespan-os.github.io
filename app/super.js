@@ -98,7 +98,6 @@ export function viewSuper() {
   const views = { log: logTab, analysis: analysisTab, timeline: () => timelineTab(entries()), substances: substancesTab, levels: levelsTab, calculator: calculatorTab, checklist: checklistTab };
   const body = (views[tab] ?? hrtTab)();
   return `${X.header("Superhuman")}<main class="wrap">
-    <p class="muted small">PEDs (Performance Enhancing Drugs), Medikamente und Peptide erfassen, protokollieren und auswerten; Hormongaben (HRT) mit Charge, Injektionsort und Präparat dokumentieren. Hier stehen deine Einträge und Rechnungen daraus; Bewertungen und Dosierungsempfehlungen gibt es in diesem Bereich noch nicht.</p>
     <nav class="tabs" aria-label="Superhuman">${TABS.map(
       ([v, l]) => `<button class="tab ${v === tab ? "active" : ""}" data-act="sh-tab" data-arg="${v}" ${v === tab ? 'aria-current="page"' : ""}>${l}</button>`,
     ).join("")}</nav>

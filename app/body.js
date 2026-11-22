@@ -229,7 +229,6 @@ export function viewBody() {
             .join("")
         : `<section class="card"><p class="empty">Noch keine Werte. Tippe auf „Werte erfassen“.</p></section>`
     }
-    <p class="muted small">Tippe auf eine Messgröße für ihren Verlauf. Je Messgröße: letzter Wert, Veränderung zum vorherigen Wert und Datum.</p>
   </main>`;
 }
 

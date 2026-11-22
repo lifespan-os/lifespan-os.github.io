@@ -294,7 +294,6 @@ export function viewInsights() {
   const arranged = arrangeCards(db, D.INSIGHTS_LAYOUT_KEY, cards);
   const layout = D.parseLayout(db.settings.get(D.INSIGHTS_LAYOUT_KEY) ?? null);
   return `${X.header("Insights")}<main class="wrap">
-    <p class="muted small">Wochenrückblick und vorsichtige Beobachtungen – ausschließlich aus deinen tatsächlich erfassten Daten. Die Auswertungen ersetzen keine ärztliche Beratung. Empfehlungen und Bewertungen gibt es nur in „Empfehlungen zu deinen Hauptzielen“ – mit deiner Einwilligung (Settings → Hauptziele), aus festen Regeln mit Fundstelle in der Masterclass.</p>
     <section class="card day-nav">
       <button class="btn sm" data-act="ins-week" data-arg="-7" aria-label="Vorherige Woche">‹</button>
       <div class="day-nav__date"><strong>KW ${kw}</strong><span class="muted small">${esc(D.trends.formatRange(week, weekEnd))}</span>
@@ -303,7 +302,6 @@ export function viewInsights() {
     </section>
     <div class="ov-grid">${arranged.map((c) => (c.empty && layout.emptyLast ? `<div class="overview-card--empty">${c.node}</div>` : c.node)).join("")}</div>
     ${hasAny ? "" : `<section class="card"><h3>Keine Daten in dieser und der Vorwoche</h3><p class="muted">Sobald du Schlaf, Regeneration, Training, Ernährung oder Körperwerte erfasst, entsteht hier ein Wochenrückblick. Es werden keine Werte geschätzt oder ergänzt.</p></section>`}
-    <p class="muted small ov-source">Der Datenauszug (PDF) und der Monats- und Jahresrückblick folgen. Die Weekly Reports erstellt der PC.</p>
   </main>`;
 }
 

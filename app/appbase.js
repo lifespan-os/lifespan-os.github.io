@@ -160,12 +160,12 @@ export function go(view, arg = null) {
 export const menuButton = () =>
   S.catalog ? `<button class="menu-btn" data-act="menu-open" aria-label="Menü öffnen" aria-expanded="${S.menuOpen ? "true" : "false"}">${icon("menu")}</button>` : "";
 
-export function header(title, { back = null, sub = "" } = {}) {
+export function header(title, { back = null, sub = "", intro = "" } = {}) {
   return `<header class="top"><div class="wrap">
     ${menuButton()}
     ${back ? `<button class="back back--icon" data-go="${back}" aria-label="Zurück">‹</button>` : ""}
     <h1${title.length > 11 ? ' class="h1--long"' : ""}>${esc(title)}${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</h1>
-  </div>${proButton(title)}${introPanel(title)}</header>`;
+  </div>${proButton(title, { intro })}${introPanel(title, intro)}</header>`;
 }
 
 export function brandHeader(hero = "") {

@@ -132,8 +132,8 @@ export function viewQuickFill() {
         .map((m) => {
           const k = sleepKey(m);
           if (m.kind === "night") {
-            return `<div class="qf-row"><div><strong>Nacht fehlt</strong><span class="muted small">Zubettgehen und Aufstehen, z. B. 23:15 und 06:45</span></div>
-              <div class="qf-times">${input(`${k}|bed`, 'inputmode="numeric" placeholder="Zubett" aria-label="Zubettgehen"')}${input(`${k}|wake`, 'inputmode="numeric" placeholder="Auf" aria-label="Aufstehen"')}</div>${err(k)}</div>`;
+            return `<div class="qf-row qf-row--night"><div><strong>Nacht fehlt</strong><span class="muted small">Zubettgehen und Aufstehen, z. B. 23:15 und 06:45</span></div>
+              <div class="qf-times">${input(`${k}|bed`, 'inputmode="numeric" placeholder="Zubettgehen" aria-label="Zubettgehen"')}${input(`${k}|wake`, 'inputmode="numeric" placeholder="Aufstehen" aria-label="Aufstehen"')}</div>${err(k)}</div>`;
           }
           const def = Q().SLEEP_FILL_FIELDS.find((x) => x.key === m.field);
           return `<div class="qf-row"><div><strong>${esc(def.label)}</strong><span class="muted small">fehlt im Eintrag dieser Nacht</span></div>
@@ -167,8 +167,7 @@ export function viewQuickFill() {
     )
     .join("");
   const empty = !values.length && !sleep.length && !grip;
-  return `${X.header("Werte nachtragen", { back: "home" })}<main class="wrap">
-    <p class="muted small">Werte, die kein Import liefert – aus der letzten Messung, nach ihrem Rhythmus fällig, aus der letzten Nacht oder die Griffkraft. Leere Felder bleiben offen. Die Auswahl stellst du am PC unter Settings → Quick Fill ein.</p>
+  return `${X.header("Werte nachtragen", { back: "home", intro: QF_INTRO })}<main class="wrap">
     ${empty ? `<section class="card"><p class="ok-note">Alles erfasst – es fehlt gerade kein Wert.</p></section>` : `${sleepHtml}${gripHtml}${valuesHtml}`}
   </main>
   ${empty ? "" : `<div class="bottom"><div class="inner"><button class="btn primary" data-act="qf-save">Speichern</button></div></div>`}`;
@@ -487,3 +486,5 @@ export function appointmentsHtml(db, t = today()) {
 // ------------------------------------------------------------------ Nutrition: Wochenplan
 
 // Nutrition → Planen: seit 1.92.0 mit Bearbeiten in planparity.js
+
+const QF_INTRO = "Werte, die kein Import liefert – aus der letzten Messung, nach ihrem Rhythmus fällig, aus der letzten Nacht oder die Griffkraft. Leere Felder bleiben offen. Die Auswahl stellst du am PC unter Settings → Quick Fill ein.";

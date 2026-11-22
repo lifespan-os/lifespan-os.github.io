@@ -96,7 +96,8 @@ function todosCard(date) {
     })
     .join("");
   const repeating = add.when === "daily" || add.when === "weekly" || add.when === "monthly";
-  return `<section class="card"><div class="wo-head todos-head"><button class="btn sm" data-act="todo-shift" data-arg="-1" aria-label="To-dos vom Vortag">‹</button><h3>To-dos am ${esc(D.formatWeekdayDate(date))}</h3><button class="btn sm" data-act="todo-shift" data-arg="1" aria-label="To-dos vom Folgetag">›</button><span class="tag">${list.length ? `${open} offen von ${list.length}` : "keine"}</span></div>
+  return `<section class="card"><div class="wo-head"><h3>To-dos</h3><span class="tag">${list.length ? `${open} offen von ${list.length}` : "keine"}</span></div>
+    <div class="todos-daynav"><button class="btn sm" data-act="todo-shift" data-arg="-1" aria-label="To-dos vom Vortag">‹</button><strong>${esc(D.formatWeekdayDate(date))}</strong><button class="btn sm" data-act="todo-shift" data-arg="1" aria-label="To-dos vom Folgetag">›</button></div>
     ${list.length ? `<ul class="todo-list">${rows}</ul>` : `<p class="muted">Für diesen Tag sind keine To-dos eingetragen.</p>`}
     <div class="todo-add">
       <input type="text" data-todo="text" value="${esc(add.text)}" placeholder="Neue Aufgabe" maxlength="${T.TEXT_MAX_CHARS}" aria-label="Neue Aufgabe">
@@ -177,7 +178,6 @@ export function viewTodos() {
   const wd = WEEKDAYS[new Date(`${date}T12:00:00`).getDay()];
   const pending = T.unsentTodos(S.todos) + CD.unsentChecklists(S.checklists);
   return `${X.header("Checklisten")}<main class="wrap">
-    <p class="muted small">To-dos für den Tag, eigene Checklisten und Importe aus Excel oder Apple Notizen – dazu ein Überblick, welche Werte heute noch einzutragen sind.</p>
     <section class="card day-nav">
       <button class="btn sm" data-act="todo-shift" data-arg="-1" aria-label="Vortag">‹</button>
       <label class="day-nav__date"><span class="muted small">${date === t ? `Heute · ${esc(D.weekdayName(date))}` : esc(D.formatWeekdayDate(date))}</span>

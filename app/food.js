@@ -448,7 +448,7 @@ export function viewFood() {
     ${freeTextCard()}
     <section class="card">
       <h3>Etikett scannen</h3>
-      <p class="muted small">Erkannt werden die Werte je 100 g/ml, die Packungsgröße und der Strichcode – offline auf dem Handy. Am besten gerade, scharf und ohne Spiegelung.</p>
+      <p class="card__note">Erkannt werden die Werte je 100 g/ml, die Packungsgröße und der Strichcode – offline auf dem Handy. Am besten gerade, scharf und ohne Spiegelung.</p>
       ${IOS ? liveTextBlock(true) + `<p class="muted small">Oder ein Foto in der App erkennen lassen:</p>` : ""}
       <label class="btn ${IOS ? "" : "primary"} block" for="ocr-cam">Etikett fotografieren</label>
       <input id="ocr-cam" type="file" accept="image/*" capture="environment" hidden>
@@ -507,8 +507,7 @@ export function viewFoodReview() {
           <input type="date" data-rv="date" data-meal="${esc(m.row.id)}" data-item="${esc(it.id)}" value="${esc(m.row.date)}" max="${today()}" aria-label="Tag"></label>
         <button class="btn sm ghost" data-act="rv-remove" data-arg="${esc(m.row.id)}|${esc(it.id)}" >Löschen</button>
       </div></div>`;
-  return `${X.header("Vor dem Senden prüfen", { back: X.S.reviewFrom || "home" })}<main class="wrap">
-    <p class="muted small">Hier siehst du alles, was noch nicht am PC ist. Änderungen gelten sofort; gesendet wird erst mit „An den PC senden“.</p>
+  return `${X.header("Vor dem Senden prüfen", { back: X.S.reviewFrom || "home", intro: "Hier siehst du alles, was noch nicht am PC ist. Änderungen gelten sofort; gesendet wird erst mit „An den PC senden“." })}<main class="wrap">
     ${empty && !openPackages().length ? `<section class="card"><p class="empty">Keine offenen Ernährungseinträge.</p></section>` : ""}
     ${
       openPackages().length

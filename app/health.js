@@ -97,8 +97,7 @@ export function viewHealth() {
   }
   // Blutzucker (1.44.0) braucht wie Heart keine Laborwerte
   if (S.healthTab === "glucose" && S.catalog?.pc) {
-    return `${X.header("Health")}<main class="wrap">
-    <p class="muted small">Blutzucker von Sensor (z. B. FreeStyle Libre, Dexcom), Scans und eigenen Messungen: Zeit im Zielbereich, Tagesverlauf mit Mahlzeiten, Tagesprofil und Nächte.</p>
+    return `${X.header("Health", { intro: "Blutzucker von Sensor (z. B. FreeStyle Libre, Dexcom), Scans und eigenen Messungen: Zeit im Zielbereich, Tagesverlauf mit Mahlzeiten, Tagesprofil und Nächte." })}<main class="wrap">
     ${nav("glucose")}
     ${glucoseTabHtml(S.catalog, S.glucoseView ?? {}, S.glucose)}
   </main>`;
@@ -106,8 +105,7 @@ export function viewHealth() {
   // Heart (1.42.0) braucht keine Laborwerte
   if ((S.healthTab === "heart" || (!S.catalog?.pc?.lab_analyte?.length && hasWearable(S.catalog))) && S.catalog?.pc) {
     S.healthTab = "heart";
-    return `${X.header("Health")}<main class="wrap">
-    <p class="muted small">Herzdaten deiner Uhr: Tagesverlauf, niedrigste Herzfrequenz der Nacht, HRV, Zeit in den Trainingszonen, nächtliche Erholung und Trainings der Uhr.</p>
+    return `${X.header("Health", { intro: "Herzdaten deiner Uhr: Tagesverlauf, niedrigste Herzfrequenz der Nacht, HRV, Zeit in den Trainingszonen, nächtliche Erholung und Trainings der Uhr." })}<main class="wrap">
     <nav class="tabs" aria-label="Health">${TABS.map(
       ([v, l]) => `<button class="tab ${v === "heart" ? "active" : ""}" data-act="health-tab" data-arg="${v}" ${v === "heart" ? 'aria-current="page"' : ""}>${l}</button>`,
     ).join("")}</nav>
@@ -122,13 +120,7 @@ export function viewHealth() {
   const d = data();
   const views = { trend: trendTab, report: reportTab, lifetime: lifetimeTab, import: importTab, analytes: analytesTab };
   const body = (views[tab] ?? drawsTab)(d);
-  return `${X.header("Health")}<main class="wrap">
-    ${
-      // Einleitung nur auf dem ersten Reiter, nicht auf jedem wiederholt (1.52.0)
-      tab === "draws"
-        ? `<p class="muted small">Laborwerte mit Referenzbereichen: Blutabnahmen erfassen oder aus CSV/Excel übernehmen, Verläufe mit Normbereich und markierten Ausreißern, Bericht für den Arzttermin und einmalig bestimmte Angaben wie Blutgruppe oder Gentests.</p>`
-        : ""
-    }
+  return `${X.header("Health", tab === "draws" ? { intro: "Laborwerte mit Referenzbereichen: Blutabnahmen erfassen oder aus CSV/Excel übernehmen, Verläufe mit Normbereich und markierten Ausreißern, Bericht für den Arzttermin und einmalig bestimmte Angaben wie Blutgruppe oder Gentests." } : {})}<main class="wrap">
     <nav class="tabs" aria-label="Health">${TABS.map(
       ([v, l]) => `<button class="tab ${v === tab ? "active" : ""}" data-act="health-tab" data-arg="${v}" ${v === tab ? 'aria-current="page"' : ""}>${l}</button>`,
     ).join("")}</nav>
@@ -465,16 +457,17 @@ function reportTab({ analytes, draws }) {
   void draws;
   return `<section class="card">
       <h3>Bericht für den Arzttermin</h3>
-      <p class="muted small">Knapp und tabellarisch: Laborwerte mit Referenzbereich und Vorwert, Vitalwerte, Gewicht und Körper, Messungen der Uhr und Blutzucker${secret ? ", auf Wunsch Hormontherapie mit Wirkstoffspiegel" : ""}, Training und Schlaf im gewählten Zeitraum. Das PDF entsteht hier auf dem Handy und verlässt es nur, wenn du es weitergibst.</p>
+      <p class="card__note">Knapp und tabellarisch: Laborwerte mit Referenzbereich und Vorwert, Vitalwerte, Gewicht und Körper, Messungen der Uhr und Blutzucker${secret ? ", auf Wunsch Hormontherapie mit Wirkstoffspiegel" : ""}, Training und Schlaf im gewählten Zeitraum. Das PDF entsteht hier auf dem Handy und verlässt es nur, wenn du es weitergibst.</p>
       <div class="lab-row__grid">
         <div class="field"><label for="doc-from">Von</label><input id="doc-from" type="date" data-doc="from" value="${esc(r.from)}"></div>
         <div class="field"><label for="doc-to">Bis</label><input id="doc-to" type="date" data-doc="to" value="${esc(r.to)}"></div>
       </div>
-      <div class="row-actions">${quick}</div>
+      <div class="seg-grid">${quick}</div>
       ${secret ? `<label class="hrt-check__item"><input type="checkbox" data-doc="withHrt" ${r.withHrt ? "checked" : ""}><span>Hormontherapie und Wirkstoffspiegel einbeziehen</span></label>` : ""}
       <div class="row-actions"><button class="btn" data-act="doc-preview">Vorschau</button><button class="btn primary" data-act="doc-pdf">PDF erstellen</button></div>
       ${r.message ? `<p class="${r.message.tone === "error" ? "field-error" : "muted small"}">${esc(r.message.text)}</p>` : ""}
       <div id="doc-pdf-result">${r.pdf ? `<a class="btn blue block" href="${r.pdf.url}" download="${esc(r.pdf.name)}">${esc(r.pdf.name)}</a>` : ""}</div>
+      <p class="card__note">Nur eigene Einträge – keine Diagnose, keine Bewertung. Der Wirkstoffspiegel ist eine Modellrechnung und als solche gekennzeichnet.</p>
     </section>
     ${
       rep
@@ -497,8 +490,7 @@ function reportTab({ analytes, draws }) {
           : ""
       }</section>`
         : ""
-    }
-    <p class="muted small">Nur eigene Einträge – keine Diagnose, keine Bewertung. Der Wirkstoffspiegel ist eine Modellrechnung und als solche gekennzeichnet.</p>`;
+    }`;
 }
 
 async function makePdf() {
@@ -564,7 +556,7 @@ function importTab({ analytes }) {
         <label class="btn block">Datei auswählen …<input type="file" data-health="import-file" accept=".csv,.txt,.xlsx,.xlsm,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden></label>
         <p class="muted small">${st.file ? esc(st.file.name) : "Noch keine Datei gewählt."}</p></div>
       <div class="field"><label for="imp-date">Datum, falls die Datei keins enthält</label><input id="imp-date" type="date" data-health="import-date" value="${esc(st.fallbackDate)}"></div>
-      <p class="muted small">Eine Zeile je Wert mit Spalten wie „Datum“, „Parameter“, „Wert“, „Einheit“, „Referenzbereich“ (z. B. „2,5 - 8,4“ oder „&lt; 200“) – oder je Zeile eine Blutabnahme mit „Datum“ und einer Spalte je Parameter („Testosteron [ng/ml]“). Bekannte Schreibweisen (z. B. „HKT“, „Vitamin D“) werden zugeordnet. Gibt es die Blutabnahme schon, kommen die Werte dazu; vorhandene Werte desselben Parameters werden ersetzt.</p>
+      <p class="card__note">Eine Zeile je Wert mit Spalten wie „Datum“, „Parameter“, „Wert“, „Einheit“, „Referenzbereich“ (z. B. „2,5 - 8,4“ oder „&lt; 200“) – oder je Zeile eine Blutabnahme mit „Datum“ und einer Spalte je Parameter („Testosteron [ng/ml]“). Bekannte Schreibweisen (z. B. „HKT“, „Vitamin D“) werden zugeordnet. Gibt es die Blutabnahme schon, kommen die Werte dazu; vorhandene Werte desselben Parameters werden ersetzt.</p>
       ${st.error ? `<p class="field-error">${esc(st.error)}</p>` : ""}
       ${st.done ? `<p class="ok-note">${esc(st.done)}</p>` : ""}
     </section>
@@ -701,8 +693,8 @@ function analytesTab({ analytes, draws }) {
   const collapsed = new Set(S.anCollapsed ?? groups);
   const allCollapsed = groups.length > 0 && groups.every((c) => collapsed.has(c));
   return `<section class="card">
-      <div class="wo-head"><h3>Laborparameter</h3><button class="btn sm primary" data-act="an-new">+ Neuer Parameter</button></div>
-      <p class="muted small">Normbereiche hängen von Labor, Methode, Geschlecht und Alter ab. Es gilt der Bereich aus dem Befund, sonst dein eigener Bereich, sonst der Bereich des AKH Wien für dein Geschlecht und Alter laut Profil.</p>
+      <div class="wo-head"><h3>Laborparameter</h3><button class="btn sm primary" data-act="an-new" aria-label="Neuer Parameter">+ Parameter</button></div>
+      <p class="card__note">Normbereiche hängen von Labor, Methode, Geschlecht und Alter ab. Es gilt der Bereich aus dem Befund, sonst dein eigener Bereich, sonst der Bereich des AKH Wien für dein Geschlecht und Alter laut Profil.</p>
       <div class="row-actions"><button class="btn sm" data-act="an-all">${allCollapsed ? "Alle aufklappen" : "Alle zuklappen"}</button></div>
       ${S.anError ? `<p class="field-error">${esc(S.anError)}</p>` : ""}
     </section>

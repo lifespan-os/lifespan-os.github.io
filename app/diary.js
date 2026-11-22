@@ -426,7 +426,7 @@ export function mealsCard(slots, fast, date, db) {
       ${m && Object.keys(m.values ?? {}).length ? `<p class="muted small">Mit Fasttracking-Werten an dieser Mahlzeit.</p>` : ""}
       ${m && m.items.length ? pickBarHtml(pk, picked.size, act) : ""}
       ${local ? quickSlotHtml(quick, key, has, m?.items ?? []) : ""}
-      <div class="row-actions"><button class="btn sm" data-act="diary-add" data-arg="${esc(key)}">+ Lebensmittel eintragen</button>
+      <div class="meal-actions"><button class="btn sm" data-act="diary-add" data-arg="${esc(key)}" aria-label="Lebensmittel eintragen">+ Lebensmittel</button>
         <button class="btn sm ghost" data-act="fast-open" data-arg="${esc(key)}">Fasttracking</button></div>`
       }
     </div>`;
@@ -439,7 +439,7 @@ export function mealsCard(slots, fast, date, db) {
     ${slots.length === 0 ? `<p class="muted small">An diesem Tag sind keine Mahlzeiten angelegt.</p>` : ""}
     ${fast ? "" : `<button class="btn sm ghost" data-act="fast-open" data-arg="">Fasttracking für den ganzen Tag</button>`}
     <p class="card__note">Einträge vom PC bearbeitest du am PC; am Handy Eingetragenes kannst du hier entfernen oder unter „Vor dem Senden prüfen“ ändern.${
-      date !== today() ? " „+ Lebensmittel eintragen“ trägt in diesen Tag ein." : ""
+      date !== today() ? " „+ Lebensmittel“ trägt in diesen Tag ein." : ""
     }</p>
   </section>`;
 }

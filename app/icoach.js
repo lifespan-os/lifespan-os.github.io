@@ -58,7 +58,6 @@ export function viewICoach() {
   const views = { evolve: evolveTab, ask: askTab, downloads: downloadsTab, magazin: magazineTab, widgets: widgetsTab };
   return `${X.header("iCoach.me")}<main class="wrap icoach">
     <p class="icoach__brand">iCoach.Me · Die Masterclass</p>
-    <p class="muted small">Wissen für Training, Ernährung und Gesundheit: Module, Antworten auf deine Fragen, die Bücher „Die Masterclass“, „Die Masterclass Blutwerte+“ und „Die Masterclass Longevity“ und Magazine zum Lesen.</p>
     <nav class="tabs" aria-label="iCoach.me">${TABS.map(
       ([v, l]) => `<button class="tab ${v === tab ? "active" : ""}" data-act="ic-tab" data-arg="${v}" ${v === tab ? 'aria-current="page"' : ""}>${l}</button>`,
     ).join("")}</nav>

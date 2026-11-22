@@ -184,15 +184,15 @@ export function workoutsTab() {
   const actions = `<div class="workouts-actions">
       ${
         dayOptions.length
-          ? `<div class="field"><label for="w-from-plan">Trainingstag aus Plan</label>
+          ? `<div class="pick-row"><div class="field"><label for="w-from-plan">Trainingstag aus Plan</label>
           <select id="w-from-plan" data-tchange="planDay" ${blocked ? "disabled" : ""}><option value="">Trainingstag wählen …</option>${dayOptions
             .map((o) => `<option value="${esc(o.value)}" ${o.value === planSel ? "selected" : ""}>${esc(o.label)}</option>`)
             .join("")}</select></div>
-          <button class="btn" data-act="train-start-day" ${!planSel || blocked ? "disabled" : ""}>▶ Tag starten</button>`
+          <button class="btn" data-act="train-start-day" ${!planSel || blocked ? "disabled" : ""}>▶ Starten</button></div>`
           : ""
       }
       ${activeGymSelectHtml(blocked)}
-      <div class="row-actions">
+      <div class="start-grid">
         <button class="btn primary" data-act="start-free" ${blocked ? "disabled" : ""}>▶ Freies Training</button>
         <button class="btn" data-act="train-backfill" ${blocked ? "disabled" : ""}>Nachtragen</button>
         <button class="btn ${todayStatus?.kind === "rest" ? "primary" : ""}" data-act="train-day" data-arg="${todayStatus?.kind === "rest" ? "" : "rest"}" aria-pressed="${todayStatus?.kind === "rest"}" title="Heute kein Training – Regeneration">🛏 Restday</button>
@@ -200,11 +200,11 @@ export function workoutsTab() {
       </div>
       ${
         cardioOptions.length
-          ? `<div class="field"><label for="w-cardio">Cardio erfassen</label>
+          ? `<div class="pick-row"><div class="field"><label for="w-cardio">Cardio erfassen</label>
           <select id="w-cardio" data-tchange="cardio" ${blocked ? "disabled" : ""}><option value="">wählen …</option>${cardioOptions
             .map((e) => `<option value="${esc(e.id)}" ${e.id === cardioSel ? "selected" : ""}>${esc(e.name)}</option>`)
             .join("")}</select></div>
-          <button class="btn" data-act="train-cardio" ${!cardioSel || blocked ? "disabled" : ""}>Cardio erfassen</button>`
+          <button class="btn" data-act="train-cardio" ${!cardioSel || blocked ? "disabled" : ""}>Erfassen</button></div>`
           : ""
       }
     </div>`;
@@ -382,7 +382,7 @@ export function neatTab() {
     }
     <section class="card card--training" id="neat-title">
       <div class="wo-head"><h3>Alltagsbewegung am ${fmtDate(date)}</h3><span class="tag">Non-Exercise Activity (NEAT)</span></div>
-      <p class="muted small">Jede Bewegung, die kein geplantes Training ist. Gehen in Schritten, alles andere in Minuten. Leere Felder gelten als nicht erfasst.</p>
+      <p class="card__note">Jede Bewegung, die kein geplantes Training ist. Gehen in Schritten, alles andere in Minuten. Leere Felder gelten als nicht erfasst.</p>
       <fieldset class="fast-group"><legend>Gehen</legend>
         ${field("steps", "Schritte am Tag", "steps", "steps")}
         <p class="muted small">Gesamtzahl des Tages, z. B. vom Handy oder der Uhr</p>

@@ -1,12 +1,17 @@
 // LIFESPAN OS Mobil – Tagebuch → Mahlzeiten als Tagesverlauf (1.100.0, wie PC 1.0.175).
 // Mahlzeiten, geplante Mahlzeiten, Koffein, Supplements und Wasser auf einer senkrechten Zeitachse.
-// Der orange Knopf lässt sich mit dem Finger an jede Uhrzeit ziehen (5-Minuten-Schritte): davor =
-// gegessen eintragen, danach = planen. Anordnung wie `src/domain/mealTimeline.ts` am PC.
+// Der orange Knopf lässt sich mit dem Finger an jede Uhrzeit ziehen: davor = gegessen eintragen,
+// danach = planen. Anordnung wie `src/domain/mealTimeline.ts` am PC.
+// 1.102.0 (wie PC 1.0.176, Wunsch 22.11.2026): Achse immer vom Tageswechsel (Settings) bis eine
+// Minute davor; Uhrzeiten vor dem Tageswechsel zählen über 24:00 hinaus (`axisMinute`). Der Knopf
+// steht immer auf der aktuellen Uhrzeit (an anderen Tagen auf derselben Uhrzeit) und rastet
+// minutengenau ein; über einer Karte bleibt die Uhrzeit stehen, dazwischen ist Platz für jede Minute.
 
 import * as P from "./pcdb.js";
 import * as N from "./nutrition.js";
 import { X, today } from "./diary.js";
 import { caffeineIntakesOn } from "./icoach.js";
+import { dayStartMinutesOn } from "./appday.js";
 
 // ------------------------------------------------------------------ Anordnung (wie mealTimeline.ts)
 
@@ -15,31 +20,42 @@ export const minuteOf = (t) => {
   const m = TIME.exec(String(t ?? "").trim());
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 };
+const DAY = 1440;
 export const clockOf = (minute) => {
-  const m = Math.max(0, Math.min(1439, Math.round(minute)));
+  const m = ((Math.round(minute) % DAY) + DAY) % DAY;
   return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 };
-export const snapMinute = (minute, step = 5) => Math.max(0, Math.min(1440 - step, Math.round(minute / step) * step));
+/** Uhrzeit vor dem Tageswechsel gehört zur Nacht danach (zählt über 24:00 hinaus). */
+export const axisMinute = (minute, dayStart = 0) => (minute < dayStart ? minute + DAY : minute);
+export const axisMinuteOf = (t, dayStart = 0) => {
+  const m = minuteOf(t);
+  return m === null ? null : axisMinute(m, dayStart);
+};
+export const snapMinute = (minute, step = 1, dayStart = 0) =>
+  Math.max(dayStart, Math.min(dayStart + DAY - 1, Math.round(minute / step) * step));
 
-export function layoutTimeline(list, { pxPerMin = 1, gap = 8, minStart = 360, minEnd = 1380, include = [] } = {}) {
-  const items = [...list].sort((a, b) => a.minute - b.minute || String(a.key).localeCompare(String(b.key)));
-  const minutes = [...items.map((i) => i.minute), ...include];
-  const first = minutes.length ? Math.min(...minutes) : minStart;
-  const last = minutes.length ? Math.max(...minutes) : minEnd;
-  const start = Math.max(0, Math.min(minStart, Math.floor((first - 30) / 60) * 60));
-  const end = Math.min(1439, Math.max(minEnd, Math.ceil((last + 60) / 60) * 60));
+/** Bis zu so vielen Minuten bekommt der Abstand zwischen zwei Einträgen `minPxPerMin` dazu */
+const ROOM_MINUTES = 10;
+
+export function layoutTimeline(list, { pxPerMin = 1, gap = 8, dayStart = 0, minPxPerMin = 4 } = {}) {
+  const start = dayStart;
+  const end = start + DAY - 1;
+  const clamp = (m) => Math.max(start, Math.min(end, m));
+  const items = [...list].map((i) => ({ ...i, minute: clamp(i.minute) })).sort((a, b) => a.minute - b.minute || String(a.key).localeCompare(String(b.key)));
   const anchors = [{ minute: start, y: 0 }];
   const placed = [];
-  let bottom = -gap;
+  let top = { minute: start, y: 0 };
+  let bottom = null;
+  const below = (minute) => (bottom === null ? 0 : bottom + gap + Math.min(minute - top.minute, ROOM_MINUTES) * minPxPerMin);
   for (const item of items) {
-    const prev = anchors[anchors.length - 1];
-    const y = Math.max(prev.y + (item.minute - prev.minute) * pxPerMin, bottom + gap);
-    if (item.minute > prev.minute) anchors.push({ minute: item.minute, y });
+    const y = Math.max(top.y + (item.minute - top.minute) * pxPerMin, below(item.minute));
+    anchors.push({ minute: item.minute, y });
+    anchors.push({ minute: item.minute, y: y + item.height });
     placed.push({ ...item, y });
+    top = { minute: item.minute, y };
     bottom = y + item.height;
   }
-  const prev = anchors[anchors.length - 1];
-  const endY = Math.max(prev.y + (end - prev.minute) * pxPerMin, bottom + gap);
+  const endY = Math.max(top.y + (end - top.minute) * pxPerMin, below(end));
   anchors.push({ minute: end, y: endY });
   const hours = [];
   for (let h = Math.ceil(start / 60); h * 60 <= end; h++) hours.push({ label: clockOf(h * 60), y: yAt(anchors, h * 60) });
@@ -69,16 +85,16 @@ export function minuteAt(anchors, y) {
 }
 
 export function mealTypeAt(minute) {
-  const h = Math.floor(minute / 60);
+  const h = Math.floor((((minute % DAY) + DAY) % DAY) / 60);
   if (h < 10) return "breakfast";
   if (h < 14) return "lunch";
   if (h >= 17 && h < 22) return "dinner";
   return "snack";
 }
 
-export function groupWater(glasses, withinMin = 45) {
+export function groupWater(glasses, dayStart = 0, withinMin = 45) {
   const timed = glasses
-    .map((g) => ({ minute: minuteOf(g.time), ml: g.amountMl }))
+    .map((g) => ({ minute: axisMinuteOf(g.time, dayStart), ml: g.amountMl }))
     .filter((g) => g.minute !== null)
     .sort((a, b) => a.minute - b.minute);
   const out = [];
@@ -97,17 +113,33 @@ export function groupWater(glasses, withinMin = 45) {
 const PX = 0.9;
 /** Höhe des Knopfes; er belegt auf der Achse Platz wie ein Eintrag, damit er nichts verdeckt. */
 const HANDLE_H = 52;
-const nowMinute = () => {
+const clockMinute = () => {
   const d = new Date();
   return d.getHours() * 60 + d.getMinutes();
 };
+/** Aktuelle Uhrzeit auf der Achse des Tages (an anderen Tagen dieselbe Uhrzeit). */
+export const axisNow = (date) => axisMinute(clockMinute(), dayStartMinutesOn(date));
+/** Uhrzeit liegt nach „jetzt“ (heute) bzw. der Tag in der Zukunft → planen */
+export function plannedAt(date, minute) {
+  const t = today();
+  if (date > t) return true;
+  return date === t && minute > axisNow(date);
+}
 
-/** Zustand des Knopfes für den Tag (Uhrzeit, offenes Fenster, gewählte Mahlzeit). */
+/**
+ * Zustand des Knopfes für den Tag. `pinned` = vom Nutzer gewählte Minute (beim Ziehen, solange
+ * das Fenster offen ist), sonst steht der Knopf auf der aktuellen Uhrzeit.
+ */
 function handleState(date) {
   const S = X.S;
-  if (!S.mtl || S.mtl.date !== date) S.mtl = { date, minute: date === today() ? snapMinute(nowMinute()) : 12 * 60, panel: false, key: null };
+  if (!S.mtl || S.mtl.date !== date) S.mtl = { date, pinned: null, panel: false, key: null };
   return S.mtl;
 }
+/** Minute des Knopfes (gewählt oder jetzt). */
+export const handleMinute = (date) => {
+  const h = handleState(date);
+  return h.pinned ?? axisNow(date);
+};
 
 function macroBar(m) {
   const p = m.proteinG * 4;
@@ -133,15 +165,18 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
   const S = X.S;
   const local = S.food?.local;
   const h = handleState(date);
+  const dayStart = dayStartMinutesOn(date);
+  const ax = (t) => axisMinuteOf(t, dayStart);
   const isToday = date === today();
-  const now = isToday ? nowMinute() : null;
+  const now = isToday ? axisNow(date) : null;
   const future = date > today();
+  const hMinute = h.pinned ?? axisNow(date);
   const list = [];
   const untimed = [];
   for (const slot of slots) {
     const m = slot.meal;
     if (!m || (m.items.length === 0 && Object.keys(m.values ?? {}).length === 0)) continue;
-    const minute = minuteOf(m.time);
+    const minute = ax(m.time);
     if (minute === null) {
       untimed.push(slot);
       continue;
@@ -150,7 +185,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
   }
   const planned = local ? N.plannedOn(S.catalog, local, date) : [];
   for (const p of planned) {
-    const minute = minuteOf(p.time);
+    const minute = ax(p.time);
     if (minute !== null) list.push({ key: `plan:${p.id}`, kind: "planned", minute, time: p.time, height: 150, plan: p });
   }
   let caffeine = [];
@@ -160,7 +195,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
     caffeine = [];
   }
   for (const c of caffeine) {
-    const minute = minuteOf(c.time);
+    const minute = ax(c.time);
     if (minute !== null) list.push({ key: `caf:${c.id}`, kind: "caffeine", minute, time: c.time, height: 32, text: `${c.label} · ${Math.round(c.mg)} mg Koffein` });
   }
   const mealTimes = new Map(slots.filter((s) => s.meal).map((s) => [s.meal.id, s.meal.time]));
@@ -169,22 +204,21 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
   for (const i of P.intakesOn(db, date)) {
     if (fromCaffeine.has(i.id)) continue;
     const t = i.time ?? (i.mealId ? mealTimes.get(i.mealId) : null) ?? null;
-    const minute = minuteOf(t);
+    const minute = ax(t);
     if (minute !== null) list.push({ key: `sup:${i.id}`, kind: "supplement", minute, time: t, height: 32, text: `${i.name}${i.items.length > 1 ? ` · ${i.items.length} Supplements` : ""}` });
   }
-  for (const [n, g] of groupWater(P.waterDay(db, date).glasses).entries()) {
+  for (const [n, g] of groupWater(P.waterDay(db, date).glasses, dayStart).entries()) {
     list.push({ key: `water:${n}`, kind: "water", minute: g.minute, time: clockOf(g.minute), height: 32, text: `Wasser · ${g.count} ${g.count === 1 ? "Glas" : "Gläser"} (${String(Math.round(g.ml / 10) / 100).replace(".", ",")} l)` });
   }
-  list.push({ key: "!handle", kind: "handle", minute: h.minute, time: clockOf(h.minute), height: HANDLE_H });
-  const layout = layoutTimeline(list, { pxPerMin: PX, gap: 8, include: [h.minute, ...(now !== null ? [now] : [])] });
+  list.push({ key: "!handle", kind: "handle", minute: hMinute, time: clockOf(hMinute), height: HANDLE_H });
+  const layout = layoutTimeline(list, { pxPerMin: PX, gap: 8, dayStart });
   const handleItem = layout.items.find((i) => i.kind === "handle");
-  const plannedAt = (minute) => future || (now !== null && minute > now);
-  const handlePlanned = plannedAt(h.minute);
+  const handlePlanned = plannedAt(date, hMinute);
   const hy = handleItem.y + 24;
-  const handleClock = clockOf(h.minute);
+  const handleClock = clockOf(hMinute);
   // Mahlzeit, in die der Knopf einträgt: Vorschlag nach Uhrzeit, änderbar
   const options = slots.map((s) => ({ key: s.ref.name ? N.extraKey(s.ref.name) : s.ref.mealType, title: s.title, type: s.ref.mealType }));
-  const suggested = options.find((o) => o.type === mealTypeAt(h.minute))?.key ?? options[0]?.key ?? "";
+  const suggested = options.find((o) => o.type === mealTypeAt(hMinute))?.key ?? options[0]?.key ?? "";
   const chosen = h.key && options.some((o) => o.key === h.key) ? h.key : suggested;
   const chosenTitle = options.find((o) => o.key === chosen)?.title ?? "Mahlzeit";
 
@@ -220,14 +254,14 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
 
   return `<div class="mtl-wrap">
     ${untimed.length ? `<p class="muted small">Ohne Uhrzeit: ${untimed.map((s) => `<button class="linkbtn" data-act="mtl-open" data-arg="${esc(s.ref.name ? N.extraKey(s.ref.name) : s.ref.mealType)}">${esc(s.title)} · ${Math.round(s.meal.energyKcal)} kcal</button>`).join(" ")}</p>` : ""}
-    <div class="mtl" style="height:${Math.ceil(Math.max(layout.height + 24, h.panel ? handleItem.y + HANDLE_H + 250 : 0))}px" data-anchors="${esc(JSON.stringify(layout.anchors.map((a) => [a.minute, Math.round(a.y * 10) / 10])))}" data-now="${now ?? ""}" data-future="${future ? 1 : 0}">
+    <div class="mtl" style="height:${Math.ceil(Math.max(layout.height + 24, h.panel ? handleItem.y + HANDLE_H + 250 : 0))}px" data-anchors="${esc(JSON.stringify(layout.anchors.map((a) => [a.minute, Math.round(a.y * 10) / 10])))}" data-now="${now ?? ""}" data-future="${future ? 1 : 0}" data-start="${dayStart}" data-minute="${hMinute}" data-pinned="${h.pinned === null ? "" : 1}">
       <span class="mtl-axis" aria-hidden="true"></span>
       ${layout.hours.filter((x) => !layout.items.some((i) => Math.abs(i.y - x.y) < 14)).map((x) => `<span class="mtl-hour" style="top:${x.y.toFixed(1)}px" aria-hidden="true">${x.label}</span>`).join("")}
       ${now !== null ? `<span class="mtl-now" style="top:${yAt(layout.anchors, now).toFixed(1)}px" aria-hidden="true"></span>` : ""}
       ${layout.items.filter((i) => i.kind !== "handle").map(rowHtml).join("")}
       <div class="mtl-handle ${handlePlanned ? "is-planned" : ""}" style="top:${handleItem.y.toFixed(1)}px">
         <span class="mtl-time mtl-time--handle">${handleClock}</span>
-        <button type="button" class="mtl-grip" aria-label="Neuer Eintrag um ${handleClock} Uhr – zum Verschieben ziehen">＋ <span class="mtl-grip__text">${handlePlanned ? "Planen" : now !== null && Math.abs(h.minute - now) <= 5 ? "Jetzt eintragen" : "Eintragen"}</span></button>
+        <button type="button" class="mtl-grip" aria-label="Neuer Eintrag um ${handleClock} Uhr – zum Verschieben ziehen">＋ <span class="mtl-grip__text">${handlePlanned ? "Planen" : now !== null && Math.abs(hMinute - now) <= 1 ? "Jetzt eintragen" : "Eintragen"}</span></button>
       </div>
       ${panel}
     </div>
@@ -237,11 +271,14 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
 
 // ------------------------------------------------------------------ Ziehen mit dem Finger (oder der Maus)
 
-/** Einmal beim Start: Ziehen des Knopfes auf der Zeitachse. Während des Ziehens wird nur der Knopf bewegt. */
+/**
+ * Einmal beim Start: Ziehen des Knopfes auf der Zeitachse (während des Ziehens wird nur der Knopf
+ * bewegt) und jede halbe Minute den Knopf auf die aktuelle Uhrzeit nachziehen.
+ */
 export function initTimelineDrag() {
   let g = null;
-  const setLabel = (el, minute, now, future) => {
-    const planned = future || (now !== null && minute > now);
+  const setLabel = (el, minute) => {
+    const planned = el.future || (el.now !== null && minute > el.now);
     el.handle.style.top = `${yAt(el.anchors, minute).toFixed(1)}px`;
     el.time.textContent = clockOf(minute);
     el.text.textContent = planned ? "Planen" : "Eintragen";
@@ -267,7 +304,8 @@ export function initTimelineDrag() {
       text: handle.querySelector(".mtl-grip__text"),
       startY: ev.clientY,
       moved: false,
-      minute: X.S.mtl?.minute ?? 720,
+      minute: Number(box.dataset.minute) || 720,
+      start: Number(box.dataset.start) || 0,
       now: box.dataset.now === "" ? null : Number(box.dataset.now),
       future: box.dataset.future === "1",
     };
@@ -280,10 +318,10 @@ export function initTimelineDrag() {
     if (!g.moved && Math.abs(ev.clientY - g.startY) < 4) return;
     g.moved = true;
     const rect = g.box.getBoundingClientRect();
-    const minute = snapMinute(minuteAt(g.anchors, ev.clientY - rect.top - 24));
+    const minute = snapMinute(minuteAt(g.anchors, ev.clientY - rect.top - 24), 1, g.start);
     if (minute !== g.minute) {
       g.minute = minute;
-      setLabel(g, minute, g.now, g.future);
+      setLabel(g, minute);
       if (navigator.vibrate) {
         try {
           navigator.vibrate(5);
@@ -300,13 +338,33 @@ export function initTimelineDrag() {
   const end = () => {
     if (!g) return;
     const S = X.S;
-    S.mtl = { ...(S.mtl ?? {}), minute: g.minute, panel: true, key: null };
+    S.mtl = { ...(S.mtl ?? {}), pinned: g.minute, panel: true, key: null };
     g.handle.classList.remove("is-dragging");
     g = null;
     X.rerender();
   };
   document.addEventListener("pointerup", end);
   document.addEventListener("pointercancel", end);
+  // Knopf folgt der Uhr, solange er nicht gewählt ist und niemand gerade tippt
+  setInterval(() => {
+    if (g || document.hidden) return;
+    const box = document.querySelector(".mtl");
+    if (!box || box.dataset.pinned === "1" || X.S.mtl?.panel) return;
+    const date = X.S.diaryDate ?? today();
+    if (axisNow(date) === Number(box.dataset.minute)) return;
+    const a = document.activeElement;
+    if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) return;
+    X.rerender();
+  }, 30000);
+}
+
+/** Fenster schließen: Knopf springt zurück auf die aktuelle Uhrzeit. */
+function releaseHandle() {
+  const S = X.S;
+  if (S.mtl) {
+    S.mtl.panel = false;
+    S.mtl.pinned = null;
+  }
 }
 
 // ------------------------------------------------------------------ Aktionen
@@ -330,7 +388,7 @@ export const timelineActions = {
     X.rerender();
   },
   "mtl-close": () => {
-    if (X.S.mtl) X.S.mtl.panel = false;
+    releaseHandle();
     X.rerender();
   },
   "mtl-open": (el) => {
@@ -344,9 +402,8 @@ export const timelineActions = {
   "mtl-add": (el) => {
     const S = X.S;
     const date = S.diaryDate ?? today();
-    const minute = S.mtl?.minute ?? 720;
-    const now = date === today() ? new Date().getHours() * 60 + new Date().getMinutes() : null;
-    const planned = date > today() || (now !== null && minute > now);
+    const minute = handleMinute(date);
+    const planned = plannedAt(date, minute);
     const f = S.food;
     f.mealType = el.dataset.arg;
     f.trackDate = date;
@@ -355,13 +412,15 @@ export const timelineActions = {
     f.planId = null;
     f.time = planned ? "" : clockOf(minute);
     f.dishTime = f.time;
-    S.mtl.panel = false;
+    releaseHandle();
     X.go("food");
   },
   "mtl-caffeine": () => {
     const S = X.S;
-    S.mtl.panel = false;
-    S.diaryCf = { id: null, date: S.diaryDate ?? today(), drinkId: "espresso", amount: "30", time: clockOf(S.mtl.minute), errors: {} };
+    const date = S.diaryDate ?? today();
+    const time = clockOf(handleMinute(date));
+    releaseHandle();
+    S.diaryCf = { id: null, date, drinkId: "espresso", amount: "30", time, errors: {} };
     X.rerender();
     requestAnimationFrame(() => document.getElementById("dcf-drink")?.scrollIntoView({ block: "center" }));
   },
@@ -370,9 +429,9 @@ export const timelineActions = {
     const date = S.diaryDate ?? today();
     const plan = N.plannedOn(S.catalog, S.food.local, date).find((p) => p.id === el.dataset.arg);
     if (!plan) return;
-    const now = date === today() ? new Date().getHours() * 60 + new Date().getMinutes() : null;
+    const now = date === today() ? axisNow(date) : null;
     // früher gegessen als geplant: Uhrzeit = jetzt
-    const time = now !== null && now < (minuteOf(plan.time) ?? 0) ? clockOf(now) : plan.time;
+    const time = now !== null && now < (axisMinuteOf(plan.time, dayStartMinutesOn(date)) ?? 0) ? clockOf(now) : plan.time;
     try {
       N.confirmPlanned(S.catalog, S.food.local, plan.id, { time, uuid: () => X.uuid(), now: new Date() });
       await persistFood();
@@ -398,7 +457,8 @@ export const timelineActions = {
   "mtl-plan-move": async (el) => {
     const S = X.S;
     try {
-      N.movePlanned(S.catalog, S.food.local, el.dataset.arg, clockOf(S.mtl?.minute ?? 720), new Date());
+      N.movePlanned(S.catalog, S.food.local, el.dataset.arg, clockOf(handleMinute(S.diaryDate ?? today())), new Date());
+      releaseHandle();
       await persistFood();
     } catch (e) {
       X.toast(e.message, true);

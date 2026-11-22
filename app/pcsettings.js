@@ -18,6 +18,8 @@ export const SYNC_KEYS = [
   "measurement_methods",
   "secret_protocols",
   "ui.day_start",
+  // Verlauf des Tageswechsels: Änderungen gelten ab dem aktuellen Tag (1.102.0)
+  "ui.day_start_history",
   "ui.overview_layout",
   "ui.diary_layout",
   "ui.sleep_layout",
@@ -153,7 +155,7 @@ export function settingLabel(key) {
   if (key.startsWith(MEAL_NAME_PREFIX) || key === "meal_hidden" || key === "meal_extra") return "Mahlzeiten";
   if (key === "measurement_methods") return "Messmethoden";
   if (key === "secret_protocols") return "Secret Protocols";
-  if (key === "ui.day_start") return "Tageswechsel";
+  if (key === "ui.day_start" || key === "ui.day_start_history") return "Tageswechsel";
   if (key === "ui.protocols") return "Protocols (Fortschritt)";
   if (key === "ui.cardio_muscles") return "Cardio in der Körperkarte";
   if (key === "ui.week_goals") return "Wochenziele";

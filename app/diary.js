@@ -84,7 +84,25 @@ export function buildDb() {
   D.setMealList(N.setMealConfig(db.settings));
   // Tageswechsel wie am PC (ui.day_start, 1.48.0)
   C.setDayStart(db.settings.get("ui.day_start") ?? null);
+  C.setDayStartHistory(db.settings.get("ui.day_start_history") ?? null);
   return db;
+}
+
+/** Geplante Mahlzeiten eines Tages für die Tagessumme (nach Uhrzeit ab Tageswechsel, 1.102.0). */
+function plannedMealsForSum(date) {
+  const S = X.S;
+  if (!S.food?.local || !S.catalog) return [];
+  const start = C.dayStartMinutesOn(date);
+  const ax = (t) => {
+    const m = /^(\d{2}):(\d{2})$/.exec(t ?? "");
+    const v = m ? Number(m[1]) * 60 + Number(m[2]) : 0;
+    return v < start ? v + 1440 : v;
+  };
+  try {
+    return N.plannedOn(S.catalog, S.food.local, date).sort((a, b) => ax(a.time) - ax(b.time));
+  } catch {
+    return [];
+  }
 }
 
 /** Nährstoffkatalog wie `fasttrack::catalog` (eingebaute Felder, eigene Felder je Gruppe am Ende). */
@@ -165,6 +183,8 @@ export function viewDiary() {
   );
   const hasSuppMacros = Object.values(suppMacros).some((v) => v > 0);
   const totals = D.sumNutrients([...meals, D.fastNutrients(fast), suppMacros]);
+  // Geplante Mahlzeiten hellgrau hinter der Tagessumme, nach Uhrzeit (1.102.0)
+  const plannedForSum = plannedMealsForSum(date);
   const weightKg = energy.step.weightKg;
   const rawGoal = P.goalFor(db, date);
   const goal = rawGoal ? D.withProteinFromWeight(rawGoal, weightKg) : null;
@@ -185,7 +205,7 @@ export function viewDiary() {
       <span class="card__meta">${goal ? `Ziele gültig ab ${esc(D.formatDate(goal.validFrom))}` : `<button class="linkbtn" data-act="goals-open">Tagesziele festlegen</button>`}</span></div>
     ${
       goalBased && goal
-        ? `${dayGoalHtml({ totals, goal, stepKcal: energy.step.kcal, expenditure: energy })}
+        ? `${dayGoalHtml({ totals, goal, stepKcal: energy.step.kcal, expenditure: energy, planned: plannedForSum })}
           ${proteinNote ? `<p class="muted small">${esc(proteinNote)}</p>` : ""}
           ${
             energyWithoutGoal || dayMacros?.proteinG == null || dayMacros.carbsG === null || dayMacros.fatG === null
@@ -196,6 +216,7 @@ export function viewDiary() {
           }`
         : `<dl class="compare-list">${compareHtml("Energie", totals.energyKcal, null, "kcal")}${compareHtml("Protein", totals.proteinG, null, "g")}${compareHtml("Kohlenhydrate", totals.carbsG, null, "g")}${compareHtml("Fett", totals.fatG, null, "g")}</dl>
           ${totals.energyKcal > 0 ? macroBreakdownHtml(totals, "shares") : ""}
+          ${plannedForSum.length ? `<p class="muted small">Geplant: ${esc(D.formatKcal(plannedForSum.reduce((x, p) => x + p.energyKcal, 0)))} (${plannedForSum.length === 1 ? "1 Mahlzeit" : `${plannedForSum.length} Mahlzeiten`}, zählt erst nach „Gegessen“)</p>` : ""}
           <p class="card__note">Mit Tageszielen für Energie und Makronährstoffe (Settings → Tagesziele) zeigt die Tagessumme, wie viel noch offen ist (Defizit) oder darüber liegt (Überschuss).</p>`
     }
     ${

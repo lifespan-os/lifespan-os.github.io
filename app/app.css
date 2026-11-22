@@ -323,6 +323,10 @@ input, textarea, select { font-size: max(16px, 1em); }
 
 .swatch { display: inline-block; width: 10px; height: 10px; flex: none; border-radius: 2px; }
 .swatch--marker { background: var(--fg); width: 3px; }
+/* Geplante Mahlzeiten (1.102.0): hellgrau, mehrere durch einen dunkleren Strich getrennt */
+.goal-bar__fill--planned { flex: none; background: color-mix(in srgb, var(--muted) 20%, var(--surface)); }
+.goal-bar__fill--planned + .goal-bar__fill--planned { border-left: 2px solid var(--muted); }
+.swatch--planned { background: color-mix(in srgb, var(--muted) 20%, var(--surface)); }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: .82rem; }
 .legend li { display: flex; align-items: center; gap: 6px; }
 

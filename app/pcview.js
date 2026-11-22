@@ -35,10 +35,13 @@ const SEGMENTS = {
 };
 const MACRO_FILL = { protein: COLOR.protein, carbs: COLOR.carbs, fat: COLOR.fat };
 
-/** Tagessumme gegen die Tagesziele wie `DayGoalSummary.tsx`. */
-export function dayGoalHtml({ totals, goal, stepKcal = null, expenditure = null }) {
+/** Geplante Mahlzeiten in einer Leiste: hellgrau, mehrere durch einen dunkleren Strich getrennt (1.102.0) */
+const plannedFills = (segs) => segs.map((p) => `<span class="goal-bar__fill goal-bar__fill--planned" style="width:${p.percent}%"></span>`).join("");
+
+/** Tagessumme gegen die Tagesziele wie `DayGoalSummary.tsx`; `planned` = geplante Mahlzeiten (grau). */
+export function dayGoalHtml({ totals, goal, stepKcal = null, expenditure = null, planned = [] }) {
   const need = D.dailyNeed(goal, stepKcal, expenditure);
-  const energy = need ? D.energyGoalView(totals, need.total) : null;
+  const energy = need ? D.energyGoalView(totals, need.total, planned) : null;
   const needText = D.describeNeed(need);
   const dynamicMissing =
     goal.energyMode === "dynamic" && !need
@@ -47,7 +50,7 @@ export function dayGoalHtml({ totals, goal, stepKcal = null, expenditure = null 
         }.`
       : null;
   const dayMacros = D.dayMacroGoals(goal, need, expenditure);
-  const macros = D.macroGoalRows(totals, dayMacros);
+  const macros = D.macroGoalRows(totals, dayMacros, planned);
   const macroNote = D.describeMacroGoals(dayMacros);
   let out = `<div class="day-goal">`;
   if (dynamicMissing) out += `<p class="muted small">${esc(dynamicMissing)}</p>`;
@@ -61,16 +64,19 @@ export function dayGoalHtml({ totals, goal, stepKcal = null, expenditure = null 
     out += `<div class="day-goal__energy">
       <div class="day-goal__head">
         <p class="day-goal__value"><strong>${esc(D.formatKcal(energy.consumed))}</strong><span class="muted"> von ${esc(D.formatKcal(energy.goal))}</span>
-          <span class="muted small"> · ${esc(D.percentText(energy.percentOfGoal))}</span></p>
+          <span class="muted small"> · ${esc(D.percentText(energy.percentOfGoal))}</span>${
+            energy.plannedKcal > 0 ? `<span class="muted small"> · ${esc(D.formatKcal(energy.plannedKcal))} geplant</span>` : ""
+          }</p>
         ${balance}
       </div>
       ${needText ? `<p class="muted small day-goal__need card-info">${esc(needText)}</p>` : ""}
       <div class="goal-bar goal-bar--energy" role="img" aria-label="${esc(`${D.formatKcal(energy.consumed)} von ${D.formatKcal(energy.goal)} Kalorienziel`)}">
-        ${energy.segments.map((s) => `<span class="goal-bar__fill" style="width:${s.percent}%;background:${SEGMENTS[s.key].fill}"></span>`).join("")}
+        ${energy.segments.map((s) => `<span class="goal-bar__fill" style="width:${s.percent}%;background:${SEGMENTS[s.key].fill}"></span>`).join("")}${plannedFills(energy.planned)}
         ${energy.goalMarkerPercent < 100 ? `<span class="goal-bar__marker" style="left:${energy.goalMarkerPercent}%"></span>` : ""}
       </div>
       <ul class="legend">
         ${energy.segments.map((s) => `<li><span class="swatch" style="background:${SEGMENTS[s.key].fill}"></span>${esc(SEGMENTS[s.key].label)} ${esc(D.formatKcal(s.kcal))}</li>`).join("")}
+        ${energy.planned.length ? `<li><span class="swatch swatch--planned"></span>Geplant ${esc(D.formatKcal(energy.plannedKcal))}${energy.planned.length > 1 ? ` (${energy.planned.length} Mahlzeiten)` : ""}</li>` : ""}
         ${energy.goalMarkerPercent < 100 ? `<li><span class="swatch swatch--marker"></span>Kalorienziel</li>` : ""}
       </ul>
     </div>`;
@@ -84,7 +90,8 @@ export function dayGoalHtml({ totals, goal, stepKcal = null, expenditure = null 
           <span class="macro-goal__status ${m.reached ? "is-reached" : ""}">${
             m.reached ? `✓ erreicht (${esc(D.percentText(m.percent))})` : `${esc(D.percentText(m.percent))} · noch ${esc(D.formatGrams(m.remaining))}`
           }</span></div>
-        <div class="goal-bar"><span class="goal-bar__fill" style="width:${Math.min(100, m.percent)}%;background:${MACRO_FILL[m.key]}"></span></div>
+        <div class="goal-bar"><span class="goal-bar__fill" style="width:${Math.min(100, m.percent)}%;background:${MACRO_FILL[m.key]}"></span>${plannedFills(m.planned)}</div>
+        ${m.plannedG > 0 ? `<p class="muted small macro-goal__over">+ ${esc(D.formatGrams(m.plannedG))} geplant</p>` : ""}
         ${m.remaining < 0 ? `<p class="muted small macro-goal__over">${esc(D.formatGrams(-m.remaining))} über dem Ziel</p>` : ""}
       </div>`,
       )

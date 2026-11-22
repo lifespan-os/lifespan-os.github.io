@@ -11,7 +11,7 @@ import { appDay } from "./appday.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.101.1";
+export const MOBILE_VERSION = "1.102.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -35,7 +35,15 @@ function cryptoRandom(n) {
 /** UTC, ISO 8601 mit Millisekunden, z. B. 2026-11-12T08:15:02.123Z */
 export const isoNow = (d = new Date()) => d.toISOString();
 
-export { setDayStart, dayStartMinutes, appDay } from "./appday.js";
+export {
+  setDayStart,
+  dayStartMinutes,
+  appDay,
+  setDayStartHistory,
+  dayStartHistory,
+  dayStartMinutesOn,
+  recordDayStartChange,
+} from "./appday.js";
 
 /** Kalendertag in Ortszeit: JJJJ-MM-TT */
 export function localDate(d = new Date()) {

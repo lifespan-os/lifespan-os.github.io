@@ -188,7 +188,7 @@ function macroEnergyShares(m) {
 }
 
 // src/domain/dayGoal.ts
-function energyGoalView(totals4, goalKcal) {
+function energyGoalView(totals4, goalKcal, planned = []) {
   const consumed = Math.max(0, totals4.energyKcal);
   const macroKcal = {
     protein: totals4.proteinG * KCAL_PER_GRAM.protein,
@@ -204,7 +204,9 @@ function energyGoalView(totals4, goalKcal) {
   ];
   const other = consumed - parts2.reduce((s, p) => s + p.kcal, 0);
   if (other > 0.5) parts2.push({ key: "other", kcal: other });
-  const base = Math.max(goalKcal, consumed);
+  const plannedValues = planned.map((p) => Math.max(0, p.energyKcal)).filter((v) => v > 0);
+  const plannedKcal = plannedValues.reduce((s, v) => s + v, 0);
+  const base = Math.max(goalKcal, consumed + plannedKcal);
   const segments2 = parts2.filter((p) => p.kcal > 0).map((p) => ({ ...p, percent: base > 0 ? p.kcal / base * 100 : 0 }));
   const diff = Math.round(goalKcal - consumed);
   const balance2 = diff > 0 ? { kind: "deficit", kcal: diff } : diff < 0 ? { kind: "surplus", kcal: -diff } : { kind: "exact" };
@@ -214,7 +216,9 @@ function energyGoalView(totals4, goalKcal) {
     percentOfGoal: goalKcal > 0 ? consumed / goalKcal * 100 : 0,
     balance: balance2,
     segments: segments2,
-    goalMarkerPercent: base > 0 ? goalKcal / base * 100 : 100
+    goalMarkerPercent: base > 0 ? goalKcal / base * 100 : 100,
+    planned: plannedValues.map((v) => ({ value: v, percent: base > 0 ? v / base * 100 : 0 })),
+    plannedKcal
   };
 }
 var MACROS = [
@@ -222,7 +226,7 @@ var MACROS = [
   { key: "carbs", label: "Kohlenhydrate", actual: (n2) => n2.carbsG },
   { key: "fat", label: "Fett", actual: (n2) => n2.fatG }
 ];
-function macroGoalRows(totals4, goals) {
+function macroGoalRows(totals4, goals, planned = []) {
   const goalOf = {
     protein: goals.proteinG,
     carbs: goals.carbsG,
@@ -233,6 +237,15 @@ function macroGoalRows(totals4, goals) {
     if (goal === null || goal <= 0) return [];
     const actual = m.actual(totals4);
     const remaining = Math.round((goal - actual) * 10) / 10;
+    let used = Math.min(100, actual / goal * 100);
+    const segs = [];
+    for (const p of planned) {
+      const value2 = Math.max(0, m.actual({ ...totals4, ...p }));
+      if (value2 <= 0) continue;
+      const percent = Math.min(value2 / goal * 100, 100 - used);
+      used += percent;
+      segs.push({ value: value2, percent });
+    }
     return [
       {
         key: m.key,
@@ -241,7 +254,9 @@ function macroGoalRows(totals4, goals) {
         goal,
         percent: actual / goal * 100,
         reached: remaining <= 0,
-        remaining
+        remaining,
+        planned: segs,
+        plannedG: segs.reduce((s, x) => s + x.value, 0)
       }
     ];
   });

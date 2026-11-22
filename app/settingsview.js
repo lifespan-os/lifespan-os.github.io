@@ -7,6 +7,7 @@
 // Tagesziele haben eine eigene Ansicht (goalsui.js); Wochen- und Hauptziele: goalsparity.js (1.91.0).
 
 import * as PS from "./pcsettings.js";
+import * as C from "./core.js";
 import { cardioSettingsCard } from "./parity.js";
 import { mainGoalsCard, weekGoalsCard } from "./goalsparity.js";
 import * as DP from "./devprefs.js";
@@ -52,6 +53,21 @@ async function putSetting(key, value) {
   S.pcsettings = PS.normSync(S.pcsettings);
   const changed = PS.setSetting(S.pcsettings, key, value, setting(buildDb(), key));
   if (changed) await X.store.set("pcsettings", S.pcsettings);
+  return changed;
+}
+
+/**
+ * Tageswechsel ändern: gilt ab dem aktuellen Tag, vergangene Tage behalten ihren (1.102.0,
+ * `ui.day_start_history` wie am PC). `true` = geändert.
+ */
+async function saveDayStart(v) {
+  const db = buildDb();
+  const previous = PS.validDayStart(setting(db, "ui.day_start")) ?? "00:00";
+  if (previous === v) return false;
+  const history = C.recordDayStartChange(C.dayStartHistory(), today(), previous, v);
+  await putSetting("ui.day_start_history", JSON.stringify(history));
+  const changed = await putSetting("ui.day_start", v === "00:00" ? null : v);
+  buildDb();
   return changed;
 }
 
@@ -477,8 +493,7 @@ export const settingsActions = {
   },
   "daystart-reset": async () => {
     X.S.dayStartError = null;
-    await putSetting("ui.day_start", null);
-    buildDb();
+    await saveDayStart("00:00");
     X.toast("Tageswechsel 00:00 Uhr");
     X.rerender();
   },
@@ -529,8 +544,7 @@ export function settingsChange(el) {
       return true;
     }
     S.dayStartError = null;
-    void putSetting("ui.day_start", v === "00:00" ? null : v).then((changed) => {
-      buildDb();
+    void saveDayStart(v).then((changed) => {
       if (changed) X.toast(`Neuer Tag ab ${v} Uhr`);
       X.rerender();
     });

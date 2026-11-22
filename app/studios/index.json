@@ -9,6 +9,15 @@
    "file": "dasgym-wien.json",
    "machines": 187,
    "created": "2026-11-20"
+  },
+  {
+   "id": "gruenblick-private-gym-01a1f8bc",
+   "name": "Grünblick Private Gym",
+   "address": "Meiereistraße 14 1020 Wien, Austria",
+   "website": "https://www.value-one.com/de/Projekte/Gruenblick-im-Viertel-Zwei_project_1651",
+   "file": "gruenblick-private-gym.json",
+   "machines": 9,
+   "created": "2026-11-22"
   }
  ]
 }

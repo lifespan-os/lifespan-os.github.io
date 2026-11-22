@@ -1,0 +1,56 @@
+{
+  "format": "lifespan-studio",
+  "version": 1,
+  "id": "gruenblick-private-gym-01a1f8bc",
+  "name": "Grünblick Private Gym",
+  "address": "Meiereistraße 14 1020 Wien, Austria",
+  "website": "https://www.value-one.com/de/Projekte/Gruenblick-im-Viertel-Zwei_project_1651",
+  "created": "2026-11-22",
+  "machines": [
+    {
+      "machine": "technogym-dbh0",
+      "number": "1",
+      "name": "Artis Synchro"
+    },
+    {
+      "machine": "technogym-dfc-dge",
+      "number": "2",
+      "name": "Excite+ Bike"
+    },
+    {
+      "machine": "technogym-djr0ndt",
+      "number": "3",
+      "name": "Skillrow"
+    },
+    {
+      "machine": "technogym-mnbc",
+      "number": "4",
+      "name": "Selection 700 Abdominal Crunch"
+    },
+    {
+      "machine": "technogym-mnfc",
+      "number": "5",
+      "name": "Selection 700 Chest Press"
+    },
+    {
+      "machine": "technogym-mnoc",
+      "number": "6",
+      "name": "Selection 700 Dual Abductor / Adductor"
+    },
+    {
+      "machine": "technogym-mnmc",
+      "number": "7",
+      "name": "Selection 700 Dual Leg Curl / Extension"
+    },
+    {
+      "machine": "technogym-mnnc",
+      "number": "8",
+      "name": "Selection 700 Dual Pectoral / Reverse Fly"
+    },
+    {
+      "machine": "technogym-mnlc",
+      "number": "9",
+      "name": "Selection 700 Lat Machine"
+    }
+  ]
+}

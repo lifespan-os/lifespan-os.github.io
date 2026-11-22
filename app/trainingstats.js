@@ -116,19 +116,46 @@ export function workoutBodyMapHtml(w, exerciseRows, { finished = false } = {}) {
   // abgeschlossene Einheit (1.73.0, Detailansicht) wie Bearbeiten: alle Sätze mit Werten
   const running = !finished && !w.backfill && !w.editOf;
   const map = D.muscleMapAll.muscleMapForOpenWorkout(sets, running, exercises, machinesOf(S.catalog), focusIndex(S.catalog));
-  const levels = D.muscleLevels(map.sets, "relative");
+  // Cardio dieser Einheit als Satz-Äquivalente (1.86.0, wie PC `draftCardioSets`): laufend = abgehakte Blöcke
+  const rowById = new Map(exerciseRows.map((e) => [e.id, e]));
+  // Datenbank nur bauen, wenn die Einheit Cardio enthält (Rendern während des Trainings bleibt schnell)
+  const hasCardio = w.exercises.some((we) => rowById.get(we.exerciseId)?.category === "cardio");
+  const db = hasCardio ? buildDb() : null;
+  const cardioSets = w.exercises.flatMap((we) => {
+    const ex = rowById.get(we.exerciseId);
+    if ((ex?.category ?? "strength") !== "cardio") return [];
+    const sportCategory = ex.sport_id ? (db?.sports?.get?.(ex.sport_id)?.category ?? null) : null;
+    const kind = P.effectiveKind("cardio", ex.cardio_kind ?? null, ex.name ?? "", ex.equipment ?? null, sportCategory);
+    return we.sets
+      .filter((s) => (running ? s.isDone : true))
+      .map((s) => ({
+        workoutId: "open",
+        exerciseId: we.exerciseId,
+        exerciseCategory: "cardio",
+        isWarmup: Boolean(s.isWarmup),
+        durationSeconds: Number.isFinite(s.durationSeconds) ? s.durationSeconds : null,
+        rpe: s.rpe ?? null,
+        hrAvg: s.hrAvg ?? null,
+        cardioKind: kind,
+      }));
+  });
+  const cardio = db ? CM.withCardio(db, cardioSets, map.sets, () => true, today()) : { on: false, values: map.sets, share: null, load: null, settings: null };
+  const values = cardio.values;
+  const levels = D.muscleLevels(values, "relative");
   const describe = (m) => {
     const level = levels[m];
     const vol = map.volumeKg[m] > 0 ? ` · ${C().formatVolume(map.volumeKg[m])}` : "";
-    return `${D.MUSCLE_LABELS[m]} · ${F(map.sets[m], 1)} ${map.sets[m] === 1 ? "Satz" : "Sätze"}${vol}${level > 0 ? ` · ${D.LEVEL_NAMES[level - 1]}` : ""}`;
+    return `${D.MUSCLE_LABELS[m]} · ${F(values[m], 1)} ${values[m] === 1 ? "Satz" : "Sätze"}${CM.cardioPart(cardio, m)}${vol}${level > 0 ? ` · ${D.LEVEL_NAMES[level - 1]}` : ""}`;
   };
   const sexRaw = S.catalog?.pc?.profile?.[0]?.sex;
   const sex = sexRaw === "female" || sexRaw === "male" ? sexRaw : "male";
   const n = map.totalSets;
   return `<section class="card card--training wo-bodymap"><div class="wo-head"><h3>Muskel-Körperkarte dieser Einheit</h3><span class="tag">${n} ${n === 1 ? "Arbeitssatz" : "Arbeitssätze"}${running ? " abgehakt" : ""}</span></div>
-    ${n === 0 ? `<p class="muted small">${running ? "Noch kein Arbeitssatz abgehakt – die Karte füllt sich mit jedem erledigten Satz." : "Noch keine Arbeitssätze von Kraftübungen eingetragen."}</p>` : ""}
-    ${heatmapHtml({ levels, describe, sex, active: S.woMuscle ?? null, act: "wo-muscle", legend: D.legendLabels("relative") })}
-    <p class="muted small">Farbe = Anteil am meistbelasteten Muskel dieser Einheit (Arbeitssätze, Hauptmuskel = 100 %, die übrigen anteilig nach Muskelfokus). ${running ? "Während des Trainings zählen die abgehakten Sätze." : "Gezählt werden alle Sätze mit Werten."}${
+    ${cardio.settings && cardioSets.length > 0 ? `<div class="muscle-map__tools">${CM.cardioSwitchHtml(cardio.settings.show, "wo-cardio")}</div>` : ""}
+    ${n === 0 && !cardio.on ? `<p class="muted small">${running ? "Noch kein Arbeitssatz abgehakt – die Karte füllt sich mit jedem erledigten Satz." : "Noch keine Arbeitssätze von Kraftübungen eingetragen."}</p>` : ""}
+    ${heatmapHtml({ levels, describe, sex, active: S.woMuscle ?? null, act: "wo-muscle", legend: D.legendLabels("relative"), cardioShare: cardio.share })}
+    ${cardio.settings?.show && cardioSets.length > 0 ? CM.cardioSummaryHtml(cardio.load, cardio.settings) : ""}
+    <p class="muted small">Farbe = Anteil am meistbelasteten Muskel dieser Einheit (Arbeitssätze, Hauptmuskel = 100 %, die übrigen anteilig nach Muskelfokus${cardio.settings?.show ? "; Cardio als Satz-Äquivalente, schraffiert" : ""}). ${running ? "Während des Trainings zählen die abgehakten Sätze." : "Gezählt werden alle Sätze mit Werten."}${
       map.setsWithoutMuscle > 0 ? ` ${map.setsWithoutMuscle} ${map.setsWithoutMuscle === 1 ? "Satz" : "Sätze"} ohne zuordenbare Muskelgruppe.` : ""
     }</p></section>`;
 }
@@ -198,7 +225,19 @@ export function viewReviewTab() {
 
   // Unter dem Zielvolumen
   const mapSettings = D.parseMuscleMapSettings(db.settings.get(D.MUSCLE_MAP_SETTINGS_KEY) ?? null);
-  const under = D.trainingProgress.underTargetMuscles(log, exercises, machines, mapSettings.targets, today(), focus);
+  // Cardio zählt hier nur mit, wenn es am PC auf die Wochenziele angerechnet wird (1.86.0, wie PC 1.0.172)
+  const cardioSet = CM.cardioAvailable() ? CM.cardioSettings(db) : null;
+  const cardioCtx = cardioSet?.countInTargets ? CM.cardioContext(db, today()) : null;
+  const under = D.trainingProgress.underTargetMuscles(
+    log,
+    exercises,
+    machines,
+    mapSettings.targets,
+    today(),
+    focus,
+    D.trainingProgress.UNDER_TARGET_WEEKS,
+    cardioCtx ? (wk) => D.cardioMuscles.cardioMuscleLoad(log, cardioCtx, (s) => s.date >= wk.from && s.date <= wk.to).sets : undefined,
+  );
   const first = under.weeks[0];
   const last = under.weeks.at(-1);
   const range = first && last ? `${fmtDate(first.from)} – ${fmtDate(last.to)}` : "";
@@ -239,7 +278,7 @@ export function viewReviewTab() {
             : `${under.below.length ? `<ul class="plain-list insight-list">${under.below.map((m) => `<li><strong>${esc(m.group)} – ${esc(m.label)}:</strong> ${esc(D.trainingProgress.describeUnderTarget(m))}</li>`).join("")}</ul>` : ""}
                ${under.untrained.length ? `<p class="muted small">In diesen Wochen gar nicht trainiert: ${esc(under.untrained.map((m) => m.label).join(", "))}.</p>` : ""}`
       }
-      <p class="muted small">Gezählt werden gewichtete Arbeitssätze je Woche (Montag–Sonntag) wie in der Muskel-Körperkarte. Zielvolumen = Beginn der Stufe „Aufbau“ deiner Zielwerte je Muskel (Overview → Muskel-Körperkarte → Individuell; ohne eigene Werte die Ausgangswerte). Ein Muskel erscheint nur, wenn er in jeder der Wochen darunter lag. Das ist ein Hinweis, keine Bewertung.</p>
+      <p class="muted small">Gezählt werden gewichtete Arbeitssätze je Woche (Montag–Sonntag) wie in der Muskel-Körperkarte${cardioCtx ? ", dazu die Satz-Äquivalente aus Cardio" : ""}. Zielvolumen = Beginn der Stufe „Aufbau“ deiner Zielwerte je Muskel (Overview → Muskel-Körperkarte → Individuell; ohne eigene Werte die Ausgangswerte). Ein Muskel erscheint nur, wenn er in jeder der Wochen darunter lag. Das ist ein Hinweis, keine Bewertung.</p>
     </section>` },
     { id: "groups", node: `<section class="card card--training"><div class="wo-head"><h3>Trainingsvolumen je Muskelgruppe</h3><span class="tag">Kraftübungen, ohne Aufwärmsätze</span></div>
       ${
@@ -722,6 +761,10 @@ export const statsActions = {
   },
   "train-review-metric": (el) => {
     X.S.trainReviewMetric = el.dataset.arg;
+    X.rerender();
+  },
+  "wo-cardio": (el) => {
+    CM.setCardioShow(el.dataset.arg === "1");
     X.rerender();
   },
   "wo-muscle": (el) => {

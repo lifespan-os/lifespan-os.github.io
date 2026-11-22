@@ -144,15 +144,57 @@ export function groupWater(glasses, dayStart = 0, withinMin = 45) {
   return out;
 }
 
+/**
+ * Feste Spalten (1.104.0, wie PC 1.0.178): eine Spalte untereinander – überdeckte Karten rutschen
+ * nach unten (`shifted`, Verbindung zur Uhrzeit).
+ */
+export function stackLane(list, { pxPerMin = 1, gap = 6, dayStart = 0 } = {}) {
+  const clamp = (m) => Math.max(dayStart, Math.min(dayStart + DAY - 1, m));
+  const sorted = [...list].sort((a, b) => a.minute - b.minute || String(a.key).localeCompare(String(b.key)));
+  let bottom = -Infinity;
+  return sorted.map((e) => {
+    const timeY = (clamp(e.minute) - dayStart) * pxPerMin;
+    const y = Math.max(timeY, bottom);
+    bottom = y + e.height + gap;
+    return { ...e, y, timeY, shifted: y > timeY + 0.5 };
+  });
+}
+
+/** Symbolspalte: Einträge weniger als `span` px nach dem ersten einer Gruppe bilden ein Symbol. */
+export function clusterLane(list, { pxPerMin = 1, span = 30, dayStart = 0 } = {}) {
+  const sorted = [...list].sort((a, b) => a.minute - b.minute || String(a.key).localeCompare(String(b.key)));
+  const out = [];
+  for (const e of sorted) {
+    const y = (Math.max(dayStart, e.minute) - dayStart) * pxPerMin;
+    const last = out[out.length - 1];
+    if (last && y - last.y < span) last.items.push(e);
+    else out.push({ key: e.key, minute: e.minute, y, items: [e] });
+  }
+  return out;
+}
+
+/** Volle Stunden der Achse mit ihrer Höhe. */
+export function hourMarks(dayStart, pxPerMin) {
+  const out = [];
+  for (let h = Math.ceil(dayStart / 60); h * 60 <= dayStart + DAY - 1; h++) out.push({ label: clockOf(h * 60), y: (h * 60 - dayStart) * pxPerMin });
+  return out;
+}
+
 // ------------------------------------------------------------------ Ansicht
 
 const PX = 0.9;
-/** Spalten: linker Rand der ersten (Uhrzeit + Punkt), Mitte des Punkts, Abstand, schmalste Spalte */
-const COL_LEFT = 66;
-const DOT_X = 52;
-const COL_GAP = 8;
-const COL_MIN = 104;
+/** Achse (Mitte), linker Rand der Mahlzeiten, Symbolspalten (1.104.0) */
+const AXIS_X = 42;
+const MEALS_LEFT = 52;
+const ICON_W = 32;
+const CAF_W = 52;
+const LANE_GAP = 3;
+const MARK_H = 28;
+const GRIP_H = 30;
 const ZOOM_KEY = "lifespan.mealsZoom";
+const LANES = ["supplement", "water", "caffeine"];
+const LANE_ICON = { supplement: "💊", water: "💧", caffeine: "☕" };
+const LANE_LABEL = { supplement: "Supplements", water: "Wasser", caffeine: "Koffein" };
 /** Zoom dieses Handys (zwei Finger), gemerkt im Browser */
 function zoomNow() {
   const S = X.S;
@@ -173,8 +215,6 @@ function setZoom(z) {
     // ohne Speicher gilt der Zoom bis zum Neustart
   }
 }
-/** Höhe des Knopfes; er belegt auf der Achse Platz wie ein Eintrag, damit er nichts verdeckt. */
-const HANDLE_H = 52;
 const clockMinute = () => {
   const d = new Date();
   return d.getHours() * 60 + d.getMinutes();
@@ -218,13 +258,13 @@ const foodsLine = (items) => {
   return names.length > 3 ? `${names.slice(0, 3).join(" · ")} · +${names.length - 3}` : names.join(" · ");
 };
 
-/** Schlüssel für Wischen: Art|ID|Name */
+const liters = (ml) => `${String(Math.round(ml / 10) / 100).replace(".", ",")} l`;
+
+/** Schlüssel für Wischen und Menü: Art|ID|Name */
 function swipeKey(it) {
   if (it.kind === "meal") return `meal|${it.slot.ref.name ? N.extraKey(it.slot.ref.name) : it.slot.ref.mealType}|${it.slot.title}`;
   if (it.kind === "planned") return `planned|${it.plan.id}|${N.mealLabel(it.plan.key)} (geplant)`;
-  if (it.kind === "caffeine") return `caffeine|${it.id}|${it.label}`;
-  if (it.kind === "supplement") return `supplement|${it.id}|${it.label}`;
-  return "";
+  return `${it.kind}|${it.id}|${it.label}`;
 }
 
 /**
@@ -242,7 +282,8 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
   const now = isToday ? axisNow(date) : null;
   const future = date > today();
   const hMinute = h.pinned ?? axisNow(date);
-  const list = [];
+  const meals = [];
+  const icons = { supplement: [], water: [], caffeine: [] };
   const untimed = [];
   for (const slot of slots) {
     const m = slot.meal;
@@ -252,12 +293,12 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
       untimed.push(slot);
       continue;
     }
-    list.push({ key: `meal:${slot.key}`, kind: "meal", minute, time: m.time, height: 96 + (glucoseOf(m) ? 18 : 0), slot, meal: m });
+    meals.push({ key: `meal:${slot.key}`, kind: "meal", minute, time: m.time, height: 78 + (glucoseOf(m) ? 18 : 0), slot, meal: m });
   }
   const planned = local ? N.plannedOn(S.catalog, local, date) : [];
   for (const p of planned) {
     const minute = ax(p.time);
-    if (minute !== null) list.push({ key: `plan:${p.id}`, kind: "planned", minute, time: p.time, height: 150, plan: p });
+    if (minute !== null) meals.push({ key: `plan:${p.id}`, kind: "planned", minute, time: p.time, height: 104, plan: p });
   }
   let caffeine = [];
   try {
@@ -267,7 +308,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
   }
   for (const c of caffeine) {
     const minute = ax(c.time);
-    if (minute !== null) list.push({ key: `caf:${c.id}`, kind: "caffeine", id: c.id, label: c.label, minute, time: c.time, height: 32, text: `${c.label} · ${Math.round(c.mg)} mg Koffein` });
+    if (minute !== null) icons.caffeine.push({ key: `caf:${c.id}`, kind: "caffeine", id: c.id, label: c.label, mg: c.mg, minute, time: c.time, text: `${c.label} · ${Math.round(c.mg)} mg Koffein` });
   }
   const mealTimes = new Map(slots.filter((s) => s.meal).map((s) => [s.meal.id, s.meal.time]));
   // Supplement-Einträge der Koffein-Erfassung stehen schon als Koffein da
@@ -276,68 +317,81 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
     if (fromCaffeine.has(i.id)) continue;
     const t = i.time ?? (i.mealId ? mealTimes.get(i.mealId) : null) ?? null;
     const minute = ax(t);
-    if (minute !== null) list.push({ key: `sup:${i.id}`, kind: "supplement", id: i.id, label: i.name, minute, time: t, height: 32, text: `${i.name}${i.items.length > 1 ? ` · ${i.items.length} Supplements` : ""}` });
+    if (minute !== null) icons.supplement.push({ key: `sup:${i.id}`, kind: "supplement", id: i.id, label: i.name, count: i.items.length, minute, time: t, text: `${i.name}${i.items.length > 1 ? ` · ${i.items.length} Supplements` : ""}` });
   }
-  for (const [n, g] of groupWater(P.waterDay(db, date).glasses, dayStart).entries()) {
-    list.push({ key: `water:${n}`, kind: "water", minute: g.minute, time: clockOf(g.minute), height: 32, text: `Wasser · ${g.count} ${g.count === 1 ? "Glas" : "Gläser"} (${String(Math.round(g.ml / 10) / 100).replace(".", ",")} l)` });
+  for (const g of P.waterDay(db, date).glasses) {
+    const minute = ax(g.time);
+    if (minute !== null) icons.water.push({ key: `water:${g.id}`, kind: "water", id: g.id, label: `Wasser ${liters(g.amountMl)}`, ml: g.amountMl, minute, time: g.time, text: `Wasser · ${liters(g.amountMl)}` });
   }
-  list.push({ key: "!handle", kind: "handle", minute: hMinute, time: clockOf(hMinute), height: HANDLE_H });
   const zoom = zoomNow();
   const px = PX * zoom;
   // Breite der Achse: gemessen an der bisherigen Ansicht, sonst geschätzt
   const measured = document.querySelector(".mtl")?.clientWidth ?? 0;
-  const width = Math.max(260, measured > 0 ? measured : Math.min(window.innerWidth || 390, 760) - 72);
-  const maxCols = Math.max(1, Math.min(3, Math.floor((width - COL_LEFT + COL_GAP) / (COL_MIN + COL_GAP))));
-  const layout = layoutTimeline(list, { pxPerMin: px, gap: 8, dayStart, maxCols, firstKey: "!handle" });
-  const colW = (width - COL_LEFT - (layout.cols - 1) * COL_GAP) / Math.max(1, layout.cols);
-  const colLeft = (c) => COL_LEFT + c * (colW + COL_GAP);
-  const side = (it) => it.col > 0 || it.shifted;
-  const handleItem = layout.items.find((i) => i.kind === "handle");
+  const width = Math.max(280, measured > 0 ? measured : Math.min(window.innerWidth || 390, 760) - 40);
+  const mealsW = Math.max(130, Math.min(560, width - MEALS_LEFT - 2 * ICON_W - CAF_W - 3 * LANE_GAP));
+  const laneLeft = {
+    supplement: MEALS_LEFT + mealsW + LANE_GAP,
+    water: MEALS_LEFT + mealsW + 2 * LANE_GAP + ICON_W,
+    caffeine: MEALS_LEFT + mealsW + 3 * LANE_GAP + 2 * ICON_W,
+  };
+  const laneW = { supplement: ICON_W, water: ICON_W, caffeine: CAF_W };
+  const right = laneLeft.caffeine + CAF_W;
+  const stacked = stackLane(meals, { pxPerMin: px, gap: 6, dayStart });
+  const clusters = Object.fromEntries(LANES.map((l) => [l, clusterLane(icons[l], { pxPerMin: px, span: MARK_H + 4, dayStart })]));
+  const hours = hourMarks(dayStart, px);
+  const endY = (DAY - 1) * px;
+  const hy = (hMinute - dayStart) * px;
   const handlePlanned = plannedAt(date, hMinute);
-  const hy = handleItem.y + 24;
   const handleClock = clockOf(hMinute);
+  const height = Math.ceil(Math.max(endY, ...stacked.map((x) => x.y + x.height)) + 16);
+  // Stützpunkte für das Ziehen (linear: Anfang und Ende)
+  const anchors = [
+    [dayStart, 0],
+    [dayStart + DAY - 1, Math.round(endY * 10) / 10],
+  ];
   // Mahlzeit, in die der Knopf einträgt: Vorschlag nach Uhrzeit, änderbar
   const options = slots.map((s) => ({ key: s.ref.name ? N.extraKey(s.ref.name) : s.ref.mealType, title: s.title, type: s.ref.mealType }));
   const suggested = options.find((o) => o.type === mealTypeAt(hMinute))?.key ?? options[0]?.key ?? "";
   const chosen = h.key && options.some((o) => o.key === h.key) ? h.key : suggested;
   const chosenTitle = options.find((o) => o.key === chosen)?.title ?? "Mahlzeit";
 
-  // schmale Spalten: geplante Karten nur mit „Gegessen“ (Rest per Wischen)
-  const narrow = colW < 200;
-  const rowHtml = (it) => {
-    let body = "";
+  // schmale Spalte: geplante Karten nur mit „Gegessen“ (Rest per Wischen)
+  const narrow = mealsW < 220;
+  const cardHtml = (it) => {
     if (it.kind === "meal") {
       const m = it.meal;
       const key = it.slot.ref.name ? N.extraKey(it.slot.ref.name) : it.slot.ref.mealType;
       const g = glucoseOf(m);
-      body = `<button type="button" class="mtl-card" data-act="mtl-open" data-arg="${esc(key)}"><span class="mtl-card__head"><b>${esc(it.slot.title)}</b><span class="mtl-kcal">${Math.round(m.energyKcal)} kcal</span></span>
-        ${macroBar(m)}<span class="muted small mtl-foods">${esc(m.items.length ? foodsLine(m.items) : "Fasttracking-Werte")}</span>${g ? `<span class="muted small">${esc(g)}</span>` : ""}</button>`;
-    } else if (it.kind === "planned") {
-      const p = it.plan;
-      body = `<div class="mtl-card mtl-card--planned"><span class="mtl-card__head"><b>${esc(N.mealLabel(p.key))} · geplant</b><span class="mtl-kcal">${Math.round(p.energyKcal)} kcal</span></span>
-        <span class="muted small mtl-foods">${esc(foodsLine(p.items))}</span>
-        ${narrow ? `<span class="mtl-card__actions"><button class="btn sm primary" data-act="mtl-confirm" data-arg="${esc(p.id)}" aria-label="Gegessen">✓</button></span>` : `<span class="mtl-card__actions"><button class="btn sm primary" data-act="mtl-confirm" data-arg="${esc(p.id)}">✓ Gegessen</button><button class="btn sm" data-act="mtl-plan-add" data-arg="${esc(p.id)}">+ Lebensmittel</button>${
-          handleClock !== p.time ? `<button class="btn sm ghost" data-act="mtl-plan-move" data-arg="${esc(p.id)}">Auf ${handleClock}</button>` : ""
-        }<button class="btn sm ghost" data-act="mtl-plan-del" data-arg="${esc(p.id)}" aria-label="Geplante Mahlzeit löschen">✕</button></span>`}</div>`;
-    } else body = `<span class="mtl-chip mtl-chip--${it.kind}">${esc(it.text)}</span>`;
-    // Wischen: nach rechts = bearbeiten, nach links = löschen (Wasser nicht)
-    const swipe = it.kind === "water" ? "" : ` data-swipe="${esc(swipeKey(it))}"`;
-    if (side(it)) {
-      return `<span class="mtl-marker mtl-row--${it.kind}" style="top:${it.timeY.toFixed(1)}px" aria-hidden="true"><span class="mtl-dot"></span></span>
-        <div class="mtl-row mtl-row--side mtl-row--${it.kind}" style="top:${it.y.toFixed(1)}px;left:${colLeft(it.col).toFixed(1)}px;width:${colW.toFixed(1)}px"${swipe}><span class="mtl-ctime">${esc(it.time)}</span>${body}</div>`;
+      return `<button type="button" class="mtl-card" data-act="mtl-open" data-arg="${esc(key)}"><span class="mtl-card__head"><span class="mtl-card__time">${esc(m.time)}</span><b>${esc(it.slot.title)}</b></span>
+        ${macroBar(m)}<span class="muted small mtl-foods"><span class="mtl-kcal">${Math.round(m.energyKcal)} kcal</span> · ${esc(m.items.length ? foodsLine(m.items) : "Fasttracking-Werte")}</span>${g ? `<span class="muted small">${esc(g)}</span>` : ""}</button>`;
     }
-    return `<div class="mtl-row mtl-row--${it.kind}" style="top:${it.y.toFixed(1)}px;width:${(COL_LEFT + colW).toFixed(1)}px"${swipe}><span class="mtl-time">${esc(it.time)}</span><span class="mtl-dot" aria-hidden="true"></span>${body}</div>`;
+    const p = it.plan;
+    return `<div class="mtl-card mtl-card--planned"><span class="mtl-card__head"><span class="mtl-card__time">${esc(p.time)}</span><b>${esc(N.mealLabel(p.key))} · geplant</b></span>
+      <span class="muted small mtl-foods"><span class="mtl-kcal">${Math.round(p.energyKcal)} kcal</span> · ${esc(foodsLine(p.items))}</span>
+      ${narrow ? `<span class="mtl-card__actions"><button class="btn sm primary" data-act="mtl-confirm" data-arg="${esc(p.id)}">✓ Gegessen</button></span>` : `<span class="mtl-card__actions"><button class="btn sm primary" data-act="mtl-confirm" data-arg="${esc(p.id)}">✓ Gegessen</button><button class="btn sm" data-act="mtl-plan-add" data-arg="${esc(p.id)}">+ Lebensmittel</button>${
+        handleClock !== p.time ? `<button class="btn sm ghost" data-act="mtl-plan-move" data-arg="${esc(p.id)}">Auf ${handleClock}</button>` : ""
+      }<button class="btn sm ghost" data-act="mtl-plan-del" data-arg="${esc(p.id)}" aria-label="Geplante Mahlzeit löschen">✕</button></span>`}</div>`;
   };
-  const links = layout.items
-    .filter((it) => it.kind !== "handle" && side(it))
-    .map((it) => `<line x1="${DOT_X}" y1="${(it.timeY + 10).toFixed(1)}" x2="${colLeft(it.col).toFixed(1)}" y2="${(it.y + (it.kind === "meal" || it.kind === "planned" ? 10 : 15)).toFixed(1)}"/>`)
+  const links = stacked
+    .filter((x) => x.shifted)
+    .map((x) => `<polyline points="${AXIS_X},${x.timeY.toFixed(1)} ${MEALS_LEFT - 5},${x.timeY.toFixed(1)} ${MEALS_LEFT - 5},${(x.y + 12).toFixed(1)} ${MEALS_LEFT},${(x.y + 12).toFixed(1)}"/>`)
     .join("");
-  const col0 = layout.items.filter((i) => i.col === 0).map((i) => i.timeY);
+  const marks = LANES.map((lane) =>
+    clusters[lane]
+      .map((c) => {
+        const count = lane === "supplement" ? c.items.reduce((n, e) => n + (e.count || 1), 0) : c.items.length;
+        const mg = c.items.reduce((n, e) => n + (e.mg || 0), 0);
+        const label = `${LANE_LABEL[lane]}: ${c.items.map((e) => `${e.time} ${e.text}`).join(" · ")}`;
+        return `<button type="button" class="mtl-mark mtl-mark--${lane}" style="top:${Math.max(0, c.y - MARK_H / 2).toFixed(1)}px;left:${laneLeft[lane] + 2}px;max-width:${laneW[lane] - 4}px" data-act="mtl-menu" data-arg="${esc(c.items.map((e) => swipeKey(e)).join("\n"))}" aria-label="${esc(label)}"><span aria-hidden="true">${LANE_ICON[lane]}</span>${lane === "caffeine" ? `<span class="mtl-mg">${Math.round(mg)}</span>` : ""}${count > 1 ? `<span class="mtl-badge">${count}</span>` : ""}</button>`;
+      })
+      .join(""),
+  ).join("");
   const ask = S.mtlAsk && S.mtlAsk.date === date ? S.mtlAsk : null;
+  const menu = S.mtlMenu && S.mtlMenu.date === date ? S.mtlMenu : null;
 
   const panel =
     h.panel && options.length
-      ? `<div class="mtl-panel" style="top:${(hy + 30).toFixed(1)}px" role="dialog" aria-label="Neuer Eintrag">
+      ? `<div class="mtl-panel" style="top:${(hy + GRIP_H / 2 + 6).toFixed(1)}px" role="dialog" aria-label="Neuer Eintrag">
       <b>${esc(chosenTitle)} · ${handleClock} Uhr · ${handlePlanned ? "geplant" : "gegessen"}</b>
       <label class="field"><span>Mahlzeit</span><select data-diary="mtl-key">${options.map((o) => `<option value="${esc(o.key)}" ${o.key === chosen ? "selected" : ""}>${esc(o.title)}</option>`).join("")}</select></label>
       <span class="muted small">${handlePlanned ? "Zählt erst, wenn du sie mit „Gegessen“ bestätigst." : "Wird mit dieser Uhrzeit ins Tagebuch eingetragen."}</span>
@@ -346,27 +400,49 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
       }<button class="btn sm ghost" data-act="mtl-close">Abbrechen</button></div></div>`
       : "";
 
+  const sheet = menu
+    ? `<div class="mtl-sheet" role="dialog" aria-label="Einträge bearbeiten">${menu.items
+        .map((k) => {
+          const [kind, id, ...rest] = k.split("|");
+          const it = [...icons.supplement, ...icons.water, ...icons.caffeine].find((e) => e.kind === kind && e.id === id);
+          if (!it) return "";
+          const edit = menu.edit === id && kind === "water";
+          return `<div class="mtl-sheet__row"><span class="mtl-sheet__name"><span class="muted">${esc(it.time)}</span> ${esc(it.text)}</span>${
+            edit
+              ? `<span class="row"><input type="time" id="mtl-water-time" value="${esc(it.time)}" aria-label="Uhrzeit"><button class="btn sm primary" data-act="mtl-water-save" data-arg="${esc(id)}">Speichern</button><button class="btn sm ghost" data-act="mtl-menu-edit" data-arg="">Abbrechen</button></span>`
+              : `<span class="row"><button class="btn sm" data-act="${kind === "water" ? "mtl-menu-edit" : "mtl-menu-go"}" data-arg="${esc(kind === "water" ? id : k)}">✎ ${kind === "water" ? "Uhrzeit" : "Bearbeiten"}</button><button class="btn sm ghost" data-act="mtl-menu-del" data-arg="${esc(`${kind}|${id}|${rest.join("|")}`)}">🗑 Löschen</button></span>`
+          }</div>`;
+        })
+        .join("")}<button class="btn sm ghost" data-act="mtl-menu-close">Schließen</button></div>`
+    : "";
+
   return `<div class="mtl-wrap">
     ${untimed.length ? `<p class="muted small">Ohne Uhrzeit: ${untimed.map((s) => `<button class="linkbtn" data-act="mtl-open" data-arg="${esc(s.ref.name ? N.extraKey(s.ref.name) : s.ref.mealType)}">${esc(s.title)} · ${Math.round(s.meal.energyKcal)} kcal</button>`).join(" ")}</p>` : ""}
-    <div class="mtl-tools"><span class="muted small">Zoom ${Math.round(zoom * 100)} %</span><button class="btn sm ghost" data-act="mtl-zoom" data-arg="0.8" aria-label="Verkleinern">−</button><button class="btn sm ghost" data-act="mtl-zoom" data-arg="1.25" aria-label="Vergrößern">+</button></div>
+    <div class="mtl-tools"><button class="btn sm primary" data-act="mtl-now">＋ ${future ? "Planen" : "Jetzt eintragen"}</button><span class="spacer"></span><span class="muted small">${Math.round(zoom * 100)} %</span><button class="btn sm ghost" data-act="mtl-zoom" data-arg="0.8" aria-label="Verkleinern">−</button><button class="btn sm ghost" data-act="mtl-zoom" data-arg="1.25" aria-label="Vergrößern">+</button></div>
     ${
       ask
         ? `<div class="mtl-ask" role="alertdialog" aria-label="Löschen bestätigen"><b>„${esc(ask.label)}“ löschen?</b>${ask.note ? `<span class="muted small">${esc(ask.note)}</span>` : ""}<div class="row"><button class="btn sm danger" data-act="mtl-ask-yes">Löschen</button><button class="btn sm ghost" data-act="mtl-ask-no">Abbrechen</button></div></div>`
         : ""
     }
-    <div class="mtl" style="height:${Math.ceil(Math.max(layout.height + 24, h.panel ? handleItem.y + HANDLE_H + 250 : 0))}px" data-anchors="${esc(JSON.stringify(layout.anchors.map((a) => [a.minute, Math.round(a.y * 10) / 10])))}" data-now="${now ?? ""}" data-future="${future ? 1 : 0}" data-start="${dayStart}" data-minute="${hMinute}" data-pinned="${h.pinned === null ? "" : 1}" data-zoom="${zoom}">
+    <div class="mtl-heads" style="width:${right}px"><span class="mtl-head" style="left:${MEALS_LEFT}px">Mahlzeiten</span>${LANES.map((l) => `<span class="mtl-head mtl-head--icon" style="left:${laneLeft[l]}px;width:${laneW[l]}px" aria-label="${LANE_LABEL[l]}">${LANE_ICON[l]}</span>`).join("")}</div>
+    <div class="mtl" style="height:${height}px" data-anchors="${esc(JSON.stringify(anchors))}" data-now="${now ?? ""}" data-future="${future ? 1 : 0}" data-start="${dayStart}" data-minute="${hMinute}" data-pinned="${h.pinned === null ? "" : 1}" data-zoom="${zoom}">
+      ${LANES.map((l) => `<span class="mtl-lane" style="left:${laneLeft[l]}px;width:${laneW[l]}px" aria-hidden="true"></span>`).join("")}
+      ${hours.map((x) => `<span class="mtl-hourline" style="top:${x.y.toFixed(1)}px;width:${right - AXIS_X}px" aria-hidden="true"></span>`).join("")}
       <span class="mtl-axis" aria-hidden="true"></span>
+      ${hours.filter((x) => Math.abs(x.y - hy) >= 16).map((x) => `<span class="mtl-hour" style="top:${x.y.toFixed(1)}px" aria-hidden="true">${x.label}</span>`).join("")}
+      ${now !== null ? `<span class="mtl-now" style="top:${((now - dayStart) * px).toFixed(1)}px;width:${right - AXIS_X}px" aria-hidden="true"></span>` : ""}
       <svg class="mtl-links" aria-hidden="true">${links}</svg>
-      ${layout.hours.filter((x) => !col0.some((y) => Math.abs(y - x.y) < 14)).map((x) => `<span class="mtl-hour" style="top:${x.y.toFixed(1)}px" aria-hidden="true">${x.label}</span>`).join("")}
-      ${now !== null ? `<span class="mtl-now" style="top:${((now - dayStart) * px).toFixed(1)}px" aria-hidden="true"></span>` : ""}
-      ${layout.items.filter((i) => i.kind !== "handle").map(rowHtml).join("")}
-      <div class="mtl-handle ${handlePlanned ? "is-planned" : ""}" style="top:${handleItem.y.toFixed(1)}px;width:${(COL_LEFT + colW).toFixed(1)}px">
-        <span class="mtl-time mtl-time--handle">${handleClock}</span>
-        <button type="button" class="mtl-grip" aria-label="Neuer Eintrag um ${handleClock} Uhr – zum Verschieben ziehen">＋ <span class="mtl-grip__text">${handlePlanned ? "Planen" : now !== null && Math.abs(hMinute - now) <= 1 ? "Jetzt eintragen" : "Eintragen"}</span></button>
+      ${stacked.map((x) => `<span class="mtl-dot mtl-dot--${x.kind}" style="top:${x.timeY.toFixed(1)}px" aria-hidden="true"></span>`).join("")}
+      ${stacked.map((x) => `<div class="mtl-slot" style="top:${x.y.toFixed(1)}px;left:${MEALS_LEFT}px;width:${mealsW}px" data-swipe="${esc(swipeKey(x))}">${cardHtml(x)}</div>`).join("")}
+      ${marks}
+      <div class="mtl-handle ${handlePlanned ? "is-planned" : ""}" style="top:${(hy - GRIP_H / 2).toFixed(1)}px;width:${right}px">
+        <button type="button" class="mtl-grip" aria-label="Neuer Eintrag um ${handleClock} Uhr – zum Verschieben ziehen"><span class="mtl-time--handle">${handleClock}</span></button>
+        <span class="mtl-handle-line" aria-hidden="true"></span>
       </div>
       ${panel}
     </div>
-    <p class="muted small">Den orangen Knopf antippen oder an die passende Uhrzeit ziehen: davor = gegessen, danach = geplant. Eintrag nach rechts wischen = bearbeiten, nach links = löschen. Mit zwei Fingern zoomen.</p>
+    ${sheet}
+    <p class="muted small">Den orangen Knopf an der Achse antippen oder an die passende Uhrzeit ziehen: davor = gegessen, danach = geplant. Mahlzeit nach rechts wischen = bearbeiten, nach links = löschen; Symbol antippen = bearbeiten oder löschen. Mit zwei Fingern zoomen.</p>
   </div>`;
 }
 
@@ -380,9 +456,8 @@ export function initTimelineDrag() {
   let g = null;
   const setLabel = (el, minute) => {
     const planned = el.future || (el.now !== null && minute > el.now);
-    el.handle.style.top = `${yAt(el.anchors, minute).toFixed(1)}px`;
+    el.handle.style.top = `${(yAt(el.anchors, minute) - GRIP_H / 2).toFixed(1)}px`;
     el.time.textContent = clockOf(minute);
-    el.text.textContent = planned ? "Planen" : "Eintragen";
     el.handle.classList.toggle("is-planned", planned);
   };
   document.addEventListener("pointerdown", (ev) => {
@@ -402,7 +477,6 @@ export function initTimelineDrag() {
       anchors,
       handle,
       time: handle.querySelector(".mtl-time--handle"),
-      text: handle.querySelector(".mtl-grip__text"),
       startY: ev.clientY,
       moved: false,
       minute: Number(box.dataset.minute) || 720,
@@ -420,7 +494,7 @@ export function initTimelineDrag() {
   const follow = () => {
     if (!g) return;
     const rect = g.box.getBoundingClientRect();
-    const minute = snapMinute(minuteAt(g.anchors, g.lastY - rect.top - 24), 1, g.start);
+    const minute = snapMinute(minuteAt(g.anchors, g.lastY - rect.top), 1, g.start);
     if (minute !== g.minute) {
       g.minute = minute;
       setLabel(g, minute);
@@ -603,6 +677,11 @@ async function swipeEdit(kind, id) {
     diaryCaffeineActions["dcf-edit"](fake);
     requestAnimationFrame(() => document.getElementById("dcf-drink")?.scrollIntoView({ block: "center" }));
   } else if (kind === "supplement") diaryActions["supp-edit"](fake);
+  else if (kind === "water") {
+    const S = X.S;
+    S.mtlMenu = { date: S.diaryDate ?? today(), items: [`water|${id}|Wasser`], edit: id };
+    X.rerender();
+  }
 }
 
 /** Nach Wischen nach links: Rückfrage im Tagesverlauf. */
@@ -628,6 +707,9 @@ async function doDelete(a) {
     } else if (a.kind === "supplement") {
       SP.deleteIntake(buildDb(), S.supp, a.id, new Date());
       await persistSupp();
+    } else if (a.kind === "water") {
+      P.deleteWaterGlass(buildDb(), S.water, a.id, new Date());
+      await X.store.set("water", S.water);
     } else if (a.kind === "meal") {
       const local = S.food.local;
       let removed = 0;
@@ -680,6 +762,50 @@ async function persistFood() {
 }
 
 export const timelineActions = {
+  "mtl-now": () => {
+    const S = X.S;
+    const date = S.diaryDate ?? today();
+    S.mtl = { date, pinned: null, panel: true, key: null };
+    S.mtlMenu = null;
+    X.rerender();
+  },
+  "mtl-menu": (el) => {
+    const S = X.S;
+    S.mtlMenu = { date: S.diaryDate ?? today(), items: String(el.dataset.arg || "").split("\n").filter(Boolean), edit: null };
+    X.rerender();
+  },
+  "mtl-menu-close": () => {
+    X.S.mtlMenu = null;
+    X.rerender();
+  },
+  "mtl-menu-edit": (el) => {
+    if (X.S.mtlMenu) X.S.mtlMenu.edit = el.dataset.arg || null;
+    X.rerender();
+    requestAnimationFrame(() => document.getElementById("mtl-water-time")?.focus());
+  },
+  "mtl-menu-go": (el) => {
+    const [kind, id] = String(el.dataset.arg).split("|");
+    X.S.mtlMenu = null;
+    void swipeEdit(kind, id);
+  },
+  "mtl-menu-del": (el) => {
+    const [kind, id, ...rest] = String(el.dataset.arg).split("|");
+    X.S.mtlMenu = null;
+    askDelete(kind, id, rest.join("|"));
+  },
+  "mtl-water-save": async (el) => {
+    const S = X.S;
+    const time = document.getElementById("mtl-water-time")?.value ?? "";
+    try {
+      P.moveWaterGlass(buildDb(), S.water, el.dataset.arg, time, new Date());
+      await X.store.set("water", S.water);
+      S.mtlMenu = null;
+      X.toast(`Glas Wasser auf ${time} Uhr verschoben.`);
+    } catch (e) {
+      X.toast(e.message, true);
+    }
+    X.rerender();
+  },
   "mtl-zoom": (el) => {
     setZoom(zoomNow() * Number(el.dataset.arg || 1));
     X.rerender();

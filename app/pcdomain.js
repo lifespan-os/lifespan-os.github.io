@@ -29977,7 +29977,15 @@ var APP_FAQ = [
     device: "handy",
     question: "Wie installiere ich die Handy-App?",
     answer: "\xD6ffne lifespan-os.github.io/app im Browser deines Handys. Auf dem iPhone in Safari \u201ETeilen \u2192 Zum Home-Bildschirm\u201C, auf Android im Chrome-Men\xFC \u201EApp installieren\u201C bzw. \u201EZum Startbildschirm hinzuf\xFCgen\u201C. Danach startet die App wie eine normale App, auch ohne Internet.",
-    keywords: ["installieren", "homebildschirm", "pwa", "iphone", "android", "herunterladen", "download"]
+    keywords: [
+      "installieren",
+      "homebildschirm",
+      "pwa",
+      "iphone",
+      "android",
+      "herunterladen",
+      "download"
+    ]
   },
   {
     id: "wie-kommen-meine-pc-daten-aufs-handy",
@@ -30217,7 +30225,13 @@ var APP_FAQ = [
     device: "beide",
     question: "Eine Maschine fehlt in der Datenbank \u2013 was nun?",
     answer: "Lege sie selbst an: am PC unter Training \u2192 Datenbank \u2192 \xDCbungen, Maschinen, Sportarten, am Handy unter Training \u2192 Datenbank (eigene Maschinen mit Nummer, Notiz und Schlagworten). Eigene Maschinen vom Handy kommen mit \u201EAn den PC senden\u201C auf den PC; Bilder und Doppelte zusammenf\xFChren gehen am PC.",
-    keywords: ["maschine fehlt", "eigene maschine", "neue maschine", "nicht gefunden", "ger\xE4t anlegen"]
+    keywords: [
+      "maschine fehlt",
+      "eigene maschine",
+      "neue maschine",
+      "nicht gefunden",
+      "ger\xE4t anlegen"
+    ]
   },
   {
     id: "wie-finde-ich-eine-maschine-schneller",
@@ -30249,14 +30263,23 @@ var APP_FAQ = [
     device: "beide",
     question: "Wie trage ich eine Mahlzeit ein?",
     answer: "Unter Nutrition \u2192 Tagebuch im Tagesverlauf den orangen Knopf \u201EJetzt eintragen\u201C anklicken (oder an die gew\xFCnschte Uhrzeit ziehen), die Mahlzeit w\xE4hlen und Lebensmittel hinzuf\xFCgen. In der Ansicht \u201EListe\u201C geht es \xFCber \u201EHinzuf\xFCgen\u201C bei der Mahlzeit.",
-    keywords: ["mahlzeit", "essen", "eintragen", "fr\xFChst\xFCck", "mittagessen", "abendessen", "snack", "erfassen"]
+    keywords: [
+      "mahlzeit",
+      "essen",
+      "eintragen",
+      "fr\xFChst\xFCck",
+      "mittagessen",
+      "abendessen",
+      "snack",
+      "erfassen"
+    ]
   },
   {
     id: "was-ist-der-tagesverlauf-im-tagebuch",
     area: "Ern\xE4hrung",
     device: "beide",
     question: "Was ist der Tagesverlauf im Tagebuch?",
-    answer: "Eine Zeitachse vom Tageswechsel bis eine Minute davor mit Mahlzeiten, geplanten Mahlzeiten, Koffein, Supplements und Wasser. \xDCberlappen sich Eintr\xE4ge, r\xFCckt einer mit einer Verbindungslinie in eine zweite Spalte. Oben schaltest du zwischen \u201ETagesverlauf\u201C und \u201EListe\u201C um.",
+    answer: "Eine Zeitachse vom Tageswechsel bis eine Minute davor mit Mahlzeiten, geplanten Mahlzeiten, Koffein, Supplements und Wasser. Feste Spalten: Mahlzeiten, Supplements (Pille), Wasser (Tropfen) und Koffein (Tasse mit mg). Liegen Mahlzeiten zu dicht, rutscht die sp\xE4tere mit einer Verbindungslinie nach unten; nahe Symbole werden mit Anzahl zusammengefasst. Oben schaltest du zwischen \u201ETagesverlauf\u201C und \u201EListe\u201C um.",
     keywords: ["tagesverlauf", "zeitachse", "timeline", "ansicht"]
   },
   {
@@ -30288,7 +30311,7 @@ var APP_FAQ = [
     area: "Ern\xE4hrung",
     device: "beide",
     question: "Wie bearbeite oder l\xF6sche ich einen Eintrag im Tagesverlauf?",
-    answer: "Am PC mit der rechten Maustaste auf Mahlzeit, Koffein oder Supplement klicken: \u201EBearbeiten\u201C oder \u201EL\xF6schen\u201C (mit R\xFCckfrage). Am Handy den Eintrag nach rechts wischen = bearbeiten, nach links = l\xF6schen (mit R\xFCckfrage).",
+    answer: "Am PC mit der rechten Maustaste auf jeden Eintrag klicken (Symbole auch mit links): \u201EBearbeiten\u201C bzw. bei Wasser \u201EUhrzeit\u201C oder \u201EL\xF6schen\u201C (mit R\xFCckfrage). Am Handy eine Mahlzeit nach rechts wischen = bearbeiten, nach links = l\xF6schen; Symbole f\xFCr Supplements, Wasser und Koffein antippen.",
     keywords: ["bearbeiten", "l\xF6schen", "rechtsklick", "wischen", "\xE4ndern", "entfernen"]
   },
   {
@@ -30392,7 +30415,7 @@ var APP_FAQ = [
     area: "Supplements & Koffein",
     device: "beide",
     question: "Wie \xE4ndere ich eine Koffein-Portion?",
-    answer: "Im Tagebuch in der Zeile \u201EKoffein\u201C bei der Portion \u201EBearbeiten\u201C w\xE4hlen \u2013 oder im Tagesverlauf rechtsklicken bzw. nach rechts wischen.",
+    answer: "Im Tagebuch in der Zeile \u201EKoffein\u201C bei der Portion \u201EBearbeiten\u201C w\xE4hlen \u2013 oder im Tagesverlauf das Koffein-Symbol anklicken bzw. antippen.",
     keywords: ["koffein \xE4ndern", "bearbeiten", "korrigieren"]
   },
   {
@@ -30433,7 +30456,21 @@ var APP_FAQ = [
     device: "beide",
     question: "Wie importiere ich Daten von Uhr, Ring oder Waage?",
     answer: "Am PC unter Import/Export \u2192 \u201EWerte von Uhr, Ring oder Waage importieren\u201C die Exportdatei des Herstellers w\xE4hlen (z. B. Apple Health, Garmin, Samsung Health, Fitbit, Huawei, Withings, Xiaomi/Zepp). Zu jedem Hersteller steht dort, wie du den Export anforderst. F\xFCr Polar gibt es zus\xE4tzlich eine eigene Anbindung.",
-    keywords: ["uhr", "smartwatch", "ring", "waage", "garmin", "apple health", "polar", "fitbit", "samsung", "huawei", "withings", "xiaomi", "import"]
+    keywords: [
+      "uhr",
+      "smartwatch",
+      "ring",
+      "waage",
+      "garmin",
+      "apple health",
+      "polar",
+      "fitbit",
+      "samsung",
+      "huawei",
+      "withings",
+      "xiaomi",
+      "import"
+    ]
   },
   {
     id: "wie-trage-ich-mein-gewicht-ein",
@@ -30687,12 +30724,39 @@ var SYNONYMS = [
     "kraftraum",
     "muckibude"
   ],
-  ["anlegen", "erstellen", "hinzuf\xFCgen", "neu", "neues", "neue", "einrichten", "hinterlegen", "machen", "erfassen", "eintragen", "trage", "tr\xE4gst", "lege", "speichern", "aufnehmen"],
+  [
+    "anlegen",
+    "erstellen",
+    "hinzuf\xFCgen",
+    "neu",
+    "neues",
+    "neue",
+    "einrichten",
+    "hinterlegen",
+    "machen",
+    "erfassen",
+    "eintragen",
+    "trage",
+    "tr\xE4gst",
+    "lege",
+    "speichern",
+    "aufnehmen"
+  ],
   ["l\xF6schen", "entfernen", "rausnehmen", "wegmachen", "streichen"],
   ["bearbeiten", "\xE4ndern", "korrigieren", "editieren", "anpassen", "umbenennen", "verschieben"],
   ["maschine", "maschinen", "ger\xE4t", "ger\xE4te", "apparat", "station"],
   ["\xFCbung", "\xFCbungen", "exercise", "bewegung", "variante"],
-  ["mahlzeit", "mahlzeiten", "essen", "meal", "fr\xFChst\xFCck", "mittagessen", "abendessen", "snack", "gericht"],
+  [
+    "mahlzeit",
+    "mahlzeiten",
+    "essen",
+    "meal",
+    "fr\xFChst\xFCck",
+    "mittagessen",
+    "abendessen",
+    "snack",
+    "gericht"
+  ],
   ["lebensmittel", "nahrungsmittel", "food", "produkt", "zutat"],
   ["training", "workout", "einheit", "einheiten", "trainingseinheit", "session", "trainieren"],
   ["gewicht", "k\xF6rpergewicht", "waage", "wiegen", "kilo"],

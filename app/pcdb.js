@@ -975,6 +975,33 @@ export function setWaterCount(db, local, date, count, time, { uuid, now = new Da
   return local;
 }
 
+/** Ein Glas löschen (wie `water::delete_glass`, Tagesverlauf 1.104.0). */
+export function deleteWaterGlass(db, local, id, now = new Date()) {
+  const own = local.rows[id];
+  const pc = [...db.waterByDate.values()].flat().some((g) => g.id === id);
+  if (!own && !pc) throw new Error("Dieses Glas gibt es nicht mehr.");
+  delete local.rows[id];
+  // Glas vom PC oder schon gesendet: Löschvermerk für den Abgleich am PC
+  if (own ? own.sent : pc) local.deleted[id] = { at: now.toISOString(), sent: false };
+  return local;
+}
+
+/** Uhrzeit eines Glases ändern (wie `water::move_glass`, Tagesverlauf 1.104.0). */
+export function moveWaterGlass(db, local, id, time, now = new Date()) {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(time ?? ""))) throw new Error("Bitte eine Uhrzeit wählen (HH:MM).");
+  const iso = now.toISOString();
+  const own = local.rows[id];
+  if (own) {
+    own.row = { ...own.row, time, updated_at: iso };
+    own.sent = false;
+    return local;
+  }
+  const pc = [...db.waterByDate.values()].flat().find((g) => g.id === id);
+  if (!pc) throw new Error("Dieses Glas gibt es nicht mehr.");
+  local.rows[id] = { row: { ...pc, time, updated_at: iso }, sent: false };
+  return local;
+}
+
 /** Glasgröße für neue Gläser (wie `water::save_glass_ml`). */
 export function setGlassMl(local, ml, now = new Date()) {
   if (!GLASS_SIZES_ML.includes(ml)) throw new Error("Bitte eine Glasgröße wählen: 0,2 l, 0,33 l, 0,5 l oder 1,0 l.");

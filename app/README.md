@@ -1488,3 +1488,11 @@ Alle Bereiche und Reiter bei iPhone-Breite (390 px) durchgesehen; kein Bereich i
 - Geändert: `app.js`, `cardiomap.js`, `core.js`, `diaryactions.js`, `pcdb.js`, `pcoverview.js`, `pcdomain.js`,
   `supplements.js`, `trainingstats.js`, `workoutview.js`, `sw.js`; Tests `core.test.mjs`, `pcoverview.test.mjs`,
   `supplements.test.mjs`.
+
+## Version 1.97.0 (22.11.2026): Griffkraft in der Tagesbereitschaft
+
+- Ist am Tag eine Griffkraft gemessen, steht sie in der Tagesbereitschaft (Overview): Mittel beider Hände und
+  Abweichung in Prozent zu deinem Schnitt der früheren Messungen (letzte 180 Tage, je Tag die letzte Messung, ab
+  2 früheren Messungen). Ampel: bis −5 % grün, bis −10 % gelb, darunter rot – zählt in die Gesamteinschätzung.
+  Rechnung aus `src/domain/dashboard.ts` (`gripFactor`, in `pcdomain.js`), wie PC 1.0.174.
+- Geändert: `overview.js`, `pcdomain.js`, `core.js`, `sw.js`.

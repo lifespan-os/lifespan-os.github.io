@@ -133,6 +133,10 @@ export function overviewData(db, catalog, date) {
       sex: db.profile?.sex === "female" || db.profile?.sex === "male" ? db.profile.sex : null,
       focus: focusIndex(catalog),
       mapSettings: D.parseMuscleMapSettings(db.settings.get(D.MUSCLE_MAP_SETTINGS_KEY) ?? null),
+      // Griffkraft in der Tagesbereitschaft (1.97.0, wie PC 1.0.174): Messungen bis zum Tag
+      grip: (db.grip ?? db.pc?.grip_strength_measurement ?? [])
+        .filter((g) => g.date <= date)
+        .map((g) => ({ id: g.id, date: g.date, time: g.time ?? null, leftKg: g.left_kg, rightKg: g.right_kg })),
       db,
     },
   };
@@ -171,7 +175,7 @@ function dashboardCards(data, w, isToday) {
   const machineIds = new Set(w.exercises.filter((e) => e.machineId).map((e) => e.id));
 
   // Tagesbereitschaft
-  const r = D.dashboard.readiness(insights, today, goal?.sleepMin ?? null);
+  const r = D.dashboard.readiness(insights, today, goal?.sleepMin ?? null, w.grip ?? []);
   const readinessCard = card(
     "readiness",
     "Tagesbereitschaft",
@@ -186,7 +190,7 @@ function dashboardCards(data, w, isToday) {
         : ""
     }
     ${r.missing.length ? keepNote(`Ohne Wert: ${esc(r.missing.join(", "))}.`) : ""}
-    ${note("Vergleich mit deinem eigenen Schnitt der 28 Tage davor – Orientierung, keine medizinische Bewertung.")}`,
+    ${note("Vergleich mit deinem eigenen Schnitt der 28 Tage davor (Griffkraft: deine Messungen der letzten 180 Tage, erscheint nur an Tagen mit Messung) – Orientierung, keine medizinische Bewertung.")}`,
     { area: "recovery" },
   );
 

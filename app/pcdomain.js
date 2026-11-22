@@ -1587,10 +1587,33 @@ var MACHINE_KIND_WORDS = [
   ["ski", ["skierg", "ski-erg", "ski erg", "langlauf"]],
   [
     "elliptical",
-    ["crosstrainer", "cross trainer", "cross-trainer", "cross personal", "ellip", "ascent", "arc trainer", "synchro", "vario"]
+    [
+      "crosstrainer",
+      "cross trainer",
+      "cross-trainer",
+      "cross personal",
+      "ellip",
+      "ascent",
+      "arc trainer",
+      "synchro",
+      "vario"
+    ]
   ],
   ["stairs", ["treppe", "stair", "stepper", "climb", "stepmill"]],
-  ["cycle", ["fahrrad", "liegerad", "ergometer", "bike", "cycle", "cycling", "spinning", "recline", " ride"]],
+  [
+    "cycle",
+    [
+      "fahrrad",
+      "liegerad",
+      "ergometer",
+      "bike",
+      "cycle",
+      "cycling",
+      "spinning",
+      "recline",
+      " ride"
+    ]
+  ],
   ["run", ["laufband", "treadmill", "skillmill", "lauf", "run"]]
 ];
 function machineCardioKind(m) {
@@ -9599,6 +9622,8 @@ __export(dashboard_exports, {
   BASELINE_DAYS: () => BASELINE_DAYS,
   CARDIO_WEEK_MINUTES: () => CARDIO_WEEK_MINUTES,
   DEFAULT_WEEK_TRAININGS: () => DEFAULT_WEEK_TRAININGS,
+  GRIP_BASELINE_DAYS: () => GRIP_BASELINE_DAYS,
+  GRIP_MIN_EARLIER: () => GRIP_MIN_EARLIER,
   LEVEL_LABELS: () => LEVEL_LABELS,
   MEAL_PROTEIN: () => MEAL_PROTEIN,
   MIN_EXTRA_DAYS: () => MIN_EXTRA_DAYS,
@@ -9616,6 +9641,7 @@ __export(dashboard_exports, {
   dueReminders: () => dueReminders,
   exerciseProgress: () => exerciseProgress,
   extrasCheck: () => extrasCheck,
+  gripFactor: () => gripFactor,
   metricChange: () => metricChange,
   parseWeekGoals: () => parseWeekGoals,
   progressExercises: () => progressExercises,
@@ -9658,7 +9684,36 @@ function fromDay(date, today) {
   const [, m, d] = date.split("-");
   return ` (vom ${d}.${m}.)`;
 }
-function readiness(data, today, sleepGoalMin) {
+var GRIP_BASELINE_DAYS = 180;
+var GRIP_MIN_EARLIER = 2;
+var gripAvg = (m) => (m.leftKg + m.rightKg) / 2;
+function gripFactor(grip, today) {
+  const byTime = (a, b) => a.date.localeCompare(b.date) || (a.time ?? "").localeCompare(b.time ?? "");
+  const todays = grip.filter((m) => m.date === today).sort(byTime);
+  const now = todays.at(-1);
+  if (!now) return null;
+  const from = shiftDays(today, -GRIP_BASELINE_DAYS);
+  const lastPerDay = /* @__PURE__ */ new Map();
+  for (const m of [...grip].sort(byTime)) {
+    if (m.date >= from && m.date < today) lastPerDay.set(m.date, m);
+  }
+  const earlier = [...lastPerDay.values()].map(gripAvg);
+  const value2 = gripAvg(now);
+  if (earlier.length < GRIP_MIN_EARLIER) {
+    return {
+      missing: `Griffkraft-Vergleich (heute ${formatNumber(value2, 1)} kg, weniger als ${GRIP_MIN_EARLIER} fr\xFChere Messungen in ${GRIP_BASELINE_DAYS} Tagen)`
+    };
+  }
+  const base = mean3(earlier);
+  const pct = (value2 - base) / base * 100;
+  return {
+    key: "grip",
+    label: "Griffkraft",
+    level: pct >= -5 ? "good" : pct >= -10 ? "caution" : "low",
+    text: `${formatNumber(value2, 1)} kg (\xD8 beider H\xE4nde) \xB7 ${formatSigned(pct, 0)} % zu deinem Schnitt (${formatNumber(base, 1)} kg aus ${earlier.length} Messungen)`
+  };
+}
+function readiness(data, today, sleepGoalMin, grip = []) {
   const factors = [];
   const missing = [];
   const hrv2 = vitalFactor(data, today, HRV_METRIC_ID);
@@ -9710,10 +9765,13 @@ function readiness(data, today, sleepGoalMin) {
       text: acute === 0 ? "keine Einheit in den letzten 3 Tagen" : `${formatNumber(ratio * 100, 0)} % deines 3-Tage-Schnitts (Dauer \xD7 Anstrengung)`
     });
   } else missing.push("Belastung (Dauer und Anstrengung der Einheiten)");
+  const g = gripFactor(grip, today);
+  if (g && "key" in g) factors.push(g);
+  else if (g) missing.push(g.missing);
   if (factors.length < 2) {
     return {
       level: null,
-      headline: "F\xFCr eine Einsch\xE4tzung fehlen noch Werte (mindestens zwei der vier Bereiche).",
+      headline: "F\xFCr eine Einsch\xE4tzung fehlen noch Werte (mindestens zwei Bereiche).",
       factors,
       missing
     };

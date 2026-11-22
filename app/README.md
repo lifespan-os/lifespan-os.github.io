@@ -1496,3 +1496,19 @@ Alle Bereiche und Reiter bei iPhone-Breite (390 px) durchgesehen; kein Bereich i
   2 früheren Messungen). Ampel: bis −5 % grün, bis −10 % gelb, darunter rot – zählt in die Gesamteinschätzung.
   Rechnung aus `src/domain/dashboard.ts` (`gripFactor`, in `pcdomain.js`), wie PC 1.0.174.
 - Geändert: `overview.js`, `pcdomain.js`, `core.js`, `sw.js`.
+
+## Version 1.98.0 (22.11.2026): Schlagworte, Grünblick, Gerätebild, Skala der Einheitskarte
+
+- **Suche mit Schlagworten:** Eigene Schlagworte der Maschinen (am PC gepflegt, PC Schema 73 `machine.tags`),
+  Merkmale, Kategorie, Typ und Notiz werden in der Maschinensuche mitdurchsucht. Die Wörterliste der
+  intelligenten Suche ist erweitert (z. B. „Bauch“ → Abdominal, „Latzug“ → Lat Machine, „Hüftstrecker“ → Multi Hip).
+- **Grünblick Private Gym** ist mitgeliefert: Es wird einmal angelegt, sobald seine Maschinen im Katalog sind
+  (gleiche ID wie am PC, daher nie doppelt; ein gelöschtes kommt nicht wieder). Außerdem steht es in der Liste
+  der Studio-Pakete (`studios/gruenblick-private-gym.json`).
+- **Gerät bei Cardio:** Unter der Auswahl steht das Bild des Geräts (Antippen = groß), zuletzt verwendete Geräte
+  stehen ganz oben („Zuletzt verwendet“).
+- **Körperkarte einer Einheit:** Auswahl Standard | Individuell | Relativ (Standard vorgewählt, je Gerät gemerkt).
+  Standard und Individuell messen eine Einheit an der halben Wochenskala – eine lockere halbe Stunde Cardio färbt
+  sich nicht mehr wie ein hartes Training.
+- Geändert: `core.js`, `gymsdata.js`, `gymsui.js`, `trainingstats.js`, `workoutview.js`, `pcdomain.js`, `sw.js`,
+  `studios/index.json`, neu `studios/gruenblick-private-gym.json`; Tests `core.test.mjs`, `gymsdata.test.mjs`.

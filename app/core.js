@@ -11,7 +11,7 @@ import { appDay } from "./appday.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.97.0";
+export const MOBILE_VERSION = "1.98.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -547,7 +547,8 @@ export function search(catalog, localExercises, query, { onlyNumbered = false, l
     else if (m.gym_number && String(m.gym_number).toLowerCase().startsWith(q)) score = 55;
     else {
       const names = (byMachine.get(m.id) ?? []).map((e) => e.name).join(" ");
-      const hay = `${m.display_name} ${m.name} ${m.manufacturer} ${m.series} ${m.muscle_groups} ${names}`.toLowerCase();
+      // eigene Schlagworte, Merkmale, Kategorie und Notiz zählen mit (1.97.0, wie PC 1.0.174)
+      const hay = `${m.display_name} ${m.name} ${m.manufacturer} ${m.series} ${m.muscle_groups} ${names} ${machineKeywordText(m)}`.toLowerCase();
       if (q.split(/\s+/).every((w) => hay.includes(w))) score = 20;
     }
     if (score >= 0) machineHits.push({ kind: "machine", score, machine: m, exercises: byMachine.get(m.id) ?? [] });
@@ -576,7 +577,7 @@ export function search(catalog, localExercises, query, { onlyNumbered = false, l
   for (const m of catalog.machines) {
     if (m.archived || (onlyNumbered && !(m.own_number || m.gym_number)) || seen.has(`m:${m.id}`)) continue;
     const names = (byMachine.get(m.id) ?? []).map((e) => e.name).join(" ");
-    options.push({ id: `m:${m.id}`, label: m.display_name, detail: `${m.name} ${m.manufacturer} ${m.series ?? ""} ${names}`, ref: m });
+    options.push({ id: `m:${m.id}`, label: m.display_name, detail: `${m.name} ${m.manufacturer} ${m.series ?? ""} ${names}`, keywords: [machineKeywordText(m)], ref: m });
   }
   for (const e of allExercises(catalog, localExercises)) {
     if (e.archived || e.machine_id || seen.has(`e:${e.id}`)) continue;
@@ -591,6 +592,11 @@ export function search(catalog, localExercises, query, { onlyNumbered = false, l
         : { kind: "exercise", score: 0, exercise: h.option.ref, match: h.kind },
     );
   return [...direct, ...extra];
+}
+
+/** Zusätzliche Suchbegriffe einer Maschine: Schlagworte (Schema 73), Merkmale, Kategorie, Typ, Notiz. */
+export function machineKeywordText(m) {
+  return [...parseJsonList(m.tags), ...parseJsonList(m.features), m.category ?? "", m.machine_type ?? "", m.notes ?? ""].join(" ");
 }
 
 function numCompare(a, b) {

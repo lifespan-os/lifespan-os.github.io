@@ -33,9 +33,17 @@ async function persist() {
 
 export const unsentGyms = () => G.unsentGyms(X.S.gyms);
 
+/** Mitgelieferte Studios (1.97.0, z. B. „Grünblick Private Gym“) einmal anlegen. */
+function ensureBuiltin() {
+  const S = X.S;
+  if (!S.catalog || !S.gyms) return;
+  if (G.ensureBuiltin(S.catalog, S.gyms)) void persist();
+}
+
 /** Aktives Gym (ID) und seine Maschinenliste; im Training das Gym der Einheit (Handy 1.65.0). */
 export function activeGym() {
   const S = X.S;
+  ensureBuiltin();
   const list = G.gymList(S.catalog, S.gyms);
   const own = S.active?.gymId && list.some((g) => g.id === S.active.gymId) ? S.active.gymId : null;
   const id = own ?? G.activeGymId(S.catalog, S.gyms, pcActive());
@@ -120,6 +128,7 @@ export function planGymSelectHtml(draft) {
 const photoHtml = (g, cls = "gym-photo") => `<span class="${cls}">${g?.photo ? `<img src="${esc(g.photo)}" alt="">` : "🏋️"}</span>`;
 
 export function viewGymsTab() {
+  ensureBuiltin();
   const S = X.S;
   if (S.gymEdit) return editorHtml(S.gymEdit);
   const list = G.gymList(S.catalog, S.gyms);

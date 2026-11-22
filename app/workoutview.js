@@ -259,6 +259,22 @@ function cardioMachineInfos() {
   }));
 }
 
+/** Zuletzt verwendete Cardiogeräte (1.97.0): aus allen Einheiten vom PC und vom Handy, neueste zuerst. */
+function recentCardioMachines(CMA) {
+  if (!CMA.recentMachineIds) return [];
+  try {
+    const db = buildDb();
+    const dateOf = new Map(db.workouts.map((w) => [w.id, w.date]));
+    const entries = [];
+    for (const [wid, list] of db.wexByWorkout ?? []) {
+      for (const we of list) if (we.machine_id) entries.push({ date: dateOf.get(wid) ?? "", machineId: we.machine_id });
+    }
+    return CMA.recentMachineIds(entries);
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Gerät einer Cardio-Übung (1.96.0, wie PC 1.0.174 `CardioMachineField.tsx`): passende Geräte zur
  * Cardio-Art oben, je Hersteller gruppiert; die Muskelgruppen des Geräts gelten in der Körperkarte.
@@ -269,7 +285,7 @@ export function cardioMachinePicker(we, ex) {
   const sport = ex?.sport_id ? (S.catalog?.sports ?? []).find((x) => x.id === ex.sport_id) : null;
   const kind = effectiveKind("cardio", ex?.cardio_kind ?? null, ex?.name ?? "", ex?.equipment ?? null, sport?.category ?? null) ?? "other";
   const infos = cardioMachineInfos();
-  const options = CMA.cardioMachineOptions(infos, kind ?? "other", we.machineId ?? null);
+  const options = CMA.cardioMachineOptions(infos, kind ?? "other", we.machineId ?? null, recentCardioMachines(CMA));
   const groups = [];
   for (const o of options) {
     const g = groups.at(-1);
@@ -288,7 +304,8 @@ export function cardioMachinePicker(we, ex) {
           )
           .join("")}
       </select>
-      <p class="muted small">${esc(CMA.cardioMachineHint(chosen))}</p></div>`;
+      <p class="muted small">${esc(CMA.cardioMachineHint(chosen))}</p>
+      ${chosen ? MI.photoButton(chosen.id, chosen.displayName || chosen.name) : ""}</div>`;
 }
 
 export function profilePicker(we, ex) {

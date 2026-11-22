@@ -92,6 +92,18 @@ function change(percent) {
  * „Übung oder Maschine hinzufügen“. Laufendes Training = abgehakte Sätze, Bearbeiten/Nachtragen =
  * alle Sätze mit Werten (`muscleMapForOpenWorkout`). Farbe = Anteil am meistbelasteten Muskel.
  */
+/** Färbung der Einheitskarte (1.97.0, wie PC 1.0.174): Standard, Individuell oder Relativ, je Gerät gemerkt. */
+const WO_MODE_KEY = "lifespan.workoutMap.mode";
+function woMode() {
+  try {
+    const v = localStorage.getItem(WO_MODE_KEY);
+    if (v === "standard" || v === "individual" || v === "relative") return v;
+  } catch {
+    // ohne Speicher gilt Standard
+  }
+  return "standard";
+}
+
 export function workoutBodyMapHtml(w, exerciseRows, { finished = false } = {}) {
   const S = X.S;
   // angetippter Muskel gilt nur für diese Einheit (1.73.0)
@@ -142,7 +154,20 @@ export function workoutBodyMapHtml(w, exerciseRows, { finished = false } = {}) {
   });
   const cardio = db ? CM.withCardio(db, cardioSets, map.sets, () => true, today()) : { on: false, values: map.sets, share: null, load: null, settings: null };
   const values = cardio.values;
-  const levels = D.muscleLevels(values, "relative");
+  const mode = woMode();
+  const MM = D.muscleMapAll;
+  const targets = mode === "individual" ? D.parseMuscleMapSettings((db ?? buildDb()).settings.get(D.MUSCLE_MAP_SETTINGS_KEY) ?? null).targets : undefined;
+  const levels = MM.sessionLevels ? MM.sessionLevels(values, mode, targets) : D.muscleLevels(values, "relative");
+  const legend = MM.sessionLegendLabels ? MM.sessionLegendLabels(mode) : D.legendLabels("relative");
+  const modeSwitch = `<div class="segmented" role="radiogroup" aria-label="Darstellung">${Object.entries(D.SCALE_MODE_LABELS)
+    .map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === mode}" class="${v === mode ? "is-active" : ""}" data-act="wo-mode" data-arg="${v}">${esc(l)}</button>`)
+    .join("")}</div>`;
+  const modeText =
+    mode === "relative"
+      ? "Relativ: Farbe = Anteil am meistbelasteten Muskel dieser Einheit."
+      : mode === "individual"
+        ? "Individuell: Stufen nach deinen Zielwerten je Muskel, für eine Einheit die Hälfte des Wochenwerts."
+        : "Standard: eine Skala für alle Muskeln, für eine Einheit die Hälfte der Wochenskala (etwa zwei Einheiten je Muskel und Woche).";
   const describe = (m) => {
     const level = levels[m];
     const vol = map.volumeKg[m] > 0 ? ` · ${C().formatVolume(map.volumeKg[m])}` : "";
@@ -152,11 +177,11 @@ export function workoutBodyMapHtml(w, exerciseRows, { finished = false } = {}) {
   const sex = sexRaw === "female" || sexRaw === "male" ? sexRaw : "male";
   const n = map.totalSets;
   return `<section class="card card--training wo-bodymap"><div class="wo-head"><h3>Muskel-Körperkarte dieser Einheit</h3><span class="tag">${n} ${n === 1 ? "Arbeitssatz" : "Arbeitssätze"}${running ? " abgehakt" : ""}</span></div>
-    ${cardio.settings && cardioSets.length > 0 ? `<div class="muscle-map__tools">${CM.cardioSwitchHtml(cardio.settings.show, "wo-cardio")}</div>` : ""}
+    <div class="muscle-map__tools">${modeSwitch}${cardio.settings && cardioSets.length > 0 ? CM.cardioSwitchHtml(cardio.settings.show, "wo-cardio") : ""}</div>
     ${n === 0 && !cardio.on ? `<p class="muted small">${running ? "Noch kein Arbeitssatz abgehakt – die Karte füllt sich mit jedem erledigten Satz." : "Noch keine Arbeitssätze von Kraftübungen eingetragen."}</p>` : ""}
-    ${heatmapHtml({ levels, describe, sex, active: S.woMuscle ?? null, act: "wo-muscle", legend: D.legendLabels("relative"), cardioShare: cardio.share })}
+    ${heatmapHtml({ levels, describe, sex, active: S.woMuscle ?? null, act: "wo-muscle", legend, cardioShare: cardio.share })}
     ${cardio.settings?.show && cardioSets.length > 0 ? CM.cardioSummaryHtml(cardio.load, cardio.settings) : ""}
-    <p class="muted small">Farbe = Anteil am meistbelasteten Muskel dieser Einheit (Arbeitssätze, Hauptmuskel = 100 %, die übrigen anteilig nach Muskelfokus${cardio.settings?.show ? "; Cardio als Satz-Äquivalente, schraffiert" : ""}). ${running ? "Während des Trainings zählen die abgehakten Sätze." : "Gezählt werden alle Sätze mit Werten."}${
+    <p class="muted small">${modeText} Gezählt werden Arbeitssätze (Hauptmuskel = 1 Satz, die übrigen anteilig nach Muskelfokus${cardio.settings?.show ? "; Cardio als Satz-Äquivalente, schraffiert" : ""}). ${running ? "Während des Trainings zählen die abgehakten Sätze." : "Gezählt werden alle Sätze mit Werten."}${
       map.setsWithoutMuscle > 0 ? ` ${map.setsWithoutMuscle} ${map.setsWithoutMuscle === 1 ? "Satz" : "Sätze"} ohne zuordenbare Muskelgruppe.` : ""
     }</p></section>`;
 }
@@ -762,6 +787,14 @@ export const statsActions = {
   },
   "train-review-metric": (el) => {
     X.S.trainReviewMetric = el.dataset.arg;
+    X.rerender();
+  },
+  "wo-mode": (el) => {
+    try {
+      localStorage.setItem(WO_MODE_KEY, el.dataset.arg);
+    } catch {
+      // ohne Speicher gilt die Wahl nicht dauerhaft
+    }
     X.rerender();
   },
   "wo-cardio": (el) => {

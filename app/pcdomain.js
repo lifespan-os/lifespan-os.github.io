@@ -2998,6 +2998,7 @@ __export(muscleMap_exports, {
   RELATIVE_TARGET: () => RELATIVE_TARGET,
   SCALE_MODE_LABELS: () => SCALE_MODE_LABELS,
   SECONDARY_FACTOR: () => SECONDARY_FACTOR,
+  SESSION_SHARE: () => SESSION_SHARE,
   STANDARD_TARGET: () => STANDARD_TARGET,
   buildFocusIndex: () => buildFocusIndex,
   emptyMuscleValues: () => emptyMuscleValues,
@@ -3021,6 +3022,9 @@ __export(muscleMap_exports, {
   relativeFocus: () => relativeFocus,
   relativeValues: () => relativeValues,
   serializeMuscleMapSettings: () => serializeMuscleMapSettings,
+  sessionLegendLabels: () => sessionLegendLabels,
+  sessionLevels: () => sessionLevels,
+  sessionTarget: () => sessionTarget,
   splitMuscleText: () => splitMuscleText,
   targetFor: () => targetFor,
   validateTarget: () => validateTarget
@@ -7466,6 +7470,34 @@ function muscleLevels(values, mode, targets = DEFAULT_TARGETS) {
   return Object.fromEntries(
     MUSCLE_IDS.map((m) => [m, levelFor(v[m], targetFor(m, mode, targets))])
   );
+}
+var SESSION_SHARE = 0.5;
+function sessionTarget(t) {
+  return {
+    moderate: t.moderate * SESSION_SHARE,
+    build: t.build * SESSION_SHARE,
+    high: t.high * SESSION_SHARE,
+    veryHigh: t.veryHigh * SESSION_SHARE
+  };
+}
+function sessionLevels(values, mode, targets = DEFAULT_TARGETS) {
+  if (mode === "relative") return muscleLevels(values, "relative");
+  return Object.fromEntries(
+    MUSCLE_IDS.map((m) => [m, levelFor(values[m], sessionTarget(targetFor(m, mode, targets)))])
+  );
+}
+var dec = (n2) => String(Math.round(n2 * 10) / 10).replace(".", ",");
+function sessionLegendLabels(mode) {
+  if (mode !== "standard") return legendLabels(mode);
+  const t = sessionTarget(STANDARD_TARGET);
+  const ranges = [
+    `unter ${dec(t.moderate)}`,
+    `${dec(t.moderate)}\u2013${dec(t.build)}`,
+    `${dec(t.build)}\u2013${dec(t.high)}`,
+    `${dec(t.high)}\u2013${dec(t.veryHigh)}`,
+    `ab ${dec(t.veryHigh)}`
+  ];
+  return ranges.map((r2, i) => `${r2} \xB7 ${LEVEL_NAMES[i]}`);
 }
 function legendLabels(mode) {
   if (mode === "individual") return [...LEVEL_NAMES];
@@ -17821,24 +17853,42 @@ function cardioLoadHasData(load) {
 var cardioMachines_exports = {};
 __export(cardioMachines_exports, {
   CARDIO_MACHINE_CATEGORY: () => CARDIO_MACHINE_CATEGORY,
+  RECENT_GROUP: () => RECENT_GROUP,
+  RECENT_MACHINES: () => RECENT_MACHINES,
   cardioMachineHint: () => cardioMachineHint,
-  cardioMachineOptions: () => cardioMachineOptions
+  cardioMachineOptions: () => cardioMachineOptions,
+  recentMachineIds: () => recentMachineIds
 });
 var CARDIO_MACHINE_CATEGORY = "Cardio";
 var byName = (a, b) => a.manufacturer.localeCompare(b.manufacturer, "de") || (a.displayName || a.name).localeCompare(b.displayName || b.name, "de");
-function cardioMachineOptions(machines, kind, current = null) {
+function cardioMachineOptions(machines, kind, current = null, recent = []) {
   const cardio = machines.filter((m) => m.category === CARDIO_MACHINE_CATEGORY && (!m.archived || m.id === current)).sort(byName);
   const fits = (m) => kind !== "other" && sameCardioDevice(machineCardioKind(m), kind);
   const label = (m) => m.displayName || m.name;
+  const byId = new Map(cardio.map((m) => [m.id, m]));
+  const recentList = [...new Set(recent)].map((id3) => byId.get(id3)).filter((m) => m !== void 0).slice(0, RECENT_MACHINES);
+  const recentIds = new Set(recentList.map((m) => m.id));
+  const rest = cardio.filter((m) => !recentIds.has(m.id));
   const out = [
-    ...cardio.filter(fits).map((m) => ({ value: m.id, label: label(m), group: m.manufacturer })),
-    ...cardio.filter((m) => !fits(m)).map((m) => ({ value: m.id, label: label(m), group: `Weitere Ger\xE4te \xB7 ${m.manufacturer}` }))
+    ...recentList.map((m) => ({
+      value: m.id,
+      label: `${label(m)} \xB7 ${m.manufacturer}`,
+      group: RECENT_GROUP
+    })),
+    ...rest.filter(fits).map((m) => ({ value: m.id, label: label(m), group: m.manufacturer })),
+    ...rest.filter((m) => !fits(m)).map((m) => ({ value: m.id, label: label(m), group: `Weitere Ger\xE4te \xB7 ${m.manufacturer}` }))
   ];
   if (current && !out.some((o) => o.value === current)) {
     const m = machines.find((x) => x.id === current);
     out.unshift({ value: current, label: m ? label(m) : "Bisheriges Ger\xE4t", group: "Gew\xE4hlt" });
   }
   return out;
+}
+var RECENT_MACHINES = 5;
+var RECENT_GROUP = "Zuletzt verwendet";
+function recentMachineIds(entries) {
+  const sorted = entries.filter((e) => e.machineId).slice().sort((a, b) => b.date.localeCompare(a.date));
+  return [...new Set(sorted.map((e) => e.machineId))];
 }
 function cardioMachineHint(machine) {
   if (!machine) return "Ohne Ger\xE4t verteilt die K\xF6rperkarte nach der Cardio-Art der \xDCbung.";
@@ -18336,12 +18386,275 @@ __export(machines_exports, {
   machineEdit: () => machineEdit,
   machineForm: () => machineForm,
   machineFormErrors: () => machineFormErrors,
+  machineKeywords: () => machineKeywords,
   machinePickerOptions: () => machinePickerOptions,
   mergeTargets: () => mergeTargets,
   numberLabel: () => numberLabel,
   sortMachines: () => sortMachines,
   splitList: () => splitList
 });
+
+// src/domain/search.ts
+function normalizeSearch2(text2) {
+  return text2.toLocaleLowerCase("de-DE").replace(/ß/g, "ss").normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+}
+function filterOptions(options, query, limit = 8) {
+  const words = normalizeSearch2(query).split(/\s+/).filter(Boolean);
+  const scored = options.map((o) => {
+    const label = normalizeSearch2(o.label);
+    const haystack2 = `${label} ${normalizeSearch2(o.detail ?? "")} ${normalizeSearch2((o.keywords ?? []).join(" "))}`;
+    if (!words.every((w) => haystack2.includes(w))) return null;
+    const first = words[0] ?? "";
+    const rank = first === "" ? 2 : label.startsWith(first) ? 0 : label.includes(` ${first}`) ? 1 : 2;
+    const exact = (o.exact ?? []).map(normalizeSearch2);
+    const hit = words.some((w) => exact.includes(w)) ? 0 : 1;
+    return { o, hit, rank, label, prio: o.priority ?? 0, usage: o.usage ?? 0 };
+  }).filter(
+    (x) => x !== null
+  ).sort(
+    (a, b) => a.hit - b.hit || a.prio - b.prio || b.usage - a.usage || a.rank - b.rank || a.label.localeCompare(b.label, "de")
+  );
+  return scored.slice(0, limit).map((x) => x.o);
+}
+
+// src/domain/smartSearch.ts
+var SYNONYM_GROUPS = [
+  [
+    "brustpresse",
+    "chest press",
+    "brustdr\xFCcken maschine",
+    "seated chest press",
+    "vertical chest press"
+  ],
+  ["bankdr\xFCcken", "bench press", "flachbankdr\xFCcken", "flat bench", "brustdr\xFCcken"],
+  ["schr\xE4gbankdr\xFCcken", "incline press", "incline bench", "schr\xE4gbank", "incline chest"],
+  ["negativbankdr\xFCcken", "decline press", "decline bench", "negativbank"],
+  ["butterfly", "pec deck", "pec fly", "chest fly", "brustfliegen", "fliegende", "flys"],
+  ["reverse butterfly", "reverse fly", "rear delt", "reverse pec deck", "hintere schulter"],
+  ["beinpresse", "leg press", "beinpressen"],
+  ["kniebeuge", "squat", "kniebeugen", "hack squat", "pendulum squat", "belt squat"],
+  ["beinstrecker", "leg extension", "beinstreckung", "quadrizeps maschine"],
+  ["beinbeuger", "leg curl", "beinbeugen", "hamstring curl", "lying leg curl", "seated leg curl"],
+  [
+    "latzug",
+    "lat pulldown",
+    "lat pull down",
+    "latziehen",
+    "pulldown",
+    "lat maschine",
+    "lat machine"
+  ],
+  ["klimmzug", "pull up", "pullup", "chin up", "klimmz\xFCge", "assisted pull up"],
+  [
+    "rudern",
+    "row",
+    "seated row",
+    "rudermaschine",
+    "kabelrudern",
+    "cable row",
+    "t-bar row",
+    "low row"
+  ],
+  ["ruderger\xE4t", "rowing machine", "rower", "ergometer rudern", "concept2"],
+  ["schulterpresse", "shoulder press", "schulterdr\xFCcken", "overhead press", "military press"],
+  ["seitheben", "lateral raise", "seitheben maschine", "side raise"],
+  ["bizepscurl", "biceps curl", "bizeps curl", "armbeuger", "preacher curl", "scott curl"],
+  [
+    "trizepsdr\xFCcken",
+    "triceps extension",
+    "triceps pushdown",
+    "trizeps",
+    "armstrecker",
+    "french press"
+  ],
+  ["dips", "dip", "barren", "dip maschine"],
+  [
+    "bauchmaschine",
+    "ab crunch",
+    "abdominal",
+    "crunch",
+    "bauchmuskel",
+    "bauchpresse",
+    "bauch",
+    "abs",
+    "core"
+  ],
+  ["r\xFCckenstrecker", "back extension", "hyperextension", "lower back", "hyperextensions"],
+  ["kreuzheben", "deadlift", "rum\xE4nisches kreuzheben", "romanian deadlift"],
+  ["adduktoren", "adduktion", "adductor", "hip adduction", "innenschenkel"],
+  ["abduktoren", "abduktion", "abductor", "hip abduction", "au\xDFenschenkel"],
+  ["hip thrust", "glute bridge", "h\xFCftstrecken", "glute drive", "beckenheben"],
+  ["glute kickback", "kickback", "ges\xE4\xDFkick", "glute kick"],
+  ["wadenheben", "calf raise", "waden", "calf press", "wade", "calf", "calves"],
+  ["multipresse", "smith machine", "smith"],
+  ["kabelzug", "cable", "kabelturm", "cable crossover", "crossover", "kabelstation"],
+  ["laufband", "treadmill", "laufen", "running"],
+  ["crosstrainer", "elliptical", "ellipsentrainer"],
+  ["fahrradergometer", "bike", "fahrrad", "spinning", "radfahren", "ergometer", "cycle"],
+  ["stepper", "stair climber", "treppensteiger", "stairmaster"],
+  ["nackenmaschine", "neck", "nacken"],
+  // Weitere Geräte und Bauarten (1.0.174): finden Maschinen mit englischen Namen
+  ["unterarm", "forearm", "wrist curl", "handgelenk"],
+  ["rotation", "torso rotation", "rotary torso", "oberk\xF6rperdrehung", "rotary"],
+  ["pullover", "pull over", "\xFCberz\xFCge"],
+  ["beinheben", "leg raise", "knee raise", "captains chair", "kapit\xE4nsstuhl", "knieheben"],
+  ["h\xFCftstrecker", "hip extension", "multi hip", "rear kick", "multi-hip"],
+  ["frontheben", "front raise"],
+  ["face pull", "facepull", "gesichtszug"],
+  ["scheibengewicht", "plate loaded", "hantelscheiben", "plate-loaded"],
+  ["steckgewicht", "selectorized", "weight stack", "selektorisiert", "selector"],
+  ["freihantel", "free weight", "dumbbell", "kurzhantel", "barbell", "langhantel"],
+  ["skiergometer", "skierg", "ski erg", "langlauf"],
+  ["airbike", "air bike", "assault bike", "fan bike"],
+  ["schlitten", "sled", "prowler"],
+  ["shrugs", "shrug", "schulterheben", "nackenheben"]
+];
+var RELATED = {
+  brustpresse: ["bankdr\xFCcken", "schr\xE4gbankdr\xFCcken", "butterfly", "dips"],
+  bankdr\u00FCcken: ["brustpresse", "schr\xE4gbankdr\xFCcken", "negativbankdr\xFCcken", "dips"],
+  schr\u00E4gbankdr\u00FCcken: ["bankdr\xFCcken", "brustpresse", "schulterpresse"],
+  negativbankdr\u00FCcken: ["bankdr\xFCcken", "dips"],
+  butterfly: ["brustpresse", "kabelzug"],
+  "reverse butterfly": ["seitheben", "rudern"],
+  beinpresse: ["kniebeuge", "beinstrecker", "hip thrust"],
+  kniebeuge: ["beinpresse", "beinstrecker", "multipresse"],
+  beinstrecker: ["beinpresse", "kniebeuge"],
+  beinbeuger: ["kreuzheben", "r\xFCckenstrecker", "hip thrust"],
+  latzug: ["klimmzug", "rudern"],
+  klimmzug: ["latzug", "rudern"],
+  rudern: ["latzug", "klimmzug", "reverse butterfly"],
+  schulterpresse: ["seitheben", "schr\xE4gbankdr\xFCcken"],
+  seitheben: ["schulterpresse", "reverse butterfly"],
+  bizepscurl: ["kabelzug"],
+  trizepsdr\u00FCcken: ["dips", "kabelzug"],
+  dips: ["trizepsdr\xFCcken", "bankdr\xFCcken"],
+  r\u00FCckenstrecker: ["kreuzheben", "beinbeuger"],
+  kreuzheben: ["r\xFCckenstrecker", "beinbeuger", "hip thrust"],
+  "hip thrust": ["glute kickback", "abduktoren", "kreuzheben"],
+  "glute kickback": ["hip thrust", "abduktoren"],
+  adduktoren: ["abduktoren"],
+  abduktoren: ["adduktoren", "glute kickback"],
+  laufband: ["crosstrainer", "stepper"],
+  crosstrainer: ["laufband", "fahrradergometer"],
+  fahrradergometer: ["crosstrainer", "ruderger\xE4t"],
+  ruderger\u00E4t: ["fahrradergometer", "rudern"]
+};
+function compactSearch(text2) {
+  return normalizeSearch2(text2).replace(/[^a-z0-9]/g, "");
+}
+function editDistance2(a, b, max = 2) {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  const d = Array.from(
+    { length: a.length + 1 },
+    (_, i) => Array.from({ length: b.length + 1 }, (_2, j) => i === 0 ? j : j === 0 ? i : 0)
+  );
+  for (let i = 1; i <= a.length; i++) {
+    let rowMin = Infinity;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      let v = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        v = Math.min(v, d[i - 2][j - 2] + 1);
+      }
+      d[i][j] = v;
+      rowMin = Math.min(rowMin, v);
+    }
+    if (rowMin > max) return max + 1;
+  }
+  return d[a.length][b.length];
+}
+var typoBudget = (len) => len < 4 ? 0 : len < 8 ? 1 : 2;
+var COMPACT_GROUPS = SYNONYM_GROUPS.map((g) => g.map(compactSearch));
+function matchingGroups(query) {
+  const q = compactSearch(query);
+  if (q.length < 3) return [];
+  const out = [];
+  COMPACT_GROUPS.forEach((terms, i) => {
+    const hit = terms.some(
+      (t) => t === q || q.length >= 4 && t.startsWith(q) || t.length >= 4 && q.includes(t) || editDistance2(q, t, typoBudget(t.length)) <= typoBudget(t.length)
+    );
+    if (hit) out.push(i);
+  });
+  return out;
+}
+function synonymTerms(query) {
+  return matchingGroups(query).flatMap((i) => COMPACT_GROUPS[i]);
+}
+function relatedGroups(groups) {
+  const names = new Set(groups.map((i) => SYNONYM_GROUPS[i][0]));
+  const out = /* @__PURE__ */ new Set();
+  for (const i of groups) {
+    for (const r2 of RELATED[SYNONYM_GROUPS[i][0]] ?? []) {
+      if (names.has(r2)) continue;
+      const idx = SYNONYM_GROUPS.findIndex((g) => g[0] === r2);
+      if (idx >= 0) out.add(idx);
+    }
+  }
+  return [...out];
+}
+function prepare(o) {
+  const label = normalizeSearch2(o.label);
+  const exact = (o.exact ?? []).map(normalizeSearch2);
+  const hay = `${label} ${normalizeSearch2(o.detail ?? "")} ${normalizeSearch2((o.keywords ?? []).join(" "))}`;
+  return {
+    o,
+    label,
+    // Nummern (z. B. Studionummer) sind auch Suchwörter
+    words: [...hay.split(/[^a-z0-9]+/).filter(Boolean), ...exact],
+    compact: compactSearch(hay),
+    exact
+  };
+}
+var KIND_ORDER2 = { exact: 0, synonym: 1, related: 2, typo: 3 };
+function smartFilter(options, query, limit = 8) {
+  const words = normalizeSearch2(query).split(/\s+/).filter(Boolean);
+  const q = compactSearch(query);
+  const prepared = options.map(prepare);
+  const kinds = /* @__PURE__ */ new Map();
+  if (words.length === 0) {
+    for (const p of prepared) kinds.set(p, "exact");
+  } else {
+    for (const p of prepared) {
+      const hay = p.words.join(" ");
+      if (words.every((w) => hay.includes(w)) || q.length >= 4 && p.compact.includes(q)) {
+        kinds.set(p, "exact");
+      }
+    }
+    const groups = matchingGroups(query);
+    const terms = (idx) => idx.flatMap((i) => COMPACT_GROUPS[i]);
+    const synonyms = terms(groups);
+    const related = terms(relatedGroups(groups));
+    const has2 = (p, t) => t.length >= 4 ? p.compact.includes(t) : p.words.includes(t);
+    for (const p of prepared) {
+      if (kinds.has(p)) continue;
+      if (synonyms.some((t) => has2(p, t))) kinds.set(p, "synonym");
+      else if (related.some((t) => has2(p, t))) kinds.set(p, "related");
+    }
+    const found = [...kinds.values()].some((k) => k === "exact" || k === "synonym");
+    if (!found) {
+      for (const p of prepared) {
+        if (kinds.has(p)) continue;
+        const pairs = p.words.slice(1).map((w, i) => p.words[i] + w);
+        const candidates = [...p.words, ...pairs];
+        const ok = words.every((w) => {
+          const budget = typoBudget(w.length);
+          return p.words.some((x) => x.includes(w)) || budget > 0 && candidates.some((c) => editDistance2(w, c, budget) <= budget);
+        });
+        const okCompact = q.length >= 4 && candidates.some((c) => editDistance2(q, c, typoBudget(q.length)) <= typoBudget(q.length));
+        if (ok || okCompact) kinds.set(p, "typo");
+      }
+    }
+  }
+  const first = words[0] ?? "";
+  return [...kinds.entries()].map(([p, kind]) => ({
+    p,
+    kind,
+    hit: words.some((w) => p.exact.includes(w)) ? 0 : 1,
+    rank: first === "" ? 2 : p.label.startsWith(first) ? 0 : p.label.includes(` ${first}`) ? 1 : 2
+  })).sort(
+    (a, b) => a.hit - b.hit || KIND_ORDER2[a.kind] - KIND_ORDER2[b.kind] || (a.p.o.priority ?? 0) - (b.p.o.priority ?? 0) || (b.p.o.usage ?? 0) - (a.p.o.usage ?? 0) || a.rank - b.rank || a.p.label.localeCompare(b.p.label, "de")
+  ).slice(0, limit).map((x) => ({ option: x.p.o, kind: x.kind }));
+}
 
 // src/domain/sorting.ts
 var sorting_exports = {};
@@ -18486,6 +18799,7 @@ function machinePickerOptions(machines, exercises, gym) {
       m.muscleGroups.join(", ")
     ].filter(Boolean).join(" \xB7 ");
     const linked = byMachine.get(m.id) ?? [];
+    const keywords = machineKeywords(m);
     const exact = [gymNo, m.ownNumber, m.gymNumber].filter(
       (n2) => !!n2 && n2.trim() !== ""
     );
@@ -18498,7 +18812,8 @@ function machinePickerOptions(machines, exercises, gym) {
         priority: 1 + extra,
         machineId: m.id,
         exerciseId: null,
-        exact
+        exact,
+        keywords
       });
     } else {
       for (const e of linked) {
@@ -18509,7 +18824,8 @@ function machinePickerOptions(machines, exercises, gym) {
           priority: extra,
           machineId: m.id,
           exerciseId: e.id,
-          exact
+          exact,
+          keywords
         });
       }
     }
@@ -18524,9 +18840,15 @@ var EMPTY_FILTER = {
   muscle: ""
 };
 var norm2 = (s) => s.toLocaleLowerCase("de").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss");
+function machineKeywords(m) {
+  return [...m.tags ?? [], ...m.features, m.category, m.machineType, m.notes ?? ""].filter(
+    (x) => x.trim() !== ""
+  );
+}
 function haystack(m) {
   return norm2(
     [
+      ...m.tags ?? [],
       m.displayName,
       m.name,
       m.series,
@@ -18544,6 +18866,7 @@ function haystack(m) {
 }
 function filterMachines(list2, f) {
   const words = norm2(f.query).split(/\s+/).filter(Boolean);
+  const synonyms = synonymTerms(f.query);
   return list2.filter((m) => {
     if (f.manufacturer && m.manufacturer !== f.manufacturer) return false;
     if (f.category && m.category !== f.category) return false;
@@ -18551,7 +18874,9 @@ function filterMachines(list2, f) {
     if (f.muscle && f.muscle !== NO_MUSCLE && !m.muscleGroups.includes(f.muscle)) return false;
     if (words.length === 0) return true;
     const text2 = haystack(m);
-    return words.every((w) => text2.includes(w));
+    if (words.every((w) => text2.includes(w))) return true;
+    const compact = compactSearch(text2);
+    return synonyms.some((t) => t.length >= 4 ? compact.includes(t) : text2.split(/[^a-z0-9]+/).includes(t));
   });
 }
 function distinct(list2, pick3) {
@@ -21609,233 +21934,6 @@ function planEaten(recipeFoodIds, dayMeals) {
 function planItems(recipe, servings) {
   const f = recipe.servings > 0 ? servings / recipe.servings : 0;
   return recipe.items.map((i) => ({ foodId: i.foodId, amount: Math.round(i.amount * f * 10) / 10 })).filter((i) => i.amount > 0);
-}
-
-// src/domain/search.ts
-function normalizeSearch2(text2) {
-  return text2.toLocaleLowerCase("de-DE").replace(/ß/g, "ss").normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
-}
-function filterOptions(options, query, limit = 8) {
-  const words = normalizeSearch2(query).split(/\s+/).filter(Boolean);
-  const scored = options.map((o) => {
-    const label = normalizeSearch2(o.label);
-    const haystack2 = `${label} ${normalizeSearch2(o.detail ?? "")}`;
-    if (!words.every((w) => haystack2.includes(w))) return null;
-    const first = words[0] ?? "";
-    const rank = first === "" ? 2 : label.startsWith(first) ? 0 : label.includes(` ${first}`) ? 1 : 2;
-    const exact = (o.exact ?? []).map(normalizeSearch2);
-    const hit = words.some((w) => exact.includes(w)) ? 0 : 1;
-    return { o, hit, rank, label, prio: o.priority ?? 0, usage: o.usage ?? 0 };
-  }).filter(
-    (x) => x !== null
-  ).sort(
-    (a, b) => a.hit - b.hit || a.prio - b.prio || b.usage - a.usage || a.rank - b.rank || a.label.localeCompare(b.label, "de")
-  );
-  return scored.slice(0, limit).map((x) => x.o);
-}
-
-// src/domain/smartSearch.ts
-var SYNONYM_GROUPS = [
-  [
-    "brustpresse",
-    "chest press",
-    "brustdr\xFCcken maschine",
-    "seated chest press",
-    "vertical chest press"
-  ],
-  ["bankdr\xFCcken", "bench press", "flachbankdr\xFCcken", "flat bench", "brustdr\xFCcken"],
-  ["schr\xE4gbankdr\xFCcken", "incline press", "incline bench", "schr\xE4gbank", "incline chest"],
-  ["negativbankdr\xFCcken", "decline press", "decline bench", "negativbank"],
-  ["butterfly", "pec deck", "pec fly", "chest fly", "brustfliegen", "fliegende", "flys"],
-  ["reverse butterfly", "reverse fly", "rear delt", "reverse pec deck", "hintere schulter"],
-  ["beinpresse", "leg press", "beinpressen"],
-  ["kniebeuge", "squat", "kniebeugen", "hack squat", "pendulum squat", "belt squat"],
-  ["beinstrecker", "leg extension", "beinstreckung", "quadrizeps maschine"],
-  ["beinbeuger", "leg curl", "beinbeugen", "hamstring curl", "lying leg curl", "seated leg curl"],
-  ["latzug", "lat pulldown", "lat pull down", "latziehen", "pulldown", "lat maschine"],
-  ["klimmzug", "pull up", "pullup", "chin up", "klimmz\xFCge", "assisted pull up"],
-  [
-    "rudern",
-    "row",
-    "seated row",
-    "rudermaschine",
-    "kabelrudern",
-    "cable row",
-    "t-bar row",
-    "low row"
-  ],
-  ["ruderger\xE4t", "rowing machine", "rower", "ergometer rudern", "concept2"],
-  ["schulterpresse", "shoulder press", "schulterdr\xFCcken", "overhead press", "military press"],
-  ["seitheben", "lateral raise", "seitheben maschine", "side raise"],
-  ["bizepscurl", "biceps curl", "bizeps curl", "armbeuger", "preacher curl", "scott curl"],
-  [
-    "trizepsdr\xFCcken",
-    "triceps extension",
-    "triceps pushdown",
-    "trizeps",
-    "armstrecker",
-    "french press"
-  ],
-  ["dips", "dip", "barren", "dip maschine"],
-  ["bauchmaschine", "ab crunch", "abdominal", "crunch", "bauchmuskel", "bauchpresse"],
-  ["r\xFCckenstrecker", "back extension", "hyperextension", "lower back", "hyperextensions"],
-  ["kreuzheben", "deadlift", "rum\xE4nisches kreuzheben", "romanian deadlift"],
-  ["adduktoren", "adduktion", "adductor", "hip adduction", "innenschenkel"],
-  ["abduktoren", "abduktion", "abductor", "hip abduction", "au\xDFenschenkel"],
-  ["hip thrust", "glute bridge", "h\xFCftstrecken", "glute drive", "beckenheben"],
-  ["glute kickback", "kickback", "ges\xE4\xDFkick", "glute kick"],
-  ["wadenheben", "calf raise", "waden", "calf press"],
-  ["multipresse", "smith machine", "smith"],
-  ["kabelzug", "cable", "kabelturm", "cable crossover", "crossover", "kabelstation"],
-  ["laufband", "treadmill", "laufen", "running"],
-  ["crosstrainer", "elliptical", "ellipsentrainer"],
-  ["fahrradergometer", "bike", "fahrrad", "spinning", "radfahren", "ergometer", "cycle"],
-  ["stepper", "stair climber", "treppensteiger", "stairmaster"],
-  ["nackenmaschine", "neck", "nacken"],
-  ["shrugs", "shrug", "schulterheben", "nackenheben"]
-];
-var RELATED = {
-  brustpresse: ["bankdr\xFCcken", "schr\xE4gbankdr\xFCcken", "butterfly", "dips"],
-  bankdr\u00FCcken: ["brustpresse", "schr\xE4gbankdr\xFCcken", "negativbankdr\xFCcken", "dips"],
-  schr\u00E4gbankdr\u00FCcken: ["bankdr\xFCcken", "brustpresse", "schulterpresse"],
-  negativbankdr\u00FCcken: ["bankdr\xFCcken", "dips"],
-  butterfly: ["brustpresse", "kabelzug"],
-  "reverse butterfly": ["seitheben", "rudern"],
-  beinpresse: ["kniebeuge", "beinstrecker", "hip thrust"],
-  kniebeuge: ["beinpresse", "beinstrecker", "multipresse"],
-  beinstrecker: ["beinpresse", "kniebeuge"],
-  beinbeuger: ["kreuzheben", "r\xFCckenstrecker", "hip thrust"],
-  latzug: ["klimmzug", "rudern"],
-  klimmzug: ["latzug", "rudern"],
-  rudern: ["latzug", "klimmzug", "reverse butterfly"],
-  schulterpresse: ["seitheben", "schr\xE4gbankdr\xFCcken"],
-  seitheben: ["schulterpresse", "reverse butterfly"],
-  bizepscurl: ["kabelzug"],
-  trizepsdr\u00FCcken: ["dips", "kabelzug"],
-  dips: ["trizepsdr\xFCcken", "bankdr\xFCcken"],
-  r\u00FCckenstrecker: ["kreuzheben", "beinbeuger"],
-  kreuzheben: ["r\xFCckenstrecker", "beinbeuger", "hip thrust"],
-  "hip thrust": ["glute kickback", "abduktoren", "kreuzheben"],
-  "glute kickback": ["hip thrust", "abduktoren"],
-  adduktoren: ["abduktoren"],
-  abduktoren: ["adduktoren", "glute kickback"],
-  laufband: ["crosstrainer", "stepper"],
-  crosstrainer: ["laufband", "fahrradergometer"],
-  fahrradergometer: ["crosstrainer", "ruderger\xE4t"],
-  ruderger\u00E4t: ["fahrradergometer", "rudern"]
-};
-function compactSearch(text2) {
-  return normalizeSearch2(text2).replace(/[^a-z0-9]/g, "");
-}
-function editDistance2(a, b, max = 2) {
-  if (Math.abs(a.length - b.length) > max) return max + 1;
-  const d = Array.from(
-    { length: a.length + 1 },
-    (_, i) => Array.from({ length: b.length + 1 }, (_2, j) => i === 0 ? j : j === 0 ? i : 0)
-  );
-  for (let i = 1; i <= a.length; i++) {
-    let rowMin = Infinity;
-    for (let j = 1; j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      let v = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
-      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
-        v = Math.min(v, d[i - 2][j - 2] + 1);
-      }
-      d[i][j] = v;
-      rowMin = Math.min(rowMin, v);
-    }
-    if (rowMin > max) return max + 1;
-  }
-  return d[a.length][b.length];
-}
-var typoBudget = (len) => len < 4 ? 0 : len < 8 ? 1 : 2;
-var COMPACT_GROUPS = SYNONYM_GROUPS.map((g) => g.map(compactSearch));
-function matchingGroups(query) {
-  const q = compactSearch(query);
-  if (q.length < 3) return [];
-  const out = [];
-  COMPACT_GROUPS.forEach((terms, i) => {
-    const hit = terms.some(
-      (t) => t === q || q.length >= 4 && t.startsWith(q) || t.length >= 4 && q.includes(t) || editDistance2(q, t, typoBudget(t.length)) <= typoBudget(t.length)
-    );
-    if (hit) out.push(i);
-  });
-  return out;
-}
-function relatedGroups(groups) {
-  const names = new Set(groups.map((i) => SYNONYM_GROUPS[i][0]));
-  const out = /* @__PURE__ */ new Set();
-  for (const i of groups) {
-    for (const r2 of RELATED[SYNONYM_GROUPS[i][0]] ?? []) {
-      if (names.has(r2)) continue;
-      const idx = SYNONYM_GROUPS.findIndex((g) => g[0] === r2);
-      if (idx >= 0) out.add(idx);
-    }
-  }
-  return [...out];
-}
-function prepare(o) {
-  const label = normalizeSearch2(o.label);
-  const exact = (o.exact ?? []).map(normalizeSearch2);
-  const hay = `${label} ${normalizeSearch2(o.detail ?? "")}`;
-  return {
-    o,
-    label,
-    // Nummern (z. B. Studionummer) sind auch Suchwörter
-    words: [...hay.split(/[^a-z0-9]+/).filter(Boolean), ...exact],
-    compact: compactSearch(hay),
-    exact
-  };
-}
-var KIND_ORDER2 = { exact: 0, synonym: 1, related: 2, typo: 3 };
-function smartFilter(options, query, limit = 8) {
-  const words = normalizeSearch2(query).split(/\s+/).filter(Boolean);
-  const q = compactSearch(query);
-  const prepared = options.map(prepare);
-  const kinds = /* @__PURE__ */ new Map();
-  if (words.length === 0) {
-    for (const p of prepared) kinds.set(p, "exact");
-  } else {
-    for (const p of prepared) {
-      const hay = p.words.join(" ");
-      if (words.every((w) => hay.includes(w)) || q.length >= 4 && p.compact.includes(q)) {
-        kinds.set(p, "exact");
-      }
-    }
-    const groups = matchingGroups(query);
-    const terms = (idx) => idx.flatMap((i) => COMPACT_GROUPS[i]);
-    const synonyms = terms(groups);
-    const related = terms(relatedGroups(groups));
-    const has2 = (p, t) => t.length >= 4 ? p.compact.includes(t) : p.words.includes(t);
-    for (const p of prepared) {
-      if (kinds.has(p)) continue;
-      if (synonyms.some((t) => has2(p, t))) kinds.set(p, "synonym");
-      else if (related.some((t) => has2(p, t))) kinds.set(p, "related");
-    }
-    const found = [...kinds.values()].some((k) => k === "exact" || k === "synonym");
-    if (!found) {
-      for (const p of prepared) {
-        if (kinds.has(p)) continue;
-        const pairs = p.words.slice(1).map((w, i) => p.words[i] + w);
-        const candidates = [...p.words, ...pairs];
-        const ok = words.every((w) => {
-          const budget = typoBudget(w.length);
-          return p.words.some((x) => x.includes(w)) || budget > 0 && candidates.some((c) => editDistance2(w, c, budget) <= budget);
-        });
-        const okCompact = q.length >= 4 && candidates.some((c) => editDistance2(q, c, typoBudget(q.length)) <= typoBudget(q.length));
-        if (ok || okCompact) kinds.set(p, "typo");
-      }
-    }
-  }
-  const first = words[0] ?? "";
-  return [...kinds.entries()].map(([p, kind]) => ({
-    p,
-    kind,
-    hit: words.some((w) => p.exact.includes(w)) ? 0 : 1,
-    rank: first === "" ? 2 : p.label.startsWith(first) ? 0 : p.label.includes(` ${first}`) ? 1 : 2
-  })).sort(
-    (a, b) => a.hit - b.hit || KIND_ORDER2[a.kind] - KIND_ORDER2[b.kind] || (a.p.o.priority ?? 0) - (b.p.o.priority ?? 0) || (b.p.o.usage ?? 0) - (a.p.o.usage ?? 0) || a.rank - b.rank || a.p.label.localeCompare(b.p.label, "de")
-  ).slice(0, limit).map((x) => ({ option: x.p.o, kind: x.kind }));
 }
 
 // src/domain/planIcons.ts

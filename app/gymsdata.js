@@ -137,6 +137,42 @@ function materialize(catalog, local, gymId) {
   if (v) local.gyms[gymId] = { row: v, sent: false };
 }
 
+// ------------------------------------------------------------------ Mitgelieferte Studios (1.97.0)
+
+/** Wie `gym::BUILTIN_PACKAGES` am PC (1.0.174): stehen in jeder Installation zur Auswahl. */
+export const BUILTIN_PACKAGES = [
+  {"format":"lifespan-studio","version":1,"id":"gruenblick-private-gym-01a1f8bc","name":"Grünblick Private Gym","address":"Meiereistraße 14 1020 Wien, Austria","website":"https://www.value-one.com/de/Projekte/Gruenblick-im-Viertel-Zwei_project_1651","created":"2026-11-22","machines":[{"machine":"technogym-dbh0","number":"1","name":"Artis Synchro"},{"machine":"technogym-dfc-dge","number":"2","name":"Excite+ Bike"},{"machine":"technogym-djr0ndt","number":"3","name":"Skillrow"},{"machine":"technogym-mnbc","number":"4","name":"Selection 700 Abdominal Crunch"},{"machine":"technogym-mnfc","number":"5","name":"Selection 700 Chest Press"},{"machine":"technogym-mnoc","number":"6","name":"Selection 700 Dual Abductor / Adductor"},{"machine":"technogym-mnmc","number":"7","name":"Selection 700 Dual Leg Curl / Extension"},{"machine":"technogym-mnnc","number":"8","name":"Selection 700 Dual Pectoral / Reverse Fly"},{"machine":"technogym-mnlc","number":"9","name":"Selection 700 Lat Machine"}]},
+];
+
+/**
+ * Mitgelieferte Studios einmal anlegen (wie `gym::ensure_builtin` am PC; gleiche ID `gym:<paket-id>`,
+ * deshalb nie doppelt). Übersprungen, wenn der PC es schon liefert, es gelöscht wurde oder ein Studio
+ * gleichen Namens besteht; ohne eine seiner Maschinen im Katalog erst später. Liefert true bei Änderung.
+ */
+export function ensureBuiltin(catalog, local, now = new Date()) {
+  const l = local;
+  l.builtin = Array.isArray(l.builtin) ? l.builtin : [];
+  let changed = false;
+  const machines = new Set((catalog?.machines ?? []).map((m) => m.id));
+  for (const pkg of BUILTIN_PACKAGES) {
+    if (l.builtin.includes(pkg.id)) continue;
+    const gymId = stableId(`gym:${pkg.id}`);
+    const all = [...(catalog?.pc?.gym ?? []), ...Object.values(l.gyms ?? {}).map((e) => e.row)];
+    const name = String(pkg.name).trim().toLowerCase();
+    const known = all.some((g) => g.id === gymId || String(g.name ?? "").trim().toLowerCase() === name);
+    if (known || isGone(gymsState(l), "gym", gymId)) {
+      l.builtin.push(pkg.id);
+      changed = true;
+      continue;
+    }
+    if (!pkg.machines.some((m) => machines.has(m.machine))) continue;
+    installPackage(catalog, l, pkg, now);
+    l.builtin.push(pkg.id);
+    changed = true;
+  }
+  return changed;
+}
+
 /** Alle Gyms (PC + Handy, Handy gewinnt), Referenz zuerst, dann nach Name. */
 export function gymList(catalog, local) {
   const l = gymsState(local);

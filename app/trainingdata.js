@@ -11,6 +11,8 @@
 // „Körperwerte … senden“ an den PC (Import „Abgleichen“: neuerer `updated_at` gewinnt).
 
 export const TRAIN_TABLES = [
+  // Maschinen (1.99.0): eigene Maschinen anlegen, eigene Nummer, Notiz und Schlagworte
+  "machine",
   "exercise",
   "sport",
   "neat_day",
@@ -23,7 +25,7 @@ export const TRAIN_TABLES = [
 ];
 
 /** Reihenfolge in der Rückgabedatei (Verweise zuerst). */
-const ORDER = ["sport", "exercise", "training_plan", "training_plan_day", "training_plan_exercise", "training_plan_set", "training_plan_slot", "neat_day", "checkin_photo"];
+const ORDER = ["machine", "sport", "exercise", "training_plan", "training_plan_day", "training_plan_exercise", "training_plan_set", "training_plan_slot", "neat_day", "checkin_photo"];
 
 export function emptyTrainLocal() {
   return { rows: {}, deleted: {} };
@@ -48,6 +50,7 @@ class FieldError extends Error {
 }
 
 function rawRows(raw, table) {
+  if (table === "machine") return raw?.machines ?? [];
   if (table === "exercise") return raw?.exercises ?? [];
   if (table === "sport") return raw?.sports ?? [];
   return raw?.pc?.[table] ?? [];
@@ -55,6 +58,7 @@ function rawRows(raw, table) {
 
 /** Hat die Exportdatei die Tabelle überhaupt (ältere Exporte: Pläne und Check-Ins fehlen)? */
 export function hasTable(raw, table) {
+  if (table === "machine") return Array.isArray(raw?.machines);
   if (table === "exercise" || table === "sport") return Array.isArray(raw?.[table === "exercise" ? "exercises" : "sports"]);
   return Array.isArray(raw?.pc?.[table]);
 }
@@ -103,11 +107,11 @@ export function overlayCatalog(raw, local, plansFromRows) {
   if (!Object.keys(l.rows).length && !Object.keys(l.deleted).length) return raw;
   const pc = { ...(raw.pc ?? {}) };
   for (const t of TRAIN_TABLES) {
-    if (t === "exercise" || t === "sport") continue;
+    if (t === "exercise" || t === "sport" || t === "machine") continue;
     if (hasTable(raw, t) || l.rows[t]) pc[t] = rowsOf(raw, l, t);
   }
   if (pc.checkin_photo) pc.checkin_date = [...new Set(pc.checkin_photo.map((c) => c.date))].map((date) => ({ date }));
-  const out = { ...raw, exercises: rowsOf(raw, l, "exercise"), sports: rowsOf(raw, l, "sport"), pc };
+  const out = { ...raw, machines: rowsOf(raw, l, "machine"), exercises: rowsOf(raw, l, "exercise"), sports: rowsOf(raw, l, "sport"), pc };
   if (hasTable(raw, "training_plan")) out.plans = plansFromRows((name) => pc[name] ?? []);
   return out;
 }
@@ -578,6 +582,80 @@ export function deleteSport(raw, local, id, { usedInWorkouts, now = new Date() }
   for (const eid of exIds) remove(raw, local, "exercise", eid, now);
   remove(raw, local, "sport", id, now);
 }
+
+// ------------------------------------------------------------------ Maschinen (1.99.0, wie machine_edit::update_own)
+
+const jsonList = (v) => {
+  if (Array.isArray(v)) return v.map(String);
+  try {
+    const p = JSON.parse(v ?? "[]");
+    return Array.isArray(p) ? p.map(String) : [];
+  } catch {
+    return [];
+  }
+};
+const cleanList = (text, max, chars, field, what) => {
+  const items = [...new Set(String(text ?? "").split(/[,;\n]/).map((x) => x.split(/\s+/).filter(Boolean).join(" ")).filter(Boolean))];
+  if (items.length > max) throw new FieldError(field, `Höchstens ${max} ${what}.`);
+  const long = items.find((x) => [...x].length > chars);
+  if (long) throw new FieldError(field, `„${long}“ ist zu lang (höchstens ${chars} Zeichen).`);
+  return items;
+};
+
+/**
+ * Maschine speichern. Eigene (`origin = app`, neu oder bisher eigene): alle Stammdaten; vom PC bzw. aus
+ * dem Import: nur eigene Nummer, Notiz und Schlagworte (Stammdaten pflegt der Master-Import).
+ */
+export function saveMachine(raw, local, input, { uuid, now = new Date() }) {
+  const ts = iso(now);
+  const old = input.id ? rowsOf(raw, local, "machine").find((m) => m.id === input.id) ?? null : null;
+  const own = !old || old.origin === "app";
+  const ownNumber = optText("ownNumber", input.ownNumber, 40);
+  const notes = optText("notes", input.notes, 2000);
+  const tags = cleanList(input.tags, 30, 40, "tags", "Schlagworte");
+  let row;
+  if (own) {
+    const name = reqText("name", "einen Namen", input.name, 120);
+    const manufacturer = reqText("manufacturer", "einen Hersteller", input.manufacturer || "Eigene", 80);
+    const category = reqText("category", "eine Kategorie", input.category, 60);
+    const series = optText("series", input.series, 80) ?? "";
+    const muscles = cleanList(input.muscleGroups, 12, 60, "muscleGroups", "Muskelgruppen");
+    row = withColumns(raw, "machine", {
+      ...(old ?? { article_number: null, machine_type: "", features: "[]", images: "[]", product_url: null, gym_number: null, own_photo: null }),
+      id: old?.id ?? uuid(),
+      manufacturer,
+      folder: old?.folder ?? "Eigene",
+      category,
+      series,
+      name,
+      display_name: series ? `${series} | ${name}` : name,
+      muscle_groups: JSON.stringify(muscles),
+      own_number: ownNumber,
+      notes,
+      tags: JSON.stringify(tags),
+      archived: input.archived ? 1 : 0,
+      origin: "app",
+      created_at: old?.created_at ?? ts,
+      updated_at: ts,
+    });
+  } else {
+    row = { ...old, own_number: ownNumber, notes, tags: JSON.stringify(tags), updated_at: ts };
+  }
+  put(local, "machine", row);
+  return row;
+}
+
+/** Löschen: nur eigene Maschinen ohne Übungen (sonst archivieren). */
+export function deleteMachine(raw, local, id, { now = new Date() } = {}) {
+  const m = rowsOf(raw, local, "machine").find((x) => x.id === id);
+  if (!m) return;
+  if (m.origin !== "app") throw new Error("Maschinen aus der Datenbank werden nicht gelöscht – du kannst sie archivieren.");
+  const used = rowsOf(raw, local, "exercise").some((e) => e.machine_id === id);
+  if (used) throw new Error("An der Maschine hängen noch Übungen – archiviere sie stattdessen.");
+  remove(raw, local, "machine", id, now);
+}
+
+export const machineTags = (m) => jsonList(m?.tags);
 
 // ------------------------------------------------------------------ Check-Ins (wie checkin::save)
 

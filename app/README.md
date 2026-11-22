@@ -1524,3 +1524,25 @@ Alle Bereiche und Reiter bei iPhone-Breite (390 px) durchgesehen; kein Bereich i
 - ANS-Werte erfassen: Die Felder Ruhepuls, HRV, Atemfrequenz, Ø Schlag-zu-Schlag-Intervall und ANS-Status
   heißen ohne „(optional)“; der Einleitungssatz sagt jetzt „Alle Werte sind freiwillig“ (wie PC 1.0.174).
   Geändert: `logs.js`, `core.js`, `sw.js`.
+
+## Version 1.99.0 (22.11.2026): Datensicherung, Maschinen ohne PC, Zielwerte der Körperkarte
+
+- Import/Export ganz unten: **Datensicherung**. „Sicherung erstellen“ speichert alles, was im aktuellen
+  Konto auf dem Handy liegt, als eine Datei („LIFESPAN Sicherung <Name> JJJJ-MM-TT HHMM.json“). Beim
+  Wiederherstellen zeigt die App erst eine Übersicht und fragt nach; der bisherige Stand wird gemerkt
+  („Wiederherstellung rückgängig machen“). Maschinenbilder gehören nicht dazu (kommen aus den Bilderpaketen).
+  Neu: `backup.js` (+ Test), `store.js` (`exportAccount`, `replaceAccount`).
+- Konten ohne PC (Startpaket): **„Maschinen aktualisieren“** übernimmt die aktuelle Maschinenliste aus dem
+  Startpaket der Website, **„maschinen_master.json importieren“** liest dieselbe Datei wie am PC (gleiche
+  Regeln, fehlende Maschinen werden archiviert). Eigene Nummer, Notiz, Schlagworte und Foto bleiben erhalten.
+  Neu: `machinesync.js` (+ Test); `transferview.js`.
+- Training → Datenbank: **eigene Maschinen** anlegen, bearbeiten, archivieren und (ohne Übungen) löschen;
+  bei Maschinen aus der Datenbank pflegst du eigene Nummer, Notiz und Schlagworte. Geht mit der
+  Körperwerte-Datei an den PC (Tabelle `machine`). `trainingdata.js`, `trainingdb.js` (+ Test).
+- Overview → Körperkarte „Individuell“: **„Zielwerte bearbeiten“** – Erhalt/Aufbau/Maximum je Muskel,
+  geprüft wie am PC, gespeichert in `ui.muscle_map` (gilt auch am PC). `overview.js`, `pcsettings.js`.
+- Messmethoden: Hinweise sagen nicht mehr „am PC“ (anlegen geht unter Settings → Messmethoden). `logs.js`.
+- **Startpaket neu** (für neue Konten ohne PC): Schema 73, 2410 Maschinen (vorher 1589), 56 Lebensmittel,
+  212 Übungen, 140 Sportarten. Der Master-Import am Handy übernimmt den Anzeigenamen wie der PC
+  (`anzeigename`, sonst Name).
+- Geändert außerdem: `app.js`, `appactions.js`, `app.css`, `core.js`, `sw.js`.

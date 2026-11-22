@@ -54,6 +54,48 @@ export async function clearAccount(id) {
   });
 }
 
+/** Gehört der Schlüssel zum aktuellen Konto? Hauptkonto: Schlüssel ohne Konto-Vorsatz. */
+function ownKey(k) {
+  if (typeof k !== "string" || k.startsWith(GLOBAL)) return false;
+  if (ns) return k.startsWith(ns);
+  return !/^[^:]+:/.test(k);
+}
+
+/** Alle Werte des aktuellen Kontos (Datensicherung, 1.99.0): { Schlüssel ohne Vorsatz: Wert }. */
+export async function exportAccount() {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE);
+    const os = tx.objectStore(STORE);
+    const keysReq = os.getAllKeys();
+    const valsReq = os.getAll();
+    tx.oncomplete = () => {
+      const out = {};
+      keysReq.result.forEach((k, i) => {
+        if (ownKey(k)) out[ns ? k.slice(ns.length) : k] = valsReq.result[i];
+      });
+      resolve(out);
+    };
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+/** Alle Werte des aktuellen Kontos durch `values` ersetzen (Wiederherstellung, in einem Schritt). */
+export async function replaceAccount(values) {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, "readwrite");
+    const os = tx.objectStore(STORE);
+    const req = os.getAllKeys();
+    req.onsuccess = () => {
+      for (const k of req.result) if (ownKey(k)) os.delete(k);
+      for (const [k, v] of Object.entries(values)) os.put(v, ns + k);
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 async function getRaw(key) {
   const db = await open();
   return new Promise((resolve, reject) => {

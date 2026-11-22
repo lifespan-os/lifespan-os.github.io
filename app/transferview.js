@@ -29,6 +29,9 @@ import * as GD from "./gymsdata.js";
 import { esc, exById, fmtDate, fmtDateTime, header, S, saveNow, toast, unsent, unsentBodyCount, unsentFood } from "./appbase.js";
 import { accountName, loadStartPackage } from "./accounts.js";
 import { fileButton } from "./homeview.js";
+import * as BK from "./backup.js";
+import * as MS from "./machinesync.js";
+import { refreshCatalog } from "./appbase.js";
 
 /**
  * Import/Export (1.45.6): alles zum Datenaustausch an einer Stelle (vorher unter Settings) – An den PC
@@ -37,7 +40,7 @@ import { fileButton } from "./homeview.js";
  */
 export function viewTransfer() {
   const c = S.catalog;
-  if (!c) return `${header("Import/Export")}<main class="wrap"><section class="card"><h3>Daten vom PC</h3>${fileButton("Exportdatei laden")}</section></main>`;
+  if (!c) return `${header("Import/Export")}<main class="wrap"><section class="card"><h3>Daten vom PC</h3>${fileButton("Exportdatei laden")}</section>${backupCard()}</main>`;
   const total = unsent().length + unsentFood() + unsentBodyCount();
   // Reihenfolge und ausgeblendete Karten wie am PC (Import/Export → Seite anpassen, 1.47.0);
   // Karten ohne Gegenstück am PC folgen ihrem Vorgänger
@@ -51,7 +54,16 @@ export function viewTransfer() {
     { id: "phone", node: `<section class="card">
       <h3>${c.startpaket ? "Grunddaten" : "Daten vom PC"}</h3>
       <p class="muted small">Stand: ${fmtDateTime(c.exportedAt)} · ${c.machines.length.toLocaleString("de-DE")} Maschinen · ${c.exercises.length} Übungen · ${c.plans.length} Pläne</p>
-      ${fileButton("Neue Exportdatei laden")}
+      ${c.startpaket ? "" : fileButton("Neue Exportdatei laden")}
+      ${
+        c.startpaket
+          ? `<button class="btn primary block" data-act="machines-update" ${S.machinesBusy ? "disabled" : ""}>${S.machinesBusy ? "Maschinen werden geladen …" : "Maschinen aktualisieren"}</button>
+      <label class="btn block" for="master-in">maschinen_master.json importieren …</label>
+      <input id="master-in" type="file" accept=".json,application/json" hidden>
+      ${S.machinesReport ? `<p class="ok-note small">${esc(S.machinesReport)}</p>` : ""}
+      <p class="muted small card-info">„Maschinen aktualisieren“ holt die aktuelle Maschinendatenbank von der Website (bei jedem Release neu). Eine eigene maschinen_master.json liest du wie am PC ein (fehlende Maschinen werden archiviert). Eigene Nummern, Notizen, Schlagworte und Fotos bleiben erhalten.</p>`
+          : ""
+      }
       <p class="muted small card-info">Am PC unter Import/Export entweder <b>„Für die Handy-App exportieren“</b> (kleiner, lädt schneller – keine Sicherung) oder den vollständigen Export „Daten exportieren“ wählen. Beide Dateien lassen sich hier laden.</p>
     </section>` },
     { id: "account", node: c.startpaket
@@ -89,8 +101,180 @@ export function viewTransfer() {
   }
   return `${header("Import/Export")}<main class="wrap">
     ${arranged.map((x) => x.node).join("")}
+    ${backupCard()}
   </main>`;
 }
+
+// ------------------------------------------------------------------ Datensicherung (1.99.0)
+
+/** Karte ganz unten: Sicherung erstellen, wiederherstellen (mit Rückfrage), rückgängig machen. */
+function backupCard() {
+  const b = S.backupUi ?? {};
+  if (b.undo === undefined && !b.undoLoading) {
+    b.undoLoading = true;
+    S.backupUi = b;
+    void BK.undoInfo(S.accountId).then((u) => {
+      b.undo = u;
+      b.undoLoading = false;
+      if (S.view === "transfer") X_rerender();
+    });
+  }
+  const pending = b.pending;
+  return `<section class="card" id="backup-card">
+    <h3>Datensicherung</h3>
+    <p class="muted small card-info">Alles, was in diesem Konto auf dem Handy gespeichert ist – Trainings, Ernährung, Supplements, Schlaf und Erholung, Body, Gyms, Checklisten, Einstellungen und die Daten vom PC – als eine Datei. Sichere sie z. B. in iCloud Drive oder Dateien. Maschinenbilder gehören nicht dazu (sie kommen aus den Bilderpaketen).</p>
+    <button class="btn primary block" data-act="backup-create" ${b.busy ? "disabled" : ""}>${b.busy === "create" ? "Sicherung wird erstellt …" : "Sicherung erstellen"}</button>
+    <div id="backup-result">${b.result ?? ""}</div>
+    <label class="btn block" for="backup-in">Sicherung wiederherstellen …</label>
+    <input id="backup-in" type="file" accept=".json,application/json" hidden>
+    ${
+      pending
+        ? `<div class="confirm-box">
+      <p class="small"><b>${esc(pending.name)}</b> vom ${esc(fmtDateTime(pending.createdAt))}${pending.account ? ` · Konto „${esc(pending.account)}“` : ""}${pending.appVersion ? ` · App ${esc(pending.appVersion)}` : ""}</p>
+      <p class="small">${pending.summary.workouts} ${pending.summary.workouts === 1 ? "Training" : "Trainings"} am Handy · ${pending.summary.pcExportedAt ? `Daten vom PC vom ${esc(fmtDateTime(pending.summary.pcExportedAt))}` : pending.summary.startpaket ? "Konto ohne PC" : "ohne Daten vom PC"} · ${pending.summary.keys} Bereiche</p>
+      <p class="warn small">Der jetzige Stand dieses Kontos wird ersetzt. Er wird vorher gemerkt – „Wiederherstellung rückgängig machen“ holt ihn zurück.</p>
+      <div class="row-actions"><button class="btn danger sm" data-act="backup-restore" ${b.busy ? "disabled" : ""}>Jetzt wiederherstellen</button><button class="btn sm" data-act="backup-cancel">Abbrechen</button></div>
+    </div>`
+        : ""
+    }
+    ${b.undo ? `<button class="btn block" data-act="backup-undo">Wiederherstellung vom ${esc(fmtDateTime(b.undo.at))} rückgängig machen</button>` : ""}
+  </section>`;
+}
+
+let X_rerender = () => {};
+/** Neu zeichnen (von app.js gesetzt). */
+export function setBackupRerender(fn) {
+  X_rerender = fn;
+}
+
+/** Datei für die Wiederherstellung gewählt: prüfen und Rückfrage zeigen. */
+export async function readBackupFile(file) {
+  const b = (S.backupUi ??= {});
+  let parsed;
+  try {
+    parsed = BK.parseBackup(await file.text());
+  } catch {
+    parsed = { error: "Die Datei konnte nicht gelesen werden." };
+  }
+  if (parsed.error) {
+    b.pending = null;
+    toast(parsed.error, true);
+    return X_rerender();
+  }
+  b.pending = {
+    name: file.name,
+    values: parsed.values,
+    createdAt: parsed.backup.createdAt,
+    account: parsed.backup.account?.name ?? "",
+    appVersion: parsed.backup.appVersion ?? "",
+    summary: parsed.summary,
+  };
+  X_rerender();
+  requestAnimationFrame(() => document.getElementById("backup-card")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+}
+
+/** Neue Maschinenliste übernehmen und speichern. */
+async function applyMachines(result, skipped = []) {
+  const cat = S.catalogRaw;
+  cat.machines = result.machines;
+  const cols = new Set([...(cat.columns?.machine ?? []), ...MS.MACHINE_COLUMNS]);
+  cat.columns = { ...(cat.columns ?? {}), machine: [...cols] };
+  await store.set("catalog", cat);
+  refreshCatalog();
+  S.machinesReport = MS.describeMerge(result, skipped);
+  toast(S.machinesReport);
+}
+
+/** maschinen_master.json gewählt (Konto am Handy). */
+export async function readMasterFile(file) {
+  const r = MS.parseMaster(await file.text());
+  if (r.error) return toast(r.error, true);
+  if (!r.machines.length) return toast("In der Datei stehen keine Maschinen.", true);
+  await applyMachines(MS.mergeMachines(S.catalogRaw.machines, r.machines, { archiveMissing: true }), r.skipped);
+  X_rerender();
+}
+
+export const backupActions = {
+  "machines-update": async () => {
+    S.machinesBusy = true;
+    X_rerender();
+    try {
+      const res = await fetch("startpaket.json", { cache: "no-cache" });
+      if (!res.ok) throw new Error("Die Maschinenliste ist gerade nicht erreichbar (offline?).");
+      const list = MS.machinesFromStartpaket(await res.json());
+      if (!list.length) throw new Error("Die Maschinenliste der Website ist leer.");
+      await applyMachines(MS.mergeMachines(S.catalogRaw.machines, list));
+    } catch (e) {
+      toast(e.message ?? String(e), true);
+    }
+    S.machinesBusy = false;
+    X_rerender();
+  },
+  "backup-create": async () => {
+    const b = (S.backupUi ??= {});
+    b.busy = "create";
+    X_rerender();
+    try {
+      await saveNow();
+      const now = new Date();
+      const doc = await BK.createBackup({ accountId: S.accountId ?? "", accountName: accountName(), appVersion: C.MOBILE_VERSION, now });
+      const name = BK.backupFileName(accountName(), now);
+      const blob = new Blob([JSON.stringify(doc)], { type: "application/json" });
+      const file = new File([blob], name, { type: "application/json" });
+      const size = `${(blob.size / 1024 / 1024).toLocaleString("de-DE", { maximumFractionDigits: 1 })} MB`;
+      let shared = false;
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: name });
+          shared = true;
+        } catch (e) {
+          if (e.name === "AbortError") {
+            b.busy = null;
+            X_rerender();
+            return toast("Abgebrochen");
+          }
+        }
+      }
+      b.result = shared
+        ? `<p class="ok-note small">„${esc(name)}“ weitergegeben (${size}).</p>`
+        : `<p class="small">Die Sicherung ist bereit (${size}). Tippe darauf und lege sie z. B. in iCloud Drive ab:</p><a class="btn blue block" href="${URL.createObjectURL(blob)}" download="${esc(name)}">${esc(name)}</a>`;
+    } catch (e) {
+      toast(`Sicherung fehlgeschlagen: ${e.message ?? e}`, true);
+    }
+    b.busy = null;
+    X_rerender();
+  },
+  "backup-cancel": () => {
+    if (S.backupUi) S.backupUi.pending = null;
+    X_rerender();
+  },
+  "backup-restore": async () => {
+    const b = S.backupUi;
+    if (!b?.pending) return;
+    b.busy = "restore";
+    X_rerender();
+    try {
+      await saveNow();
+      await BK.restoreBackup(b.pending.values, S.accountId ?? "");
+      toast("Sicherung wiederhergestellt – die App lädt neu");
+      setTimeout(() => location.reload(), 600);
+    } catch (e) {
+      b.busy = null;
+      toast(`Wiederherstellen fehlgeschlagen: ${e.message ?? e}`, true);
+      X_rerender();
+    }
+  },
+  "backup-undo": async () => {
+    try {
+      if (await BK.undoRestore(S.accountId ?? "")) {
+        toast("Vorheriger Stand zurückgeholt – die App lädt neu");
+        setTimeout(() => location.reload(), 600);
+      }
+    } catch (e) {
+      toast(`Rückgängig fehlgeschlagen: ${e.message ?? e}`, true);
+    }
+  },
+};
 
 export function viewSend() {
   const open = unsent();

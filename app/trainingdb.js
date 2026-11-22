@@ -91,6 +91,7 @@ export function viewDatabaseTab() {
   const S = X.S;
   if (S.trainExEdit) return exerciseEditor();
   if (S.trainSportEdit) return sportEditor();
+  if (S.trainMachineEdit) return machineEditor();
   if (S.trainMachine) return machineDetail();
   // 1.74.0: Bereiche auf- und zuklappen (Zustand auf diesem Handy) und wie am PC anordnen
   const cards = [
@@ -228,6 +229,7 @@ function machineModels(catalog) {
     archived: Boolean(m.archived),
     origin: m.origin ?? "import",
     updatedAt: m.updated_at ?? "",
+    tags: list(m.tags),
   }));
 }
 
@@ -258,7 +260,8 @@ function machinesCard() {
   const sel = (id, label, key, options, extra = "") =>
     `<div class="field"><label for="${id}">${label}</label><select id="${id}" data-mfilter="${key}"><option value="">Alle</option>${options.map(([v, l]) => `<option value="${esc(v)}" ${v === f[key] ? "selected" : ""}>${esc(l)}</option>`).join("")}${extra}</select></div>`;
   return `<details class="card ov-card card--training db-card" id="machines-title" data-card="db-machines"${cardOpen("db-machines") ? " open" : ""}><summary class="wo-head ov-card__head"><h3>Maschinendatenbank</h3></summary>
-    <p class="muted small card-info">Maschinen kommen mit der Exportdatei vom PC. Importieren, Stammdaten und Bilder ändern (Master-Editor) und Doppelte zusammenführen geht am PC.</p>
+    <p class="muted small card-info">Maschinen kommen mit der Exportdatei vom PC bzw. (Konto ohne PC) unter Import/Export → „Maschinen aktualisieren“. Eigene Maschinen legst du hier an; bei allen Maschinen pflegst du eigene Nummer, Notiz und Schlagworte. Bilder und Doppelte zusammenführen gehen am PC.</p>
+    <button class="btn sm primary" data-act="train-machine-new">Eigene Maschine anlegen</button>
     <div class="field"><label for="machine-search">Maschinen durchsuchen</label><input id="machine-search" type="search" placeholder="Name, Hersteller, Nummer, Muskelgruppe …" value="${esc(f.query)}" data-dbinput="machineQuery" autocomplete="off"></div>
     ${sel("machine-manufacturer", "Hersteller", "manufacturer", manufacturers.map((x) => [x, x]))}
     ${sel("machine-category", "Kategorie", "category", categories.map((x) => [x, x]))}
@@ -306,7 +309,7 @@ function machineDetail() {
     ${row("Hersteller", m.manufacturer)}${row("Serie", m.series)}${row("Kategorie · Typ", [m.category, m.machineType].filter(Boolean).join(" · "))}${row("Artikelnummer", m.articleNumber)}
     ${row("Eigene Nummer", m.ownNumber)}${row("dasGym-Nummer", m.gymNumber)}${row("Muskelgruppen", m.muscleGroups.join(", "))}${row("Besonderheiten", m.features.join(", "))}
     ${focus.length ? row("Muskelfokus", focus.map(([mu, p]) => `${D.MUSCLE_LABELS[mu] ?? mu} ${F(p)} %`).join(", ")) : ""}
-    ${row("Notiz", m.notes)}${row("Bilder", m.images.length ? `${m.images.length} am PC${MI.has(m.id) ? ` · ${MI.countOf(m.id)} auf dem Handy` : " · aufs Handy unter Import/Export → Maschinenbilder"}` : "")}
+    ${row("Notiz", m.notes)}${row("Schlagworte", m.tags.join(", "))}${row("Bilder", m.images.length ? `${m.images.length} am PC${MI.has(m.id) ? ` · ${MI.countOf(m.id)} auf dem Handy` : " · aufs Handy unter Import/Export → Maschinenbilder"}` : "")}
     ${m.productUrl ? `<p class="small"><a href="${esc(m.productUrl)}" target="_blank" rel="noopener">Produktseite des Herstellers</a></p>` : ""}
     <h4>Übungen an dieser Maschine</h4>
     ${
@@ -314,8 +317,47 @@ function machineDetail() {
         ? `<ul class="train-list">${exs.map((e) => `<li class="train-row"><span class="train-row__main"><strong>${esc(e.name)}</strong><span class="muted small">${usage.get(e.id) ?? 0} ${(usage.get(e.id) ?? 0) === 1 ? "Einheit" : "Einheiten"}${e.muscle_group ? ` · ${esc(e.muscle_group)}` : ""}</span></span><button class="linkbtn" data-act="train-ex-edit" data-arg="${esc(e.id)}">Bearbeiten</button></li>`).join("")}</ul>`
         : `<p class="muted small">Noch keine Übung – sie entsteht, sobald du die Maschine im Training oder in einem Plan wählst.</p>`
     }
-    <p class="muted small">Stammdaten, Nummern und Bilder ändern: am PC unter Training → Datenbank → Maschinendatenbank bzw. im Master-Editor.</p>
+    <div class="row-actions"><button class="btn sm primary" data-act="train-machine-edit" data-arg="${esc(m.id)}">${m.origin === "app" ? "Bearbeiten" : "Nummer, Notiz, Schlagworte"}</button>${
+      m.origin === "app" && !exs.length ? `<button class="btn sm danger" data-act="train-machine-delete" data-arg="${esc(m.id)}">Löschen</button>` : ""
+    }</div>
+    ${m.origin === "app" ? "" : `<p class="muted small">Stammdaten und Bilder dieser Maschine kommen aus der Maschinendatenbank (Master-Editor am PC).</p>`}
   </section>`;
+}
+
+/** Maschine anlegen bzw. bearbeiten (1.99.0): eigene komplett, importierte nur Nummer, Notiz, Schlagworte. */
+function machineEditor() {
+  const S = X.S;
+  const d = S.trainMachineEdit;
+  const errors = S.trainErrors ?? {};
+  const all = machineModels(S.catalog);
+  const cats = [...new Set(all.map((m) => m.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"));
+  const groups = [...new Set(all.flatMap((m) => m.muscleGroups))].sort((a, b) => a.localeCompare(b, "de"));
+  const txt = (key, label, opts = {}) =>
+    `<div class="field"><label for="mach-${key}">${label}</label><input id="mach-${key}" type="text" maxlength="${opts.max ?? 120}" value="${esc(d[key] ?? "")}" data-mef="${key}"${opts.list ? ` list="${opts.list}"` : ""}${opts.placeholder ? ` placeholder="${esc(opts.placeholder)}"` : ""}>${opts.hint ? `<p class="muted small">${esc(opts.hint)}</p>` : ""}${fe(errors, key)}</div>`;
+  return `<section class="card card--training"><h3>${d.id ? (d.own ? "Eigene Maschine bearbeiten" : `„${esc(d.name)}“: Nummer, Notiz, Schlagworte`) : "Eigene Maschine anlegen"}</h3>
+    ${notice()}
+    ${
+      d.own
+        ? `${txt("name", "Name", { placeholder: "z. B. Hip Thrust Maschine" })}
+    ${txt("manufacturer", "Hersteller", { max: 80, placeholder: "z. B. Eigene, gym80" })}
+    ${txt("series", "Serie", { max: 80 })}
+    ${txt("category", "Kategorie", { max: 60, list: "mach-cats", placeholder: "z. B. Plate Loaded, Cardio" })}<datalist id="mach-cats">${cats.map((c) => `<option value="${esc(c)}"></option>`).join("")}</datalist>
+    ${txt("muscleGroups", "Muskelgruppen", { max: 400, list: "mach-groups", hint: "Mehrere mit Komma trennen; die erste ist der Hauptmuskel (Körperkarte)." })}<datalist id="mach-groups">${groups.map((c) => `<option value="${esc(c)}"></option>`).join("")}</datalist>`
+        : ""
+    }
+    ${txt("ownNumber", "Eigene Nummer", { max: 40 })}
+    ${txt("tags", "Schlagworte", { max: 1200, placeholder: "z. B. Hip Thrust, OG", hint: "Eigene Suchbegriffe, mehrere mit Komma trennen – gelten in allen Suchen." })}
+    <div class="field"><label for="mach-notes">Notiz</label><textarea id="mach-notes" rows="2" maxlength="2000" data-mef="notes">${esc(d.notes ?? "")}</textarea>${fe(errors, "notes")}</div>
+    ${d.own ? `<label class="toggle"><input type="checkbox" data-mef="archived" ${d.archived ? "checked" : ""}> Archiviert</label>` : ""}
+    <div class="row-actions"><button class="btn primary" data-act="train-machine-save">Speichern</button><button class="btn" data-act="train-machine-cancel">Abbrechen</button></div>
+    <p class="muted small">Geht mit „Körperwerte … senden“ an den PC.</p>
+  </section>`;
+}
+
+function syncMachine() {
+  const d = X.S.trainMachineEdit;
+  if (!d) return;
+  for (const el of document.querySelectorAll("[data-mef]")) d[el.dataset.mef] = el.type === "checkbox" ? el.checked : el.value;
 }
 
 // ------------------------------------------------------------------ Sportarten (SportsCard.tsx)
@@ -635,6 +677,59 @@ export const dbActions = {
     X.S.trainMachine = null;
     X.rerender();
     requestAnimationFrame(() => document.getElementById("machines-title")?.scrollIntoView({ block: "start" }));
+  },
+  "train-machine-new": () => {
+    const S = X.S;
+    S.trainMachineEdit = { id: null, own: true, name: "", manufacturer: "Eigene", series: "", category: "", muscleGroups: "", ownNumber: "", tags: "", notes: "", archived: false };
+    S.trainNotice = null;
+    S.trainErrors = {};
+    X.rerender();
+    window.scrollTo(0, 0);
+  },
+  "train-machine-edit": (el) => {
+    const S = X.S;
+    const m = machineModels(S.catalog).find((x) => x.id === el.dataset.arg);
+    if (!m) return;
+    S.trainMachineEdit = { id: m.id, own: m.origin === "app", name: m.name, manufacturer: m.manufacturer, series: m.series, category: m.category, muscleGroups: m.muscleGroups.join(", "), ownNumber: m.ownNumber ?? "", tags: m.tags.join(", "), notes: m.notes ?? "", archived: m.archived };
+    S.trainNotice = null;
+    S.trainErrors = {};
+    X.rerender();
+    window.scrollTo(0, 0);
+  },
+  "train-machine-cancel": () => {
+    X.S.trainMachineEdit = null;
+    X.S.trainErrors = {};
+    X.S.trainNotice = null;
+    X.rerender();
+  },
+  "train-machine-save": async () => {
+    const S = X.S;
+    syncMachine();
+    const d = S.trainMachineEdit;
+    try {
+      const row = TR.saveMachine(S.catalogRaw, S.train, d, { uuid: X.uuid, now: new Date() });
+      await X.persistTrain();
+      X.setNotice("ok", `Maschine „${row.display_name}“ gespeichert.`);
+      S.trainMachineEdit = null;
+      S.trainMachine = row.id;
+      S.trainErrors = {};
+    } catch (e) {
+      X.failed(e);
+    }
+    X.rerender();
+  },
+  "train-machine-delete": async (el) => {
+    const S = X.S;
+    if (!X.confirmTwice(el, "Nochmal tippen: Maschine löschen")) return;
+    try {
+      TR.deleteMachine(S.catalogRaw, S.train, el.dataset.arg, { now: new Date() });
+      await X.persistTrain();
+      S.trainMachine = null;
+      X.setNotice("ok", "Maschine gelöscht.");
+    } catch (e) {
+      X.setNotice("error", e.message);
+    }
+    X.rerender();
   },
   "train-sport-new": () => {
     const S = X.S;

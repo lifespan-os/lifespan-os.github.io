@@ -12,6 +12,9 @@ import { REGIONS } from "./musclemap/regions.js";
 import { stepsDayHtml } from "./heart.js";
 import { overviewCaffeine } from "./icoach.js";
 import * as CM from "./cardiomap.js";
+import * as PS from "./pcsettings.js";
+import * as store from "./store.js";
+import { buildDb } from "./diary.js";
 
 let X = null; // { S, buildDb, rerender, today }
 
@@ -481,6 +484,61 @@ export function heatmapHtml({ levels, describe, sex, active = null, act, legend,
       }</ul></div>`;
 }
 
+// ------------------------------------------------------------------ Zielwerte „Individuell“ (1.99.0, wie PC MuscleTargetsEditor)
+
+const TARGET_FIELDS = [
+  ["moderate", 1],
+  ["build", 2],
+  ["high", 3],
+  ["veryHigh", 4],
+];
+
+/** Tabelle: je Muskel der Wert dieser Woche und die vier Schwellen (Arbeitssätze je Woche). */
+function targetsEditorHtml(targets, current) {
+  const err = X.S.ovTargetsErr ?? {};
+  const rows = D.muscleMapAll.MUSCLE_IDS.map((m) => {
+    const t = targets[m];
+    return `<tr${err[m] ? ' class="is-invalid"' : ""}><th scope="row">${esc(D.MUSCLE_LABELS[m])}${err[m] ? `<span class="field-error">${esc(err[m])}</span>` : ""}</th><td class="num">${F(current[m] ?? 0, 1)}</td>${TARGET_FIELDS.map(
+      ([k]) => `<td><input class="mt-input" data-mt="${m}|${k}" type="text" inputmode="decimal" value="${esc(String(t[k]).replace(".", ","))}" aria-label="${esc(`${D.MUSCLE_LABELS[m]} ${D.LEVEL_NAMES[TARGET_FIELDS.findIndex((f) => f[0] === k) + 1]} ab`)}"></td>`,
+    ).join("")}</tr>`;
+  }).join("");
+  return `<div class="muscle-targets">
+    <p class="muted small">Ab wie vielen Arbeitssätzen je Woche eine Stufe beginnt. Gilt für PC und Handy (geht mit „An den PC senden“ an den PC).</p>
+    <div class="table-scroll"><table class="data-table muscle-targets__table"><thead><tr><th>Muskel</th><th class="num">diese Woche</th>${TARGET_FIELDS.map(
+      ([, lvl]) => `<th class="num"><span class="muscle-map__swatch" style="background:${HEAT[lvl]}"></span>${esc(D.LEVEL_NAMES[lvl])} ab</th>`,
+    ).join("")}</tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="row-actions"><button class="btn primary sm" data-act="ov-targets-save">Zielwerte speichern</button><button class="btn sm ghost" data-act="ov-targets-reset">Startwerte</button></div>
+  </div>`;
+}
+
+/** Zielwerte aus den Feldern lesen; Fehler je Muskel. */
+function readTargets(base) {
+  const targets = structuredClone(base);
+  const errors = {};
+  const num = (x) => (String(x).trim() === "" ? NaN : Number(String(x).replace(",", ".")));
+  for (const el of document.querySelectorAll("[data-mt]")) {
+    const [m, k] = el.dataset.mt.split("|");
+    targets[m][k] = num(el.value);
+  }
+  for (const m of D.muscleMapAll.MUSCLE_IDS) {
+    const e = Object.values(targets[m]).some(Number.isNaN) ? "Bitte alle Felder ausfüllen" : D.muscleMapAll.validateTarget(targets[m]);
+    if (e) errors[m] = e;
+  }
+  return { targets, errors };
+}
+
+async function saveTargets(targets) {
+  const S = X.S;
+  const db = buildDb();
+  const key = D.MUSCLE_MAP_SETTINGS_KEY;
+  const current = D.parseMuscleMapSettings(db.settings.get(key) ?? null);
+  const json = D.muscleMapAll.serializeMuscleMapSettings({ ...current, targets });
+  S.pcsettings = PS.normSync(S.pcsettings);
+  const changed = PS.setSetting(S.pcsettings, key, json, db.settings.get(key) ?? null);
+  if (changed) await store.set("pcsettings", S.pcsettings);
+  return changed;
+}
+
 function bodyMapCard(w, today) {
   const S = X.S;
   const previous = Boolean(S.ovBodyPrev);
@@ -524,16 +582,19 @@ function bodyMapCard(w, today) {
       Object.entries(D.SCALE_MODE_LABELS),
       mode,
       "ov-body-mode",
-    )}${cardio.settings ? CM.cardioSwitchHtml(cardio.settings.show, "ov-body-cardio") : ""}</div>
+    )}${cardio.settings ? CM.cardioSwitchHtml(cardio.settings.show, "ov-body-cardio") : ""}${
+      mode === "individual" ? `<button class="linkbtn small" data-act="ov-targets-toggle">${S.ovTargetsEdit ? "Zielwerte schließen" : "Zielwerte bearbeiten"}</button>` : ""
+    }</div>
     ${data.totalSets === 0 && !cardio.on ? `<p class="muted small">Im Zeitraum keine Arbeitssätze von Kraftübungen.</p>` : ""}
     ${heatmapHtml({ levels, describe, sex, active, act: "ov-muscle", legend, cardioShare: cardio.share })}
     ${cardio.settings?.show ? CM.cardioSummaryHtml(cardio.load, cardio.settings) : ""}
+    ${mode === "individual" && S.ovTargetsEdit ? targetsEditorHtml(targets, values) : ""}
     ${note(
       esc(
         `Arbeitssätze von Kraftübungen (Montag–Sonntag)${
           cardio.settings?.show ? ", dazu Cardio als Satz-Äquivalente (Minuten × Intensität, schraffiert; Einstellungen am PC unter Settings → Cardio in der Körperkarte)" : ""
         }. Mit Muskelfokus (bei Maschine bzw. Übung in Prozent eingetragen) zählt jeder Muskelteil mit seinem Anteil; sonst Hauptmuskel = erste Muskelgruppe der Übung (bzw. der Maschine), weitere Muskelgruppen zählen als halber Satz.${
-          mode === "standard" ? " Standard: eine Skala für alle Muskeln." : mode === "individual" ? " Individuell: Stufen nach deinen Zielwerten je Muskel (am PC einstellbar)." : " Relativ: Anteil am meisttrainierten Muskel."
+          mode === "standard" ? " Standard: eine Skala für alle Muskeln." : mode === "individual" ? " Individuell: Stufen nach deinen Zielwerten je Muskel („Zielwerte bearbeiten“, gilt auch am PC)." : " Relativ: Anteil am meisttrainierten Muskel."
         }${data.setsWithoutMuscle > 0 ? ` ${data.setsWithoutMuscle} ${data.setsWithoutMuscle === 1 ? "Satz" : "Sätze"} ohne zuordenbare Muskelgruppe.` : ""}${
           data.unmapped.length > 0 ? ` Nicht zugeordnet: ${data.unmapped.map((u) => u.term).join(", ")}.` : ""
         }${w.sex === null ? " Ohne Geschlecht im Profil wird das männliche Modell gezeigt – Profil am PC in Settings ergänzen." : ""}`,
@@ -955,6 +1016,30 @@ export function shiftOverviewDay(delta) {
 export const overviewActions = {
   "ov-body-week": (el) => {
     X.S.ovBodyPrev = el.dataset.arg === "1";
+    X.rerender();
+  },
+  "ov-targets-toggle": () => {
+    X.S.ovTargetsEdit = !X.S.ovTargetsEdit;
+    X.S.ovTargetsErr = null;
+    X.rerender();
+  },
+  "ov-targets-save": async () => {
+    const base = D.parseMuscleMapSettings(buildDb().settings.get(D.MUSCLE_MAP_SETTINGS_KEY) ?? null).targets;
+    const { targets, errors } = readTargets(base);
+    if (Object.keys(errors).length) {
+      X.S.ovTargetsErr = errors;
+      return X.rerender();
+    }
+    X.S.ovTargetsErr = null;
+    const changed = await saveTargets(targets);
+    X.S.ovTargetsEdit = false;
+    X.toast?.(changed ? "Zielwerte gespeichert" : "Keine Änderung");
+    X.rerender();
+  },
+  "ov-targets-reset": async () => {
+    await saveTargets(structuredClone(D.muscleMapAll.DEFAULT_TARGETS));
+    X.S.ovTargetsErr = null;
+    X.toast?.("Startwerte übernommen");
     X.rerender();
   },
   "ov-body-mode": (el) => {

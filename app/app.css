@@ -2107,3 +2107,10 @@ a.btn { color: var(--fg); text-decoration: none; }
 .qf-row--night { grid-template-columns: minmax(0, 1fr); }
 .qf-row--night .qf-times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .qf-row--night .qf-times input { width: 100%; }
+
+/* ------------------------------------------------------------ Zielwerte „Individuell“ und Datensicherung (1.99.0) */
+.muscle-targets { margin-top: 12px; }
+.muscle-targets__table th[scope="row"] { font-weight: 500; min-width: 9rem; }
+.muscle-targets__table .mt-input { width: 3.6rem; min-width: 0; padding: 6px 8px; text-align: right; }
+.muscle-targets__table tr.is-invalid th { color: var(--danger); }
+.confirm-box { margin: 12px 0; display: grid; gap: 8px; }

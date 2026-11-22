@@ -43,9 +43,10 @@ import { quickGo, renderNav, rerenderKeepScroll, setMenu } from "./navshell.js";
 import { adjustRest, startRest, stopRest, wakeLock } from "./resttimer.js";
 import { accountName, createAccount, switchAccount } from "./accounts.js";
 import { addExercise, applyDivisionWeights, exComplete, findSet, findWe, focusExId, isOpen, pcWorkout, setFocus, startWorkout } from "./workoutview.js";
-import { exportAccount, markSent, sendFile } from "./transferview.js";
+import { backupActions, exportAccount, markSent, sendFile } from "./transferview.js";
 
 export const actions = {
+  ...backupActions,
   ...foodActions,
   ...diaryActions,
   ...vendorActions,

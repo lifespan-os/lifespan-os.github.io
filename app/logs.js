@@ -420,7 +420,7 @@ function editSleepView(f) {
       ${field("date", "Aufgewacht am", d.date, { type: "date", error: e.date })}
       ${selectField("method", "Messmethode", d.method, [["", "Keine Angabe"], ...methods.map((m) => [m, m])], {
         error: e.method,
-        hint: methods.length ? "" : "Messmethoden legst du am PC unter Settings → Messmethoden (Schlaf) an.",
+        hint: methods.length ? "" : "Messmethoden legst du unter Settings → Messmethoden (Schlaf) an.",
       })}
       <div class="logs-grid">
         ${field("bedTime", "Zu Bett gegangen", d.bedTime, { type: "time", error: e.bedTime })}
@@ -525,7 +525,7 @@ function editVitalsView(f) {
       <p class="muted small">Manuell übertragene Messwerte, z. B. von Uhr, Brustgurt oder App. Sie werden unter Body &amp; Longevity gespeichert. Alle Werte sind freiwillig. Werte vom PC entfernst du am PC; ein geleertes Feld entfernt einen hier erfassten, noch nicht gesendeten Wert.</p>
       ${field("date", "Messdatum", d.date, { type: "date", error: e.date })}
       ${selectField("method", "Messmethode", d.method, [["", "Keine Angabe"], ...methods.map((m) => [m, m])], {
-        hint: methods.length ? "Gilt für alle Werte dieses Messdatums." : "Messmethoden legst du am PC unter Settings → Messmethoden (Vitalwerte) an.",
+        hint: methods.length ? "Gilt für alle Werte dieses Messdatums." : "Messmethoden legst du unter Settings → Messmethoden (Vitalwerte) an.",
       })}
       <div class="logs-grid">${VITALS.filter((v) => v.id !== ANS_STATUS).map(vf).join("")}</div>
       <div class="ans-status"><h4 class="logs-sub">ANS-Status</h4><div id="lf-ans">${ansBar(ansNum !== null && Number.isFinite(ansNum) ? ansNum : null, prev)}</div>${vf(VITALS[4])}</div>

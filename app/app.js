@@ -60,6 +60,7 @@ import { watchParityChange } from "./watchparity.js";
 import { app, esc, go, header, refreshCatalog, render, restEl, S, saveNow, saveSoon, setRender, toast } from "./appbase.js";
 import { foldTabs, sheetRoot } from "./sheets.js";
 import { measureHead, renderNav, rerenderKeepScroll } from "./navshell.js";
+import { readBackupFile, readMasterFile, setBackupRerender } from "./transferview.js";
 import { renderRest, unlockAudio, wakeLock } from "./resttimer.js";
 import { applyPrefs, notify, startReminders, syncSections } from "./devsettings.js";
 import { accountsCard, applyPendingRename, renameActiveAccount, viewAccountNew } from "./accounts.js";
@@ -140,6 +141,7 @@ function renderApp() {
   renderRest();
 }
 setRender(renderApp);
+setBackupRerender(() => rerenderKeepScroll());
 
 // ------------------------------------------------------------------ Eingaben
 
@@ -329,6 +331,13 @@ app.addEventListener("change", async (ev) => {
     rerenderKeepScroll();
   } else if (el.id === "file-in" && el.files?.[0]) {
     await loadFile(el.files[0]);
+  } else if (el.id === "master-in" && el.files?.[0]) {
+    await readMasterFile(el.files[0]);
+    el.value = "";
+  } else if (el.id === "backup-in" && el.files?.[0]) {
+    // Datensicherung wiederherstellen (1.99.0): erst prüfen, dann Rückfrage in der Karte
+    await readBackupFile(el.files[0]);
+    el.value = "";
   } else if (el.dataset.wfield === "title") {
     if (!S.active.title.trim()) S.active.title = "Training";
   }

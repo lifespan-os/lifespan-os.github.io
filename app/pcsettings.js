@@ -30,6 +30,8 @@ export const SYNC_KEYS = [
   "ui.protocols",
   // Settings → Cardio in der Körperkarte (1.89.0)
   "ui.cardio_muscles",
+  // Körperkarte „Individuell“: Zielwerte je Muskel (1.99.0)
+  "ui.muscle_map",
   // Settings → Wochenziele, Hauptziele und Einwilligung (1.91.0)
   "ui.week_goals",
   "ui.main_goals",

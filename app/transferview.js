@@ -1,5 +1,6 @@
 // LIFESPAN OS Mobil – Import/Export: Übersicht, Senden an den PC, offene Einträge, Dateien bauen (aus app.js, 1.74.0).
 import * as C from "./core.js";
+import * as PR from "./paritydata.js";
 import * as store from "./store.js";
 import * as N from "./nutrition.js";
 import * as BD from "./bodydata.js";
@@ -258,7 +259,7 @@ export function referencedRow(table, id) {
 }
 
 export function bodyPartTablesRaw(all) {
-  return mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), mergeTables(CF.caffeineTables(S.caffeine, { all }), GLD.glucoseTables(S.glucose, { all }))), mergeTables(TR.trainTables(S.train, { all }), mergeTables(GL.goalTables(S.goals, { all }), mergeTables(PS.syncTables(S.pcsettings, { all }), GD.gymTables(S.gyms, { all })))))))));
+  return mergeTables(mergeTables(BD.bodyTables(S.catalog, S.body.local, { all }), LG.logTables(S.logs, { all })), mergeTables(TD.todoTables(S.todos, { all }), mergeTables(HD.healthTables(S.health, { all }), mergeTables(SD.superTables(S.super, { all }), mergeTables(mergeTables(CD.checklistTables(S.checklists, { all }), mergeTables(CF.caffeineTables(S.caffeine, { all }), GLD.glucoseTables(S.glucose, { all }))), mergeTables(TR.trainTables(S.train, { all }), mergeTables(GL.goalTables(S.goals, { all }), mergeTables(PS.syncTables(S.pcsettings, { all }), mergeTables(GD.gymTables(S.gyms, { all }), PR.parityTables(S.parity, { all }))))))))));
 }
 
 /**
@@ -344,6 +345,8 @@ export async function markSent(arg) {
     await store.set("goals", S.goals);
     PS.markSyncSent(S.pcsettings);
     await store.set("pcsettings", S.pcsettings);
+    PR.markParitySent(S.parity);
+    await store.set("parity", S.parity);
   }
   if ((kind === "food" || kind === "all") && S.food) {
     N.markNutritionSent(S.food.local);

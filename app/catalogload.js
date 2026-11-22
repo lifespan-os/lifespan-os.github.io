@@ -1,5 +1,6 @@
 // LIFESPAN OS Mobil – Exportdatei vom PC laden und übernehmen (aus app.js, 1.74.0).
 import * as C from "./core.js";
+import * as PR from "./paritydata.js";
 import * as store from "./store.js";
 import * as N from "./nutrition.js";
 import * as BD from "./bodydata.js";
@@ -68,6 +69,9 @@ export async function applyCatalog(catalog) {
     await store.set("supp", S.supp);
     S.goals = GL.pruneGoals(catalog, S.goals);
     await store.set("goals", S.goals);
+    S.parity = PR.pruneParity(catalog, S.parity);
+    await store.set("parity", S.parity);
+    refreshCatalog();
     S.pcsettings = PS.pruneSync(catalog, S.pcsettings);
     await store.set("pcsettings", S.pcsettings);
     S.logs = LG.pruneLogs(catalog, S.logs);

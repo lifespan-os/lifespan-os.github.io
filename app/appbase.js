@@ -1,5 +1,6 @@
 // LIFESPAN OS Mobil – Gemeinsamer Zustand und Grundfunktionen der Handy-App (aus app.js, 1.74.0): Zustand `S`, Formatierung, Meldungen, Speichern, Seitenwechsel `go`, Kopfzeilen.
 import * as C from "./core.js";
+import * as PR from "./paritydata.js";
 import * as store from "./store.js";
 import * as N from "./nutrition.js";
 import { bodyLeave } from "./body.js";
@@ -119,7 +120,8 @@ export async function saveNow() {
 
 /** Katalog vom PC plus Änderungen im Training am Handy (Pläne, Übungen, Sportarten, NEAT, Check-Ins). */
 export function refreshCatalog() {
-  S.catalog = S.catalogRaw ? TR.overlayCatalog(S.catalogRaw, S.train, C.plansFromRows) : null;
+  // 1.90.0: dazu Lebensstil, Messgrößen, Ziele und Wochenplan vom Handy (paritydata.js)
+  S.catalog = S.catalogRaw ? PR.overlayCatalog(TR.overlayCatalog(S.catalogRaw, S.train, C.plansFromRows), S.parity) : null;
 }
 
 export const exById = () => new Map(C.allExercises(S.catalog, S.localExercises).map((e) => [e.id, e]));
@@ -131,7 +133,7 @@ export const unsent = () => S.workouts.filter((w) => w.status === "done" && !w.e
 export const unsentFood = () => (S.food ? N.unsentCount(S.food.local) : 0) + P.unsentWater(S.water) + SP.unsentSupp(S.supp) + FT.unsentFast(S.fast);
 
 // Körperwerte plus Schlaf und Regeneration (gehen zusammen in die Datei „Körperwerte“, 1.7.0)
-export const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + GLD.unsentGlucose(S.glucose) + TR.unsentTrain(S.train) + GL.unsentGoals(S.goals) + PS.unsentSync(S.pcsettings) + GD.unsentGyms(S.gyms);
+export const unsentBodyCount = () => (S.body ? BD.unsentBody(S.body.local) : 0) + LG.unsentLogs(S.logs) + TD.unsentTodos(S.todos) + HD.unsentHealth(S.health) + SD.unsentSuper(S.super) + CD.unsentChecklists(S.checklists) + CF.unsentCaffeine(S.caffeine) + GLD.unsentGlucose(S.glucose) + TR.unsentTrain(S.train) + GL.unsentGoals(S.goals) + PS.unsentSync(S.pcsettings) + GD.unsentGyms(S.gyms) + PR.unsentParity(S.parity);
 
 export function go(view, arg = null) {
   // Seite anpassen (1.48.0): Bearbeiten endet, wenn eine andere Seite geöffnet wird

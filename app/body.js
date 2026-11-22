@@ -2,6 +2,7 @@
 // (Verlauf → „… – letzte Werte“), Verlauf je Messgröße, Werte erfassen und an den PC senden.
 
 import * as B from "./bodydata.js";
+import * as BP from "./bodyparity.js";
 import * as D from "./pcdomain.js";
 import { appDay } from "./appday.js";
 import { notice as trainNotice } from "./training.js";
@@ -149,6 +150,11 @@ export const BODY_TABS = [
   ["protocols", "Protocols"],
   ["entry", "Erfassen"],
   ["checkins", "Check-Ins"],
+  // 1.90.0 wie am PC
+  ["history", "Verlauf"],
+  ["compare", "Zeiträume vergleichen"],
+  ["lifestyle", "Lebensstil"],
+  ["metrics", "Messgrößen"],
 ];
 const BODY_TAB_IDS = new Set(BODY_TABS.map(([v]) => v));
 
@@ -181,6 +187,16 @@ export function viewBody() {
       body = `<section class="card"><p class="warn">Die Check-Ins konnten nicht angezeigt werden: ${esc(e.message)}</p></section>`;
     }
     return `${head}<main class="wrap">${nav}${trainNotice()}${body}</main>`;
+  }
+  if (["history", "compare", "lifestyle", "metrics"].includes(tab) && (X.S.catalog?.body || tab === "lifestyle")) {
+    let body;
+    try {
+      body = { history: BP.historyTab, compare: BP.compareTab, lifestyle: BP.lifestyleTab, metrics: BP.metricsTab }[tab]();
+    } catch (e) {
+      console.error(e);
+      body = `<section class="card"><p class="warn">Der Reiter konnte nicht angezeigt werden: ${esc(e.message)}</p></section>`;
+    }
+    return `${head}<main class="wrap">${nav}${body}</main>`;
   }
   if (!X.S.catalog?.body) {
     return `${head}<main class="wrap">${nav}<section class="card"><p class="small">Für die Körperwerte bitte einmal eine neue Exportdatei vom PC laden (am PC Import/Export → „Für die Handy-App exportieren“, dann hier unter Import/Export „Neue Exportdatei laden“).</p></section></main>`;

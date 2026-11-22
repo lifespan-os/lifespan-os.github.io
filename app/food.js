@@ -81,15 +81,28 @@ async function persist() {
 const mealOptions = (value) =>
   N.mealChoices(value).map((m) => `<option value="${esc(m.value)}" ${m.value === value ? "selected" : ""}>${esc(m.label)}</option>`).join("");
 
+/** Aktuelle Uhrzeit „HH:MM“ */
+const clockNow = () => {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
+
 /**
- * Uhrzeit beim Eintragen (1.47.0, wie am PC): keine feste Vorgabe. Hat die Mahlzeit noch keine
- * Uhrzeit und ist das Feld leer, erscheint vor dem Eintragen ein Hinweis mit Sprung ins Feld.
+ * Uhrzeit, die eine neue Mahlzeit ohne Eingabe bekommt (1.100.0, wie PC 1.0.175): heute die
+ * aktuelle Uhrzeit, an anderen Tagen keine (dort fragt die App wie bisher nach).
+ */
+const defaultTime = (date) => (date === today() ? clockNow() : "");
+
+/**
+ * Uhrzeit beim Eintragen (1.47.0, wie am PC). Seit 1.100.0 steht bei einer neuen Mahlzeit von
+ * heute die aktuelle Uhrzeit schon im Feld. An anderen Tagen erscheint ohne Uhrzeit vor dem
+ * Eintragen ein Hinweis mit Sprung ins Feld.
  */
 function timeFieldHtml(kind, date, mealKey) {
   const s = F();
   const id = kind === "dish" ? "fd-time" : "ft-time";
   const known = N.mealTimeFor(X.S.catalog, s.local, date, mealKey);
-  const value = kind === "dish" ? s.dishTime : s.time;
+  const value = (kind === "dish" ? s.dishTime : s.time) || (known ? "" : defaultTime(date));
   return `<div class="field"><label for="${id}">Uhrzeit</label><input id="${id}" type="time" data-${kind === "dish" ? "fd" : "ft"}="${kind === "dish" ? "dishTime" : "time"}" value="${esc(value ?? "")}">
       ${known ? `<span class="muted small">Die Mahlzeit hat schon ${esc(known)} Uhr.</span>` : `<button type="button" class="btn sm ghost" data-act="food-time-now" data-arg="${kind}">Jetzt</button>`}</div>`;
 }
@@ -809,7 +822,9 @@ function trackDayLabel() {
 
 async function track(items, mealType, label, { time = "", kind = "track", skipTime = false, date = trackDate() } = {}) {
   const s = F();
-  if (!time && !skipTime && !N.mealTimeFor(X.S.catalog, s.local, date, mealType)) {
+  const known = N.mealTimeFor(X.S.catalog, s.local, date, mealType);
+  if (!time && !skipTime && !known) time = defaultTime(date);
+  if (!time && !skipTime && !known) {
     s.askTime = kind;
     X.rerender();
     return false;

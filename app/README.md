@@ -1546,3 +1546,14 @@ Alle Bereiche und Reiter bei iPhone-Breite (390 px) durchgesehen; kein Bereich i
   212 Übungen, 140 Sportarten. Der Master-Import am Handy übernimmt den Anzeigenamen wie der PC
   (`anzeigename`, sonst Name).
 - Geändert außerdem: `app.js`, `appactions.js`, `app.css`, `core.js`, `sw.js`.
+
+## Version 1.100.0 (22.11.2026): Koffein unter Mahlzeiten, Uhrzeit beim Eintragen
+
+- Tagebuch → Mahlzeiten: neue unterste Zeile **„Koffein“** (wie PC 1.0.175). Sie zeigt alle Koffein-Portionen
+  des Tages (Handy, Koffein-Widget, PC-Schnellerfassung). Hinzufügen („+ Koffein“, Uhrzeit = jetzt),
+  ändern (✎) und entfernen (✕). Portionen aus der PC-Schnellerfassung (mit Supplement-Eintrag) werden
+  am PC geändert; Koffein aus Supplementen, Mahlzeiten und Fasttracking steht nur zur Info da.
+  Neu: `diarycaffeine.js`; `caffeinedata.js` (`updateIntake`, + Test), `diary.js`, `app.js`, `appactions.js`.
+- Lebensmittel eintragen: Bei einer neuen Mahlzeit von heute steht die **aktuelle Uhrzeit** schon im Feld
+  und wird ohne Rückfrage übernommen. An anderen Tagen fragt die App wie bisher. `food.js`.
+- Geändert außerdem: `core.js`, `sw.js`.

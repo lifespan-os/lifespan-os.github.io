@@ -18,6 +18,8 @@ import * as FT from "./fastdata.js";
 import * as QM from "./quickmeal.js";
 import * as GLD from "./glucosedata.js";
 import { fastCard, supplementsCard } from "./diarysupp.js";
+import { caffeineSlotHtml } from "./diarycaffeine.js";
+export { diaryCaffeineActions, diaryCaffeineChange } from "./diarycaffeine.js";
 export { viewFastEntry, viewSuppIntake } from "./diarysupp.js";
 export { diaryActions, diaryChange, diaryInput } from "./diaryactions.js";
 
@@ -437,6 +439,7 @@ export function mealsCard(slots, fast, date, db) {
     ${planCardHtml(db, date, slots)}
     ${slots.map(slotHtml).join("")}
     ${slots.length === 0 ? `<p class="muted small">An diesem Tag sind keine Mahlzeiten angelegt.</p>` : ""}
+    ${caffeineSlotHtml(date, today())}
     ${fast ? "" : `<button class="btn sm ghost" data-act="fast-open" data-arg="">Fasttracking für den ganzen Tag</button>`}
     <p class="card__note">Einträge vom PC bearbeitest du am PC; am Handy Eingetragenes kannst du hier entfernen oder unter „Vor dem Senden prüfen“ ändern.${
       date !== today() ? " „+ Lebensmittel“ trägt in diesen Tag ein." : ""

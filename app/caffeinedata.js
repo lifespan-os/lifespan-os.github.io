@@ -147,6 +147,32 @@ export function addIntake(catalog, local, input, { uuid, now = new Date() }) {
   return row.id;
 }
 
+/**
+ * Einnahme ändern (1.100.0, Tagebuch → Mahlzeiten → „Koffein“): Getränk, Uhrzeit, Menge. Einträge
+ * der PC-Schnellerfassung mit Supplement-Eintrag werden am PC geändert (sonst stimmt der
+ * verknüpfte Supplement-Eintrag nicht mehr).
+ */
+export function updateIntake(catalog, local, id, input, now = new Date()) {
+  const old = merged(catalog, local).find((x) => x.id === id);
+  if (!old) throw new Error("Den Eintrag gibt es nicht mehr.");
+  if (old.supplement_intake_id) {
+    throw new Error("Dieser Eintrag stammt aus der Schnellerfassung am PC und steht auch unter Nutrition → Supplemente. Bitte am PC ändern.");
+  }
+  const time = String(input.time ?? "").trim();
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw new Error("Uhrzeit als HH:MM eingeben.");
+  const drink = String(input.drinkId ?? "").trim();
+  if (drink === "" || [...drink].length > 40) throw new Error("Bitte ein Getränk wählen.");
+  const label = String(input.label ?? "").trim();
+  if (label === "" || [...label].length > 80) throw new Error("Bitte eine Bezeichnung eingeben.");
+  const ml = input.ml === null || input.ml === undefined ? null : round(Number(input.ml), 0);
+  if (ml !== null && (!Number.isFinite(ml) || ml < 1 || ml > 3000)) throw new Error("Die Menge muss zwischen 1 und 3000 ml liegen.");
+  const mg = round(Number(input.mg), 1);
+  if (!Number.isFinite(mg) || mg < 1 || mg > 1000) throw new Error("Das Koffein muss zwischen 1 und 1000 mg liegen.");
+  const row = { ...old, time, drink_id: drink, label, ml, mg, updated_at: now.toISOString() };
+  local.rows[id] = { row, sent: false };
+  return id;
+}
+
 /** Einnahme löschen; vom PC oder schon gesendet → Löschvermerk. */
 export function deleteIntake(catalog, local, id, now = new Date()) {
   const r = merged(catalog, local).find((x) => x.id === id);

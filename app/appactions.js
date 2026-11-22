@@ -11,7 +11,7 @@ import * as store from "./store.js";
 import { foodActions } from "./food.js";
 import { bodyActions, bodyOpenEntry } from "./body.js";
 import { SECTIONS } from "./nav.js";
-import { diaryActions, today as todayIso } from "./diary.js";
+import { diaryActions, diaryCaffeineActions, today as todayIso } from "./diary.js";
 import { vendorActions } from "./vendorui.js";
 import * as MI from "./machineimages.js";
 import { catalogActions } from "./catalogui.js";
@@ -49,6 +49,7 @@ export const actions = {
   ...backupActions,
   ...foodActions,
   ...diaryActions,
+  ...diaryCaffeineActions,
   ...vendorActions,
   ...MI.machineImageActions,
   ...catalogActions,

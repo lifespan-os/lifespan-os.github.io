@@ -2209,3 +2209,6 @@ html[data-theme="dark"] .mtl-mark--water { background: #12324a; }
 .faq-item__q { font-weight: 600; }
 .faq-item__a { margin: 0; padding: 0 12px 12px; line-height: 1.5; font-size: .92rem; }
 .gs-faq { display: grid; gap: 6px; margin: 8px 0; padding: 10px; border-radius: 12px; background: var(--surface-2); }
+
+/* Werte nachtragen: weitere Werte aus der hochgeladenen Datei (1.106.0) */
+.qf-use { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; color: var(--muted); white-space: nowrap; }

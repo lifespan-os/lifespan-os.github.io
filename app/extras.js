@@ -166,9 +166,19 @@ export function viewQuickFill() {
         .join("")}</section>`,
     )
     .join("");
+  const extraHtml = f.extra?.length
+    ? `<section class="card"><div class="wo-head"><h3>Weitere Werte aus der Datei · ${esc(D.formatDate(today()))}</h3><button class="linkbtn" data-act="qf-extra-drop">verwerfen</button></div>
+      ${f.extra
+        .map(
+          (x, i) => `<div class="qf-row"><div><strong>${esc(x.name)}</strong>${x.note ? `<span class="muted small">${esc(x.note)}</span>` : ""}</div>
+          <div class="qf-value"><input class="qf-input" data-qf-extra="${i}" value="${esc(x.text)}" inputmode="decimal" autocomplete="off" ${x.use ? "" : "disabled"}><span class="muted small">${esc(x.unit)}</span>
+          <label class="qf-use"><input type="checkbox" data-qf-extra-use="${i}" ${x.use ? "checked" : ""}> speichern</label></div>${err(`extra|${x.metricId}`)}</div>`,
+        )
+        .join("")}</section>`
+    : "";
   const empty = !values.length && !sleep.length && !grip;
   return `${X.header("Werte nachtragen", { back: "home", intro: QF_INTRO })}<main class="wrap">
-    ${empty ? `<section class="card"><p class="ok-note">Alles erfasst – es fehlt gerade kein Wert.</p></section>` : `${sleepHtml}${gripHtml}${valuesHtml}`}
+    ${empty ? `<section class="card"><p class="ok-note">Alles erfasst – es fehlt gerade kein Wert.</p></section>` : `${sleepHtml}${gripHtml}${valuesHtml}${extraHtml}`}
   </main>
   ${empty ? "" : `<div class="bottom"><div class="inner"><button class="btn primary" data-act="qf-save">Speichern</button></div></div>`}`;
 }
@@ -191,7 +201,9 @@ export async function quickFillUpload(el) {
   X.rerender();
   try {
     const { readScaleFile } = await import("./body.js");
-    const bounds = list.map((m) => ({ id: m.metricId, name: m.name, unit: m.unit, minValue: m.minValue, maxValue: m.maxValue, decimals: m.decimals }));
+    // Seit 1.106.0 gegen alle Messgrößen lesen (wie Body → „PDF einfügen“): fällige Werte in ihre
+    // Felder, alle weiteren darunter zum Prüfen
+    const bounds = (X.S.catalog?.body?.metrics ?? []).map((m) => ({ id: m.id, name: m.name, unit: m.unit ?? "", minValue: m.min_value ?? null, maxValue: m.max_value ?? null, decimals: m.decimals ?? 1 }));
     const vals = await readScaleFile(file, bounds, (text) => {
       f.readStatus = text;
       const s = document.getElementById("qf-upload-status");
@@ -199,17 +211,26 @@ export async function quickFillUpload(el) {
     });
     let n = 0;
     const check = [];
+    const more = [];
     for (const v of vals) {
       if (!v.metric || v.value === null) continue;
       const m = list.find((x) => x.metricId === v.metric.id);
-      if (!m) continue;
+      if (!m) {
+        if (!more.some((x) => x.metricId === v.metric.id))
+          more.push({ metricId: v.metric.id, name: v.metric.name, unit: v.metric.unit, decimals: v.metric.decimals, minValue: v.metric.minValue, maxValue: v.metric.maxValue, text: String(Math.round(v.value * 10 ** v.metric.decimals) / 10 ** v.metric.decimals).replace(".", ","), use: !!v.ok, note: v.note ?? null });
+        continue;
+      }
       f.inputs[valueKey(m)] = String(Math.round(v.value * 10 ** m.decimals) / 10 ** m.decimals).replace(".", ",");
       n++;
       if (!v.ok) check.push(v.note ? `${m.name} (${v.note})` : m.name);
     }
-    f.upload = n
-      ? { tone: "ok", text: `${n} ${n === 1 ? "Wert" : "Werte"} aus der Datei eingetragen – bitte prüfen und speichern.${check.length ? ` Besonders prüfen: ${check.join(", ")}.` : ""}` }
-      : { tone: "error", text: "In der Datei wurden keine Werte für die heute fälligen Messgrößen erkannt." };
+    f.extra = more;
+    const parts = [];
+    if (n) parts.push(`${n} ${n === 1 ? "Wert" : "Werte"} in die Felder eingetragen`);
+    if (more.length) parts.push(`${more.length} ${more.length === 1 ? "weiterer Wert" : "weitere Werte"} unten`);
+    f.upload = parts.length
+      ? { tone: "ok", text: `${parts.join(", ")} – bitte prüfen und speichern.${check.length ? ` Besonders prüfen: ${check.join(", ")}.` : ""}` }
+      : { tone: "error", text: "In der Datei wurden keine Werte erkannt." };
   } catch (e) {
     f.upload = { tone: "error", text: e?.message || "Die Datei lässt sich nicht lesen." };
   } finally {
@@ -221,8 +242,20 @@ export async function quickFillUpload(el) {
 
 /** Eingabe im Quick-Fill-Formular (ohne neu zu zeichnen). */
 export function quickFillInput(el) {
+  const f0 = (X.S.qf ??= { inputs: {}, errors: {} });
+  if (el.dataset.qfExtra !== undefined) {
+    const x = f0.extra?.[Number(el.dataset.qfExtra)];
+    if (x) x.text = el.value;
+    return true;
+  }
+  if (el.dataset.qfExtraUse !== undefined) {
+    const x = f0.extra?.[Number(el.dataset.qfExtraUse)];
+    if (x) x.use = el.checked;
+    X.rerender();
+    return true;
+  }
   if (!el.dataset.qf) return false;
-  const f = (X.S.qf ??= { inputs: {}, errors: {} });
+  const f = f0;
   f.inputs[el.dataset.qf] = el.value;
   return true;
 }
@@ -267,6 +300,10 @@ export const extrasActions = {
     skip(missingAll().values.filter((m) => keys.has(valueKey(m))), []);
   },
   "qf-skip-sleep": () => skip([], missingAll().sleep),
+  "qf-extra-drop": () => {
+    if (X.S.qf) X.S.qf.extra = [];
+    X.rerender();
+  },
   "qf-skip-grip": () => skip([], [], true),
   "qf-save": async () => {
     const S = X.S;
@@ -280,6 +317,18 @@ export const extrasActions = {
       const e = Q().fillInputError(v, m);
       if (e) errors[valueKey(m)] = e === "Bitte eine Zahl eingeben." ? e : `Erlaubt: ${F(m.minValue, m.decimals)}–${F(m.maxValue, m.decimals)} ${m.unit}`;
       else if (v !== null) bodyItems.push({ m, v });
+    }
+    // Weitere Werte aus der Datei (angehakt) als Messung von heute
+    for (const x of f.extra ?? []) {
+      if (!x.use) continue;
+      const v = Q().parseFillInput(x.text ?? "");
+      if (v === null) continue;
+      if (Number.isNaN(v) || (x.minValue !== null && v < x.minValue) || (x.maxValue !== null && v > x.maxValue)) {
+        errors[`extra|${x.metricId}`] = x.minValue !== null && x.maxValue !== null ? `Erlaubt: ${F(x.minValue, x.decimals)}–${F(x.maxValue, x.decimals)} ${x.unit}` : "Bitte eine Zahl eingeben.";
+        continue;
+      }
+      if (bodyItems.some((b) => b.m.metricId === x.metricId)) continue;
+      bodyItems.push({ m: { metricId: x.metricId, date: today() }, v });
     }
     const nights = [];
     const patches = new Map();

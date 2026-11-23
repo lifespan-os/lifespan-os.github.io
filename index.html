@@ -658,7 +658,7 @@ footer .wrap span:last-child { max-width: 62ch; }
           <p class="dl-k">Neu installieren</p>
           <h3>Komplettpaket (ZIP)</h3>
           <p>App, Maschinendatenbank mit Bildern und Open-Food-Facts-Katalog. Entpacken und <b>Einrichten.cmd</b> starten.</p>
-          <a class="btn btn-orange" href="https://github.com/lifespan-os/lifespan-os.github.io/releases/latest/download/LIFESPAN-OS.zip" id="dl-btn">
+          <a class="btn btn-orange" href="https://github.com/lifespan-os/lifespan-os.github.io/releases/download/v1.0.178/LIFESPAN.zip" id="dl-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6 11l6 6 6-6M4 21h16"/></svg>
             <span>ZIP herunterladen (<span id="dl-zip-size">ca. 1,3 GB</span>)</span>
           </a>
@@ -679,8 +679,8 @@ footer .wrap span:last-child { max-width: 62ch; }
         <summary>Prüfsummen (SHA-256)</summary>
         <p>Damit kannst du prüfen, ob die Datei vollständig und unverändert ist – in Windows: <code>certutil -hashfile Datei SHA256</code>.</p>
         <dl>
-          <dt>LIFESPAN-OS.zip</dt><dd><code id="sha-zip">4ff3ac2b4a59e728982e3b6eaed1a3f96fbff65d10a3616d8c6066d21635aaeb</code></dd>
-          <dt>LIFESPAN-OS-Setup.exe</dt><dd><code id="sha-exe">46706fa8dcd4c619293491707a21198a7b7209f0c34f0a27fed409bdb5200573</code></dd>
+          <dt id="sha-zip-name">LIFESPAN-OS.zip</dt><dd><code id="sha-zip">4ff3ac2b4a59e728982e3b6eaed1a3f96fbff65d10a3616d8c6066d21635aaeb</code></dd>
+          <dt id="sha-exe-name">LIFESPAN-OS-Setup.exe</dt><dd><code id="sha-exe">46706fa8dcd4c619293491707a21198a7b7209f0c34f0a27fed409bdb5200573</code></dd>
         </dl>
         <p class="dl-note">Stand: Version <span id="sha-ver">1.0.178</span>. Alle Versionen und Prüfsummen auch auf der <a href="https://github.com/lifespan-os/lifespan-os.github.io/releases">Release-Seite</a>.</p>
       </details>
@@ -798,8 +798,10 @@ footer .wrap span:last-child { max-width: 62ch; }
         set("dl-ver", v); set("sha-ver", v);
         (rel.assets || []).forEach(function (a) {
           var sha = a.digest && /^sha256:/.test(a.digest) ? a.digest.slice(7) : null;
-          if (a.name === "LIFESPAN-OS.zip") { set("dl-zip-size", "ca. " + mb(a.size)); set("sha-zip", sha); }
-          if (a.name === "LIFESPAN-OS-Setup.exe") { set("dl-exe-size", "ca. " + mb(a.size)); set("sha-exe", sha); }
+          // Dateien am Typ erkennen (der Name im Release kann abweichen); Knöpfe zeigen direkt auf die Datei
+          var link = function (id, url) { var n = document.getElementById(id); if (n && url) n.href = url; };
+          if (/\.zip$/i.test(a.name)) { set("dl-zip-size", "ca. " + mb(a.size)); set("sha-zip", sha); set("sha-zip-name", a.name); link("dl-btn", a.browser_download_url); }
+          if (/\.exe$/i.test(a.name)) { set("dl-exe-size", "ca. " + mb(a.size)); set("sha-exe", sha); set("sha-exe-name", a.name); link("dl-exe", a.browser_download_url); }
         });
       })
       .catch(function () {});

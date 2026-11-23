@@ -471,7 +471,7 @@ export function mealsCard(slots, fast, date, db) {
     return g ? g.text : "";
   };
   return `<section class="card card--nutrition meals-card"><div class="card__head"><h3>Mahlzeiten</h3>
-      <span class="segmented" role="group" aria-label="Darstellung"><button class="${timeline ? "is-active" : ""}" data-act="meals-view" data-arg="timeline" aria-pressed="${timeline}">Tagesverlauf</button><button class="${timeline ? "" : "is-active"}" data-act="meals-view" data-arg="list" aria-pressed="${!timeline}">Liste</button></span></div>
+      <span class="segmented" role="group" aria-label="Darstellung"><button class="${timeline ? "is-active" : ""}" data-act="meals-view" data-arg="timeline" aria-pressed="${timeline}">Tagesverlauf (beta)</button><button class="${timeline ? "" : "is-active"}" data-act="meals-view" data-arg="list" aria-pressed="${!timeline}">Liste</button></span></div>
     ${!anyContent && fast ? `<p class="muted">Keine einzelnen Mahlzeiten – die Tageswerte stehen unter „Fasttracking“.</p>` : ""}
     ${planCardHtml(db, date, slots)}
     ${timeline ? timelineHtml(db, date, slots, glucoseText) : slots.map(slotHtml).join("")}

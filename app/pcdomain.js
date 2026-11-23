@@ -30279,7 +30279,7 @@ var APP_FAQ = [
     area: "Ern\xE4hrung",
     device: "beide",
     question: "Was ist der Tagesverlauf im Tagebuch?",
-    answer: "Eine Zeitachse vom Tageswechsel bis eine Minute davor mit Mahlzeiten, geplanten Mahlzeiten, Koffein, Supplements und Wasser. Feste Spalten: Mahlzeiten, Supplements (Pille), Wasser (Tropfen) und Koffein (Tasse mit mg). Liegen Mahlzeiten zu dicht, rutscht die sp\xE4tere mit einer Verbindungslinie nach unten; nahe Symbole werden mit Anzahl zusammengefasst. Oben schaltest du zwischen \u201ETagesverlauf\u201C und \u201EListe\u201C um.",
+    answer: "Eine Zeitachse vom Tageswechsel bis eine Minute davor mit Mahlzeiten, geplanten Mahlzeiten, Koffein, Supplements und Wasser. Feste Spalten: Mahlzeiten, Supplements (Pille), Wasser (Tropfen) und Koffein (Tasse mit mg). Liegen Mahlzeiten zu dicht, rutscht die sp\xE4tere mit einer Verbindungslinie nach unten; nahe Symbole werden mit Anzahl zusammengefasst. Die Schlafzeit aus dem Schlafprotokoll wird zusammengeklappt (Settings \u2192 Darstellung und Tageswechsel: \u201EAlles anzeigen\u201C oder \u201EOptimiert anhand der Schlafdaten\u201C). Oben schaltest du zwischen \u201ETagesverlauf (beta)\u201C und \u201EListe\u201C um.",
     keywords: ["tagesverlauf", "zeitachse", "timeline", "ansicht"]
   },
   {

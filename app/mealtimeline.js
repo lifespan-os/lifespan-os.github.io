@@ -148,12 +148,13 @@ export function groupWater(glasses, dayStart = 0, withinMin = 45) {
  * Feste Spalten (1.104.0, wie PC 1.0.178): eine Spalte untereinander – überdeckte Karten rutschen
  * nach unten (`shifted`, Verbindung zur Uhrzeit).
  */
-export function stackLane(list, { pxPerMin = 1, gap = 6, dayStart = 0 } = {}) {
+export function stackLane(list, { pxPerMin = 1, gap = 6, dayStart = 0, yOf = null } = {}) {
   const clamp = (m) => Math.max(dayStart, Math.min(dayStart + DAY - 1, m));
+  const toY = yOf ?? ((m) => (m - dayStart) * pxPerMin);
   const sorted = [...list].sort((a, b) => a.minute - b.minute || String(a.key).localeCompare(String(b.key)));
   let bottom = -Infinity;
   return sorted.map((e) => {
-    const timeY = (clamp(e.minute) - dayStart) * pxPerMin;
+    const timeY = toY(clamp(e.minute));
     const y = Math.max(timeY, bottom);
     bottom = y + e.height + gap;
     return { ...e, y, timeY, shifted: y > timeY + 0.5 };
@@ -161,11 +162,12 @@ export function stackLane(list, { pxPerMin = 1, gap = 6, dayStart = 0 } = {}) {
 }
 
 /** Symbolspalte: Einträge weniger als `span` px nach dem ersten einer Gruppe bilden ein Symbol. */
-export function clusterLane(list, { pxPerMin = 1, span = 30, dayStart = 0 } = {}) {
+export function clusterLane(list, { pxPerMin = 1, span = 30, dayStart = 0, yOf = null } = {}) {
+  const toY = yOf ?? ((m) => (m - dayStart) * pxPerMin);
   const sorted = [...list].sort((a, b) => a.minute - b.minute || String(a.key).localeCompare(String(b.key)));
   const out = [];
   for (const e of sorted) {
-    const y = (Math.max(dayStart, e.minute) - dayStart) * pxPerMin;
+    const y = toY(Math.max(dayStart, e.minute));
     const last = out[out.length - 1];
     if (last && y - last.y < span) last.items.push(e);
     else out.push({ key: e.key, minute: e.minute, y, items: [e] });
@@ -178,6 +180,75 @@ export function hourMarks(dayStart, pxPerMin) {
   const out = [];
   for (let h = Math.ceil(dayStart / 60); h * 60 <= dayStart + DAY - 1; h++) out.push({ label: clockOf(h * 60), y: (h * 60 - dayStart) * pxPerMin });
   return out;
+}
+
+/** Freie Abschnitte von [a, b] ohne die Minuten `busy` (± `margin`). */
+function freeParts(a, b, busy, margin) {
+  const out = [];
+  let start = a;
+  for (const m of [...busy].sort((x, y) => x - y)) {
+    if (m + margin <= start || m - margin >= b) continue;
+    if (m - margin > start) out.push([start, m - margin]);
+    start = Math.max(start, m + margin);
+  }
+  if (start < b) out.push([start, b]);
+  return out;
+}
+
+/**
+ * Schlafzeit zusammenklappen (1.105.0, wie `sleepFolds` am PC 1.0.179): Nacht bis zum Morgen
+ * (Schlafprotokoll mit Datum = Aufwachtag) und Nacht ab dem Abend (Protokoll des Folgetags).
+ */
+export function sleepFolds(date, nextDate, logs, dayStart, busy = [], { margin = 20, minLen = 90 } = {}) {
+  const end = dayStart + DAY - 1;
+  const raw = [];
+  const morning = logs.find((l) => l.date === date);
+  if (morning) {
+    const wake = minuteOf(morning.wakeTime);
+    const bed = minuteOf(morning.bedTime);
+    if (wake !== null && wake >= dayStart) raw.push({ from: bed !== null && bed >= dayStart && bed < wake ? bed : dayStart, to: wake, bed: morning.bedTime, wake: morning.wakeTime });
+  }
+  const evening = logs.find((l) => l.date === nextDate);
+  if (evening) {
+    const bed = minuteOf(evening.bedTime);
+    const wake = minuteOf(evening.wakeTime);
+    if (bed !== null) {
+      const from = axisMinute(bed, dayStart);
+      const to = wake !== null && wake < dayStart ? wake + DAY : end;
+      if (from < to && from > dayStart + 6 * 60) raw.push({ from, to: Math.min(end, to), bed: evening.bedTime, wake: evening.wakeTime });
+    }
+  }
+  const out = [];
+  for (const f of raw) for (const [a, b] of freeParts(f.from, f.to, busy, margin)) if (b - a >= minLen) out.push({ ...f, from: a, to: b });
+  return out.sort((a, b) => a.from - b.from);
+}
+
+/** Achse mit zusammengeklappten Abschnitten (je `foldPx` hoch), wie `axisScale` am PC. */
+export function axisScale(dayStart, pxPerMin, folds = [], foldPx = 32) {
+  const placed = [];
+  let saved = 0;
+  for (const f of [...folds].sort((a, b) => a.from - b.from)) {
+    placed.push({ ...f, y: (f.from - dayStart) * pxPerMin - saved, h: foldPx });
+    saved += (f.to - f.from) * pxPerMin - foldPx;
+  }
+  const y = (m) => {
+    let cut = 0;
+    for (const f of placed) {
+      if (m >= f.to) cut += (f.to - f.from) * pxPerMin - f.h;
+      else if (m > f.from) return f.y + ((m - f.from) / (f.to - f.from)) * f.h;
+    }
+    return (m - dayStart) * pxPerMin - cut;
+  };
+  const minute = (yy) => {
+    let cut = 0;
+    for (const f of placed) {
+      if (yy < f.y) break;
+      if (yy <= f.y + f.h) return f.from + ((yy - f.y) / f.h) * (f.to - f.from);
+      cut += (f.to - f.from) * pxPerMin - f.h;
+    }
+    return dayStart + (yy + cut) / pxPerMin;
+  };
+  return { y, minute, endY: y(dayStart + DAY - 1), folds: placed };
 }
 
 // ------------------------------------------------------------------ Ansicht
@@ -336,19 +407,39 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
   };
   const laneW = { supplement: ICON_W, water: ICON_W, caffeine: CAF_W };
   const right = laneLeft.caffeine + CAF_W;
-  const stacked = stackLane(meals, { pxPerMin: px, gap: 6, dayStart });
-  const clusters = Object.fromEntries(LANES.map((l) => [l, clusterLane(icons[l], { pxPerMin: px, span: MARK_H + 4, dayStart })]));
-  const hours = hourMarks(dayStart, px);
-  const endY = (DAY - 1) * px;
-  const hy = (hMinute - dayStart) * px;
+  // Schlafzeit zusammenklappen (Einstellung „ui.meals_sleep_fold“, Voreinstellung optimiert)
+  const foldAll = (db.settings?.get?.("ui.meals_sleep_fold") ?? null) === "all";
+  const showAll = S.mtlShowAll === date;
+  let folds = [];
+  if (!foldAll && !showAll) {
+    const nd = new Date(`${date}T12:00:00`);
+    nd.setDate(nd.getDate() + 1);
+    const next = `${nd.getFullYear()}-${String(nd.getMonth() + 1).padStart(2, "0")}-${String(nd.getDate()).padStart(2, "0")}`;
+    const logs = (db.sleep ?? []).filter((r) => r.date === date || r.date === next).map((r) => ({ date: r.date, bedTime: r.bed_time, wakeTime: r.wake_time }));
+    const busy = [...meals, ...icons.supplement, ...icons.water, ...icons.caffeine].map((e) => e.minute);
+    if (now !== null) busy.push(now);
+    if (h.pinned !== null) busy.push(h.pinned);
+    folds = sleepFolds(date, next, logs, dayStart, busy);
+  }
+  const scale = axisScale(dayStart, px, folds, 32);
+  const stacked = stackLane(meals, { pxPerMin: px, gap: 6, dayStart, yOf: scale.y });
+  const clusters = Object.fromEntries(LANES.map((l) => [l, clusterLane(icons[l], { pxPerMin: px, span: MARK_H + 4, dayStart, yOf: scale.y })]));
+  const h0 = Math.ceil(dayStart / 60) * 60;
+  const hours = hourMarks(dayStart, px)
+    .map((x, i) => ({ ...x, minute: h0 + i * 60 }))
+    .filter((x) => !scale.folds.some((f) => x.minute > f.from - 10 && x.minute < f.to + 10))
+    .map((x) => ({ ...x, y: scale.y(x.minute) }));
+  const endY = scale.endY;
+  const hy = scale.y(hMinute);
   const handlePlanned = plannedAt(date, hMinute);
   const handleClock = clockOf(hMinute);
   const height = Math.ceil(Math.max(endY, ...stacked.map((x) => x.y + x.height)) + 16);
   // Stützpunkte für das Ziehen (linear: Anfang und Ende)
-  const anchors = [
-    [dayStart, 0],
-    [dayStart + DAY - 1, Math.round(endY * 10) / 10],
-  ];
+  const anchors = [[dayStart, 0]];
+  for (const f of scale.folds) {
+    anchors.push([f.from, Math.round(f.y * 10) / 10], [f.to, Math.round((f.y + f.h) * 10) / 10]);
+  }
+  anchors.push([dayStart + DAY - 1, Math.round(endY * 10) / 10]);
   // Mahlzeit, in die der Knopf einträgt: Vorschlag nach Uhrzeit, änderbar
   const options = slots.map((s) => ({ key: s.ref.name ? N.extraKey(s.ref.name) : s.ref.mealType, title: s.title, type: s.ref.mealType }));
   const suggested = options.find((o) => o.type === mealTypeAt(hMinute))?.key ?? options[0]?.key ?? "";
@@ -418,7 +509,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
 
   return `<div class="mtl-wrap">
     ${untimed.length ? `<p class="muted small">Ohne Uhrzeit: ${untimed.map((s) => `<button class="linkbtn" data-act="mtl-open" data-arg="${esc(s.ref.name ? N.extraKey(s.ref.name) : s.ref.mealType)}">${esc(s.title)} · ${Math.round(s.meal.energyKcal)} kcal</button>`).join(" ")}</p>` : ""}
-    <div class="mtl-tools"><button class="btn sm primary" data-act="mtl-now">＋ ${future ? "Planen" : "Jetzt eintragen"}</button><span class="spacer"></span><span class="muted small">${Math.round(zoom * 100)} %</span><button class="btn sm ghost" data-act="mtl-zoom" data-arg="0.8" aria-label="Verkleinern">−</button><button class="btn sm ghost" data-act="mtl-zoom" data-arg="1.25" aria-label="Vergrößern">+</button></div>
+    <div class="mtl-tools"><button class="btn sm primary" data-act="mtl-now">＋ ${future ? "Planen" : "Jetzt eintragen"}</button><span class="spacer"></span>${showAll && !foldAll ? `<button class="linkbtn" data-act="mtl-hidesleep">☾ ausblenden</button>` : ""}<span class="muted small">${Math.round(zoom * 100)} %</span><button class="btn sm ghost" data-act="mtl-zoom" data-arg="0.8" aria-label="Verkleinern">−</button><button class="btn sm ghost" data-act="mtl-zoom" data-arg="1.25" aria-label="Vergrößern">+</button></div>
     ${
       ask
         ? `<div class="mtl-ask" role="alertdialog" aria-label="Löschen bestätigen"><b>„${esc(ask.label)}“ löschen?</b>${ask.note ? `<span class="muted small">${esc(ask.note)}</span>` : ""}<div class="row"><button class="btn sm danger" data-act="mtl-ask-yes">Löschen</button><button class="btn sm ghost" data-act="mtl-ask-no">Abbrechen</button></div></div>`
@@ -429,8 +520,9 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
       ${LANES.map((l) => `<span class="mtl-lane" style="left:${laneLeft[l]}px;width:${laneW[l]}px" aria-hidden="true"></span>`).join("")}
       ${hours.map((x) => `<span class="mtl-hourline" style="top:${x.y.toFixed(1)}px;width:${right - AXIS_X}px" aria-hidden="true"></span>`).join("")}
       <span class="mtl-axis" aria-hidden="true"></span>
-      ${hours.filter((x) => Math.abs(x.y - hy) >= 16).map((x) => `<span class="mtl-hour" style="top:${x.y.toFixed(1)}px" aria-hidden="true">${x.label}</span>`).join("")}
-      ${now !== null ? `<span class="mtl-now" style="top:${((now - dayStart) * px).toFixed(1)}px;width:${right - AXIS_X}px" aria-hidden="true"></span>` : ""}
+      ${hours.filter((x) => Math.abs(x.y - hy) >= 24).map((x) => `<span class="mtl-hour" style="top:${x.y.toFixed(1)}px" aria-hidden="true">${x.label}</span>`).join("")}
+      ${scale.folds.map((f) => `<div class="mtl-fold" style="top:${f.y.toFixed(1)}px;height:${f.h}px;width:${right - AXIS_X + 6}px"><span aria-hidden="true">☾</span><span>Schlaf ${esc(f.bed)}–${esc(f.wake)}</span><button class="linkbtn" data-act="mtl-showall">Einblenden</button></div>`).join("")}
+      ${now !== null ? `<span class="mtl-now" style="top:${scale.y(now).toFixed(1)}px;width:${right - AXIS_X}px" aria-hidden="true"></span>` : ""}
       <svg class="mtl-links" aria-hidden="true">${links}</svg>
       ${stacked.map((x) => `<span class="mtl-dot mtl-dot--${x.kind}" style="top:${x.timeY.toFixed(1)}px" aria-hidden="true"></span>`).join("")}
       ${stacked.map((x) => `<div class="mtl-slot" style="top:${x.y.toFixed(1)}px;left:${MEALS_LEFT}px;width:${mealsW}px" data-swipe="${esc(swipeKey(x))}">${cardHtml(x)}</div>`).join("")}
@@ -762,6 +854,14 @@ async function persistFood() {
 }
 
 export const timelineActions = {
+  "mtl-showall": () => {
+    X.S.mtlShowAll = X.S.diaryDate ?? today();
+    X.rerender();
+  },
+  "mtl-hidesleep": () => {
+    X.S.mtlShowAll = null;
+    X.rerender();
+  },
   "mtl-now": () => {
     const S = X.S;
     const date = S.diaryDate ?? today();

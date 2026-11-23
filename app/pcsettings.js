@@ -20,6 +20,8 @@ export const SYNC_KEYS = [
   "ui.day_start",
   // Verlauf des Tageswechsels: Änderungen gelten ab dem aktuellen Tag (1.102.0)
   "ui.day_start_history",
+  // Tagesverlauf: Schlafzeit zusammenklappen (1.105.0, „all“ = alles anzeigen)
+  "ui.meals_sleep_fold",
   "ui.overview_layout",
   "ui.diary_layout",
   "ui.sleep_layout",

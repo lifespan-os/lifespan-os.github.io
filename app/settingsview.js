@@ -191,6 +191,8 @@ function dayStartCard(db) {
       ${X.S.dayStartError ? `<p class="field-error">${esc(X.S.dayStartError)}</p>` : ""}
       <p class="muted small card-info">Bis zu dieser Uhrzeit zählt alles noch zum Vortag (Voreinstellung 00:00 Uhr, spätestens 12:00 Uhr). „Heute“ ist gerade der ${esc(D.formatDate(today()))}.</p></div>
     ${v !== "00:00" ? `<button class="btn sm ghost" data-act="daystart-reset">Auf 00:00 Uhr zurücksetzen</button>` : ""}
+    <div class="field"><span class="field-label">Tagesverlauf der Mahlzeiten</span>${segmented("mtl-foldset", [["sleep", "Optimiert (Schlafdaten)"], ["all", "Alles anzeigen"]], setting(db, "ui.meals_sleep_fold") === "all" ? "all" : "sleep")}
+      <p class="muted small card-info">Optimiert: Die Schlafzeit aus dem Schlafprotokoll wird zusammengeklappt, solange dort nichts eingetragen ist.</p></div>
     ${syncNote}
   </section>`;
 }
@@ -491,6 +493,11 @@ export const settingsActions = {
   "pref-barlabels": async (el) => {
     X.S.prefs.barLabels = el.dataset.arg;
     await savePrefs();
+    X.rerender();
+  },
+  "mtl-foldset": async (el) => {
+    await putSetting("ui.meals_sleep_fold", el.dataset.arg === "all" ? "all" : null);
+    buildDb();
     X.rerender();
   },
   "daystart-reset": async () => {

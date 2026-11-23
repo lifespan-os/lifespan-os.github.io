@@ -158,8 +158,58 @@ function mealsCard(db) {
       ${S.setMeals ? `<button class="btn sm ghost" data-act="meal-discard">Verwerfen</button>` : ""}
     </div>
     <button class="btn primary block" data-act="meal-save">Mahlzeiten speichern</button>
+    ${workoutTargetsHtml(db)}
     ${syncNote}
   </section>`;
+}
+
+// ------------------------------------------------------------------ Workout-Richtwerte (1.110.0, wie PC 1.0.184)
+
+const WTL = () => D.workoutTimeline;
+const WT_FIELDS = [
+  ["postCarbsG", "Kohlenhydrate ab", "g", "fest"],
+  ["postProteinG", "Protein ab", "g", "fest"],
+  ["postCarbsPerKg", "Kohlenhydrate ab", "g/kg", "pro kg"],
+  ["postProteinPerKg", "Protein ab", "g/kg", "pro kg"],
+  ["postWindowMin", "Post-Workout innerhalb von", "min", "nach dem Training"],
+  ["preLightFrom", "Pre-Workout ab", "min", "vor dem Training"],
+  ["preLightTo", "Pre-Workout bis", "min", "vor dem Training"],
+  ["preMealKcal", "Mahlzeit 1–3 Stunden vorher ab", "kcal", ""],
+];
+
+/** Richtwerte für die Hinweise im Tagesverlauf (Einstellung `ui.workout_targets`, mit dem PC abgeglichen). */
+function workoutTargetsHtml(db) {
+  const S = X.S;
+  const f = S.setWt ?? { draft: WTL().workoutTargetsDraft(WTL().parseWorkoutTargets(setting(db, WTL().WORKOUT_TARGETS_SETTING))), errors: null };
+  const d = f.draft;
+  const fields = WT_FIELDS.filter(([k]) => (d.mode === "perKg" ? k !== "postCarbsG" && k !== "postProteinG" : k !== "postCarbsPerKg" && k !== "postProteinPerKg"))
+    .map(
+      ([k, label, unit, note]) => `<div class="field"><label for="wt-${k}" class="small muted">${esc(label)} (${esc(unit)})${note && note !== "fest" && note !== "pro kg" ? ` · ${esc(note)}` : ""}</label>
+        <input id="wt-${k}" data-wt="${k}" type="text" inputmode="${unit === "g/kg" ? "decimal" : "numeric"}" value="${esc(d[k])}" ${f.errors?.[k] ? 'aria-invalid="true"' : ""}>${errOf(f.errors, k)}</div>`,
+    )
+    .join("");
+  return `<div class="set-wt" id="set-workout-targets">
+    <h4 class="set-wt__title">Workout-Richtwerte</h4>
+    <p class="muted small">Richtwerte für die Hinweise im Tagesverlauf bei Krafttraining und intensivem Cardio. Pro kg rechnet mit deinem letzten Gewicht; ohne Gewicht gelten die festen Gramm.</p>
+    <div class="segmented set-wt__mode" role="radiogroup" aria-label="Post-Workout bemessen">
+      <button type="button" role="radio" aria-checked="${d.mode === "fixed"}" class="${d.mode === "fixed" ? "is-active" : ""}" data-act="wt-mode" data-arg="fixed">Feste Gramm</button>
+      <button type="button" role="radio" aria-checked="${d.mode === "perKg"}" class="${d.mode === "perKg" ? "is-active" : ""}" data-act="wt-mode" data-arg="perKg">Pro kg Körpergewicht</button>
+    </div>
+    <div class="set-wt__grid">${fields}</div>
+    <div class="row-actions">
+      <button class="btn sm ghost" data-act="wt-default">Voreinstellung</button>
+      ${S.setWt ? `<button class="btn sm ghost" data-act="wt-discard">Verwerfen</button>` : ""}
+    </div>
+    <button class="btn primary block" data-act="wt-save">Richtwerte speichern</button>
+  </div>`;
+}
+
+function readWt() {
+  const S = X.S;
+  const f = S.setWt ?? { draft: WTL().workoutTargetsDraft(WTL().parseWorkoutTargets(setting(buildDb(), WTL().WORKOUT_TARGETS_SETTING))), errors: null };
+  for (const el of document.querySelectorAll("[data-wt]")) f.draft[el.dataset.wt] = el.value;
+  S.setWt = f;
+  return f;
 }
 
 function methodsCard(db) {
@@ -460,6 +510,34 @@ export const settingsActions = {
     f.extras.splice(Number(el.dataset.arg), 1);
     f.extraShow.splice(Number(el.dataset.arg), 1);
     f.errors = null;
+    X.rerender();
+  },
+  "wt-mode": (el) => {
+    const f = readWt();
+    f.draft.mode = el.dataset.arg === "perKg" ? "perKg" : "fixed";
+    f.errors = null;
+    X.rerender();
+  },
+  "wt-discard": () => {
+    X.S.setWt = null;
+    X.rerender();
+  },
+  "wt-default": async () => {
+    const changed = await putSetting(WTL().WORKOUT_TARGETS_SETTING, JSON.stringify(WTL().DEFAULT_WORKOUT_TARGETS));
+    X.S.setWt = null;
+    X.toast(changed ? "Voreinstellung wiederhergestellt (40 g / 20 g)" : "Keine Änderung");
+    X.rerender();
+  },
+  "wt-save": async () => {
+    const f = readWt();
+    const r = WTL().validateWorkoutTargets(f.draft);
+    if (!r.ok) {
+      f.errors = r.errors;
+      return X.rerender();
+    }
+    const changed = await putSetting(WTL().WORKOUT_TARGETS_SETTING, JSON.stringify(r.value));
+    X.S.setWt = null;
+    X.toast(changed ? "Workout-Richtwerte gespeichert" : "Keine Änderung");
     X.rerender();
   },
   "meal-discard": () => {

@@ -744,6 +744,8 @@ __export(labels_exports, {
 var workoutTimeline_exports = {};
 __export(workoutTimeline_exports, {
   DEFAULT_PLANNED_MIN: () => DEFAULT_PLANNED_MIN,
+  DEFAULT_WORKOUT_TARGETS: () => DEFAULT_WORKOUT_TARGETS,
+  HINTS_OFF_SETTING: () => HINTS_OFF_SETTING,
   POST_CARBS_G: () => POST_CARBS_G,
   POST_PROTEIN_G: () => POST_PROTEIN_G,
   POST_WINDOW: () => POST_WINDOW,
@@ -753,13 +755,19 @@ __export(workoutTimeline_exports, {
   TRAINING_DURATIONS_SETTING: () => TRAINING_DURATIONS_SETTING,
   TRAINING_SKIPS_SETTING: () => TRAINING_SKIPS_SETTING,
   WORKOUT_MEALS: () => WORKOUT_MEALS,
+  WORKOUT_TARGETS_SETTING: () => WORKOUT_TARGETS_SETTING,
+  WORKOUT_TARGET_LIMITS: () => WORKOUT_TARGET_LIMITS,
+  addHintOff: () => addHintOff,
   addSkip: () => addSkip,
   changedSlots: () => changedSlots,
+  durationText: () => durationText,
+  hintOffKey: () => hintOffKey,
   isIntensePlanDay: () => isIntensePlanDay,
   isIntenseWorkout: () => isIntenseWorkout,
   linkedEntries: () => linkedEntries,
   parseDurations: () => parseDurations,
   parseSkips: () => parseSkips,
+  parseWorkoutTargets: () => parseWorkoutTargets,
   planWithSlots: () => planWithSlots,
   plannedBars: () => plannedBars,
   plannedDuration: () => plannedDuration,
@@ -767,13 +775,17 @@ __export(workoutTimeline_exports, {
   postFuel: () => postFuel,
   preFueled: () => preFueled,
   rescheduledSlots: () => rescheduledSlots,
+  resolveWorkoutTargets: () => resolveWorkoutTargets,
   setDuration: () => setDuration,
   skipKey: () => skipKey,
   trackedBars: () => trackedBars,
   trainingHints: () => trainingHints,
+  validateWorkoutTargets: () => validateWorkoutTargets,
+  visibleHints: () => visibleHints,
   workoutMealAt: () => workoutMealAt,
   workoutMealName: () => workoutMealName,
-  workoutRole: () => workoutRole
+  workoutRole: () => workoutRole,
+  workoutTargetsDraft: () => workoutTargetsDraft
 });
 
 // src/domain/planSchedule.ts
@@ -951,7 +963,8 @@ function trackedBars(workouts, dayStart, nowMinute) {
       to: Math.min(to, dayStart + DAY - 1),
       running,
       intense: isIntenseWorkout(w),
-      workoutId: w.id
+      workoutId: w.id,
+      ...w.planDayId ? { planDayId: w.planDayId } : {}
     });
   }
   return out;
@@ -997,25 +1010,133 @@ var PRE_MEAL_KCAL = 300;
 var POST_WINDOW = 120;
 var POST_CARBS_G = 40;
 var POST_PROTEIN_G = 20;
+var WORKOUT_TARGETS_SETTING = "ui.workout_targets";
+var DEFAULT_WORKOUT_TARGETS = {
+  mode: "fixed",
+  postCarbsG: POST_CARBS_G,
+  postProteinG: POST_PROTEIN_G,
+  postCarbsPerKg: 0.5,
+  postProteinPerKg: 0.3,
+  postWindowMin: POST_WINDOW,
+  preLightFrom: PRE_LIGHT[0],
+  preLightTo: PRE_LIGHT[1],
+  preMealKcal: PRE_MEAL_KCAL
+};
+var WORKOUT_TARGET_LIMITS = {
+  postCarbsG: { min: 0, max: 300, label: "Kohlenhydrate", unit: "g" },
+  postProteinG: { min: 0, max: 150, label: "Protein", unit: "g" },
+  postCarbsPerKg: { min: 0, max: 3, label: "Kohlenhydrate", unit: "g/kg" },
+  postProteinPerKg: { min: 0, max: 1, label: "Protein", unit: "g/kg" },
+  postWindowMin: { min: 30, max: 240, label: "Post-Workout-Fenster", unit: "min" },
+  preLightFrom: { min: 0, max: 180, label: "Pre-Workout ab", unit: "min" },
+  preLightTo: { min: 10, max: 240, label: "Pre-Workout bis", unit: "min" },
+  preMealKcal: { min: 0, max: 2e3, label: "Mahlzeit vorher ab", unit: "kcal" }
+};
+var TARGET_KEYS = Object.keys(WORKOUT_TARGET_LIMITS);
+function parseWorkoutTargets(raw) {
+  const out = { ...DEFAULT_WORKOUT_TARGETS };
+  if (!raw) return out;
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    return out;
+  }
+  if (!data || typeof data !== "object") return out;
+  const obj = data;
+  if (obj.mode === "perKg" || obj.mode === "fixed") out.mode = obj.mode;
+  for (const k of TARGET_KEYS) {
+    const v = obj[k];
+    const lim = WORKOUT_TARGET_LIMITS[k];
+    if (typeof v === "number" && Number.isFinite(v) && v >= lim.min && v <= lim.max) out[k] = v;
+  }
+  if (out.preLightTo <= out.preLightFrom) {
+    out.preLightFrom = DEFAULT_WORKOUT_TARGETS.preLightFrom;
+    out.preLightTo = DEFAULT_WORKOUT_TARGETS.preLightTo;
+  }
+  return out;
+}
+var workoutTargetsDraft = (t) => ({
+  mode: t.mode,
+  ...Object.fromEntries(
+    TARGET_KEYS.map((k) => [k, String(t[k]).replace(".", ",")])
+  )
+});
+function validateWorkoutTargets(draft) {
+  const errors = {};
+  const value2 = { ...DEFAULT_WORKOUT_TARGETS, mode: draft.mode };
+  for (const k of TARGET_KEYS) {
+    const lim = WORKOUT_TARGET_LIMITS[k];
+    const text2 = draft[k].trim().replace(",", ".");
+    const n2 = Number(text2);
+    if (text2 === "" || !Number.isFinite(n2)) {
+      errors[k] = "Bitte eine Zahl eingeben.";
+      continue;
+    }
+    if (n2 < lim.min || n2 > lim.max) {
+      errors[k] = `Bitte zwischen ${String(lim.min).replace(".", ",")} und ${String(lim.max).replace(".", ",")} ${lim.unit}.`;
+      continue;
+    }
+    value2[k] = lim.unit === "g/kg" ? Math.round(n2 * 100) / 100 : Math.round(n2);
+  }
+  if (!errors.preLightFrom && !errors.preLightTo && value2.preLightTo <= value2.preLightFrom) {
+    errors.preLightTo = "\u201EBis\u201C muss gr\xF6\xDFer als \u201Eab\u201C sein.";
+  }
+  return Object.keys(errors).length ? { ok: false, errors } : { ok: true, value: value2 };
+}
+var HINTS_OFF_SETTING = "ui.training_hints_off";
+function hintOffKey(date, bar) {
+  const day = bar.plan?.dayId ?? bar.planDayId;
+  return day ? `${date}|d:${day}` : `${date}|${bar.key}`;
+}
+function addHintOff(list2, key, keepFrom) {
+  const out = list2.filter((k) => (k.split("|")[0] ?? "") >= keepFrom && k !== key);
+  out.push(key);
+  return out;
+}
+function visibleHints(hints, bars, date, off) {
+  if (!off.length) return [...hints];
+  const hidden = new Set(
+    bars.filter((b) => off.includes(hintOffKey(date, b))).map((b) => b.key)
+  );
+  return hints.filter((h) => !hidden.has(h.barKey));
+}
+function resolveWorkoutTargets(t = DEFAULT_WORKOUT_TARGETS, weightKg = null) {
+  const perKg = t.mode === "perKg" && weightKg !== null && weightKg > 0;
+  return {
+    carbsG: perKg ? Math.round(t.postCarbsPerKg * weightKg) : t.postCarbsG,
+    proteinG: perKg ? Math.round(t.postProteinPerKg * weightKg) : t.postProteinG,
+    windowMin: t.postWindowMin,
+    preLight: [t.preLightFrom, t.preLightTo],
+    preMealKcal: t.preMealKcal,
+    basis: t.mode === "fixed" ? "fixed" : perKg ? "perKg" : "perKgNoWeight",
+    weightKg: perKg ? weightKg : null
+  };
+}
+var DEFAULT_RESOLVED = resolveWorkoutTargets();
+function durationText(min) {
+  if (min % 60 === 0) return min === 60 ? "1 Stunde" : `${min / 60} Stunden`;
+  return `${min} Minuten`;
+}
 var eats = (e) => (e.kind === "meal" || e.kind === "planned") && e.kcal > 0;
-function preFueled(bar, entries) {
+function preFueled(bar, entries, r2 = DEFAULT_RESOLVED) {
   return entries.some((e) => {
     const before = bar.from - e.minute;
-    if (e.role === "pre" && before >= 0 && before <= PRE_MEAL[1]) return true;
+    if (e.role === "pre" && before >= 0 && before <= Math.max(PRE_MEAL[1], r2.preLight[1])) return true;
     if (before < 0) return false;
-    if (before >= PRE_LIGHT[0] && before <= PRE_LIGHT[1]) {
+    if (before >= r2.preLight[0] && before <= r2.preLight[1]) {
       if (e.kind === "caffeine" || e.kind === "supplement" || eats(e)) return true;
     }
-    return eats(e) && e.kcal >= PRE_MEAL_KCAL && before >= PRE_MEAL[0] && before <= PRE_MEAL[1];
+    return eats(e) && e.kcal >= r2.preMealKcal && before >= PRE_MEAL[0] && before <= PRE_MEAL[1];
   });
 }
-function postFuel(bar, entries) {
+function postFuel(bar, entries, r2 = DEFAULT_RESOLVED) {
   let meals = 0;
   let carbsG = 0;
   let proteinG = 0;
   for (const e of entries) {
     const after = e.minute - bar.to;
-    const inWindow = after >= 0 && after <= POST_WINDOW || e.role === "post" && after >= -15;
+    const inWindow = after >= 0 && after <= r2.windowMin || e.role === "post" && after >= -15;
     if (!inWindow || !eats(e)) continue;
     meals += 1;
     carbsG += e.carbsG;
@@ -1023,37 +1144,40 @@ function postFuel(bar, entries) {
   }
   return { meals, carbsG, proteinG };
 }
-function trainingHints(bars, entries, nowMinute, future) {
+function trainingHints(bars, entries, nowMinute, future, r2 = DEFAULT_RESOLVED) {
   const out = [];
+  const pre = `${r2.preLight[0]}\u2013${r2.preLight[1]} Minuten`;
+  const win = durationText(r2.windowMin);
+  const goal = `Kohlenhydrate (ab ${r2.carbsG} g) und Protein (ab ${r2.proteinG} g)`;
   for (const bar of bars) {
     if (!bar.intense) continue;
     const startAhead = future || nowMinute !== null && bar.from > nowMinute;
     const endAhead = future || nowMinute !== null && bar.to > nowMinute;
-    if (!preFueled(bar, entries)) {
+    if (!preFueled(bar, entries, r2)) {
       out.push({
         barKey: bar.key,
         type: "pre",
         minute: bar.from - 40,
-        text: startAhead ? "Kein Pre-Workout eingetragen: 30\u201390 Minuten vorher ein Getr\xE4nk, einen Shake oder eine kleine Mahlzeit (oder 1\u20133 Stunden vorher eine Mahlzeit) anlegen." : "Vor dem Training war kein Pre-Workout eingetragen (Getr\xE4nk, Shake oder Mahlzeit 30\u201390 Minuten bzw. 1\u20133 Stunden vorher)."
+        text: startAhead ? `Kein Pre-Workout eingetragen: ${pre} vorher ein Getr\xE4nk, einen Shake oder eine kleine Mahlzeit (oder 1\u20133 Stunden vorher eine Mahlzeit) anlegen.` : `Vor dem Training war kein Pre-Workout eingetragen (Getr\xE4nk, Shake oder Mahlzeit ${pre} bzw. 1\u20133 Stunden vorher).`
       });
     }
-    const post = postFuel(bar, entries);
+    const post = postFuel(bar, entries, r2);
     if (bar.running) continue;
     if (post.meals === 0) {
       out.push({
         barKey: bar.key,
         type: "post",
         minute: bar.to + 20,
-        text: endAhead ? `Post-Workout anlegen: in den 2 Stunden danach vor allem Kohlenhydrate (ab ${POST_CARBS_G} g) und Protein (ab ${POST_PROTEIN_G} g).` : `Nach dem Training fehlt ein Post-Workout: in den 2 Stunden danach vor allem Kohlenhydrate (ab ${POST_CARBS_G} g) und Protein (ab ${POST_PROTEIN_G} g).`
+        text: endAhead ? `Post-Workout anlegen: in den ${win} danach vor allem ${goal}.` : `Nach dem Training fehlt ein Post-Workout: in den ${win} danach vor allem ${goal}.`
       });
       continue;
     }
-    const lowC = post.carbsG < POST_CARBS_G;
-    const lowP = post.proteinG < POST_PROTEIN_G;
+    const lowC = post.carbsG < r2.carbsG;
+    const lowP = post.proteinG < r2.proteinG;
     if (lowC || lowP) {
       const parts2 = [
-        lowC ? `Kohlenhydrate ${Math.round(post.carbsG)} g (Richtwert ab ${POST_CARBS_G} g)` : "",
-        lowP ? `Protein ${Math.round(post.proteinG)} g (Richtwert ab ${POST_PROTEIN_G} g)` : ""
+        lowC ? `Kohlenhydrate ${Math.round(post.carbsG)} g (Richtwert ab ${r2.carbsG} g)` : "",
+        lowP ? `Protein ${Math.round(post.proteinG)} g (Richtwert ab ${r2.proteinG} g)` : ""
       ].filter(Boolean);
       out.push({
         barKey: bar.key,
@@ -1065,13 +1189,13 @@ function trainingHints(bars, entries, nowMinute, future) {
   }
   return out;
 }
-function workoutMealAt(bars, minute) {
+function workoutMealAt(bars, minute, r2 = DEFAULT_RESOLVED) {
   for (const b of bars) {
     if (minute >= b.from && minute <= b.to) return "Intra-Workout";
   }
   for (const b of bars) {
-    if (minute < b.from && b.from - minute <= PRE_LIGHT[1]) return "Pre-Workout";
-    if (minute > b.to && minute - b.to <= POST_WINDOW) return "Post-Workout";
+    if (minute < b.from && b.from - minute <= r2.preLight[1]) return "Pre-Workout";
+    if (minute > b.to && minute - b.to <= r2.windowMin) return "Post-Workout";
   }
   return null;
 }
@@ -30719,7 +30843,7 @@ var APP_FAQ = [
     area: "Ern\xE4hrung",
     device: "beide",
     question: "Warum sehe ich Trainings im Tagesverlauf und was bedeuten die Hinweise?",
-    answer: "Getrackte Einheiten (Start bis Ende, eine laufende bis jetzt) und geplante Einheiten aus den Terminen deiner Trainingspl\xE4ne (mit Uhrzeit) erscheinen als hellgrauer Balken \xFCber alle Spalten \u2013 Mahlzeiten, Shakes, Wasser und Koffein tr\xE4gst du trotzdem darin ein. Bei Krafttraining und intensivem Cardio gibt es Hinweise: Pre-Workout fehlt, wenn 30\u201390 Minuten vorher weder Getr\xE4nk, Shake, Koffein, Supplement noch kleine Mahlzeit und 1\u20133 Stunden vorher keine Mahlzeit eingetragen ist; Post-Workout, wenn in den 2 Stunden danach keine Mahlzeit mit Kohlenhydraten (ab 40 g) und Protein (ab 20 g) steht. \u201EPre-Workout eintragen\u201C setzt den Knopf auf die passende Uhrzeit. Doppelklick (Handy: zweimal antippen) auf eine geplante Einheit: verschieben, Dauer \xE4ndern oder l\xF6schen \u2013 nur an diesem Tag oder jeden Wochentag; Workout-Mahlzeiten ziehen mit.",
+    answer: "Getrackte Einheiten (Start bis Ende, eine laufende bis jetzt) und geplante Einheiten aus den Terminen deiner Trainingspl\xE4ne (mit Uhrzeit) erscheinen als hellgrauer Balken \xFCber alle Spalten \u2013 Mahlzeiten, Shakes, Wasser und Koffein tr\xE4gst du trotzdem darin ein. Bei Krafttraining und intensivem Cardio gibt es Hinweise: Pre-Workout fehlt, wenn 30\u201390 Minuten vorher weder Getr\xE4nk, Shake, Koffein, Supplement noch kleine Mahlzeit und 1\u20133 Stunden vorher keine Mahlzeit eingetragen ist; Post-Workout, wenn in den 2 Stunden danach keine Mahlzeit mit Kohlenhydraten (ab 40 g) und Protein (ab 20 g) steht. Diese Richtwerte \xE4nderst du unter Settings \u2192 Mahlzeiten \u2192 Workout-Richtwerte. \u201EPre-Workout eintragen\u201C setzt den Knopf auf die passende Uhrzeit. Doppelklick (Handy: zweimal antippen) auf eine geplante Einheit: verschieben, Dauer \xE4ndern oder l\xF6schen \u2013 nur an diesem Tag oder jeden Wochentag; Workout-Mahlzeiten ziehen mit.",
     keywords: [
       "training",
       "pre-workout",
@@ -30746,6 +30870,14 @@ var APP_FAQ = [
       "trainingsplan",
       "wochentag"
     ]
+  },
+  {
+    id: "workout-richtwerte",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Wo \xE4ndere ich die Richtwerte f\xFCr Pre- und Post-Workout?",
+    answer: "Unter Settings \u2192 Mahlzeiten \u2192 Workout-Richtwerte. Post-Workout bemisst du entweder in festen Gramm (Voreinstellung: Kohlenhydrate ab 40 g, Protein ab 20 g) oder pro kg K\xF6rpergewicht (z. B. 0,5 g/kg Kohlenhydrate und 0,3 g/kg Protein) \u2013 dann rechnet die App mit deinem letzten Gewicht, ohne Gewicht gelten die festen Gramm. Au\xDFerdem einstellbar: das Zeitfenster nach dem Training (Voreinstellung 120 Minuten), das Fenster f\xFCr leichtes Pre-Workout (30\u201390 Minuten vorher) und ab wie vielen kcal eine Mahlzeit 1\u20133 Stunden vorher z\xE4hlt. Die Werte gelten am PC und am Handy. Einen Hinweis zu einem Training blendest du mit \u201E\u2715\u201C aus \u2013 dann kommen zu diesem Training keine mehr, beim n\xE4chsten Training wieder.",
+    keywords: ["richtwert", "post-workout", "pre-workout", "kohlenhydrate", "protein", "gramm", "pro kg", "fenster", "workout"]
   },
   {
     id: "orange-punkte",
@@ -31342,9 +31474,7 @@ function itemsOf(items, section) {
   return items.filter((i) => i.section === section);
 }
 function openTabs(items, section) {
-  return new Set(
-    items.filter((i) => i.section === section && i.tab).map((i) => i.tab)
-  );
+  return new Set(items.filter((i) => i.section === section && i.tab).map((i) => i.tab));
 }
 function markTitle(items) {
   if (items.length === 0) return "";

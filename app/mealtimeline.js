@@ -24,6 +24,7 @@ import * as D from "./pcdomain.js";
 import * as TR from "./trainingdata.js";
 import * as CD from "./checklistdata.js";
 import * as PS from "./pcsettings.js";
+import * as O from "./pcoverview.js";
 
 // ------------------------------------------------------------------ Anordnung (wie mealTimeline.ts)
 
@@ -397,7 +398,25 @@ function trainingOf(db, date) {
     skips: WT().parseSkips(db.settings?.get?.(WT().TRAINING_SKIPS_SETTING) ?? null),
     durations: WT().parseDurations(db.settings?.get?.(WT().TRAINING_DURATIONS_SETTING) ?? null),
     off,
+    targets: targetsOf(db, date),
+    // ausgeblendete Hinweise je Training (1.110.0)
+    hintsOff: WT().parseSkips(db.settings?.get?.(WT().HINTS_OFF_SETTING) ?? null),
   };
+}
+
+/** Workout-Richtwerte (Settings → Mahlzeiten, 1.110.0) mit dem letzten Gewicht bis zu diesem Tag */
+function targetsOf(db, date) {
+  const t = WT().parseWorkoutTargets(db.settings?.get?.(WT().WORKOUT_TARGETS_SETTING) ?? null);
+  let weight = null;
+  if (t.mode === "perKg") {
+    try {
+      const list = O.measurementsBetween(db, P.WEIGHT_METRIC_ID, null, date);
+      weight = list.length ? list[list.length - 1].value : null;
+    } catch {
+      weight = null;
+    }
+  }
+  return WT().resolveWorkoutTargets(t, weight);
 }
 
 function barsOf(tr, date, dayStart, now) {
@@ -497,7 +516,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
   } catch {
     // ohne Koffeindaten
   }
-  const hints = shown.length ? WT().trainingHints(shown, fuel, now, future) : [];
+  const hints = shown.length ? WT().visibleHints(WT().trainingHints(shown, fuel, now, future, tr?.targets), shown, date, tr?.hintsOff ?? []) : [];
   S.mtlBars = { date, bars, fuel };
   const hintText = date >= today();
   const zoom = zoomNow();
@@ -561,7 +580,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
     choice = N.WORKOUT_MEALS;
   }
   for (const name of choice) if (!options.some((o) => o.title === name)) options.push({ key: N.extraKey(name), title: name, type: "other" });
-  const wm = shown.length ? WT().workoutMealAt(shown, hMinute) : null;
+  const wm = shown.length ? WT().workoutMealAt(shown, hMinute, tr?.targets) : null;
   const suggested = (wm ? options.find((o) => o.title === wm)?.key : undefined) ?? options.find((o) => o.type === mealTypeAt(hMinute))?.key ?? options[0]?.key ?? "";
   const chosen = h.key && options.some((o) => o.key === h.key) ? h.key : suggested;
   const chosenTitle = options.find((o) => o.key === chosen)?.title ?? "Mahlzeit";
@@ -618,7 +637,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
           .map((h) => {
             const b = shown.find((x) => x.key === h.barKey);
             const name = h.type === "pre" ? "Pre-Workout" : "Post-Workout";
-            return `<li class="mtl-hint"><span aria-hidden="true">⚠</span><span class="small"><b>${esc(b?.title ?? "")} ${b ? clockOf(b.from) : ""}:</b> ${esc(h.text)}</span><button class="btn sm" data-act="mtl-hint" data-arg="${Math.round(h.minute)}|${esc(name)}">＋ ${esc(name)}</button></li>`;
+            return `<li class="mtl-hint"><span aria-hidden="true">⚠</span><span class="small"><b>${esc(b?.title ?? "")} ${b ? clockOf(b.from) : ""}:</b> ${esc(h.text)}</span><button class="btn sm" data-act="mtl-hint" data-arg="${Math.round(h.minute)}|${esc(name)}">＋ ${esc(name)}</button>${b ? `<button class="btn sm ghost mtl-hint__close" data-act="mtl-hint-off" data-arg="${esc(b.key)}" aria-label="Hinweise zu ${esc(b.title)} ausblenden" title="Hinweise zu diesem Training ausblenden (beim nächsten Training wieder)">✕</button>` : ""}</li>`;
           })
           .join("")}</ul>`
       : "";
@@ -1197,6 +1216,18 @@ export const timelineActions = {
     S.mtl = { date, pinned: snapMinute(Number(m), 1, dayStartMinutesOn(date)), panel: true, key: N.extraKey(name.join("|")) };
     X.rerender();
     requestAnimationFrame(() => document.querySelector(".mtl-panel")?.scrollIntoView({ block: "center", behavior: "smooth" }));
+  },
+  // Hinweise zu einem Training ausblenden; beim nächsten Training wieder (1.110.0)
+  "mtl-hint-off": async (el) => {
+    const S = X.S;
+    const date = S.diaryDate ?? today();
+    const b = (S.mtlBars?.date === date ? S.mtlBars.bars : []).find((x) => x.key === el.dataset.arg);
+    if (!b) return;
+    const db = buildDb();
+    const list = WT().parseSkips(db.settings?.get?.(WT().HINTS_OFF_SETTING) ?? null);
+    await putSetting(WT().HINTS_OFF_SETTING, JSON.stringify(WT().addHintOff(list, WT().hintOffKey(date, b), isoMinus(date, 60))));
+    X.toast(`Hinweise zu „${b.title}“ ausgeblendet`);
+    X.rerender();
   },
   "mtl-tr-cancel": () => {
     X.S.mtlTrain = null;

@@ -21,6 +21,10 @@ export const SYNC_KEYS = [
   // Trainings im Tagesverlauf: ausgelassene Termine und Dauer geplanter Einheiten (1.107.0)
   "ui.training_skips",
   "ui.training_durations",
+  // Settings → Mahlzeiten → Workout-Richtwerte (1.110.0)
+  "ui.workout_targets",
+  // Hinweise je Training ausgeblendet (1.110.0)
+  "ui.training_hints_off",
   "measurement_methods",
   "secret_protocols",
   "ui.day_start",
@@ -162,6 +166,8 @@ const LAYOUT_NAMES = {
 export function settingLabel(key) {
   if (key.startsWith(MEAL_NAME_PREFIX) || ["meal_hidden", "meal_extra", "meal_extra_hidden", "meal_workout"].includes(key)) return "Mahlzeiten";
   if (key === "ui.training_skips" || key === "ui.training_durations") return "Trainings im Tagesverlauf";
+  if (key === "ui.workout_targets") return "Workout-Richtwerte";
+  if (key === "ui.training_hints_off") return "Hinweise zum Training (ausgeblendet)";
   if (key === "measurement_methods") return "Messmethoden";
   if (key === "secret_protocols") return "Secret Protocols";
   if (key === "ui.day_start" || key === "ui.day_start_history") return "Tageswechsel";

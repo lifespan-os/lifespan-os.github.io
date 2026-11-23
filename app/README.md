@@ -1673,3 +1673,14 @@ Wie PC 1.0.177 (Wünsche des Nutzers vom 22.11.2026):
   neue Datei `openitems.js` (in sw.js), `nav.js`, `navshell.js`, `body.js`, `training.js`, `app.css`.
 - Checklisten → „Heute noch einzutragen“: auch die geplanten Trainings des Tages (Haken, sobald eine Einheit
   erfasst ist). `todos.js`.
+
+## Version 1.110.0 (23.11.2026): Workout-Richtwerte einstellbar (wie PC 1.0.184)
+
+- Settings → Mahlzeiten → Workout-Richtwerte: Post-Workout in festen Gramm (Voreinstellung 40 g Kohlenhydrate,
+  20 g Protein) oder pro kg Körpergewicht (mit dem letzten Gewicht, ohne Gewicht feste Gramm), Zeitfenster
+  nach dem Training, Fenster für leichtes Pre-Workout und kcal-Grenze der Mahlzeit 1–3 Stunden vorher.
+  Einstellung `ui.workout_targets`, mit dem PC abgeglichen. Die Hinweise im Tagesverlauf und der Vorschlag
+  „Pre-/Post-Workout“ rechnen damit. `settingsview.js`, `pcsettings.js`, `mealtimeline.js`, `app.css`.
+- Hinweise zu Pre-/Post-Workout lassen sich mit „✕“ je Training ausblenden; beim nächsten Training kommen
+  wieder welche (geplante und daraus gestartete Einheit gelten als dasselbe Training). Einstellung
+  `ui.training_hints_off`, mit dem PC abgeglichen.

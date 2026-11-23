@@ -2253,3 +2253,13 @@ body.bar-icons .tabbar__item .nav__dot { top: auto; bottom: 10px; }
 .tabbar--inline .tabbar__sub { position: relative; }
 .tabbar__sub .nav__dot { right: -3px; bottom: -3px; width: 13px; height: 13px; box-shadow: 0 0 0 2px var(--navy, #0b2a4a); }
 .bsheet__grid .tab__dot { right: 10px; bottom: 10px; width: 9px; height: 9px; }
+
+/* Settings → Mahlzeiten → Workout-Richtwerte (1.110.0) */
+.set-wt { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.set-wt__title { margin: 0; font-size: 1rem; }
+.set-wt__mode { display: flex; }
+.set-wt__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.set-wt__grid .field input { width: 100%; }
+@media (max-width: 360px) { .set-wt__grid { grid-template-columns: minmax(0, 1fr); } }
+.mtl-hint .mtl-hint__close { grid-column: 3; grid-row: 1; align-self: start; justify-self: end; min-width: 36px; padding-inline: 8px; color: var(--muted); }
+.set-wt__grid .field { display: flex; flex-direction: column; justify-content: flex-end; }

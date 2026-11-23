@@ -763,8 +763,10 @@ __export(workoutTimeline_exports, {
   planWithSlots: () => planWithSlots,
   plannedBars: () => plannedBars,
   plannedDuration: () => plannedDuration,
+  plannedEntries: () => plannedEntries,
   postFuel: () => postFuel,
   preFueled: () => preFueled,
+  rescheduledSlots: () => rescheduledSlots,
   setDuration: () => setDuration,
   skipKey: () => skipKey,
   trackedBars: () => trackedBars,
@@ -1124,6 +1126,52 @@ function changedSlots(slots, index, date, time, scope) {
   }
   if (time === null) return { slots: list2.filter((_, i) => i !== index), skip: false };
   list2[index] = { ...slot, time };
+  return { slots: list2, skip: false };
+}
+var addDay = (iso2, n2) => {
+  const [y, m, d] = iso2.split("-").map(Number);
+  const t = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + n2));
+  return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}-${String(t.getUTCDate()).padStart(2, "0")}`;
+};
+function plannedEntries(plans, from, to, { skips = [], durations = {} } = {}) {
+  const out = [];
+  for (let date = from; date <= to; date = addDay(date, 1)) {
+    const wd = isoWeekday(date);
+    for (const plan of plans) {
+      if (plan.archived) continue;
+      for (const day of plan.days) {
+        (day.slots ?? []).forEach((slot, slotIndex) => {
+          const hit = slot.weekday !== null ? slot.weekday === wd : slot.date === date;
+          if (!hit || skips.includes(skipKey(day.id, slot, date))) return;
+          out.push({
+            key: `${plan.id}:${day.id}:${slotIndex}:${date}`,
+            date,
+            planId: plan.id,
+            planName: plan.name,
+            dayId: day.id,
+            dayName: day.name,
+            slotIndex,
+            slot,
+            time: slot.time,
+            durationMin: plannedDuration(durations, day.id, date)
+          });
+        });
+      }
+    }
+  }
+  return out.sort(
+    (a, b) => a.date === b.date ? (a.time ?? "99:99").localeCompare(b.time ?? "99:99") : a.date < b.date ? -1 : 1
+  );
+}
+function rescheduledSlots(slots, index, toDate, time, scope) {
+  const list2 = slots.map((s) => ({ ...s }));
+  const slot = list2[index];
+  if (!slot) return { slots: list2, skip: false };
+  if (slot.weekday !== null && scope === "day") {
+    list2.push({ weekday: null, date: toDate, time });
+    return { slots: list2, skip: true };
+  }
+  list2[index] = slot.weekday !== null ? { weekday: isoWeekday(toDate), date: null, time } : { weekday: null, date: toDate, time };
   return { slots: list2, skip: false };
 }
 
@@ -30682,6 +30730,14 @@ var APP_FAQ = [
       "hinweis",
       "kohlenhydrate"
     ]
+  },
+  {
+    id: "plaene-als-kalender",
+    area: "Training",
+    device: "beide",
+    question: "Wie sehe und verschiebe ich geplante Trainings im Kalender?",
+    answer: "Unter Training \u2192 Pl\xE4ne oben auf \u201EKalender\u201C umschalten: Alle Termine deiner Pl\xE4ne stehen im Monat, erfasste Einheiten mit H\xE4kchen. Einen Termin anklicken (Handy: Tag und dann Termin antippen) und Tag, Uhrzeit oder Dauer \xE4ndern, l\xF6schen oder heute starten \u2013 bei Wochenterminen nur diesen Termin oder jede Woche. Mit \u201E+\u201C an einem Tag (Handy: \u201E+ Training planen\u201C) legst du einen neuen Termin an.",
+    keywords: ["kalender", "plan", "termin", "verschieben", "geplant", "trainingsplan", "wochentag"]
   },
   {
     id: "workout-mahlzeiten",

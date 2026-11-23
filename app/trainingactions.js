@@ -5,6 +5,7 @@ import * as TR from "./trainingdata.js";
 import { today } from "./diary.js";
 import { statsActions, statsChange } from "./trainingstats.js";
 import { dbActions, dbChange, dbInput } from "./trainingdb.js";
+import { planCalActions } from "./plancalendar.js";
 import { adoptWorkout, applyDay, failed, fmtDate, groupOfTab, neatDraftNow, persistTrain, setNotice, TRAINING_GROUPS, updateNeatLive, X } from "./training.js";
 import { addPlanExercise, isCardioCheck, planPickerResults, syncPlanInputs } from "./trainingplans.js";
 
@@ -13,6 +14,7 @@ import { addPlanExercise, isCardioCheck, planPickerResults, syncPlanInputs } fro
 export const trainingActions = {
   ...statsActions,
   ...dbActions,
+  ...planCalActions,
   // Gruppe der Reiterleiste: zuletzt gewählter Unterreiter dieser Gruppe, sonst der erste (1.72.0)
   "train-group": (el) => {
     const S = X.S;

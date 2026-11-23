@@ -2,6 +2,7 @@
 import * as D from "./pcdomain.js";
 import * as TR from "./trainingdata.js";
 import { planGymSelectHtml } from "./gymsui.js";
+import { planCalendarHtml, plansView } from "./plancalendar.js";
 import * as GD from "./gymsdata.js";
 import { actionBtn, esc, fieldError, notice, X } from "./training.js";
 
@@ -27,9 +28,13 @@ export function plansTab() {
   const plans = TR.plansOf(S.catalogRaw, S.train, S.catalog.exercises);
   const planGymNames = GD.gymNames(S.catalog, S.gyms);
   const cardio = isCardioCheck();
-  return `<section class="card card--training"><div class="wo-head"><h3>Trainingspläne</h3><button class="btn primary sm" data-act="plan-new">Neuer Plan</button></div>
-      <p class="card__note">Pläne legen Trainingstage mit Übungen und Sätzen fest – auch Cardiopläne. Aus einem Tag startest du ein Training; die Sätze sind dann mit den Richtwerten vorbelegt. Termine (Wochentag oder Datum mit Uhrzeit) zeigen in der Übersicht das nächste Training.</p></section>
-    ${notice()}
+  const view = plansView();
+  const head = `<section class="card card--training"><div class="wo-head"><h3>Trainingspläne</h3><button class="btn primary sm" data-act="plan-new">Neuer Plan</button></div>
+      <p class="card__note">Pläne legen Trainingstage mit Übungen und Sätzen fest – auch Cardiopläne. Aus einem Tag startest du ein Training; die Sätze sind dann mit den Richtwerten vorbelegt. Termine (Wochentag oder Datum mit Uhrzeit) zeigen in der Übersicht das nächste Training.</p>
+      <div class="segmented" role="group" aria-label="Darstellung der Pläne"><button class="${view === "list" ? "is-active" : ""}" data-act="plan-view" data-arg="list" aria-pressed="${view === "list"}">Liste</button><button class="${view === "calendar" ? "is-active" : ""}" data-act="plan-view" data-arg="calendar" aria-pressed="${view === "calendar"}">Kalender</button></div></section>
+    ${notice()}`;
+  if (view === "calendar") return `${head}<section class="card card--training">${planCalendarHtml()}</section>`;
+  return `${head}
     ${plans.length ? "" : `<section class="card card--training"><div class="empty-state"><p><strong>Noch keine Trainingspläne</strong></p><p class="muted small">Ein Plan ist optional. Einheiten kannst du auch ohne Plan erfassen.</p></div></section>`}
     ${plans
       .map(

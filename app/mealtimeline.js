@@ -582,6 +582,16 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
   for (const name of choice) if (!options.some((o) => o.title === name)) options.push({ key: N.extraKey(name), title: name, type: "other" });
   const wm = shown.length ? WT().workoutMealAt(shown, hMinute, tr?.targets) : null;
   const suggested = (wm ? options.find((o) => o.title === wm)?.key : undefined) ?? options.find((o) => o.type === mealTypeAt(hMinute))?.key ?? options[0]?.key ?? "";
+  // grüner Punkt = frei, roter = schon Lebensmittel eingetragen oder geplant (1.112.0, wie PC 1.0.188)
+  const usedKeys = new Set();
+  for (const s of slots) {
+    const m = s.meal;
+    if (m && (m.items.length > 0 || Number(m.energyKcal) > 0 || Object.values(m.values ?? {}).some((v) => v > 0))) {
+      usedKeys.add(s.ref.name ? N.extraKey(s.ref.name) : s.ref.mealType);
+    }
+  }
+  for (const p of planned) if (p.items.length > 0) usedKeys.add(p.key);
+  for (const o of options) o.used = usedKeys.has(o.key);
   const chosen = h.key && options.some((o) => o.key === h.key) ? h.key : suggested;
   const chosenTitle = options.find((o) => o.key === chosen)?.title ?? "Mahlzeit";
 
@@ -665,7 +675,12 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
     h.panel && options.length
       ? `<div class="mtl-panel" style="top:${(hy + GRIP_H / 2 + 6).toFixed(1)}px" role="dialog" aria-label="Neuer Eintrag">
       <b>${esc(chosenTitle)} · ${handleClock} Uhr · ${handlePlanned ? "geplant" : "gegessen"}</b>
-      <label class="field"><span>Mahlzeit</span><select data-diary="mtl-key">${options.map((o) => `<option value="${esc(o.key)}" ${o.key === chosen ? "selected" : ""}>${esc(o.title)}</option>`).join("")}</select></label>
+      <div class="field"><span>Mahlzeit</span><div class="mtl-picks" role="radiogroup" aria-label="Mahlzeit">${options
+        .map(
+          (o) =>
+            `<button type="button" class="mtl-pick${o.key === chosen ? " is-on" : ""}" role="radio" aria-checked="${o.key === chosen}" data-act="mtl-key" data-arg="${esc(o.key)}" aria-label="${esc(o.title)} (${o.used ? "belegt" : "frei"})"><i class="slot-dot${o.used ? " is-used" : ""}" aria-hidden="true"></i>${esc(o.title)}</button>`,
+        )
+        .join("")}</div><span class="mtl-picks__legend muted small" aria-hidden="true"><i class="slot-dot"></i> frei <i class="slot-dot is-used"></i> schon belegt</span></div>
       <span class="muted small">${handlePlanned ? "Zählt erst, wenn du sie mit „Gegessen“ bestätigst." : "Wird mit dieser Uhrzeit ins Tagebuch eingetragen."}</span>
       <div class="row"><button class="btn sm primary" data-act="mtl-add" data-arg="${esc(chosen)}">+ Lebensmittel</button>${
         handlePlanned ? "" : `<button class="btn sm" data-act="mtl-caffeine">Koffein</button>`
@@ -1326,6 +1341,10 @@ export const timelineActions = {
     X.S.diaryFocus = key;
     X.rerender();
     requestAnimationFrame(() => document.querySelector(`[data-meal-key="${CSS.escape(key)}"]`)?.scrollIntoView({ block: "start" }));
+  },
+  "mtl-key": (el) => {
+    if (X.S.mtl) X.S.mtl.key = el.dataset.arg;
+    X.rerender();
   },
   "mtl-add": (el) => {
     const S = X.S;

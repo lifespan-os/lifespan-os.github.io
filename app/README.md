@@ -1685,6 +1685,12 @@ Wie PC 1.0.177 (Wünsche des Nutzers vom 22.11.2026):
   wieder welche (geplante und daraus gestartete Einheit gelten als dasselbe Training). Einstellung
   `ui.training_hints_off`, mit dem PC abgeglichen.
 
+## Version 1.112.0 (23.11.2026): Belegte Mahlzeiten in der Auswahl (wie PC 1.0.188)
+
+- Tagesverlauf → Knopf → Fenster „Neuer Eintrag“: Die Mahlzeiten stehen als antippbare Felder mit
+  Punkt – grün = noch frei, rot = schon Lebensmittel eingetragen oder geplant. Ersetzt das
+  Auswahlfeld (iOS zeigt in Auswahllisten keine Farben). `mealtimeline.js`, `app.css`.
+
 ## Version 1.111.0 (23.11.2026): Trainingskalender mit Farben und Restdays (wie PC 1.0.187)
 
 - Training → Pläne → Kalender: Punkte in der Farbe der Rubrik (Krafttraining blau, Cardio orange, Sportart

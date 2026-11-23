@@ -1684,3 +1684,10 @@ Wie PC 1.0.177 (Wünsche des Nutzers vom 22.11.2026):
 - Hinweise zu Pre-/Post-Workout lassen sich mit „✕“ je Training ausblenden; beim nächsten Training kommen
   wieder welche (geplante und daraus gestartete Einheit gelten als dasselbe Training). Einstellung
   `ui.training_hints_off`, mit dem PC abgeglichen.
+
+## Version 1.111.0 (23.11.2026): Trainingskalender mit Farben und Restdays (wie PC 1.0.187)
+
+- Training → Pläne → Kalender: Punkte in der Farbe der Rubrik (Krafttraining blau, Cardio orange, Sportart
+  türkis, Mobilität violett; Ring = geplant, gefüllt = erfasst). Regel `trainingKind` aus `pcdomain.js`.
+- Restdays sind grün gefüllt, Krankheitstage rot; im Tagesdetail steht oben „Restday“ bzw. „Krankheit“.
+- Erfasste Einheiten im Tagesdetail öffnen per Tipp die Einheit. `plancalendar.js`, `app.css`.

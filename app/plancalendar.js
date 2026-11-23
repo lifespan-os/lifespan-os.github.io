@@ -8,10 +8,36 @@ import * as D from "./pcdomain.js";
 import * as P from "./pcdb.js";
 import * as TR from "./trainingdata.js";
 import * as PS from "./pcsettings.js";
+import * as CD from "./checklistdata.js";
 import { buildDb, today } from "./diary.js";
 import { esc, fmtDate, monthGrid, persistTrain, X } from "./training.js";
 
 const WT = () => D.workoutTimeline;
+const KIND = () => D.trainingKind;
+
+/** Rubrik einer erfassten Einheit (1.110.0 → 1.111.0, wie PC 1.0.187): aus ihren Übungen */
+function workoutKind(db, w) {
+  try {
+    const ex = [...(db.wexByWorkout?.get(w.id) ?? [])].map((we) => {
+      const e = db.exercises?.get(we.exercise_id);
+      return { exerciseCategory: e?.category ?? "strength", sportId: e?.sport_id ?? null };
+    });
+    return KIND().trainingKind(ex, w.title ?? "");
+  } catch {
+    return "other";
+  }
+}
+
+/** Rubrik eines geplanten Termins: aus den Übungen seines Trainingstags */
+function entryKind(db, list, e) {
+  try {
+    const day = list.find((p) => p.id === e.planId)?.days.find((d) => d.id === e.dayId);
+    const ex = (day?.exercises ?? []).map((x) => ({ exerciseCategory: x.exerciseCategory ?? x.category ?? "strength", sportId: db.exercises?.get(x.exerciseId)?.sport_id ?? null }));
+    return KIND().trainingKind(ex, e.dayName ?? "");
+  } catch {
+    return "other";
+  }
+}
 const MONTHS = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
 const WEEKDAYS = { 1: "Montag", 2: "Dienstag", 3: "Mittwoch", 4: "Donnerstag", 5: "Freitag", 6: "Samstag", 7: "Sonntag" };
 const pad2 = (n) => String(n).padStart(2, "0");
@@ -70,6 +96,13 @@ export function planCalendarHtml() {
   } catch {
     // ohne Einheiten
   }
+  // Restday/Krankheit je Tag (Checklisten)
+  const off = new Map();
+  try {
+    for (const x of CD.dayStatusOf(S.catalog, S.checklists, first, last)) off.set(x.date, x.kind);
+  } catch {
+    // ohne Tageshinweise
+  }
   const prefix = `${ym.year}-${pad2(ym.month)}`;
   const count = entries.filter((e) => e.date.startsWith(prefix)).length;
   const sel = S.planCalDay && S.planCalDay >= first && S.planCalDay <= last ? S.planCalDay : null;
@@ -78,8 +111,10 @@ export function planCalendarHtml() {
     .map((c) => {
       const p = byDate.get(c.date) ?? [];
       const w = done.get(c.date) ?? [];
-      const marks = p.length || w.length ? `<span class="tcal__dots">${p.map(() => `<i class="pcal-dot"></i>`).join("")}${w.map(() => `<i class="pcal-dot is-done"></i>`).join("")}</span>` : "";
-      return `<button type="button" class="tcal__day ${c.inMonth ? "" : "is-outside"} ${c.date === t ? "is-today" : ""} ${c.date === sel ? "is-selected" : ""}" data-act="pcal-day" data-arg="${c.date}" aria-label="${fmtDate(c.date)}${p.length ? `: ${p.length} ${p.length === 1 ? "Termin" : "Termine"}` : ""}"><span>${c.day}</span>${marks}</button>`;
+      // Punkte in der Farbe der Rubrik: Ring = geplant, gefüllt = erfasst
+      const marks = p.length || w.length ? `<span class="tcal__dots">${p.map((e) => `<i class="pcal-dot pcal--${entryKind(db, list, e)}"></i>`).join("")}${w.map((x) => `<i class="pcal-dot is-done pcal--${workoutKind(db, x)}"></i>`).join("")}</span>` : "";
+      const o = off.get(c.date);
+      return `<button type="button" class="tcal__day ${c.inMonth ? "" : "is-outside"} ${c.date === t ? "is-today" : ""} ${c.date === sel ? "is-selected" : ""} ${o ? `is-${o}` : ""}" data-act="pcal-day" data-arg="${c.date}" aria-label="${fmtDate(c.date)}${o === "rest" ? ", Restday" : o === "sick" ? ", Krankheit" : ""}${p.length ? `: ${p.length} ${p.length === 1 ? "Termin" : "Termine"}` : ""}"><span>${c.day}</span>${marks}</button>`;
     })
     .join("");
   const edit = S.planCalEdit;
@@ -87,18 +122,19 @@ export function planCalendarHtml() {
   if (sel) {
     const p = byDate.get(sel) ?? [];
     const w = done.get(sel) ?? [];
-    detail = `<div class="tcal__detail"><b>${fmtDate(sel)}</b>${p
+    const o = off.get(sel);
+    detail = `<div class="tcal__detail"><b>${fmtDate(sel)}</b>${o ? `<span class="pcal-off pcal--${o}">${o === "rest" ? "Restday" : "Krankheit"}</span>` : ""}${p
       .map((e) => {
         const open = edit && edit.kind === "edit" && edit.key === e.key;
-        return `<button class="train-row tcal__entry ${open ? "is-open" : ""}" data-act="pcal-open" data-arg="${esc(e.key)}"><span class="train-row__main"><strong>${esc(e.dayName)}</strong><span class="muted small">${esc(e.planName)} · ${e.time ? `${esc(e.time)} Uhr · ` : ""}${e.durationMin} min${e.slot.weekday !== null ? ` · jeden ${WEEKDAYS[e.slot.weekday]}` : ""}</span></span><span aria-hidden="true">✎</span></button>${open ? editForm(edit, e, t) : ""}`;
+        return `<button class="train-row tcal__entry pcal--${entryKind(db, list, e)} ${open ? "is-open" : ""}" data-act="pcal-open" data-arg="${esc(e.key)}"><span class="train-row__main"><strong>${esc(e.dayName)}</strong><span class="muted small">${esc(e.planName)} · ${e.time ? `${esc(e.time)} Uhr · ` : ""}${e.durationMin} min${e.slot.weekday !== null ? ` · jeden ${WEEKDAYS[e.slot.weekday]}` : ""}</span></span><span aria-hidden="true">✎</span></button>${open ? editForm(edit, e, t) : ""}`;
       })
-      .join("")}${w.map((x) => `<span class="pcal-done">✓ ${esc(x.title)}${x.start_time ? ` · ${esc(x.start_time)} Uhr` : ""}</span>`).join("")}${
+      .join("")}${w.map((x) => `<button type="button" class="pcal-done pcal--${workoutKind(db, x)}" data-go="detail" data-arg="${esc(x.id)}">✓ ${esc(x.title)}${x.start_time ? ` · ${esc(x.start_time)} Uhr` : ""}<span aria-hidden="true">›</span></button>`).join("")}${
       !p.length && !w.length ? `<span class="muted small">Kein Termin an diesem Tag.</span>` : ""
     }${sel >= t ? (edit && edit.kind === "new" && edit.date === sel ? newForm(edit, list) : `<button class="btn sm" data-act="pcal-new" data-arg="${sel}">+ Training planen</button>`) : ""}</div>`;
   }
   return `<div class="tcal pcal"><div class="tcal__head"><button class="btn sm ghost" data-act="pcal-month" data-arg="-1" aria-label="Vorheriger Monat">‹</button><b>${MONTHS[ym.month - 1]} ${ym.year}</b><button class="btn sm ghost" data-act="pcal-month" data-arg="1" aria-label="Nächster Monat">›</button><span class="muted small">${count} ${count === 1 ? "Termin" : "Termine"}</span></div>
     <div class="tcal__grid">${["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((d) => `<span class="tcal__wd">${d}</span>`).join("")}${cells}</div>
-    <p class="muted small"><i class="pcal-dot"></i> geplant · <i class="pcal-dot is-done"></i> erfasst</p>${detail}</div>`;
+    <p class="muted small pcal-legend"><span><i class="pcal-dot"></i> geplant</span><span><i class="pcal-dot is-done"></i> erfasst</span>${["strength", "cardio", "sport", "mobility"].map((k) => `<span><i class="pcal-dot is-done pcal--${k}"></i> ${esc(KIND().TRAINING_KIND_LABELS[k])}</span>`).join("")}<span><i class="pcal-rest"></i> Restday</span></p>${detail}</div>`;
 }
 
 function editForm(edit, e, t) {

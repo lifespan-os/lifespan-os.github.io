@@ -2263,3 +2263,26 @@ body.bar-icons .tabbar__item .nav__dot { top: auto; bottom: 10px; }
 @media (max-width: 360px) { .set-wt__grid { grid-template-columns: minmax(0, 1fr); } }
 .mtl-hint .mtl-hint__close { grid-column: 3; grid-row: 1; align-self: start; justify-self: end; min-width: 36px; padding-inline: 8px; color: var(--muted); }
 .set-wt__grid .field { display: flex; flex-direction: column; justify-content: flex-end; }
+
+/* Trainingskalender: Farben je Rubrik, Restday grün ausgefüllt (1.111.0, wie PC 1.0.187) */
+:root { --kind-strength: #0D47A1; --kind-cardio: #F39A22; --kind-sport: #14A3C7; --kind-mobility: #5446B8; --kind-other: #7A889D; --kind-rest: #1D7048; --kind-rest-fill: #BFE8CF; --kind-sick: #B42318; --kind-sick-fill: #F8D3CF; }
+html[data-theme="dark"] { --kind-strength: #8AAAF2; --kind-cardio: #F7B65E; --kind-sport: #6CD3EC; --kind-mobility: #B3A9F5; --kind-other: #8593A8; --kind-rest: #5BCB8F; --kind-rest-fill: #1F5A3A; --kind-sick: #F2837A; --kind-sick-fill: #5A2626; }
+.pcal--strength { --kind: var(--kind-strength); }
+.pcal--cardio { --kind: var(--kind-cardio); }
+.pcal--sport { --kind: var(--kind-sport); }
+.pcal--mobility { --kind: var(--kind-mobility); }
+.pcal--other { --kind: var(--kind-other); }
+.pcal .tcal__dots i.pcal-dot[class*="pcal--"], .pcal-dot[class*="pcal--"] { border-color: var(--kind); }
+.pcal .tcal__dots i.pcal-dot.is-done[class*="pcal--"], .pcal-dot.is-done[class*="pcal--"] { background: var(--kind); border-color: var(--kind); }
+.pcal .tcal__dots i.pcal-dot { width: 8px; height: 8px; }
+.tcal__day.is-rest { background: var(--kind-rest-fill); border-color: var(--kind-rest); color: var(--kind-rest); font-weight: 700; }
+.tcal__day.is-sick { background: var(--kind-sick-fill); border-color: var(--kind-sick); color: var(--kind-sick); font-weight: 700; }
+.tcal__day.is-rest.is-selected, .tcal__day.is-sick.is-selected { box-shadow: inset 0 0 0 2px var(--blue); }
+.tcal__entry[class*="pcal--"] { border-left: 4px solid var(--kind); }
+button.pcal-done { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 40px; padding: 6px 10px; border: 1px solid var(--line); border-left: 4px solid var(--kind, var(--muted)); border-radius: 10px; background: var(--surface); color: var(--fg); font: inherit; font-size: .9rem; text-align: left; }
+.pcal-off { display: block; padding: 8px 10px; border-radius: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; text-align: center; }
+.pcal-off.pcal--rest { background: var(--kind-rest-fill); color: var(--kind-rest); }
+.pcal-off.pcal--sick { background: var(--kind-sick-fill); color: var(--kind-sick); }
+.pcal-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.pcal-legend > span { display: inline-flex; align-items: center; gap: 4px; }
+.pcal-rest { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--kind-rest-fill); border: 1px solid var(--kind-rest); }

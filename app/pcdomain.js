@@ -1058,9 +1058,7 @@ function parseWorkoutTargets(raw) {
 }
 var workoutTargetsDraft = (t) => ({
   mode: t.mode,
-  ...Object.fromEntries(
-    TARGET_KEYS.map((k) => [k, String(t[k]).replace(".", ",")])
-  )
+  ...Object.fromEntries(TARGET_KEYS.map((k) => [k, String(t[k]).replace(".", ",")]))
 });
 function validateWorkoutTargets(draft) {
   const errors = {};
@@ -1096,9 +1094,7 @@ function addHintOff(list2, key, keepFrom) {
 }
 function visibleHints(hints, bars, date, off) {
   if (!off.length) return [...hints];
-  const hidden = new Set(
-    bars.filter((b) => off.includes(hintOffKey(date, b))).map((b) => b.key)
-  );
+  const hidden = new Set(bars.filter((b) => off.includes(hintOffKey(date, b))).map((b) => b.key));
   return hints.filter((h) => !hidden.has(h.barKey));
 }
 function resolveWorkoutTargets(t = DEFAULT_WORKOUT_TARGETS, weightKg = null) {
@@ -1122,7 +1118,8 @@ var eats = (e) => (e.kind === "meal" || e.kind === "planned") && e.kcal > 0;
 function preFueled(bar, entries, r2 = DEFAULT_RESOLVED) {
   return entries.some((e) => {
     const before = bar.from - e.minute;
-    if (e.role === "pre" && before >= 0 && before <= Math.max(PRE_MEAL[1], r2.preLight[1])) return true;
+    if (e.role === "pre" && before >= 0 && before <= Math.max(PRE_MEAL[1], r2.preLight[1]))
+      return true;
     if (before < 0) return false;
     if (before >= r2.preLight[0] && before <= r2.preLight[1]) {
       if (e.kind === "caffeine" || e.kind === "supplement" || eats(e)) return true;
@@ -30860,7 +30857,7 @@ var APP_FAQ = [
     area: "Training",
     device: "beide",
     question: "Wie sehe und verschiebe ich geplante Trainings im Kalender?",
-    answer: "Unter Training \u2192 Pl\xE4ne oben auf \u201EKalender\u201C umschalten: Alle Termine deiner Pl\xE4ne stehen im Monat, erfasste Einheiten mit H\xE4kchen. Einen Termin anklicken (Handy: Tag und dann Termin antippen) und Tag, Uhrzeit oder Dauer \xE4ndern, l\xF6schen oder heute starten \u2013 bei Wochenterminen nur diesen Termin oder jede Woche. Mit \u201E+\u201C an einem Tag (Handy: \u201E+ Training planen\u201C) legst du einen neuen Termin an.",
+    answer: "Unter Training \u2192 Pl\xE4ne oben auf \u201EKalender\u201C umschalten: Alle Termine deiner Pl\xE4ne stehen im Monat, erfasste Einheiten mit H\xE4kchen. Einen Termin anklicken (Handy: Tag und dann Termin antippen) und Tag, Uhrzeit oder Dauer \xE4ndern, l\xF6schen oder heute starten \u2013 bei Wochenterminen nur diesen Termin oder jede Woche. Mit \u201E+\u201C an einem Tag (Handy: \u201E+ Training planen\u201C) legst du einen neuen Termin an. Jede Rubrik hat ihre Farbe (Krafttraining blau, Cardio orange, Sportart t\xFCrkis, Mobilit\xE4t violett); erfasste Einheiten \xF6ffnest du per Klick bzw. Tipp. Restdays stehen am PC als gro\xDFes Feld im Tag, am Handy ist der Tag gr\xFCn gef\xFCllt (Krankheit rot).",
     keywords: [
       "kalender",
       "plan",
@@ -30877,7 +30874,17 @@ var APP_FAQ = [
     device: "beide",
     question: "Wo \xE4ndere ich die Richtwerte f\xFCr Pre- und Post-Workout?",
     answer: "Unter Settings \u2192 Mahlzeiten \u2192 Workout-Richtwerte. Post-Workout bemisst du entweder in festen Gramm (Voreinstellung: Kohlenhydrate ab 40 g, Protein ab 20 g) oder pro kg K\xF6rpergewicht (z. B. 0,5 g/kg Kohlenhydrate und 0,3 g/kg Protein) \u2013 dann rechnet die App mit deinem letzten Gewicht, ohne Gewicht gelten die festen Gramm. Au\xDFerdem einstellbar: das Zeitfenster nach dem Training (Voreinstellung 120 Minuten), das Fenster f\xFCr leichtes Pre-Workout (30\u201390 Minuten vorher) und ab wie vielen kcal eine Mahlzeit 1\u20133 Stunden vorher z\xE4hlt. Die Werte gelten am PC und am Handy. Einen Hinweis zu einem Training blendest du mit \u201E\u2715\u201C aus \u2013 dann kommen zu diesem Training keine mehr, beim n\xE4chsten Training wieder.",
-    keywords: ["richtwert", "post-workout", "pre-workout", "kohlenhydrate", "protein", "gramm", "pro kg", "fenster", "workout"]
+    keywords: [
+      "richtwert",
+      "post-workout",
+      "pre-workout",
+      "kohlenhydrate",
+      "protein",
+      "gramm",
+      "pro kg",
+      "fenster",
+      "workout"
+    ]
   },
   {
     id: "orange-punkte",
@@ -31481,6 +31488,42 @@ function markTitle(items) {
   const list2 = items.map((i) => i.label);
   return `${items.length} offen: ${list2.slice(0, 4).join(", ")}${list2.length > 4 ? " \u2026" : ""}`;
 }
+
+// src/domain/trainingKind.ts
+var trainingKind_exports = {};
+__export(trainingKind_exports, {
+  TRAINING_KINDS: () => TRAINING_KINDS,
+  TRAINING_KIND_LABELS: () => TRAINING_KIND_LABELS,
+  trainingKind: () => trainingKind
+});
+var TRAINING_KINDS = [
+  "strength",
+  "cardio",
+  "sport",
+  "mobility",
+  "other"
+];
+var TRAINING_KIND_LABELS = {
+  strength: "Krafttraining",
+  cardio: "Cardio",
+  sport: "Sportart",
+  mobility: "Mobilit\xE4t",
+  other: "Sonstiges"
+};
+var CARDIO_NAME = /cardio|ergometer|fahrrad|indoor ?bike|bike|rad\b|lauf|run|jogg|walk|spazier|zone ?2|rudern|row(ing)?\b|crosstrainer|stepper|schwimm|swim|hiit/i;
+var MOBILITY_NAME = /mobil|yoga|dehn|stretch|pilates|faszien/i;
+var STRENGTH_NAME = /kraft|ok\b|uk\b|push|pull|legs?\b|beine|oberk|unterk|ganzk|hypertroph/i;
+function trainingKind(exercises, name = "") {
+  if (exercises.some((e) => e.exerciseCategory === "strength")) return "strength";
+  if (exercises.some((e) => e.sportId)) return "sport";
+  if (exercises.some((e) => e.exerciseCategory === "cardio")) return "cardio";
+  if (exercises.some((e) => e.exerciseCategory === "mobility")) return "mobility";
+  if (exercises.length > 0) return "other";
+  if (MOBILITY_NAME.test(name)) return "mobility";
+  if (CARDIO_NAME.test(name)) return "cardio";
+  if (STRENGTH_NAME.test(name)) return "strength";
+  return "other";
+}
 export {
   AKH_REFERENCES,
   ANS_INFO,
@@ -31731,6 +31774,7 @@ export {
   trainingCalc_exports as trainingCalc,
   trainingCoverage_exports as trainingCoverage,
   trainingGroupLabels_exports as trainingGroupLabels,
+  trainingKind_exports as trainingKind,
   trainingNutrition_exports as trainingNutrition,
   trainingProgress_exports as trainingProgress,
   trainingReview_exports as trainingReview,

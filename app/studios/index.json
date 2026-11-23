@@ -4,11 +4,11 @@
   {
    "id": "dasgym-wien",
    "name": "dasGym Wien",
-   "address": null,
-   "website": null,
+   "address": "Handelskai 340 1020 Wien Österreich",
+   "website": "https://www.dasgym.com/",
    "file": "dasgym-wien.json",
-   "machines": 187,
-   "created": "2026-11-20"
+   "machines": 188,
+   "created": "2026-11-23"
   },
   {
    "id": "gruenblick-private-gym-01a1f8bc",

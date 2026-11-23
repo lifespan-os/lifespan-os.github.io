@@ -3,9 +3,9 @@
  "version": 1,
  "id": "dasgym-wien",
  "name": "dasGym Wien",
- "address": null,
- "website": null,
- "created": "2026-11-20",
+ "address": "Handelskai 340 1020 Wien Österreich",
+ "website": "https://www.dasgym.com/",
+ "created": "2026-11-23",
  "machines": [
   {
    "machine": "eigen-mw54m4na-m97lg",
@@ -606,6 +606,11 @@
    "machine": "eigen-mwahpx70-1g9ky",
    "number": "122",
    "name": "Abdominal Crunch"
+  },
+  {
+   "machine": "eigen-01a18e87-b43b-73f6-bd30-e91d028d16ae",
+   "number": "123",
+   "name": "Cybex Bauchmaschine"
   },
   {
    "machine": "eigen-mwmoiyio-22pk7",

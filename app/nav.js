@@ -79,8 +79,17 @@ export function sectionOf(view, arg, back = null) {
 }
 
 /** Menü (Schublade von links). */
-export function drawerHtml({ view, arg, open, esc, back = null }) {
+/**
+ * Oranger Punkt für offene Punkte des Tages (1.109.0): `marks` = Map Bereich → { count, title, tab }.
+ * Mit Punkt führt der Eintrag direkt zum Reiter zum Eintragen (`data-tab`).
+ */
+const markAttrs = (m, esc) => (m ? `${m.tab ? ` data-tab="${esc(m.tab)}"` : ""} data-mark="1"` : "");
+const markDot = (m) => (m ? `<i class="nav__dot" aria-hidden="true"></i>` : "");
+const markLabel = (label, m) => (m ? `${label}, ${m.title}` : label);
+
+export function drawerHtml({ view, arg, open, esc, back = null, marks = null }) {
   const current = sectionOf(view, arg, back);
+  const mk = (id) => marks?.get(id) ?? null;
   return `<div class="drawer-backdrop ${open ? "open" : ""}" data-act="menu-close"></div>
   <nav class="drawer ${open ? "open" : ""}" aria-label="Hauptmenü" ${open ? "" : 'aria-hidden="true" inert'}>
     <div class="drawer__brand"><img src="icons/icon-192.png" alt=""><div><b>LIFESPAN OS</b><small>Alle Bereiche</small></div>
@@ -89,8 +98,8 @@ export function drawerHtml({ view, arg, open, esc, back = null }) {
     <button class="drawer__search" data-act="gs-open">${icon("search")}<span>Suchen …</span></button>
     <ul>
       ${SECTIONS.filter((s) => !s.header && shown(s)).map(
-        (s) => `<li><button class="drawer__item ${s.id === current ? "active" : ""} ${s.view ? "" : "pc-only"}" data-act="menu-go" data-arg="${s.id}" ${s.id === current ? 'aria-current="page"' : ""}>
-          ${icon(s.id)}<span>${esc(s.label)}</span>${s.view ? "" : `<small>PC</small>`}</button></li>`,
+        (s) => `<li><button class="drawer__item ${s.id === current ? "active" : ""} ${s.view ? "" : "pc-only"}" data-act="menu-go" data-arg="${s.id}"${markAttrs(mk(s.id), esc)} ${mk(s.id) ? `aria-label="${esc(markLabel(s.label, mk(s.id)))}"` : ""} ${s.id === current ? 'aria-current="page"' : ""}>
+          ${icon(s.id)}<span>${esc(s.label)}</span>${s.view ? "" : `<small>PC</small>`}${markDot(mk(s.id))}</button></li>`,
       ).join("")}
     </ul>
   </nav>`;
@@ -130,7 +139,7 @@ const SHORT = { "Body & Longevity": "Body", "iCoach.me": "iCoach", Checklisten: 
  * keinen Inhalt mehr: „+“ (Schnell erfassen) zwischen Punkt 1 und 2, „:“ (Untermenü der Seite,
  * `sub` = { key, label, open }) zwischen Punkt 3 und 4.
  */
-export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = DEFAULT_BAR_SLOTS, sub = null }) {
+export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = DEFAULT_BAR_SLOTS, sub = null, marks = null }) {
   const current = sectionOf(view, arg, back);
   const [left, right] = barSlots(slots);
   const sec = (id) => SECTIONS.find((s) => s.id === id);
@@ -147,15 +156,27 @@ export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = 
       // Gleicher Bereich auf zwei Plätzen: nur der erste wird markiert
       const active = !marked && (b.id === "more" ? !main.includes(current) : b.id === current);
       if (active) marked = true;
-      const act = b.id === "more" ? `data-act="menu-open-bar"` : `data-act="tabbar-go" data-arg="${b.id}"`;
-      return `<button class="tabbar__item ${active ? "active" : ""}" ${act} ${active ? 'aria-current="page"' : ""}>${ICONS[b.icon] ?? ""}<span>${b.label}</span></button>`;
+      // „Mehr“ trägt den Punkt, wenn ein Bereich außerhalb der Leiste offen ist
+      const m = b.id === "more" ? moreMark(marks, main) : (marks?.get(b.id) ?? null);
+      const act = b.id === "more" ? `data-act="menu-open-bar"` : `data-act="tabbar-go" data-arg="${b.id}"${markAttrs(m, escAttr)}`;
+      const aria = m ? ` aria-label="${escAttr(markLabel(b.label, m))}"` : "";
+      return `<button class="tabbar__item ${active ? "active" : ""}" ${act}${aria} ${active ? 'aria-current="page"' : ""}>${ICONS[b.icon] ?? ""}<span>${b.label}</span>${markDot(m)}</button>`;
     });
   const quick = `<button class="tabbar__quick tabbar__fab tabbar__fab--a" data-act="quick-open" aria-label="Schnell erfassen" aria-expanded="${quickOpen}">${ICONS.plus}</button>`;
   const subBtn = sub
-    ? `<button class="tabbar__quick tabbar__sub tabbar__fab tabbar__fab--b" data-act="tabs-fold" data-arg="${escAttr(sub.key)}" aria-label="Untermenü: ${escAttr(sub.label)}" aria-haspopup="dialog" aria-expanded="${Boolean(sub.open)}">${ICONS.sub}</button>`
+    ? `<button class="tabbar__quick tabbar__sub tabbar__fab tabbar__fab--b" data-act="tabs-fold" data-arg="${escAttr(sub.key)}" aria-label="Untermenü: ${escAttr(sub.label)}" aria-haspopup="dialog" aria-expanded="${Boolean(sub.open)}">${ICONS.sub}${sub.mark ? markDot({}) : ""}</button>`
     : "";
   const [b0, b1, b2, b3] = buttons;
   return `<nav class="tabbar tabbar--float tabbar--inline${sub ? " tabbar--sub" : ""}" aria-label="Hauptbereiche"><div class="tabbar__grid">${b0}${quick}${b1}${b2}${subBtn}${b3}</div></nav>`;
+}
+
+/** Punkt an „Mehr“: offene Bereiche, die nicht auf der Leiste liegen */
+function moreMark(marks, main) {
+  if (!marks) return null;
+  const rest = [...marks.entries()].filter(([id]) => !main.includes(id) && !hiddenSections.has(id));
+  if (!rest.length) return null;
+  const n = rest.reduce((a, [, m]) => a + m.count, 0);
+  return { count: n, title: `${n} offen in weiteren Bereichen`, tab: null };
 }
 
 const escAttr = (v) => String(v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");

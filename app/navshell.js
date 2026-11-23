@@ -6,6 +6,7 @@ import { today as todayIso } from "./diary.js";
 import * as DP from "./devprefs.js";
 import { app, esc, go, render, S } from "./appbase.js";
 import { actions } from "./appactions.js";
+import { markTitle, marksOf, openItemsNow, phoneTab, resetOpenItems } from "./openitems.js";
 
 // ------------------------------------------------------------------ Menü (wie die linke Leiste am PC)
 
@@ -18,6 +19,23 @@ document.body.appendChild(navRoot);
 /** Ansichten mit eigener Leiste unten (Training läuft, Speichern): dort keine Hauptleiste. */
 export const NO_TABBAR = new Set(["setup", "workout", "picker", "machine", "finish", "supp-intake", "fast-entry", "account-new"]);
 
+/**
+ * Offene Punkte des Tages je Bereich (1.109.0): Map Bereich → { count, title, tab } für die orangen
+ * Punkte in Menü und unterer Leiste.
+ */
+function navMarks() {
+  const items = openItemsNow();
+  const out = new Map();
+  for (const id of new Set(items.map((i) => i.section))) {
+    const list = marksOf(items, id);
+    if (list.length) out.set(id, { count: list.length, title: markTitle(list), tab: phoneTab(list[0]) });
+  }
+  return out;
+}
+
+let lastMarks = "";
+const marksKey = (m) => [...m.entries()].map(([id, x]) => `${id}:${x.count}`).join("|");
+
 export function renderNav() {
   if (!S.catalog) {
     navRoot.innerHTML = "";
@@ -25,9 +43,13 @@ export function renderNav() {
     return;
   }
   const bar = !NO_TABBAR.has(S.view) && !app.querySelector(".bottom");
+  // Nach jeder Änderung (Neuzeichnen) neu berechnen
+  resetOpenItems();
+  const marks = navMarks();
+  lastMarks = marksKey(marks);
   navRoot.innerHTML =
-    drawerHtml({ view: S.view, arg: S.arg, open: S.menuOpen, esc, back: S.logEdit?.back ?? null }) +
-    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen), slots: S.prefs.barSlots, sub: S.subMenu }) + quickSheetHtml(Boolean(S.quickOpen), DP.quickItems(QUICK, S.prefs.quick)) : "");
+    drawerHtml({ view: S.view, arg: S.arg, open: S.menuOpen, esc, back: S.logEdit?.back ?? null, marks }) +
+    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen), slots: S.prefs.barSlots, sub: S.subMenu, marks }) + quickSheetHtml(Boolean(S.quickOpen), DP.quickItems(QUICK, S.prefs.quick)) : "");
   document.body.classList.toggle("has-tabbar", bar);
   // Mit Knopf unten entfällt der Reiter-Knopf oben links
   document.body.classList.toggle("has-submenu", Boolean(bar && S.subMenu));
@@ -103,6 +125,8 @@ navRoot.addEventListener("click", (ev) => {
   if (el.dataset.act === "tabbar-go") {
     S.menuOpen = false;
     S.quickOpen = false;
+    // Mit orangem Punkt direkt zum Reiter zum Eintragen (wie im Menü)
+    if (el.dataset.tab) return actions["menu-go"](el);
     const id = el.dataset.arg;
     if (id === "training") S.trainTab = "workouts";
     if (id === "nutrition") S.diaryDate = S.diaryDate ?? todayIso();
@@ -198,3 +222,11 @@ export function rerenderKeepScroll() {
   render();
   window.scrollTo(0, y);
 }
+
+// Offene Punkte (1.109.0): auch ohne Neuzeichnen (z. B. Uhrzeit, Daten vom PC) alle 30 Sekunden
+// prüfen; die Leisten werden nur neu gezeichnet, wenn sich etwas geändert hat.
+setInterval(() => {
+  if (document.hidden || !S.catalog || S.menuOpen || S.quickOpen) return;
+  resetOpenItems();
+  if (marksKey(navMarks()) !== lastMarks) renderNav();
+}, 30_000);

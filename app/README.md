@@ -1578,3 +1578,98 @@ Alle Bereiche und Reiter bei iPhone-Breite (390 px) durchgesehen; kein Bereich i
 - Stundenmarken stehen nicht mehr unter den Uhrzeiten der Einträge; Koffein aus der PC-Schnellerfassung
   erscheint nicht zusätzlich als Supplement; das Fenster des Knopfes passt in die Achse. `mealtimeline.js`,
   `core.js`, `sw.js`.
+
+## Version 1.102.0 (22.11.2026): Tagesverlauf ab Tageswechsel, Knopf auf jetzt, Geplantes in der Tagessumme
+
+Wie PC 1.0.176 (Wunsch des Nutzers vom 22.11.2026):
+
+- Der Tagesverlauf reicht immer vom Tageswechsel (Settings, z. B. 03:00) bis eine Minute davor am nächsten
+  Morgen; Einträge nach Mitternacht stehen am Ende der Achse. `mealtimeline.js`.
+- Der Knopf „Eintragen“ steht immer auf der aktuellen Uhrzeit (an anderen Tagen auf derselben Uhrzeit),
+  folgt der Uhr und springt nach dem Eintragen oder „Abbrechen“ zurück. Gezogen rastet er minutengenau ein;
+  zwischen dicht liegenden Einträgen (z. B. 11:13 und 11:15) bleibt Platz für jede Minute dazwischen.
+- Geplante Mahlzeiten stehen in der Tagessumme hellgrau hinter dem Gegessenen (Energie und Protein,
+  Kohlenhydrate, Fett), mehrere durch einen dunkleren Strich getrennt. Sie zählen erst nach „Gegessen“.
+  `pcview.js`, `pcdomain.js`, `diary.js`, `app.css`.
+- Tageswechsel mit Verlauf (`ui.day_start_history`): Eine Änderung gilt ab dem aktuellen Tag, vergangene
+  Tage behalten ihren Tageswechsel. Bis zur ersten Änderung gilt die bisherige Einstellung für alle Tage.
+  `appday.js`, `core.js`, `settingsview.js`, `pcsettings.js`.
+
+## Version 1.103.0 (22.11.2026): Tagesverlauf in Spalten, Wischen, Zoom, Einheiten-Kalender, FAQ
+
+Wie PC 1.0.177 (Wünsche des Nutzers vom 22.11.2026):
+
+- Tagesverlauf maßstabsgetreu: Überdecken sich Einträge, rückt der spätere mit einer Verbindungslinie in die
+  nächste Spalte (der Knopf hat die erste). Beim Ziehen am Bildschirmrand läuft die Seite mit. Zoom mit zwei
+  Fingern oder „−“/„+“ (gemerkt auf diesem Handy). Eintrag nach rechts wischen = bearbeiten, nach links =
+  löschen mit Rückfrage (Mahlzeiten: nur noch nicht gesendete Lebensmittel; was am PC ist, dort löschen).
+  `mealtimeline.js`, `app.css`.
+- Training → Einheiten: Ansicht „Liste | Kalender“; Tag antippen zeigt seine Einheiten, leerer Tag:
+  „Einheit nachtragen“. `training.js`, `trainingactions.js`.
+- Gym-Auswahl ohne Anzahl der Maschinen. `gymsui.js`.
+- Maschine in der Übungsauswahl nach links/rechts wischen: ihre Übungen ansehen und eine neue anlegen; die
+  Muskelfokusgruppe folgt Schlagwörtern im Namen (z. B. „Wadenheben stehend“, auch aufrecht/gestreckt;
+  sitzend auch angewinkelt/abgeknickt/90 Grad). `workoutview.js`, `pcdomain.js`, `focusdata.js`.
+- Settings → FAQ mit Suche (gleichbedeutende Wörter, z. B. Gym = Studio, Fitnessstudio …); die Suche zeigt
+  passende Antworten direkt. `searchview.js`, `settingsview.js`, `pcdomain.js` (`appFaq`).
+- Wochenbericht als PDF mit dem Ernährungstagebuch der Woche (Montag bis Sonntag) im Anhang.
+  `weeklyreports.js`, `pdfparity.js`.
+
+## Version 1.104.0 (23.11.2026): Tagesverlauf mit festen Spalten (wie PC 1.0.178)
+
+- Tagesverlauf in festen Spalten: Mahlzeiten | 💊 Supplements | 💧 Wasser | ☕ Koffein. In den drei
+  rechten Spalten nur Symbole (Koffein mit mg), nahe Einträge als ein Symbol mit Anzahl. Uhrzeiten stehen in
+  den Karten, links an der Achse nur die vollen Stunden. Liegen Mahlzeiten zu dicht, rutscht die spätere mit
+  einer Verbindungslinie nach unten. `mealtimeline.js`, `app.css`.
+- Symbol antippen: jeder Eintrag einzeln bearbeiten oder löschen (mit Rückfrage), Wasser auch die Uhrzeit
+  eines Glases ändern. `mealtimeline.js`, `pcdb.js` (`deleteWaterGlass`, `moveWaterGlass`).
+- Knopf als Uhrzeit an der Achse mit Linie über alle Spalten; „＋ Jetzt eintragen“ oben. `mealtimeline.js`.
+
+## Version 1.105.0 (23.11.2026): Schlafzeit im Tagesverlauf ausblenden (wie PC 1.0.179)
+
+- „Tagesverlauf (beta)“: Die Schlafzeit aus dem Schlafprotokoll (Nacht bis zum Morgen, Nacht ab dem Abend)
+  wird zu einer schmalen Zeile „☾ Schlaf …“ zusammengeklappt, solange dort nichts eingetragen ist;
+  „Einblenden“ zeigt sie für den Tag. `mealtimeline.js` (`sleepFolds`, `axisScale`), `app.css`.
+- Settings → Tageswechsel: „Tagesverlauf der Mahlzeiten“ – Optimiert (Schlafdaten, Voreinstellung) oder Alles
+  anzeigen; Einstellung `ui.meals_sleep_fold` wird mit dem PC abgeglichen. `settingsview.js`, `pcsettings.js`.
+- Stundenmarken verschwinden neben der Uhrzeit des Knopfes (überdeckte „01:00“).
+
+## Version 1.106.0 (23.11.2026): Werte nachtragen – Upload übernimmt alle erkannten Werte (wie PC 1.0.180)
+
+- „Werte nachtragen“ → Upload liest die Waagen-Auswertung jetzt gegen alle Messgrößen (wie Body → „PDF einfügen“):
+  Werte der heute fälligen Messgrößen kommen in ihre Felder, alle weiteren erscheinen darunter unter „Weitere Werte
+  aus der Datei“ (Häkchen „speichern“, änderbar) und werden mit „Speichern“ als Messung von heute übernommen.
+  `extras.js`, `app.css`.
+
+## Version 1.107.0 (23.11.2026): Trainings im Tagesverlauf, Workout-Mahlzeiten (wie PC 1.0.181)
+
+- „Tagesverlauf (beta)“: getrackte Einheiten (Start bis Ende, laufende bis jetzt) und geplante Einheiten aus den
+  Terminen der Trainingspläne (mit Uhrzeit) als hellgrauer Balken über alle Spalten; Mahlzeiten, Wasser und Koffein
+  lassen sich darin weiter eintragen. Regeln wie am PC aus `pcdomain.js` (`workoutTimeline`).
+- Hinweise bei Krafttraining und intensivem Cardio: Pre-Workout (30–90 Minuten vorher Getränk, Shake, Koffein,
+  Supplement oder kleine Mahlzeit, bzw. 1–3 Stunden vorher eine Mahlzeit) und Post-Workout (2 Stunden danach,
+  Kohlenhydrate ab 40 g und Protein ab 20 g); „＋ Pre-Workout“ setzt den Knopf auf die passende Uhrzeit.
+- Zweimal auf eine geplante Einheit tippen: verschieben (Balken ziehen), Dauer (unterer Rand), löschen – nur an
+  diesem Tag oder jeden Wochentag; geplante Workout-Mahlzeiten ziehen mit. Einstellungen `ui.training_skips`,
+  `ui.training_durations` werden mit dem PC abgeglichen. `mealtimeline.js`, `app.css`, `pcsettings.js`.
+- Settings → Mahlzeiten: Pre-, Intra- und Post-Workout stehen immer zur Wahl, Haken = jeden Tag im Tagebuch;
+  eigene Mahlzeiten ebenfalls mit Haken (ohne = nur zur Wahl). `settingsview.js`, `nutrition.js`, `pcsettings.js`.
+- Spalten des Tagesverlaufs richten sich nach rechts aus und ragen nicht mehr über den Rand (Koffein war abgeschnitten).
+
+## Version 1.108.0 (23.11.2026): Training → Pläne als Kalender (wie PC 1.0.182)
+
+- Training → Pläne: Umschalter „Liste | Kalender“. Der Kalender zeigt alle Termine der Pläne im Monat (Kreis =
+  geplant, Punkt = erfasste Einheit). Tag antippen → Termine; Termin antippen → Tag, Uhrzeit, Dauer ändern,
+  löschen oder heute starten; bei Wochenterminen „nur dieser Termin“ oder „jeden Wochentag“. „+ Training planen“
+  legt einen Kalendertermin an. Neue Datei `plancalendar.js` (in sw.js), `trainingplans.js`, `trainingactions.js`, `app.css`.
+
+## Version 1.109.0 (23.11.2026): Orange Punkte für offene Einträge (wie PC 1.0.183)
+
+- Menü und untere Leiste: Ein oranger Punkt unten rechts zeigt Bereiche, in denen heute noch etwas offen ist
+  (Körperwerte, Schlaf, HRV/Ruhepuls, Recovery, Ernährung, Schritte, geplantes Training, To-dos, fällige
+  Hormongabe). Antippen führt direkt zum Eintragen (Body → „Werte erfassen“, Training → „Pläne“ bzw. „NEAT“);
+  der passende Reiter trägt ebenfalls einen Punkt. „Mehr“ zeigt einen Punkt, wenn ein Bereich außerhalb der
+  Leiste offen ist. Der Punkt verschwindet, sobald alles erledigt ist. Regeln aus `pcdomain.js` (`openItems`),
+  neue Datei `openitems.js` (in sw.js), `nav.js`, `navshell.js`, `body.js`, `training.js`, `app.css`.
+- Checklisten → „Heute noch einzutragen“: auch die geplanten Trainings des Tages (Haken, sobald eine Einheit
+  erfasst ist). `todos.js`.

@@ -22,6 +22,7 @@ import { activeGymSelectHtml, viewGymsTab } from "./gymsui.js";
 import * as GD from "./gymsdata.js";
 import { icon } from "./nav.js";
 import { plansTab } from "./trainingplans.js";
+import { dotHtml, openTabsOf } from "./openitems.js";
 export { planPickerResults } from "./trainingplans.js";
 export { trainingActions, trainingChange, trainingInput } from "./trainingactions.js";
 
@@ -121,12 +122,15 @@ export function viewTrainingSection() {
   return `${X.header("Training")}<main class="wrap">
     ${(() => {
       const [gid, glabel, subs] = groupOfTab(tab);
+      // Orange Punkte (1.109.0): Gruppe bzw. Unterreiter mit offenen Punkten für heute
+      const marks = openTabsOf("training");
+      const groupMarked = (g) => TRAINING_GROUPS.find(([x]) => x === g)?.[2].some(([v]) => marks.has(v));
       return `<nav class="tabs" aria-label="Training">${TRAINING_GROUPS.map(
-        ([g, l]) => `<button class="tab ${g === gid ? "active" : ""}" data-act="train-group" data-arg="${g}" ${g === gid ? 'aria-current="page"' : ""}>${esc(l)}</button>`,
+        ([g, l]) => `<button class="tab ${g === gid ? "active" : ""}" data-act="train-group" data-arg="${g}" ${g === gid ? 'aria-current="page"' : ""}>${esc(l)}${groupMarked(g) ? dotHtml() : ""}</button>`,
       ).join("")}</nav>${
         subs.length > 1
           ? `<div class="subtabs-row"><div class="segmented subtabs" role="radiogroup" aria-label="${esc(glabel)}">${subs
-              .map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === tab}" class="${v === tab ? "is-active" : ""}" data-act="train-tab" data-arg="${v}">${esc(l)}</button>`)
+              .map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === tab}" class="${v === tab ? "is-active" : ""}" data-act="train-tab" data-arg="${v}">${esc(l)}${marks.has(v) ? dotHtml() : ""}</button>`)
               .join("")}</div>${subAside(tab)}</div>`
           : ""
       }`;

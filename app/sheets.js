@@ -110,7 +110,9 @@ export function foldTabs() {
   }
   if (groups.length) {
     const first = groups[0];
-    S.subMenu = { key: "page", label: first.jump ? "Abschnitte" : first.active?.textContent.trim() || first.title, open: Boolean(S.tabsOpen?.page) };
+    // Oranger Punkt am Knopf (1.109.0), wenn ein Reiter darin offene Punkte für heute hat
+    const mark = groups.some((g) => g.items.some((b) => b.querySelector(".tab__dot")));
+    S.subMenu = { key: "page", label: first.jump ? "Abschnitte" : first.active?.textContent.trim() || first.title, open: Boolean(S.tabsOpen?.page), mark };
   }
   if (S.tabsOpen?.page && !shown && groups.length) {
     shown = true;

@@ -30737,7 +30737,31 @@ var APP_FAQ = [
     device: "beide",
     question: "Wie sehe und verschiebe ich geplante Trainings im Kalender?",
     answer: "Unter Training \u2192 Pl\xE4ne oben auf \u201EKalender\u201C umschalten: Alle Termine deiner Pl\xE4ne stehen im Monat, erfasste Einheiten mit H\xE4kchen. Einen Termin anklicken (Handy: Tag und dann Termin antippen) und Tag, Uhrzeit oder Dauer \xE4ndern, l\xF6schen oder heute starten \u2013 bei Wochenterminen nur diesen Termin oder jede Woche. Mit \u201E+\u201C an einem Tag (Handy: \u201E+ Training planen\u201C) legst du einen neuen Termin an.",
-    keywords: ["kalender", "plan", "termin", "verschieben", "geplant", "trainingsplan", "wochentag"]
+    keywords: [
+      "kalender",
+      "plan",
+      "termin",
+      "verschieben",
+      "geplant",
+      "trainingsplan",
+      "wochentag"
+    ]
+  },
+  {
+    id: "orange-punkte",
+    area: "Erste Schritte",
+    device: "beide",
+    question: "Was bedeuten die orangen Punkte in der Navigation?",
+    answer: "Ein oranger Punkt unten rechts an einem Bereich zeigt, dass dort f\xFCr heute noch etwas offen ist \u2013 etwa K\xF6rperwerte am Morgen, Schlaf, HRV, Ern\xE4hrung, ein geplantes Training, ein To-do oder eine f\xE4llige Hormongabe. Ein Klick auf den Bereich f\xFChrt direkt zur Stelle zum Eintragen; dort tr\xE4gt auch der passende Reiter (z. B. \u201EErfassen\u201C) einen Punkt. Der Punkt verschwindet, sobald alles Offene des Bereichs erledigt ist. Geplante Trainings stehen au\xDFerdem unter Checklisten im Tages\xFCberblick.",
+    keywords: [
+      "punkt",
+      "orange",
+      "offen",
+      "markierung",
+      "benachrichtigung",
+      "erinnerung",
+      "navigation"
+    ]
   },
   {
     id: "workout-mahlzeiten",
@@ -31271,6 +31295,62 @@ function searchFaq2(query, items = APP_FAQ, limit = 10) {
   }
   return hits.sort((a, b) => b.score - a.score).slice(0, limit);
 }
+
+// src/domain/openItems.ts
+var openItems_exports = {};
+__export(openItems_exports, {
+  itemsOf: () => itemsOf,
+  markTitle: () => markTitle,
+  openItems: () => openItems,
+  openTabs: () => openTabs
+});
+function openItems(input) {
+  const out = [];
+  const weightOpen = input.status.some((r2) => r2.key === "weight" && !r2.done && !r2.optional);
+  if (input.dueValues > 0 || weightOpen) {
+    out.push({
+      key: "body-values",
+      label: input.dueValues > 1 ? `${input.dueValues} K\xF6rperwerte eintragen` : weightOpen && input.dueValues <= 1 ? "Gewicht eintragen" : "K\xF6rperwert eintragen",
+      section: "body",
+      tab: "entry"
+    });
+  }
+  for (const r2 of input.status) {
+    if (r2.done || r2.optional || r2.key === "weight") continue;
+    out.push({
+      key: `status-${r2.key}`,
+      label: `${r2.label} eintragen`,
+      section: r2.section,
+      ...r2.tab ? { tab: r2.tab } : {},
+      ...r2.anchor ? { anchor: r2.anchor } : {}
+    });
+  }
+  for (const p of input.planned.slice(input.workoutsToday)) {
+    const label = `Training \u201E${p.title}\u201C${p.time ? ` um ${p.time} Uhr` : ""}`;
+    out.push({ key: `plan-${p.key}`, label, section: "checklists" });
+    out.push({ key: `train-${p.key}`, label, section: "training", tab: "plans" });
+  }
+  for (const t of input.todos) {
+    out.push({ key: `todo-${t.id}`, label: `To-do: ${t.text}`, section: "checklists" });
+  }
+  for (const name of input.hrtDue) {
+    out.push({ key: `hrt-${name}`, label: `Hormongabe f\xE4llig: ${name}`, section: "checklists" });
+  }
+  return out;
+}
+function itemsOf(items, section) {
+  return items.filter((i) => i.section === section);
+}
+function openTabs(items, section) {
+  return new Set(
+    items.filter((i) => i.section === section && i.tab).map((i) => i.tab)
+  );
+}
+function markTitle(items) {
+  if (items.length === 0) return "";
+  const list2 = items.map((i) => i.label);
+  return `${items.length} offen: ${list2.slice(0, 4).join(", ")}${list2.length > 4 ? " \u2026" : ""}`;
+}
 export {
   AKH_REFERENCES,
   ANS_INFO,
@@ -31456,6 +31536,7 @@ export {
   nutritionExport_exports as nutritionExport,
   nutritionExportPdf_exports as nutritionExportPdf,
   onboarding_exports as onboarding,
+  openItems_exports as openItems,
   optionalOf,
   parseChecklistText,
   parseCsv,

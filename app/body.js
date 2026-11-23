@@ -9,6 +9,7 @@ import { notice as trainNotice } from "./training.js";
 import { viewCheckinsTab } from "./trainingdb.js";
 import { longevityTabHtml } from "./longevityview.js";
 import { protocolsTabHtml } from "./protocolsview.js";
+import { dotHtml, openTabsOf } from "./openitems.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -158,9 +159,10 @@ export const BODY_TABS = [
 ];
 const BODY_TAB_IDS = new Set(BODY_TABS.map(([v]) => v));
 
-const bodyTabsHtml = (tab) =>
+// Oranger Punkt am Reiter mit offenen Punkten für heute (1.109.0, z. B. „Erfassen“ am Morgen)
+const bodyTabsHtml = (tab, marks = openTabsOf("body")) =>
   `<nav class="tabs" aria-label="Body &amp; Longevity">${BODY_TABS.map(
-    ([v, l]) => `<button class="tab ${v === tab ? "active" : ""}" data-act="body-tab" data-arg="${v}" ${v === tab ? 'aria-current="page"' : ""}>${esc(l)}</button>`,
+    ([v, l]) => `<button class="tab ${v === tab ? "active" : ""}" data-act="body-tab" data-arg="${v}" ${v === tab ? 'aria-current="page"' : ""}>${esc(l)}${marks.has(v) ? dotHtml() : ""}</button>`,
   ).join("")}</nav>`;
 
 export function viewBody() {

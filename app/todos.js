@@ -13,6 +13,7 @@ import * as P from "./pcdb.js";
 import * as D from "./pcdomain.js";
 import * as CD from "./checklistdata.js";
 import * as SD from "./superdata.js";
+import * as TR from "./trainingdata.js";
 import { buildDb, today } from "./diary.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
@@ -57,7 +58,20 @@ function dayStatusCard(date) {
   const S = X.S;
   const db = buildDb();
   const o = O.overviewFor(db, date);
-  const st = D.dayStatus(o, P.intakesOn(db, date).length);
+  const base = D.dayStatus(o, P.intakesOn(db, date).length);
+  // Geplante Trainings des Tages (1.109.0, wie PC 1.0.183): erledigt, sobald Einheiten erfasst sind
+  let planned = [];
+  try {
+    const WT = D.workoutTimeline;
+    const plans = TR.plansOf(S.catalogRaw, S.train, S.catalog?.exercises ?? []);
+    const skips = WT.parseSkips(db.settings?.get?.(WT.TRAINING_SKIPS_SETTING) ?? null);
+    const n = P.workoutsBetween(db, date, date).length;
+    planned = WT.plannedEntries(plans, date, date, { skips }).map((e, i) => ({ ...e, done: i < n }));
+  } catch {
+    planned = [];
+  }
+  const pOpen = planned.filter((p) => !p.done).length;
+  const st = { ...base, done: base.done + planned.length - pOpen, open: base.open + pOpen };
   const isToday = date === today();
   return `<section class="card"><div class="wo-head"><h3>${isToday ? "Heute noch einzutragen" : `Einträge am ${esc(D.formatDate(date))}`}</h3>
       <span class="tag">${st.open === 0 ? "Alles eingetragen" : `${st.done} von ${st.done + st.open} eingetragen`}</span></div>
@@ -66,6 +80,12 @@ function dayStatusCard(date) {
         (r) => `<li class="${r.done ? "is-done" : ""}"><span class="status-icon ${r.done ? "" : "status-icon--open"}" aria-label="${r.done ? "eingetragen" : "offen"}">${r.done ? "✓" : ""}</span>
         <span><button class="linkbtn" data-act="menu-go" data-arg="${SECTION_OF[r.section] ?? "overview"}">${esc(r.label)}</button>${r.optional ? ` <span class="muted small">(optional)</span>` : ""}
         <span class="muted small">${r.value ? esc(r.value) : esc(r.where)}</span></span></li>`,
+      )
+      .join("")}${planned
+      .map(
+        (p) => `<li class="${p.done ? "is-done" : ""}"><span class="status-icon ${p.done ? "" : "status-icon--open"}" aria-label="${p.done ? "erledigt" : "offen"}">${p.done ? "✓" : ""}</span>
+        <span><button class="linkbtn" data-act="menu-go" data-arg="training" data-tab="plans">Training „${esc(p.dayName)}“</button>
+        <span class="muted small">${p.done ? `Einheit erfasst${p.time ? ` (geplant ${esc(p.time)} Uhr)` : ""}` : `${p.time ? `Geplant um ${esc(p.time)} Uhr` : "Geplant"} · ${esc(p.planName)}`}</span></span></li>`,
       )
       .join("")}</ul>
     ${S.todoDate && !isToday ? "" : ""}</section>`;

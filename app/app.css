@@ -2242,3 +2242,14 @@ html[data-theme="dark"] .mtl-mark--water { background: #12324a; }
 .pcal-form input[type="number"] { width: 80px; }
 .pcal-scope { display: grid; gap: 6px; font-size: .88rem; }
 .pcal-done { font-size: .85rem; color: var(--muted); }
+
+/* Offene Punkte für heute (1.109.0, wie PC 1.0.183): oranger Punkt unten rechts am Bereich bzw. Reiter */
+.drawer__item, .tabbar__item, .tab, .segmented > button { position: relative; }
+.nav__dot, .tab__dot { position: absolute; display: block; border-radius: 50%; background: var(--orange); pointer-events: none; }
+.drawer__item .nav__dot { right: 6px; bottom: 6px; width: 9px; height: 9px; }
+.tabbar__item .nav__dot { left: calc(50% + 10px); top: 22px; width: 9px; height: 9px; }
+body.bar-icons .tabbar__item .nav__dot { top: auto; bottom: 10px; }
+.tab__dot { right: 3px; bottom: 3px; width: 7px; height: 7px; }
+.tabbar--inline .tabbar__sub { position: relative; }
+.tabbar__sub .nav__dot { right: -3px; bottom: -3px; width: 13px; height: 13px; box-shadow: 0 0 0 2px var(--navy, #0b2a4a); }
+.bsheet__grid .tab__dot { right: 10px; bottom: 10px; width: 9px; height: 9px; }

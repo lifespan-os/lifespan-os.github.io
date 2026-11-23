@@ -2183,6 +2183,26 @@ a.btn { color: var(--fg); text-decoration: none; }
 html[data-theme="dark"] .mtl-mark--caffeine { background: #3a2a1c; }
 html[data-theme="dark"] .mtl-mark--water { background: #12324a; }
 .mtl-ask { display: grid; gap: 6px; padding: 12px; border: 1px solid var(--danger); border-radius: 14px; background: var(--surface); }
+/* Trainings im Tagesverlauf (1.107.0): hellgrauer Balken über alle Spalten, Hinweise */
+.mtl-train { position: absolute; right: 0; z-index: 0; border-radius: 8px; background: color-mix(in srgb, var(--fg) 9%, transparent); border-left: 3px solid color-mix(in srgb, var(--fg) 28%, transparent); box-sizing: border-box; }
+.mtl-train--planned { background: color-mix(in srgb, var(--fg) 5%, transparent); border-left-style: dashed; }
+.mtl-train.is-editing { z-index: 2; background: color-mix(in srgb, var(--blue) 16%, transparent); border: 2px dashed var(--blue); touch-action: none; cursor: grab; }
+.mtl-train-size { position: absolute; left: 0; right: 0; bottom: -8px; height: 16px; touch-action: none; }
+.mtl-train-size::after { content: ""; position: absolute; left: 50%; bottom: 5px; width: 40px; height: 5px; margin-left: -20px; border-radius: 3px; background: var(--blue); }
+.mtl-train-label { position: absolute; z-index: 0; max-width: calc(100% - 60px); height: 18px; padding: 0 4px; box-sizing: border-box; overflow: hidden; border-radius: 6px; font-size: .68rem; font-weight: 700; line-height: 18px; white-space: nowrap; text-overflow: ellipsis; color: var(--muted); }
+.mtl-train-label.is-over { z-index: 2; background: var(--surface-2); border: 1px solid var(--line); line-height: 16px; }
+.mtl-train-warn { color: var(--orange-text); }
+.mtl-panel--train { z-index: 5; }
+.mtl-panel--train .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mtl-panel--train .field { display: grid; gap: 2px; }
+.mtl-panel--train input[type="number"] { width: 80px; }
+.mtl-train-scope { display: flex; flex-wrap: wrap; gap: 12px; font-size: .85rem; }
+.mtl-train-shift { display: flex; align-items: flex-start; gap: 8px; font-size: .85rem; }
+.mtl-train-shift input { flex: none; margin-top: 2px; }
+.mtl-hints { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.mtl-hint { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4px 8px; padding: 8px 10px; border-left: 3px solid var(--orange); border-radius: 10px; background: color-mix(in srgb, var(--orange) 12%, var(--surface)); }
+.mtl-hint > span:first-child { color: var(--orange-text); }
+.mtl-hint .btn { grid-column: 2; justify-self: start; }
 
 /* Training → Einheiten als Kalender (1.103.0) */
 .tcal { display: grid; gap: 8px; }

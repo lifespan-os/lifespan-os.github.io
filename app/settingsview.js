@@ -6,6 +6,7 @@
 // - Konten am Handy (anlegen, umbenennen, wechseln, löschen) stehen in app.js (`accountsCard`).
 // Tagesziele haben eine eigene Ansicht (goalsui.js); Wochen- und Hauptziele: goalsparity.js (1.91.0).
 
+import * as N from "./nutrition.js";
 import * as PS from "./pcsettings.js";
 import * as C from "./core.js";
 import { cardioSettingsCard } from "./parity.js";
@@ -45,8 +46,18 @@ function currentMeals(db) {
     const n = setting(db, PS.MEAL_NAME_PREFIX + s);
     if (n) names[s] = n;
   }
-  return { names, hidden: list(setting(db, "meal_hidden")).filter((h) => PS.DEFAULT_MEALS.includes(h)), extras: list(setting(db, "meal_extra")) };
+  // wie am PC: eigene Mahlzeit „Pre-Workout“ o. Ä. ist eine Workout-Mahlzeit (1.107.0)
+  const cfg = N.setMealConfig(db.settings);
+  return {
+    names,
+    hidden: list(setting(db, "meal_hidden")).filter((h) => PS.DEFAULT_MEALS.includes(h)),
+    extras: [...cfg.extras],
+    extraShow: cfg.extras.map((x) => !cfg.extraHidden.includes(x)),
+    workout: [...cfg.workout],
+  };
 }
+const mealForm = (cur) => ({ names: { ...cur.names }, hidden: [...cur.hidden], extras: [...cur.extras], extraShow: [...cur.extraShow], workout: [...cur.workout], errors: null });
+const shownCount = (f) => PS.DEFAULT_MEALS.length - f.hidden.length + f.extraShow.filter(Boolean).length + f.workout.length;
 
 /** Einstellung ändern und speichern (mit dem PC abgeglichen). */
 async function putSetting(key, value) {
@@ -113,30 +124,37 @@ function profileCard(db) {
 function mealsCard(db) {
   const S = X.S;
   const cur = currentMeals(db);
-  const f = S.setMeals ?? { names: { ...cur.names }, hidden: [...cur.hidden], extras: [...cur.extras], errors: null };
+  const f = S.setMeals ?? mealForm(cur);
   const e = f.errors;
-  const active = PS.DEFAULT_MEALS.length - f.hidden.length + f.extras.length;
+  const active = shownCount(f);
   const rows = PS.DEFAULT_MEALS.map(
     (s) => `<li class="set-meal">
       <label class="toggle"><input type="checkbox" data-meal-show="${s}" ${f.hidden.includes(s) ? "" : "checked"}> <span class="sr-only">In der Liste</span></label>
       <div class="field"><label for="meal-${s}" class="small muted">${esc(PS.MEAL_LABELS[s])}</label><input id="meal-${s}" data-meal-name="${s}" type="text" maxlength="60" placeholder="${esc(PS.MEAL_LABELS[s])}" value="${esc(f.names[s] ?? "")}" ${e?.[s] ? 'aria-invalid="true"' : ""}>${errOf(e, s)}</div>
     </li>`,
   ).join("");
+  const workout = N.WORKOUT_MEALS.map(
+    (w) => `<li class="set-meal">
+      <label class="toggle"><input type="checkbox" data-meal-wshow="${esc(w)}" ${f.workout.includes(w) ? "checked" : ""}> <span class="sr-only">Im Tagebuch anzeigen</span></label>
+      <div class="field"><span class="small muted">Workout-Mahlzeit · immer zur Wahl</span><b>${esc(w)}</b></div>
+    </li>`,
+  ).join("");
   const extras = f.extras
     .map(
       (n, i) => `<li class="set-meal">
-      <button class="btn sm ghost danger" data-act="meal-extra-del" data-arg="${i}" aria-label="Mahlzeit entfernen">✕</button>
+      <label class="toggle"><input type="checkbox" data-meal-xshow="${i}" ${f.extraShow[i] === false ? "" : "checked"}> <span class="sr-only">Im Tagebuch anzeigen</span></label>
       <div class="field"><label for="meal-x${i}" class="small muted">Eigene Mahlzeit ${i + 1}</label><input id="meal-x${i}" data-meal-extra="${i}" type="text" maxlength="60" value="${esc(n)}" ${e?.[`extras.${i}`] ? 'aria-invalid="true"' : ""}>${errOf(e, `extras.${i}`)}</div>
+      <button class="btn sm ghost danger" data-act="meal-extra-del" data-arg="${i}" aria-label="Mahlzeit entfernen">✕</button>
     </li>`,
     )
     .join("");
   return `<section class="card" id="set-meals">
     <div class="wo-head"><h3>Mahlzeiten</h3><span class="tag">${active} von ${PS.MAX_MEALS}</span></div>
-    <p class="muted small card-info">Haken = erscheint im Tagebuch. Standardmahlzeiten umbenennen (leer = Standardname), eigene Mahlzeiten hinten anhängen. Gilt nur für künftige Einträge: vorhandene behalten ihren Namen.</p>
-    <ul class="set-list">${rows}${extras}</ul>
+    <p class="muted small card-info">Haken = erscheint jeden Tag im Tagebuch; ohne Haken steht eine eigene oder Workout-Mahlzeit nur zur Wahl (z. B. im Tagesverlauf). Standardmahlzeiten umbenennen (leer = Standardname), eigene Mahlzeiten hinten anhängen. Gilt nur für künftige Einträge.</p>
+    <ul class="set-list">${rows}${extras}${workout}</ul>
     ${errOf(e, "hidden")}${errOf(e, "extras")}
     <div class="row-actions">
-      <button class="btn sm" data-act="meal-extra-add" ${active >= PS.MAX_MEALS ? "disabled" : ""}>+ Eigene Mahlzeit</button>
+      <button class="btn sm" data-act="meal-extra-add" ${f.extras.length >= 2 * PS.MAX_MEALS ? "disabled" : ""}>+ Eigene Mahlzeit</button>
       ${S.setMeals ? `<button class="btn sm ghost" data-act="meal-discard">Verwerfen</button>` : ""}
     </div>
     <button class="btn primary block" data-act="meal-save">Mahlzeiten speichern</button>
@@ -342,8 +360,13 @@ function readProfile() {
 function readMeals() {
   const S = X.S;
   const cur = currentMeals(buildDb());
-  const f = S.setMeals ?? { names: { ...cur.names }, hidden: [...cur.hidden], extras: [...cur.extras], errors: null };
+  const f = S.setMeals ?? mealForm(cur);
   for (const el of document.querySelectorAll("[data-meal-name]")) f.names[el.dataset.mealName] = el.value;
+  for (const el of document.querySelectorAll("[data-meal-xshow]")) f.extraShow[Number(el.dataset.mealXshow)] = el.checked;
+  for (const el of document.querySelectorAll("[data-meal-wshow]")) {
+    const w = el.dataset.mealWshow;
+    f.workout = el.checked ? [...new Set([...f.workout, w])] : f.workout.filter((x) => x !== w);
+  }
   for (const el of document.querySelectorAll("[data-meal-show]")) {
     const s = el.dataset.mealShow;
     f.hidden = el.checked ? f.hidden.filter((h) => h !== s) : [...new Set([...f.hidden, s])];
@@ -428,12 +451,14 @@ export const settingsActions = {
   "meal-extra-add": () => {
     const f = readMeals();
     f.extras.push("");
+    f.extraShow.push(shownCount(f) < PS.MAX_MEALS);
     X.rerender();
     setTimeout(() => document.getElementById(`meal-x${f.extras.length - 1}`)?.focus(), 0);
   },
   "meal-extra-del": (el) => {
     const f = readMeals();
     f.extras.splice(Number(el.dataset.arg), 1);
+    f.extraShow.splice(Number(el.dataset.arg), 1);
     f.errors = null;
     X.rerender();
   },

@@ -723,10 +723,14 @@ __export(labels_exports, {
   METRIC_CATEGORIES: () => METRIC_CATEGORIES,
   defaultMealTypeLabel: () => defaultMealTypeLabel,
   exerciseCategoryLabel: () => exerciseCategoryLabel,
+  getChoiceOnlyMealNames: () => getChoiceOnlyMealNames,
+  getDiaryExtraNames: () => getDiaryExtraNames,
+  getExtraHiddenNames: () => getExtraHiddenNames,
   getExtraMealNames: () => getExtraMealNames,
   getHiddenMealTypes: () => getHiddenMealTypes,
   getMealListVersion: () => getMealListVersion,
   getMealNames: () => getMealNames,
+  getWorkoutMealsShown: () => getWorkoutMealsShown,
   lifestyleCategoryLabel: () => lifestyleCategoryLabel,
   mealTypeLabel: () => mealTypeLabel,
   mealTypeOptions: () => mealTypeOptions,
@@ -735,6 +739,395 @@ __export(labels_exports, {
   setMealNames: () => setMealNames,
   subscribeMealNames: () => subscribeMealNames
 });
+
+// src/domain/workoutTimeline.ts
+var workoutTimeline_exports = {};
+__export(workoutTimeline_exports, {
+  DEFAULT_PLANNED_MIN: () => DEFAULT_PLANNED_MIN,
+  POST_CARBS_G: () => POST_CARBS_G,
+  POST_PROTEIN_G: () => POST_PROTEIN_G,
+  POST_WINDOW: () => POST_WINDOW,
+  PRE_LIGHT: () => PRE_LIGHT,
+  PRE_MEAL: () => PRE_MEAL,
+  PRE_MEAL_KCAL: () => PRE_MEAL_KCAL,
+  TRAINING_DURATIONS_SETTING: () => TRAINING_DURATIONS_SETTING,
+  TRAINING_SKIPS_SETTING: () => TRAINING_SKIPS_SETTING,
+  WORKOUT_MEALS: () => WORKOUT_MEALS,
+  addSkip: () => addSkip,
+  changedSlots: () => changedSlots,
+  isIntensePlanDay: () => isIntensePlanDay,
+  isIntenseWorkout: () => isIntenseWorkout,
+  linkedEntries: () => linkedEntries,
+  parseDurations: () => parseDurations,
+  parseSkips: () => parseSkips,
+  planWithSlots: () => planWithSlots,
+  plannedBars: () => plannedBars,
+  plannedDuration: () => plannedDuration,
+  postFuel: () => postFuel,
+  preFueled: () => preFueled,
+  setDuration: () => setDuration,
+  skipKey: () => skipKey,
+  trackedBars: () => trackedBars,
+  trainingHints: () => trainingHints,
+  workoutMealAt: () => workoutMealAt,
+  workoutMealName: () => workoutMealName,
+  workoutRole: () => workoutRole
+});
+
+// src/domain/planSchedule.ts
+var planSchedule_exports = {};
+__export(planSchedule_exports, {
+  WEEKDAY_LABELS: () => WEEKDAY_LABELS,
+  WEEKDAY_SHORT: () => WEEKDAY_SHORT,
+  describeScheduled: () => describeScheduled,
+  describeSlot: () => describeSlot,
+  isoWeekday: () => isoWeekday,
+  nextOccurrence: () => nextOccurrence
+});
+var WEEKDAY_LABELS = {
+  1: "Montag",
+  2: "Dienstag",
+  3: "Mittwoch",
+  4: "Donnerstag",
+  5: "Freitag",
+  6: "Samstag",
+  7: "Sonntag"
+};
+var WEEKDAY_SHORT = {
+  1: "Mo",
+  2: "Di",
+  3: "Mi",
+  4: "Do",
+  5: "Fr",
+  6: "Sa",
+  7: "So"
+};
+var pad = (n2) => String(n2).padStart(2, "0");
+function isoWeekday(iso2) {
+  const [y, m, d] = iso2.split("-").map(Number);
+  const day = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1)).getUTCDay();
+  return day === 0 ? 7 : day;
+}
+function germanDate(iso2) {
+  const [y, m, d] = iso2.split("-");
+  return `${d}.${m}.${y}`;
+}
+function daysBetween(a, b) {
+  const ms = (iso2) => {
+    const [y, m, d] = iso2.split("-").map(Number);
+    return Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1);
+  };
+  return Math.round((ms(b) - ms(a)) / 864e5);
+}
+function describeSlot(slot) {
+  const time = slot.time ? ` um ${slot.time} Uhr` : "";
+  if (slot.weekday !== null) return `jeden ${WEEKDAY_LABELS[slot.weekday] ?? "?"}${time}`;
+  if (slot.date)
+    return `am ${WEEKDAY_SHORT[isoWeekday(slot.date)]}, ${germanDate(slot.date)}${time}`;
+  return "";
+}
+function describeScheduled(date, time, today) {
+  const diff = daysBetween(today, date);
+  const day = diff === 0 ? "heute" : diff === 1 ? "morgen" : `${WEEKDAY_LABELS[isoWeekday(date)]}, ${germanDate(date)}`;
+  return `${day}${time ? ` um ${time} Uhr` : ""}`;
+}
+function nextOccurrence(slot, today) {
+  if (slot.weekday !== null) {
+    const add = (slot.weekday - isoWeekday(today) + 7) % 7;
+    const [y, m, d] = today.split("-").map(Number);
+    const t = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + add));
+    return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`;
+  }
+  if (slot.date && slot.date >= today) return slot.date;
+  return null;
+}
+
+// src/domain/workoutTimeline.ts
+var DAY = 24 * 60;
+var WORKOUT_MEALS = ["Pre-Workout", "Intra-Workout", "Post-Workout"];
+var ROLE_OF = {
+  "Pre-Workout": "pre",
+  "Intra-Workout": "intra",
+  "Post-Workout": "post"
+};
+var norm = (s) => s.toLowerCase().replace(/[\s_-]+/g, "");
+function workoutMealName(name) {
+  if (!name) return null;
+  const n2 = norm(name);
+  return WORKOUT_MEALS.find((w) => norm(w) === n2) ?? null;
+}
+function workoutRole(name) {
+  const w = workoutMealName(name);
+  return w ? ROLE_OF[w] : null;
+}
+var TRAINING_SKIPS_SETTING = "ui.training_skips";
+var TRAINING_DURATIONS_SETTING = "ui.training_durations";
+var DEFAULT_PLANNED_MIN = 60;
+function skipKey(dayId, slot, date) {
+  return `${dayId}|${slot.weekday ?? slot.date ?? ""}|${slot.time ?? ""}|${date}`;
+}
+function parseSkips(raw) {
+  try {
+    const v = JSON.parse(raw ?? "[]");
+    return Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+function addSkip(list2, key, keepFrom) {
+  const out = list2.filter((k) => (k.split("|")[3] ?? "") >= keepFrom && k !== key);
+  out.push(key);
+  return out;
+}
+function parseDurations(raw) {
+  try {
+    const v = JSON.parse(raw ?? "{}");
+    if (!v || typeof v !== "object" || Array.isArray(v)) return {};
+    const out = {};
+    for (const [k, n2] of Object.entries(v)) {
+      if (typeof n2 === "number" && n2 >= 5 && n2 <= 600) out[k] = Math.round(n2);
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+function plannedDuration(map, dayId, date) {
+  return map[`${dayId}@${date}`] ?? map[dayId] ?? DEFAULT_PLANNED_MIN;
+}
+function setDuration(map, dayId, minutes, date, keepFrom) {
+  const out = {};
+  for (const [k, v] of Object.entries(map)) {
+    const at = k.split("@")[1];
+    if (at === void 0 || at >= keepFrom) out[k] = v;
+  }
+  out[date ? `${dayId}@${date}` : dayId] = Math.max(5, Math.min(600, Math.round(minutes)));
+  return out;
+}
+var TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
+var minuteOf = (t) => {
+  const m = TIME.exec((t ?? "").trim());
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+};
+var axis = (m, dayStart) => m < dayStart ? m + DAY : m;
+function localMinute(iso2) {
+  if (!iso2) return null;
+  const d = new Date(iso2);
+  return Number.isNaN(d.getTime()) ? null : d.getHours() * 60 + d.getMinutes();
+}
+var INTENSE_WORDS = /hiit|intervall|interval|sprint|tempo|schwelle|threshold|hyrox|vo2|crossfit/i;
+function isIntenseWorkout(w) {
+  if ((w.exercises ?? []).some((e) => e.exerciseCategory === "strength")) return true;
+  if ((w.perceivedExertion ?? 0) >= 7) return true;
+  return INTENSE_WORDS.test(w.title);
+}
+function isIntensePlanDay(day) {
+  if (day.exercises.some((e) => e.exerciseCategory === "strength")) return true;
+  if (day.exercises.length === 0) return !/cardio|lauf|rad|zone ?2|spazier|locker/i.test(day.name);
+  return INTENSE_WORDS.test(day.name);
+}
+function trackedBars(workouts, dayStart, nowMinute) {
+  const out = [];
+  for (const w of workouts) {
+    const startRaw = localMinute(w.startedAt) ?? minuteOf(w.startTime);
+    if (startRaw === null) continue;
+    const from = axis(startRaw, dayStart);
+    const running = w.status === "active";
+    let to;
+    const endRaw = localMinute(w.finishedAt);
+    if (running) to = nowMinute !== null ? Math.max(from + 5, nowMinute) : from + 60;
+    else if (endRaw !== null) {
+      to = axis(endRaw, dayStart);
+      if (to < from) to += DAY;
+    } else to = from + (w.durationMin && w.durationMin > 0 ? w.durationMin : DEFAULT_PLANNED_MIN);
+    if (to - from < 5) to = from + 5;
+    out.push({
+      key: `w:${w.id}`,
+      kind: "tracked",
+      title: w.title,
+      from,
+      to: Math.min(to, dayStart + DAY - 1),
+      running,
+      intense: isIntenseWorkout(w),
+      workoutId: w.id
+    });
+  }
+  return out;
+}
+function plannedBars(plans, date, dayStart, {
+  skips = [],
+  durations = {},
+  doneDayIds = [],
+  off = false
+} = {}) {
+  if (off) return [];
+  const out = [];
+  const wd = isoWeekday(date);
+  for (const plan of plans) {
+    if (plan.archived) continue;
+    for (const day of plan.days) {
+      if (doneDayIds.includes(day.id)) continue;
+      (day.slots ?? []).forEach((slot, slotIndex) => {
+        const hit = slot.weekday !== null ? slot.weekday === wd : slot.date === date;
+        const start = minuteOf(slot.time);
+        if (!hit || start === null) return;
+        if (skips.includes(skipKey(day.id, slot, date))) return;
+        const from = axis(start, dayStart);
+        const to = Math.min(from + plannedDuration(durations, day.id, date), dayStart + DAY - 1);
+        out.push({
+          key: `p:${plan.id}:${day.id}:${slotIndex}`,
+          kind: "planned",
+          title: day.name,
+          from,
+          to,
+          running: false,
+          intense: isIntensePlanDay(day),
+          plan: { planId: plan.id, dayId: day.id, slotIndex, slot }
+        });
+      });
+    }
+  }
+  return out.sort((a, b) => a.from - b.from);
+}
+var PRE_LIGHT = [30, 90];
+var PRE_MEAL = [60, 180];
+var PRE_MEAL_KCAL = 300;
+var POST_WINDOW = 120;
+var POST_CARBS_G = 40;
+var POST_PROTEIN_G = 20;
+var eats = (e) => (e.kind === "meal" || e.kind === "planned") && e.kcal > 0;
+function preFueled(bar, entries) {
+  return entries.some((e) => {
+    const before = bar.from - e.minute;
+    if (e.role === "pre" && before >= 0 && before <= PRE_MEAL[1]) return true;
+    if (before < 0) return false;
+    if (before >= PRE_LIGHT[0] && before <= PRE_LIGHT[1]) {
+      if (e.kind === "caffeine" || e.kind === "supplement" || eats(e)) return true;
+    }
+    return eats(e) && e.kcal >= PRE_MEAL_KCAL && before >= PRE_MEAL[0] && before <= PRE_MEAL[1];
+  });
+}
+function postFuel(bar, entries) {
+  let meals = 0;
+  let carbsG = 0;
+  let proteinG = 0;
+  for (const e of entries) {
+    const after = e.minute - bar.to;
+    const inWindow = after >= 0 && after <= POST_WINDOW || e.role === "post" && after >= -15;
+    if (!inWindow || !eats(e)) continue;
+    meals += 1;
+    carbsG += e.carbsG;
+    proteinG += e.proteinG;
+  }
+  return { meals, carbsG, proteinG };
+}
+function trainingHints(bars, entries, nowMinute, future) {
+  const out = [];
+  for (const bar of bars) {
+    if (!bar.intense) continue;
+    const startAhead = future || nowMinute !== null && bar.from > nowMinute;
+    const endAhead = future || nowMinute !== null && bar.to > nowMinute;
+    if (!preFueled(bar, entries)) {
+      out.push({
+        barKey: bar.key,
+        type: "pre",
+        minute: bar.from - 40,
+        text: startAhead ? "Kein Pre-Workout eingetragen: 30\u201390 Minuten vorher ein Getr\xE4nk, einen Shake oder eine kleine Mahlzeit (oder 1\u20133 Stunden vorher eine Mahlzeit) anlegen." : "Vor dem Training war kein Pre-Workout eingetragen (Getr\xE4nk, Shake oder Mahlzeit 30\u201390 Minuten bzw. 1\u20133 Stunden vorher)."
+      });
+    }
+    const post = postFuel(bar, entries);
+    if (bar.running) continue;
+    if (post.meals === 0) {
+      out.push({
+        barKey: bar.key,
+        type: "post",
+        minute: bar.to + 20,
+        text: endAhead ? `Post-Workout anlegen: in den 2 Stunden danach vor allem Kohlenhydrate (ab ${POST_CARBS_G} g) und Protein (ab ${POST_PROTEIN_G} g).` : `Nach dem Training fehlt ein Post-Workout: in den 2 Stunden danach vor allem Kohlenhydrate (ab ${POST_CARBS_G} g) und Protein (ab ${POST_PROTEIN_G} g).`
+      });
+      continue;
+    }
+    const lowC = post.carbsG < POST_CARBS_G;
+    const lowP = post.proteinG < POST_PROTEIN_G;
+    if (lowC || lowP) {
+      const parts2 = [
+        lowC ? `Kohlenhydrate ${Math.round(post.carbsG)} g (Richtwert ab ${POST_CARBS_G} g)` : "",
+        lowP ? `Protein ${Math.round(post.proteinG)} g (Richtwert ab ${POST_PROTEIN_G} g)` : ""
+      ].filter(Boolean);
+      out.push({
+        barKey: bar.key,
+        type: "post",
+        minute: bar.to + 20,
+        text: `Post-Workout knapp: ${parts2.join(", ")}.`
+      });
+    }
+  }
+  return out;
+}
+function workoutMealAt(bars, minute) {
+  for (const b of bars) {
+    if (minute >= b.from && minute <= b.to) return "Intra-Workout";
+  }
+  for (const b of bars) {
+    if (minute < b.from && b.from - minute <= PRE_LIGHT[1]) return "Pre-Workout";
+    if (minute > b.to && minute - b.to <= POST_WINDOW) return "Post-Workout";
+  }
+  return null;
+}
+function linkedEntries(bar, entries) {
+  return entries.filter((e) => {
+    if (e.role === "pre") return e.minute <= bar.from && bar.from - e.minute <= 180;
+    if (e.role === "intra") return e.minute >= bar.from - 15 && e.minute <= bar.to + 15;
+    if (e.role === "post") return e.minute >= bar.to - 15 && e.minute - bar.to <= 180;
+    return false;
+  });
+}
+var NO_SETTINGS = {
+  seatHeight: null,
+  seatDepth: null,
+  chestPadHeight: null,
+  chestPadAngle: null,
+  gripWidth: null,
+  backrest: null,
+  footrest: null,
+  gripPosition: null
+};
+function planWithSlots(plan, dayId, slots) {
+  return {
+    id: plan.id,
+    name: plan.name,
+    description: plan.description,
+    icon: plan.icon ?? null,
+    gymId: plan.gymId ?? null,
+    archived: plan.archived,
+    days: plan.days.map((d) => ({
+      id: d.id,
+      name: d.name,
+      notes: d.notes,
+      slots: d.id === dayId ? slots.map((s) => ({ ...s })) : (d.slots ?? []).map((s) => ({ ...s })),
+      // übrige Felder (Name, Kategorie) ignoriert der Kern beim Speichern
+      exercises: d.exercises.map((e) => ({
+        ...e,
+        settings: e.settings ?? NO_SETTINGS,
+        sets: e.sets ?? []
+      }))
+    }))
+  };
+}
+function changedSlots(slots, index, date, time, scope) {
+  const list2 = slots.map((s) => ({ ...s }));
+  const slot = list2[index];
+  if (!slot) return { slots: list2, skip: false };
+  const weekly = slot.weekday !== null;
+  if (weekly && scope === "day") {
+    if (time !== null) list2.push({ weekday: null, date, time });
+    return { slots: list2, skip: true };
+  }
+  if (time === null) return { slots: list2.filter((_, i) => i !== index), skip: false };
+  list2[index] = { ...slot, time };
+  return { slots: list2, skip: false };
+}
+
+// src/domain/labels.ts
 var EXERCISE_CATEGORIES = [
   { value: "strength", label: "Kraft" },
   { value: "cardio", label: "Ausdauer" },
@@ -771,6 +1164,8 @@ var exerciseCategoryLabel = (v) => labelOf(EXERCISE_CATEGORIES, v);
 var customMealNames = {};
 var hiddenMealTypes = [];
 var extraMealNames = [];
+var extraHiddenNames = [];
+var workoutShown = [];
 var mealListVersion = 0;
 var listeners = /* @__PURE__ */ new Set();
 function setMealNames(names) {
@@ -780,8 +1175,33 @@ function setMealNames(names) {
 }
 function setMealList(list2) {
   hiddenMealTypes = [...list2.hidden];
-  extraMealNames = [...list2.extras];
+  const shown = /* @__PURE__ */ new Set();
+  for (const w of list2.workout ?? []) {
+    const n2 = workoutMealName(w);
+    if (n2) shown.add(n2);
+  }
+  const extras = [];
+  for (const e of list2.extras) {
+    const n2 = workoutMealName(e);
+    if (n2) shown.add(n2);
+    else if (!extras.includes(e)) extras.push(e);
+  }
+  extraMealNames = extras;
+  extraHiddenNames = (list2.extraHidden ?? []).filter((h) => extras.includes(h));
+  workoutShown = WORKOUT_MEALS.filter((w) => shown.has(w));
   setMealNames(list2.names);
+}
+function getExtraHiddenNames() {
+  return extraHiddenNames;
+}
+function getWorkoutMealsShown() {
+  return workoutShown;
+}
+function getDiaryExtraNames() {
+  return [...extraMealNames.filter((e) => !extraHiddenNames.includes(e)), ...workoutShown];
+}
+function getChoiceOnlyMealNames() {
+  return [...extraHiddenNames, ...WORKOUT_MEALS.filter((w) => !workoutShown.includes(w))];
 }
 function getMealListVersion() {
   return mealListVersion;
@@ -1639,8 +2059,8 @@ function machineCardioKind(m) {
   return "other";
 }
 function sameCardioDevice(a, b) {
-  const norm3 = (k) => k === "walk" ? "run" : k;
-  return norm3(a) === norm3(b);
+  const norm4 = (k) => k === "walk" ? "run" : k;
+  return norm4(a) === norm4(b);
 }
 
 // src/domain/workoutDraft.ts
@@ -2564,9 +2984,9 @@ function formatPercent(percent) {
 var DAY_START_KEY = "lifespan.dayStart";
 var DEFAULT_DAY_START = "00:00";
 var LATEST_DAY_START = "12:00";
-var TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
+var TIME2 = /^([01]\d|2[0-3]):([0-5]\d)$/;
 function minutesOf(time) {
-  const m = TIME.exec(time.trim());
+  const m = TIME2.exec(time.trim());
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 }
 function validDayStart(time) {
@@ -2599,7 +3019,7 @@ function daySlots(day) {
     ref: { id: m.id, date: m.date, mealType: m.mealType },
     title: mealDisplayName(m)
   });
-  const extras = getExtraMealNames();
+  const extras = getDiaryExtraNames();
   const hidden = getHiddenMealTypes();
   const rank = (m) => {
     const i = DEFAULT_SLOTS.indexOf(m.mealType);
@@ -2698,7 +3118,7 @@ __export(trends_exports, {
   RANGE_PRESETS: () => RANGE_PRESETS,
   comparePeriods: () => comparePeriods,
   dailySeries: () => dailySeries,
-  daysBetween: () => daysBetween,
+  daysBetween: () => daysBetween2,
   formatRange: () => formatRange,
   groupByPeriod: () => groupByPeriod,
   isoFromUtc: () => isoFromUtc,
@@ -2742,7 +3162,7 @@ function isoFromUtc(t) {
 function shiftDays(iso2, days3) {
   return isoFromUtc(utcDay(iso2) + days3 * DAY_MS);
 }
-function daysBetween(from, to) {
+function daysBetween2(from, to) {
   return Math.round((utcDay(to) - utcDay(from)) / DAY_MS) + 1;
 }
 function weekStart2(iso2) {
@@ -2797,13 +3217,13 @@ function groupByPeriod(points2, period) {
   return [...groups.values()].sort((a, b) => a.info.start.localeCompare(b.info.start)).map(({ info, values }) => ({
     ...info,
     ...stats(values),
-    days: daysBetween(info.start, info.end)
+    days: daysBetween2(info.start, info.end)
   }));
 }
 function rangeStats(points2, from, to) {
   if (from > to) throw new Error("Der Beginn des Zeitraums muss vor dem Ende liegen.");
   const inside = points2.filter((p) => p.date >= from && p.date <= to && Number.isFinite(p.value)).sort((a, b) => a.date.localeCompare(b.date));
-  const days3 = daysBetween(from, to);
+  const days3 = daysBetween2(from, to);
   if (inside.length === 0) {
     return { from, to, days: days3, count: 0, mean: null, min: null, max: null, first: null, last: null };
   }
@@ -2852,7 +3272,7 @@ function presetRanges(preset, today) {
 }
 function dailySeries(points2, from, to) {
   const byDate = new Map(points2.map((p) => [p.date, p.value]));
-  const n2 = daysBetween(from, to);
+  const n2 = daysBetween2(from, to);
   const out = [];
   for (let i = 0; i < n2; i++) {
     const date = shiftDays(from, i);
@@ -2941,74 +3361,6 @@ function weeklyMuscleSets(log, exercises, today, count = 4) {
       (a, b) => (b.sets[last] ?? 0) - (a.sets[last] ?? 0) || sum(b.sets) - sum(a.sets) || a.group.localeCompare(b.group, "de")
     )
   };
-}
-
-// src/domain/planSchedule.ts
-var planSchedule_exports = {};
-__export(planSchedule_exports, {
-  WEEKDAY_LABELS: () => WEEKDAY_LABELS,
-  WEEKDAY_SHORT: () => WEEKDAY_SHORT,
-  describeScheduled: () => describeScheduled,
-  describeSlot: () => describeSlot,
-  isoWeekday: () => isoWeekday,
-  nextOccurrence: () => nextOccurrence
-});
-var WEEKDAY_LABELS = {
-  1: "Montag",
-  2: "Dienstag",
-  3: "Mittwoch",
-  4: "Donnerstag",
-  5: "Freitag",
-  6: "Samstag",
-  7: "Sonntag"
-};
-var WEEKDAY_SHORT = {
-  1: "Mo",
-  2: "Di",
-  3: "Mi",
-  4: "Do",
-  5: "Fr",
-  6: "Sa",
-  7: "So"
-};
-var pad = (n2) => String(n2).padStart(2, "0");
-function isoWeekday(iso2) {
-  const [y, m, d] = iso2.split("-").map(Number);
-  const day = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1)).getUTCDay();
-  return day === 0 ? 7 : day;
-}
-function germanDate(iso2) {
-  const [y, m, d] = iso2.split("-");
-  return `${d}.${m}.${y}`;
-}
-function daysBetween2(a, b) {
-  const ms = (iso2) => {
-    const [y, m, d] = iso2.split("-").map(Number);
-    return Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1);
-  };
-  return Math.round((ms(b) - ms(a)) / 864e5);
-}
-function describeSlot(slot) {
-  const time = slot.time ? ` um ${slot.time} Uhr` : "";
-  if (slot.weekday !== null) return `jeden ${WEEKDAY_LABELS[slot.weekday] ?? "?"}${time}`;
-  if (slot.date)
-    return `am ${WEEKDAY_SHORT[isoWeekday(slot.date)]}, ${germanDate(slot.date)}${time}`;
-  return "";
-}
-function describeScheduled(date, time, today) {
-  const diff = daysBetween2(today, date);
-  const day = diff === 0 ? "heute" : diff === 1 ? "morgen" : `${WEEKDAY_LABELS[isoWeekday(date)]}, ${germanDate(date)}`;
-  return `${day}${time ? ` um ${time} Uhr` : ""}`;
-}
-function nextOccurrence(slot, today) {
-  if (slot.weekday !== null) {
-    const add = (slot.weekday - isoWeekday(today) + 7) % 7;
-    const [y, m, d] = today.split("-").map(Number);
-    const t = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + add));
-    return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`;
-  }
-  if (slot.date && slot.date >= today) return slot.date;
-  return null;
 }
 
 // src/domain/backup.ts
@@ -7785,7 +8137,7 @@ function withinWindow(a, b, windowMin = DUPLICATE_WINDOW_MIN) {
   if (ma === null || mb === null) return false;
   return Math.abs(ma - mb) <= windowMin;
 }
-var norm = (s) => s.trim().toLocaleLowerCase("de-DE");
+var norm2 = (s) => s.trim().toLocaleLowerCase("de-DE");
 function exerciseSequence(w) {
   return w.exercises.map((e) => e.exerciseId).join(",");
 }
@@ -7793,14 +8145,14 @@ function duplicateWorkouts(input, sameDay) {
   const seq = exerciseSequence(input);
   return sameDay.filter((w) => {
     if (w.id === input.id || w.date !== input.date) return false;
-    const sameContent = seq !== "" ? exerciseSequence(w) === seq : w.exercises.length === 0 && norm(w.title) === norm(input.title);
+    const sameContent = seq !== "" ? exerciseSequence(w) === seq : w.exercises.length === 0 && norm2(w.title) === norm2(input.title);
     if (!sameContent) return false;
     return withinWindow(input.startTime, w.startTime) || input.startTime === null || w.startTime === null;
   });
 }
 function duplicateHrtEntries(input, entries, windowMin = DUPLICATE_WINDOW_MIN) {
   return entries.filter(
-    (e) => e.id !== input.id && e.date === input.date && e.status === input.status && norm(e.hormone) === norm(input.hormone) && withinWindow(e.time, input.time, windowMin)
+    (e) => e.id !== input.id && e.date === input.date && e.status === input.status && norm2(e.hormone) === norm2(input.hormone) && withinWindow(e.time, input.time, windowMin)
   );
 }
 function hrtDuplicateHint(dupes) {
@@ -8858,7 +9210,7 @@ var CLEARED_BELOW_MG = 1;
 var MAX_ML = 3e3;
 var MAX_MG = 1e3;
 var DAY_MIN = 24 * 60;
-var TIME2 = /^([01]\d|2[0-3]):([0-5]\d)$/;
+var TIME3 = /^([01]\d|2[0-3]):([0-5]\d)$/;
 function findDrink(id3) {
   return CAFFEINE_DRINKS.find((d) => d.id === id3);
 }
@@ -8867,7 +9219,7 @@ function mgPer100Ml(drink) {
   return drink.portionMg / drink.portionMl * 100;
 }
 function parseClock(time) {
-  const m = TIME2.exec(time.trim());
+  const m = TIME3.exec(time.trim());
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 }
 function formatClock2(minutes) {
@@ -9233,9 +9585,9 @@ __export(sleep_exports, {
   totalSleepWithNaps: () => totalSleepWithNaps,
   typicalShareText: () => typicalShareText
 });
-var TIME3 = /^([01]\d|2[0-3]):([0-5]\d)$/;
+var TIME4 = /^([01]\d|2[0-3]):([0-5]\d)$/;
 function toMinutes(time) {
-  const m = TIME3.exec(time);
+  const m = TIME4.exec(time);
   if (!m) {
     throw new Error(`Ung\xFCltige Uhrzeit: "${time}" (erwartet HH:MM)`);
   }
@@ -9933,7 +10285,7 @@ function weeklyGoals(input) {
   const own = input.settings ?? NO_WEEK_GOALS;
   const { today, data } = input;
   const monday = weekStart2(today);
-  const elapsed = daysBetween(monday, today);
+  const elapsed = daysBetween2(monday, today);
   const inWeek2 = (d) => inRange2(d, monday, today);
   const out = [];
   const fromPlan = own.trainings === null && !!input.planDays && input.planDays > 0;
@@ -10156,7 +10508,7 @@ function dueReminders(dashboard, today) {
         });
       continue;
     }
-    const since = daysBetween(last, today) - 1;
+    const since = daysBetween2(last, today) - 1;
     if (since >= rule.days) {
       out.push({
         key: rule.key,
@@ -12745,9 +13097,9 @@ function fieldOfRow(row) {
   const text2 = normalizeLabel(row);
   if (text2.length < 3) return null;
   let best = null;
-  for (const { field, norm: norm3 } of NORMALIZED) {
-    if (text2.length > norm3.length + 4) continue;
-    const score = 1 - editDistance(text2, norm3) / Math.max(text2.length, norm3.length);
+  for (const { field, norm: norm4 } of NORMALIZED) {
+    if (text2.length > norm4.length + 4) continue;
+    const score = 1 - editDistance(text2, norm4) / Math.max(text2.length, norm4.length);
     if (!best || score > best.score) best = { field, score };
   }
   return best && best.score >= 0.7 ? best.field : null;
@@ -13248,7 +13600,7 @@ function glucoseStats(readings) {
 }
 
 // src/domain/wearable.ts
-function minuteOf(clock3) {
+function minuteOf2(clock3) {
   const m = /^(\d{1,2}):(\d{2})/.exec(clock3.trim());
   if (!m) return null;
   const h = Number(m[1]);
@@ -13266,7 +13618,7 @@ function nightSeries(json) {
   if (!obj || typeof obj !== "object") return [];
   const out = [];
   for (const [k, v] of Object.entries(obj)) {
-    const minute = minuteOf(k);
+    const minute = minuteOf2(k);
     if (minute === null || typeof v !== "number" || !Number.isFinite(v)) continue;
     out.push({ minute, value: v });
   }
@@ -15975,9 +16327,9 @@ var DEFAULT_REMINDERS = {
   hrt: { on: false, time: "09:00" }
 };
 var HRT_INTERVAL_SAMPLES = 4;
-var TIME4 = /^([01]\d|2[0-3]):([0-5]\d)$/;
+var TIME5 = /^([01]\d|2[0-3]):([0-5]\d)$/;
 function validTime(time) {
-  return TIME4.test(time.trim());
+  return TIME5.test(time.trim());
 }
 function parseReminderSettings(raw) {
   const out = {
@@ -18903,14 +19255,14 @@ var EMPTY_FILTER = {
   category: "",
   muscle: ""
 };
-var norm2 = (s) => s.toLocaleLowerCase("de").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss");
+var norm3 = (s) => s.toLocaleLowerCase("de").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss");
 function machineKeywords(m) {
   return [...m.tags ?? [], ...m.features, m.category, m.machineType, m.notes ?? ""].filter(
     (x) => x.trim() !== ""
   );
 }
 function haystack(m) {
-  return norm2(
+  return norm3(
     [
       ...m.tags ?? [],
       m.displayName,
@@ -18929,7 +19281,7 @@ function haystack(m) {
   );
 }
 function filterMachines(list2, f) {
-  const words = norm2(f.query).split(/\s+/).filter(Boolean);
+  const words = norm3(f.query).split(/\s+/).filter(Boolean);
   const synonyms = synonymTerms(f.query);
   return list2.filter((m) => {
     if (f.manufacturer && m.manufacturer !== f.manufacturer) return false;
@@ -19095,7 +19447,7 @@ function niceMax(v) {
   for (const f of [1, 2, 2.5, 5, 10]) if (v <= f * p) return f * p;
   return 10 * p;
 }
-function axis(min, max) {
+function axis2(min, max) {
   if (!Number.isFinite(min) || !Number.isFinite(max)) return { lo: 0, hi: 1, step: 0.25 };
   if (max - min < 1e-9) {
     min -= 1;
@@ -19198,8 +19550,8 @@ function hrvChart(hrv2, rhr, width = 480) {
     shapes.push(text(width / 2, h / 2, "Keine HRV- und Ruhepuls-Werte erfasst", "middle"));
     return { w: width, h, shapes };
   }
-  const a = axis(Math.min(...hv.length ? hv : [0]), Math.max(...hv.length ? hv : [1]));
-  const b = axis(Math.min(...rv.length ? rv : [0]), Math.max(...rv.length ? rv : [1]));
+  const a = axis2(Math.min(...hv.length ? hv : [0]), Math.max(...hv.length ? hv : [1]));
+  const b = axis2(Math.min(...rv.length ? rv : [0]), Math.max(...rv.length ? rv : [1]));
   yGrid(shapes, a, box2, hv.length ? "left" : "none");
   if (rv.length) yGrid(shapes, b, box2, "right", 0, false);
   const yA = (v) => box2.y + box2.h - (v - a.lo) / (a.hi - a.lo) * box2.h;
@@ -19226,7 +19578,7 @@ function trainingChart(days3, width = 230) {
   const box2 = { x: 30, y: 26, w: width - 40, h: 110 };
   const shapes = [];
   const totals4 = days3.map((d) => d.strengthMin + d.cardioMin + d.otherMin);
-  const a = axis(0, Math.max(30, ...totals4));
+  const a = axis2(0, Math.max(30, ...totals4));
   yGrid(shapes, { ...a, lo: 0 }, box2, "left");
   const slot = box2.w / Math.max(days3.length, 1);
   const y = (v) => box2.y + box2.h - v / a.hi * box2.h;
@@ -19264,7 +19616,7 @@ function gripChart(points2, weekStart4, width = 230) {
     return { w: width, h, shapes };
   }
   const all = points2.flatMap((p) => [p.left, p.right]);
-  const a = axis(Math.min(...all), Math.max(...all));
+  const a = axis2(Math.min(...all), Math.max(...all));
   const n2 = points2.length;
   const xAt = (i) => box2.x + (n2 <= 1 ? box2.w / 2 : i / (n2 - 1) * box2.w);
   const first = points2.findIndex((p) => p.date >= weekStart4);
@@ -19302,7 +19654,7 @@ function energyChart(days3, weight, width = 480) {
   const shapes = [];
   const kcals = days3.flatMap((d) => d.kcal === null ? [] : [d.kcal]);
   const wv = weight.flatMap((p) => p.value === null ? [] : [p.value]);
-  const a = axis(0, Math.max(1e3, ...kcals));
+  const a = axis2(0, Math.max(1e3, ...kcals));
   const ax = { ...a, lo: 0 };
   const slot = box2.w / Math.max(days3.length, 1);
   if (days3.length >= 14)
@@ -19323,7 +19675,7 @@ function energyChart(days3, weight, width = 480) {
     shapes.push(text(bx + slot * 0.32, box2.y + box2.h + 11, dayMonth(d.date), "middle"));
   });
   if (wv.length) {
-    const b = axis(Math.min(...wv), Math.max(...wv));
+    const b = axis2(Math.min(...wv), Math.max(...wv));
     yGrid(shapes, b, box2, "right", 0, false);
     const yw = (v) => box2.y + box2.h - (v - b.lo) / (b.hi - b.lo) * box2.h;
     const coords = weight.map(
@@ -19347,7 +19699,7 @@ function macroChart(days3, width = 230) {
   const shapes = [];
   const parts2 = (d) => [d.proteinG * 4, d.carbsG * 4, d.fatG * 9];
   const totals4 = days3.map((d) => d.kcal === null ? 0 : parts2(d).reduce((x, y2) => x + y2, 0));
-  const a = axis(0, Math.max(1e3, ...totals4));
+  const a = axis2(0, Math.max(1e3, ...totals4));
   yGrid(shapes, { ...a, lo: 0 }, box2, "left");
   const slot = box2.w / Math.max(days3.length, 1);
   const y = (v) => box2.y + box2.h - v / a.hi * box2.h;
@@ -20309,7 +20661,7 @@ __export(quickFill_exports, {
   parseFillInput: () => parseFillInput,
   parseFillRules: () => parseFillRules,
   parseGripRule: () => parseGripRule,
-  parseSkips: () => parseSkips,
+  parseSkips: () => parseSkips2,
   parseSleepRule: () => parseSleepRule,
   serializeFillRules: () => serializeFillRules,
   serializeSkips: () => serializeSkips,
@@ -20477,7 +20829,7 @@ function effectiveRules(stored, metrics) {
     (m) => stored === null ? defaultRule(m.id) : byId.get(m.id) ?? { metricId: m.id, withMeasurement: false, rhythm: "off" }
   );
 }
-function parseSkips(raw) {
+function parseSkips2(raw) {
   if (!raw) return [];
   try {
     const data = JSON.parse(raw);
@@ -22571,31 +22923,31 @@ function findNorm(norms, sex, ageYears, heightCm) {
   const first = group[0];
   const last = group[group.length - 1];
   if (!first || !last) return null;
-  const norm3 = heightCm < first.height_min_cm ? first : last;
-  return { norm: norm3, heightClamped: true };
+  const norm4 = heightCm < first.height_min_cm ? first : last;
+  return { norm: norm4, heightClamped: true };
 }
 function evaluateGrip(norms, input) {
   const found = findNorm(norms, input.sex, input.ageYears, input.heightCm);
   if (!found) return null;
-  const { norm: norm3, heightClamped } = found;
+  const { norm: norm4, heightClamped } = found;
   const averageKg = round1((input.leftKg + input.rightKg) / 2);
-  const zScore = (averageKg - norm3.mean_kg) / norm3.sd_kg;
+  const zScore = (averageKg - norm4.mean_kg) / norm4.sd_kg;
   const percentile = round1(normalCdf(zScore) * 100);
   const category = CATEGORY_BOUNDS.find((b) => percentile >= b.minPercentile).category;
   const nextBound = [...CATEGORY_BOUNDS].reverse().find((b) => b.minPercentile > percentile);
   let kgToNextLevel = null;
   if (nextBound) {
-    const target = nextBound.minPercentile === 10 ? norm3.p10_kg : nextBound.minPercentile === 90 ? norm3.p90_kg : norm3.mean_kg + (Z[nextBound.minPercentile] ?? 0) * norm3.sd_kg;
+    const target = nextBound.minPercentile === 10 ? norm4.p10_kg : nextBound.minPercentile === 90 ? norm4.p90_kg : norm4.mean_kg + (Z[nextBound.minPercentile] ?? 0) * norm4.sd_kg;
     kgToNextLevel = round1(Math.max(0, target - averageKg));
   }
   return {
     averageKg,
-    norm: norm3,
+    norm: norm4,
     percentile,
     zScore: Math.round(zScore * 100) / 100,
     category,
-    diffToMeanKg: round1(averageKg - norm3.mean_kg),
-    percentOfMean: Math.round(averageKg / norm3.mean_kg * 100),
+    diffToMeanKg: round1(averageKg - norm4.mean_kg),
+    percentOfMean: Math.round(averageKg / norm4.mean_kg * 100),
     kgToNextLevel,
     heightClamped,
     asymmetry: evaluateAsymmetry(input.leftKg, input.rightKg, input.dominantHand)
@@ -27307,7 +27659,7 @@ function recordHistory(log) {
 
 // src/domain/sleepRegularity.ts
 var MIN_NIGHTS2 = 3;
-var DAY = 1440;
+var DAY2 = 1440;
 var NOON = 720;
 function clock2(time) {
   const m = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
@@ -27319,10 +27671,10 @@ function clock2(time) {
 }
 function bedAxis(time) {
   const c = clock2(time);
-  return c === null ? null : (c - NOON + DAY) % DAY;
+  return c === null ? null : (c - NOON + DAY2) % DAY2;
 }
 function axisClock(value2) {
-  const total = ((Math.round(value2) + NOON) % DAY + DAY) % DAY;
+  const total = ((Math.round(value2) + NOON) % DAY2 + DAY2) % DAY2;
   const pad6 = (n2) => String(n2).padStart(2, "0");
   return `${pad6(Math.floor(total / 60))}:${pad6(total % 60)}`;
 }
@@ -30315,6 +30667,31 @@ var APP_FAQ = [
     keywords: ["bearbeiten", "l\xF6schen", "rechtsklick", "wischen", "\xE4ndern", "entfernen"]
   },
   {
+    id: "trainings-im-tagesverlauf",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Warum sehe ich Trainings im Tagesverlauf und was bedeuten die Hinweise?",
+    answer: "Getrackte Einheiten (Start bis Ende, eine laufende bis jetzt) und geplante Einheiten aus den Terminen deiner Trainingspl\xE4ne (mit Uhrzeit) erscheinen als hellgrauer Balken \xFCber alle Spalten \u2013 Mahlzeiten, Shakes, Wasser und Koffein tr\xE4gst du trotzdem darin ein. Bei Krafttraining und intensivem Cardio gibt es Hinweise: Pre-Workout fehlt, wenn 30\u201390 Minuten vorher weder Getr\xE4nk, Shake, Koffein, Supplement noch kleine Mahlzeit und 1\u20133 Stunden vorher keine Mahlzeit eingetragen ist; Post-Workout, wenn in den 2 Stunden danach keine Mahlzeit mit Kohlenhydraten (ab 40 g) und Protein (ab 20 g) steht. \u201EPre-Workout eintragen\u201C setzt den Knopf auf die passende Uhrzeit. Doppelklick (Handy: zweimal antippen) auf eine geplante Einheit: verschieben, Dauer \xE4ndern oder l\xF6schen \u2013 nur an diesem Tag oder jeden Wochentag; Workout-Mahlzeiten ziehen mit.",
+    keywords: [
+      "training",
+      "pre-workout",
+      "post-workout",
+      "intra-workout",
+      "balken",
+      "verschieben",
+      "hinweis",
+      "kohlenhydrate"
+    ]
+  },
+  {
+    id: "workout-mahlzeiten",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Wo finde ich Pre-, Intra- und Post-Workout als Mahlzeit?",
+    answer: "Sie stehen immer zur Wahl, wenn du im Tagesverlauf eine Mahlzeit eintr\xE4gst \u2013 im oder kurz vor bzw. nach einem Training sind sie schon vorgew\xE4hlt. Unter Settings \u2192 Mahlzeiten legst du mit \u201EIm Tagebuch anzeigen\u201C fest, ob sie jeden Tag als eigener Platz erscheinen. Dasselbe H\xE4kchen gibt es f\xFCr eigene Mahlzeiten: ohne H\xE4kchen stehen sie nur zur Wahl.",
+    keywords: ["pre-workout", "post-workout", "intra-workout", "mahlzeiten", "shake", "settings"]
+  },
+  {
     id: "wie-setze-ich-die-uhrzeit-einer-mahlzeit",
     area: "Ern\xE4hrung",
     device: "beide",
@@ -30963,6 +31340,8 @@ export {
   formatSigned,
   formatSupplementAmount,
   formatWeekdayDate,
+  getChoiceOnlyMealNames,
+  getDiaryExtraNames,
   glassOptions,
   globalSearch_exports as globalSearch,
   glucoseMeal_exports as glucoseMeal,
@@ -31110,5 +31489,6 @@ export {
   withProteinFromWeight,
   workoutDraft_exports as workoutDraft,
   workoutList_exports as workoutList,
+  workoutTimeline_exports as workoutTimeline,
   yearReview_exports as yearReview
 };

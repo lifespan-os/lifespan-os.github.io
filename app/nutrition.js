@@ -32,9 +32,16 @@ export const MEAL_TYPES = [
 // Mahlzeitenliste wie am PC (Settings → Mahlzeiten, 1.47.0): eigene Namen der Standardmahlzeiten,
 // abgewählte Standardmahlzeiten und eigene Mahlzeiten. Eine eigene Mahlzeit hat den Schlüssel
 // „x:<Name>“ (Mahlzeit `other` mit diesem Namen).
-let mealConfig = { names: {}, hidden: [], extras: [] };
+let mealConfig = { names: {}, hidden: [], extras: [], extraHidden: [], workout: [] };
 
-/** Aus den Einstellungen vom PC (`meal_name.*`, `meal_hidden`, `meal_extra`). */
+// Workout-Mahlzeiten (1.107.0, wie PC 1.0.181): stehen immer zur Wahl; `meal_workout` nennt die,
+// die jeden Tag als Platz erscheinen. Eigene Mahlzeiten in `meal_extra_hidden` stehen nur zur Wahl.
+export const WORKOUT_MEALS = ["Pre-Workout", "Intra-Workout", "Post-Workout"];
+const wnorm = (s) => String(s ?? "").toLowerCase().replace(/[\s_-]+/g, "");
+/** Workout-Mahlzeit zu einem Namen („preworkout“ → „Pre-Workout“), sonst null. */
+export const workoutMealName = (n) => WORKOUT_MEALS.find((w) => wnorm(w) === wnorm(n)) ?? null;
+
+/** Aus den Einstellungen vom PC (`meal_name.*`, `meal_hidden`, `meal_extra`, `meal_extra_hidden`, `meal_workout`). */
 export function setMealConfig(settings) {
   const list = (key) => {
     try {
@@ -49,7 +56,16 @@ export function setMealConfig(settings) {
     const n = settings.get(`meal_name.${t}`);
     if (n) names[t] = n;
   }
-  mealConfig = { names, hidden: list("meal_hidden"), extras: list("meal_extra") };
+  // ältere Listen: eigene Mahlzeit „Pre-Workout“ o. Ä. ist eine Workout-Mahlzeit (wie am PC)
+  const shown = new Set(list("meal_workout").map(workoutMealName).filter(Boolean));
+  const extras = [];
+  for (const e of list("meal_extra")) {
+    const w = workoutMealName(e);
+    if (w) shown.add(w);
+    else if (!extras.includes(e)) extras.push(e);
+  }
+  const extraHidden = list("meal_extra_hidden").filter((h) => extras.includes(h));
+  mealConfig = { names, hidden: list("meal_hidden"), extras, extraHidden, workout: WORKOUT_MEALS.filter((w) => shown.has(w)) };
   return mealConfig;
 }
 
@@ -65,7 +81,8 @@ export function parseMealKey(key) {
 }
 
 /** Schlüssel einer gespeicherten Mahlzeit (eigene Mahlzeit der Liste → „x:<Name>“). */
-export const mealKeyOf = (row) => (row.meal_type === "other" && row.name && mealConfig.extras.includes(row.name) ? extraKey(row.name) : row.meal_type);
+export const mealKeyOf = (row) =>
+  row.meal_type === "other" && row.name && (mealConfig.extras.includes(row.name) || WORKOUT_MEALS.includes(row.name)) ? extraKey(row.name) : row.meal_type;
 
 export const mealLabel = (t) => {
   const { type, name } = parseMealKey(t);
@@ -80,6 +97,7 @@ export const mealLabel = (t) => {
 export function mealChoices(current) {
   const out = MEAL_TYPES.filter((m) => m.value !== "other" && (!mealConfig.hidden.includes(m.value) || m.value === current)).map((m) => m.value);
   for (const n of mealConfig.extras) out.push(extraKey(n));
+  for (const n of WORKOUT_MEALS) out.push(extraKey(n));
   out.push("other");
   if (current && !out.includes(current)) out.push(current);
   return out.map((value) => ({ value, label: mealLabel(value) }));

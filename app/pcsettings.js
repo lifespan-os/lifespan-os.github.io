@@ -15,6 +15,12 @@ export const MEAL_NAME_PREFIX = "meal_name.";
 export const SYNC_KEYS = [
   "meal_hidden",
   "meal_extra",
+  // Settings → Mahlzeiten: eigene nur zur Wahl, Workout-Mahlzeiten im Tagebuch (1.107.0)
+  "meal_extra_hidden",
+  "meal_workout",
+  // Trainings im Tagesverlauf: ausgelassene Termine und Dauer geplanter Einheiten (1.107.0)
+  "ui.training_skips",
+  "ui.training_durations",
   "measurement_methods",
   "secret_protocols",
   "ui.day_start",
@@ -154,7 +160,8 @@ const LAYOUT_NAMES = {
 
 /** Bezeichnung einer Einstellung (Offene Daten); Mahlzeiten-Schlüssel zählen zusammen. */
 export function settingLabel(key) {
-  if (key.startsWith(MEAL_NAME_PREFIX) || key === "meal_hidden" || key === "meal_extra") return "Mahlzeiten";
+  if (key.startsWith(MEAL_NAME_PREFIX) || ["meal_hidden", "meal_extra", "meal_extra_hidden", "meal_workout"].includes(key)) return "Mahlzeiten";
+  if (key === "ui.training_skips" || key === "ui.training_durations") return "Trainings im Tagesverlauf";
   if (key === "measurement_methods") return "Messmethoden";
   if (key === "secret_protocols") return "Secret Protocols";
   if (key === "ui.day_start" || key === "ui.day_start_history") return "Tageswechsel";
@@ -196,8 +203,10 @@ export function validateProfile(draft, today) {
 /**
  * Mahlzeitenliste wie `meal::save_meal_list`: Namen der Standardmahlzeiten (höchstens 60 Zeichen,
  * Standardname = kein eigener), abgewählte, eigene Mahlzeiten (Name nötig, eindeutig über die ganze
- * Liste ohne Groß-/Kleinschreibung), mindestens eine und höchstens zehn aktive.
- * Ergebnis { ok, value: { names, hidden, extras } | errors } (Fehler je Feld wie am PC).
+ * Liste ohne Groß-/Kleinschreibung), mindestens eine und höchstens zehn im Tagebuch.
+ * 1.107.0: `extraShow[i]` = eigene Mahlzeit i im Tagebuch (sonst nur zur Wahl), `workout` =
+ * Workout-Mahlzeiten im Tagebuch; Workout-Namen sind als eigene Mahlzeit vergeben.
+ * Ergebnis { ok, value: { names, hidden, extras, extraHidden, workout } | errors } (Fehler je Feld wie am PC).
  */
 export function validateMealList(input) {
   const errors = {};
@@ -218,15 +227,22 @@ export function validateMealList(input) {
   const seen = DEFAULT_MEALS.map((s) => (names[s] ?? MEAL_LABELS[s]).toLowerCase());
   extras.forEach((n, i) => {
     if (!n || errors[`extras.${i}`]) return;
-    if (seen.includes(n.toLowerCase())) errors[`extras.${i}`] = "Diesen Namen gibt es schon in der Liste.";
+    if (WORKOUT_NAMES.some((w) => wnorm(w) === wnorm(n))) errors[`extras.${i}`] = "Diese Mahlzeit gibt es schon unter den Workout-Mahlzeiten.";
+    else if (seen.includes(n.toLowerCase())) errors[`extras.${i}`] = "Diesen Namen gibt es schon in der Liste.";
     seen.push(n.toLowerCase());
   });
-  const active = DEFAULT_MEALS.length - hidden.length + extras.length;
+  const extraHidden = extras.filter((n, i) => n && input.extraShow && input.extraShow[i] === false);
+  const workout = WORKOUT_NAMES.filter((w) => (input.workout ?? []).includes(w));
+  if (extras.length > 2 * MAX_MEALS) errors.extras = `Höchstens ${2 * MAX_MEALS} eigene Mahlzeiten.`;
+  const active = DEFAULT_MEALS.length - hidden.length + extras.length - extraHidden.length + workout.length;
   if (active === 0) errors.hidden = "Mindestens eine Mahlzeit muss in der Liste bleiben.";
-  if (active > MAX_MEALS) errors.extras = `Höchstens ${MAX_MEALS} Mahlzeiten.`;
+  if (active > MAX_MEALS) errors.extras = `Höchstens ${MAX_MEALS} Mahlzeiten im Tagebuch.`;
   if (Object.keys(errors).length) return { ok: false, errors };
-  return { ok: true, value: { names, hidden, extras } };
+  return { ok: true, value: { names, hidden, extras, extraHidden, workout } };
 }
+
+const WORKOUT_NAMES = ["Pre-Workout", "Intra-Workout", "Post-Workout"];
+const wnorm = (s) => String(s ?? "").toLowerCase().replace(/[\s_-]+/g, "");
 
 /** Einstellungen für eine geprüfte Mahlzeitenliste (`null` = Schlüssel löschen, wie am PC). */
 export function mealListSettings(list) {
@@ -234,6 +250,8 @@ export function mealListSettings(list) {
   for (const slot of DEFAULT_MEALS) out[MEAL_NAME_PREFIX + slot] = list.names[slot] ?? null;
   out.meal_hidden = list.hidden.length ? JSON.stringify(list.hidden) : null;
   out.meal_extra = list.extras.length ? JSON.stringify(list.extras) : null;
+  out.meal_extra_hidden = list.extraHidden?.length ? JSON.stringify(list.extraHidden) : null;
+  out.meal_workout = list.workout?.length ? JSON.stringify(list.workout) : null;
   return out;
 }
 

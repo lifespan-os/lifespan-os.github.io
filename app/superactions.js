@@ -3,7 +3,8 @@ import * as SD from "./superdata.js";
 import * as D from "./pcdomain.js";
 import { today } from "./diary.js";
 import { CL, CUSTOM, entries, fmt, fmtAmount, HR, nowTime, numberToInput, opts, persist, PR, products, protocolEntries, substances, X } from "./super.js";
-import { calcState, newForm, newRow } from "./supertabs.js";
+import { calcState, newForm, newRow, savedIntervalOf } from "./supertabs.js";
+import * as PS from "./pcsettings.js";
 
 // ------------------------------------------------------------------ Aktionen
 
@@ -152,8 +153,12 @@ export const superActions = {
     const f = S.hrtEdit;
     f.message = "";
     const r = HR().hrtDraftToInput(f.draft);
-    if (!r.ok) {
-      f.errors = r.errors;
+    // Injektionsintervall (1.113.0): leer = kein festes Intervall
+    const savedIv = savedIntervalOf(f.draft.hormone);
+    const ivText = f.intervalTouched ? (f.intervalText ?? "") : savedIv === null ? "" : String(savedIv);
+    const iv = D.hrtSchedule.parseIntervalInput(ivText);
+    if (!r.ok || !iv.ok) {
+      f.errors = { ...(r.ok ? {} : r.errors), ...(iv.ok ? {} : { interval: iv.error }) };
       f.dupes = null;
       X.rerender();
       return;
@@ -169,6 +174,15 @@ export const superActions = {
     try {
       const saved = SD.saveHrtEntry(S.catalog, S.super, r.input, opts());
       await persist();
+      const ivNow = savedIntervalOf(saved.hormone);
+      if (iv.days !== ivNow) {
+        const key = D.hrtSchedule.HRT_INTERVALS_SETTING;
+        const current = PS.effective(S.catalog, S.pcsettings, key);
+        S.pcsettings = PS.normSync(S.pcsettings);
+        if (PS.setSetting(S.pcsettings, key, D.hrtSchedule.withHrtInterval(current, saved.hormone, iv.days), current)) {
+          await X.store.set("pcsettings", S.pcsettings);
+        }
+      }
       S.hrtEdit = null;
       S.superTab = "hrt";
       X.toast(`${saved.hormone}: ${fmt(saved.amount)} ${saved.unit} am ${D.formatDate(saved.date)} (${HR().STATUS_LABELS[saved.status]}) gespeichert.`);
@@ -286,6 +300,12 @@ export const superActions = {
 export function superInput(el) {
   const S = X.S;
   const k = el.dataset ?? {};
+  if (k.hrt === "interval" && S.hrtEdit) {
+    S.hrtEdit.intervalTouched = true;
+    S.hrtEdit.intervalText = el.value;
+    if (S.hrtEdit.errors?.interval) S.hrtEdit.errors.interval = "";
+    return true;
+  }
   if (k.hrt && S.hrtEdit && !["product", "siteSelect", "needleSelect"].includes(k.hrt)) {
     S.hrtEdit.draft[k.hrt] = el.value;
     if (S.hrtEdit.errors?.[k.hrt]) S.hrtEdit.errors[k.hrt] = "";

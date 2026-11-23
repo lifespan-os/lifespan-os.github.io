@@ -98,7 +98,7 @@ export function drawerHtml({ view, arg, open, esc, back = null, marks = null }) 
     <button class="drawer__search" data-act="gs-open">${icon("search")}<span>Suchen …</span></button>
     <ul>
       ${SECTIONS.filter((s) => !s.header && shown(s)).map(
-        (s) => `<li><button class="drawer__item ${s.id === current ? "active" : ""} ${s.view ? "" : "pc-only"}" data-act="menu-go" data-arg="${s.id}"${markAttrs(mk(s.id), esc)} ${mk(s.id) ? `aria-label="${esc(markLabel(s.label, mk(s.id)))}"` : ""} ${s.id === current ? 'aria-current="page"' : ""}>
+        (s) => `<li><button class="drawer__item ${s.id === current ? "active" : ""} ${s.view ? "" : "pc-only"}${mk(s.id)?.alert ? " is-alert" : ""}" data-act="menu-go" data-arg="${s.id}"${markAttrs(mk(s.id), esc)} ${mk(s.id) ? `aria-label="${esc(markLabel(s.label, mk(s.id)))}"` : ""} ${s.id === current ? 'aria-current="page"' : ""}>
           ${icon(s.id)}<span>${esc(s.label)}</span>${s.view ? "" : `<small>PC</small>`}${markDot(mk(s.id))}</button></li>`,
       ).join("")}
     </ul>
@@ -160,7 +160,9 @@ export function tabbarHtml({ view, arg, back = null, quickOpen = false, slots = 
       const m = b.id === "more" ? moreMark(marks, main) : (marks?.get(b.id) ?? null);
       const act = b.id === "more" ? `data-act="menu-open-bar"` : `data-act="tabbar-go" data-arg="${b.id}"${markAttrs(m, escAttr)}`;
       const aria = m ? ` aria-label="${escAttr(markLabel(b.label, m))}"` : "";
-      return `<button class="tabbar__item ${active ? "active" : ""}" ${act}${aria} ${active ? 'aria-current="page"' : ""}>${ICONS[b.icon] ?? ""}<span>${b.label}</span>${markDot(m)}</button>`;
+      // Hormongabe seit 6 Stunden überfällig: Platz (bzw. „Mehr“) leuchtet orange (1.113.0)
+      const alert = b.id === "more" ? Boolean(marks?.get("superhuman")?.alert) && !main.includes("superhuman") : Boolean(m?.alert);
+      return `<button class="tabbar__item ${active ? "active" : ""}${alert ? " is-alert" : ""}" ${act}${aria} ${active ? 'aria-current="page"' : ""}>${ICONS[b.icon] ?? ""}<span>${b.label}</span>${markDot(m)}</button>`;
     });
   const quick = `<button class="tabbar__quick tabbar__fab tabbar__fab--a" data-act="quick-open" aria-label="Schnell erfassen" aria-expanded="${quickOpen}">${ICONS.plus}</button>`;
   const subBtn = sub

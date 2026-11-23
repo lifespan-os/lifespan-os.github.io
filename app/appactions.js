@@ -28,6 +28,7 @@ import { healthActions } from "./health.js";
 import { longevityActions } from "./longevityview.js";
 import { protocolsActions } from "./protocolsview.js";
 import { superActions } from "./super.js";
+import { ackHrtAlarms } from "./openitems.js";
 import { icoachActions } from "./icoach.js";
 import { layoutActions, settingsActions } from "./settingsview.js";
 import { trainingActions } from "./training.js";
@@ -504,8 +505,20 @@ export const actions = {
     if (el.dataset.arg === "body" && el.dataset.tab?.startsWith("entry")) return bodyOpenEntry(el.dataset.tab.split(":")[1] ?? null);
     // Check-Ins liegen seit 1.60.0 unter Body & Longevity; aus dem Menü seit 1.77.0 immer „Überblick“ (wie am PC)
     if (el.dataset.arg === "body") S.bodyTab = el.dataset.tab ?? (el.closest(".drawer") ? "overview" : S.bodyTab ?? "overview");
+    // Fällige Hormongabe: direkt Superhuman → HRT (1.113.0)
+    if (el.dataset.arg === "superhuman" && el.dataset.tab) S.superTab = el.dataset.tab;
     const sec = SECTIONS.find((x) => x.id === el.dataset.arg);
     return sec?.view ? go(sec.view) : go("pc-only", el.dataset.arg);
+  },
+  // Warnung „Hormongabe überfällig“ wegklicken bzw. direkt zum Eintragen (1.113.0)
+  "hrt-alarm-ok": () => {
+    ackHrtAlarms();
+    render();
+  },
+  "hrt-alarm-go": () => {
+    ackHrtAlarms();
+    S.superTab = "hrt";
+    go("super");
   },
   "rest-plus": () => adjustRest(15),
   "rest-minus": () => adjustRest(-15),

@@ -6,7 +6,7 @@ import { today as todayIso } from "./diary.js";
 import * as DP from "./devprefs.js";
 import { app, esc, go, render, S } from "./appbase.js";
 import { actions } from "./appactions.js";
-import { markTitle, marksOf, openItemsNow, phoneTab, resetOpenItems } from "./openitems.js";
+import { hrtAlarmHtml, hrtStateNow, openHrtAlarms, markTitle, marksOf, openItemsNow, phoneTab, resetOpenItems } from "./openitems.js";
 
 // ------------------------------------------------------------------ Menü (wie die linke Leiste am PC)
 
@@ -30,11 +30,15 @@ function navMarks() {
     const list = marksOf(items, id);
     if (list.length) out.set(id, { count: list.length, title: markTitle(list), tab: phoneTab(list[0]) });
   }
+  // Hormongabe seit 6 Stunden überfällig: „Superhuman“ leuchtet orange (1.113.0)
+  const stage = hrtStateNow().stage;
+  const sh = out.get("superhuman");
+  if (sh && (stage === "glow" || stage === "alarm")) sh.alert = true;
   return out;
 }
 
 let lastMarks = "";
-const marksKey = (m) => [...m.entries()].map(([id, x]) => `${id}:${x.count}`).join("|");
+const marksKey = (m) => `${[...m.entries()].map(([id, x]) => `${id}:${x.count}${x.alert ? "!" : ""}`).join("|")}#${openHrtAlarms().length}`;
 
 export function renderNav() {
   if (!S.catalog) {
@@ -49,7 +53,9 @@ export function renderNav() {
   lastMarks = marksKey(marks);
   navRoot.innerHTML =
     drawerHtml({ view: S.view, arg: S.arg, open: S.menuOpen, esc, back: S.logEdit?.back ?? null, marks }) +
-    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen), slots: S.prefs.barSlots, sub: S.subMenu, marks }) + quickSheetHtml(Boolean(S.quickOpen), DP.quickItems(QUICK, S.prefs.quick)) : "");
+    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen), slots: S.prefs.barSlots, sub: S.subMenu, marks }) + quickSheetHtml(Boolean(S.quickOpen), DP.quickItems(QUICK, S.prefs.quick)) : "") +
+    // Warnung: Hormongabe seit 12 Stunden überfällig (1.113.0)
+    hrtAlarmHtml(esc);
   document.body.classList.toggle("has-tabbar", bar);
   // Mit Knopf unten entfällt der Reiter-Knopf oben links
   document.body.classList.toggle("has-submenu", Boolean(bar && S.subMenu));
@@ -133,8 +139,12 @@ navRoot.addEventListener("click", (ev) => {
     const sec = SECTIONS.find((x) => x.id === id);
     return go(sec?.view ?? "home");
   }
+  // Warnung „Hormongabe überfällig“ (1.113.0)
+  if (el.dataset.act === "hrt-alarm-ok" || el.dataset.act === "hrt-alarm-go") return actions[el.dataset.act](el);
   if (el.dataset.act === "menu-go") {
     S.menuOpen = false;
+    // Mit orangem Punkt direkt zum Reiter zum Eintragen (z. B. Superhuman → HRT)
+    if (el.dataset.tab) return actions["menu-go"](el);
     const sec = SECTIONS.find((x) => x.id === el.dataset.arg);
     return sec?.view ? go(sec.view) : go("pc-only", el.dataset.arg);
   }

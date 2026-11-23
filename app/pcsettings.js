@@ -25,6 +25,8 @@ export const SYNC_KEYS = [
   "ui.workout_targets",
   // Hinweise je Training ausgeblendet (1.110.0)
   "ui.training_hints_off",
+  // Superhuman → HRT: Injektionsintervall je Präparat (1.113.0)
+  "ui.hrt_intervals",
   "measurement_methods",
   "secret_protocols",
   "ui.day_start",
@@ -167,6 +169,7 @@ export function settingLabel(key) {
   if (key.startsWith(MEAL_NAME_PREFIX) || ["meal_hidden", "meal_extra", "meal_extra_hidden", "meal_workout"].includes(key)) return "Mahlzeiten";
   if (key === "ui.training_skips" || key === "ui.training_durations") return "Trainings im Tagesverlauf";
   if (key === "ui.workout_targets") return "Workout-Richtwerte";
+  if (key === "ui.hrt_intervals") return "Injektionsintervall";
   if (key === "ui.training_hints_off") return "Hinweise zum Training (ausgeblendet)";
   if (key === "measurement_methods") return "Messmethoden";
   if (key === "secret_protocols") return "Secret Protocols";

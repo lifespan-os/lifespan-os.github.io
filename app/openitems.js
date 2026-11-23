@@ -19,7 +19,11 @@ import { S } from "./appbase.js";
 const OI = () => D.openItems;
 const WT = () => D.workoutTimeline;
 
+const HS = () => D.hrtSchedule;
+
 let cache = { at: 0, items: [] };
+/** Hormongaben mit festem Intervall: höchste Stufe und Warnungen (1.113.0, wie PC 1.0.189) */
+let hrtState = { stage: null, alarms: [] };
 
 /** Offene Punkte für heute; innerhalb einer Sekunde aus dem Zwischenspeicher (mehrere Leisten). */
 export function openItemsNow() {
@@ -71,15 +75,76 @@ function compute() {
   } catch {
     workoutsToday = 0;
   }
+  // Hormongabe: festes Intervall nach Uhrzeit (Punkt, nach 6 h Leuchten, nach 12 h Warnung),
+  // sonst der geschätzte Abstand wie bisher
   let hrtDue = [];
+  hrtState = { stage: null, alarms: [] };
   try {
     if (String(PS.effective(S.catalog, S.pcsettings, "secret_protocols")) === "1") {
-      hrtDue = D.hrtDueToday(SD.hrtEntriesOf(S.catalog, S.super), t).map((d) => d.hormone);
+      const all = SD.hrtEntriesOf(S.catalog, S.super);
+      const intervals = HS().parseHrtIntervals(PS.effective(S.catalog, S.pcsettings, HS().HRT_INTERVALS_SETTING));
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      const fixed = HS().hrtSchedules(all, intervals, date, time);
+      hrtState = { stage: HS().topStage(fixed), alarms: fixed.filter((x) => x.stage === "alarm") };
+      hrtDue = [
+        ...fixed.filter((x) => x.stage !== null).map((x) => x.hormone),
+        ...D.hrtDueToday(all, t)
+          .filter((d) => !intervals[HS().hrtKey(d.hormone)])
+          .map((d) => d.hormone),
+      ];
     }
-  } catch {
+  } catch (e) {
+    console.error(e);
     hrtDue = [];
   }
   return OI().openItems({ status, dueValues, todos, planned, workoutsToday, hrtDue });
+}
+
+/** Stand der Hormongaben (nach `openItemsNow`) */
+export function hrtStateNow() {
+  openItemsNow();
+  return hrtState;
+}
+
+const ACK_KEY = "lifespan.hrt_alarm_ack";
+function readAck() {
+  try {
+    const list = JSON.parse(localStorage.getItem(ACK_KEY) ?? "[]");
+    return Array.isArray(list) ? list.filter((x) => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Offene Warnungen (seit 12 Stunden überfällig, noch nicht weggeklickt) */
+export function openHrtAlarms() {
+  const ack = readAck();
+  return hrtStateNow().alarms.filter((a) => !ack.includes(HS().alarmKey(a)));
+}
+
+/** Warnungen wegklicken (je Präparat und Termin einmal) */
+export function ackHrtAlarms() {
+  const keys = [...readAck(), ...openHrtAlarms().map((a) => HS().alarmKey(a))].slice(-50);
+  try {
+    localStorage.setItem(ACK_KEY, JSON.stringify(keys));
+  } catch {
+    // ohne Speicher erscheint die Warnung beim nächsten Öffnen erneut
+  }
+}
+
+/** Warnung als Dialog (muss aktiv weggeklickt werden) */
+export function hrtAlarmHtml(esc) {
+  const list = openHrtAlarms();
+  if (!list.length) return "";
+  return `<div class="hrt-alarm-backdrop" role="presentation"><div class="hrt-alarm card" role="alertdialog" aria-modal="true" aria-labelledby="hrt-alarm-title">
+    <h3 id="hrt-alarm-title">Hormongabe überfällig</h3>
+    <p>Seit mehr als 12 Stunden ist keine Gabe eingetragen:</p>
+    <ul>${list.map((a) => `<li>${esc(HS().alarmText(a))}</li>`).join("")}</ul>
+    <p class="muted small">Trage die Gabe ein oder vermerke sie als „ausgelassen“ – dann endet die Erinnerung.</p>
+    <div class="row-actions"><button class="btn primary" data-act="hrt-alarm-go">Gabe eintragen</button><button class="btn" data-act="hrt-alarm-ok">Verstanden</button></div>
+  </div></div>`;
 }
 
 /** Punkte je Bereich */
@@ -99,6 +164,7 @@ export function phoneTab(item) {
   if (!item?.tab) return null;
   if (item.section === "training" && (item.tab === "plans" || item.tab === "neat")) return item.tab;
   if (item.section === "body" && item.tab === "entry") return "entry";
+  if (item.section === "superhuman" && item.tab === "hrt") return "hrt";
   return null;
 }
 

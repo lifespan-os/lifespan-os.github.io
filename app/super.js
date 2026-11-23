@@ -11,6 +11,7 @@ import { today } from "./diary.js";
 import { barTrendSvg } from "./pcview.js";
 import { calculatorTab, checklistTab, fromFor, hrtTab, levelsTab } from "./supertabs.js";
 import { timelineTab } from "./parity.js";
+import { dotHtml, openTabsOf } from "./openitems.js";
 export { viewHrtEdit } from "./supertabs.js";
 export { superActions, superChange, superInput } from "./superactions.js";
 
@@ -97,9 +98,11 @@ export function viewSuper() {
   const pending = SD.unsentSuper(S.super);
   const views = { log: logTab, analysis: analysisTab, timeline: () => timelineTab(entries()), substances: substancesTab, levels: levelsTab, calculator: calculatorTab, checklist: checklistTab };
   const body = (views[tab] ?? hrtTab)();
+  // Punkt am Reiter HRT, wenn eine Gabe fällig ist (1.113.0)
+  const marks = openTabsOf("superhuman");
   return `${X.header("Superhuman")}<main class="wrap">
     <nav class="tabs" aria-label="Superhuman">${TABS.map(
-      ([v, l]) => `<button class="tab ${v === tab ? "active" : ""}" data-act="sh-tab" data-arg="${v}" ${v === tab ? 'aria-current="page"' : ""}>${l}</button>`,
+      ([v, l]) => `<button class="tab ${v === tab ? "active" : ""}" data-act="sh-tab" data-arg="${v}" ${v === tab ? 'aria-current="page"' : ""}>${l}${marks.has(v) ? dotHtml() : ""}</button>`,
     ).join("")}</nav>
     ${pending ? `<p class="muted small">${pending} ${pending === 1 ? "Änderung" : "Änderungen"} in Superhuman noch nicht am PC · <button class="linkbtn" data-go="send">An den PC senden</button></p>` : ""}
     ${body}

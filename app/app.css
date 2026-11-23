@@ -2294,3 +2294,17 @@ button.pcal-done { display: flex; align-items: center; justify-content: space-be
 .pcal-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; }
 .pcal-legend > span { display: inline-flex; align-items: center; gap: 4px; }
 .pcal-rest { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: var(--kind-rest-fill); border: 1px solid var(--kind-rest); }
+
+/* Superhuman → HRT (1.113.0): Gabe seit 6 Stunden überfällig = Bereich leuchtet orange,
+   seit 12 Stunden = Warnung, die weggeklickt werden muss */
+.drawer__item.is-alert,
+.tabbar__item.is-alert { background: var(--orange); color: var(--orange-ink); box-shadow: 0 0 12px 2px var(--orange); animation: hrt-glow 1.6s ease-in-out infinite alternate; }
+.drawer__item.is-alert svg,
+.tabbar__item.is-alert svg { color: var(--orange-ink); stroke: currentColor; }
+.drawer__item.is-alert .nav__dot,
+.tabbar__item.is-alert .nav__dot { background: var(--orange-ink); }
+@keyframes hrt-glow { from { box-shadow: 0 0 4px 0 var(--orange); } to { box-shadow: 0 0 16px 4px var(--orange); } }
+@media (prefers-reduced-motion: reduce) { .drawer__item.is-alert, .tabbar__item.is-alert { animation: none; } }
+.hrt-alarm-backdrop { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; padding: calc(var(--safe-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 16px); background: rgba(10, 26, 48, .6); }
+.hrt-alarm { width: 100%; max-width: 420px; margin: 0; border-top: 6px solid var(--orange); }
+.hrt-alarm ul { margin: 8px 0; padding-left: 20px; }

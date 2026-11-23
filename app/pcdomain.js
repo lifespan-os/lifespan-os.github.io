@@ -13186,6 +13186,122 @@ function progress(items) {
   return { done: items.filter((i) => i.done).length, total: items.length };
 }
 
+// src/domain/hrtSchedule.ts
+var hrtSchedule_exports = {};
+__export(hrtSchedule_exports, {
+  HRT_ALARM_AFTER_MIN: () => HRT_ALARM_AFTER_MIN,
+  HRT_DEFAULT_TIME: () => HRT_DEFAULT_TIME,
+  HRT_GLOW_AFTER_MIN: () => HRT_GLOW_AFTER_MIN,
+  HRT_INTERVALS_SETTING: () => HRT_INTERVALS_SETTING,
+  HRT_INTERVAL_MAX: () => HRT_INTERVAL_MAX,
+  alarmKey: () => alarmKey,
+  alarmText: () => alarmText,
+  hrtKey: () => hrtKey,
+  hrtSchedules: () => hrtSchedules,
+  parseHrtIntervals: () => parseHrtIntervals,
+  parseIntervalInput: () => parseIntervalInput,
+  stageFor: () => stageFor,
+  topStage: () => topStage,
+  withHrtInterval: () => withHrtInterval
+});
+var HRT_INTERVALS_SETTING = "ui.hrt_intervals";
+var HRT_GLOW_AFTER_MIN = 6 * 60;
+var HRT_ALARM_AFTER_MIN = 12 * 60;
+var HRT_DEFAULT_TIME = "08:00";
+var HRT_INTERVAL_MAX = 365;
+var hrtKey = (hormone) => hormone.trim().toLowerCase();
+function parseHrtIntervals(raw) {
+  if (!raw) return {};
+  try {
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== "object" || Array.isArray(data)) return {};
+    const out = {};
+    for (const [k, v] of Object.entries(data)) {
+      if (typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= HRT_INTERVAL_MAX) {
+        out[hrtKey(k)] = v;
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+function withHrtInterval(raw, hormone, days3) {
+  const map = parseHrtIntervals(raw);
+  const key = hrtKey(hormone);
+  if (days3 === null) delete map[key];
+  else map[key] = days3;
+  return JSON.stringify(map);
+}
+function parseIntervalInput(text2) {
+  const t = text2.trim();
+  if (t === "") return { ok: true, days: null };
+  if (!/^\d+$/.test(t)) return { ok: false, error: "Bitte ganze Tage angeben, z. B. 7." };
+  const days3 = Number(t);
+  if (days3 < 1 || days3 > HRT_INTERVAL_MAX) {
+    return { ok: false, error: `Bitte 1 bis ${HRT_INTERVAL_MAX} Tage angeben.` };
+  }
+  return { ok: true, days: days3 };
+}
+var shift = (iso2, days3) => {
+  const d = /* @__PURE__ */ new Date(`${iso2}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days3);
+  return d.toISOString().slice(0, 10);
+};
+var minutesBetween = (fromDate, fromTime, toDate, toTime) => {
+  const a = Date.parse(`${fromDate}T${fromTime}:00Z`);
+  const b = Date.parse(`${toDate}T${toTime}:00Z`);
+  return Math.round((b - a) / 6e4);
+};
+function stageFor(overdueMin) {
+  if (overdueMin >= HRT_ALARM_AFTER_MIN) return "alarm";
+  if (overdueMin >= HRT_GLOW_AFTER_MIN) return "glow";
+  if (overdueMin >= 0) return "due";
+  return null;
+}
+function hrtSchedules(entries, intervals, nowDate, nowTime2) {
+  const last = /* @__PURE__ */ new Map();
+  for (const e of entries) {
+    const key = hrtKey(e.hormone);
+    if (!intervals[key]) continue;
+    const prev = last.get(key);
+    const stamp3 = `${e.date} ${e.time ?? ""}`;
+    if (!prev || stamp3 > `${prev.date} ${prev.time ?? ""}`) {
+      last.set(key, { hormone: e.hormone.trim(), date: e.date, time: e.time });
+    }
+  }
+  const out = [];
+  for (const [key, l] of last) {
+    const intervalDays = intervals[key];
+    const dueDate = shift(l.date, intervalDays);
+    const dueTime = l.time ?? HRT_DEFAULT_TIME;
+    const overdueMin = minutesBetween(dueDate, dueTime, nowDate, nowTime2);
+    out.push({
+      hormone: l.hormone,
+      intervalDays,
+      lastDate: l.date,
+      lastTime: l.time,
+      dueDate,
+      dueTime,
+      overdueMin,
+      stage: stageFor(overdueMin)
+    });
+  }
+  return out.sort((a, b) => b.overdueMin - a.overdueMin || a.hormone.localeCompare(b.hormone));
+}
+function topStage(list2) {
+  const rank = { due: 1, glow: 2, alarm: 3 };
+  let best = null;
+  for (const s of list2) if (s.stage && (!best || rank[s.stage] > rank[best])) best = s.stage;
+  return best;
+}
+var alarmKey = (s) => `${hrtKey(s.hormone)}|${s.dueDate}|${s.dueTime}`;
+function alarmText(s) {
+  const h = Math.floor(s.overdueMin / 60);
+  const when = `${s.dueDate.slice(8, 10)}.${s.dueDate.slice(5, 7)}. um ${s.dueTime} Uhr`;
+  return `${s.hormone}: f\xE4llig seit ${when} (seit ${h} Stunden), Intervall ${s.intervalDays} ${s.intervalDays === 1 ? "Tag" : "Tage"}.`;
+}
+
 // src/domain/scaleScan.ts
 var scaleScan_exports = {};
 __export(scaleScan_exports, {
@@ -28376,7 +28492,7 @@ function entry(kind, id3, label, href, detail, usage) {
   };
 }
 var pad5 = (n2) => String(n2).padStart(2, "0");
-function shift(date, days3) {
+function shift2(date, days3) {
   const [y, m, d] = date.split("-").map(Number);
   const t = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, (d ?? 1) + days3));
   return `${t.getUTCFullYear()}-${pad5(t.getUTCMonth() + 1)}-${pad5(t.getUTCDate())}`;
@@ -28390,8 +28506,8 @@ function valid(y, m, d) {
 function parseDayQuery(query, today) {
   const q = normalizeSearch2(query);
   if (q === "heute") return today;
-  if (q === "gestern") return shift(today, -1);
-  if (q === "vorgestern") return shift(today, -2);
+  if (q === "gestern") return shift2(today, -1);
+  if (q === "vorgestern") return shift2(today, -2);
   const iso2 = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(q);
   if (iso2) return valid(Number(iso2[1]), Number(iso2[2]), Number(iso2[3]));
   const de3 = /^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})?$/.exec(q);
@@ -30783,7 +30899,7 @@ var APP_FAQ = [
     area: "Ern\xE4hrung",
     device: "beide",
     question: "Wie trage ich eine Mahlzeit ein?",
-    answer: "Unter Nutrition \u2192 Tagebuch im Tagesverlauf den orangen Knopf \u201EJetzt eintragen\u201C anklicken (oder an die gew\xFCnschte Uhrzeit ziehen), die Mahlzeit w\xE4hlen und Lebensmittel hinzuf\xFCgen. In der Ansicht \u201EListe\u201C geht es \xFCber \u201EHinzuf\xFCgen\u201C bei der Mahlzeit.",
+    answer: "Unter Nutrition \u2192 Tagebuch im Tagesverlauf den orangen Knopf \u201EJetzt eintragen\u201C anklicken (oder an die gew\xFCnschte Uhrzeit ziehen), die Mahlzeit w\xE4hlen (gr\xFCner Punkt = noch frei, roter Punkt = schon Lebensmittel eingetragen oder geplant) und Lebensmittel hinzuf\xFCgen. In der Ansicht \u201EListe\u201C geht es \xFCber \u201EHinzuf\xFCgen\u201C bei der Mahlzeit.",
     keywords: [
       "mahlzeit",
       "essen",
@@ -31473,7 +31589,12 @@ function openItems(input) {
     out.push({ key: `todo-${t.id}`, label: `To-do: ${t.text}`, section: "checklists" });
   }
   for (const name of input.hrtDue) {
-    out.push({ key: `hrt-${name}`, label: `Hormongabe f\xE4llig: ${name}`, section: "checklists" });
+    out.push({
+      key: `hrt-${name}`,
+      label: `Hormongabe f\xE4llig: ${name}`,
+      section: "superhuman",
+      tab: "hrt"
+    });
   }
   return out;
 }
@@ -31481,7 +31602,9 @@ function itemsOf(items, section) {
   return items.filter((i) => i.section === section);
 }
 function openTabs(items, section) {
-  return new Set(items.filter((i) => i.section === section && i.tab).map((i) => i.tab));
+  return new Set(
+    items.filter((i) => i.section === section && i.tab).map((i) => i.tab)
+  );
 }
 function markTitle(items) {
   if (items.length === 0) return "";
@@ -31669,6 +31792,7 @@ export {
   hrtChecklist_exports as hrtChecklist,
   hrtDueToday,
   hrtDuplicateHint,
+  hrtSchedule_exports as hrtSchedule,
   insights_exports as insights,
   insightsDaily_exports as insightsDaily,
   insightsLoad_exports as insightsLoad,

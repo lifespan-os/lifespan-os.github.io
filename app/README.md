@@ -1685,6 +1685,17 @@ Wie PC 1.0.177 (Wünsche des Nutzers vom 22.11.2026):
   wieder welche (geplante und daraus gestartete Einheit gelten als dasselbe Training). Einstellung
   `ui.training_hints_off`, mit dem PC abgeglichen.
 
+## Version 1.113.0 (23.11.2026): Injektionsintervall und Erinnerung an die Hormongabe (wie PC 1.0.189)
+
+- Superhuman → HRT → Gabe erfassen: neues Feld „Injektionsintervall (in Tagen)“ je Präparat
+  (Einstellung `ui.hrt_intervals`, mit dem PC abgeglichen). Fällig: letzter Eintrag + Intervall zur
+  Uhrzeit der letzten Gabe (ohne Uhrzeit 08:00); „ausgelassen“ startet das Intervall neu.
+- Ab dem Termin oranger Punkt bei Superhuman und am Reiter HRT; nach 6 Stunden leuchtet Superhuman
+  (Menü, Platz in der Leiste bzw. „Mehr“) komplett orange; nach 12 Stunden erscheint beim Öffnen eine
+  Warnung, die weggeklickt werden muss (je Präparat und Termin einmal). Nur mit Secret Protocols.
+- Regeln `hrtSchedule` aus `pcdomain.js`; `openitems.js`, `navshell.js`, `nav.js`, `appactions.js`,
+  `super.js`, `supertabs.js`, `superactions.js`, `pcsettings.js`, `app.css`.
+
 ## Version 1.112.0 (23.11.2026): Belegte Mahlzeiten in der Auswahl (wie PC 1.0.188)
 
 - Tagesverlauf → Knopf → Fenster „Neuer Eintrag“: Die Mahlzeiten stehen als antippbare Felder mit

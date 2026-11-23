@@ -2,6 +2,7 @@
 import * as SD from "./superdata.js";
 import * as H from "./healthdata.js";
 import * as D from "./pcdomain.js";
+import * as PS from "./pcsettings.js";
 import { today } from "./diary.js";
 import { doseContextHtml } from "./parity.js";
 import { CL, CUSTOM, DC, entries, esc, fmt, HL, HR, numberToInput, positive, products, RANGES, viewSuper, X } from "./super.js";
@@ -95,6 +96,25 @@ export function textarea(k, label, value, hint = "", error = "") {
     ${error ? `<p class="field-error">${esc(error)}</p>` : hint ? `<p class="muted small">${esc(hint)}</p>` : ""}</div>`;
 }
 
+// Injektionsintervall je Präparat (Einstellung `ui.hrt_intervals`, 1.113.0, wie PC 1.0.189)
+const HS = () => D.hrtSchedule;
+export const savedIntervals = () => HS().parseHrtIntervals(PS.effective(X.S.catalog, X.S.pcsettings, HS().HRT_INTERVALS_SETTING));
+export const savedIntervalOf = (hormone) => (hormone.trim() ? (savedIntervals()[HS().hrtKey(hormone)] ?? null) : null);
+
+function intervalField(f, d, e) {
+  const saved = savedIntervalOf(d.hormone);
+  const text = f.intervalTouched ? (f.intervalText ?? "") : saved === null ? "" : String(saved);
+  const check = HS().parseIntervalInput(text);
+  const next = check.ok && check.days !== null && d.date ? `${D.formatDate(D.trends.shiftDays(d.date, check.days))} um ${d.time || HS().HRT_DEFAULT_TIME} Uhr` : null;
+  return field("interval", "Injektionsintervall (in Tagen)", text, {
+    unit: "Tage",
+    mode: "numeric",
+    placeholder: "z. B. 7",
+    hint: next ? `Nächste Gabe: ${next}. Erinnerung bei Superhuman, ab 6 Stunden leuchtet der Bereich, ab 12 Stunden erscheint eine Warnung.` : "Leer lassen für keine feste Erinnerung.",
+    error: e.interval,
+  });
+}
+
 export function newForm(draft) {
   const all = entries();
   const siteOptions = [...new Set([...all.flatMap((e) => (e.site ? [e.site.trim()] : [])), ...HR().SITE_SUGGESTIONS])];
@@ -150,6 +170,7 @@ export function viewHrtEdit() {
       </div>
       ${field("expiryDate", "Verfallsdatum (optional)", d.expiryDate, { type: "date", hint: expiry ?? "", error: e.expiryDate })}
       ${field("prescription", "Verordnung (optional)", d.prescription, { placeholder: "z. B. Praxis, Rezept vom …", error: e.prescription })}
+      ${intervalField(f, d, e)}
       ${vialMg !== null ? `<p class="muted small">Inhalt der Ampulle: ${esc(D.formatNumber(positive(d.vialVolumeMl) ?? 0, 2))} ml × ${esc(fmt(positive(d.concentrationMgMl) ?? 0))} mg/ml = ${esc(fmt(vialMg))} mg Wirkstoff.</p>` : ""}
       ${canPrefill ? `<p class="small"><button class="linkbtn" data-act="hrt-prefill">Angaben der letzten Gabe „${esc(d.hormone.trim())}“ übernehmen</button> <span class="muted">(Präparat, Injektionsvolumen, Anwendung, Kanüle, Verordnung)</span></p>` : ""}
     </section>

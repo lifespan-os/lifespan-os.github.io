@@ -6,6 +6,7 @@ import * as PS from "./pcsettings.js";
 import { today } from "./diary.js";
 import { doseContextHtml } from "./parity.js";
 import { CL, CUSTOM, DC, entries, esc, fmt, HL, HR, numberToInput, positive, products, RANGES, viewSuper, X } from "./super.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 // ------------------------------------------------------------------ HRT
 
@@ -80,9 +81,9 @@ export function hrtTab() {
 
 // ------------------------------------------------------------------ HRT-Formular
 
-export function field(k, label, value, { type = "text", unit = "", hint = "", mode = "", list = "", placeholder = "", disabled = false, error = "" } = {}) {
+export function field(k, label, value, { type = "text", unit = "", hint = "", mode = "", list = "", placeholder = "", disabled = false, error = "", req = false } = {}) {
   return `<div class="field ${error ? "has-error" : ""}"><label for="hf-${k}">${esc(label)}</label>
-    <div class="input-row"><input id="hf-${k}" type="${type}" data-hrt="${k}" value="${esc(value)}" ${mode ? `inputmode="${mode}"` : ""} ${list ? `list="${list}"` : ""} ${placeholder ? `placeholder="${esc(placeholder)}"` : ""} ${disabled ? "disabled" : ""} autocomplete="off">${unit ? `<span class="unit">${esc(unit)}</span>` : ""}</div>
+    <div class="input-row"><input id="hf-${k}" type="${type}" data-hrt="${k}" value="${esc(value)}" ${req && !disabled ? "required" : ""} ${mode ? `inputmode="${mode}"` : ""} ${list ? `list="${list}"` : ""} ${placeholder ? `placeholder="${esc(placeholder)}"` : ""} ${disabled ? "disabled" : ""} autocomplete="off">${unit ? `<span class="unit">${esc(unit)}</span>` : ""}</div>
     ${error ? `<p class="field-error">${esc(error)}</p>` : hint ? `<p class="muted small">${esc(hint)}</p>` : ""}</div>`;
 }
 
@@ -165,7 +166,7 @@ export function viewHrtEdit() {
   const hormones = [...new Set([...prods.map((p) => p.hormone), ...all.map((x) => x.hormone), ...HR().HORMONE_SUGGESTIONS])];
   const makers = [...new Set([...prods.flatMap((p) => (p.manufacturer ? [p.manufacturer] : [])), ...all.flatMap((x) => (x.manufacturer ? [x.manufacturer] : []))])];
   const routeOpts = [["", "Keine Angabe"], ...Object.entries(D.ROUTE_LABELS)];
-  return `${X.header(d.id ? "HRT-Eintrag bearbeiten" : "Hormongabe erfassen", { back: "super" })}<main class="wrap">
+  return `${X.header(d.id ? "HRT-Eintrag bearbeiten" : "Hormongabe erfassen", { back: "super" })}<main class="wrap" ${autoAttrs("hrt", d.id ? "edit" : "new")}>
     <datalist id="hrt-hormones">${hormones.map((h) => `<option value="${esc(h)}">`).join("")}</datalist>
     <datalist id="hrt-makers">${makers.map((m) => `<option value="${esc(m)}">`).join("")}</datalist>
     <section class="card">
@@ -180,7 +181,7 @@ export function viewHrtEdit() {
       </div>
       ${f.productNote ? `<p class="${f.productNote.tone === "error" ? "field-error" : "muted small"}">${esc(f.productNote.text)}</p>` : ""}
       ${field("manufacturer", "Hersteller (optional)", d.manufacturer, { list: "hrt-makers", error: e.manufacturer })}
-      ${field("hormone", "Art (Hormon bzw. Präparat)", d.hormone, { list: "hrt-hormones", placeholder: "z. B. Testosteron Enantat", error: e.hormone })}
+      ${field("hormone", "Art (Hormon bzw. Präparat)", d.hormone, { list: "hrt-hormones", placeholder: "z. B. Testosteron Enantat", error: e.hormone, req: true })}
       ${field("batch", "Charge (optional)", d.batch, { placeholder: "Ch.-B. laut Packung", error: e.batch })}
       <div class="lab-row__grid">
         ${field("vialVolumeMl", "Ampullenvolumen (optional)", d.vialVolumeMl, { unit: "ml", mode: "decimal", error: e.vialVolumeMl })}
@@ -195,13 +196,13 @@ export function viewHrtEdit() {
     <section class="card">
       <h3>Gabe</h3>
       <div class="lab-row__grid">
-        ${field("date", "Datum", d.date, { type: "date", error: e.date })}
+        ${field("date", "Datum", d.date, { type: "date", error: e.date, req: true })}
         ${field("time", "Uhrzeit (optional)", d.time, { type: "time", error: e.time })}
       </div>
       ${select("status", "Status", d.status, Object.entries(HR().STATUS_LABELS), e.status)}
       <div class="lab-row__grid">
         ${field("volumeMl", "Injektionsvolumen", d.volumeMl, { unit: "ml", mode: "decimal", placeholder: "0,00", hint: "2 Stellen, z. B. 0,45", error: e.volumeMl })}
-        ${field("amount", "Wirkstoffmenge", computed !== null ? numberToInput(computed, 3) : d.amount, { unit: d.unit, mode: "decimal", disabled: computed !== null, error: e.amount })}
+        ${field("amount", "Wirkstoffmenge", computed !== null ? numberToInput(computed, 3) : d.amount, { unit: d.unit, mode: "decimal", disabled: computed !== null, error: e.amount, req: true })}
       </div>
       <p class="muted small">${
         computed !== null
@@ -224,7 +225,7 @@ export function viewHrtEdit() {
       ${
         f.dupes
           ? `<div class="warn">${esc(f.dupes)}<div class="row-actions"><button class="btn primary" data-act="hrt-save" data-arg="confirmed">Trotzdem speichern</button><button class="btn" data-act="hrt-dupe-cancel">Zurück</button></div></div>`
-          : `<div class="row-actions"><button class="btn primary" data-act="hrt-save">${d.id ? "Änderung speichern" : "Eintrag speichern"}</button><button class="btn" data-go="super">Abbrechen</button></div>`
+          : `${autoSaveHtml("hrt-save", { mode: d.id ? "edit" : "new" })}<div class="row-actions"><button class="btn" data-go="super">${d.id ? "Fertig" : "Abbrechen"}</button></div>`
       }
     </section>
   </main>`;
@@ -466,8 +467,8 @@ export function checklistTab() {
       <ul class="hrt-check__list">${items
         .map((it, i) => {
           if (item && item.section === s.id && item.id === it.id) {
-            return `<li class="is-editing"><input type="text" data-chk="edit" value="${esc(item.text)}" maxlength="${CL().ITEM_MAX_LENGTH}" aria-label="Punkt bearbeiten">
-            <div class="row-actions"><button class="btn sm primary" data-act="chk-edit-save">Speichern</button><button class="btn sm" data-act="chk-edit-cancel">Abbrechen</button></div></li>`;
+            return `<li class="is-editing" ${autoAttrs("chk-edit")}><input type="text" data-chk="edit" value="${esc(item.text)}" maxlength="${CL().ITEM_MAX_LENGTH}" aria-label="Punkt bearbeiten">
+            ${autoSaveHtml("chk-edit-save", { note: "" })}<div class="row-actions"><button class="btn sm" data-act="chk-edit-cancel">Fertig</button></div></li>`;
           }
           return `<li class="${it.done ? "is-done" : ""}"><label class="hrt-check__item"><input type="checkbox" data-chk="toggle" data-section="${s.id}" data-id="${esc(it.id)}" ${it.done ? "checked" : ""}><span>${esc(it.text)}</span></label>
           ${

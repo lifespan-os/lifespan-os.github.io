@@ -11,6 +11,7 @@ import * as SD from "./superdata.js";
 import * as B from "./bodydata.js";
 import { X, today } from "./diary.js";
 import { wearableOf } from "./heart.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 const esc = (v) => X.esc(v);
 const F = (v, d = 0) => D.formatNumber(v, d);
@@ -387,8 +388,8 @@ export function cardioSettingsCard(db) {
   const e = (k) => (err[k] ? `<p class="field-error">${esc(err[k])}</p>` : "");
   const isDefault = s.countInTargets === d.countInTargets && s.cap === d.cap && s.minutesPerSet === d.minutesPerSet && s.zoneFactors.every((z, i) => z === d.zoneFactors[i]);
   const ZL = ["Zone 1 · sehr leicht", "Zone 2 · leicht", "Zone 3 · moderat", "Zone 4 · hart", "Zone 5 · maximal"];
-  return `<section class="card" id="set-cardio-map"><h3>Cardio in der Körperkarte</h3>
-    <div class="field"><label for="cm-count">Cardio anrechnen</label><select id="cm-count" data-parity="cm-count"><option value="map" ${s.countInTargets ? "" : "selected"}>Nur in der Körperkarte zeigen</option><option value="targets" ${s.countInTargets ? "selected" : ""}>Auch auf die Wochenziele je Muskel</option></select></div>
+  return `<section class="card" id="set-cardio-map" ${autoAttrs("cm")}><h3>Cardio in der Körperkarte</h3>
+    <div class="field"><label for="cm-count">Cardio anrechnen</label><select id="cm-count" data-parity="cm-count" data-autosave-skip><option value="map" ${s.countInTargets ? "" : "selected"}>Nur in der Körperkarte zeigen</option><option value="targets" ${s.countInTargets ? "selected" : ""}>Auch auf die Wochenziele je Muskel</option></select></div>
     <div class="tl-pick">
       <div class="field"><label for="cm-cap">Obergrenze je Einheit und Muskel</label><div class="input-unit"><input id="cm-cap" inputmode="decimal" data-cm="cap" value="${esc(v("cap", s.cap))}"><span class="unit">Sätze</span></div>${e("cap")}</div>
       <div class="field"><label for="cm-mps">Minuten je Satz</label><div class="input-unit"><input id="cm-mps" inputmode="decimal" data-cm="minutesPerSet" value="${esc(v("minutesPerSet", s.minutesPerSet))}"><span class="unit">min</span></div>${e("minutesPerSet")}</div>
@@ -397,7 +398,8 @@ export function cardioSettingsCard(db) {
     <div class="cm-zones">${s.zoneFactors
       .map((z, i) => `<div class="field"><label for="cm-z${i}">${ZL[i]}</label><input id="cm-z${i}" inputmode="decimal" data-cm="zone${i}" value="${esc(v(`zone${i}`, z))}">${e(`zone${i}`)}</div>`)
       .join("")}</div>
-    <div class="row-actions"><button class="btn primary" data-act="cm-save">Speichern</button><button class="btn" data-act="cm-reset" ${isDefault ? "disabled" : ""}>Standardwerte wiederherstellen</button></div>
+    ${autoSaveHtml("cm-save")}
+    <div class="row-actions"><button class="btn" data-act="cm-reset" ${isDefault ? "disabled" : ""}>Standardwerte wiederherstellen</button></div>
     <details class="card-info"><summary class="muted small">So wird gerechnet</summary><p class="muted small">Satz-Äquivalente je Muskel = Minuten × Faktor ÷ Minuten je Satz × Anteil des Muskels an der Bewegung (Hauptmuskel = 100 %). Die Intensität kommt aus dem Ø Puls des Blocks und deinen Herzfrequenz-Zonen, ohne Puls aus der gefühlten Anstrengung (RPE bis 3 = Zone 1, 4–5 = Zone 2, 6 = Zone 3, 7–8 = Zone 4, 9–10 = Zone 5), ohne beides als Zone 2. Standard: nur Körperkarte · ${F(d.cap)} Sätze · ${F(d.minutesPerSet)} min je Satz · Faktoren ${d.zoneFactors.map((z) => D.formatNumber(z, 2)).join(" / ")}. Änderungen gehen mit „An den PC senden“ an den PC.</p></details>
   </section>`;
 }

@@ -138,17 +138,25 @@ export const diaryActions = {
     if (!String(d.time ?? "").trim()) d.time = SP.mealTimeForTiming(d.timing, slots) ?? "";
     const opts = { uuid: X.uuid, now: new Date() };
     try {
-      SP.saveIntake(db, X.S.supp, d, {
+      const row = SP.saveIntake(db, X.S.supp, d, {
         ...opts,
         timingLabel: label,
         ensureMeal: (date, type) => N.ensureMeal(X.S.catalog, X.S.food.local, date, type, opts),
       });
+      d.savedId = row.id;
     } catch (e) {
       st.error = e.message;
       X.rerender();
       return;
     }
     await persistSupp();
+    // Sofort speichern (1.131.0): Editor bleibt offen und bearbeitet die gespeicherte Einnahme
+    if (X.S.autosaving) {
+      d.id = d.savedId;
+      st.error = null;
+      X.toast(d.stackId ? `Supplements „${d.name}“ gespeichert.` : `Supplements (${label ?? "Einnahme"}) gespeichert.`);
+      return X.rerender();
+    }
     X.S.suppEdit = null;
     X.S.diaryDate = d.date;
     X.toast(d.stackId ? `Supplements „${d.name}“ gespeichert.` : `Supplements (${label ?? "Einnahme"}) gespeichert.`);
@@ -263,7 +271,7 @@ export const diaryActions = {
     const meal = local.meals[mealId];
     const item = meal?.items.find((i) => i.id === itemId);
     if (!meal || !item) return;
-    const snapshot = { row: { ...meal.row }, items: meal.items.map((i) => ({ ...i })), fromPc: meal.fromPc, sent: meal.sent };
+    const snapshot = { row: { ...meal.row }, items: meal.items.map((i) => ({ ...i })), fromPc: meal.fromPc, sent: meal.sent, ...(meal.rowChanged ? { rowChanged: true } : {}) };
     N.removeItem(local, mealId, itemId);
     try {
       await X.store.set("nutrition", local);

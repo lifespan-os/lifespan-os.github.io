@@ -59,6 +59,7 @@ import { pdfParityChange } from "./pdfparity.js";
 import { watchParityChange } from "./watchparity.js";
 import { app, esc, go, header, refreshCatalog, render, restEl, S, saveNow, saveSoon, setRender, toast } from "./appbase.js";
 import { foldTabs, sheetRoot } from "./sheets.js";
+import { initAutosave } from "./autosave.js";
 import { measureHead, renderNav, rerenderKeepScroll } from "./navshell.js";
 import { readBackupFile, readMasterFile, setBackupRerender } from "./transferview.js";
 import { renderRest, unlockAudio, wakeLock } from "./resttimer.js";
@@ -532,6 +533,40 @@ initFood({
   go: (view, arg) => go(view, arg),
   confirmTwice: (el, text) => confirmTwice(el, text),
 });
+
+/** Zustände zu Speicherschlüsseln neu laden (Sofort speichern → „Rückgängig“, 1.131.0) */
+const RELOAD = {
+  catalog: async () => (S.catalogRaw = await store.get("catalog")),
+  train: async () => (S.train = TR.trainState(await store.get("train"))),
+  localExercises: async () => (S.localExercises = (await store.get("localExercises")) || []),
+  workouts: async () => (S.workouts = (await store.get("workouts")) || []),
+  prefs: async () => (S.prefs = DP.normPrefs({ ...S.prefs, ...((await store.get("prefs")) || {}) })),
+  nutrition: async () => (S.food = foodState(await store.get("nutrition"))),
+  body: async () => (S.body = bodyState(await store.get("body"))),
+  water: async () => (S.water = (await store.get("water")) || P.emptyWaterLocal()),
+  fast: async () => (S.fast = FT.normFast(await store.get("fast"))),
+  supp: async () => (S.supp = SP.normSupp(await store.get("supp"))),
+  goals: async () => (S.goals = GL.normGoals(await store.get("goals"))),
+  parity: async () => (S.parity = PR.normParity(await store.get("parity"))),
+  pcsettings: async () => (S.pcsettings = PS.normSync(await store.get("pcsettings"))),
+  logs: async () => (S.logs = LG.logsState(await store.get("logs"))),
+  todos: async () => (S.todos = TD.todosState(await store.get("todos"))),
+  checklists: async () => (S.checklists = CD.checklistState(await store.get("checklists"))),
+  caffeine: async () => (S.caffeine = CF.caffeineState(await store.get("caffeine"))),
+  caffeineSettings: async () => (S.caffeineSettings = (await store.get("caffeineSettings")) ?? null),
+  glucose: async () => (S.glucose = GLD.glucoseState(await store.get("glucose"))),
+  health: async () => (S.health = HD.healthState(await store.get("health"))),
+  super: async () => (S.super = SD.superState(await store.get("super"))),
+};
+async function reloadKeys(keys) {
+  for (const k of keys) {
+    if (RELOAD[k]) await RELOAD[k]();
+    else if (/^gym/i.test(k)) await GY.gymsBoot();
+  }
+  refreshCatalog();
+  rerenderKeepScroll();
+}
+initAutosave({ S, actions, store, toast, reload: reloadKeys });
 
 async function boot() {
   fixSafeTop();

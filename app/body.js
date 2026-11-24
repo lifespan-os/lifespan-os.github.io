@@ -10,6 +10,7 @@ import { viewCheckinsTab } from "./trainingdb.js";
 import { longevityTabHtml } from "./longevityview.js";
 import { protocolsTabHtml } from "./protocolsview.js";
 import { dotHtml, openTabsOf } from "./openitems.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -117,25 +118,25 @@ function formCard({ fixed = false } = {}) {
   const m = metricById(f.metricId);
   const values = m ? B.allValues(X.S.catalog, st.local).get(m.id) : [];
   const methods = B.methodsFor(values);
-  return `<section class="card" id="body-form"><h3>${f.editId ? "Wert ändern" : "Wert erfassen"}</h3>
+  return `<section class="card" id="body-form" ${autoAttrs("body-form", f.editId ? "edit" : "new")}><h3>${f.editId ? "Wert ändern" : "Wert erfassen"}</h3>
     ${
       fixed
         ? ""
-        : `<label class="field"><span>Messgröße</span><select data-bf="metricId">${metricOptions(f.metricId)}</select></label>`
+        : `<label class="field"><span>Messgröße</span><select data-bf="metricId" data-autosave-skip>${metricOptions(f.metricId)}</select></label>`
     }
     <div class="grid2">
       <label class="field"><span>Datum</span><input type="date" data-bf="date" value="${esc(f.date)}" max="${today()}"></label>
       <label class="field"><span>Uhrzeit (optional)</span><input type="time" data-bf="time" value="${esc(f.time)}"></label>
     </div>
     <label class="field"><span>${esc(m?.name ?? "Wert")}${m ? ` (${esc(m.unit)})` : ""}</span>
-      <input type="text" inputmode="decimal" data-bf="value" value="${esc(f.value)}" placeholder="${m ? `${fmtNum(m.min_value, m.decimals)} – ${fmtNum(m.max_value, m.decimals)}` : ""}"></label>
+      <input type="text" inputmode="decimal" data-bf="value" required value="${esc(f.value)}" placeholder="${m ? `${fmtNum(m.min_value, m.decimals)} – ${fmtNum(m.max_value, m.decimals)}` : ""}"></label>
     <label class="field"><span>Messmethode (optional)</span>
       <input type="text" data-bf="method" list="body-methods" value="${esc(f.method)}" placeholder="z. B. Waage, InBody, Labor"></label>
     <datalist id="body-methods">${methods.map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
     <label class="field"><span>Notiz (optional)</span><input type="text" data-bf="notes" value="${esc(f.notes)}"></label>
     <p class="muted small">Je Messgröße und Tag gilt ein Wert – ein vorhandener Wert dieses Tages wird ersetzt.</p>
-    <button class="btn primary block" data-act="body-save">${f.editId ? "Änderung speichern" : "Wert speichern"}</button>
-    ${f.editId ? `<button class="btn ghost block" data-act="body-cancel">Abbrechen</button>` : ""}
+    ${autoSaveHtml("body-save", { mode: f.editId ? "edit" : "new" })}
+    ${f.editId ? `<button class="btn ghost block" data-act="body-cancel">${f.auto ? "Neuer Wert" : "Fertig"}</button>` : ""}
   </section>`;
 }
 
@@ -535,11 +536,11 @@ export function viewBodyEntry() {
   const sections = B.metricSections(metrics());
   const derived = derivedFor(d);
   const wd = WEEKDAYS[new Date(`${d.date}T12:00:00`).getDay()];
-  return `${X.header("Werte erfassen", { back: "body" })}<main class="wrap body-entry">
+  return `${X.header("Werte erfassen", { back: "body" })}<main class="wrap body-entry" ${autoAttrs("body-day")}>
     <section class="card day-nav">
       <button class="btn sm" data-act="body-day-shift" data-arg="-1" aria-label="Vortag">‹</button>
       <label class="day-nav__date"><span class="muted small">${d.date === today() ? "Heute" : wd}</span>
-        <input type="date" data-bd="date" value="${esc(d.date)}" max="${today()}" aria-label="Tag"></label>
+        <input type="date" data-bd="date" data-autosave-skip value="${esc(d.date)}" max="${today()}" aria-label="Tag"></label>
       <button class="btn sm" data-act="body-day-shift" data-arg="1" aria-label="Folgetag" ${d.date >= today() ? "disabled" : ""}>›</button>
     </section>
     ${d.errors.date ? `<p class="err small">${esc(d.errors.date)}</p>` : ""}
@@ -579,8 +580,8 @@ export function viewBodyEntry() {
       </section>`;
       })
       .join("")}
-    <div class="entry-save"><button class="btn primary block" data-act="body-day-save">Werte speichern</button></div>
-    <p class="muted small">Gespeichert wird auch automatisch, sobald du einen Bereich verlässt, den Tag wechselst oder die Ansicht schließt. Messmethode und Uhrzeit gelten für alle Werte ihres Bereichs. Ein geleertes Feld entfernt einen noch nicht gesendeten Wert dieses Tages; Werte vom PC bleiben bestehen.</p>
+    <div class="entry-save">${autoSaveHtml("body-day-save", { note: "Jeder Wert wird beim Verlassen des Feldes automatisch gespeichert." })}</div>
+    <p class="muted small">Messmethode und Uhrzeit gelten für alle Werte ihres Bereichs. Ein geleertes Feld entfernt einen noch nicht gesendeten Wert dieses Tages; Werte vom PC bleiben bestehen.</p>
   </main>`;
 }
 
@@ -665,7 +666,7 @@ export const bodyActions = {
     const raw = String(f.value).trim().replace(/\s/g, "").replace(",", ".");
     const value = raw === "" ? null : Number(raw);
     try {
-      const { replaced } = B.saveValue(
+      const { replaced, row } = B.saveValue(
         X.S.catalog,
         st.local,
         { ...f, value: Number.isFinite(value) ? value : null },
@@ -673,8 +674,9 @@ export const bodyActions = {
       );
       await persist();
       const m = metricById(f.metricId);
-      X.toast(replaced ? `${m.name}: Wert vom ${fmtDate(f.date)} ersetzt` : `${m.name} gespeichert`);
-      st.form = blankForm(f.metricId);
+      X.toast(replaced && !f.editId ? `${m.name}: Wert vom ${fmtDate(f.date)} ersetzt` : `${m.name} gespeichert`);
+      // Sofort speichern (1.131.0): das Formular bearbeitet danach den gespeicherten Wert
+      st.form = X.S.autosaving ? { ...f, editId: row.id, auto: true } : blankForm(f.metricId);
       X.rerender();
     } catch (e) {
       X.toast(e.message, true);
@@ -769,7 +771,9 @@ export function bodyChange(el) {
     return true;
   }
   if (el.dataset.bf !== "metricId") return false;
-  S().form.metricId = el.value;
+  // andere Messgröße: neuer Wert (der bisherige ist schon gespeichert)
+  if (S().form.auto) S().form = blankForm(el.value);
+  else S().form.metricId = el.value;
   X.rerender();
   return true;
 }

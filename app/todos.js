@@ -15,6 +15,7 @@ import * as CD from "./checklistdata.js";
 import * as SD from "./superdata.js";
 import * as TR from "./trainingdata.js";
 import { buildDb, today } from "./diary.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -122,8 +123,8 @@ function todosCard(date) {
   const rows = list
     .map((t, i) => {
       if (editing?.id === t.id && editing.where !== "review") {
-        return `<li class="todo-item is-editing"><input type="text" data-todo="edit" value="${esc(editing.text)}" maxlength="${T.TEXT_MAX_CHARS}" aria-label="Aufgabe">
-          <div class="todo-item__actions"><button class="btn sm primary" data-act="todo-edit-save">Speichern</button><button class="btn sm" data-act="todo-edit-cancel">Abbrechen</button></div></li>`;
+        return `<li class="todo-item is-editing" ${autoAttrs("todo-edit")}><input type="text" data-todo="edit" value="${esc(editing.text)}" maxlength="${T.TEXT_MAX_CHARS}" aria-label="Aufgabe">
+          ${autoSaveHtml("todo-edit-save", { note: "" })}<div class="todo-item__actions"><button class="btn sm" data-act="todo-edit-cancel">Fertig</button></div></li>`;
       }
       return `<li class="todo-item ${t.done ? "is-done" : ""}">
         <button class="todo-check ${t.done ? "is-done" : ""}" data-act="todo-toggle" data-arg="${esc(t.id)}" aria-label="${t.done ? "Als offen markieren" : "Abhaken"}">${t.done ? "✓" : ""}</button>
@@ -183,8 +184,8 @@ function weekReviewCard(date) {
   const items = r.open
     .map((t) => {
       if (editing?.id === t.id) {
-        return `<li class="todo-item is-editing"><input type="text" data-todo="edit" value="${esc(editing.text)}" maxlength="${T.TEXT_MAX_CHARS}" aria-label="Aufgabe am ${esc(D.formatWeekdayDate(t.date))}">
-          <div class="todo-item__actions"><button class="btn sm primary" data-act="todo-edit-save">Speichern</button><button class="btn sm" data-act="todo-edit-cancel">Abbrechen</button></div></li>`;
+        return `<li class="todo-item is-editing" ${autoAttrs("todo-edit")}><input type="text" data-todo="edit" value="${esc(editing.text)}" maxlength="${T.TEXT_MAX_CHARS}" aria-label="Aufgabe am ${esc(D.formatWeekdayDate(t.date))}">
+          ${autoSaveHtml("todo-edit-save", { note: "" })}<div class="todo-item__actions"><button class="btn sm" data-act="todo-edit-cancel">Fertig</button></div></li>`;
       }
       return `<li class="todo-item week-review__item"><span class="todo-item__text"><span class="muted small">${esc(D.formatWeekdayDate(t.date))}</span><br>${esc(t.text)}${t.checklistName ? ` <span class="muted small">· aus „${esc(t.checklistName)}“</span>` : ""}</span>
         <span class="week-review__actions">
@@ -299,8 +300,8 @@ function scheduleItem(item) {
   if (todo) {
     const ed = X.S.schedEdit;
     if (ed?.id === todo.id) {
-      return `<li class="schedule__item is-todo"><div class="schedule__edit"><input type="text" data-sched="edit" value="${esc(ed.text)}" aria-label="Aufgabe bearbeiten">
-        <button class="btn sm primary" data-act="sched-edit-save">OK</button><button class="btn sm" data-act="sched-edit-cancel">Abbrechen</button></div></li>`;
+      return `<li class="schedule__item is-todo"><div class="schedule__edit" ${autoAttrs("sched-edit")}><input type="text" data-sched="edit" value="${esc(ed.text)}" aria-label="Aufgabe bearbeiten">
+        ${autoSaveHtml("sched-edit-save", { note: "" })}<button class="btn sm" data-act="sched-edit-cancel">Fertig</button></div></li>`;
     }
     return `<li class="schedule__item is-todo ${todo.done ? "is-done" : ""}">
       <button class="todo-check ${todo.done ? "is-done" : ""}" data-act="todo-toggle" data-arg="${esc(todo.id)}" aria-label="${esc(todo.text)} ${todo.done ? "wieder öffnen" : "abhaken"}">${todo.done ? "✓" : ""}</button>
@@ -439,25 +440,31 @@ export function viewChecklistEdit() {
   }
   const d = f.draft;
   const e = f.errors ?? {};
-  return `${X.header(d.importing ? "Vorschau des Imports" : d.id ? "Checkliste bearbeiten" : "Neue Checkliste", { back: "todos" })}<main class="wrap"><section class="card">
+  // Sofort speichern (1.131.0): nicht beim Import (dort bleibt „Importieren“)
+  const auto = !d.importing;
+  return `${X.header(d.importing ? "Vorschau des Imports" : d.id ? "Checkliste bearbeiten" : "Neue Checkliste", { back: "todos" })}<main class="wrap"><section class="card" ${auto ? autoAttrs("cl", d.id ? "edit" : "new") : ""}>
     ${d.importing ? `<p class="muted small">${esc(D.SOURCE_LABEL[d.source] ?? "")}: ${d.items.length} ${d.items.length === 1 ? "Punkt" : "Punkte"} erkannt. Prüfe Name und Punkte und speichere dann. Ist der Name schon vergeben, wird „(2)“ angehängt.</p>` : ""}
     ${d.notes.map((n) => `<p class="muted small">${esc(n)}</p>`).join("")}
-    <div class="field ${e.name ? "has-error" : ""}"><label for="cl-name">Name</label><input id="cl-name" type="text" data-cl="name" value="${esc(d.name)}" maxlength="${CD.NAME_MAX}">${e.name ? `<p class="field-error">${esc(e.name)}</p>` : ""}</div>
+    <div class="field ${e.name ? "has-error" : ""}"><label for="cl-name">Name</label><input id="cl-name" type="text" data-cl="name" required value="${esc(d.name)}" maxlength="${CD.NAME_MAX}">${e.name ? `<p class="field-error">${esc(e.name)}</p>` : ""}</div>
     ${
       d.items.length
         ? `<ul class="check-edit">${d.items
             .map(
               (it, i) => `<li><input type="checkbox" data-cl="done" data-key="${it.key}" ${it.done ? "checked" : ""} aria-label="Punkt ${i + 1} erledigt">
-          <input type="text" data-cl="item" data-key="${it.key}" value="${esc(it.text)}" aria-label="Punkt ${i + 1}" maxlength="${CD.TEXT_MAX}">
-          <span class="row-actions"><button class="btn sm" data-act="cl-move" data-arg="${it.key}|-1" ${i === 0 ? "disabled" : ""} aria-label="Nach oben">↑</button><button class="btn sm" data-act="cl-move" data-arg="${it.key}|1" ${i === d.items.length - 1 ? "disabled" : ""} aria-label="Nach unten">↓</button><button class="btn sm danger" data-act="cl-item-remove" data-arg="${it.key}" aria-label="Entfernen">✕</button></span></li>`,
+          <input type="text" id="cl-item-${i}" data-cl="item" data-key="${it.key}" value="${esc(it.text)}" aria-label="Punkt ${i + 1}" maxlength="${CD.TEXT_MAX}">
+          <span class="row-actions"><button class="btn sm" data-act="cl-move" data-autosave-click data-arg="${it.key}|-1" ${i === 0 ? "disabled" : ""} aria-label="Nach oben">↑</button><button class="btn sm" data-act="cl-move" data-autosave-click data-arg="${it.key}|1" ${i === d.items.length - 1 ? "disabled" : ""} aria-label="Nach unten">↓</button><button class="btn sm danger" data-act="cl-item-remove" data-autosave-click data-arg="${it.key}" aria-label="Entfernen">✕</button></span></li>`,
             )
             .join("")}</ul>`
         : `<p class="muted">Noch keine Punkte.</p>`
     }
-    <div class="field"><label for="cl-new">Punkte hinzufügen (eine Zeile je Punkt)</label><textarea id="cl-new" data-cl="new" rows="2">${esc(f.newText ?? "")}</textarea></div>
-    <div class="row-actions"><button class="btn sm" data-act="cl-item-add">+ Hinzufügen</button></div>
+    <div class="field"><label for="cl-new">Punkte hinzufügen (eine Zeile je Punkt)</label><textarea id="cl-new" data-cl="new" data-autosave-skip rows="2">${esc(f.newText ?? "")}</textarea></div>
+    <div class="row-actions"><button class="btn sm" data-act="cl-item-add" data-autosave-click>+ Hinzufügen</button></div>
     ${f.message ? `<p class="field-error">${esc(f.message)}</p>` : ""}
-    <div class="row-actions"><button class="btn primary" data-act="cl-save">${d.importing ? "Importieren" : "Speichern"}</button><button class="btn" data-go="todos">Abbrechen</button></div>
+    ${
+      auto
+        ? `${autoSaveHtml("cl-save", { mode: d.id ? "edit" : "new", note: d.id ? "Änderungen werden automatisch gespeichert." : "Wird automatisch gespeichert, sobald ein Name eingetragen ist." })}<div class="row-actions"><button class="btn" data-go="todos">${d.id ? "Fertig" : "Abbrechen"}</button></div>`
+        : `<div class="row-actions"><button class="btn primary" data-act="cl-save">Importieren</button><button class="btn" data-go="todos">Abbrechen</button></div>`
+    }
   </section></main>`;
 }
 
@@ -715,6 +722,12 @@ export const todoActions = {
       await persist();
       const saved = CD.checklistsOf(S.catalog, S.checklists).find((c) => c.id === id);
       S.clSelected = id;
+      // Sofort speichern (1.131.0): Editor bleibt offen und bearbeitet die gespeicherte Checkliste
+      if (S.autosaving && saved) {
+        S.clEdit = { ...f, draft: toDraft(saved), errors: {}, message: "" };
+        X.toast("Checkliste gespeichert.");
+        return X.rerender();
+      }
       S.clMessage = { tone: "ok", text: d.importing ? `Checkliste „${saved?.name ?? d.name}“ importiert.` : "Checkliste gespeichert." };
       S.clEdit = null;
       X.go("todos");

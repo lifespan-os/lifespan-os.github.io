@@ -11,6 +11,7 @@ import { appDay } from "./core.js";
 import { cropPhoto } from "./photocrop.js";
 import { thumbButton } from "./machineimages.js";
 import { openImageZoom } from "./mapzoom.js";
+import { autoAttrs, autoSaveHtml, autosaveNow } from "./autosave.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -397,9 +398,9 @@ function editorHtml(d) {
   const err = X.S.gymErrors ?? {};
   const f = (key, label, extra = "") => `<div class="field"><label for="ge-${key}">${label}</label>
     <input id="ge-${key}" data-gymf="${key}" value="${esc(d[key] ?? "")}" ${extra}>${err[key] ? `<p class="warn small">${esc(err[key])}</p>` : ""}</div>`;
-  return `<section class="card">
+  return `<section class="card" ${autoAttrs("gym", d.id ? "edit" : "new")}>
     <div class="wo-head"><h3>${d.id ? "Gym bearbeiten" : "Neues Gym"}</h3></div>
-    ${f("name", "Name", 'maxlength="120" placeholder="z. B. John Reed Wien Mitte"')}
+    ${f("name", "Name", 'maxlength="120" required placeholder="z. B. John Reed Wien Mitte"')}
     ${f("address", "Anschrift", 'maxlength="300"')}
     ${f("contact", "Kontakt", 'maxlength="300" placeholder="Ansprechperson, Öffnungszeiten …"')}
     ${f("phone", "Telefon", 'maxlength="40" type="tel" inputmode="tel" placeholder="z. B. +43 1 234 56 78"')}
@@ -409,14 +410,14 @@ function editorHtml(d) {
     ${f("website", "Website", 'maxlength="300" inputmode="url" placeholder="z. B. dasgym.at"')}
     <div class="gym-head">${photoHtml(d, "gym-photo gym-photo--large")}<div>
       <label class="btn sm" for="ge-photo">${d.photo ? "Anderes Foto" : "Foto aufnehmen oder wählen"}</label>
-      <input id="ge-photo" type="file" accept="image/*" data-gym="photo" hidden>
-      ${d.photo ? '<button class="linkbtn" data-act="gym-photo-crop">Ausschnitt ändern</button> <button class="linkbtn" data-act="gym-photo-remove">Foto entfernen</button>' : ""}
+      <input id="ge-photo" type="file" accept="image/*" data-gym="photo" data-autosave-skip hidden>
+      ${d.photo ? '<button class="linkbtn" data-act="gym-photo-crop">Ausschnitt ändern</button> <button class="linkbtn" data-act="gym-photo-remove" data-autosave-click>Foto entfernen</button>' : ""}
       <p class="muted small">Du wählst den Ausschnitt; das Bild wird verkleinert gespeichert.</p>
       ${err.photo ? `<p class="warn small">${esc(err.photo)}</p>` : ""}
     </div></div>
+    ${autoSaveHtml("gym-save", { mode: d.id ? "edit" : "new", note: d.id ? "Änderungen werden automatisch gespeichert." : "Wird automatisch gespeichert, sobald ein Name eingetragen ist." })}
     <div class="row-actions">
-      <button class="btn primary" data-act="gym-save">Speichern</button>
-      <button class="btn" data-act="gym-cancel">Abbrechen</button>
+      <button class="btn" data-act="gym-cancel">${d.id ? "Fertig" : "Abbrechen"}</button>
     </div>
   </section>`;
 }
@@ -428,6 +429,7 @@ async function choosePhoto(source) {
     const url = await cropPhoto(source, { title: "Ausschnitt für das Gym-Foto" });
     if (!url || !S.gymEdit) return;
     S.gymEdit.photo = url;
+    autosaveNow("gym");
     S.gymErrors = { ...(S.gymErrors ?? {}), photo: undefined };
     X.rerender();
   } catch {
@@ -510,7 +512,9 @@ export const gymsActions = {
       return X.rerender();
     }
     await persist();
-    S.gymEdit = null;
+    // Sofort speichern (1.131.0): Editor bleibt offen und bearbeitet das gespeicherte Gym
+    S.gymEdit = S.autosaving ? { ...S.gymEdit, id: r.row.id } : null;
+    S.gymErrors = null;
     S.gymSel = r.row.id;
     X.toast(`„${r.row.name}“ gespeichert.`);
     X.rerender();

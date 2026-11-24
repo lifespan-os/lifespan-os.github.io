@@ -24,6 +24,7 @@ import { icon } from "./nav.js";
 import { plansTab } from "./trainingplans.js";
 import { workoutKind } from "./plancalendar.js";
 import { dotHtml, openTabsOf } from "./openitems.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 export { planPickerResults } from "./trainingplans.js";
 export { trainingActions, trainingChange, trainingInput } from "./trainingactions.js";
 
@@ -467,7 +468,7 @@ export function neatTab() {
           <div class="row-actions"><button class="btn sm primary" data-act="menu-go" data-arg="body">Gewicht erfassen</button><button class="btn sm" data-act="train-weigh-ok" data-arg="${esc(date)}">Verstanden</button></div></section>`
         : ""
     }
-    <section class="card card--training" id="neat-title">
+    <section class="card card--training" id="neat-title" ${autoAttrs("neat")}>
       <div class="wo-head"><h3>Alltagsbewegung am ${fmtDate(date)}</h3><span class="tag">Non-Exercise Activity (NEAT)</span></div>
       <p class="card__note">Jede Bewegung, die kein geplantes Training ist. Gehen in Schritten, alles andere in Minuten. Leere Felder gelten als nicht erfasst.</p>
       <fieldset class="fast-group"><legend>Gehen</legend>
@@ -483,7 +484,8 @@ export function neatTab() {
         <p class="sum-line" id="neat-sum">${minutesNow > 0 ? `Zusammen: ${esc(D.formatDuration(minutesNow))}` : ""}</p>
       </fieldset>
       <div class="field"><label for="neat-notes">Notizen (optional)</label><textarea id="neat-notes" rows="2" maxlength="1000" data-neat="notes">${esc(val("notes", "notes"))}</textarea>${fieldError(errors, "notes")}</div>
-      <div class="row-actions"><button class="btn primary" data-act="train-neat-save">Speichern</button>${row ? `<button class="btn danger" data-act="train-neat-delete">Eintrag löschen</button>` : ""}</div>
+      ${autoSaveHtml("train-neat-save")}
+      ${row ? `<div class="row-actions"><button class="btn danger" data-act="train-neat-delete">Eintrag löschen</button></div>` : ""}
     </section>
     ${stepsDayHtml(date)}
     ${

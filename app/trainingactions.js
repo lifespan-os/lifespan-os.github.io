@@ -8,6 +8,7 @@ import { dbActions, dbChange, dbInput } from "./trainingdb.js";
 import { planCalActions } from "./plancalendar.js";
 import { adoptWorkout, applyDay, failed, fmtDate, groupOfTab, neatDraftNow, persistTrain, setNotice, TRAINING_GROUPS, updateNeatLive, X } from "./training.js";
 import { addPlanExercise, isCardioCheck, planPickerResults, syncPlanInputs } from "./trainingplans.js";
+import { autosaveNow } from "./autosave.js";
 
 // ------------------------------------------------------------------ Aktionen
 
@@ -162,7 +163,9 @@ export const trainingActions = {
       await persistTrain();
       S.trainErrors = {};
       S.trainNeatDraft = null;
-      setNotice("ok", `Alltagsbewegung für ${fmtDate(d.date)} gespeichert.`);
+      // Sofort speichern (1.131.0): Meldung kommt oben mit „Rückgängig“
+      if (S.autosaving) X.toast(`Alltagsbewegung für ${fmtDate(d.date)} gespeichert`);
+      else setNotice("ok", `Alltagsbewegung für ${fmtDate(d.date)} gespeichert.`);
     } catch (e) {
       failed(e);
     }
@@ -302,12 +305,19 @@ export const trainingActions = {
         const local = (S.localExercises ?? []).find((e) => e.id === ex.exerciseId);
         if (local) TR.addExerciseRow(S.catalogRaw, S.train, local);
       }
-      TR.savePlan(S.catalogRaw, S.train, r.input, { uuid: X.uuid, now: new Date(), exercises: all });
+      const planId = TR.savePlan(S.catalogRaw, S.train, r.input, { uuid: X.uuid, now: new Date(), exercises: all });
       await persistTrain();
+      S.trainErrors = {};
+      // Sofort speichern (1.131.0): Editor bleibt offen und bearbeitet den gespeicherten Plan
+      const saved = S.autosaving ? TR.plansOf(S.catalogRaw, S.train, S.catalog.exercises).find((p) => p.id === planId) : null;
+      if (saved) {
+        S.trainPlanEdit = D.planDraft.planToDraft(saved, isCardioCheck());
+        X.toast(`Plan „${r.input.name.trim()}“ gespeichert`);
+        return X.rerender();
+      }
       setNotice("ok", `Plan „${r.input.name.trim()}“ gespeichert.`);
       S.trainPlanEdit = null;
       S.trainPlanDayIdx = null;
-      S.trainErrors = {};
     } catch (e) {
       failed(e);
     }
@@ -330,6 +340,8 @@ export const trainingActions = {
     S.trainPlanDayIdx = null;
     X.rerender();
     window.scrollTo(0, 0);
+    // Sofort speichern (1.131.0): geänderte Übungen des Tages gleich im Plan speichern
+    autosaveNow("plan");
   },
   "pday-ex-add": (el) => addPlanExercise(el.dataset.arg),
   "pday-machine-add": (el) => {

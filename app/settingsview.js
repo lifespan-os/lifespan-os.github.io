@@ -362,6 +362,15 @@ function methodsCard(db) {
   </section>`;
 }
 
+/** Tagesablauf: welche Punkte erscheinen (1.130.0, wie PC 1.0.204) – speichert sofort */
+function flowPrefsHtml(p) {
+  const hidden = new Set(p.flowHidden ?? []);
+  const F = D.dayFlow;
+  return `<fieldset class="field set-flow"><legend class="field-label">Tagesablauf zeigt</legend>${F.FLOW_KEYS.map(
+    (k) => `<label class="check-row"><input type="checkbox" data-flowpref="${k}" ${hidden.has(k) ? "" : "checked"}> ${esc(F.FLOW_LABELS[k])}</label>`,
+  ).join("")}<p class="muted small card-info">Abgewählte Punkte fehlen im Tagesablauf der Overview „Reduziert“. Gilt nur auf diesem Handy.</p></fieldset>`;
+}
+
 function appearanceCard() {
   const p = X.S.prefs;
   return `<section class="card" id="set-appearance">
@@ -370,6 +379,7 @@ function appearanceCard() {
     <div class="field"><span class="field-label">Untere Leiste zeigt</span>${segmented("pref-barlabels", DP.BAR_LABELS, p.barLabels)}</div>
     <div class="field"><span class="field-label">Overview</span>${segmented("pref-ovmode", [["reduced", "Reduziert"], ["full", "Ausführlich"]], p.overviewMode ?? "reduced")}
       <p class="muted small card-info">Reduziert: oben „Heute“ (Erholung, Kalorien und Protein, Training, offene Punkte, Wasser und Schritte), die übrigen Karten zugeklappt mit einer Kennzahl.</p></div>
+    ${(p.overviewMode ?? "reduced") === "reduced" ? flowPrefsHtml(p) : ""}
     ${X.barSlotsHtml()}
     ${deviceNote}
   </section>`;
@@ -798,6 +808,14 @@ export const settingsActions = {
 /** Änderungen an Feldern, die sofort gelten. `true` = behandelt. */
 export function settingsChange(el) {
   const S = X.S;
+  if (el.dataset?.flowpref) {
+    const hidden = new Set(S.prefs.flowHidden ?? []);
+    if (el.checked) hidden.delete(el.dataset.flowpref);
+    else hidden.add(el.dataset.flowpref);
+    S.prefs.flowHidden = [...hidden];
+    void savePrefs();
+    return true;
+  }
   if (el.dataset?.prof) {
     void autoProfile();
     return true;

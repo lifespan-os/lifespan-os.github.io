@@ -495,7 +495,7 @@ export function updateItem(catalog, local, mealId, itemId, { amount, date, mealT
     return meal;
   }
   meal.items = meal.items.filter((i) => i.id !== itemId);
-  if (!meal.items.length) delete local.meals[mealId];
+  if (!meal.items.length && !meal.rowChanged) delete local.meals[mealId];
   const target = mealFor(catalog, local, d, t, { uuid, now });
   item.meal_id = target.row.id;
   item.position = 1000 + target.items.length;
@@ -558,7 +558,8 @@ export function removeItem(local, mealId, itemId) {
   const meal = local.meals[mealId];
   if (!meal) return;
   meal.items = meal.items.filter((i) => i.id !== itemId || i.sent);
-  if (!meal.items.length) delete local.meals[mealId];
+  // eine am Handy verschobene Mahlzeit bleibt (ihre Uhrzeit)
+  if (!meal.items.length && !meal.rowChanged) delete local.meals[mealId];
 }
 
 /** Mahlzeiten eines Tages am Handy mit Einträgen und Summen. */
@@ -705,6 +706,7 @@ export function unsentCount(local) {
     Object.values(local.foods).filter((f) => !f.sent && !f.pkg).length +
     Object.values(local.barcodes).filter((b) => !b.sent).length +
     Object.values(local.meals).reduce((n, m) => n + m.items.filter((i) => !i.sent).length, 0) +
+    Object.values(local.meals).filter((m) => m.rowChanged && !m.sent && m.items.every((i) => i.sent)).length +
     Object.values(local.recipes).filter((r) => !r.sent).length
   );
 }
@@ -732,7 +734,9 @@ export function nutritionTables(catalog, local, { all = false } = {}) {
   }
   for (const m of Object.values(local.meals)) {
     const items = m.items.filter((i) => all || !i.sent);
-    if (!items.length) continue;
+    // geänderte Uhrzeit (1.130.0): die Mahlzeit auch ohne neue Lebensmittel senden
+    const rowOnly = Boolean(m.rowChanged) && (all || !m.sent);
+    if (!items.length && !rowOnly) continue;
     out.meal.push({ ...m.row });
     for (const it of items) {
       needFood(it.food_id);
@@ -794,8 +798,22 @@ export function pruneLocal(catalog, local, today = localDate()) {
   const pcFoods = new Map((catalog.nutrition?.foods ?? []).map((f) => [f.id, f]));
   const pcCodes = catalog.nutrition?.barcodes ?? {};
   const limit = localDate(new Date(new Date(`${today}T12:00:00`).getTime() - 14 * 86400000));
+  const pcMeals = new Map((catalog.nutrition?.meals ?? []).map((m) => [m.id, m]));
   for (const [id, m] of Object.entries(local.meals)) {
-    if (m.row.date < limit && m.items.every((i) => i.sent)) delete local.meals[id];
+    const unsentTime = m.rowChanged && !m.sent;
+    if (m.row.date < limit && m.items.every((i) => i.sent) && !unsentTime) {
+      delete local.meals[id];
+      continue;
+    }
+    // verschobene Uhrzeit (1.130.0): sobald der PC sie (oder Neueres) mitbringt, gilt seine Zeile
+    const pc = pcMeals.get(id);
+    if (m.rowChanged && m.sent && pc && String(pc.updated_at) >= String(m.row.updated_at)) {
+      if (!m.items.length) delete local.meals[id];
+      else {
+        m.row = { ...pc };
+        delete m.rowChanged;
+      }
+    }
   }
   for (const [id, f] of Object.entries(local.foods)) {
     const pc = pcFoods.get(id);
@@ -921,6 +939,26 @@ export function removePlannedItem(catalog, local, id, itemId, now = new Date()) 
   p.removedItems = { ...(p.removedItems ?? {}), [itemId]: now.toISOString() };
   p.row = { ...p.row, updated_at: now.toISOString() };
   p.sent = false;
+}
+
+/**
+ * Uhrzeit einer gegessenen Mahlzeit ändern (Tagesverlauf: gedrückt halten und ziehen, 1.130.0).
+ * Mahlzeiten vom PC bekommen dafür einen eigenen Eintrag am Handy; gesendet wird die Mahlzeit
+ * selbst (neuere Änderung gewinnt am PC), auch ohne neue Lebensmittel.
+ */
+export function setMealTime(catalog, local, mealId, time, now = new Date()) {
+  if (!TIME_RE.test(String(time ?? ""))) throw new Error("Bitte eine gültige Uhrzeit eingeben (HH:MM).");
+  let meal = local.meals[mealId];
+  if (!meal) {
+    const pc = (catalog.nutrition?.meals ?? []).find((m) => m.id === mealId);
+    if (!pc) throw new Error("Die Mahlzeit gibt es nicht mehr.");
+    meal = { row: { ...pc }, items: [], fromPc: true };
+    local.meals[mealId] = meal;
+  }
+  meal.row = { ...meal.row, time, updated_at: now.toISOString() };
+  meal.rowChanged = true;
+  meal.sent = false;
+  return meal;
 }
 
 /** Verschieben im Tagesverlauf. */

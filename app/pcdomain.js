@@ -33218,9 +33218,36 @@ function matchPlanDay(exerciseIds, days3) {
 // src/domain/dayFlow.ts
 var dayFlow_exports = {};
 __export(dayFlow_exports, {
+  DAY_FLOW_HIDDEN_KEY: () => DAY_FLOW_HIDDEN_KEY,
+  FLOW_KEYS: () => FLOW_KEYS,
+  FLOW_LABELS: () => FLOW_LABELS,
   MEALS_DONE_SHARE: () => MEALS_DONE_SHARE,
-  dayFlow: () => dayFlow
+  dayFlow: () => dayFlow,
+  parseFlowHidden: () => parseFlowHidden
 });
+var FLOW_LABELS = {
+  check: "Morgen-Check",
+  weigh: "Wiegen",
+  meals: "Mahlzeiten eintragen",
+  training: "Training",
+  water: "Wasser trinken",
+  steps: "Schritte",
+  open: "Offene Punkte abhaken"
+};
+var FLOW_KEYS = Object.keys(FLOW_LABELS);
+var DAY_FLOW_HIDDEN_KEY = "ui.day_flow_hidden";
+function parseFlowHidden(raw) {
+  let list2 = raw;
+  if (typeof raw === "string") {
+    try {
+      list2 = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(list2)) return [];
+  return FLOW_KEYS.filter((k) => list2.includes(k));
+}
 var MEALS_DONE_SHARE = 0.8;
 var n2 = (v) => formatNumber(v, 0);
 var liters2 = (ml) => formatNumber(ml / 1e3, ml % 1e3 === 0 ? 0 : 1);
@@ -33277,10 +33304,12 @@ function dayFlow(i) {
       detail: i.openItems === 0 ? null : `${i.openItems} offen`,
       done: i.openItems === 0
     });
+  const hidden = new Set(i.hidden ?? []);
+  const shown = steps.filter((s) => !hidden.has(s.key));
   return {
-    steps,
-    done: steps.filter((s) => s.done).length,
-    next: steps.find((s) => !s.done) ?? null
+    steps: shown,
+    done: shown.filter((s) => s.done).length,
+    next: shown.find((s) => !s.done) ?? null
   };
 }
 export {

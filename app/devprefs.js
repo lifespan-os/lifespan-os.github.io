@@ -34,7 +34,9 @@ export function normPrefs(prefs) {
   const remShown = Array.isArray(p.remShown) ? p.remShown.filter((x) => typeof x === "string") : [];
   // Overview-Ansicht dieses Handys (1.118.0): reduziert (Voreinstellung) oder ausführlich
   const overviewMode = p.overviewMode === "full" ? "full" : "reduced";
-  return { ...p, theme, barLabels, reminders, quick, transfer, remShown, overviewMode };
+  // Ausgeblendete Punkte im Tagesablauf (1.130.0, wie PC 1.0.204): nur bekannte Schlüssel
+  const flowHidden = Array.isArray(p.flowHidden) ? p.flowHidden.filter((x) => ["check", "weigh", "meals", "training", "water", "steps", "open"].includes(x)) : [];
+  return { ...p, theme, barLabels, reminders, quick, transfer, remShown, overviewMode, flowHidden };
 }
 
 /** Wirksames Design: „system“ folgt dem Handy. */

@@ -58,6 +58,13 @@ export const superActions = {
     try {
       const saved = SD.saveProtocolEntry(S.catalog, S.super, r.input, opts());
       await persist();
+      // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet den gespeicherten Eintrag
+      if (S.autosaving && saved?.id) {
+        f.draft.id = saved.id;
+        f.errors = {};
+        X.toast(`${saved.substanceName}: ${fmtAmount(saved.amount, saved.unit)} am ${D.formatDate(saved.date)} gespeichert.`);
+        return X.rerender();
+      }
       S.protoEdit = null;
       S.superTab = "log";
       X.toast(`${saved.substanceName}: ${fmtAmount(saved.amount, saved.unit)} am ${D.formatDate(saved.date)} gespeichert.`);
@@ -95,6 +102,13 @@ export const superActions = {
     try {
       const saved = SD.saveSubstance(S.catalog, S.super, r.input, opts());
       await persist();
+      // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet die gespeicherte Substanz
+      if (S.autosaving && saved?.id) {
+        f.draft.id = saved.id;
+        f.errors = {};
+        X.toast(`„${saved.name}“ gespeichert.`);
+        return X.rerender();
+      }
       S.subEdit = null;
       S.superTab = "substances";
       X.toast(`„${saved.name}“ gespeichert.`);
@@ -163,7 +177,8 @@ export const superActions = {
       X.rerender();
       return;
     }
-    if (el.dataset.arg !== "confirmed") {
+    if (el.dataset.arg === "confirmed") f.dupesOk = true;
+    else if (!f.dupesOk) {
       const hint = D.hrtDuplicateHint(D.duplicateHrtEntries(r.input, entries()));
       if (hint) {
         f.dupes = hint.text;
@@ -183,9 +198,18 @@ export const superActions = {
           await X.store.set("pcsettings", S.pcsettings);
         }
       }
+      const msg = `${saved.hormone}: ${fmt(saved.amount)} ${saved.unit} am ${D.formatDate(saved.date)} (${HR().STATUS_LABELS[saved.status]}) gespeichert.`;
+      // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet den gespeicherten Eintrag
+      if ((S.autosaving || el.dataset.arg === "confirmed") && saved?.id) {
+        f.draft.id = saved.id;
+        f.errors = {};
+        f.dupes = null;
+        X.toast(msg);
+        return X.rerender();
+      }
       S.hrtEdit = null;
       S.superTab = "hrt";
-      X.toast(`${saved.hormone}: ${fmt(saved.amount)} ${saved.unit} am ${D.formatDate(saved.date)} (${HR().STATUS_LABELS[saved.status]}) gespeichert.`);
+      X.toast(msg);
       X.go("super");
     } catch (e) {
       f.dupes = null;

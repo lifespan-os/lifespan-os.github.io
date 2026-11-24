@@ -17,6 +17,7 @@ import { glucoseTabHtml } from "./glucose.js";
 import { appointmentsHtml } from "./extras.js";
 import * as W from "./wearabledata.js";
 import * as GLD from "./glucosedata.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -279,15 +280,16 @@ function lifeForm(draft, errors) {
   const sugg = LT().LIFETIME_SUGGESTIONS[draft.category] ?? [];
   const f = (k, label, type = "text", extra = "") =>
     `<div class="field ${e[k] ? "has-error" : ""}"><label for="lt-${k}">${esc(label)}</label><input id="lt-${k}" type="${type}" data-life="${k}" value="${esc(draft[k])}" ${extra} autocomplete="off">${e[k] ? `<p class="field-error">${esc(e[k])}</p>` : ""}</div>`;
-  return `<div class="lifetime-form">
+  return `<div class="lifetime-form" ${autoAttrs("life", draft.id ? "edit" : "new")}>
     <h4>${draft.id ? `„${esc(draft.name)}“ bearbeiten` : "Neuer Eintrag"}</h4>
-    ${f("name", "Bezeichnung", "text", `list="lt-sugg" maxlength="80"`)}
+    ${f("name", "Bezeichnung", "text", `list="lt-sugg" maxlength="80" required`)}
     <datalist id="lt-sugg">${sugg.map((s) => `<option value="${esc(s)}">`).join("")}</datalist>
-    <div class="field ${e.value ? "has-error" : ""}"><label for="lt-value">Befund</label><textarea id="lt-value" data-life="value" rows="2" maxlength="500">${esc(draft.value)}</textarea>${e.value ? `<p class="field-error">${esc(e.value)}</p>` : ""}</div>
+    <div class="field ${e.value ? "has-error" : ""}"><label for="lt-value">Befund</label><textarea id="lt-value" data-life="value" rows="2" maxlength="500" required>${esc(draft.value)}</textarea>${e.value ? `<p class="field-error">${esc(e.value)}</p>` : ""}</div>
     ${f("date", "Datum (optional)", "date")}
     ${f("source", "Labor / Praxis (optional)", "text", `maxlength="120"`)}
     <div class="field"><label for="lt-notes">Notiz (optional)</label><textarea id="lt-notes" data-life="notes" rows="2" maxlength="2000">${esc(draft.notes)}</textarea>${e.notes ? `<p class="field-error">${esc(e.notes)}</p>` : ""}</div>
-    <div class="row-actions"><button class="btn primary" data-act="life-save">Speichern</button><button class="btn" data-act="life-cancel">Abbrechen</button></div>
+    ${autoSaveHtml("life-save", { mode: draft.id ? "edit" : "new" })}
+    <div class="row-actions"><button class="btn" data-act="life-cancel">${draft.id ? "Fertig" : "Abbrechen"}</button></div>
   </div>`;
 }
 
@@ -350,7 +352,7 @@ export function viewLabEdit() {
       const k = `results.${r.key}`;
       const err = (f) => (e[`${k}.${f}`] ? `<p class="field-error">${esc(e[`${k}.${f}`])}</p>` : "");
       const inp = (f, label, extra = "") =>
-        `<div class="field ${e[`${k}.${f}`] ? "has-error" : ""}"><label>${esc(label)}</label><input type="text" data-labr="${esc(r.key)}" data-f="${f}" value="${esc(r[f])}" ${extra} autocomplete="off">${err(f)}</div>`;
+        `<div class="field ${e[`${k}.${f}`] ? "has-error" : ""}"><label>${esc(label)}</label><input type="text" id="labr-${esc(r.key)}-${f}" data-labr="${esc(r.key)}" data-f="${f}" value="${esc(r[f])}" ${extra} autocomplete="off">${err(f)}</div>`;
       return `<div class="lab-row card-inner">
         <div class="field ${e[`${k}.analyteId`] ? "has-error" : ""}"><label>Parameter</label><select data-labr="${esc(r.key)}" data-f="analyteId"><option value="">Bitte wählen …</option>${analyteOptions(analytes, r.analyteId, r.analyteId)}</select>${err("analyteId")}</div>
         <div class="lab-row__grid">
@@ -359,14 +361,14 @@ export function viewLabEdit() {
           ${inp("refLow", "Referenz von", `inputmode="decimal"`)}
           ${inp("refHigh", "bis", `inputmode="decimal"`)}
         </div>
-        <button class="btn sm" data-act="lab-row-remove" data-arg="${esc(r.key)}">Wert entfernen</button>
+        <button class="btn sm" data-act="lab-row-remove" data-autosave-click data-arg="${esc(r.key)}">Wert entfernen</button>
       </div>`;
     })
     .join("");
-  return `${X.header(d.id ? "Blutabnahme bearbeiten" : "Neue Blutabnahme", { back: "health" })}<main class="wrap">
+  return `${X.header(d.id ? "Blutabnahme bearbeiten" : "Neue Blutabnahme", { back: "health" })}<main class="wrap" ${autoAttrs("lab", d.id ? "edit" : "new")}>
     <section class="card">
       <div class="lab-row__grid">
-        ${field("date", "Datum", "date")}
+        ${field("date", "Datum", "date", "required")}
         ${field("time", "Uhrzeit (optional)", "time")}
       </div>
       ${field("lab", "Labor / Praxis (optional)", "text", `maxlength="80"`)}
@@ -379,14 +381,15 @@ export function viewLabEdit() {
       <p class="muted small">Den Referenzbereich so eintragen, wie er im Befund steht (leer = eigener bzw. Vorgabebereich des Parameters). Werte unter bzw. über der Messgrenze mit „&lt;“ bzw. „&gt;“ (z. B. „&lt; 0,5“).</p>
       ${rows}
       <div class="row-actions">
-        <button class="btn" data-act="lab-row-add">+ Wert hinzufügen</button>
+        <button class="btn" data-act="lab-row-add" data-autosave-click>+ Wert hinzufügen</button>
         <label class="field"><span class="muted small">Ganze Gruppe hinzufügen</span><select data-lab="group"><option value="">Gruppe wählen …</option>${L().LAB_CATEGORIES.map((c) => `<option value="${c}">${esc(L().LAB_CATEGORY_LABELS[c])}</option>`).join("")}</select></label>
       </div>
     </section>
     <section class="card">
       <div class="field ${e.notes ? "has-error" : ""}"><label for="lab-notes">Notiz (optional)</label><textarea id="lab-notes" data-lab="notes" rows="2" maxlength="1000">${esc(d.notes)}</textarea>${e.notes ? `<p class="field-error">${esc(e.notes)}</p>` : ""}</div>
       ${ed.message ? `<p class="field-error">${esc(ed.message)}</p>` : ""}
-      <div class="row-actions"><button class="btn primary" data-act="lab-save">Speichern</button><button class="btn" data-go="health">Abbrechen</button></div>
+      ${autoSaveHtml("lab-save", { mode: d.id ? "edit" : "new", note: d.id ? "Änderungen werden automatisch gespeichert; ein geleerter Wert wird entfernt." : "Wird automatisch gespeichert, sobald Datum und ein Wert eingetragen sind." })}
+      <div class="row-actions"><button class="btn" data-go="health">${d.id ? "Fertig" : "Abbrechen"}</button></div>
     </section>
   </main>`;
 }
@@ -664,11 +667,11 @@ function analyteEditor(f) {
   const d = f.draft;
   const e = f.errors ?? {};
   const HL = D.hormoneLevel;
-  const fld = (k, label, mode = "") =>
-    `<div class="field ${e[k] ? "has-error" : ""}"><label for="an-${k}">${esc(label)}</label><input id="an-${k}" type="text" data-an="${k}" value="${esc(d[k])}" ${mode ? `inputmode="${mode}"` : ""} autocomplete="off">${e[k] ? `<p class="field-error">${esc(e[k])}</p>` : ""}</div>`;
-  return `<section class="card">
+  const fld = (k, label, mode = "", req = false) =>
+    `<div class="field ${e[k] ? "has-error" : ""}"><label for="an-${k}">${esc(label)}</label><input id="an-${k}" type="text" data-an="${k}" value="${esc(d[k])}" ${req ? "required" : ""} ${mode ? `inputmode="${mode}"` : ""} autocomplete="off">${e[k] ? `<p class="field-error">${esc(e[k])}</p>` : ""}</div>`;
+  return `<section class="card" ${autoAttrs("an", d.id ? "edit" : "new")}>
     <h3>${d.id ? `„${esc(d.title)}“ bearbeiten` : "Neuer Parameter"}</h3>
-    ${fld("name", "Name")}
+    ${fld("name", "Name", "", true)}
     ${fld("unit", "Einheit")}
     <div class="field"><label for="an-category">Gruppe</label><select id="an-category" data-an="category">${L()
       .LAB_CATEGORIES.map((c) => `<option value="${c}" ${c === d.category ? "selected" : ""}>${esc(L().LAB_CATEGORY_LABELS[c])}</option>`)
@@ -680,7 +683,8 @@ function analyteEditor(f) {
     <p class="muted small">Der eigene Bereich gilt nur für Werte, deren Befund keinen Bereich nennt; ohne eigenen Bereich gilt der Bereich des AKH Wien (nach Geschlecht und Alter laut Profil). Mit dem Wirkstoffspiegel verknüpfte Werte stellen den geschätzten Verlauf in echten Einheiten dar.</p>
     ${d.id ? `<label class="hrt-check__item"><input type="checkbox" data-an="archived" ${d.archived ? "checked" : ""}><span>Archiviert (bei neuen Werten nicht mehr zur Auswahl)</span></label>` : ""}
     ${f.message ? `<p class="field-error">${esc(f.message)}</p>` : ""}
-    <div class="row-actions"><button class="btn primary" data-act="an-save">Speichern</button><button class="btn" data-act="an-cancel">Abbrechen</button></div>
+    ${autoSaveHtml("an-save", { mode: d.id ? "edit" : "new" })}
+    <div class="row-actions"><button class="btn" data-act="an-cancel">${d.id ? "Fertig" : "Abbrechen"}</button></div>
   </section>`;
 }
 
@@ -816,9 +820,11 @@ export const healthActions = {
     f.message = "";
     if (Object.keys(errors).length) return X.rerender();
     try {
-      H.saveAnalyte(S.catalog, S.health, { id: d.id, name: d.name, unit: d.unit, category: d.category, refLow: low, refHigh: high, measurand: d.measurand || null, archived: d.archived }, opts());
+      const id = H.saveAnalyte(S.catalog, S.health, { id: d.id, name: d.name, unit: d.unit, category: d.category, refLow: low, refHigh: high, measurand: d.measurand || null, archived: d.archived }, opts());
       await persist();
-      S.anEdit = null;
+      // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet den gespeicherten Parameter
+      if (S.autosaving) d.id = id;
+      else S.anEdit = null;
       X.toast(`„${d.name.trim()}“ gespeichert.`);
     } catch (e) {
       if (e.field) f.errors = { [e.field]: e.message };
@@ -891,7 +897,11 @@ export const healthActions = {
   "lab-save": async () => {
     const S = X.S;
     const ed = S.labEdit;
-    const { input, errors } = L().draftToInput(ed.draft);
+    // Sofort speichern (1.131.0): Zeilen ohne Wert (gerade in Arbeit) bleiben im Formular, gespeichert werden die übrigen
+    const auto = S.autosaving;
+    const draft = auto ? { ...ed.draft, results: ed.draft.results.filter((r) => String(r.value ?? "").trim() !== "") } : ed.draft;
+    if (auto && !draft.results.length) return;
+    const { input, errors } = L().draftToInput(draft);
     ed.errors = errors;
     ed.message = "";
     if (!input) {
@@ -902,6 +912,18 @@ export const healthActions = {
     try {
       const id = H.saveDraw(S.catalog, S.health, input, opts());
       await persist();
+      if (auto) {
+        // das Formular bearbeitet ab jetzt die gespeicherte Blutabnahme und ihre Werte
+        ed.draft.id = id;
+        const saved = H.drawsOf(S.catalog, S.health).find((x) => x.id === id);
+        for (const r of ed.draft.results) {
+          if (r.id || !String(r.value ?? "").trim()) continue;
+          r.id = saved?.results.find((x) => x.analyteId === r.analyteId)?.id ?? null;
+        }
+        S.healthDraw = id;
+        X.toast("Blutabnahme gespeichert.");
+        return X.rerender();
+      }
       S.labEdit = null;
       S.healthDraw = id;
       S.healthTab = "draws";
@@ -929,9 +951,13 @@ export const healthActions = {
     const S = X.S;
     const ed = S.lifeEdit;
     try {
-      H.saveLifetime(S.catalog, S.health, ed.draft, opts());
+      const id = H.saveLifetime(S.catalog, S.health, ed.draft, opts());
       await persist();
-      S.lifeEdit = null;
+      // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet den gespeicherten Eintrag
+      if (S.autosaving) {
+        ed.draft.id = id;
+        ed.errors = {};
+      } else S.lifeEdit = null;
       X.toast("Gespeichert.");
     } catch (e) {
       ed.errors = e.field ? { [e.field]: e.message } : {};

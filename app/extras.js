@@ -13,6 +13,7 @@ import * as B from "./bodydata.js";
 import * as L from "./logsdata.js";
 import * as GLD from "./glucosedata.js";
 import { buildDb, nutritionTabs, today } from "./diary.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go }
 
@@ -135,7 +136,7 @@ export function viewQuickFill() {
   const f = (S.qf ??= { inputs: {}, errors: {} });
   const { values, sleep, grip } = missingAll();
   const input = (key, attrs = "") =>
-    `<input class="qf-input" data-qf="${esc(key)}" value="${esc(f.inputs[key] ?? "")}" ${attrs} autocomplete="off">`;
+    `<input class="qf-input" id="qf-${esc(key.replace(/[^a-z0-9]/gi, "-"))}" data-qf="${esc(key)}" value="${esc(f.inputs[key] ?? "")}" ${attrs} autocomplete="off">`;
   const err = (key) => (f.errors[key] ? `<p class="err small">${esc(f.errors[key])}</p>` : "");
   const groups = new Map();
   for (const m of values) {
@@ -171,7 +172,7 @@ export function viewQuickFill() {
     .map(
       ([title, list]) => `<section class="card"><div class="wo-head"><h3>${esc(title)}</h3><span class="qf-head-actions">${
         title === "Heute fällig"
-          ? `<label class="btn sm ${f.reading ? "is-busy" : ""}">${f.reading ? "Liest …" : "Upload"}<input type="file" accept="image/*,application/pdf,.pdf" data-qf-upload="${esc(list.map(valueKey).join(","))}" hidden ${f.reading ? "disabled" : ""}></label>`
+          ? `<label class="btn sm ${f.reading ? "is-busy" : ""}">${f.reading ? "Liest …" : "Upload"}<input type="file" accept="image/*,application/pdf,.pdf" data-qf-upload="${esc(list.map(valueKey).join(","))}" data-autosave-skip hidden ${f.reading ? "disabled" : ""}></label>`
           : ""
       }<button class="linkbtn" data-act="qf-skip-group" data-arg="${esc(list.map(valueKey).join(","))}">alle überspringen</button></span></div>
       ${title === "Heute fällig" && (f.upload || f.reading) ? `<p class="${f.upload?.tone === "error" ? "warn" : "muted"} small" id="qf-upload-status" role="status">${esc(f.reading ? f.readStatus ?? "Datei wird gelesen …" : f.upload.text)}</p>` : ""}
@@ -196,10 +197,9 @@ export function viewQuickFill() {
         .join("")}</section>`
     : "";
   const empty = !values.length && !sleep.length && !grip;
-  return `${X.header("Werte nachtragen", { back: "home", intro: QF_INTRO })}<main class="wrap">
-    ${empty ? `<section class="card"><p class="ok-note">Alles erfasst – es fehlt gerade kein Wert.</p></section>` : `${sleepHtml}${gripHtml}${valuesHtml}${extraHtml}`}
-  </main>
-  ${empty ? "" : `<div class="bottom"><div class="inner"><button class="btn primary" data-act="qf-save">Speichern</button></div></div>`}`;
+  return `${X.header("Werte nachtragen", { back: "home", intro: QF_INTRO })}<main class="wrap" ${autoAttrs("qf")}>
+    ${empty ? `<section class="card"><p class="ok-note">Alles erfasst – es fehlt gerade kein Wert.</p></section>` : `${sleepHtml}${gripHtml}${valuesHtml}${extraHtml}${autoSaveHtml("qf-save", { note: "Jeder Wert wird beim Verlassen des Feldes gespeichert; Schlaf und Griffkraft, sobald beide Felder ausgefüllt sind." })}`}
+  </main>`;
 }
 
 /**
@@ -357,6 +357,8 @@ export const extrasActions = {
         const bed = Q().parseClock(f.inputs[`${k}|bed`] ?? "");
         const wake = Q().parseClock(f.inputs[`${k}|wake`] ?? "");
         if (bed === null && wake === null) continue;
+        // Sofort speichern (1.131.0): halb ausgefüllte Nacht bleibt stehen, bis beide Zeiten da sind
+        if ((!bed || !wake) && S.autosaving) continue;
         if (!bed || !wake) {
           errors[k] = "Bitte Zubettgehen und Aufstehen als Uhrzeit eingeben, z. B. 23:15.";
           continue;
@@ -384,7 +386,9 @@ export const extrasActions = {
       const right = Q().parseFillInput(f.inputs["grip|right"] ?? "");
       const e = Q().gripInputError(left) ?? Q().gripInputError(right);
       if (e) errors.grip = e;
-      else if ((left === null) !== (right === null)) errors.grip = "Bitte beide Hände eintragen (oder beide leer lassen).";
+      else if ((left === null) !== (right === null)) {
+        if (!S.autosaving) errors.grip = "Bitte beide Hände eintragen (oder beide leer lassen).";
+      }
       else if (left !== null) {
         // Uhrzeit ist Pflicht (1.126.0, wie PC 1.0.201)
         const time = f.inputs["grip|time"] ?? gripTimeDefault(grip);
@@ -398,7 +402,7 @@ export const extrasActions = {
       return X.toast("Bitte die markierten Felder prüfen.", true);
     }
     const total = bodyItems.length + nights.length + patches.size + (gripDraft ? 1 : 0);
-    if (!total) return X.toast("Noch kein Wert eingetragen.", true);
+    if (!total) return S.autosaving ? undefined : X.toast("Noch kein Wert eingetragen.", true);
     try {
       for (const { m, v } of bodyItems) {
         B.saveValue(S.catalog, S.body.local, { metricId: m.metricId, date: m.date, time: "", value: v, method: "", notes: "", editId: null }, { uuid: X.uuid, now: new Date() });
@@ -417,7 +421,18 @@ export const extrasActions = {
       X.rerender();
       return X.toast(e.message, true);
     }
-    S.qf = { inputs: {}, errors: {} };
+    if (S.autosaving) {
+      // gespeicherte Werte verschwinden aus der Liste; halb ausgefüllte (Nacht, Griffkraft) bleiben
+      const done = new Set(bodyItems.filter((b) => b.m.metricId && !b.m.name).map((b) => `extra|${b.m.metricId}`));
+      for (const { m } of bodyItems) if (m.name) delete f.inputs[valueKey(m)];
+      for (const m of sleep) if (m.kind !== "night" && patches.has(m.logId)) delete f.inputs[sleepKey(m)];
+      for (const n of nights) {
+        const m = sleep.find((x) => x.kind === "night" && x.date === n.date);
+        if (m) for (const s of ["bed", "wake"]) delete f.inputs[`${sleepKey(m)}|${s}`];
+      }
+      if (gripDraft) for (const k of ["grip|left", "grip|right", "grip|time"]) delete f.inputs[k];
+      S.qf = { ...f, errors: {}, extra: (f.extra ?? []).filter((x) => !(x.use && done.has(`extra|${x.metricId}`))) };
+    } else S.qf = { inputs: {}, errors: {} };
     X.toast(total === 1 ? "1 Wert gespeichert – mit „An den PC senden“ übertragen." : `${total} Werte gespeichert – mit „An den PC senden“ übertragen.`);
     X.rerender();
   },

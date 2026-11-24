@@ -18,6 +18,7 @@ export const DB_LAYOUT_KEY = "ui.training_db_layout";
 
 import { machineDupHtml } from "./reviewparity.js";
 import { activeGym } from "./gymsui.js";
+import { autoAttrs, autoSaveHtml, autosaveNow } from "./autosave.js";
 let X = null;
 
 export function initTrainingDb(ctx) {
@@ -170,9 +171,9 @@ function exerciseEditor() {
   const S = X.S;
   const d = S.trainExEdit;
   const errors = S.trainErrors ?? {};
-  return `<section class="card card--training"><h3>${d.id ? "Übung bearbeiten" : "Neue Übung"}</h3>
+  return `<section class="card card--training" ${autoAttrs("train-ex", d.id ? "edit" : "new")}><h3>${d.id ? "Übung bearbeiten" : "Neue Übung"}</h3>
     ${notice()}
-    <div class="field"><label for="ex-name">Name</label><input id="ex-name" type="text" maxlength="80" value="${esc(d.name)}" data-exf="name">${fe(errors, "name")}</div>
+    <div class="field"><label for="ex-name">Name</label><input id="ex-name" type="text" maxlength="80" required value="${esc(d.name)}" data-exf="name">${fe(errors, "name")}</div>
     <div class="field"><label for="ex-category">Typ</label><select id="ex-category" data-exf="category" data-dbchange="exCategory">${D.labelsAll.EXERCISE_CATEGORIES.map((c) => `<option value="${c.value}" ${c.value === d.category ? "selected" : ""}>${esc(c.label)}</option>`).join("")}</select>${fe(errors, "category")}</div>
     ${
       d.category === "cardio"
@@ -187,7 +188,8 @@ function exerciseEditor() {
       ${PROFILE_KEYS.map((k) => `<label class="toggle"><input type="checkbox" data-exprofile="${k}" ${d.resistanceProfiles.includes(k) ? "checked" : ""}> ${esc(D.resistance.PROFILE_LABELS[k])}</label>`).join("")}
       ${fe(errors, "resistanceProfiles")}</fieldset>
     <label class="toggle"><input type="checkbox" data-exf="archived" ${d.archived ? "checked" : ""}> Archiviert</label>
-    <div class="row-actions"><button class="btn primary" data-act="train-ex-save">Speichern</button><button class="btn" data-act="train-ex-cancel">Abbrechen</button></div>
+    ${autoSaveHtml("train-ex-save", { mode: d.id ? "edit" : "new" })}
+    <div class="row-actions"><button class="btn" data-act="train-ex-cancel">${d.id ? "Fertig" : "Abbrechen"}</button></div>
   </section>`;
 }
 
@@ -374,12 +376,12 @@ function machineEditor() {
   const cats = [...new Set(all.map((m) => m.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"));
   const groups = [...new Set(all.flatMap((m) => m.muscleGroups))].sort((a, b) => a.localeCompare(b, "de"));
   const txt = (key, label, opts = {}) =>
-    `<div class="field"><label for="mach-${key}">${label}</label><input id="mach-${key}" type="text" maxlength="${opts.max ?? 120}" value="${esc(d[key] ?? "")}" data-mef="${key}"${opts.list ? ` list="${opts.list}"` : ""}${opts.placeholder ? ` placeholder="${esc(opts.placeholder)}"` : ""}>${opts.hint ? `<p class="muted small">${esc(opts.hint)}</p>` : ""}${fe(errors, key)}</div>`;
-  return `<section class="card card--training"><h3>${d.id ? (d.own ? "Eigene Maschine bearbeiten" : `„${esc(d.name)}“: Nummer, Notiz, Schlagworte`) : "Eigene Maschine anlegen"}</h3>
+    `<div class="field"><label for="mach-${key}">${label}</label><input id="mach-${key}" type="text" maxlength="${opts.max ?? 120}" value="${esc(d[key] ?? "")}" data-mef="${key}"${opts.required ? " required" : ""}${opts.list ? ` list="${opts.list}"` : ""}${opts.placeholder ? ` placeholder="${esc(opts.placeholder)}"` : ""}>${opts.hint ? `<p class="muted small">${esc(opts.hint)}</p>` : ""}${fe(errors, key)}</div>`;
+  return `<section class="card card--training" ${autoAttrs("train-machine", d.id ? "edit" : "new")}><h3>${d.id ? (d.own ? "Eigene Maschine bearbeiten" : `„${esc(d.name)}“: Nummer, Notiz, Schlagworte`) : "Eigene Maschine anlegen"}</h3>
     ${notice()}
     ${
       d.own
-        ? `${txt("name", "Name", { placeholder: "z. B. Hip Thrust Maschine" })}
+        ? `${txt("name", "Name", { placeholder: "z. B. Hip Thrust Maschine", required: true })}
     ${txt("manufacturer", "Hersteller", { max: 80, placeholder: "z. B. Eigene, gym80" })}
     ${txt("series", "Serie", { max: 80 })}
     ${txt("category", "Kategorie", { max: 60, list: "mach-cats", placeholder: "z. B. Plate Loaded, Cardio" })}<datalist id="mach-cats">${cats.map((c) => `<option value="${esc(c)}"></option>`).join("")}</datalist>
@@ -390,7 +392,8 @@ function machineEditor() {
     ${txt("tags", "Schlagworte", { max: 1200, placeholder: "z. B. Hip Thrust, OG", hint: "Eigene Suchbegriffe, mehrere mit Komma trennen – gelten in allen Suchen." })}
     <div class="field"><label for="mach-notes">Notiz</label><textarea id="mach-notes" rows="2" maxlength="2000" data-mef="notes">${esc(d.notes ?? "")}</textarea>${fe(errors, "notes")}</div>
     ${d.own ? `<label class="toggle"><input type="checkbox" data-mef="archived" ${d.archived ? "checked" : ""}> Archiviert</label>` : ""}
-    <div class="row-actions"><button class="btn primary" data-act="train-machine-save">Speichern</button><button class="btn" data-act="train-machine-cancel">Abbrechen</button></div>
+    ${autoSaveHtml("train-machine-save", { mode: d.id ? "edit" : "new" })}
+    <div class="row-actions"><button class="btn" data-act="train-machine-cancel">${d.id ? "Fertig" : "Abbrechen"}</button></div>
     <p class="muted small">Geht mit „Körperwerte … senden“ an den PC.</p>
   </section>`;
 }
@@ -466,15 +469,16 @@ function sportEditor() {
   const d = S.trainSportEdit;
   const errors = S.trainErrors ?? {};
   const cats = D.sports.sportCategories(sportModels());
-  return `<section class="card card--training"><h3>${d.id ? "Sportart bearbeiten" : "Neue Sportart"}</h3>
+  return `<section class="card card--training" ${autoAttrs("train-sport", d.id ? "edit" : "new")}><h3>${d.id ? "Sportart bearbeiten" : "Neue Sportart"}</h3>
     ${notice()}
-    <div class="field"><label for="sport-name">Name</label><input id="sport-name" type="text" maxlength="80" value="${esc(d.name)}" data-spf="name">${fe(errors, "name")}</div>
-    <div class="field"><label for="sport-cat">Kategorie</label><input id="sport-cat" type="text" maxlength="60" list="sport-cats" placeholder="z. B. Mannschaftssport, Wassersport" value="${esc(d.category)}" data-spf="category"><datalist id="sport-cats">${cats.map((c) => `<option value="${esc(c)}"></option>`).join("")}</datalist>${fe(errors, "category")}</div>
+    <div class="field"><label for="sport-name">Name</label><input id="sport-name" type="text" maxlength="80" required value="${esc(d.name)}" data-spf="name">${fe(errors, "name")}</div>
+    <div class="field"><label for="sport-cat">Kategorie</label><input id="sport-cat" type="text" maxlength="60" required list="sport-cats" placeholder="z. B. Mannschaftssport, Wassersport" value="${esc(d.category)}" data-spf="category"><datalist id="sport-cats">${cats.map((c) => `<option value="${esc(c)}"></option>`).join("")}</datalist>${fe(errors, "category")}</div>
     <div class="field"><label for="sport-desc">Beschreibung (optional)</label><textarea id="sport-desc" rows="3" maxlength="2000" data-spf="description">${esc(d.description)}</textarea>${fe(errors, "description")}</div>
     <div class="field"><label>Bild (optional)</label>${d.image ? `<img class="sport-preview" src="${esc(d.image)}" alt="">` : ""}
-      <div class="row-actions"><label class="btn sm">Bild wählen<input type="file" accept="image/*" hidden data-dbchange="sportImage"></label>${d.image ? `<button class="btn sm" data-act="train-sport-image-remove">Bild entfernen</button>` : ""}</div>${fe(errors, "image")}</div>
+      <div class="row-actions"><label class="btn sm">Bild wählen<input type="file" accept="image/*" hidden data-dbchange="sportImage" data-autosave-skip></label>${d.image ? `<button class="btn sm" data-act="train-sport-image-remove" data-autosave-click>Bild entfernen</button>` : ""}</div>${fe(errors, "image")}</div>
     <label class="toggle"><input type="checkbox" data-spf="archived" ${d.archived ? "checked" : ""}> Archiviert</label>
-    <div class="row-actions"><button class="btn primary" data-act="train-sport-save">Speichern</button><button class="btn" data-act="train-sport-cancel">Abbrechen</button></div>
+    ${autoSaveHtml("train-sport-save", { mode: d.id ? "edit" : "new" })}
+    <div class="row-actions"><button class="btn" data-act="train-sport-cancel">${d.id ? "Fertig" : "Abbrechen"}</button></div>
   </section>`;
 }
 
@@ -545,7 +549,7 @@ export function viewCheckinsTab() {
   const poseSel = (c) => `<option value="${esc(c.id)}">${esc(ckLabel(c))}</option>`;
   const opt = (list, cur) => list.map((c) => poseSel(c).replace(`value="${esc(c.id)}"`, `value="${esc(c.id)}" ${c.id === cur ? "selected" : ""}`)).join("");
   const info = C.poseInfo(draft.pose);
-  return `<section class="card card--training" id="checkin-new-title">
+  return `<section class="card card--training" id="checkin-new-title" ${autoAttrs("checkin", draft.id ? "edit" : "new")} data-autosave-ready="${draft.id || draft.image ? 1 : 0}">
       <h3>${draft.id ? "Check-In bearbeiten" : "Neues Check-In"}</h3>
       <p class="card__note">${esc(C.CHECKIN_INFO)}</p>
       <p class="card__note">Formbild aufnehmen oder wählen und mit Datum, Uhrzeit und Pose speichern. Für gute Vergleiche: gleiches Licht, gleiche Pose, gleicher Abstand. Das Foto wird verkleinert und bleibt auf diesem Handy, bis du es an den PC sendest.</p>
@@ -554,7 +558,7 @@ export function viewCheckinsTab() {
         draft.id
           ? ""
           : `<div class="field"><label>Foto</label>${draft.thumb ? `<img class="checkin-preview" src="${esc(dataUrl(draft.thumb.mime, draft.thumb.data))}" alt="Vorschau">` : ""}
-          <div class="row-actions"><label class="btn sm">📷 Foto aufnehmen<input type="file" accept="image/*" capture="environment" hidden data-dbchange="checkinImage"></label><label class="btn sm">Aus Fotos wählen<input type="file" accept="image/*" hidden data-dbchange="checkinImage"></label></div>${fe(errors, "image")}</div>`
+          <div class="row-actions"><label class="btn sm">📷 Foto aufnehmen<input type="file" accept="image/*" capture="environment" hidden data-dbchange="checkinImage" data-autosave-skip></label><label class="btn sm">Aus Fotos wählen<input type="file" accept="image/*" hidden data-dbchange="checkinImage" data-autosave-skip></label></div>${fe(errors, "image")}</div>`
       }
       <div class="field"><label for="ck-date">Datum</label><input id="ck-date" type="date" value="${esc(draft.date)}" data-ckf="date">${fe(errors, "date")}</div>
       <div class="field"><label for="ck-time">Uhrzeit</label><input id="ck-time" type="time" value="${esc(draft.time)}" data-ckf="time">${fe(errors, "time")}</div>
@@ -566,7 +570,8 @@ export function viewCheckinsTab() {
         ${info ? `<p class="muted small pose-info">${esc(info).replace(/\n/g, "<br>")}</p>` : ""}
         ${fe(errors, "pose")}</fieldset>
       <div class="field"><label for="ck-notes">Notiz (optional)</label><textarea id="ck-notes" rows="2" maxlength="500" data-ckf="notes">${esc(draft.notes)}</textarea>${fe(errors, "notes")}</div>
-      <div class="row-actions"><button class="btn primary" data-act="train-checkin-save" ${S.trainCheckinBusy ? "disabled" : ""}>Speichern</button>${draft.id ? `<button class="btn" data-act="train-checkin-cancel">Abbrechen</button>` : ""}</div>
+      ${autoSaveHtml("train-checkin-save", { mode: draft.id ? "edit" : "new", note: draft.id ? "Änderungen werden automatisch gespeichert." : "Wird automatisch gespeichert, sobald ein Foto gewählt ist." })}
+      ${draft.id ? `<div class="row-actions"><button class="btn" data-act="train-checkin-cancel">Fertig</button></div>` : ""}
     </section>
     <section class="card card--training" id="checkin-compare-title"><div class="wo-head"><h3>Vergleich</h3>${before && after ? `<span class="tag">${C.daysApart(before, after)} ${C.daysApart(before, after) === 1 ? "Tag" : "Tage"} dazwischen</span>` : ""}</div>
       ${
@@ -667,11 +672,16 @@ export const dbActions = {
         if (!row) throw new Error("Die Übung gibt es nicht mehr.");
         await saveExerciseRow(row, patch);
       } else {
-        TR.saveExercise(S.catalogRaw, S.train, { id: null, ...patch }, { uuid: X.uuid, now: new Date(), all: [...S.catalog.exercises, ...(S.localExercises ?? [])] });
+        const row = TR.saveExercise(S.catalogRaw, S.train, { id: null, ...patch }, { uuid: X.uuid, now: new Date(), all: [...S.catalog.exercises, ...(S.localExercises ?? [])] });
         await X.persistTrain();
+        d.id = row?.id ?? null;
       }
-      X.setNotice("ok", `Übung „${d.name.trim()}“ gespeichert.`);
-      S.trainExEdit = null;
+      // Sofort speichern (1.131.0): Editor bleibt offen, Meldung oben mit „Rückgängig“
+      if (S.autosaving && d.id) X.toast(`Übung „${d.name.trim()}“ gespeichert`);
+      else {
+        X.setNotice("ok", `Übung „${d.name.trim()}“ gespeichert.`);
+        S.trainExEdit = null;
+      }
       S.trainErrors = {};
     } catch (e) {
       X.failed(e);
@@ -750,8 +760,14 @@ export const dbActions = {
     try {
       const row = TR.saveMachine(S.catalogRaw, S.train, d, { uuid: X.uuid, now: new Date() });
       await X.persistTrain();
-      X.setNotice("ok", `Maschine „${row.display_name}“ gespeichert.`);
-      S.trainMachineEdit = null;
+      // Sofort speichern (1.131.0): Editor bleibt offen, Meldung oben mit „Rückgängig“
+      if (S.autosaving) {
+        d.id = row.id;
+        X.toast(`Maschine „${row.display_name}“ gespeichert`);
+      } else {
+        X.setNotice("ok", `Maschine „${row.display_name}“ gespeichert.`);
+        S.trainMachineEdit = null;
+      }
       S.trainMachine = row.id;
       S.trainErrors = {};
     } catch (e) {
@@ -806,10 +822,16 @@ export const dbActions = {
     syncSport();
     const d = S.trainSportEdit;
     try {
-      TR.saveSport(S.catalogRaw, S.train, { id: d.id, name: d.name, category: d.category, description: d.description, image: d.image, imageKey: d.imageKey, archived: d.archived }, { uuid: X.uuid, now: new Date() });
+      const row = TR.saveSport(S.catalogRaw, S.train, { id: d.id, name: d.name, category: d.category, description: d.description, image: d.image, imageKey: d.imageKey, archived: d.archived }, { uuid: X.uuid, now: new Date() });
       await X.persistTrain();
-      X.setNotice("ok", `Sportart „${d.name.trim()}“ gespeichert.`);
-      S.trainSportEdit = null;
+      // Sofort speichern (1.131.0): Editor bleibt offen, Meldung oben mit „Rückgängig“
+      if (S.autosaving) {
+        d.id = row?.id ?? d.id;
+        X.toast(`Sportart „${d.name.trim()}“ gespeichert`);
+      } else {
+        X.setNotice("ok", `Sportart „${d.name.trim()}“ gespeichert.`);
+        S.trainSportEdit = null;
+      }
       S.trainErrors = {};
     } catch (e) {
       X.failed(e);
@@ -844,7 +866,7 @@ export const dbActions = {
       return X.rerender();
     }
     try {
-      TR.saveCheckin(
+      const saved = TR.saveCheckin(
         S.catalogRaw,
         S.train,
         {
@@ -858,8 +880,16 @@ export const dbActions = {
         { uuid: X.uuid, now: new Date() },
       );
       await X.persistTrain();
-      X.setNotice("ok", d.id ? "Check-In gespeichert." : `Check-In vom ${fmtDate(d.date)} gespeichert.`);
-      S.trainCheckin = null;
+      const msg = d.id ? "Check-In gespeichert." : `Check-In vom ${fmtDate(d.date)} gespeichert.`;
+      // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet das gespeicherte Check-In
+      const id = typeof saved === "string" ? saved : saved?.id;
+      if (S.autosaving && id) {
+        Object.assign(d, { id, image: null, thumb: null });
+        X.toast(msg);
+      } else {
+        X.setNotice("ok", msg);
+        S.trainCheckin = null;
+      }
       S.trainErrors = {};
     } catch (e) {
       X.failed(e);
@@ -990,6 +1020,7 @@ export function dbChange(el) {
         const r = draw(img, 480, 0.8);
         S.trainSportEdit.image = `data:${r.mime};base64,${r.data}`;
         S.trainErrors = {};
+        autosaveNow("train-sport");
       })
       .catch((e) => {
         S.trainErrors = { image: e.message };
@@ -1014,6 +1045,7 @@ export function dbChange(el) {
         S.trainCheckin.image = draw(img, 1600, 0.85);
         S.trainCheckin.thumb = draw(img, 360, 0.8);
         S.trainErrors = {};
+        autosaveNow("checkin");
       })
       .catch((e) => {
         S.trainErrors = { image: e.message };

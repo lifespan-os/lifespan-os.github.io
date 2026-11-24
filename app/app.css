@@ -2168,6 +2168,11 @@ a.btn { color: var(--fg); text-decoration: none; }
 .mtl-dot--planned { background: var(--surface); border: 2px dashed var(--orange); box-sizing: border-box; }
 .mtl-slot { position: absolute; z-index: 1; }
 .mtl-slot > .mtl-card { width: 100%; box-sizing: border-box; }
+/* gedrückt halten und ziehen verschiebt die Mahlzeit (1.130.0) */
+.mtl-slot { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.mtl-slot.is-moving { z-index: 4; cursor: grabbing; }
+.mtl-slot.is-moving > .mtl-card { outline: 2px solid var(--orange); outline-offset: 1px; box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
+.mtl-slot.is-moving .mtl-card__time { color: var(--orange-text); font-weight: 800; }
 .mtl-card__head { display: flex; flex-wrap: nowrap; align-items: baseline; gap: 6px; }
 .mtl-card__head b { flex: 1; }
 .mtl-foods .mtl-kcal { color: var(--fg); }
@@ -2419,7 +2424,10 @@ button.pcal-done { display: flex; align-items: center; justify-content: space-be
 .ov-flow__next { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 10px; }
 .ov-flow__steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .ov-flow__steps li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
-.ov-flow__steps li.is-done > span:nth-child(2) { color: var(--muted); }
+.ov-flow__steps li.is-done > .ov-flow__go { color: var(--muted); }
+.ov-flow__go { justify-self: start; text-align: left; color: inherit; text-decoration: none; font-weight: 500; }
+.set-flow { border: 0; padding: 0; margin: 0 0 12px; display: grid; gap: 8px; }
+.set-flow .check-row { display: flex; gap: 10px; align-items: center; }
 .ov-flow__mark { width: 18px; height: 18px; border-radius: 999px; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; }
 .ov-flow__steps li.is-done .ov-flow__mark { background: var(--ok); border-color: var(--ok); color: #fff; }
 /* Overview „Reduziert“: Datenqualität (1.120.0) */

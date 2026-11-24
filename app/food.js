@@ -9,6 +9,7 @@ import * as L from "./label.js";
 import { buildDb, nutritionTabs } from "./diary.js";
 import * as QM from "./quickmeal.js";
 import { extraResultsHtml, initPlate, plateActions, plateCardHtml, plateInput, saveWithoutTime, tagHtml } from "./mealplate.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 let X = null; // Verbindung zur App (Zustand, Anzeige, Speichern)
 
@@ -300,12 +301,13 @@ function formCard() {
   const w = formWarnings();
   const fixed = (k) => (!f.id && s.scan?.corrected?.includes(k) ? `<p class="muted small">Lesefehler automatisch korrigiert – bitte prüfen.</p>` : "");
   const warn = (k) => `<p class="field-warn small" id="fw-${k}" ${w[k] ? "" : "hidden"}>${w[k] ? `⚠ ${esc(w[k])}` : ""}</p>`;
+  const REQ = new Set(["name", "v.energyKcal", "v.proteinG", "v.carbsG", "v.fatG"]);
   const field = (key, label, value, { unit = "", mode = "decimal", wide = false } = {}) => `
     <div class="field${wide ? " wide" : ""}"><label for="ff-${key}">${esc(label)}${unit ? ` <span class="muted">(${esc(unit)})</span>` : ""}</label>
-      <input id="ff-${key}" type="text" inputmode="${mode}" data-ff="${key}" value="${esc(value)}" autocomplete="off" ${e[key] ? 'aria-invalid="true"' : ""}>
+      <input id="ff-${key}" type="text" inputmode="${mode}" data-ff="${key}" value="${esc(value)}" ${REQ.has(key) ? "required" : ""} autocomplete="off" ${e[key] ? 'aria-invalid="true"' : ""}>
       ${e[key] ? `<p class="err small">${esc(e[key])}</p>` : ""}${key.startsWith("v.") ? warn(key.slice(2)) + fixed(key.slice(2)) : ""}</div>`;
   const hint = (k) => (s.scan?.lessThan.includes(k) ? " (<)" : "");
-  return `<section class="card" id="food-form">
+  return `<section class="card" id="food-form" ${autoAttrs("food", f.id ? "edit" : "new")}>
     <div class="wo-head"><h3>${s.known ? "Gespeichertes Lebensmittel" : s.offHint && !f.id ? "Aus Open Food Facts" : "Erkannte Nährwerte"}</h3>${
       s.scan ? `<span class="tag">${L.recognizedCount(s.scan)} von 8 erkannt</span>` : ""
     }</div>
@@ -327,7 +329,8 @@ function formCard() {
     </div>
     ${warn("sum")}
     ${s.text ? `<details><summary class="muted small">Erkannter Text</summary><pre class="ocr-raw">${esc(s.text)}</pre></details>` : ""}
-    <button class="btn primary block" data-act="food-save">${s.form.id ? "Änderungen speichern" : "Als Lebensmittel speichern"}</button>
+    ${autoSaveHtml("food-save", { mode: f.id ? "edit" : "new", note: f.id ? "Änderungen werden automatisch gespeichert." : "Wird automatisch gespeichert, sobald Name, kcal, Eiweiß, Kohlenhydrate und Fett eingetragen sind – erkannte Werte gleich so:" })}
+    ${f.id ? `<button class="btn block" data-act="food-form-done">Fertig</button>` : `<button class="btn primary block" data-act="food-save">Als Lebensmittel speichern</button>`}
   </section>`;
 }
 
@@ -335,7 +338,7 @@ function formCard() {
 function caffeineTipHtml(f) {
   const tip = (f.caffeineMg ?? "").trim() === "" ? D.foodCaffeine.caffeineHint(f.name, f.basis) : null;
   if (!tip) return "Zählt im Tagesverlauf in der Spalte „Koffein“ – auch als Zutat einer Mahlzeit.";
-  return `Richtwert ${esc(tip.label)}: etwa ${tip.mgPer100} mg je 100 ml (Schätzung – Packungsangabe geht vor). <button type="button" class="linkbtn" data-act="food-caffeine-tip" data-arg="${tip.mgPer100}">Übernehmen</button>`;
+  return `Richtwert ${esc(tip.label)}: etwa ${tip.mgPer100} mg je 100 ml (Schätzung – Packungsangabe geht vor). <button type="button" class="linkbtn" data-act="food-caffeine-tip" data-autosave-click data-arg="${tip.mgPer100}">Übernehmen</button>`;
 }
 
 function updateCaffeineTip() {
@@ -1006,8 +1009,22 @@ export const foodActions = {
       return;
     }
     await persist();
+    // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet das gespeicherte Lebensmittel
+    if (X.S.autosaving) {
+      s.form.id = r.food.id;
+      s.errors = {};
+      X.toast(r.merged ? "Vorhandenes Lebensmittel aktualisiert" : "Lebensmittel gespeichert");
+      return X.rerender();
+    }
     select(r.food, { known: true });
     X.toast(r.merged ? "Vorhandenes Lebensmittel aktualisiert" : "Lebensmittel gespeichert");
+    X.rerender();
+    requestAnimationFrame(() => document.getElementById("food-track")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  },
+  "food-form-done": () => {
+    const s = F();
+    const food = s.form?.id ? N.allFoods(X.S.catalog, s.local).get(s.form.id) : null;
+    if (food) select(food, { known: true });
     X.rerender();
     requestAnimationFrame(() => document.getElementById("food-track")?.scrollIntoView({ block: "start", behavior: "smooth" }));
   },

@@ -12,6 +12,7 @@ import { barTrendSvg } from "./pcview.js";
 import { calculatorTab, checklistTab, fromFor, hrtTab, levelsTab } from "./supertabs.js";
 import { timelineTab } from "./parity.js";
 import { dotHtml, openTabsOf } from "./openitems.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 export { viewHrtEdit } from "./supertabs.js";
 export { superActions, superChange, superInput } from "./superactions.js";
 
@@ -223,15 +224,15 @@ export function substancesTab() {
     </section>`;
 }
 
-export function pfield(attr, k, label, value, { type = "text", unit = "", mode = "", placeholder = "", error = "" } = {}) {
+export function pfield(attr, k, label, value, { type = "text", unit = "", mode = "", placeholder = "", error = "", req = false } = {}) {
   return `<div class="field ${error ? "has-error" : ""}"><label for="${attr}-${k}">${esc(label)}</label>
-    <div class="input-row"><input id="${attr}-${k}" type="${type}" data-${attr}="${k}" value="${esc(value)}" ${mode ? `inputmode="${mode}"` : ""} ${placeholder ? `placeholder="${esc(placeholder)}"` : ""} autocomplete="off">${unit ? `<span class="unit">${esc(unit)}</span>` : ""}</div>
+    <div class="input-row"><input id="${attr}-${k}" type="${type}" data-${attr}="${k}" value="${esc(value)}" ${req ? "required" : ""} ${mode ? `inputmode="${mode}"` : ""} ${placeholder ? `placeholder="${esc(placeholder)}"` : ""} autocomplete="off">${unit ? `<span class="unit">${esc(unit)}</span>` : ""}</div>
     ${error ? `<p class="field-error">${esc(error)}</p>` : ""}</div>`;
 }
 
-export function pselect(attr, k, label, value, options, error = "") {
+export function pselect(attr, k, label, value, options, error = "", req = false) {
   return `<div class="field ${error ? "has-error" : ""}"><label for="${attr}-${k}">${esc(label)}</label>
-    <select id="${attr}-${k}" data-${attr}="${k}">${options.map(([v, l, g]) => `<option value="${esc(v)}" ${String(v) === String(value) ? "selected" : ""}>${esc(g ? `${l} (${g})` : l)}</option>`).join("")}</select>
+    <select id="${attr}-${k}" data-${attr}="${k}" ${req ? "required" : ""}>${options.map(([v, l, g]) => `<option value="${esc(v)}" ${String(v) === String(value) ? "selected" : ""}>${esc(g ? `${l} (${g})` : l)}</option>`).join("")}</select>
     ${error ? `<p class="field-error">${esc(error)}</p>` : ""}</div>`;
 }
 
@@ -253,18 +254,19 @@ export function viewProtocolEdit() {
   const options = [...subs, ...(current ? [current] : [])];
   const chosen = options.find((s) => s.id === d.substanceId);
   return `${X.header(d.id ? "Eintrag bearbeiten" : "Einnahme erfassen", { back: "super" })}<main class="wrap">
-    <section class="card">
-      ${pselect("pf", "substanceId", "Substanz", d.substanceId, [["", "Bitte wählen …"], ...options.map((s) => [s.id, s.name, PR().CATEGORY_SHORT[s.category]])], e.substanceId)}
-      ${pfield("pf", "amount", "Menge", d.amount, { unit: chosen?.unit ?? "", mode: "decimal", error: e.amount })}
+    <section class="card" ${autoAttrs("proto", d.id ? "edit" : "new")}>
+      ${pselect("pf", "substanceId", "Substanz", d.substanceId, [["", "Bitte wählen …"], ...options.map((s) => [s.id, s.name, PR().CATEGORY_SHORT[s.category]])], e.substanceId, true)}
+      ${pfield("pf", "amount", "Menge", d.amount, { unit: chosen?.unit ?? "", mode: "decimal", error: e.amount, req: true })}
       <div class="lab-row__grid">
-        ${pfield("pf", "date", "Datum", d.date, { type: "date", error: e.date })}
+        ${pfield("pf", "date", "Datum", d.date, { type: "date", error: e.date, req: true })}
         ${pfield("pf", "time", "Uhrzeit (optional)", d.time, { type: "time", error: e.time })}
       </div>
       ${pselect("pf", "route", "Anwendung (optional)", d.route, routeOptions(), e.route)}
       ${pfield("pf", "site", "Stelle (optional)", d.site, { placeholder: "z. B. Bauch links", error: e.site })}
       ${ptextarea("pf", "notes", "Notiz (optional)", d.notes, e.notes)}
       ${f.message ? `<p class="field-error">${esc(f.message)}</p>` : ""}
-      <div class="row-actions"><button class="btn primary" data-act="proto-save">${d.id ? "Änderung speichern" : "Eintrag speichern"}</button><button class="btn" data-go="super">Abbrechen</button></div>
+      ${autoSaveHtml("proto-save", { mode: d.id ? "edit" : "new" })}
+      <div class="row-actions"><button class="btn" data-go="super">${d.id ? "Fertig" : "Abbrechen"}</button></div>
     </section>
   </main>`;
 }
@@ -275,15 +277,16 @@ export function viewSubstanceEdit() {
   const d = f.draft;
   const e = f.errors ?? {};
   return `${X.header(d.id ? "Substanz bearbeiten" : "Neue Substanz", { back: "super" })}<main class="wrap">
-    <section class="card">
-      ${pfield("sf", "name", "Name", d.name, { error: e.name })}
+    <section class="card" ${autoAttrs("sub", d.id ? "edit" : "new")}>
+      ${pfield("sf", "name", "Name", d.name, { error: e.name, req: true })}
       ${pselect("sf", "category", "Art", d.category, Object.entries(PR().CATEGORY_LABELS), e.category)}
       ${pselect("sf", "unit", "Einheit", d.unit, PR().UNITS.map((u) => [u, u]), e.unit)}
       ${pselect("sf", "defaultRoute", "Übliche Anwendung (optional)", d.defaultRoute, routeOptions(), e.defaultRoute)}
       ${ptextarea("sf", "notes", "Notiz (optional)", d.notes, e.notes)}
       ${d.id ? `<label class="hrt-check__item"><input type="checkbox" data-sf="archived" ${d.archived ? "checked" : ""}><span>Archiviert (nicht mehr zur Auswahl beim Erfassen)</span></label>` : ""}
       ${f.message ? `<p class="field-error">${esc(f.message)}</p>` : ""}
-      <div class="row-actions"><button class="btn primary" data-act="sub-save">Speichern</button><button class="btn" data-go="super">Abbrechen</button>
+      ${autoSaveHtml("sub-save", { mode: d.id ? "edit" : "new" })}
+      <div class="row-actions"><button class="btn" data-go="super">${d.id ? "Fertig" : "Abbrechen"}</button>
         ${d.id ? `<button class="btn danger" data-act="sub-delete" data-arg="${esc(d.id)}">Löschen</button>` : ""}</div>
       ${d.id ? `<p class="muted small">Löschen geht nur ohne Protokolleinträge – sonst archivieren.</p>` : ""}
     </section>

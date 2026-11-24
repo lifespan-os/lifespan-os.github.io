@@ -15,6 +15,7 @@ import { barTrendSvg, COLOR, trendSvg } from "./pcview.js";
 import { buildDb, today } from "./diary.js";
 import { measuredSleepHtml } from "./heart.js";
 import { caffeineIntakesOn, caffeineSettings, sleepCaffeineHtml } from "./icoach.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -371,9 +372,9 @@ function sleepDraft(row) {
     : null;
 }
 
-function field(name, label, value, { type = "text", unit = "", hint = "", mode = "", error = "", placeholder = "" } = {}) {
+function field(name, label, value, { type = "text", unit = "", hint = "", mode = "", error = "", placeholder = "", req = false } = {}) {
   return `<div class="field ${error ? "has-error" : ""}"><label for="lf-${name}">${esc(label)}</label>
-    <div class="input-row"><input id="lf-${name}" type="${type}" data-lf="${name}" value="${esc(value)}" ${mode ? `inputmode="${mode}"` : ""} ${placeholder ? `placeholder="${esc(placeholder)}"` : ""} ${error ? 'aria-invalid="true"' : ""} autocomplete="off">${unit ? `<span class="unit">${esc(unit)}</span>` : ""}</div>
+    <div class="input-row"><input id="lf-${name}" type="${type}" data-lf="${name}" value="${esc(value)}" ${req ? "required" : ""} ${mode ? `inputmode="${mode}"` : ""} ${placeholder ? `placeholder="${esc(placeholder)}"` : ""} ${error ? 'aria-invalid="true"' : ""} autocomplete="off">${unit ? `<span class="unit">${esc(unit)}</span>` : ""}</div>
     ${error ? `<p class="field-error">${esc(error)}</p>` : hint ? `<p class="muted small">${esc(hint)}</p>` : ""}</div>`;
 }
 
@@ -403,9 +404,8 @@ function phasePreview(d) {
 }
 
 function formButtons(isEdit, deleteLabel) {
-  return `<div class="logs-form-actions">
-    <button class="btn primary" data-act="log-save">Speichern</button>
-    <button class="btn" data-act="log-cancel">Abbrechen</button>
+  return `${autoSaveHtml("log-save", { mode: isEdit ? "edit" : "new" })}<div class="logs-form-actions">
+    <button class="btn" data-act="log-cancel">${isEdit ? "Fertig" : "Abbrechen"}</button>
     ${isEdit ? `<button class="btn danger" data-act="log-delete">${esc(deleteLabel)}</button>` : ""}
   </div>`;
 }
@@ -416,15 +416,15 @@ function editSleepView(f) {
   const db = buildDb();
   const methods = D.methodChoices(L.methodsOf(db, "sleep"), d.method);
   return `${X.header(d.id ? "Nacht bearbeiten" : "Nacht erfassen", { back: "sleep" })}<main class="wrap">
-    <section class="card card--sleep ov-card logs-form">
-      ${field("date", "Aufgewacht am", d.date, { type: "date", error: e.date })}
+    <section class="card card--sleep ov-card logs-form" ${autoAttrs("log", d.id ? "edit" : "new")}>
+      ${field("date", "Aufgewacht am", d.date, { type: "date", error: e.date, req: true })}
       ${selectField("method", "Messmethode", d.method, [["", "Keine Angabe"], ...methods.map((m) => [m, m])], {
         error: e.method,
         hint: methods.length ? "" : "Messmethoden legst du unter Settings → Messmethoden (Schlaf) an.",
       })}
       <div class="logs-grid">
-        ${field("bedTime", "Zu Bett gegangen", d.bedTime, { type: "time", error: e.bedTime })}
-        ${field("wakeTime", "Aufgestanden", d.wakeTime, { type: "time", error: e.wakeTime })}
+        ${field("bedTime", "Zu Bett gegangen", d.bedTime, { type: "time", error: e.bedTime, req: true })}
+        ${field("wakeTime", "Aufgestanden", d.wakeTime, { type: "time", error: e.wakeTime, req: true })}
         ${field("sleepLatencyMin", "Einschlafdauer (optional)", d.sleepLatencyMin, { unit: "min", mode: "numeric", error: e.sleepLatencyMin })}
         ${field("awakeMin", "Wach in der Nacht (optional)", d.awakeMin, { unit: "min", mode: "numeric", error: e.awakeMin })}
         ${field("awakenings", "Wachphasen (optional)", d.awakenings, { unit: "×", mode: "numeric", error: e.awakenings, hint: "Wie oft du nachts aufgewacht bist." })}
@@ -455,11 +455,11 @@ function editNapView(f) {
   const T = /^\d{2}:\d{2}$/;
   const duration = T.test(d.startTime) && T.test(d.endTime) && d.startTime !== d.endTime ? D.sleep.sleepMinutes(d.startTime, d.endTime) : null;
   return `${X.header(d.id ? "Nap bearbeiten" : "Nap erfassen", { back: "sleep" })}<main class="wrap">
-    <section class="card card--sleep ov-card logs-form">
-      ${field("date", "Datum", d.date, { type: "date", error: e.date })}
+    <section class="card card--sleep ov-card logs-form" ${autoAttrs("log", d.id ? "edit" : "new")}>
+      ${field("date", "Datum", d.date, { type: "date", error: e.date, req: true })}
       <div class="logs-grid">
-        ${field("startTime", "Beginn", d.startTime, { type: "time", error: e.startTime })}
-        ${field("endTime", "Ende", d.endTime, { type: "time", error: e.endTime })}
+        ${field("startTime", "Beginn", d.startTime, { type: "time", error: e.startTime, req: true })}
+        ${field("endTime", "Ende", d.endTime, { type: "time", error: e.endTime, req: true })}
       </div>
       ${field("notes", "Notiz (optional)", d.notes, { placeholder: "z. B. Powernap", error: e.notes })}
       <p class="muted" id="lf-preview">${duration !== null ? `Dauer: <strong>${dur(duration)}</strong> – wird zur Schlafdauer dieses Tages addiert.` : ""}</p>
@@ -481,9 +481,9 @@ function editRecoveryView(f) {
   const d = f.draft;
   const e = f.errors;
   return `${X.header(d.id ? "Einschätzung bearbeiten" : "Tag einschätzen", { back: "recovery" })}<main class="wrap">
-    <section class="card card--recovery ov-card logs-form">
+    <section class="card card--recovery ov-card logs-form" ${autoAttrs("log", d.id ? "edit" : "new")}>
       <p class="muted small">Alle Angaben sind deine eigene Einschätzung. Wähle nur aus, was du heute einschätzen möchtest – leere Felder bleiben leer und werden nicht geschätzt.</p>
-      ${field("date", "Datum", d.date, { type: "date", error: e.date })}
+      ${field("date", "Datum", d.date, { type: "date", error: e.date, req: true })}
       ${D.recovery.RECOVERY_SCALES.map((s) => selectField(s.key, s.question, d[s.key], scaleOptions(s), { error: e[s.key], hint: D.recovery.scaleHint(s.key) })).join("")}
       <div class="field"><label for="lf-notes">Notizen</label><textarea id="lf-notes" data-lf="notes" rows="2">${esc(d.notes)}</textarea>${e.notes ? `<p class="field-error">${esc(e.notes)}</p>` : ""}</div>
       ${formButtons(Boolean(d.id), "Eintrag löschen")}
@@ -521,7 +521,7 @@ function editVitalsView(f) {
       ? field(`v-${v.id}`, v.label, d.values[v.id] ?? "", { unit: v.unit, mode: v.decimals === 0 ? "numeric" : "decimal", hint: v.hint, error: e[v.id] })
       : "";
   return `${X.header("ANS-Werte erfassen", { back: "recovery", sub: D.ANS_TITLE })}<main class="wrap">
-    <section class="card card--recovery ov-card logs-form">
+    <section class="card card--recovery ov-card logs-form" ${autoAttrs("log")}>
       <p class="muted small">Manuell übertragene Messwerte, z. B. von Uhr, Brustgurt oder App. Sie werden unter Body &amp; Longevity gespeichert. Alle Werte sind freiwillig. Werte vom PC entfernst du am PC; ein geleertes Feld entfernt einen hier erfassten, noch nicht gesendeten Wert.</p>
       ${field("date", "Messdatum", d.date, { type: "date", error: e.date })}
       ${selectField("method", "Messmethode", d.method, [["", "Keine Angabe"], ...methods.map((m) => [m, m])], {
@@ -530,7 +530,7 @@ function editVitalsView(f) {
       <div class="logs-grid">${VITALS.filter((v) => v.id !== ANS_STATUS).map(vf).join("")}</div>
       <div class="ans-status"><h4 class="logs-sub">ANS-Status</h4><div id="lf-ans">${ansBar(ansNum !== null && Number.isFinite(ansNum) ? ansNum : null, prev)}</div>${vf(VITALS[4])}</div>
       <details class="ov-more"><summary>Was bedeuten die Werte?</summary><p class="muted small logs-help">${esc(D.ANS_INFO).replace(/\n/g, "<br>")}</p></details>
-      <div class="logs-form-actions"><button class="btn primary" data-act="log-save">Speichern</button><button class="btn" data-act="log-cancel">Abbrechen</button></div>
+      ${autoSaveHtml("log-save", { note: "Jeder Wert wird beim Verlassen des Feldes automatisch gespeichert." })}<div class="logs-form-actions"><button class="btn" data-act="log-cancel">Fertig</button></div>
     </section></main>`;
 }
 
@@ -773,8 +773,16 @@ export const logsActions = {
       return X.toast("Bitte die markierten Felder prüfen.", true);
     }
     await persist();
+    const msg = f.kind === "sleep" ? "Nacht gespeichert." : f.kind === "naps" ? "Nap gespeichert." : "Einschätzung gespeichert.";
+    // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet den gespeicherten Eintrag
+    if (S.autosaving) {
+      if (res.row?.id) f.draft.id = res.row.id;
+      f.errors = {};
+      X.toast(msg);
+      return X.rerender();
+    }
     S.logEdit = null;
-    X.toast(f.kind === "sleep" ? "Nacht gespeichert." : f.kind === "naps" ? "Nap gespeichert." : "Einschätzung gespeichert.");
+    X.toast(msg);
     X.go(f.back);
   },
   "log-delete": async (el) => {
@@ -807,6 +815,7 @@ async function saveVitals(f) {
     return X.toast("Bitte die markierten Felder prüfen.", true);
   }
   if (!res.saved && !res.removed && !res.kept && Object.values(values).every((v) => !String(v).trim())) {
+    if (S.autosaving) return;
     f.errors = { [VITALS[0].id]: "Bitte mindestens einen Wert eingeben." };
     X.rerender();
     return;
@@ -816,7 +825,9 @@ async function saveVitals(f) {
   } catch (e) {
     X.toast("Speichern auf dem Gerät fehlgeschlagen: " + e.message, true);
   }
-  S.logEdit = null;
+  // Sofort speichern (1.131.0): Formular bleibt offen
+  if (!S.autosaving) S.logEdit = null;
+  else f.errors = {};
   X.toast(
     res.saved || res.removed
       ? `${res.saved ? `${res.saved === 1 ? "1 Messwert" : `${res.saved} Messwerte`} gespeichert` : ""}${res.saved && res.removed ? ", " : ""}${res.removed ? `${res.removed} entfernt` : ""}.${res.kept ? " Werte vom PC bitte am PC löschen." : ""}`
@@ -824,6 +835,7 @@ async function saveVitals(f) {
         ? "Werte vom PC bitte am PC löschen."
         : "Keine Änderung.",
   );
+  if (S.autosaving) return X.rerender();
   X.go("recovery");
 }
 

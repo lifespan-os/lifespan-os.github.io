@@ -13,6 +13,7 @@ import * as PS from "./pcsettings.js";
 import { X, buildDb, today } from "./diary.js";
 import { trendSvg, COLOR } from "./pcview.js";
 import { refreshCatalog } from "./appbase.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 const esc = (v) => X.esc(v);
 const F = (v, d = 0) => D.formatNumber(v, d);
@@ -71,16 +72,16 @@ function editorHtml(db, d, errors) {
   const unit = unitOf(d.kind, d.metricId);
   const subject =
     d.kind === "body_metric"
-      ? `<div class="field"><label for="tg-metric">Messgröße</label><select id="tg-metric" data-tg="metricId" ${inv(errors, "metricId")}><option value="">Bitte wählen …</option>${metricList()
+      ? `<div class="field"><label for="tg-metric">Messgröße</label><select id="tg-metric" data-tg="metricId" required ${inv(errors, "metricId")}><option value="">Bitte wählen …</option>${metricList()
           .map((m) => `<option value="${esc(m.id)}" ${m.id === d.metricId ? "selected" : ""}>${esc(`${m.name} (${m.unit})`)}</option>`)
           .join("")}</select>${errOf(errors, "metricId")}</div>`
-      : `<div class="field"><label for="tg-exercise">Übung</label><select id="tg-exercise" data-tg="exerciseId" ${inv(errors, "exerciseId")}><option value="">Bitte wählen …</option>${exerciseList(db)
+      : `<div class="field"><label for="tg-exercise">Übung</label><select id="tg-exercise" data-tg="exerciseId" required ${inv(errors, "exerciseId")}><option value="">Bitte wählen …</option>${exerciseList(db)
           .map((x) => `<option value="${esc(x.id)}" ${x.id === d.exerciseId ? "selected" : ""}>${esc(x.name)}</option>`)
           .join("")}</select>${errOf(errors, "exerciseId")}</div>`;
-  const text = (key, label, value, { type = "text", mode = "", ph = "", hint = "", u = "" } = {}) =>
-    `<div class="field"><label for="tg-${key}">${esc(label)}${u ? ` <span class="muted small">(${esc(u)})</span>` : ""}</label><input id="tg-${key}" data-tg="${key}" type="${type}" ${mode ? `inputmode="${mode}"` : ""} value="${esc(value)}" ${ph ? `placeholder="${esc(ph)}"` : ""} ${inv(errors, key)}>${hint ? `<p class="muted small">${esc(hint)}</p>` : ""}${errOf(errors, key)}</div>`;
-  return `<div class="goal-form tg-form">
-    ${text("title", "Name", d.title, { ph: "z. B. Kniebeuge 140 kg" })}
+  const text = (key, label, value, { type = "text", mode = "", ph = "", hint = "", u = "", req = false } = {}) =>
+    `<div class="field"><label for="tg-${key}">${esc(label)}${u ? ` <span class="muted small">(${esc(u)})</span>` : ""}</label><input id="tg-${key}" data-tg="${key}" type="${type}" ${req ? "required" : ""} ${mode ? `inputmode="${mode}"` : ""} value="${esc(value)}" ${ph ? `placeholder="${esc(ph)}"` : ""} ${inv(errors, key)}>${hint ? `<p class="muted small">${esc(hint)}</p>` : ""}${errOf(errors, key)}</div>`;
+  return `<div class="goal-form tg-form" ${autoAttrs("tg", d.isNew ? "new" : "edit")}>
+    ${text("title", "Name", d.title, { ph: "z. B. Kniebeuge 140 kg", req: true })}
     <div class="grid2">
       <div class="field"><label for="tg-kind">Art</label><select id="tg-kind" data-tg="kind">${Object.keys(labels)
         .map((k) => `<option value="${k}" ${k === d.kind ? "selected" : ""}>${esc(labels[k])}</option>`)
@@ -88,7 +89,7 @@ function editorHtml(db, d, errors) {
       ${subject}
     </div>
     <div class="grid2">
-      ${text("targetValue", "Zielwert", d.targetValue, { mode: "decimal", u: unit })}
+      ${text("targetValue", "Zielwert", d.targetValue, { mode: "decimal", u: unit, req: true })}
       ${text("startValue", "Ausgangswert", d.startValue, { mode: "decimal", u: unit, ph: "optional" })}
     </div>
     <div class="grid2">
@@ -99,7 +100,8 @@ function editorHtml(db, d, errors) {
     <div class="field"><label for="tg-notes">Notiz</label><textarea id="tg-notes" data-tg="notes" rows="2" maxlength="2000" placeholder="optional" ${inv(errors, "notes")}>${esc(d.notes)}</textarea>${errOf(errors, "notes")}</div>
     ${d.isNew ? "" : `<label class="toggle"><input type="checkbox" data-tg="archived" ${d.archived ? "checked" : ""}> <span>Archiviert (abgeschlossen oder aufgegeben)</span></label>`}
     ${errOf(errors, "_")}
-    <div class="row-actions"><button class="btn primary" data-act="tg-save">Speichern</button><button class="btn" data-act="tg-cancel">Abbrechen</button>${d.isNew ? "" : `<button class="btn danger" data-act="tg-delete">Löschen</button>`}</div>
+    ${autoSaveHtml("tg-save", { mode: d.isNew ? "new" : "edit" })}
+    <div class="row-actions"><button class="btn" data-act="tg-cancel">${d.isNew ? "Abbrechen" : "Fertig"}</button>${d.isNew ? "" : `<button class="btn danger" data-act="tg-delete">Löschen</button>`}</div>
   </div>`;
 }
 
@@ -236,7 +238,7 @@ export function weekGoalsCard(db) {
   const e = S.wgErr ?? null;
   const field = (key, label, ph, mode = "numeric", u = "") =>
     `<div class="field"><label for="wg-${key}">${esc(label)}${u ? ` <span class="muted small">(${u})</span>` : ""}</label><input id="wg-${key}" data-wg="${key}" inputmode="${mode}" value="${esc(f[key])}" placeholder="${esc(ph)}" ${inv(e, key)}>${errOf(e, key)}</div>`;
-  return `<section class="card" id="set-week-goals">
+  return `<section class="card" id="set-week-goals" ${autoAttrs("wg")}>
     <h3>Wochenziele</h3>
     <p class="muted small card-info">Alle Ziele der Karte „Wochenziele“ in der Overview (Woche ab Montag). Leer lassen = Ziel aus deinem aktuellen Trainingsplan bzw. ${Db.DEFAULT_WEEK_TRAININGS} Einheiten, für Cardio der WHO-Richtwert von ${Db.CARDIO_WEEK_MINUTES} Minuten moderater Ausdauer je Woche, für Protein jeder Tag der Woche und für Schlaf das Schlafziel aus den Tageszielen.</p>
     <div class="grid2">
@@ -245,7 +247,7 @@ export function weekGoalsCard(db) {
       ${field("proteinDays", "Protein-Tage je Woche", "jeder Tag")}
       ${field("sleepHours", "Schlaf: Ø je Nacht", "aus Tageszielen", "decimal", "h")}
     </div>
-    <button class="btn primary block" data-act="wg-save">Wochenziele speichern</button>
+    ${autoSaveHtml("wg-save")}
     ${syncNote}
   </section>`;
 }
@@ -335,7 +337,8 @@ export const goalsParityActions = {
     S.parity = PR.normParity(S.parity);
     PR.putRow(S.parity, "goal", { ...r.row, ...(d.createdAt ? { created_at: d.createdAt } : {}) });
     await saveParity();
-    S.tgEdit = null;
+    // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet das gespeicherte Ziel
+    S.tgEdit = S.autosaving ? { ...d, isNew: false } : null;
     S.tgErr = null;
     X.toast("Ziel gespeichert");
     X.rerender();

@@ -25,6 +25,7 @@ import * as TR from "./trainingdata.js";
 import * as CD from "./checklistdata.js";
 import * as PS from "./pcsettings.js";
 import * as O from "./pcoverview.js";
+import { autoAttrs, autoSaveHtml, autosaveNow } from "./autosave.js";
 
 // ------------------------------------------------------------------ Anordnung (wie mealTimeline.ts)
 
@@ -346,6 +347,11 @@ function swipeKey(it) {
   return `${it.kind}|${it.id}|${it.label}`;
 }
 
+/** Schlüssel zum Verschieben (gedrückt halten, 1.130.0): Art|ID */
+function moveKey(it) {
+  return it.kind === "meal" ? `meal|${it.meal.id}` : `planned|${it.plan.id}`;
+}
+
 // ------------------------------------------------------------------ Trainings (1.107.0)
 
 const WT = () => D.workoutTimeline;
@@ -561,6 +567,11 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
   const hy = scale.y(hMinute);
   const handlePlanned = plannedAt(date, hMinute);
   const handleClock = clockOf(hMinute);
+  // nach dem Sofort-Speichern kann die Einheit einen neuen Schlüssel haben (z. B. nur an diesem Tag verschoben)
+  if (te && te.follow && !bars.some((b) => b.key === te.key)) {
+    const again = bars.find((b) => b.kind === "planned" && b.plan?.dayId === te.follow.dayId && b.from === te.from);
+    if (again) te.key = again.key;
+  }
   const editBar = te ? bars.find((b) => b.key === te.key) ?? null : null;
   const editTop = te ? scale.y(te.from + te.dur) + 8 : 0;
   const height = Math.ceil(Math.max(endY, ...stacked.map((x) => x.y + x.height), te ? editTop + 470 : 0) + 16);
@@ -656,16 +667,16 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
     const ref = editBar.plan;
     const weekly = ref.slot.weekday !== null;
     const linked = WT().linkedEntries(editBar, fuel).filter((x) => x.kind === "planned");
-    editHtml = `<div class="mtl-panel mtl-panel--train" style="top:${editTop.toFixed(1)}px" role="dialog" aria-label="Geplantes Training bearbeiten">
+    editHtml = `<div class="mtl-panel mtl-panel--train" style="top:${editTop.toFixed(1)}px" role="dialog" aria-label="Geplantes Training bearbeiten" ${autoAttrs("mtl-tr")}>
       <b>${esc(editBar.title)} · geplant · ${clockOf(te.from)}–${clockOf(te.from + te.dur)} Uhr</b>
       <span class="muted small">Balken ziehen = verschieben, unteren Rand ziehen = Dauer.</span>
+      ${weekly ? `<div class="row mtl-train-scope" data-autosave-skip><label><input type="radio" name="mtl-tr-scope" data-diary="mtl-tr" value="day" ${te.scope === "day" ? "checked" : ""}> Nur am ${germanDay(date)}</label><label><input type="radio" name="mtl-tr-scope" data-diary="mtl-tr" value="series" ${te.scope === "series" ? "checked" : ""}> Jeden ${WEEKDAY_NAMES[ref.slot.weekday] ?? ""}</label></div>` : ""}
       <div class="row"><label class="field"><span>Beginn</span><input type="time" id="mtl-tr-from" data-diary="mtl-tr" value="${clockOf(te.from)}"></label><label class="field"><span>Dauer (Min.)</span><input type="number" id="mtl-tr-dur" data-diary="mtl-tr" min="10" max="600" step="5" inputmode="numeric" value="${te.dur}"></label></div>
-      ${weekly ? `<div class="row mtl-train-scope"><label><input type="radio" name="mtl-tr-scope" data-diary="mtl-tr" value="day" ${te.scope === "day" ? "checked" : ""}> Nur am ${germanDay(date)}</label><label><input type="radio" name="mtl-tr-scope" data-diary="mtl-tr" value="series" ${te.scope === "series" ? "checked" : ""}> Jeden ${WEEKDAY_NAMES[ref.slot.weekday] ?? ""}</label></div>` : ""}
-      ${linked.length ? `<label class="mtl-train-shift"><input type="checkbox" id="mtl-tr-shift" data-diary="mtl-tr" ${te.shift ? "checked" : ""}> Workout-Mahlzeiten mitverschieben (${esc(linked.map((x) => `${N.mealLabel(N.extraKey(x.role === "pre" ? "Pre-Workout" : x.role === "post" ? "Post-Workout" : "Intra-Workout"))} ${x.time}`).join(", "))})</label>` : ""}
+      ${linked.length ? `<label class="mtl-train-shift" data-autosave-skip><input type="checkbox" id="mtl-tr-shift" data-diary="mtl-tr" ${te.shift ? "checked" : ""}> Workout-Mahlzeiten mitverschieben (${esc(linked.map((x) => `${N.mealLabel(N.extraKey(x.role === "pre" ? "Pre-Workout" : x.role === "post" ? "Post-Workout" : "Intra-Workout"))} ${x.time}`).join(", "))})</label>` : ""}
       ${
         te.ask
           ? `<div class="row"><span class="small">${weekly && te.scope === "day" ? `Training am ${germanDay(date)} auslassen?` : "Termin aus dem Trainingsplan entfernen?"}</span><button class="btn sm danger" data-act="mtl-tr-del">Ja</button><button class="btn sm ghost" data-act="mtl-tr-ask" data-arg="0">Nein</button></div>`
-          : `<div class="row"><button class="btn sm primary" data-act="mtl-tr-save">✓ Speichern</button><button class="btn sm" data-act="mtl-tr-ask" data-arg="1">🗑 Löschen</button><button class="btn sm ghost" data-act="mtl-tr-cancel">Abbrechen</button></div>`
+          : `${autoSaveHtml("mtl-tr-save", { note: "Änderungen an Beginn und Dauer werden sofort gespeichert (gilt wie oben gewählt)." })}<div class="row"><button class="btn sm" data-act="mtl-tr-ask" data-arg="1">🗑 Löschen</button><button class="btn sm ghost" data-act="mtl-tr-cancel">Fertig</button></div>`
       }</div>`;
   }
   const ask = S.mtlAsk && S.mtlAsk.date === date ? S.mtlAsk : null;
@@ -700,7 +711,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
           const edit = menu.edit === id && kind === "water";
           return `<div class="mtl-sheet__row"><span class="mtl-sheet__name"><span class="muted">${esc(it.time)}</span> ${esc(it.text)}</span>${
             edit
-              ? `<span class="row"><input type="time" id="mtl-water-time" value="${esc(it.time)}" aria-label="Uhrzeit"><button class="btn sm primary" data-act="mtl-water-save" data-arg="${esc(id)}">Speichern</button><button class="btn sm ghost" data-act="mtl-menu-edit" data-arg="">Abbrechen</button></span>`
+              ? `<span class="row" ${autoAttrs("mtl-water")}><input type="time" id="mtl-water-time" value="${esc(it.time)}" aria-label="Uhrzeit">${autoSaveHtml("mtl-water-save", { attrs: `data-arg="${esc(id)}"`, note: "" })}<button class="btn sm ghost" data-act="mtl-menu-edit" data-arg="">Fertig</button></span>`
               : `<span class="row"><button class="btn sm" data-act="${kind === "water" ? "mtl-menu-edit" : "mtl-menu-go"}" data-arg="${esc(kind === "water" ? id : k)}">✎ ${kind === "water" ? "Uhrzeit" : "Bearbeiten"}</button><button class="btn sm ghost" data-act="mtl-menu-del" data-arg="${esc(`${kind}|${id}|${rest.join("|")}`)}">🗑 Löschen</button></span>`
           }</div>`;
         })
@@ -727,7 +738,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
       ${barsHtml}
       <svg class="mtl-links" aria-hidden="true">${links}</svg>
       ${stacked.map((x) => `<span class="mtl-dot mtl-dot--${x.kind}" style="top:${x.timeY.toFixed(1)}px" aria-hidden="true"></span>`).join("")}
-      ${stacked.map((x) => `<div class="mtl-slot" style="top:${x.y.toFixed(1)}px;left:${MEALS_LEFT}px;right:${lanesW}px" data-swipe="${esc(swipeKey(x))}">${cardHtml(x)}</div>`).join("")}
+      ${stacked.map((x) => `<div class="mtl-slot" style="top:${x.y.toFixed(1)}px;left:${MEALS_LEFT}px;right:${lanesW}px" data-swipe="${esc(swipeKey(x))}" data-move="${esc(moveKey(x))}" data-minute="${x.minute}">${cardHtml(x)}</div>`).join("")}
       ${marks}
       <div class="mtl-handle ${handlePlanned ? "is-planned" : ""}" style="top:${(hy - GRIP_H / 2).toFixed(1)}px;right:0">
         <button type="button" class="mtl-grip" aria-label="Neuer Eintrag um ${handleClock} Uhr – zum Verschieben ziehen"><span class="mtl-time--handle">${handleClock}</span></button>
@@ -838,6 +849,7 @@ export function initTimelineDrag() {
   document.addEventListener("pointerup", end);
   document.addEventListener("pointercancel", end);
   initTrainBars();
+  initCardMove();
   initSwipe();
   initPinch();
   // Knopf folgt der Uhr, solange er nicht gewählt ist und niemand gerade tippt
@@ -907,6 +919,8 @@ function initTrainBars() {
     if (!td) return;
     td = null;
     X.rerender();
+    // Sofort speichern (1.131.0): gezogener Balken wird gespeichert
+    autosaveNow("mtl-tr");
   };
   document.addEventListener("pointerup", end);
   document.addEventListener("pointercancel", end);
@@ -1013,8 +1027,169 @@ async function saveTrain(del) {
       }
       if (moved) await persistFood();
     }
-    S.mtlTrain = null;
+    // Sofort speichern (1.131.0): das Bearbeiten bleibt offen
+    S.mtlTrain = S.autosaving ? { ...te, follow: { dayId: b.plan.dayId } } : null;
     X.toast(`Training „${b.title}“: ${time}–${clockOf(te.from + te.dur)} Uhr${weekly && te.scope === "series" ? ` (jeden ${WEEKDAY_NAMES[b.plan.slot.weekday]})` : ""}${moved ? ` · ${moved} Workout-Mahlzeit${moved === 1 ? "" : "en"} mitverschoben` : ""}.`);
+  } catch (e) {
+    X.toast(e.message, true);
+  }
+  X.rerender();
+}
+
+/** Gedrückt halten (ms), bis eine Mahlzeit verschiebbar wird */
+const HOLD_MS = 350;
+/** laufendes Verschieben einer Mahlzeit (Wischen ruht währenddessen) */
+let cm = null;
+
+/**
+ * Mahlzeit verschieben (1.130.0, wie am PC): Karte gedrückt halten, dann ziehen; am Bildschirmrand
+ * läuft die Seite mit, Loslassen speichert die neue Uhrzeit.
+ */
+function initCardMove() {
+  const minuteOf = (c) => {
+    const rect = c.box.getBoundingClientRect();
+    return snapMinute(minuteAt(c.anchors, c.lastY - rect.top) - c.offset, 1, c.start);
+  };
+  const show = (c) => {
+    const minute = minuteOf(c);
+    if (minute === c.minute) return;
+    c.minute = minute;
+    c.slot.style.transform = `translateY(${(yAt(c.anchors, minute) - yAt(c.anchors, c.origin)).toFixed(1)}px)`;
+    if (c.time) c.time.textContent = clockOf(minute);
+    if (navigator.vibrate) {
+      try {
+        navigator.vibrate(5);
+      } catch {
+        // Vibration nicht verfügbar (z. B. iPhone)
+      }
+    }
+  };
+  const edgeScroll = () => {
+    if (!cm?.active) return;
+    if (cm.moved) {
+      const lower = window.innerHeight - 90;
+      const upper = 130;
+      let dy = 0;
+      if (cm.lastY > lower) dy = Math.min(22, Math.ceil((cm.lastY - lower) / 5) + 3);
+      else if (cm.lastY < upper) dy = -Math.min(22, Math.ceil((upper - cm.lastY) / 5) + 3);
+      if (dy) {
+        window.scrollBy(0, dy);
+        show(cm);
+      }
+    }
+    cm.frame = requestAnimationFrame(edgeScroll);
+  };
+  const cancel = () => {
+    if (!cm) return;
+    clearTimeout(cm.timer);
+    cancelAnimationFrame(cm.frame);
+    if (cm.active) {
+      cm.slot.classList.remove("is-moving");
+      cm.slot.style.transform = "";
+      if (cm.time) cm.time.textContent = cm.originText;
+    }
+    cm = null;
+  };
+  document.addEventListener("pointerdown", (ev) => {
+    const slot = ev.target.closest?.(".mtl .mtl-slot[data-move]");
+    if (!slot || (ev.pointerType === "mouse" && ev.button !== 0)) return;
+    cancel();
+    const box = slot.closest(".mtl");
+    let anchors;
+    try {
+      anchors = JSON.parse(box.dataset.anchors || "[]").map(([minute, y]) => ({ minute, y }));
+    } catch {
+      return;
+    }
+    const origin = Number(slot.dataset.minute);
+    if (!Number.isFinite(origin)) return;
+    const time = slot.querySelector(".mtl-card__time");
+    const c = { slot, box, anchors, origin, minute: origin, offset: 0, start: Number(box.dataset.start) || 0, x0: ev.clientX, y0: ev.clientY, lastY: ev.clientY, id: ev.pointerId, active: false, moved: false, time, originText: time?.textContent ?? "", timer: 0, frame: 0 };
+    c.timer = setTimeout(() => {
+      if (cm !== c) return;
+      c.active = true;
+      const rect = box.getBoundingClientRect();
+      c.offset = minuteAt(anchors, c.lastY - rect.top) - origin;
+      try {
+        slot.setPointerCapture?.(c.id);
+      } catch {
+        // Zeiger schon weg
+      }
+      slot.classList.add("is-moving");
+      if (navigator.vibrate) {
+        try {
+          navigator.vibrate(15);
+        } catch {
+          // Vibration nicht verfügbar
+        }
+      }
+      c.frame = requestAnimationFrame(edgeScroll);
+    }, HOLD_MS);
+    cm = c;
+  });
+  document.addEventListener("pointermove", (ev) => {
+    if (!cm || ev.pointerId !== cm.id) return;
+    cm.lastY = ev.clientY;
+    if (!cm.active) {
+      // vor dem Halten bewegt: normales Scrollen, Wischen oder Tippen
+      if (Math.hypot(ev.clientX - cm.x0, ev.clientY - cm.y0) > 8) cancel();
+      return;
+    }
+    if (!cm.moved && Math.abs(ev.clientY - cm.y0) < 4) return;
+    cm.moved = true;
+    show(cm);
+    ev.preventDefault();
+  });
+  // die Seite scrollt währenddessen nicht vom Finger
+  document.addEventListener(
+    "touchmove",
+    (ev) => {
+      if (cm?.active) ev.preventDefault();
+    },
+    { passive: false },
+  );
+  document.addEventListener(
+    "contextmenu",
+    (ev) => {
+      if (cm?.active) ev.preventDefault();
+    },
+    { capture: true },
+  );
+  document.addEventListener("pointerup", (ev) => {
+    if (!cm || ev.pointerId !== cm.id) return;
+    const c = cm;
+    clearTimeout(c.timer);
+    cancelAnimationFrame(c.frame);
+    cm = null;
+    if (!c.active) return;
+    // der Klick nach dem Loslassen öffnet nichts
+    const stop = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    };
+    document.addEventListener("click", stop, { capture: true, once: true });
+    setTimeout(() => document.removeEventListener("click", stop, { capture: true }), 350);
+    c.slot.classList.remove("is-moving");
+    if (c.minute === c.origin) {
+      c.slot.style.transform = "";
+      return;
+    }
+    void moveEntry(c.slot.dataset.move, clockOf(c.minute));
+  });
+  document.addEventListener("pointercancel", (ev) => {
+    if (cm && ev.pointerId === cm.id) cancel();
+  });
+}
+
+/** Mahlzeit bzw. geplante Mahlzeit auf eine neue Uhrzeit setzen und speichern. */
+async function moveEntry(key, time) {
+  const S = X.S;
+  const [kind, id] = String(key).split("|");
+  try {
+    if (kind === "meal") N.setMealTime(S.catalog, S.food.local, id, time, new Date());
+    else N.movePlanned(S.catalog, S.food.local, id, time, new Date());
+    await persistFood();
+    X.toast(`${kind === "meal" ? "Mahlzeit" : "Geplante Mahlzeit"} auf ${time} Uhr verschoben.`);
   } catch (e) {
     X.toast(e.message, true);
   }
@@ -1034,6 +1209,10 @@ function initSwipe() {
   });
   document.addEventListener("pointermove", (ev) => {
     if (!w || ev.pointerId !== w.id) return;
+    if (cm?.active) {
+      w = null;
+      return;
+    }
     const dx = ev.clientX - w.x;
     const dy = ev.clientY - w.y;
     if (!w.active) {

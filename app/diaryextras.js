@@ -101,7 +101,7 @@ export function extrasCard(db, date, open) {
   const days = Array.from({ length: S.EXTRA_HISTORY_DAYS }, (_, i) => P.mealDay(db, D.trends.shiftDays(date, -i)));
   const ex = D.dashboard.extrasCheck(S.weekExtras(days, date));
   const todayDay = days[0];
-  return `<section class="card card--nutrition extras-card${open ? " extras-card--open" : ""}"><div class="card__head"><h3>Ballaststoffe, Zucker, Salz</h3><span class="card__meta">Ø letzte 7 Tage</span></div>
+  return `<section class="card card--nutrition extras-card${open ? " extras-card--open" : ""}" id="extras-diary" tabindex="-1"><div class="card__head"><h3>Ballaststoffe, Zucker, Salz</h3><span class="card__meta">Ø letzte 7 Tage</span></div>
     ${
       ex.checks.length === 0
         ? `<p class="muted">Dafür braucht es an mindestens 3 der letzten 7 Tage Mahlzeiten mit Lebensmitteln (bisher ${ex.days}).</p>`

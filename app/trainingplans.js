@@ -5,6 +5,7 @@ import { planGymSelectHtml } from "./gymsui.js";
 import { planCalendarHtml, plansView } from "./plancalendar.js";
 import * as GD from "./gymsdata.js";
 import { actionBtn, esc, fieldError, notice, X } from "./training.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 // ------------------------------------------------------------------ Pläne (PlansTab.tsx)
 
@@ -73,7 +74,7 @@ export function planIconPickerHtml(draft) {
   const opts = [{ key: D.AUTO_ICON, label: `Automatisch (${D.planIconLabel(auto)})`, icon: auto }, ...D.PLAN_ICONS.map((i) => ({ key: i.key, label: i.label, icon: i.key }))];
   return `<div class="field"><span class="label">Symbol</span><div class="plan-icon-grid" role="radiogroup" aria-label="Symbol des Plans">${opts
     .map(
-      (o) => `<button class="plan-icon-choice ${current === o.key ? "is-selected" : ""}" role="radio" aria-checked="${current === o.key}" data-act="plan-icon" data-arg="${esc(o.key)}"><span class="plan-icon">${D.planIconSvg(o.icon, 28)}</span><span>${esc(o.label)}</span></button>`,
+      (o) => `<button class="plan-icon-choice ${current === o.key ? "is-selected" : ""}" role="radio" aria-checked="${current === o.key}" data-act="plan-icon" data-autosave-click data-arg="${esc(o.key)}"><span class="plan-icon">${D.planIconSvg(o.icon, 28)}</span><span>${esc(o.label)}</span></button>`,
     )
     .join("")}</div></div>`;
 }
@@ -85,9 +86,9 @@ export function planEditor() {
   if (S.trainPlanDayIdx !== null && S.trainPlanDayIdx !== undefined && draft.days[S.trainPlanDayIdx]) return planDayEditor(draft, S.trainPlanDayIdx, errors);
   const byId = new Map(S.catalog.exercises.map((e) => [e.id, e]));
   for (const e of S.localExercises ?? []) byId.set(e.id, e);
-  return `<section class="card card--training"><h3>${draft.id ? "Plan bearbeiten" : "Neuer Plan"}</h3>
+  return `<section class="card card--training" ${autoAttrs("plan", draft.id ? "edit" : "new")} data-autosave-ready="${draft.days.length ? 1 : 0}"><h3>${draft.id ? "Plan bearbeiten" : "Neuer Plan"}</h3>
     ${notice()}
-    <div class="field"><label for="plan-name">Name</label><input id="plan-name" type="text" maxlength="80" placeholder="z. B. Push/Pull/Beine oder Cardio" value="${esc(draft.name)}" data-plan="name">${fieldError(errors, "name")}</div>
+    <div class="field"><label for="plan-name">Name</label><input id="plan-name" type="text" maxlength="80" required placeholder="z. B. Push/Pull/Beine oder Cardio" value="${esc(draft.name)}" data-plan="name">${fieldError(errors, "name")}</div>
     <label class="toggle"><input type="checkbox" data-plan="archived" ${draft.archived ? "checked" : ""}> Archiviert</label>
     <div class="field"><label for="plan-description">Beschreibung (optional)</label><textarea id="plan-description" rows="2" maxlength="2000" data-plan="description">${esc(draft.description)}</textarea>${fieldError(errors, "description")}</div>
     ${planGymSelectHtml(draft)}${fieldError(errors, "gymId")}
@@ -100,9 +101,9 @@ export function planEditor() {
         const exErr = Object.keys(errors).some((k) => k.startsWith(`days.${di}.exercises`));
         return `<div class="exercise-block">
           <div class="field"><label for="plan-day-${di}">Tag ${di + 1}</label><input id="plan-day-${di}" type="text" maxlength="80" value="${esc(day.name)}" data-plan-day="${di}" data-pf="name">${fieldError(errors, `days.${di}.name`)}</div>
-          <div class="row-actions"><button class="btn sm" data-act="plan-day-move" data-arg="${di}|-1" ${di === 0 ? "disabled" : ""} aria-label="Nach oben">↑</button>
-            <button class="btn sm" data-act="plan-day-move" data-arg="${di}|1" ${di === draft.days.length - 1 ? "disabled" : ""} aria-label="Nach unten">↓</button>
-            <button class="btn sm danger" data-act="plan-day-remove" data-arg="${di}" aria-label="Tag entfernen">✕ Tag entfernen</button></div>
+          <div class="row-actions"><button class="btn sm" data-act="plan-day-move" data-autosave-click data-arg="${di}|-1" ${di === 0 ? "disabled" : ""} aria-label="Nach oben">↑</button>
+            <button class="btn sm" data-act="plan-day-move" data-autosave-click data-arg="${di}|1" ${di === draft.days.length - 1 ? "disabled" : ""} aria-label="Nach unten">↓</button>
+            <button class="btn sm danger" data-act="plan-day-remove" data-autosave-click data-arg="${di}" aria-label="Tag entfernen">✕ Tag entfernen</button></div>
           ${
             day.exercises.length
               ? `<ul class="plan-ex-list">${day.exercises.map((ex) => `<li><span>${esc(byId.get(ex.exerciseId)?.name ?? "Unbekannte Übung")}</span><span class="muted small">${esc(D.planDraft.describePlanSets(ex.sets))}</span></li>`).join("")}</ul>`
@@ -115,8 +116,9 @@ export function planEditor() {
         </div>`;
       })
       .join("")}
-    <button class="btn" data-act="plan-day-add">+ Trainingstag hinzufügen</button>
-    <div class="row-actions"><button class="btn primary" data-act="plan-save">Speichern</button><button class="btn" data-act="plan-cancel">Abbrechen</button></div>
+    <button class="btn" data-act="plan-day-add" data-autosave-click>+ Trainingstag hinzufügen</button>
+    ${autoSaveHtml("plan-save", { mode: draft.id ? "edit" : "new", note: draft.id ? "Änderungen werden automatisch gespeichert." : "Wird automatisch gespeichert, sobald Name und ein Trainingstag da sind." })}
+    <div class="row-actions"><button class="btn" data-act="plan-cancel">${draft.id ? "Fertig" : "Abbrechen"}</button></div>
   </section>`;
 }
 
@@ -134,11 +136,11 @@ export function slotEditor(day, di, errors) {
             : `<div class="field"><label>Datum</label><input type="date" value="${esc(s.date)}" data-slot="${di}|${si}" data-pf="date">${err(si, "date")}${err(si, "weekday")}</div>`
         }
         <div class="field"><label>Uhrzeit (optional)</label><input type="time" value="${esc(s.time)}" data-slot="${di}|${si}" data-pf="time">${err(si, "time")}</div>
-        <button class="btn sm" data-act="plan-slot-remove" data-arg="${di}|${si}" aria-label="Termin ${si + 1} entfernen">✕</button>
+        <button class="btn sm" data-act="plan-slot-remove" data-autosave-click data-arg="${di}|${si}" aria-label="Termin ${si + 1} entfernen">✕</button>
       </div>`,
       )
       .join("")}
-    ${day.slots.length < D.planDraft.MAX_SLOTS ? `<button class="btn sm" data-act="plan-slot-add" data-arg="${di}">+ Termin hinzufügen</button>` : ""}
+    ${day.slots.length < D.planDraft.MAX_SLOTS ? `<button class="btn sm" data-act="plan-slot-add" data-autosave-click data-arg="${di}">+ Termin hinzufügen</button>` : ""}
   </div>`;
 }
 

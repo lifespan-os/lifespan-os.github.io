@@ -30,7 +30,14 @@ export async function get(key) {
 }
 
 export async function set(key, value) {
+  if (watch) await watch(key);
   return setRaw(ns + key, value);
+}
+
+let watch = null;
+/** Sofort speichern (1.131.0): vor jedem Schreiben `fn(key)` aufrufen (für „Rückgängig“); null = aus. */
+export function watchWrites(fn) {
+  watch = fn;
 }
 
 /** Globale Werte (Kontenliste, aktives Konto) – unabhängig vom Konto. */

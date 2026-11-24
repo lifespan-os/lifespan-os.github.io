@@ -4,6 +4,7 @@ import * as GL from "./goals.js";
 import * as P from "./pcdb.js";
 import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -74,7 +75,7 @@ export function viewGoals() {
   const own = GL.normGoals(S.goals);
   const list = db.goals;
   return `${X.header("Tagesziele", { back: "settings" })}<main class="wrap">
-    <section class="card goal-form">
+    <section class="card goal-form" ${autoAttrs("goal")}>
       <h3>${d.id ? `Ziele ab ${esc(D.formatDate(d.validFrom))} bearbeiten` : "Neue Ziele"}</h3>
       ${field("validFrom", "Gültig ab", d.validFrom, { type: "date", err: err("validFrom") })}
       ${select("energyMode", "Kalorienziel", d.energyMode, [
@@ -126,8 +127,8 @@ export function viewGoals() {
       }
       <p class="muted small">Alle Ziele sind optional. Sie werden nur als Vergleichswert neben deinen Einträgen angezeigt.</p>
       ${error && !errField ? `<p class="field-error">${esc(error)}</p>` : ""}
-      <button class="btn primary block" data-act="goal-save">Ziele speichern</button>
-      ${d.id ? `<button class="btn block ghost" data-act="goal-new">Abbrechen</button>` : ""}
+      ${autoSaveHtml("goal-save")}
+      ${d.id ? `<button class="btn block ghost" data-act="goal-new">Fertig</button>` : ""}
     </section>
     <section class="card">
       <h3>Bisherige Zielstände</h3>
@@ -195,7 +196,8 @@ export const goalActions = {
     const f = X.S.goalForm;
     X.S.goals = GL.normGoals(X.S.goals);
     try {
-      GL.saveGoal(X.S.goals, buildDb().goals, f.draft, { uuid: X.uuid, now: new Date() });
+      const row = GL.saveGoal(X.S.goals, buildDb().goals, f.draft, { uuid: X.uuid, now: new Date() });
+      f.draft.id = row.id;
     } catch (e) {
       f.error = e.message;
       f.field = e.field ?? null;
@@ -203,7 +205,9 @@ export const goalActions = {
       return;
     }
     await persist();
-    X.S.goalForm = null;
+    // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet den gespeicherten Zielstand
+    if (X.S.autosaving) Object.assign(f, { error: null, field: null });
+    else X.S.goalForm = null;
     X.toast("Ziele gespeichert.");
     X.rerender();
   },

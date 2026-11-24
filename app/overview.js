@@ -15,8 +15,9 @@ import * as CM from "./cardiomap.js";
 import * as PS from "./pcsettings.js";
 import * as store from "./store.js";
 import { buildDb } from "./diary.js";
-import { openItemsNow } from "./openitems.js";
+import { openItemsNow, phoneTab } from "./openitems.js";
 import { withCarbCycle } from "./carbcycle.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 let X = null; // { S, buildDb, rerender, today }
 
@@ -133,13 +134,13 @@ function todayBlockHtml(data, widgets, isToday) {
   const lines = D.overviewToday.overviewToday(todayInput);
   // Geführter Tagesablauf (1.120.0, wie PC 1.0.196): Wiegen nur, wer sich in 30 Tagen gewogen hat
   const weights = data.weightLast30Days ?? [];
-  const flow = isToday ? D.dayFlow.dayFlow({ ...todayInput, weighedToday: weights.length ? weights.some((w) => w.date === data.date) : null }) : null;
+  const flow = isToday ? D.dayFlow.dayFlow({ ...todayInput, weighedToday: weights.length ? weights.some((w) => w.date === data.date) : null, hidden: X.S.prefs?.flowHidden ?? [] }) : null;
   return {
     sleepMin,
     html: `<section class="card ov-today ov-card--wide"><h3>${isToday ? "Heute" : esc(D.formatDate(data.date))}</h3>
       <ul class="ov-today__lines">${lines
         .map((l) => `<li class="ov-today__line is-${l.state}"><span class="ov-today__label">${esc(l.label)}</span><span class="ov-today__value">${esc(l.value)}</span></li>`)
-        .join("")}</ul></section>${flow && flow.steps.length ? flowHtml(flow) : ""}${isToday && widgets.insights ? qualityHtml(D.coverageSummary(D.coverage(widgets.insights, data.date))) : ""}`,
+        .join("")}</ul></section>${flow && flow.steps.length ? flowHtml(flow, data.date) : ""}${isToday && widgets.insights ? qualityHtml(D.coverageSummary(D.coverage(widgets.insights, data.date))) : ""}`,
   };
 }
 
@@ -148,15 +149,33 @@ function qualityHtml(q) {
   return `<p class="ov-quality ov-card--wide"><span class="ov-quality__label">Datenqualität</span> <span>${esc(q.text)}</span> <button class="linkbtn" data-go="insights">Details</button></p>`;
 }
 
-const FLOW_GO = { check: "recovery", weigh: "body", meals: "diary", training: "training", water: "diary", steps: null, open: "todos" };
+/**
+ * Ziel je Punkt des Tagesablaufs (1.130.0, wie PC 1.0.204): jeder Punkt führt dorthin; „Offene
+ * Punkte“ zum ersten noch offenen Punkt, „Schritte“ zur Schritteingabe des Tages.
+ */
+function flowGoAttrs(key, date) {
+  const go = (section, tab = null) => `data-act="menu-go" data-arg="${section}"${tab ? ` data-tab="${tab}"` : ""}`;
+  switch (key) {
+    case "check": return go("recovery");
+    case "weigh": return go("body", "entry");
+    case "meals":
+    case "water": return go("nutrition");
+    case "training": return go("training");
+    case "steps": return stepsEntryAttrs(date);
+    case "open": {
+      const first = openItemsNow()[0];
+      return first ? go(first.section, phoneTab(first)) : go("checklists");
+    }
+    default: return go("checklists");
+  }
+}
 
-function flowHtml(flow) {
+function flowHtml(flow, date) {
   const next = flow.next;
-  const go = next ? FLOW_GO[next.key] : null;
   return `<section class="card ov-flow ov-card--wide"><h3>Tagesablauf <span class="muted small">${flow.done} von ${flow.steps.length} erledigt</span></h3>
-    ${next ? `<p class="ov-flow__next">Als Nächstes: <strong>${esc(next.label)}</strong>${next.detail ? ` <span class="muted">· ${esc(next.detail)}</span>` : ""}${go ? ` <button class="btn sm primary" data-go="${go}">Öffnen</button>` : ""}</p>` : `<p class="ov-flow__next">Alles für heute erledigt.</p>`}
+    ${next ? `<p class="ov-flow__next">Als Nächstes: <strong>${esc(next.label)}</strong>${next.detail ? ` <span class="muted">· ${esc(next.detail)}</span>` : ""} <button class="btn sm primary" ${flowGoAttrs(next.key, date)}>Öffnen</button></p>` : `<p class="ov-flow__next">Alles für heute erledigt.</p>`}
     <ol class="ov-flow__steps">${flow.steps
-      .map((s) => `<li class="${s.done ? "is-done" : ""}"><span class="ov-flow__mark" aria-hidden="true">${s.done ? "✓" : ""}</span><span>${esc(s.label)}</span>${s.detail ? `<span class="muted small">${esc(s.detail)}</span>` : "<span></span>"}<span class="visually-hidden">${s.done ? " (erledigt)" : " (offen)"}</span></li>`)
+      .map((s) => `<li class="${s.done ? "is-done" : ""}"><span class="ov-flow__mark" aria-hidden="true">${s.done ? "✓" : ""}</span><button type="button" class="linkbtn ov-flow__go" ${flowGoAttrs(s.key, date)}>${esc(s.label)}</button>${s.detail ? `<span class="muted small">${esc(s.detail)}</span>` : "<span></span>"}<span class="visually-hidden">${s.done ? " (erledigt)" : " (offen)"}</span></li>`)
       .join("")}</ol></section>`;
 }
 
@@ -460,7 +479,7 @@ function dashboardCards(data, w, isToday) {
             .join("")}</ul>`
     }
     ${note(
-      `Aus den Lebensmitteln deiner Mahlzeiten an ${ex.days} ${ex.days === 1 ? "Tag" : "Tagen"} (ohne Fasttracking). Beim Zucker zählt der gesamte Zucker – auch aus Obst und Milch –, der WHO-Richtwert gilt nur für freie Zucker; die Ampel ist hier also eher streng. Orientierung, keine Ernährungsberatung.`,
+      `Aus den Lebensmitteln deiner Mahlzeiten an ${ex.days} ${ex.days === 1 ? "Tag" : "Tagen"} (ohne Fasttracking). Beim Zucker zählt der gesamte Zucker – auch aus Obst und Milch –, der WHO-Richtwert gilt nur für freie Zucker; die Ampel ist hier also eher streng. Orientierung, keine Ernährungsberatung. <button class="linkbtn" data-act="menu-go" data-arg="nutrition" data-focus="extras-diary">Details je Stoff unter Nutrition → Tagebuch</button>`,
     )}`,
     { area: "nutrition" },
   );
@@ -596,12 +615,13 @@ function targetsEditorHtml(targets, current) {
       ([k]) => `<td><input class="mt-input" data-mt="${m}|${k}" type="text" inputmode="decimal" value="${esc(String(t[k]).replace(".", ","))}" aria-label="${esc(`${D.MUSCLE_LABELS[m]} ${D.LEVEL_NAMES[TARGET_FIELDS.findIndex((f) => f[0] === k) + 1]} ab`)}"></td>`,
     ).join("")}</tr>`;
   }).join("");
-  return `<div class="muscle-targets">
+  return `<div class="muscle-targets" ${autoAttrs("ov-targets")}>
     <p class="muted small">Ab wie vielen Arbeitssätzen je Woche eine Stufe beginnt. Gilt für PC und Handy (geht mit „An den PC senden“ an den PC).</p>
     <div class="table-scroll"><table class="data-table muscle-targets__table"><thead><tr><th>Muskel</th><th class="num">diese Woche</th>${TARGET_FIELDS.map(
       ([, lvl]) => `<th class="num"><span class="muscle-map__swatch" style="background:${HEAT[lvl]}"></span>${esc(D.LEVEL_NAMES[lvl])} ab</th>`,
     ).join("")}</tr></thead><tbody>${rows}</tbody></table></div>
-    <div class="row-actions"><button class="btn primary sm" data-act="ov-targets-save">Zielwerte speichern</button><button class="btn sm ghost" data-act="ov-targets-reset">Startwerte</button></div>
+    ${autoSaveHtml("ov-targets-save")}
+    <div class="row-actions"><button class="btn sm ghost" data-act="ov-targets-reset">Startwerte</button></div>
   </div>`;
 }
 
@@ -1150,7 +1170,8 @@ export const overviewActions = {
     }
     X.S.ovTargetsErr = null;
     const changed = await saveTargets(targets);
-    X.S.ovTargetsEdit = false;
+    // Sofort speichern (1.131.0): die Tabelle bleibt offen
+    if (!X.S.autosaving) X.S.ovTargetsEdit = false;
     X.toast?.(changed ? "Zielwerte gespeichert" : "Keine Änderung");
     X.rerender();
   },

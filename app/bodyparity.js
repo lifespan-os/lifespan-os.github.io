@@ -9,6 +9,7 @@ import * as PR from "./paritydata.js";
 import { X, today } from "./diary.js";
 import { trendSvg, COLOR } from "./pcview.js";
 import { refreshCatalog } from "./appbase.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 const esc = (v) => X.esc(v);
 const F = (v, d = 1) => D.formatNumber(v, d);
@@ -172,11 +173,13 @@ export function lifestyleTab() {
   const cats = L().LIFESTYLE_CATEGORIES;
   if (ed) {
     const e = S.bpNoteErr ?? {};
-    return `<section class="card"><h3>${ed.id && notes().some((n) => n.id === ed.id) ? "Notiz bearbeiten" : "Neue Notiz"}</h3>
-      <div class="tl-pick"><div class="field"><label for="bp-n-date">Datum</label><input id="bp-n-date" type="date" data-bpn="date" value="${esc(ed.date)}">${e.date ? `<p class="field-error">${esc(e.date)}</p>` : ""}</div>
+    const known = notes().some((n) => n.id === ed.id) || ed.saved;
+    return `<section class="card" ${autoAttrs("bp-note", known ? "edit" : "new")}><h3>${known ? "Notiz bearbeiten" : "Neue Notiz"}</h3>
+      <div class="tl-pick"><div class="field"><label for="bp-n-date">Datum</label><input id="bp-n-date" type="date" data-bpn="date" required value="${esc(ed.date)}">${e.date ? `<p class="field-error">${esc(e.date)}</p>` : ""}</div>
       <div class="field"><label for="bp-n-cat">Thema</label><select id="bp-n-cat" data-bpn="category">${cats.map((c) => `<option value="${c.value}" ${c.value === ed.category ? "selected" : ""}>${esc(c.label)}</option>`).join("")}</select></div></div>
-      <div class="field"><label for="bp-n-text">Notiz</label><textarea id="bp-n-text" rows="4" maxlength="5000" data-bpn="text" placeholder="z. B. Seit heute kein Kaffee nach 14 Uhr">${esc(ed.text)}</textarea>${e.text ? `<p class="field-error">${esc(e.text)}</p>` : ""}<p class="muted small">Höchstens 5.000 Zeichen.</p></div>
-      <div class="row-actions"><button class="btn primary" data-act="bp-note-save">Speichern</button><button class="btn" data-act="bp-note-cancel">Abbrechen</button>${notes().some((n) => n.id === ed.id) ? `<button class="btn danger" data-act="bp-note-delete">Notiz löschen</button>` : ""}</div>
+      <div class="field"><label for="bp-n-text">Notiz</label><textarea id="bp-n-text" rows="4" maxlength="5000" data-bpn="text" required placeholder="z. B. Seit heute kein Kaffee nach 14 Uhr">${esc(ed.text)}</textarea>${e.text ? `<p class="field-error">${esc(e.text)}</p>` : ""}<p class="muted small">Höchstens 5.000 Zeichen.</p></div>
+      ${autoSaveHtml("bp-note-save", { mode: known ? "edit" : "new" })}
+      <div class="row-actions"><button class="btn" data-act="bp-note-cancel">${known ? "Fertig" : "Abbrechen"}</button>${notes().some((n) => n.id === ed.id) ? `<button class="btn danger" data-act="bp-note-delete">Notiz löschen</button>` : ""}</div>
     </section>`;
   }
   const filter = S.bpNoteCat ?? "";
@@ -212,14 +215,15 @@ export function metricsTab() {
   if (ed) {
     const e = S.bpMetricErr ?? {};
     const f = (k, label, extra = "") => `<div class="field"><label for="bp-m-${k}">${label}</label><input id="bp-m-${k}" data-bpm="${k}" value="${esc(ed[k] ?? "")}" ${extra}>${e[k] ? `<p class="field-error">${esc(e[k])}</p>` : ""}</div>`;
-    return `<section class="card"><h3>${ed.isNew ? "Neue Messgröße" : "Messgröße bearbeiten"}</h3>
-      <div class="tl-pick">${f("name", "Name", 'placeholder="z. B. Nüchternblutzucker" maxlength="60"')}${f("unit", "Einheit", 'placeholder="z. B. mg/dl" maxlength="20"')}
+    return `<section class="card" ${autoAttrs("bp-metric", ed.isNew ? "new" : "edit")}><h3>${ed.isNew ? "Neue Messgröße" : "Messgröße bearbeiten"}</h3>
+      <div class="tl-pick">${f("name", "Name", 'placeholder="z. B. Nüchternblutzucker" maxlength="60" required')}${f("unit", "Einheit", 'placeholder="z. B. mg/dl" maxlength="20" required')}
       <div class="field"><label for="bp-m-cat">Kategorie</label><select id="bp-m-cat" data-bpm="category">${cats.map((c) => `<option value="${c.value}" ${c.value === ed.category ? "selected" : ""}>${esc(c.label)}</option>`).join("")}</select></div>
       <div class="field"><label for="bp-m-dec">Nachkommastellen</label><select id="bp-m-dec" data-bpm="decimals">${["0", "1", "2", "3"].map((v) => `<option ${v === String(ed.decimals) ? "selected" : ""}>${v}</option>`).join("")}</select></div>
-      ${f("min", "Kleinster erlaubter Wert", 'inputmode="decimal"')}${f("max", "Größter erlaubter Wert", 'inputmode="decimal"')}</div>
+      ${f("min", "Kleinster erlaubter Wert", 'inputmode="decimal" required')}${f("max", "Größter erlaubter Wert", 'inputmode="decimal" required')}</div>
       <div class="field"><label for="bp-m-desc">Beschreibung (optional)</label><textarea id="bp-m-desc" rows="2" maxlength="500" data-bpm="description">${esc(ed.description ?? "")}</textarea></div>
       <p class="card__note">Der erlaubte Bereich schützt vor Tippfehlern, z. B. 840 statt 84,0. Er ist kein Referenz- oder Normbereich – die App bewertet deine Werte nicht.</p>
-      <div class="row-actions"><button class="btn primary" data-act="bp-metric-save">Speichern</button><button class="btn" data-act="bp-metric-cancel">Abbrechen</button></div>
+      ${autoSaveHtml("bp-metric-save", { mode: ed.isNew ? "new" : "edit" })}
+      <div class="row-actions"><button class="btn" data-act="bp-metric-cancel">${ed.isNew ? "Abbrechen" : "Fertig"}</button></div>
     </section>`;
   }
   const rows = allMetricRows();
@@ -288,7 +292,9 @@ export const bodyParityActions = {
     S.parity = PR.normParity(S.parity);
     PR.putRow(S.parity, "lifestyle_note", { id: d.id, date: d.date, category: d.category, text: String(d.text).trim(), created_at: d.created_at });
     await saveParity();
-    S.bpNote = null;
+    // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet die gespeicherte Notiz
+    S.bpNote = S.autosaving ? { ...d, saved: true } : null;
+    S.bpNoteErr = null;
     X.toast("Notiz gespeichert");
     X.rerender();
   },
@@ -350,8 +356,10 @@ export const bodyParityActions = {
       decimals: Number(d.decimals) || 0,
       description: String(d.description ?? "").trim() || null,
     });
-    await saveParity();
-    S.bpMetricEdit = null;
+    const saved = await saveParity().then(() => PR.normParity(S.parity).rows[`body_metric:${d.id}`]?.row ?? null);
+    // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet die gespeicherte Messgröße
+    S.bpMetricEdit = S.autosaving ? { ...d, isNew: false, row: saved ?? d.row } : null;
+    S.bpMetricErr = null;
     X.toast(`„${name}“ gespeichert`);
     X.rerender();
   },

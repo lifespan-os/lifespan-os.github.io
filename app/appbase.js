@@ -74,6 +74,8 @@ export const fmtSec = (s) => {
 
 /** Meldung oben; mit `undo` (Funktion) zusätzlich ein Knopf „Rückgängig“ (1.55.0, 6 Sekunden). */
 export function toast(text, err = false, undo = null) {
+  // Sofort speichern (1.131.0): Meldungen der Aktion sammeln, eine Meldung mit „Rückgängig“ folgt
+  if (toast.capture && typeof undo !== "function" && toast.capture(text, err)) return;
   toastEl.textContent = text;
   toastEl.className = err ? "toast err" : "toast";
   if (typeof undo === "function") {

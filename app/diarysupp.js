@@ -5,6 +5,7 @@ import * as N from "./nutrition.js";
 import * as SP from "./supplements.js";
 import * as FT from "./fastdata.js";
 import { buildDb, esc, nutrientCatalog, nutritionTabs, today, viewDiary, WEEKDAYS, X } from "./diary.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 // ---------------- Supplements (am Handy erfassbar seit 1.26.0)
 
@@ -67,7 +68,7 @@ export function viewSuppIntake() {
   const hits = st.query ? SP.searchSupplements(db, st.query, 25) : [];
   const chosen = new Set(d.items.map((i) => i.supplementId));
   const title = "Einnahme";
-  return `${X.header(title, { back: "diary" })}<main class="wrap">
+  return `${X.header(title, { back: "diary" })}<main class="wrap" ${autoAttrs("supp", d.id ? "edit" : "new")} data-autosave-ready="${d.items.length ? 1 : 0}">
     <section class="card">
       <p class="small"><b>${d.id ? "Bearbeiten" : "Eintragen"}</b> · ${esc(D.formatDate(d.date))}${d.stackId ? ` · Stack „${esc(d.name)}“` : ""}</p>
       <div class="grid2">
@@ -97,20 +98,20 @@ export function viewSuppIntake() {
                 return `<li><span class="supp-items__name">${esc(s ? suppLabel(s) : "Unbekanntes Supplement")}</span>
                   <span class="supp-items__amount"><input type="text" inputmode="decimal" aria-label="${esc(`Menge von ${s?.name ?? "Eintrag"}`)}" data-diary="supp-amt" data-arg="${i}" value="${esc(it.amount)}">
                   <span class="muted small">${esc(s?.unit ?? "")}</span></span>
-                  <button class="btn sm ghost danger" data-act="supp-item-del" data-arg="${i}" aria-label="${esc(`${s?.name ?? "Eintrag"} entfernen`)}">✕</button></li>`;
+                  <button class="btn sm ghost danger" data-act="supp-item-del" data-autosave-click data-arg="${i}" aria-label="${esc(`${s?.name ?? "Eintrag"} entfernen`)}">✕</button></li>`;
               })
               .join("")}</ul>`
           : `<p class="muted small">Noch keine Supplements gewählt.</p>`
       }
       <div class="field"><label for="supp-q">Supplement hinzufügen</label>
-        <input id="supp-q" type="search" data-diary="supp-q" autocomplete="off" placeholder="Supplement suchen, z. B. Vitamin D …" value="${esc(st.query)}"></div>
+        <input id="supp-q" type="search" data-diary="supp-q" data-autosave-skip autocomplete="off" placeholder="Supplement suchen, z. B. Vitamin D …" value="${esc(st.query)}"></div>
       <ul class="supp-hits" id="supp-hits">${suppHits(hits, chosen)}</ul>
     </section>
     <section class="card">
       <div class="field"><label for="supp-notes">Notizen (optional)</label>
         <textarea id="supp-notes" rows="2" maxlength="1000" data-diary="supp-notes">${esc(d.notes)}</textarea></div>
       ${st.error ? `<p class="field-error">${esc(st.error)}</p>` : ""}
-      <button class="btn primary block" data-act="supp-save">Speichern</button>
+      ${autoSaveHtml("supp-save", { mode: d.id ? "edit" : "new", note: d.id ? "Änderungen werden automatisch gespeichert." : "Wird automatisch gespeichert, sobald ein Supplement gewählt ist." })}
       ${d.id ? `<button class="btn block ghost danger" data-act="supp-delete">Vom Tag entfernen</button>` : ""}
     </section>
   </main>`;
@@ -122,7 +123,7 @@ export function suppHits(hits, chosen) {
   if (!hits.length) return `<li class="muted small">Kein Supplement gefunden.</li>`;
   return hits
     .map(
-      (s) => `<li><button type="button" class="supp-hit" data-act="supp-add" data-arg="${esc(s.id)}">
+      (s) => `<li><button type="button" class="supp-hit" data-act="supp-add" data-autosave-click data-arg="${esc(s.id)}">
         <span>${esc(s.name)}${s.manufacturer ? ` <span class="muted small">${esc(s.manufacturer)}</span>` : ""}</span>
         <span class="muted small">${chosen.has(s.id) ? "schon gewählt" : `${esc(SP.fmtAmount(SP.startAmount(s)))} ${esc(s.unit)}`}</span></button></li>`,
     )
@@ -213,10 +214,10 @@ export function viewFastEntry() {
   const groups = catalog.groups.map((g) => ({ g, list: catalog.nutrients.filter((n) => n.group === g.key) })).filter((x) => x.list.length);
   return `${X.header("Nutrition")}<main class="wrap">
     ${nutritionTabs("diary")}
-    <section class="card hl">
+    <section class="card hl" ${autoAttrs("fast")}>
       <h3>Fasttracking</h3>
       <p class="muted small">${st.date === today() ? "Heute" : `${WEEKDAYS[new Date(`${st.date}T12:00:00`).getDay()]} ${esc(D.formatDate(st.date))}`} – Nährwerte direkt eintragen, z. B. im Restaurant oder aus einer anderen App. Leere Felder = nicht erfasst.</p>
-      <div class="field"><label for="fe-target">Für</label><select id="fe-target" data-diary="fast-target">
+      <div class="field"><label for="fe-target">Für</label><select id="fe-target" data-diary="fast-target" data-autosave-skip>
         <option value="" ${st.target === FAST_DAY ? "selected" : ""}>Ganzer Tag (Tageswerte)</option>
         ${targets.map((t) => `<option value="${esc(t.key)}" ${t.key === st.target ? "selected" : ""}>${esc(t.title)}</option>`).join("")}
       </select></div>
@@ -235,10 +236,10 @@ export function viewFastEntry() {
           : ""
       }
       ${st.error ? `<p class="field-error">${esc(st.error)}</p>` : ""}
-      <button class="btn primary block" data-act="fast-save">Speichern</button>
+      ${autoSaveHtml("fast-save")}
       ${st.exists ? `<button class="btn ghost danger block" data-act="fast-clear">Alle Werte entfernen</button>` : ""}
-      <button class="btn ghost block" data-act="fast-cancel">Abbrechen</button>
-      <p class="card__note">Speichern ersetzt alle Werte dieses Ziels. Geht mit „Lebensmittel senden“ an den PC.</p>
+      <button class="btn ghost block" data-act="fast-cancel">Fertig</button>
+      <p class="card__note">Gespeichert werden alle Werte dieses Ziels. Geht mit „Lebensmittel senden“ an den PC.</p>
     </section>
   </main>`;
 }
@@ -292,6 +293,12 @@ export async function saveFastForm(clear) {
     return X.rerender();
   }
   await persistFast();
+  // Sofort speichern (1.131.0): Formular bleibt offen
+  if (X.S.autosaving && !clear) {
+    Object.assign(st, { exists: true, error: null, errors: null });
+    X.toast("Fasttracking gespeichert.");
+    return X.rerender();
+  }
   X.S.fastEdit = null;
   X.S.diaryDate = st.date;
   X.toast(clear ? "Fasttracking-Werte entfernt." : "Fasttracking gespeichert.");

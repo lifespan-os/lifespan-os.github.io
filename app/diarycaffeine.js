@@ -7,6 +7,7 @@ import * as D from "./pcdomain.js";
 import * as CF from "./caffeinedata.js";
 import { caffeineIntakesOn } from "./icoach.js";
 import { X, backToNowIfFromTimeline, today } from "./diary.js";
+import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
 const C = () => D.caffeine;
 const nowClock = () => {
@@ -70,15 +71,16 @@ function formHtml(f, esc) {
   const drink = C().findDrink(f.drinkId);
   const free = drink?.portionMl === null;
   const e = f.errors ?? {};
-  return `<div class="dcf-form">
+  return `<div class="dcf-form" ${autoAttrs("dcf", f.id ? "edit" : "new")}>
     <div class="field ${e.drinkId ? "has-error" : ""}"><label for="dcf-drink">Getränk</label><select id="dcf-drink" data-diary="dcf-drink">${C()
       .CAFFEINE_DRINKS.map((d) => `<option value="${esc(d.id)}" ${d.id === f.drinkId ? "selected" : ""}>${esc(d.label)}</option>`)
       .join("")}</select></div>
     <div class="cf-pair">
-      <div class="field ${e.amount ? "has-error" : ""}"><label for="dcf-amount">${free ? "Koffein (mg)" : "Menge (ml)"}</label><input id="dcf-amount" type="text" inputmode="decimal" data-dcf="amount" value="${esc(f.amount)}">${e.amount ? `<p class="field-error">${esc(e.amount)}</p>` : ""}</div>
-      <div class="field ${e.time ? "has-error" : ""}"><label for="dcf-time">Uhrzeit</label><input id="dcf-time" type="time" data-dcf="time" value="${esc(f.time)}">${e.time ? `<p class="field-error">${esc(e.time)}</p>` : ""}</div>
+      <div class="field ${e.amount ? "has-error" : ""}"><label for="dcf-amount">${free ? "Koffein (mg)" : "Menge (ml)"}</label><input id="dcf-amount" type="text" inputmode="decimal" data-dcf="amount" required value="${esc(f.amount)}">${e.amount ? `<p class="field-error">${esc(e.amount)}</p>` : ""}</div>
+      <div class="field ${e.time ? "has-error" : ""}"><label for="dcf-time">Uhrzeit</label><input id="dcf-time" type="time" data-dcf="time" required value="${esc(f.time)}">${e.time ? `<p class="field-error">${esc(e.time)}</p>` : ""}</div>
     </div>
-    <div class="row"><button class="btn sm primary" data-act="dcf-save">${f.id ? "Speichern" : "Eintragen"}</button><button class="btn sm" data-act="dcf-cancel">Abbrechen</button></div>
+    ${autoSaveHtml("dcf-save", { mode: f.id ? "edit" : "new", note: f.id ? "Änderungen werden automatisch gespeichert." : "Wird beim Ändern eines Feldes automatisch eingetragen – oder gleich so:" })}
+    <div class="row">${f.id ? "" : `<button class="btn sm primary" data-act="dcf-save">Eintragen</button>`}<button class="btn sm" data-act="dcf-cancel">${f.id ? "Fertig" : "Abbrechen"}</button></div>
   </div>`;
 }
 
@@ -149,9 +151,18 @@ export const diaryCaffeineActions = {
       mg: Math.round(r.intake.mg * 10) / 10,
     };
     try {
+      const wasNew = !f.id;
       if (f.id) CF.updateIntake(S.catalog, S.caffeine, f.id, input, new Date());
-      else CF.addIntake(S.catalog, S.caffeine, input, { uuid: X.uuid, now: new Date() });
+      else f.newId = CF.addIntake(S.catalog, S.caffeine, input, { uuid: X.uuid, now: new Date() });
       await persist();
+      // Sofort speichern (1.131.0): Formular bleibt offen und bearbeitet den Eintrag
+      if (S.autosaving) {
+        if (wasNew) f.id = f.newId;
+        f.errors = {};
+        S.mealOpen = { ...(S.mealOpen ?? {}), __caffeine: true };
+        X.toast(`${input.label} ${wasNew ? "eingetragen" : "geändert"}: ${C().formatMg(input.mg)} mg um ${input.time} Uhr.`);
+        return X.rerender();
+      }
       S.diaryCf = null;
       S.mealOpen = { ...(S.mealOpen ?? {}), __caffeine: true };
       X.toast(`${input.label} ${f.id ? "geändert" : "eingetragen"}: ${C().formatMg(input.mg)} mg um ${input.time} Uhr.`);

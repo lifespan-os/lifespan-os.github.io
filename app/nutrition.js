@@ -215,6 +215,7 @@ export function emptyForm() {
     values: Object.fromEntries(LABEL_KEYS.map((k) => [k, ""])),
     portionName: "",
     portionAmount: "",
+    caffeineMg: "",
     barcode: "",
     notes: "",
   };
@@ -248,6 +249,7 @@ export function foodToForm(food, barcode = "") {
     basis: food.basis_unit,
     portionName: food.portion_name ?? "",
     portionAmount: num(food.portion_amount, 1),
+    caffeineMg: num(food.caffeine_mg ?? null, 1),
     barcode,
     notes: food.notes ?? "",
   };
@@ -286,6 +288,10 @@ export function checkForm(f) {
   } else if (pAmount !== null && !pName) errors.portionName = "Bitte die Portion benennen, z. B. Packung.";
   else if (pAmount === null && pName) errors.portionAmount = "Bitte die Menge der Portion angeben.";
   if (pName.length > 40) errors.portionName = "Höchstens 40 Zeichen.";
+  // Koffein in mg je 100 g/ml (1.126.0, wie PC 1.0.201)
+  const caffeine = parseNum(f.caffeineMg ?? "");
+  if (Number.isNaN(caffeine)) errors.caffeineMg = "Bitte eine Zahl eingeben, z. B. 40.";
+  else if (caffeine !== null && (caffeine < 0 || caffeine > 100000)) errors.caffeineMg = "Bitte 0 bis 100.000 mg je 100 angeben.";
   const notes = f.notes.trim();
   if (notes.length > 1000) errors.notes = "Höchstens 1000 Zeichen.";
   const code = f.barcode.replace(/[\s-]/g, "");
@@ -308,6 +314,7 @@ export function checkForm(f) {
       salt_g: v.saltG,
       portion_name: pAmount !== null ? pName : null,
       portion_amount: pAmount,
+      caffeine_mg: caffeine === null || Number.isNaN(caffeine) ? null : Math.round(caffeine * 10) / 10,
       notes: notes || null,
     },
   };
@@ -612,9 +619,12 @@ export function saveDishAsRecipe(catalog, local, dish, { uuid, now = new Date() 
   const servings = parseNum(dish.servings);
   if (!(servings > 0 && servings <= 100)) throw new Error("Portionen: bitte eine Zahl von 0 bis 100.");
   const { items, errors } = dishAmounts(catalog, local, dish);
-  if (!items.length) throw new Error("Das Gericht hat noch keine Zutaten.");
+  // Supplemente im Gericht (1.125.0, PC-Schema 75): [{ supplementId, amount }]
+  const supps = (dish.supplements ?? []).filter((x) => x.supplementId);
+  if (!items.length && !supps.length) throw new Error("Das Gericht hat noch keine Zutaten.");
   if (Object.keys(errors).length) throw new Error("Bitte bei allen Zutaten eine Menge eingeben.");
   if (items.some((i) => i.amount > 20000)) throw new Error("Eine Zutat hat mehr als 20 kg.");
+  if (supps.some((x) => !(x.amount > 0 && x.amount <= 100000))) throw new Error("Bitte bei allen Supplementen eine Menge eingeben.");
   const iso = now.toISOString();
   const id = uuid();
   const row = {
@@ -634,6 +644,15 @@ export function saveDishAsRecipe(catalog, local, dish, { uuid, now = new Date() 
       recipe_id: id,
       food_id: it.food.id,
       amount: Math.round(it.amount * 10) / 10,
+      position,
+      created_at: iso,
+      updated_at: iso,
+    })),
+    supplements: supps.map((x, position) => ({
+      id: uuid(),
+      recipe_id: id,
+      supplement_id: x.supplementId,
+      amount: Math.round(x.amount * 1000) / 1000,
       position,
       created_at: iso,
       updated_at: iso,
@@ -699,7 +718,7 @@ const clean = ({ sent: _sent, ...row }) => row;
  */
 export function nutritionTables(catalog, local, { all = false } = {}) {
   const foods = allFoods(catalog, local);
-  const out = { food: new Map(), meal: [], meal_item: [], recipe: [], recipe_item: [], settings: [], planned_meal: [], planned_meal_item: [], deleted_record: [] };
+  const out = { food: new Map(), meal: [], meal_item: [], recipe: [], recipe_item: [], recipe_supplement: [], settings: [], planned_meal: [], planned_meal_item: [], deleted_record: [] };
   const needFood = (id) => {
     const f = foods.get(id);
     if (!f) throw new Error("Ein Lebensmittel fehlt. Bitte neue Daten vom PC laden.");
@@ -727,6 +746,7 @@ export function nutritionTables(catalog, local, { all = false } = {}) {
       needFood(it.food_id);
       out.recipe_item.push({ ...it });
     }
+    for (const it of r.supplements ?? []) out.recipe_supplement.push({ ...it });
   }
   // Geplante Mahlzeiten (1.100.0, Schema 74): die ganze Mahlzeit mit allen Lebensmitteln; am PC
   // entfallene Lebensmittel löscht der Abgleich über die Löschvermerke der Einträge

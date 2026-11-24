@@ -93,6 +93,13 @@ function between(v, lo, hi, label, { optional = false } = {}) {
   return round(n, 2);
 }
 
+const caffeineOf = (v) => {
+  if (v === null || v === undefined) return null;
+  const n = num(v);
+  if (n === null || n < 0 || n > 100000) throw new Error("Koffein muss zwischen 0 und 100.000 mg je 100 liegen");
+  return round(n, 1);
+};
+
 /** Lebensmittel aus dem Paket → Zeile `food` (Prüfregeln der Migrationen). */
 export function foodRow(r, id, iso) {
   const name = reqTxt(r.name, "Name", 100);
@@ -113,6 +120,8 @@ export function foodRow(r, id, iso) {
     sugar_g: between(r.sugarG, 0, 100, "Zucker", { optional: true }),
     saturated_fat_g: between(r.saturatedFatG, 0, 100, "Gesättigte Fettsäuren", { optional: true }),
     salt_g: between(r.saltG, 0, 100, "Salz", { optional: true }),
+    // Koffein in mg je 100 g/ml (1.127.0, wie PC 1.0.202: Schema 77)
+    caffeine_mg: caffeineOf(r.caffeineMg),
     portion_name: optTxt(r.portionName, 40),
     portion_amount: r.portionAmount === null || r.portionAmount === undefined ? null : between(r.portionAmount, 0.01, 5000, "Portionsmenge"),
     notes: optTxt(r.notes, 1000),

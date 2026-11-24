@@ -6,7 +6,7 @@
 import * as D from "./pcdomain.js";
 import * as CF from "./caffeinedata.js";
 import { caffeineIntakesOn } from "./icoach.js";
-import { X, today } from "./diary.js";
+import { X, backToNowIfFromTimeline, today } from "./diary.js";
 
 const C = () => D.caffeine;
 const nowClock = () => {
@@ -128,6 +128,7 @@ export const diaryCaffeineActions = {
   },
   "dcf-cancel": () => {
     X.S.diaryCf = null;
+    X.S.fromTimeline = false;
     X.rerender();
   },
   "dcf-save": async () => {
@@ -158,6 +159,7 @@ export const diaryCaffeineActions = {
       X.toast(e.message, true);
     }
     X.rerender();
+    backToNowIfFromTimeline();
   },
   "dcf-delete": async (el) => {
     if (!X.confirmTwice(el, "Nochmal tippen: entfernen")) return;

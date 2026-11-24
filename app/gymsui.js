@@ -6,6 +6,8 @@
 // Seit 1.82.0 (wie PC 1.0.168): Vorder- und Rückseite, Antippen dreht die Karte um.
 
 import * as G from "./gymsdata.js";
+import * as D from "./pcdomain.js";
+import { appDay } from "./core.js";
 import { cropPhoto } from "./photocrop.js";
 import { thumbButton } from "./machineimages.js";
 import { openImageZoom } from "./mapzoom.js";
@@ -77,11 +79,36 @@ function gymCodeButtonHtml(gymId, selectId) {
 }
 
 /** Auswahl „Gym“ vor „Freies Training“. */
+/**
+ * Vorgewähltes Gym (Handy 1.117.0, wie PC 1.0.193): Auswahl von heute, sonst das Gym mit den meisten
+ * Einheiten der letzten 30 Tage (PC und Handy), sonst das bisher aktive Gym. Das Plan-Gym setzt der Plan.
+ */
+function preselectedGymId() {
+  const S = X.S;
+  const list = G.gymList(S.catalog, S.gyms);
+  const today = appDay();
+  const seen = new Set();
+  const workouts = [];
+  for (const w of S.workouts ?? []) {
+    seen.add(w.id);
+    workouts.push({ date: w.date, gymId: w.gymId ?? null });
+  }
+  for (const w of S.catalog?.pc?.workout ?? []) if (!seen.has(w.id)) workouts.push({ date: w.date, gymId: w.gym_id ?? null });
+  const choice = S.gyms.choiceDate && S.gyms.active ? { date: S.gyms.choiceDate, gymId: S.gyms.active } : null;
+  return D.gymPreselect.preselectGym({
+    today,
+    manual: choice,
+    workouts,
+    active: G.activeGymId(S.catalog, S.gyms, pcActive()),
+    valid: new Set(list.map((g) => g.id)),
+  });
+}
+
 export function activeGymSelectHtml(blocked) {
   const S = X.S;
   const list = G.gymList(S.catalog, S.gyms);
   if (!list.length) return "";
-  const id = G.activeGymId(S.catalog, S.gyms, pcActive());
+  const id = preselectedGymId();
   return `<div class="field"><label for="w-gym">Gym</label>
     <div class="gym-pick"><select id="w-gym" data-gym="active" ${blocked ? "disabled" : ""}>${list
       .map((g) => `<option value="${esc(g.id)}" ${g.id === id ? "selected" : ""}>${esc(g.name)}</option>`)
@@ -90,8 +117,7 @@ export function activeGymSelectHtml(blocked) {
 
 /** ID des aktiven Gyms (für neue Einheiten). */
 export function activeGymIdNow() {
-  const S = X.S;
-  return G.activeGymId(S.catalog, S.gyms, pcActive());
+  return preselectedGymId();
 }
 
 /** Auswahl „Gym“ einer Einheit (im Training, beim Bearbeiten und Nachtragen, Handy 1.65.0). */
@@ -582,6 +608,8 @@ export function gymsChange(el) {
   if (!kind || kind === "query") return false;
   if (kind === "active") {
     S.gyms.active = el.value;
+    // Auswahl von Hand gilt heute vor dem meistgenutzten Gym (1.117.0)
+    S.gyms.choiceDate = appDay();
     void persist().then(() => X.rerender());
     return true;
   }

@@ -20,12 +20,16 @@ import * as GLD from "./glucosedata.js";
 import { fastCard, supplementsCard } from "./diarysupp.js";
 import { caffeineSlotHtml } from "./diarycaffeine.js";
 import { timelineHtml } from "./mealtimeline.js";
+import { withCarbCycle } from "./carbcycle.js";
 export { initTimelineDrag, timelineActions, timelineChange } from "./mealtimeline.js";
 export { diaryCaffeineActions, diaryCaffeineChange } from "./diarycaffeine.js";
 export { viewFastEntry, viewSuppIntake } from "./diarysupp.js";
 export { diaryActions, diaryChange, diaryInput } from "./diaryactions.js";
 
 import { diaryExportHtml } from "./pdfparity.js";
+import { extrasCard } from "./diaryextras.js";
+import * as BL from "./bls.js";
+import { ensureBls } from "./blsui.js";
 export let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice, buildReturnTables }
 
 export function initDiary(ctx) {
@@ -38,6 +42,16 @@ export const pad = (n) => String(n).padStart(2, "0");
 
 /** „Heute“ mit dem Tageswechsel wie am PC (1.48.0). */
 export const today = () => C.appDay();
+
+/**
+ * Nach Supplement bzw. Koffein aus dem Tagesverlauf (1.123.0, wie PC 1.0.199): Tagesverlauf auf die
+ * aktuelle Uhrzeit (sonst den Griff) zentrieren – nur, wenn der Eintrag von dort kam.
+ */
+export function backToNowIfFromTimeline() {
+  if (!X.S.fromTimeline) return;
+  X.S.fromTimeline = false;
+  setTimeout(() => (document.querySelector(".mtl-now") ?? document.querySelector(".mtl-handle"))?.scrollIntoView({ block: "center", behavior: "smooth" }), 120);
+}
 
 export const nowTime = () => {
   const d = new Date();
@@ -175,7 +189,9 @@ export function viewDiary() {
   const suppMacros = D.macrosOf(supps);
   const mealValues = D.addNutrientValues(meals.map((m) => m.values ?? {}));
   const hasMealValues = Object.keys(mealValues).length > 0;
-  const micro = D.microValues(catalog, [supps, fast?.values ?? {}, mealValues]);
+  // Stoffe aus Lebensmitteln des BLS (1.119.0, wie PC 1.0.195): nur wenn der BLS auf dem Handy liegt
+  const fromFoods = blsFoodMicro(db, meals);
+  const micro = D.microValues(catalog, [fromFoods.values, supps, fast?.values ?? {}, mealValues]);
   const microGroups = D.groupedValues(catalog, { values: micro });
   const refGroup = D.referenceGroup(
     profile ? { sex: profile.sex, birthDate: profile.birth_date, birthYear: profile.birth_year, lifePhase: profile.life_phase } : null,
@@ -186,7 +202,8 @@ export function viewDiary() {
   // Geplante Mahlzeiten hellgrau hinter der Tagessumme, nach Uhrzeit (1.102.0)
   const plannedForSum = plannedMealsForSum(date);
   const weightKg = energy.step.weightKg;
-  const rawGoal = P.goalFor(db, date);
+  // Carb-Cycling (1.119.0, wie PC 1.0.195): KH-Ziel nach Trainings- bzw. Ruhetag
+  const rawGoal = withCarbCycle(P.goalFor(db, date), db, X.S.catalog, date, energy.trainings?.length ?? 0);
   const goal = rawGoal ? D.withProteinFromWeight(rawGoal, weightKg) : null;
   const proteinNote = D.describeProteinPerKg(goal?.proteinGPerKg, weightKg);
   const dayMacros = goal ? D.dayMacroGoals(goal, D.dailyNeed(goal, energy.step.kcal, energy), energy) : null;
@@ -232,7 +249,8 @@ export function viewDiary() {
   const cards = [
     { id: "totals", node: totalsCard },
     { id: "water", node: waterCard(db, date, goal) },
-    { id: "micro", node: microCard(catalog, microGroups, micro, refGroup, fast || hasMealValues) },
+    { id: "extras", node: extrasCard(db, date, Boolean(S.extrasOpen)) },
+    { id: "micro", node: microCard(catalog, microGroups, micro, refGroup, fast || hasMealValues, fromFoods, db) },
     { id: "fasttrack", empty: !fast, node: fast ? fastCard(catalog, fast, date) : "" },
     { id: "meals", node: mealsCard(slots, fast, date, db) },
     { id: "supplements", node: supplementsCard(intakes, suppMacros, hasSuppMacros) },
@@ -507,11 +525,50 @@ export async function quickAdd(key, items, label) {
     QM.undoItems(X.S.food.local, res.mealId, res.added);
     await X.store.set("nutrition", X.S.food.local);
     X.rerender();
-  });
+  });  return res;
 }
 
-export function microCard(catalog, groups, micro, refGroup, withFast) {
+/** BLS-Einträge der Lebensmittel eines Tages als `BlsFood` (wie am PC `bls_food`) */
+function blsFoodMicro(db, meals) {
+  const empty = { values: {}, extra: {}, withData: 0, without: [], missing: {}, noBls: true };
+  const items = meals.flatMap((m) => m.items.map((i) => ({ foodId: i.foodId, amount: i.amount })));
+  if (!items.length) return empty;
+  const foods = new Map([...db.foods.values()].map((f) => [f.id, { name: f.name, brand: f.brand, notes: f.notes }]));
+  const b = ensureBls();
+  const bls = new Map();
+  if (b) {
+    for (const it of items) {
+      const f = foods.get(it.foodId);
+      const code = f ? D.blsMicro.blsCodeOf(f) : null;
+      if (!code || bls.has(code)) continue;
+      const row = BL.foodByCode(b, code);
+      if (!row) continue;
+      bls.set(code, {
+        code,
+        name: row[1],
+        nameEn: row[2],
+        hint: row[3],
+        values: b.data.nutrients.map((n, i) => {
+          const raw = row[4][i];
+          return { code: n.code, amount: typeof raw === "number" ? raw : null, flag: typeof raw === "string" ? raw : null, origin: null };
+        }),
+      });
+    }
+  }
+  return { ...D.blsMicro.foodMicro(items, foods, bls), noBls: !b };
+}
+
+const suppList = (db) =>
+  [...db.supplements.values()].map((s) => ({
+    name: s.name,
+    archived: !!s.archived,
+    values: Object.fromEntries((db.supValues.get(s.id) ?? []).map((v) => [v.nutrient, v.amount])),
+  }));
+
+export function microCard(catalog, groups, micro, refGroup, withFast, fromFoods = null, db = null) {
   const n = Object.keys(micro).length;
+  const supps = db ? suppList(db) : [];
+  const names = new Map((ensureBls()?.data.nutrients ?? []).map((x) => [x.code, x]));
   return `<section class="card card--nutrition micro-card"><div class="card__head"><h3>Mikronährstoffe und weitere Stoffe</h3>
       <span class="card__meta">${groups.length ? `${n} ${n === 1 ? "Stoff" : "Stoffe"} aufgenommen` : "aus Supplements und Fasttracking"}</span></div>
     ${
@@ -523,7 +580,9 @@ export function microCard(catalog, groups, micro, refGroup, withFast) {
           <tbody>${g.items
             .map(({ def, value }) => {
               const p = D.nutrientPercents(def.key, value, def.unit, refGroup);
-              return `<tr><td>${esc(def.label)}</td><td class="tnum">${esc(D.formatNutrient(value, def.unit))}</td>
+              const miss = fromFoods?.missing?.[def.key] ?? 0;
+              const low = D.blsMicro.lowReferenceHint(p.reference.percent, D.blsMicro.supplementsWith(def.key, supps));
+              return `<tr><td>${esc(def.label)}${miss ? `<span class="sub">${miss} Lebensmittel ohne Angabe</span>` : ""}${low ? `<span class="sub micro-low">${esc(low)}</span>` : ""}</td><td class="tnum">${esc(D.formatNutrient(value, def.unit))}</td>
                 <td class="tnum" title="${esc(p.reference.title)}">${esc(D.formatPercent(p.reference.percent))}</td>
                 <td class="tnum" title="${esc(p.limit.title)}">${esc(D.formatPercent(p.limit.percent))}</td></tr>`;
             })
@@ -537,7 +596,26 @@ export function microCard(catalog, groups, micro, refGroup, withFast) {
         ? `<p class="card__note">${esc(refGroup.ok ? `Referenzwerte für: ${D.GROUP_LABELS[refGroup.group]} (aus dem Profil am PC). ` : `${refGroup.reason} `)}„% Ref. DGE“ = Anteil am Referenzwert der DGE/ÖGE, „% Max. EFSA“ = Anteil an der tolerierbaren Höchstmenge der EFSA. „-“ = kein Wert festgelegt.</p>`
         : ""
     }
-    <p class="card__note">Summe aus Supplements${withFast ? " und Fasttracking" : ""} dieses Tages. Lebensmittel aus Mahlzeiten liefern hier nur Makronährstoffe, Ballaststoffe, Zucker und Salz.</p>
+    ${
+      fromFoods && Object.keys(fromFoods.extra).length
+        ? `<details class="micro-extra"><summary>Weitere Stoffe aus dem BLS (${Object.keys(fromFoods.extra).length})</summary>
+          <table class="data-table micro-table"><tbody>${Object.entries(fromFoods.extra)
+            .map(([code, v]) => `<tr><td>${esc(names.get(code)?.name ?? code)}</td><td class="tnum">${esc(`${D.formatNumber(v, v < 10 ? 2 : 0)} ${names.get(code)?.unit ?? ""}`)}</td></tr>`)
+            .join("")}</tbody></table></details>`
+        : ""
+    }
+    ${
+      fromFoods
+        ? `<p class="card__note card__note--keep">${
+            fromFoods.noBls
+              ? "Für Stoffe aus Lebensmitteln den BLS auf dem Handy laden (Nutrition → BLS)."
+              : fromFoods.withData
+                ? `Aus ${fromFoods.withData} ${fromFoods.withData === 1 ? "Lebensmittel" : "Lebensmitteln"} des BLS (alle Stoffe je Menge)`
+                : "Noch kein Lebensmittel aus dem BLS an diesem Tag"
+          }${!fromFoods.noBls && fromFoods.without.length ? ` · ohne Angabe (zählt nicht als 0): ${esc(fromFoods.without.join(", "))}` : ""}</p>`
+        : ""
+    }
+    <p class="card__note">Summe aus Lebensmitteln des BLS, Supplements${withFast ? " und Fasttracking" : ""} dieses Tages. Andere Lebensmittel liefern nur Makronährstoffe, Ballaststoffe, Zucker und Salz. Unter 70 % des Referenzwerts steht ein Hinweis – mit deinen eigenen Supplements, die den Stoff enthalten.</p>
   </section>`;
 }
 

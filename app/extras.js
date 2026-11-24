@@ -101,6 +101,23 @@ export function missingCount() {
   }
 }
 
+/** Uhrzeit der Griffkraft: heute „jetzt“, sonst leer (1.126.0). */
+function gripTimeDefault(grip) {
+  if (grip?.date !== today()) return "";
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+/** Übliches 90-Minuten-Messfenster aus den bisherigen Messungen (wie PC). */
+function gripWindow() {
+  try {
+    const db = buildDb();
+    return D.gripTiming.usualGripWindow((db.grip ?? []).map((g) => g.time));
+  } catch {
+    return null;
+  }
+}
+
 /** Hinweis oben in der Overview, wenn Werte fehlen. */
 export function quickFillBanner() {
   const n = missingCount();
@@ -146,7 +163,9 @@ export function viewQuickFill() {
       <div class="qf-row"><div><strong>Links und rechts</strong><span class="muted small">${
         grip.lastDate ? `zuletzt ${esc(F(grip.lastLeftKg ?? 0, 1))} / ${esc(F(grip.lastRightKg ?? 0, 1))} kg am ${esc(D.formatDate(grip.lastDate))}` : "noch keine Messung"
       }</span></div>
-      <div class="qf-times">${input("grip|left", 'inputmode="decimal" placeholder="Links" aria-label="Griffkraft links in kg"')}${input("grip|right", 'inputmode="decimal" placeholder="Rechts" aria-label="Griffkraft rechts in kg"')}<span class="muted small">kg</span></div>${err("grip")}</div></section>`
+      <div class="qf-times">${input("grip|left", 'inputmode="decimal" placeholder="Links" aria-label="Griffkraft links in kg"')}${input("grip|right", 'inputmode="decimal" placeholder="Rechts" aria-label="Griffkraft rechts in kg"')}<span class="muted small">kg</span></div>
+      <div class="qf-times"><label class="muted small" for="qf-grip-time">Uhrzeit</label><input id="qf-grip-time" class="qf-input" type="time" data-qf="grip|time" value="${esc(f.inputs["grip|time"] ?? gripTimeDefault(grip))}" aria-label="Uhrzeit der Griffkraft-Messung"></div>
+      <p class="muted small">${esc(D.gripTiming.gripWindowText(gripWindow()))}</p>${err("grip")}</div></section>`
     : "";
   const valuesHtml = [...groups.entries()]
     .map(
@@ -366,7 +385,12 @@ export const extrasActions = {
       const e = Q().gripInputError(left) ?? Q().gripInputError(right);
       if (e) errors.grip = e;
       else if ((left === null) !== (right === null)) errors.grip = "Bitte beide Hände eintragen (oder beide leer lassen).";
-      else if (left !== null) gripDraft = { date: grip.date, leftKg: left, rightKg: right };
+      else if (left !== null) {
+        // Uhrzeit ist Pflicht (1.126.0, wie PC 1.0.201)
+        const time = f.inputs["grip|time"] ?? gripTimeDefault(grip);
+        if (D.gripTiming.minutesOf(time) === null) errors.grip = "Bitte die Uhrzeit der Messung angeben.";
+        else gripDraft = { date: grip.date, time, leftKg: left, rightKg: right };
+      }
     }
     f.errors = errors;
     if (Object.keys(errors).length) {

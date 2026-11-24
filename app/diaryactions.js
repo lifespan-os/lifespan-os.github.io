@@ -4,7 +4,7 @@ import * as D from "./pcdomain.js";
 import * as N from "./nutrition.js";
 import * as SP from "./supplements.js";
 import * as QM from "./quickmeal.js";
-import { buildDb, itemsOf, nowTime, pad, quickAdd, today, X } from "./diary.js";
+import { backToNowIfFromTimeline, buildDb, itemsOf, nowTime, pad, quickAdd, today, X } from "./diary.js";
 import { buildDbCached, FAST_DAY, fastTargets, loadFast, persistSupp, readSuppForm, saveFastForm, suppHits } from "./diarysupp.js";
 
 // ------------------------------------------------------------------ Ereignisse
@@ -24,6 +24,11 @@ export const shift = (iso, n) => {
 };
 
 export const diaryActions = {
+  // Ballaststoffe, Zucker, Salz: Details auf- und zuklappen (1.114.0)
+  "extras-toggle": () => {
+    X.S.extrasOpen = !X.S.extrasOpen;
+    X.rerender();
+  },
   "qm-repeat": (el) => {
     const [key, kind] = el.dataset.arg.split("|");
     const db = buildDb();
@@ -42,7 +47,7 @@ export const diaryActions = {
     if (!items.length) return X.toast("Vorschlag nicht mehr vorhanden.", true);
     return quickAdd(key, items, QM.itemsName(items, foods));
   },
-  "qm-plan": (el) => {
+  "qm-plan": async (el) => {
     const db = buildDb();
     const date = X.S.diaryDate ?? today();
     const e = (db.pc.meal_plan_entry ?? []).find((x) => x.id === el.dataset.arg);
@@ -53,7 +58,21 @@ export const diaryActions = {
     const items = QM.onlyKnown(QM.Q.planItems({ servings: r.servings, items: recipeItems }, e.servings), foods);
     if (!items.length) return X.toast("Zu diesem Rezept fehlen die Lebensmittel – bitte am PC neu exportieren.", true);
     const choices = fastTargets(db, date).map((t) => ({ key: t.key, label: t.title }));
-    return quickAdd(QM.Q.planSlotKey(e.slot, choices), items, r.name);
+    const key = QM.Q.planSlotKey(e.slot, choices);
+    const res = await quickAdd(key, items, r.name);
+    // Supplemente des Gerichts als Einnahme zur Mahlzeit (1.125.0, wie PC 1.0.200)
+    const sups = (db.pc.recipe_supplement ?? []).filter((i) => i.recipe_id === r.id);
+    if (!res?.mealId || !sups.length) return;
+    const factor = r.servings > 0 ? e.servings / r.servings : e.servings;
+    const opts = { uuid: X.uuid, now: new Date() };
+    try {
+      const draft = { ...SP.emptyDraft(date, `meal:${res.mealId}`, ""), items: sups.map((i) => ({ id: null, supplementId: i.supplement_id, amount: Math.round(i.amount * factor * 1000) / 1000 })) };
+      SP.saveIntake(buildDb(), X.S.supp, draft, { ...opts, timingLabel: N.mealLabel(key), ensureMeal: (d, t) => N.ensureMeal(X.S.catalog, X.S.food.local, d, t, opts) });
+      await persistSupp();
+      X.rerender();
+    } catch (err) {
+      X.toast(err.message, true);
+    }
   },
   "fast-open": (el) => {
     const date = el.dataset.date || X.S.diaryDate || today();
@@ -134,6 +153,7 @@ export const diaryActions = {
     X.S.diaryDate = d.date;
     X.toast(d.stackId ? `Supplements „${d.name}“ gespeichert.` : `Supplements (${label ?? "Einnahme"}) gespeichert.`);
     X.go("diary");
+    backToNowIfFromTimeline();
   },
   "supp-delete": async (el) => {
     const st = X.S.suppEdit;

@@ -156,7 +156,7 @@ function weeklyAnalysisCards(db, week, weekEnd, data) {
   const setLog = O.setLog(db);
   const measurements = O.measurementsBetween(db, null, D.trends.shiftDays(week, -LOOKBACK_DAYS), weekEnd);
   const range = { from: week, to: weekEnd };
-  const a = D.weeklyAnalysis({ week: range, sleep: data.sleep, measurements, grip: gripOf(db), setLog, workouts: data.workouts, nutrition: data.nutrition, goal: data.goal });
+  const a = D.weeklyAnalysis({ week: range, sleep: data.sleep, measurements, grip: gripOf(db), setLog, workouts: data.workouts, nutrition: data.nutrition, goal: data.goal, energy: data.energy ?? [] });
   const categories = new Map((db.pc.body_metric ?? []).map((m) => [m.id, m.category]));
   const issues = D.dataCheck({ week: range, setLog, workouts: data.workouts, measurements, categoryOf: (id) => categories.get(id), hrt: null });
   return (
@@ -210,12 +210,48 @@ function coverageCard(data, t) {
 
 const AREA_TITLES = { sleep: "Schlaf", recovery: "Regeneration", training: "Training", nutrition: "Ernährung", body: "Körper" };
 
+function adaptiveTdeeCard(data, today) {
+  const A = D.adaptiveTdee;
+  const r = A.adaptiveTdee(data.nutrition, data.measurements.filter((m) => m.metricId === "00000000-0000-7000-8000-000000000001"), today);
+  const F = (v, d = 0) => D.formatNumber(v, d);
+  const body =
+    r.kind === "insufficient"
+      ? `<p class="muted">Dafür braucht es mindestens ${A.TDEE_MIN_SPAN} Tage mit ${A.TDEE_MIN_FOOD_DAYS} vollständig erfassten Ernährungstagen und ${A.TDEE_MIN_WEIGHINS} Wiegungen (bisher ${r.spanDays} Tage, ${r.foodDays} Ernährungstage, ${r.weighIns} Wiegungen).</p>`
+      : `<p><strong>${F(r.tdee)} kcal</strong> je Tag – Aufnahme Ø ${F(r.intakeAvg)} kcal, Gewicht ${r.trendKgPerWeek >= 0 ? "+" : "−"}${F(Math.abs(r.trendKgPerWeek), 2)} kg je Woche.</p><p class="muted small">Als Kalorienziel übernehmen geht am PC (Insights → Echter Verbrauch).</p>`;
+  return card(
+    "adaptive-tdee",
+    "Echter Verbrauch",
+    "aus dem Gewichtsverlauf",
+    `${body}<p class="card__note">Mittlere Aufnahme der vollständig erfassten Tage minus Energie aus der Trendgeraden deiner Wiegungen (7.700 kcal je kg), letzte 28 Tage. Nur ein Vorschlag.</p>`,
+    { area: "nutrition" },
+  );
+}
+
+function lateTrainingCard(data) {
+  const L = D.lateTraining;
+  const r = L.lateTraining(data.workouts, data.sleep);
+  const body =
+    r.kind === "insufficient"
+      ? `<p class="muted">Noch zu wenige Trainingstage mit Uhrzeit, Dauer und Schlaf in der Nacht danach (bisher ${r.late} späte und ${r.early} frühere, nötig sind je ${L.LATE_MIN_DAYS}).</p>`
+      : r.notable
+        ? `<p>${esc(r.text)}</p>`
+        : `<p class="muted">Kein deutlicher Unterschied (unter ${L.LATE_MIN_DIFF} Minuten) zwischen Nächten nach spätem und früherem Training (${r.late} späte, ${r.early} frühere Trainingstage).</p>`;
+  return card(
+    "late-training",
+    "Spätes Training und Schlaf",
+    `letzte ${ASSOCIATION_WEEKS} Wochen`,
+    `${body}<p class="card__note">Spät = Ende des Trainings weniger als 3 Stunden vor deiner üblichen Zubettgehzeit (Median der Schlafeinträge). Verglichen werden Schlafdauer und Einschlafzeit der Nacht danach. Nur Beschreibung deiner Daten, keine Ursache.</p>`,
+    { area: "sleep" },
+  );
+}
+
 export function viewInsights() {
   const S = X.S;
   if (!S.catalog?.pc) return `${X.header("Insights")}<main class="wrap"><section class="card"><p class="warn">Für Insights wie am PC fehlen noch Daten: Bitte am PC einen neuen Export erstellen und hier unter Import/Export „Neue Exportdatei laden“.</p></section></main>`;
   const t = today();
   const currentWeek = D.trends.weekStart(t);
-  const week = S.insightsWeek && S.insightsWeek <= currentWeek ? S.insightsWeek : currentWeek;
+  // Voreinstellung: letzte vollständige Woche (1.118.0, wie PC 1.0.194)
+  const week = S.insightsWeek && S.insightsWeek <= currentWeek ? S.insightsWeek : D.trends.shiftDays(currentWeek, -7);
   const weekEnd = D.trends.shiftDays(week, 6);
   const db = buildDb();
   const weekData = O.insightsFor(db, D.trends.shiftDays(week, -7), weekEnd);
@@ -279,6 +315,11 @@ export function viewInsights() {
   cards.push({ id: "supplement-sleep", node: PA.supplementSleepCard(card, db, O.insightsFor(db, D.trends.shiftDays(t, -84), t)) });
   const caffeineNode = PA.caffeineSleepCard(card, longData, (d) => CF.intakesOn(S.catalog, S.caffeine, d));
   if (caffeineNode) cards.push({ id: "caffeine", node: caffeineNode });
+  // Spätes Training und Schlaf (1.119.0, wie PC 1.0.195)
+  cards.push({ id: "late-training", node: lateTrainingCard(longData) });
+  // Echter Verbrauch aus dem Gewichtsverlauf (1.119.0, wie PC 1.0.195) – nur mit Einstellung am PC
+  const tdeeMode = D.adaptiveTdee.parseTdeeMode(db.settings.get(D.adaptiveTdee.TDEE_MODE_KEY) ?? null);
+  if (tdeeMode !== "calculated") cards.push({ id: "adaptive-tdee", node: adaptiveTdeeCard(longData, t) });
   if (db.settings.get("secret_protocols") === "1") {
     const hrtNode = PA.hrtRecoveryCard(card, longData, SD.hrtEntriesOf(S.catalog, S.super));
     if (hrtNode) cards.push({ id: "hrt", node: hrtNode });
@@ -311,7 +352,7 @@ export const insightsActions = {
     const t = today();
     const current = D.trends.weekStart(t);
     const n = Number(el.dataset.arg);
-    const week = n === 0 ? current : D.trends.shiftDays(S.insightsWeek ?? current, n);
+    const week = n === 0 ? current : D.trends.shiftDays(S.insightsWeek ?? D.trends.shiftDays(current, -7), n);
     S.insightsWeek = week > current ? current : week;
     X.rerender();
   },

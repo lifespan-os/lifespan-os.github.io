@@ -28,6 +28,7 @@ export function hrtTab() {
       <div class="wo-head"><h3>HRT</h3><button class="btn sm primary" data-act="hrt-new">+ Hormongabe erfassen</button></div>
       ${all.length ? "" : `<p class="muted">Noch keine HRT-Einträge.</p>`}
     </section>
+    ${labScheduleCard(all, t)}
     ${
       summary.length
         ? `<section class="card"><h3>Übersicht je Art</h3>
@@ -94,6 +95,23 @@ export function select(k, label, value, options, error = "") {
 export function textarea(k, label, value, hint = "", error = "") {
   return `<div class="field ${error ? "has-error" : ""}"><label for="hf-${k}">${esc(label)}</label><textarea id="hf-${k}" data-hrt="${k}" rows="2">${esc(value)}</textarea>
     ${error ? `<p class="field-error">${esc(error)}</p>` : hint ? `<p class="muted small">${esc(hint)}</p>` : ""}</div>`;
+}
+
+// Nächste Laborkontrolle (1.119.0, wie PC 1.0.195 / Verbesserung 24); Abstände aus `ui.lab_schedule` (am PC änderbar)
+function labScheduleCard(all, t) {
+  const LS = D.labSchedule;
+  const settings = LS.parseLabSchedule(PS.effective(X.S.catalog, X.S.pcsettings, LS.LAB_SCHEDULE_KEY));
+  const plan = LS.labPlan(all, H.drawsOf(X.S.catalog, X.S.health), t, settings);
+  if (!plan) return "";
+  const days = D.trends.daysBetween(t, plan.due);
+  const when = days === 0 ? "heute" : days > 0 ? `in ${days} ${days === 1 ? "Tag" : "Tagen"}` : `seit ${-days} ${days === -1 ? "Tag" : "Tagen"} fällig`;
+  return `<section class="card lab-schedule">
+      <h3>Nächste Laborkontrolle</h3>
+      <p class="lab-schedule__due ${plan.overdue ? "is-over" : ""}"><strong>${esc(D.formatDate(plan.due))}</strong> · ${esc(when)}</p>
+      <p class="muted small">${plan.anchorKind === "change" ? "Letzte Dosisänderung" : "Beginn"} am ${esc(D.formatDate(plan.anchor))}${plan.lastDraw ? ` · letzte Abnahme am ${esc(D.formatDate(plan.lastDraw))}` : " · seitdem keine Abnahme"}</p>
+      <p class="muted small">Werte: ${esc(LS.LAB_PANEL.map((p) => p.label).join(", "))}${plan.missing.length ? ` – bei der letzten Abnahme fehlten: <strong>${esc(plan.missing.join(", "))}</strong>` : ""}</p>
+      <p class="muted small card-info">${settings.weeksAfterChange} Wochen nach Beginn bzw. nach einer Dosisänderung, danach alle ${settings.months} Monate nach der letzten Abnahme. Die Abstände änderst du am PC (Superhuman → HRT). Keine ärztliche Empfehlung.</p>
+    </section>`;
 }
 
 // Injektionsintervall je Präparat (Einstellung `ui.hrt_intervals`, 1.113.0, wie PC 1.0.189)

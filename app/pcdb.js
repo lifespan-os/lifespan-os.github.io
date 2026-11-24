@@ -97,6 +97,8 @@ export const KEEP_TABLES = [
   "recipe",
   // seit 1.55.0: geplante Mahlzeiten am Handy als gegessen eintragen
   "recipe_item",
+  // seit 1.124.0 (PC-Schema 75): Supplemente in Gerichten
+  "recipe_supplement",
 ];
 
 /** Einstellungen, die die Ansichten brauchen (keine Strichcodes). */
@@ -338,6 +340,7 @@ function mealItem(db, it) {
     saltG: per("salt_g"),
     portionName: f?.portion_name ?? null,
     portionAmount: f?.portion_amount ?? null,
+    caffeineMg: per("caffeine_mg"),
     position: it.position ?? 0,
     known: Boolean(f),
   };
@@ -920,12 +923,12 @@ export function energyFor(db, date, cache = new Map()) {
   };
 }
 
-/** Berechneter Gesamtverbrauch je Tag (ohne Kalibrierung) wie `energy::daily_points`. */
+/** Berechneter Gesamtverbrauch je Tag (ohne Kalibrierung) wie `energy::daily_points` (seit 1.116.0 mit Grundbedarf und Schritt-kcal). */
 export function dailyPoints(db, from, to) {
   const out = [];
   for (let d = from; d <= to; d = addDays(d, 1)) {
     const f = formula(db, d);
-    if (f.total !== null) out.push({ date: d, totalKcal: f.total, pal: pal(f.total, f.bmr) });
+    if (f.total !== null) out.push({ date: d, totalKcal: f.total, pal: pal(f.total, f.bmr), baselineKcal: f.baseline, stepKcal: f.step.kcal ?? null });
   }
   return out;
 }

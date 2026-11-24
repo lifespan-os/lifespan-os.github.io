@@ -16,7 +16,7 @@ const WT = () => D.workoutTimeline;
 const KIND = () => D.trainingKind;
 
 /** Rubrik einer erfassten Einheit (1.110.0 → 1.111.0, wie PC 1.0.187): aus ihren Übungen */
-function workoutKind(db, w) {
+export function workoutKind(db, w) {
   try {
     const ex = [...(db.wexByWorkout?.get(w.id) ?? [])].map((we) => {
       const e = db.exercises?.get(we.exercise_id);

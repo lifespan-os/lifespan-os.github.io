@@ -67,10 +67,24 @@ export function caffeineMg(values) {
 
 /**
  * Koffein aus Nutrition eines Tages wie `caffeine::list_with_nutrition` (nur lesen):
- * Supplement-Einnahmen mit dem Nährstoff „Koffein“, direkt eingetragene Nährwerte einer Mahlzeit,
+ * Supplement-Einnahmen mit dem Nährstoff „Koffein“, Koffein einer Mahlzeit (Nährwerte und Lebensmittel),
  * Fasttracking des Tages. Einträge der Schnellerfassung am PC (`supplement_intake_id`) zählen nur
  * einmal. `day` = { intakes, meals, fast } aus pcdb.js (`intakesOn`, `mealDay(...).meals`, `fastDay`).
  */
+/**
+ * Koffein einer Mahlzeit wie `meal_caffeine` am PC (1.126.0 / PC 1.0.201): direkt eingetragene
+ * Nährwerte plus Koffein der Lebensmittel (z. B. „Kaffee mit Milch“ als Zutat); null ohne Koffein.
+ */
+export function mealCaffeineMg(m) {
+  const direct = caffeineMg(m.values) ?? 0;
+  const items = (m.items ?? []).reduce((sum, i) => {
+    const mg = Number(i.caffeineMg);
+    return Number.isFinite(mg) && mg > 0 ? sum + mg : sum;
+  }, 0);
+  const mg = Math.round((direct + items) * 10) / 10;
+  return mg > 0 ? mg : null;
+}
+
 export function nutritionIntakes(day, linkedIds = new Set()) {
   const out = [];
   const meals = day.meals ?? [];
@@ -98,7 +112,7 @@ export function nutritionIntakes(day, linkedIds = new Set()) {
     out.push(derived(i.id, time, fallback, i.name, mg, "supplement", i.createdAt));
   }
   for (const m of meals) {
-    const mg = caffeineMg(m.values);
+    const mg = mealCaffeineMg(m);
     if (mg === null) continue;
     out.push(derived(m.id, m.time ?? null, assumedTime(m.mealType), m.name ?? MEAL_LABELS[m.mealType] ?? "Mahlzeit", mg, "meal", m.createdAt));
   }

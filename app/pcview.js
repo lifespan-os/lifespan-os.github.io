@@ -50,8 +50,9 @@ export function dayGoalHtml({ totals, goal, stepKcal = null, expenditure = null,
         }.`
       : null;
   const dayMacros = D.dayMacroGoals(goal, need, expenditure);
-  const macros = D.macroGoalRows(totals, dayMacros, planned);
+  const macros = D.macroGoalRows(totals, dayMacros, planned, dayMacros.minimums);
   const macroNote = D.describeMacroGoals(dayMacros);
+  const needShort = D.describeNeedShort(need);
   let out = `<div class="day-goal">`;
   if (dynamicMissing) out += `<p class="muted small">${esc(dynamicMissing)}</p>`;
   if (energy) {
@@ -68,6 +69,7 @@ export function dayGoalHtml({ totals, goal, stepKcal = null, expenditure = null,
             energy.plannedKcal > 0 ? `<span class="muted small"> · ${esc(D.formatKcal(energy.plannedKcal))} geplant</span>` : ""
           }</p>
         ${balance}
+        ${needShort ? `<p class="muted small day-goal__derive">${esc(needShort)}</p>` : ""}
       </div>
       ${needText ? `<p class="muted small day-goal__need card-info">${esc(needText)}</p>` : ""}
       <div class="goal-bar goal-bar--energy" role="img" aria-label="${esc(`${D.formatKcal(energy.consumed)} von ${D.formatKcal(energy.goal)} Kalorienziel`)}">
@@ -86,11 +88,21 @@ export function dayGoalHtml({ totals, goal, stepKcal = null, expenditure = null,
       .map(
         (m) => `<div class="macro-goal">
         <div class="macro-goal__head"><span class="macro-goal__label">${esc(m.label)}</span>
-          <span>${esc(D.formatGrams(m.actual))} <span class="muted">von ${esc(D.formatGrams(m.goal))}</span></span>
-          <span class="macro-goal__status ${m.reached ? "is-reached" : ""}">${
-            m.reached ? `✓ erreicht (${esc(D.percentText(m.percent))})` : `${esc(D.percentText(m.percent))} · noch ${esc(D.formatGrams(m.remaining))}`
+          <span>${esc(D.formatGrams(m.actual))} <span class="muted">von ${esc(D.formatGrams(m.goal))}</span>${
+            m.minimum !== null ? `<span class="muted small"> · Minimum ${esc(D.formatGrams(m.minimum))}</span>` : ""
+          }</span>
+          <span class="macro-goal__status ${m.reached ? "is-reached" : m.minimum !== null && m.minimumReached ? "is-minimum" : ""}">${
+            m.reached
+              ? `✓ erreicht (${esc(D.percentText(m.percent))})`
+              : m.minimum !== null && m.minimumReached
+                ? `✓ Minimum erreicht · noch ${esc(D.formatGrams(m.remaining))}`
+                : `${esc(D.percentText(m.percent))} · noch ${esc(D.formatGrams(m.remaining))}`
           }</span></div>
-        <div class="goal-bar"><span class="goal-bar__fill" style="width:${Math.min(100, m.percent)}%;background:${MACRO_FILL[m.key]}"></span>${plannedFills(m.planned)}</div>
+        <div class="goal-bar"><span class="goal-bar__fill" style="width:${Math.min(100, m.percent)}%;background:${MACRO_FILL[m.key]}"></span>${plannedFills(m.planned)}${
+          m.minimumPercent !== null
+            ? `<span class="goal-bar__marker goal-bar__marker--min" style="left:${m.minimumPercent}%" title="${esc(D.describeMacroStage(m.goal, m.minimum) ?? "")}"></span>`
+            : ""
+        }</div>
         ${m.plannedG > 0 ? `<p class="muted small macro-goal__over">+ ${esc(D.formatGrams(m.plannedG))} geplant</p>` : ""}
         ${m.remaining < 0 ? `<p class="muted small macro-goal__over">${esc(D.formatGrams(-m.remaining))} über dem Ziel</p>` : ""}
       </div>`,
@@ -155,8 +167,12 @@ export function dayChartHtml(chart) {
     <ul class="day-chart__bars">${chart.bars
       .map(
         (b) => `<li><div class="day-chart__bar-head"><span><span class="swatch" style="background:${MACRO_FILL[b.key]}"></span>${esc(b.label)}</span>
-          <span class="day-chart__value"><strong>${D.formatNumber(b.actual, 0)}</strong>${b.goal !== null ? ` / ${D.formatNumber(b.goal, 0)} g` : " g"}<span class="muted"> · ${b.energyShare} % kcal</span></span></div>
-          <span class="day-chart__track ${b.over ? "is-over" : ""}"><span class="day-chart__fill" style="width:${b.width}%;background:${MACRO_FILL[b.key]}"></span></span></li>`,
+          <span class="day-chart__value"><strong>${D.formatNumber(b.actual, 0)}</strong>${b.goal !== null ? ` / ${D.formatNumber(b.goal, 0)} g` : " g"}${
+            b.minimum !== null ? `<span class="muted"> · Min. ${D.formatNumber(b.minimum, 0)} g</span>` : ""
+          }<span class="muted"> · ${b.energyShare} % kcal</span></span></div>
+          <span class="day-chart__track ${b.over ? "is-over" : ""}"><span class="day-chart__fill" style="width:${b.width}%;background:${MACRO_FILL[b.key]}"></span>${
+            b.minimumPercent !== null ? `<span class="day-chart__min" style="left:${b.minimumPercent}%"></span>` : ""
+          }</span></li>`,
       )
       .join("")}</ul>
   </div>`;

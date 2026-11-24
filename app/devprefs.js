@@ -32,7 +32,9 @@ export function normPrefs(prefs) {
     autoMark: t.autoMark === true,
   };
   const remShown = Array.isArray(p.remShown) ? p.remShown.filter((x) => typeof x === "string") : [];
-  return { ...p, theme, barLabels, reminders, quick, transfer, remShown };
+  // Overview-Ansicht dieses Handys (1.118.0): reduziert (Voreinstellung) oder ausführlich
+  const overviewMode = p.overviewMode === "full" ? "full" : "reduced";
+  return { ...p, theme, barLabels, reminders, quick, transfer, remShown, overviewMode };
 }
 
 /** Wirksames Design: „system“ folgt dem Handy. */

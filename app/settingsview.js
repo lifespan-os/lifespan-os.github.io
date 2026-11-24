@@ -91,6 +91,128 @@ const segmented = (act, options, current) =>
 const syncNote = `<p class="muted small card-info">Gilt für PC und Handy: geht mit „An den PC senden“ an den PC; dort gewinnt beim Abgleich der neuere Stand.</p>`;
 const deviceNote = `<p class="muted small card-info">Gilt nur auf diesem Handy (am PC gibt es eine eigene Einstellung).</p>`;
 
+// ------------------------------------------------------------------ Automatisch speichern (1.117.0, wie PC 1.0.193)
+// Profil, Mahlzeiten, Workout-Richtwerte und Messmethoden speichern beim Verlassen eines Feldes bzw.
+// sofort bei Auswahl und Haken. Ungültige Eingaben: rot, nicht gespeichert. Danach „Gespeichert“ mit
+// „Rückgängig“ (stellt den Stand davor wieder her).
+
+/** Hinweis unter dem Formular einer Karte */
+function autoNote(card, invalid) {
+  const n = X.S.autoNote;
+  if (invalid) return `<p class="field-error autosave-note">Nicht gespeichert – bitte die markierten Felder prüfen.</p>`;
+  if (n?.card === card) {
+    return `<p class="autosave-note autosave-note--ok small" role="status">✓ ${n.undone ? "Rückgängig gemacht" : "Gespeichert"}${
+      n.undo ? ` <button class="linkbtn" data-act="autosave-undo">Rückgängig</button>` : ""
+    }</p>`;
+  }
+  return `<p class="autosave-note muted small">Änderungen werden automatisch gespeichert.</p>`;
+}
+
+/** Neu zeichnen, nachdem der Fokus zum nächsten Feld gewandert ist, und ihn dort lassen */
+function rerenderKeepFocus() {
+  setTimeout(() => {
+    const id = document.activeElement?.id;
+    X.rerender();
+    if (id) document.getElementById(id)?.focus({ preventScroll: true });
+  }, 0);
+}
+
+/** Gespeichert: Hinweis mit „Rückgängig“ merken */
+function saved(card, undo) {
+  X.S.autoNote = { card, undo, undone: false };
+  rerenderKeepFocus();
+}
+
+/** Einstellungen speichern und den Stand davor für „Rückgängig“ merken */
+async function saveSettings(card, entries) {
+  const db = buildDb();
+  const before = entries.map(([k]) => [k, setting(db, k)]);
+  let n = 0;
+  for (const [k, v] of entries) if (await putSetting(k, v)) n++;
+  buildDb();
+  if (!n) return rerenderKeepFocus();
+  saved(card, async () => {
+    for (const [k, v] of before) await putSetting(k, v);
+    buildDb();
+  });
+}
+
+async function autoProfile() {
+  const S = X.S;
+  const f = readProfile();
+  const r = PS.validateProfile(f, today());
+  if (!r.ok) {
+    f.errors = r.errors;
+    S.autoNote = null;
+    return rerenderKeepFocus();
+  }
+  f.errors = null;
+  const prev = buildDb()?.profile ?? null;
+  // Nichts geändert (z. B. Feld nur betreten und verlassen): nicht speichern
+  if (prev && Object.entries(r.value).every(([k, v]) => (prev[k] ?? null) === (v ?? null))) {
+    S.setProfile = null;
+    return rerenderKeepFocus();
+  }
+  S.pcsettings = PS.normSync(S.pcsettings);
+  PS.setProfile(S.pcsettings, { ...r.value, photo: prev?.photo ?? null });
+  await X.store.set("pcsettings", S.pcsettings);
+  S.setProfile = null;
+  await X.renameActiveAccount(r.value.name);
+  saved(
+    "profile",
+    prev
+      ? async () => {
+          const { id: _id, updated_at: _u, ...row } = prev;
+          S.pcsettings = PS.normSync(S.pcsettings);
+          PS.setProfile(S.pcsettings, row);
+          await X.store.set("pcsettings", S.pcsettings);
+          await X.renameActiveAccount(prev.name ?? "");
+        }
+      : null,
+  );
+}
+
+async function autoMeals() {
+  const f = readMeals();
+  // Neue eigene Mahlzeit ohne Namen: warten, bis der Name eingetragen ist
+  if (f.extras.some((n) => !String(n ?? "").trim())) return;
+  const r = PS.validateMealList(f);
+  if (!r.ok) {
+    f.errors = r.errors;
+    X.S.autoNote = null;
+    return rerenderKeepFocus();
+  }
+  X.S.setMeals = null;
+  await saveSettings("meals", Object.entries(PS.mealListSettings(r.value)));
+}
+
+async function autoWt() {
+  const f = readWt();
+  const r = WTL().validateWorkoutTargets(f.draft);
+  if (!r.ok) {
+    f.errors = r.errors;
+    X.S.autoNote = null;
+    return rerenderKeepFocus();
+  }
+  X.S.setWt = null;
+  await saveSettings("meals", [[WTL().WORKOUT_TARGETS_SETTING, JSON.stringify(r.value)]]);
+}
+
+async function autoMethods() {
+  const f = readMethods();
+  // Neue Methode ohne Bezeichnung: warten
+  if (Object.values(f.list).some((l) => l.some((m) => !String(m ?? "").trim()))) return;
+  const r = PS.validateMethods(f.list);
+  if (!r.ok) {
+    f.errors = r.errors;
+    X.S.autoNote = null;
+    return rerenderKeepFocus();
+  }
+  const empty = Object.values(r.value).every((l) => !l.length);
+  X.S.setMethods = null;
+  await saveSettings("methods", [["measurement_methods", empty && !setting(buildDb(), "measurement_methods") ? null : r.json]]);
+}
+
 // ------------------------------------------------------------------ Karten
 
 function profileCard(db) {
@@ -116,7 +238,7 @@ function profileCard(db) {
     }</div>
     ${f.sex === "female" ? `<div class="field"><label for="prof-phase">Schwangerschaft/Stillzeit</label><select id="prof-phase" data-prof="lifePhase">${opt(D.LIFE_PHASE_OPTIONS, f.lifePhase)}</select>${errOf(e, "lifePhase")}</div>` : ""}
     <p class="muted small card-info">Geschlecht, Alter und Größe braucht die App für Energiebedarf und Referenzwerte – wie am PC.</p>
-    <button class="btn primary block" data-act="prof-save">Profil speichern</button>
+    ${autoNote("profile", Boolean(e && Object.values(e).some(Boolean)))}
     ${syncNote}
   </section>`;
 }
@@ -155,9 +277,9 @@ function mealsCard(db) {
     ${errOf(e, "hidden")}${errOf(e, "extras")}
     <div class="row-actions">
       <button class="btn sm" data-act="meal-extra-add" ${f.extras.length >= 2 * PS.MAX_MEALS ? "disabled" : ""}>+ Eigene Mahlzeit</button>
-      ${S.setMeals ? `<button class="btn sm ghost" data-act="meal-discard">Verwerfen</button>` : ""}
+      ${e ? `<button class="btn sm ghost" data-act="meal-discard">Verwerfen</button>` : ""}
     </div>
-    <button class="btn primary block" data-act="meal-save">Mahlzeiten speichern</button>
+    ${autoNote("meals", Boolean(e && Object.values(e).some(Boolean)))}
     ${workoutTargetsHtml(db)}
     ${syncNote}
   </section>`;
@@ -196,11 +318,11 @@ function workoutTargetsHtml(db) {
       <button type="button" role="radio" aria-checked="${d.mode === "perKg"}" class="${d.mode === "perKg" ? "is-active" : ""}" data-act="wt-mode" data-arg="perKg">Pro kg Körpergewicht</button>
     </div>
     <div class="set-wt__grid">${fields}</div>
+    ${f.errors ? `<p class="field-error">Nicht gespeichert – bitte die markierten Felder prüfen.</p>` : ""}
     <div class="row-actions">
-      <button class="btn sm ghost" data-act="wt-default">Voreinstellung</button>
-      ${S.setWt ? `<button class="btn sm ghost" data-act="wt-discard">Verwerfen</button>` : ""}
+      <button class="btn sm ghost" data-act="wt-default">Standardwerte wiederherstellen</button>
+      ${f.errors ? `<button class="btn sm ghost" data-act="wt-discard">Verwerfen</button>` : ""}
     </div>
-    <button class="btn primary block" data-act="wt-save">Richtwerte speichern</button>
   </div>`;
 }
 
@@ -234,8 +356,8 @@ function methodsCard(db) {
     <h3>Messmethoden</h3>
     <p class="muted small card-info">Je Thema die Methoden, die du beim Erfassen wählst (z. B. Waage, Maßband, Polar) – höchstens 30, je bis 40 Zeichen.</p>
     ${topics}
-    <div class="row-actions">${S.setMethods ? `<button class="btn sm ghost" data-act="method-discard">Verwerfen</button>` : ""}</div>
-    <button class="btn primary block" data-act="method-save">Messmethoden speichern</button>
+    ${e ? `<div class="row-actions"><button class="btn sm ghost" data-act="method-discard">Verwerfen</button></div>` : ""}
+    ${autoNote("methods", Boolean(e && Object.values(e).some(Boolean)))}
     ${syncNote}
   </section>`;
 }
@@ -246,6 +368,8 @@ function appearanceCard() {
     <h3>Darstellung</h3>
     <div class="field"><span class="field-label">Design</span>${segmented("pref-theme", DP.THEMES, p.theme)}</div>
     <div class="field"><span class="field-label">Untere Leiste zeigt</span>${segmented("pref-barlabels", DP.BAR_LABELS, p.barLabels)}</div>
+    <div class="field"><span class="field-label">Overview</span>${segmented("pref-ovmode", [["reduced", "Reduziert"], ["full", "Ausführlich"]], p.overviewMode ?? "reduced")}
+      <p class="muted small card-info">Reduziert: oben „Heute“ (Erholung, Kalorien und Protein, Training, offene Punkte, Wasser und Schritte), die übrigen Karten zugeklappt mit einer Kennzahl.</p></div>
     ${X.barSlotsHtml()}
     ${deviceNote}
   </section>`;
@@ -353,6 +477,35 @@ function transferCard(db) {
   </section>`;
 }
 
+/**
+ * Gruppen der Settings (1.117.0, Verbesserung 12): zuklappbar, mit Suche über alle Karten.
+ * Offene Gruppen merkt sich die Sitzung (`S.setGroupsOpen`), damit sie nach dem Speichern offen bleiben.
+ */
+const SET_GROUPS = [
+  ["profil", "Profil und Konten"],
+  ["ziele", "Ziele"],
+  ["ernaehrung", "Training und Ernährung"],
+  ["anzeige", "Darstellung und Bedienung"],
+  ["daten", "Daten und Datenschutz"],
+  ["hilfe", "Hilfe und FAQ"],
+];
+
+/** Überschriften der Karten einer Gruppe (für die Zeile unter dem Gruppennamen) */
+const cardTitles = (html) => [...html.matchAll(/<h3[^>]*>([^<]+)/g)].map((m) => m[1].trim());
+
+function groupHtml(id, title, cards, open) {
+  const body = cards.filter(Boolean).join("");
+  if (!body) return "";
+  const names = cardTitles(body);
+  return `<section class="set-group${open ? " is-open" : ""}" data-set-group="${id}">
+    <button class="set-group__head" data-act="set-group" data-arg="${id}" aria-expanded="${open}">
+      <span><b>${esc(title)}</b><span class="muted small set-group__names">${esc(names.join(" · "))}</span></span>
+      <span class="chev" aria-hidden="true">${open ? "▾" : "▸"}</span>
+    </button>
+    <div class="set-group__body"${open ? "" : " hidden"}>${body}</div>
+  </section>`;
+}
+
 /** Ganze Settings-Seite. */
 export function viewSettings() {
   const S = X.S;
@@ -363,35 +516,69 @@ export function viewSettings() {
     db = null;
   }
   const open = PS.unsentSync(S.pcsettings);
-  return `${X.header("Settings")}<main class="wrap">
-    ${db ? profileCard(db) : ""}
-    ${X.accountsCard()}
-    <section class="card">
+  const isOpen = new Set(S.setGroupsOpen ?? []);
+  const goalsCard = `<section class="card">
       <h3>Tagesziele</h3>
       <p class="muted small card-info">Energie (fest oder dynamisch aus dem Verbrauch), Makros, Schlaf, Gewicht, Schritte und Wasser – wie am PC.</p>
       <button class="btn block" data-act="goals-open">Tagesziele festlegen</button>
-    </section>
-    ${db ? weekGoalsCard(db) : ""}
-    ${db ? mainGoalsCard(db) : ""}
-    ${db ? cardioSettingsCard(db) : ""}
-    ${db ? mealsCard(db) : ""}
-    ${db ? methodsCard(db) : ""}
-    ${appearanceCard()}
-    ${db ? dayStartCard(db) : ""}
-    ${db ? remindersCard(db) : ""}
-    ${quickCard()}
-    ${db ? layoutsCard(db) : ""}
-    ${db ? transferCard(db) : ""}
-    ${db ? secretCard(db) : ""}
-    ${open ? `<section class="card hl"><p class="small">${open === 1 ? "1 Änderung" : `${open} Änderungen`} an den Einstellungen noch nicht am PC.</p><button class="btn block" data-go="send">An den PC senden</button></section>` : ""}
-    ${faqCardHtml()}
-    <section class="card">
+    </section>`;
+  const helpCard = `<section class="card">
       <h3>Hilfe</h3>
       <p class="muted small">Version ${esc(X.version)} · Bedienung, Datenschutz und Datenaustausch.</p>
       <button class="btn block" data-go="help">Hilfe öffnen</button>
       ${S.catalog?.startpaket && S.prefs.setup?.dismissed ? `<button class="linkbtn small" data-act="setup-show">„Erste Schritte“ wieder in der Overview zeigen</button>` : ""}
-    </section>
+    </section>`;
+  const groups = {
+    profil: [db ? profileCard(db) : "", X.accountsCard()],
+    ziele: [goalsCard, db ? weekGoalsCard(db) : "", db ? mainGoalsCard(db) : ""],
+    ernaehrung: [db ? mealsCard(db) : "", db ? cardioSettingsCard(db) : "", db ? methodsCard(db) : ""],
+    anzeige: [appearanceCard(), db ? dayStartCard(db) : "", db ? remindersCard(db) : "", quickCard(), db ? layoutsCard(db) : ""],
+    daten: [db ? transferCard(db) : "", db ? secretCard(db) : ""],
+    hilfe: [faqCardHtml(), helpCard],
+  };
+  // Suche bleibt nach dem Neuzeichnen aktiv
+  if (String(S.setQuery ?? "").trim()) queueMicrotask(applySettingsSearch);
+  return `${X.header("Settings")}<main class="wrap">
+    <div class="set-search"><label for="set-q" class="sr-only">Settings durchsuchen</label>
+      <input id="set-q" type="search" data-set-search="1" placeholder="Settings durchsuchen …" autocomplete="off" value="${esc(S.setQuery ?? "")}"></div>
+    ${open ? `<section class="card hl"><p class="small">${open === 1 ? "1 Änderung" : `${open} Änderungen`} an den Einstellungen noch nicht am PC.</p><button class="btn block" data-go="send">An den PC senden</button></section>` : ""}
+    ${SET_GROUPS.map(([id, title]) => groupHtml(id, title, groups[id], isOpen.has(id))).join("")}
+    <p class="muted small set-search__none" hidden>Nichts gefunden.</p>
   </main>`;
+}
+
+/** Suche in den Settings: Karten mit Treffer zeigen, ihre Gruppen aufklappen (ohne neu zu zeichnen) */
+export function applySettingsSearch() {
+  const q = String(X.S.setQuery ?? "").trim().toLowerCase();
+  let any = false;
+  for (const g of document.querySelectorAll(".set-group")) {
+    const body = g.querySelector(".set-group__body");
+    const head = g.querySelector(".set-group__head");
+    let hits = 0;
+    for (const card of body.children) {
+      const hit = !q || card.textContent.toLowerCase().includes(q);
+      card.hidden = !hit;
+      if (hit) hits++;
+    }
+    // Gruppenname passt, aber keine Karte: ganze Gruppe zeigen
+    const titleHit = Boolean(q) && !hits && head.textContent.toLowerCase().includes(q);
+    if (titleHit) for (const card of body.children) card.hidden = false;
+    g.hidden = Boolean(q) && !hits && !titleHit;
+    const open = q ? hits > 0 || titleHit : g.classList.contains("is-open");
+    body.hidden = !open;
+    head.setAttribute("aria-expanded", String(open));
+    if (!g.hidden) any = true;
+  }
+  const none = document.querySelector(".set-search__none");
+  if (none) none.hidden = any;
+}
+
+/** Eingabe im Suchfeld der Settings. `true` = behandelt. */
+export function settingsInput(el) {
+  if (!el.dataset?.setSearch) return false;
+  X.S.setQuery = el.value;
+  applySettingsSearch();
+  return true;
 }
 
 // ------------------------------------------------------------------ Eingaben
@@ -482,20 +669,23 @@ export const settingsActions = {
     if (photo) void chooseProfilePhoto(photo);
   },
   "prof-photo-remove": () => saveProfilePhoto(null),
-  "prof-save": async () => {
-    const f = readProfile();
-    const r = PS.validateProfile(f, today());
-    if (!r.ok) {
-      f.errors = r.errors;
-      return X.rerender();
-    }
+  "set-group": (el) => {
     const S = X.S;
-    S.pcsettings = PS.normSync(S.pcsettings);
-    PS.setProfile(S.pcsettings, { ...r.value, photo: buildDb()?.profile?.photo ?? null });
-    await X.store.set("pcsettings", S.pcsettings);
-    S.setProfile = null;
-    await X.renameActiveAccount(r.value.name);
-    X.toast("Profil gespeichert");
+    const id = el.dataset.arg;
+    const open = new Set(S.setGroupsOpen ?? []);
+    if (open.has(id)) open.delete(id);
+    else open.add(id);
+    S.setGroupsOpen = [...open];
+    X.rerender();
+  },
+  "autosave-undo": async () => {
+    const S = X.S;
+    const n = S.autoNote;
+    if (!n?.undo) return;
+    await n.undo();
+    S.setProfile = S.setMeals = S.setWt = S.setMethods = null;
+    S.autoNote = { card: n.card, undo: null, undone: true };
+    buildDb();
     X.rerender();
   },
   "meal-extra-add": () => {
@@ -510,51 +700,24 @@ export const settingsActions = {
     f.extras.splice(Number(el.dataset.arg), 1);
     f.extraShow.splice(Number(el.dataset.arg), 1);
     f.errors = null;
-    X.rerender();
+    void autoMeals();
   },
   "wt-mode": (el) => {
     const f = readWt();
     f.draft.mode = el.dataset.arg === "perKg" ? "perKg" : "fixed";
     f.errors = null;
-    X.rerender();
+    void autoWt();
   },
   "wt-discard": () => {
     X.S.setWt = null;
     X.rerender();
   },
   "wt-default": async () => {
-    const changed = await putSetting(WTL().WORKOUT_TARGETS_SETTING, JSON.stringify(WTL().DEFAULT_WORKOUT_TARGETS));
     X.S.setWt = null;
-    X.toast(changed ? "Voreinstellung wiederhergestellt (40 g / 20 g)" : "Keine Änderung");
-    X.rerender();
-  },
-  "wt-save": async () => {
-    const f = readWt();
-    const r = WTL().validateWorkoutTargets(f.draft);
-    if (!r.ok) {
-      f.errors = r.errors;
-      return X.rerender();
-    }
-    const changed = await putSetting(WTL().WORKOUT_TARGETS_SETTING, JSON.stringify(r.value));
-    X.S.setWt = null;
-    X.toast(changed ? "Workout-Richtwerte gespeichert" : "Keine Änderung");
-    X.rerender();
+    await saveSettings("meals", [[WTL().WORKOUT_TARGETS_SETTING, JSON.stringify(WTL().DEFAULT_WORKOUT_TARGETS)]]);
   },
   "meal-discard": () => {
     X.S.setMeals = null;
-    X.rerender();
-  },
-  "meal-save": async () => {
-    const f = readMeals();
-    const r = PS.validateMealList(f);
-    if (!r.ok) {
-      f.errors = r.errors;
-      return X.rerender();
-    }
-    let n = 0;
-    for (const [k, v] of Object.entries(PS.mealListSettings(r.value))) if (await putSetting(k, v)) n++;
-    X.S.setMeals = null;
-    X.toast(n ? "Mahlzeiten gespeichert" : "Keine Änderung");
     X.rerender();
   },
   "method-add": (el) => {
@@ -569,27 +732,19 @@ export const settingsActions = {
     f.list[k].splice(Number(i), 1);
     f.errors = null;
     X.S.setMethodsOpen = k;
-    X.rerender();
+    void autoMethods();
   },
   "method-discard": () => {
     X.S.setMethods = null;
     X.rerender();
   },
-  "method-save": async () => {
-    const f = readMethods();
-    const r = PS.validateMethods(f.list);
-    if (!r.ok) {
-      f.errors = r.errors;
-      return X.rerender();
-    }
-    const empty = Object.values(r.value).every((l) => !l.length);
-    const changed = await putSetting("measurement_methods", empty && !setting(buildDb(), "measurement_methods") ? null : r.json);
-    X.S.setMethods = null;
-    X.toast(changed ? "Messmethoden gespeichert" : "Keine Änderung");
-    X.rerender();
-  },
   "pref-theme": async (el) => {
     X.S.prefs.theme = el.dataset.arg;
+    await savePrefs();
+    X.rerender();
+  },
+  "pref-ovmode": async (el) => {
+    X.S.prefs.overviewMode = el.dataset.arg === "full" ? "full" : "reduced";
     await savePrefs();
     X.rerender();
   },
@@ -643,9 +798,20 @@ export const settingsActions = {
 /** Änderungen an Feldern, die sofort gelten. `true` = behandelt. */
 export function settingsChange(el) {
   const S = X.S;
-  if (el.dataset?.prof === "sex") {
-    readProfile();
-    X.rerender();
+  if (el.dataset?.prof) {
+    void autoProfile();
+    return true;
+  }
+  if (el.dataset?.mealName !== undefined || el.dataset?.mealShow !== undefined || el.dataset?.mealXshow !== undefined || el.dataset?.mealWshow !== undefined || el.dataset?.mealExtra !== undefined) {
+    void autoMeals();
+    return true;
+  }
+  if (el.dataset?.wt) {
+    void autoWt();
+    return true;
+  }
+  if (el.dataset?.method) {
+    void autoMethods();
     return true;
   }
   if (el.dataset?.daystart) {

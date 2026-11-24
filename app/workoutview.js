@@ -31,6 +31,45 @@ export function lastText(last, cardio) {
   return `<p class="last">Letztes Mal (${fmtDate(last.date)}): <b>${esc(parts.join(" · ") || "–")}</b>${cardio ? "" : " kg"}</p>`;
 }
 
+/**
+ * Gewichtsvorschlag nach doppelter Progression (Handy 1.117.0, wie PC 1.0.193): Regeln in
+ * `trainingProgress` (pcdomain.js). Nur Kraftübungen ohne Widerstandsprofil mit früherer Einheit.
+ */
+export function suggestionFor(we, last, ex) {
+  if (!last?.sets?.length || ex?.category !== "strength" || !we) return null;
+  if (C.visibleProfiles(we, ex).length) return null;
+  const TP = PDOM.trainingProgress;
+  return TP.progressionSuggestion(last.sets, TP.repRangeFrom(we.repRange?.min ?? null, we.repRange?.max ?? null));
+}
+
+/** Vorschlag in die Arbeitssätze eintragen (nichts ändern, sobald ein Satz erledigt ist). */
+export function applySuggestion(we, last, ex) {
+  const s = suggestionFor(we, last, ex);
+  if (!s || we.sets.some((x) => x.isDone)) return;
+  const count = PDOM.trainingProgress.workingSetCount(last.sets);
+  const only = we.sets.length === 1 ? we.sets[0] : null;
+  if (only && only.reps === null && only.weightKg === null && count > 1) we.sets = Array.from({ length: count }, () => C.newSet());
+  for (const x of we.sets) {
+    if (x.isWarmup) continue;
+    x.reps = s.reps;
+    x.weightKg = s.weightKg;
+  }
+}
+
+/** Stehen in allen offenen Arbeitssätzen noch die Vorschlagswerte? */
+function showsSuggestion(we, s) {
+  const working = we.sets.filter((x) => !x.isWarmup);
+  return working.length > 0 && working.every((x) => !x.isDone && x.reps === s.reps && x.weightKg === s.weightKg);
+}
+
+function suggestionHtml(we, last, ex) {
+  const s = suggestionFor(we, last, ex);
+  if (!s) return "";
+  return `<div class="ex-suggest">${showsSuggestion(we, s) ? '<span class="pill pill--suggest">Vorschlag eingetragen</span>' : ""}
+    <p class="small"><b>Vorschlag:</b> ${esc(s.text)}</p>
+    ${we.sets.some((x) => x.isDone) ? "" : `<button class="btn sm ghost" data-act="ex-like-last" data-we="${we.id}">Wie letztes Mal</button>`}</div>`;
+}
+
 export function viewWorkout() {
   const w = S.active;
   if (!w) return viewHome();
@@ -48,6 +87,7 @@ export function viewWorkout() {
     }</div>
     ${GY.workoutGymSelectHtml(w)}
     ${w.competition ? competitionCard(w.competition) : ""}
+    ${planDayMatchHtml(w)}
     ${w.exercises.map((we, i) => exerciseCard(we, i, exs, machines)).join("")}
     <button class="btn block" data-go="picker">+ Übung oder Maschine hinzufügen</button>
     ${workoutBodyMapHtml(w, C.allExercises(S.catalog, S.localExercises))}
@@ -55,6 +95,23 @@ export function viewWorkout() {
     <button class="btn danger block" data-act="discard">${w.backfill ? "Verwerfen" : edit ? "Änderungen verwerfen" : "Training verwerfen"}</button>
   </main>
   <div class="bottom"><div class="inner"><button class="btn primary" data-go="finish">${w.backfill ? "Weiter zum Speichern" : edit ? "Änderungen speichern" : "Training beenden"}</button></div></div>`;
+}
+
+// Freies Training (1.120.0, wie PC 1.0.196 / Verbesserung 15): passenden Trainingstag vorschlagen
+export function planDayMatchOf(w) {
+  if (w.planDayId || w.editOf) return null;
+  const days = (S.catalog?.plans ?? []).flatMap((p) =>
+    p.days.map((d) => ({ id: d.row.id, label: `${p.row.name} – ${d.row.name}`, name: d.row.name, exerciseIds: d.exercises.map((e) => e.exerciseId) })),
+  );
+  const m = PDOM.planDayMatch.matchPlanDay(w.exercises.map((e) => e.exerciseId), days);
+  return m && m.id !== w.matchDismissed ? m : null;
+}
+
+function planDayMatchHtml(w) {
+  const m = planDayMatchOf(w);
+  if (!m) return "";
+  return `<section class="card plan-day-match"><p>Passt zum Trainingstag <strong>${esc(m.label)}</strong> (${m.shared} von ${m.planned} Übungen gleich).</p>
+    <div class="row-actions"><button class="btn sm primary" data-act="wo-match-adopt">Als „${esc(m.name)}“ übernehmen</button><button class="linkbtn" data-act="wo-match-dismiss">Nicht passend</button></div></section>`;
 }
 
 /**
@@ -181,16 +238,20 @@ export function addHyrox(template) {
 
 export function exerciseCard(we, i, exs, machines) {
   const ex = exs.get(we.exerciseId);
-  const { name, nr, m } = exLabel(ex, machines);
+  const { name, m } = exLabel(ex, machines);
   const cardio = ex?.category === "cardio";
   const weighted = cardio && HX.HYROX_WEIGHTED.has(we.exerciseId);
   const last = C.lastSessionFor(S.catalog, S.workouts, we.exerciseId, S.active.id);
   const st = we.settings || C.emptySettings();
   const open = isOpen(S.active, we);
   const done = we.sets.filter((x) => x.isDone).length;
+  // Gerätenummer als Kachel; Ausrüstung ohne Nummer (z. B. „Langhantel, Flachbank“) als Text unter
+  // dem Namen – sonst verdrängt die breite Kachel Namen und Satzzähler (1.116.0)
+  const machineNr = m?.own_number || m?.gym_number || null;
+  const equipment = !machineNr ? ex?.equipment || null : null;
   const head = `<button class="ex-head ex-toggle" data-act="toggle-ex" data-we="${we.id}" aria-expanded="${open}">
-      <span class="num ${nr ? "" : "none"}">${nr ? esc(nr) : "–"}</span>${MI.thumb(m?.id)}
-      <span class="main"><b>${esc(name)}</b><span class="muted small">${esc([m?.manufacturer, ex?.muscle_group].filter(Boolean).join(" · "))}</span></span>
+      ${machineNr ? `<span class="num">${esc(machineNr)}</span>` : equipment ? "" : `<span class="num none">–</span>`}${MI.thumb(m?.id)}
+      <span class="main"><b>${esc(name)}</b><span class="muted small">${esc([equipment, m?.manufacturer, ex?.muscle_group].filter(Boolean).join(" · "))}</span></span>
       <span class="ex-progress${we.sets.length && done === we.sets.length ? " all" : ""}">${done}/${we.sets.length}</span>
       <span class="chev" aria-hidden="true">${open ? "▾" : "▸"}</span>
     </button>`;
@@ -200,6 +261,7 @@ export function exerciseCard(we, i, exs, machines) {
   return `<section class="ex" id="ex-${we.id}">
     ${head}
     ${lastText(last, cardio)}
+    ${cardio ? "" : suggestionHtml(we, last, ex)}
     <details class="settings"${Object.values(st).some((v) => v) ? "" : ""}>
       <summary>Geräteeinstellungen${Object.values(st).some((v) => v) ? `: ${esc(Object.entries(C.SETTING_LABELS).filter(([k]) => st[k]).map(([k, l]) => `${l} ${st[k]}`).join(", "))}` : ""}</summary>
       <div class="settings-grid">
@@ -661,8 +723,14 @@ export async function startWorkout(title, planDay = null, planGymId = null) {
   // Gym (1.65.0): das des Plans, sonst das aktive Gym
   const w = C.newWorkout({ title, planDayId: planDay?.row.id ?? null, gymId: planGymId || GY.activeGymIdNow() });
   if (planDay) {
+    const exs = exById();
     for (const pe of planDay.exercises) {
-      w.exercises.push(C.workoutExercise({ exerciseId: pe.exerciseId, planExercise: pe, last: C.lastSessionFor(S.catalog, S.workouts, pe.exerciseId) }));
+      const last = C.lastSessionFor(S.catalog, S.workouts, pe.exerciseId);
+      const we = C.workoutExercise({ exerciseId: pe.exerciseId, planExercise: pe, last });
+      // Wiederholungsspanne des Plans für den Gewichtsvorschlag (1.117.0)
+      if (pe.targetRepsMin != null || pe.targetRepsMax != null) we.repRange = { min: pe.targetRepsMin ?? null, max: pe.targetRepsMax ?? null };
+      applySuggestion(we, last, exs.get(pe.exerciseId));
+      w.exercises.push(we);
     }
   }
   S.active = w;
@@ -684,6 +752,8 @@ export function addExercise(exerciseId) {
   }
   const last = C.lastSessionFor(S.catalog, S.workouts, exerciseId, S.active.id);
   const we = C.workoutExercise({ exerciseId, last });
+  // Laufendes Training: Gewichtsvorschlag eintragen (beim Nachtragen die Werte wie letztes Mal)
+  if (S.active.status === "active") applySuggestion(we, last, exById().get(exerciseId));
   S.active.exercises.push(we);
   setFocus(S.active, we.id);
   saveSoon();

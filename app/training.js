@@ -22,6 +22,7 @@ import { activeGymSelectHtml, viewGymsTab } from "./gymsui.js";
 import * as GD from "./gymsdata.js";
 import { icon } from "./nav.js";
 import { plansTab } from "./trainingplans.js";
+import { workoutKind } from "./plancalendar.js";
 import { dotHtml, openTabsOf } from "./openitems.js";
 export { planPickerResults } from "./trainingplans.js";
 export { trainingActions, trainingChange, trainingInput } from "./trainingactions.js";
@@ -189,7 +190,7 @@ export function workoutsTab() {
       ${
         dayOptions.length
           ? `<div class="pick-row"><div class="field"><label for="w-from-plan">Trainingstag aus Plan</label>
-          <select id="w-from-plan" data-tchange="planDay" ${blocked ? "disabled" : ""}><option value="">Trainingstag wählen …</option>${dayOptions
+          <select id="w-from-plan" data-tchange="planDay" ${blocked ? "disabled" : ""}><option value="">wählen …</option>${dayOptions
             .map((o) => `<option value="${esc(o.value)}" ${o.value === planSel ? "selected" : ""}>${esc(o.label)}</option>`)
             .join("")}</select></div>
           <button class="btn" data-act="train-start-day" ${!planSel || blocked ? "disabled" : ""}>▶ Starten</button></div>`
@@ -242,8 +243,15 @@ export function workoutsTab() {
           return `<li class="train-row"><span class="train-row__date">${fmtDate(w.date)}${w.startTime ? `<span class="muted small">${esc(w.startTime)} Uhr</span>` : ""}</span>
             <span class="train-row__main"><strong>${esc(w.title)}</strong>${w.status === "active" ? ' <span class="status-pill status-pill--active">läuft</span>' : ""}${w.competition ? `<span class="small train-row__comp">${esc(HX.describeCompetition(w.competition))}</span>` : ""}
               ${w.gymName ? `<span class="small train-row__gym">🏋️ ${esc(w.gymName)}</span>` : ""}
-              <span class="muted small">${w.exerciseCount} ${w.exerciseCount === 1 ? "Übung" : "Übungen"} · ${w.setCount} Arbeitssätze · ${w.volumeKg > 0 ? `${F(w.volumeKg)} kg` : "–"} · ${w.durationMin !== null ? `${w.durationMin} min` : "–"}</span></span>
-            <span class="train-row__acts">${w.status === "done" && hasWearable(S.catalog) ? `<button class="linkbtn" data-act="train-heart" data-arg="${esc(w.id)}" aria-expanded="${S.trainHeart === w.id}" aria-label="Herzfrequenz der Einheit" title="Herzfrequenz">♥ HF</button>` : ""}<button class="linkbtn" data-act="train-open" data-arg="${esc(w.id)}" aria-label="Einheit öffnen">Open</button></span></li>${
+              <span class="muted small">${[
+                `${w.exerciseCount} ${w.exerciseCount === 1 ? "Übung" : "Übungen"}`,
+                `${w.setCount} ${w.setCount === 1 ? "Arbeitssatz" : "Arbeitssätze"}`,
+                w.volumeKg > 0 ? `${F(w.volumeKg)} kg` : null,
+                w.durationMin !== null ? `${w.durationMin} min` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}</span></span>
+            <span class="train-row__acts">${w.status === "done" && hasWearable(S.catalog) ? `<button class="linkbtn" data-act="train-heart" data-arg="${esc(w.id)}" aria-expanded="${S.trainHeart === w.id}" aria-label="Herzfrequenz der Einheit" title="Herzfrequenz">♥ HF</button>` : ""}<button class="linkbtn" data-act="train-open" data-arg="${esc(w.id)}" aria-label="Einheit öffnen">Öffnen</button></span></li>${
               S.trainHeart === w.id ? `<li class="train-heart">${workoutHeartHtml(workoutHeartOf(S.catalog, w))}</li>` : ""
             }`;
         })
@@ -309,13 +317,16 @@ function calendarHtml(summaries, statuses, blocked) {
   const prefix = `${ym.year}-${pad2(ym.month)}`;
   const count = summaries.filter((w) => w.date.startsWith(prefix)).length;
   const sel = S.trainCalDay && S.trainCalDay.startsWith(prefix) ? S.trainCalDay : null;
+  // Rubrik-Farben wie im Pläne-Kalender (1.116.0 wie PC 1.0.192): Ergometer = Cardio
+  const db = buildDb();
+  const kindOf = (w) => workoutKind(db, w);
   const cells = monthGrid(ym.year, ym.month)
     .flat()
     .map((c) => {
       const list = byDate.get(c.date) ?? [];
       const st = statusOf.get(c.date);
-      const marks = list.length ? `<span class="tcal__dots">${list.map((w) => `<i class="${w.status === "active" ? "is-active" : ""}"></i>`).join("")}</span>` : st ? `<span class="tcal__st">${st.kind === "rest" ? "🛏" : "🌡"}</span>` : "";
-      return `<button type="button" class="tcal__day ${c.inMonth ? "" : "is-outside"} ${c.date === t ? "is-today" : ""} ${c.date === sel ? "is-selected" : ""}" data-act="train-cal-day" data-arg="${c.date}" aria-label="${fmtDate(c.date)}${list.length ? `: ${list.length} ${list.length === 1 ? "Einheit" : "Einheiten"}` : ""}"><span>${c.day}</span>${marks}</button>`;
+      const marks = list.length ? `<span class="tcal__dots">${list.map((w) => `<i class="pcal-dot is-done pcal--${kindOf(w)} ${w.status === "active" ? "is-active" : ""}"></i>`).join("")}</span>` : st ? `<span class="tcal__st">${st.kind === "rest" ? "🛏" : "🌡"}</span>` : "";
+      return `<button type="button" class="tcal__day ${c.inMonth ? "" : "is-outside"} ${c.date === t ? "is-today" : ""} ${c.date === sel ? "is-selected" : ""} ${st && !list.length ? `is-${st.kind}` : ""}" data-act="train-cal-day" data-arg="${c.date}" aria-label="${fmtDate(c.date)}${list.length ? `: ${list.length} ${list.length === 1 ? "Einheit" : "Einheiten"}` : ""}"><span>${c.day}</span>${marks}</button>`;
     })
     .join("");
   let detail = "";
@@ -323,13 +334,14 @@ function calendarHtml(summaries, statuses, blocked) {
     const list = byDate.get(sel) ?? [];
     const st = statusOf.get(sel);
     detail = `<div class="tcal__detail"><b>${fmtDate(sel)}</b>${list
-      .map((w) => `<button class="train-row tcal__entry" data-act="train-open" data-arg="${esc(w.id)}"><span class="train-row__main"><strong>${esc(w.title)}</strong>${w.status === "active" ? ' <span class="status-pill status-pill--active">läuft</span>' : ""}<span class="muted small">${w.startTime ? `${esc(w.startTime)} Uhr · ` : ""}${w.exerciseCount} ${w.exerciseCount === 1 ? "Übung" : "Übungen"}${w.volumeKg > 0 ? ` · ${F(w.volumeKg)} kg` : ""}${w.durationMin !== null ? ` · ${w.durationMin} min` : ""}</span></span><span aria-hidden="true">›</span></button>`)
+      .map((w) => `<button class="train-row tcal__entry pcal--${kindOf(w)}" data-act="train-open" data-arg="${esc(w.id)}"><span class="train-row__main"><strong>${esc(w.title)}</strong>${w.status === "active" ? ' <span class="status-pill status-pill--active">läuft</span>' : ""}<span class="muted small">${w.startTime ? `${esc(w.startTime)} Uhr · ` : ""}${w.exerciseCount} ${w.exerciseCount === 1 ? "Übung" : "Übungen"}${w.volumeKg > 0 ? ` · ${F(w.volumeKg)} kg` : ""}${w.durationMin !== null ? ` · ${w.durationMin} min` : ""}</span></span><span aria-hidden="true">›</span></button>`)
       .join("")}${st ? `<span class="day-pill day-pill--${st.kind}">${st.kind === "rest" ? "🛏 Restday" : "🌡 Krankheit"}</span>` : ""}${
       !list.length && !st ? `<span class="muted small">Keine Einheit an diesem Tag.</span>` : ""
     }${sel <= t ? `<button class="btn sm" data-act="train-backfill-on" data-arg="${sel}" ${blocked ? "disabled" : ""}>+ Einheit nachtragen</button>` : ""}</div>`;
   }
   return `<div class="tcal"><div class="tcal__head"><button class="btn sm ghost" data-act="train-cal-month" data-arg="-1" aria-label="Vorheriger Monat">‹</button><b>${MONTHS[ym.month - 1]} ${ym.year}</b><button class="btn sm ghost" data-act="train-cal-month" data-arg="1" aria-label="Nächster Monat">›</button><span class="muted small">${count} ${count === 1 ? "Einheit" : "Einheiten"}</span></div>
-    <div class="tcal__grid">${["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((d) => `<span class="tcal__wd">${d}</span>`).join("")}${cells}</div>${detail}</div>`;
+    <div class="tcal__grid">${["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((d) => `<span class="tcal__wd">${d}</span>`).join("")}${cells}</div>
+    <p class="muted small pcal-legend">${["strength", "cardio", "sport", "mobility"].map((k) => `<span><i class="pcal-dot is-done pcal--${k}"></i> ${esc(D.trainingKind.TRAINING_KIND_LABELS[k])}</span>`).join("")}<span><i class="pcal-rest"></i> Restday</span></p>${detail}</div>`;
 }
 
 export function adoptOffer() {

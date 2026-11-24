@@ -265,6 +265,9 @@ export function saveGrip(db, local, draft, { uuid, now = new Date() }) {
     else return Math.round(v * 10) / 10;
     return null;
   };
+  // Uhrzeit (1.126.0): Pflicht beim Erfassen, sonst bleibt die bisherige
+  const time = draft.time === undefined ? null : String(draft.time).trim();
+  if (time !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) errors.time = "Bitte eine gültige Uhrzeit angeben (hh:mm).";
   const left = hand("leftKg", "Die linke Hand", draft.leftKg);
   const right = hand("rightKg", "Die rechte Hand", draft.rightKg);
   const profile = db.profile;
@@ -279,7 +282,7 @@ export function saveGrip(db, local, draft, { uuid, now = new Date() }) {
   const row = {
     id,
     date,
-    time: same?.time ?? null,
+    time: time ?? same?.time ?? null,
     left_kg: left,
     right_kg: right,
     dominant_hand: same?.dominant_hand ?? last?.dominant_hand ?? null,

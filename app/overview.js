@@ -15,6 +15,8 @@ import * as CM from "./cardiomap.js";
 import * as PS from "./pcsettings.js";
 import * as store from "./store.js";
 import { buildDb } from "./diary.js";
+import { openItemsNow } from "./openitems.js";
+import { withCarbCycle } from "./carbcycle.js";
 
 let X = null; // { S, buildDb, rerender, today }
 
@@ -65,11 +67,97 @@ if (typeof document !== "undefined") {
 /** Zuklappbare Karte anderer Seiten (1.74.0, Training → Datenbank): gleicher Speicher wie die Overview. */
 export const cardOpen = (id) => !collapsedCards().has(id);
 
+/**
+ * Overview „Reduziert“ (1.118.0, wie PC 1.0.194): Karten zugeklappt, im Kopf eine Kennzahl statt der
+ * Beschriftung. Wird beim Zeichnen gesetzt (`overviewCardsHtml`).
+ */
+let reducedFigures = null;
+
 function card(id, title, meta, body, { area = "", wide = false } = {}) {
-  const open = !collapsedCards().has(id);
-  return `<details class="card ov-card ${area ? `card--${area}` : ""} ${wide ? "ov-card--wide" : ""}" data-card="${esc(id)}"${open ? " open" : ""}>
-    <summary class="wo-head ov-card__head"><h3>${esc(title)}</h3>${meta ? `<span class="tag">${esc(meta)}</span>` : ""}</summary>
+  const open = reducedFigures ? false : !collapsedCards().has(id);
+  const tag = reducedFigures ? (reducedFigures[id] ?? "") : meta;
+  return `<details class="card ov-card ${area ? `card--${area}` : ""} ${wide ? "ov-card--wide" : ""}${reducedFigures ? " ov-card--row" : ""}" data-card="${esc(id)}"${open ? " open" : ""}>
+    <summary class="wo-head ov-card__head"><h3>${esc(title)}</h3>${tag ? `<span class="tag">${esc(tag)}</span>` : ""}</summary>
     ${body}</details>`;
+}
+
+/** Kennzahl je Karte für die zugeklappte Zeile */
+function keyFigures(data, sleepMin) {
+  const n = data.nutritionToday;
+  const w = data.weightLast30Days?.at(-1);
+  return {
+    training: data.workoutsToday.length ? `${data.workoutsToday.length} ${data.workoutsToday.length === 1 ? "Einheit" : "Einheiten"}` : data.lastWorkout ? `zuletzt ${D.formatDate(data.lastWorkout.date)}` : "",
+    recovery: data.recoveryToday?.readiness != null ? `${data.recoveryToday.readiness}/10` : "",
+    nutrition: n ? `${F(n.energyKcal)} kcal` : "",
+    sleep: sleepMin ? dur(sleepMin) : "",
+    neat: data.neatToday?.steps != null ? `${F(data.neatToday.steps)} Schritte` : "",
+    energy: data.energyToday?.totalKcal != null ? `${F(data.energyToday.totalKcal)} kcal` : "",
+    weight: w ? `${F(w.value, 1)} kg` : "",
+  };
+}
+
+/** Block „Heute“ der reduzierten Overview */
+function todayBlockHtml(data, widgets, isToday) {
+  const goal = data.goal ? D.withProteinFromWeight(data.goal, data.stepEnergyToday.weightKg) : null;
+  const need = D.dailyNeed(goal, data.stepEnergyToday.kcal, data.energyToday);
+  const macros = goal ? D.dayMacroGoals(goal, need, data.energyToday) : null;
+  const naps = D.sleep.napMinutesByDate(data.napsLast7Days ?? []);
+  const sleepMin = data.sleepToday ? data.sleepToday.sleepMin + (naps.get(data.sleepToday.date) ?? 0) : null;
+  const vital = (id) => {
+    const m = data.vitalsLast7Days.filter((x) => x.metricId === id).at(-1);
+    return m && m.date === data.date ? m.value : null;
+  };
+  const next = widgets.dashboard.nextPlanDay;
+  const todayInput = {
+    today: data.date,
+    readiness: data.recoveryToday?.readiness ?? null,
+    sleepMin,
+    restingHr: vital(O.RESTING_HR_METRIC_ID),
+    hrvMs: vital(O.HRV_METRIC_ID),
+    kcal: data.nutritionToday?.energyKcal ?? null,
+    kcalTarget: need?.total ?? null,
+    proteinG: data.nutritionToday?.proteinG ?? null,
+    proteinTarget: macros?.proteinG ?? null,
+    proteinMinimum: macros?.minimums?.protein ?? null,
+    training: {
+      done: data.workoutsToday.map((w) => ({ title: w.title, setCount: w.exercises.flatMap((e) => e.sets).filter((s) => !s.isWarmup).length, running: w.status === "active" })),
+      next: next ? { name: next.dayName, date: next.scheduledDate, time: next.scheduledTime } : null,
+      dayKind: null,
+    },
+    openItems: isToday ? openItemsNow().length : null,
+    waterMl: widgets.dashboard.water.find((w) => w.date === data.date)?.value ?? null,
+    waterGoalMl: data.goal?.waterL != null ? Math.round(data.goal.waterL * 1000) : null,
+    steps: data.neatToday?.steps ?? null,
+    stepGoal: data.goal?.steps ?? null,
+  };
+  const lines = D.overviewToday.overviewToday(todayInput);
+  // Geführter Tagesablauf (1.120.0, wie PC 1.0.196): Wiegen nur, wer sich in 30 Tagen gewogen hat
+  const weights = data.weightLast30Days ?? [];
+  const flow = isToday ? D.dayFlow.dayFlow({ ...todayInput, weighedToday: weights.length ? weights.some((w) => w.date === data.date) : null }) : null;
+  return {
+    sleepMin,
+    html: `<section class="card ov-today ov-card--wide"><h3>${isToday ? "Heute" : esc(D.formatDate(data.date))}</h3>
+      <ul class="ov-today__lines">${lines
+        .map((l) => `<li class="ov-today__line is-${l.state}"><span class="ov-today__label">${esc(l.label)}</span><span class="ov-today__value">${esc(l.value)}</span></li>`)
+        .join("")}</ul></section>${flow && flow.steps.length ? flowHtml(flow) : ""}${isToday && widgets.insights ? qualityHtml(D.coverageSummary(D.coverage(widgets.insights, data.date))) : ""}`,
+  };
+}
+
+// Datenqualität sichtbar (1.120.0, wie PC 1.0.196): Kurzfassung „Auswertung verbessern“ aus Insights
+function qualityHtml(q) {
+  return `<p class="ov-quality ov-card--wide"><span class="ov-quality__label">Datenqualität</span> <span>${esc(q.text)}</span> <button class="linkbtn" data-go="insights">Details</button></p>`;
+}
+
+const FLOW_GO = { check: "recovery", weigh: "body", meals: "diary", training: "training", water: "diary", steps: null, open: "todos" };
+
+function flowHtml(flow) {
+  const next = flow.next;
+  const go = next ? FLOW_GO[next.key] : null;
+  return `<section class="card ov-flow ov-card--wide"><h3>Tagesablauf <span class="muted small">${flow.done} von ${flow.steps.length} erledigt</span></h3>
+    ${next ? `<p class="ov-flow__next">Als Nächstes: <strong>${esc(next.label)}</strong>${next.detail ? ` <span class="muted">· ${esc(next.detail)}</span>` : ""}${go ? ` <button class="btn sm primary" data-go="${go}">Öffnen</button>` : ""}</p>` : `<p class="ov-flow__next">Alles für heute erledigt.</p>`}
+    <ol class="ov-flow__steps">${flow.steps
+      .map((s) => `<li class="${s.done ? "is-done" : ""}"><span class="ov-flow__mark" aria-hidden="true">${s.done ? "✓" : ""}</span><span>${esc(s.label)}</span>${s.detail ? `<span class="muted small">${esc(s.detail)}</span>` : "<span></span>"}<span class="visually-hidden">${s.done ? " (erledigt)" : " (offen)"}</span></li>`)
+      .join("")}</ol></section>`;
 }
 
 const metric = (label, value, unit = "", display = false) =>
@@ -117,6 +205,8 @@ const LEVEL = (l) => D.dashboard.LEVEL_LABELS[l] ?? "";
 /** Alles, was die Karten brauchen (wie OverviewPage.tsx lädt). */
 export function overviewData(db, catalog, date) {
   const data = O.overviewFor(db, date);
+  // Carb-Cycling (1.119.0): KH-Ziel nach Trainings- bzw. Ruhetag
+  if (data.goal) data.goal = withCarbCycle(data.goal, db, catalog, date, data.workoutsToday.length);
   const insights = O.insightsFor(db, P.addDays(date, -(O.STREAK_DAYS - 1)), date);
   const monday = D.trends.weekStart(date);
   const week = D.insights.weeklySummary(O.insightsFor(db, D.trends.shiftDays(monday, -7), date), monday);
@@ -198,9 +288,13 @@ function dashboardCards(data, w, isToday) {
   );
 
   // Wochenziele
+  // Makroziele von heute wie in der Tagessumme: Wochenziel und Serie zählen das Tagesziel (1.116.0)
+  const goalW = insights.goal ? D.withProteinFromWeight(insights.goal, weight) : null;
+  const todayMacros = goalW ? D.dayMacroGoals(goalW, D.dailyNeed(goalW, data.stepEnergyToday.kcal, data.energyToday), data.energyToday) : null;
   const goals = D.dashboard.weeklyGoals({
     today,
     data: insights,
+    todayMacros,
     cardio: w.cardio,
     weightKg: weight,
     planDays: next?.planDayCount ?? null,
@@ -235,7 +329,7 @@ function dashboardCards(data, w, isToday) {
   );
 
   // Streaks
-  const list = D.dashboard.streaks({ today, days: O.STREAK_DAYS, data: insights, dashboard: w.dashboard, weightKg: weight });
+  const list = D.dashboard.streaks({ today, days: O.STREAK_DAYS, data: insights, todayMacros, dashboard: w.dashboard, weightKg: weight });
   const streaksCard = card(
     "streaks",
     "Streaks",
@@ -681,7 +775,7 @@ function liveCards(data, week, widgets, isToday) {
           )
           .join("")}</tbody></table>`
       : `${missing(`${onDay} noch keine Einheit erfasst.`, "training", "Zum Training", "workouts")}
-        ${data.lastWorkout ? keepNote(esc(`Letzte Einheit: ${data.lastWorkout.title} am ${D.formatDate(data.lastWorkout.date)} · ${data.lastWorkout.setCount} Arbeitssätze`)) : ""}`,
+        ${data.lastWorkout ? keepNote(esc(`Letzte Einheit: ${data.lastWorkout.title} am ${D.formatDate(data.lastWorkout.date)} · ${data.lastWorkout.setCount} ${data.lastWorkout.setCount === 1 ? "Arbeitssatz" : "Arbeitssätze"}`)) : ""}`,
     { area: "training" },
   );
 
@@ -716,7 +810,8 @@ function liveCards(data, week, widgets, isToday) {
   const need = D.dailyNeed(goal, data.stepEnergyToday.kcal, energyDay);
   const needNote = D.describeNeed(need);
   const dayMacros = goal ? D.dayMacroGoals(goal, need, energyDay) : null;
-  const targets = { energyKcal: need?.total ?? null, proteinG: dayMacros?.proteinG ?? null, carbsG: dayMacros?.carbsG ?? null, fatG: dayMacros?.fatG ?? null };
+  const targets = { energyKcal: need?.total ?? null, proteinG: dayMacros?.proteinG ?? null, carbsG: dayMacros?.carbsG ?? null, fatG: dayMacros?.fatG ?? null, minimums: dayMacros?.minimums };
+  const proteinMin = dayMacros?.minimums.protein ?? null;
   const macroNote = dayMacros ? D.describeMacroGoals(dayMacros) : null;
   const openProtein = isToday && targets.proteinG !== null ? targets.proteinG - (n?.proteinG ?? 0) : null;
   const openKcal = need !== null ? need.total - (n?.energyKcal ?? 0) : null;
@@ -745,12 +840,14 @@ function liveCards(data, week, widgets, isToday) {
         ${n.fasttracking ? note(n.mealCount > 0 ? "Mahlzeiten und Fasttracking-Tageswerte zusammen." : "Aus Fasttracking (Tageswerte ohne einzelne Mahlzeiten).") : ""}
         ${needNote ? note(esc(needNote)) : ""}${macroNote ? note(esc(macroNote)) : ""}${budget}
         ${
-          need !== null || goal?.proteinG != null
+          need !== null || targets.proteinG !== null
             ? keepNote(
                 esc(
                   [
                     need !== null ? `Energie: ${D.describeGoalProgress(D.goalProgress(need.total, n.energyKcal, 0), "kcal")}` : null,
-                    goal?.proteinG != null ? `Protein (Ziel ${F(goal.proteinG)} g): ${D.describeGoalProgress(D.goalProgress(goal.proteinG, n.proteinG, 1), "g")}` : null,
+                    targets.proteinG !== null
+                      ? `Protein (Tagesziel ${F(targets.proteinG)} g${proteinMin !== null && proteinMin < targets.proteinG - 0.5 ? `, Minimum ${F(proteinMin)} g` : ""}): ${D.describeGoalProgress(D.goalProgress(targets.proteinG, n.proteinG, 1), "g")}`
+                      : null,
                   ]
                     .filter(Boolean)
                     .join(" · "),
@@ -974,6 +1071,27 @@ export function heroSteps(steps, goal, entryDate = null) {
 export function overviewCardsHtml(db, catalog, date, today) {
   const { data, week, widgets } = overviewData(db, catalog, date);
   const layout = D.parseLayout(db.settings.get(D.OVERVIEW_LAYOUT_KEY) ?? null);
+  // Ansicht dieses Handys (Settings → Darstellung, 1.118.0)
+  const reduced = (X.S.prefs?.overviewMode ?? "reduced") === "reduced";
+  let todayHtml = "";
+  if (reduced) {
+    try {
+      const t = todayBlockHtml(data, widgets, date === today);
+      todayHtml = t.html;
+      reducedFigures = keyFigures(data, t.sleepMin);
+    } catch (e) {
+      console.error(e);
+      reducedFigures = {};
+    }
+  }
+  try {
+    return overviewGridHtml(db, catalog, date, today, data, week, widgets, layout, todayHtml);
+  } finally {
+    reducedFigures = null;
+  }
+}
+
+function overviewGridHtml(db, catalog, date, today, data, week, widgets, layout, todayHtml) {
   const live = liveCards(data, week, widgets, date === today);
   // Schritte über den Tag mit Median (1.45.5, wie am PC); nur mit Schrittverlauf der Uhr
   const now = new Date();
@@ -987,7 +1105,7 @@ export function overviewCardsHtml(db, catalog, date, today) {
     // ohne Koffein-Daten keine Kachel
   }
   const cards = arrangeCards(db, D.OVERVIEW_LAYOUT_KEY, live);
-  return `<div class="ov-grid">${cards.map((c) => (c.empty && layout.emptyLast ? `<div class="overview-card--empty">${c.node}</div>` : c.node)).join("")}</div>`;
+  return `<div class="ov-grid${todayHtml ? " ov-grid--reduced" : ""}">${todayHtml}${cards.map((c) => (c.empty && layout.emptyLast ? `<div class="overview-card--empty">${c.node}</div>` : c.node)).join("")}</div>`;
 }
 
 /** Minute ab 00:00 des Tages `date` (nach Mitternacht vor Tagesbeginn über 1440). */

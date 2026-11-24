@@ -43,7 +43,7 @@ import { foldTabs, jumpTargets } from "./sheets.js";
 import { quickGo, renderNav, rerenderKeepScroll, setMenu } from "./navshell.js";
 import { adjustRest, startRest, stopRest, wakeLock } from "./resttimer.js";
 import { accountName, createAccount, switchAccount } from "./accounts.js";
-import { addExercise, applyDivisionWeights, exComplete, findSet, findWe, focusExId, isOpen, pcWorkout, setFocus, startWorkout } from "./workoutview.js";
+import { addExercise, applyDivisionWeights, exComplete, findSet, findWe, focusExId, isOpen, pcWorkout, planDayMatchOf, setFocus, startWorkout } from "./workoutview.js";
 import { backupActions, exportAccount, markSent, sendFile } from "./transferview.js";
 
 export const actions = {
@@ -199,6 +199,33 @@ export const actions = {
     const we = findWe(el.dataset.we);
     const prev = we.sets[we.sets.length - 1] || null;
     we.sets.push(C.newSet(prev ? { ...prev, isWarmup: false } : null));
+    saveSoon();
+    rerenderKeepScroll();
+  },
+  // Freies Training: passenden Trainingstag übernehmen bzw. ausblenden (1.120.0)
+  "wo-match-adopt": () => {
+    const m = S.active ? planDayMatchOf(S.active) : null;
+    if (!m) return;
+    S.active.planDayId = m.id;
+    S.active.title = m.name;
+    saveSoon();
+    toast(`Als „${m.name}“ übernommen`);
+    rerenderKeepScroll();
+  },
+  "wo-match-dismiss": () => {
+    const m = S.active ? planDayMatchOf(S.active) : null;
+    if (!m) return;
+    S.active.matchDismissed = m.id;
+    saveSoon();
+    rerenderKeepScroll();
+  },
+  // Gewichtsvorschlag zurücknehmen: Sätze wie in der letzten Einheit (1.117.0)
+  "ex-like-last": (el) => {
+    const we = findWe(el.dataset.we);
+    if (!we || we.sets.some((s) => s.isDone)) return;
+    const last = C.lastSessionFor(S.catalog, S.workouts, we.exerciseId, S.active.id);
+    if (!last?.sets?.length) return;
+    we.sets = last.sets.map((s) => C.newSet(s));
     saveSoon();
     rerenderKeepScroll();
   },

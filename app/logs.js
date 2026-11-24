@@ -293,12 +293,12 @@ function trendsCard(db, t, goalMin) {
     "Wochen- und Monatstrend",
     "",
     `${head}${periodBars(bars, { color: COLOR.sleep, format: dur, label: period === "week" ? "Mittlere Schlafdauer je Woche" : "Mittlere Schlafdauer je Monat" })}
-    <div class="table-scroll"><table class="data-table"><thead><tr><th>${period === "week" ? "Woche" : "Monat"}</th><th class="tnum">Erfasst</th><th class="tnum">Ø Schlaf</th><th class="tnum">Min – Max</th><th class="tnum">Ø Qualität</th></tr></thead><tbody>
+    <div class="table-scroll"><table class="data-table"><thead><tr><th>${period === "week" ? "Woche" : "Monat"}</th><th class="tnum">Erfasst</th><th class="tnum">Ø Schlaf</th><th class="tnum">Ø Qualität</th></tr></thead><tbody>
     ${[...duration]
       .reverse()
       .map((p) => {
         const q = quality.get(p.key);
-        return `<tr><td>${esc(p.label)}<span class="sub">${esc(D.trends.formatRange(p.start, p.end))}</span></td><td class="tnum">${p.count} von ${p.days}</td><td class="tnum">${dur(p.mean)}</td><td class="tnum">${dur(p.min)} – ${dur(p.max)}</td><td class="tnum">${q ? `${F(q.mean, 1)} / 10 (${q.count}×)` : "–"}</td></tr>`;
+        return `<tr><td>${esc(p.label)}<span class="sub">${esc(D.trends.formatRange(p.start, p.end))}</span></td><td class="tnum">${p.count} von ${p.days}</td><td class="tnum">${dur(p.mean)}<span class="sub">${dur(p.min)} – ${dur(p.max)}</span></td><td class="tnum">${q ? `${F(q.mean, 1)} / 10<span class="sub">${q.count}×</span>` : "–"}</td></tr>`;
       })
       .join("")}</tbody></table></div>
     ${note(`Mittelwerte nur aus erfassten Nächten (inklusive Nickerchen desselben Tages); fehlende Nächte werden nicht geschätzt.${goalMin !== null ? ` Dein Schlafziel: ${dur(goalMin)}.` : ""}`)}`,
@@ -484,8 +484,8 @@ function editRecoveryView(f) {
     <section class="card card--recovery ov-card logs-form">
       <p class="muted small">Alle Angaben sind deine eigene Einschätzung. Wähle nur aus, was du heute einschätzen möchtest – leere Felder bleiben leer und werden nicht geschätzt.</p>
       ${field("date", "Datum", d.date, { type: "date", error: e.date })}
-      ${D.recovery.RECOVERY_SCALES.map((s) => selectField(s.key, `${s.question} (optional)`, d[s.key], scaleOptions(s), { error: e[s.key], hint: D.recovery.scaleHint(s.key) })).join("")}
-      <div class="field"><label for="lf-notes">Notizen (optional)</label><textarea id="lf-notes" data-lf="notes" rows="2">${esc(d.notes)}</textarea>${e.notes ? `<p class="field-error">${esc(e.notes)}</p>` : ""}</div>
+      ${D.recovery.RECOVERY_SCALES.map((s) => selectField(s.key, s.question, d[s.key], scaleOptions(s), { error: e[s.key], hint: D.recovery.scaleHint(s.key) })).join("")}
+      <div class="field"><label for="lf-notes">Notizen</label><textarea id="lf-notes" data-lf="notes" rows="2">${esc(d.notes)}</textarea>${e.notes ? `<p class="field-error">${esc(e.notes)}</p>` : ""}</div>
       ${formButtons(Boolean(d.id), "Eintrag löschen")}
     </section></main>`;
 }

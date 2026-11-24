@@ -107,6 +107,11 @@ textarea { min-height: 80px; resize: vertical; }
 .ex-head b { font-size: 1.05rem; }
 .last { font-size: .84rem; color: var(--muted); padding: 0 14px 10px; }
 .last b { color: var(--fg); font-weight: 600; }
+/* Gewichtsvorschlag (1.117.0): Markierung, Text und „Wie letztes Mal“ */
+.ex-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 0 14px 10px; color: var(--muted); }
+.ex-suggest p { margin: 0; flex: 1 1 200px; min-width: 0; }
+.ex-suggest b { color: var(--fg); }
+.pill.pill--suggest { color: var(--orange-text); border-color: var(--orange); background: transparent; }
 .sets { display: grid; gap: 0; }
 .set { display: grid; grid-template-columns: 30px 1fr 1fr 64px 52px; gap: 8px; align-items: center; padding: 8px 14px; border-top: 1px solid var(--line); }
 .set.cardio { grid-template-columns: 30px 1fr 1fr 52px; }
@@ -430,7 +435,7 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .day-chart__bars { flex: 1 1 200px; min-width: 0; display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .day-chart__bar-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; margin-bottom: 4px; font-size: .84rem; }
 .day-chart__bar-head .swatch { margin-right: 6px; }
-.day-chart__value { font-variant-numeric: tabular-nums; }
+.day-chart__value { margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
 .day-chart__track { position: relative; display: block; height: 10px; border-radius: 999px; background: var(--c-sunken); border: 1px solid var(--line); overflow: hidden; }
 .day-chart__fill { display: block; height: 100%; border-radius: 999px; }
 .day-chart__track.is-over { border-color: var(--c-danger); }
@@ -503,7 +508,9 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .review-bars__track { display: block; height: 12px; margin: 3px 0 2px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); overflow: hidden; }
 .review-bars__fill { display: block; height: 100%; border-radius: 999px; }
 .ov-more summary { color: var(--blue); font-weight: 600; font-size: .86rem; cursor: pointer; margin-bottom: 8px; }
-.next-training__list { columns: 2; }
+/* Einspaltig, damit Übungsnamen nicht über zwei Spalten zerbrechen (1.116.0) */
+.next-training__list { columns: 1; }
+.next-training__list li { break-inside: avoid; }
 .next-training__when { margin: 0; }
 .reminders { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .reminders li { display: grid; justify-items: start; }
@@ -1284,6 +1291,9 @@ main[data-day-swipe] { touch-action: pan-y pinch-zoom; }
 .catalog-block { padding-top: 10px; border-top: 1px solid var(--line); margin-top: 10px; }
 .catalog-block h4 { margin: 0; font-size: .95rem; }
 .catalog-preview { margin-top: 10px; padding: 10px; border-radius: 10px; background: var(--surface-2); }
+.catalog-mode { border: 0; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
+.catalog-mode legend { padding: 0; margin-bottom: 4px; }
+.catalog-mode__opt { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font-size: .9rem; }
 
 /* Checklisten (1.47.0): Pfeile neben „To-dos am …“, Wochenabschluss am Sonntag */
 .todos-daynav { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 8px; margin: 8px 0 4px; text-align: center; }
@@ -1618,7 +1628,7 @@ details.ov-card:not([open]) { padding-bottom: 12px; }
 .quick-meal .chip { text-align: left; max-width: 100%; height: auto; }
 .quick-meal__label { margin: 2px 0 0; }
 .quick-meal .chip-row { margin: 0; }
-.quick-fav { text-align: left; max-width: 100%; height: auto; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.quick-fav { text-align: left; max-width: 100%; height: auto; white-space: nowrap; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .qm-parsed { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 8px; }
 .qm-parsed__item { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; display: grid; gap: 6px; }
 .qm-parsed__item.is-uncertain { border-color: var(--orange); }
@@ -2308,3 +2318,170 @@ button.pcal-done { display: flex; align-items: center; justify-content: space-be
 .hrt-alarm-backdrop { position: fixed; inset: 0; z-index: 1100; display: grid; place-items: center; padding: calc(var(--safe-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 16px); background: rgba(10, 26, 48, .6); }
 .hrt-alarm { width: 100%; max-width: 420px; margin: 0; border-top: 6px solid var(--orange); }
 .hrt-alarm ul { margin: 8px 0; padding-left: 20px; }
+
+/* Ballaststoffe, Zucker, Salz im Tagebuch (1.114.0) */
+.extras-card .readiness__factors { margin-bottom: 10px; }
+.extras-card__toggle { margin-bottom: 10px; }
+.extras-card__chev { display: inline-block; transition: transform .2s ease; }
+.extras-card--open .extras-card__chev { transform: rotate(180deg); }
+.xd { border-top: 1px solid var(--line); padding-top: 10px; margin-bottom: 10px; }
+.xd__item { margin-top: 14px; }
+.xd__title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 2px; font-size: 1rem; }
+.xd__title .readiness__dot { margin-right: 0; }
+.xd__total { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+.xd__sub { margin: 0 0 6px; color: var(--muted); font-size: .82rem; }
+.xd__histhead { margin-top: 10px; }
+.xs { list-style: none; margin: 0 0 6px; padding: 0; }
+.xs__row { display: grid; grid-template-columns: minmax(0, 1fr) auto 3.4rem 2.6rem; grid-template-areas: "n a v s" "b b b b"; align-items: center; gap: 2px 8px; padding: 3px 0; font-size: .85rem; font-variant-numeric: tabular-nums; }
+.xs__name { grid-area: n; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.xs__amount { grid-area: a; color: var(--muted); text-align: right; }
+.xs__value { grid-area: v; text-align: right; font-weight: 600; }
+.xs__share { grid-area: s; color: var(--muted); text-align: right; }
+.xs__bar { grid-area: b; height: 4px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.xs__bar > span { display: block; height: 100%; background: var(--orange-text); }
+.xs__more { padding-top: 2px; }
+.xh__bar--good { fill: var(--ok); }
+.xh__bar--caution { fill: #e0a526; }
+.xh__bar--low { fill: var(--danger); }
+.xh__bar--none { fill: var(--muted); }
+.xh__limit { fill: none; stroke: var(--fg); stroke-width: 1.4; stroke-dasharray: 4 3; }
+
+/* Makroziele zweistufig (1.116.0): Strich = Minimum (Grundbedarf), Ende = Tagesziel */
+.goal-bar__marker--min { top: 0; bottom: 0; width: 2px; background: var(--muted); }
+.day-chart__min { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--muted); }
+.macro-goal__status.is-minimum { color: var(--orange-text); font-weight: 600; }
+.day-goal__derive { flex-basis: 100%; margin: 0; }
+/* Übungskopf im Training (1.116.0): Name bricht um, Satzzähler bleibt rechts daneben */
+.ex-toggle .main b { overflow-wrap: anywhere; hyphens: auto; }
+.ex-toggle .ex-progress { align-self: center; }
+
+/* Settings (1.117.0): Suche, zuklappbare Gruppen, automatisch speichern */
+.set-search input { min-height: 44px; }
+.set-search input { width: 100%; }
+.set-group { display: grid; gap: 12px; }
+.set-group[hidden] { display: none; }
+.set-group__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 14px 16px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); color: var(--fg); font: inherit; cursor: pointer; }
+.set-group__head > span:first-child { display: grid; gap: 2px; min-width: 0; }
+.set-group__names { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.set-group.is-open .set-group__head { border-color: var(--orange); }
+.set-group__body { display: grid; gap: 12px; }
+.set-group__body[hidden] { display: none; }
+.set-search__none { text-align: center; }
+.autosave-note { margin: 0; }
+.autosave-note--ok { color: var(--ok); }
+
+/* Overview „Reduziert“ (1.118.0): Block „Heute“, Karten als zugeklappte Zeilen */
+.ov-today { gap: 8px; }
+.ov-today__lines { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ov-today__line { display: grid; grid-template-columns: 1fr; gap: 1px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.ov-today__line:last-child { border-bottom: 0; padding-bottom: 0; }
+.ov-today__label { font-size: .78rem; color: var(--muted); }
+.ov-today__label::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: var(--line); vertical-align: middle; }
+.ov-today__line.is-ok .ov-today__label::before { background: var(--ok); }
+.ov-today__line.is-open .ov-today__label::before { background: var(--orange); }
+.ov-today__value { font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.ov-grid--reduced .ov-card--row:not([open]) { padding-top: 12px; padding-bottom: 12px; }
+/* Zeilen einzeilig: Titel links (gekürzt), Kennzahl rechts; ⓘ erst im aufgeklappten Zustand */
+.ov-grid--reduced .ov-card--row:not([open]) > summary { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; }
+.ov-grid--reduced .ov-card--row:not([open]) > summary h3 { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov-grid--reduced .ov-card--row:not([open]) > summary .tag { flex: none; }
+.ov-grid--reduced .ov-card--row:not([open]) .card-info__btn { display: none; }
+
+/* Mikronährstoffe aus dem BLS (1.119.0) */
+.micro-table td .sub { display: block; font-size: .74rem; color: var(--muted); }
+.micro-table td .micro-low { color: var(--orange-text); }
+.micro-extra { margin-top: 10px; }
+.micro-extra > summary { cursor: pointer; font-weight: 600; }
+/* Superhuman → HRT: Nächste Laborkontrolle (1.119.0) */
+.lab-schedule__due { margin: 0 0 6px; font-size: 1.1rem; }
+.lab-schedule__due.is-over strong { color: var(--orange-text); }
+/* Training → Datenbank: Maschinen je Muskel (1.119.0) */
+.mm-group { border-top: 1px solid var(--line); padding: 8px 0; }
+.mm-group > summary { cursor: pointer; font-weight: 600; }
+.mm-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.mm-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--surface); }
+.mm-item p { margin: 4px 0 0; }
+.mm-item .mm-muscle { margin: 0 0 6px; color: var(--muted); font-size: .85rem; }
+.mm-best { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.mm-nr { min-width: 44px; height: 44px; padding: 0 6px; display: grid; place-items: center; border-radius: 10px; background: var(--navy); color: #fff; font: italic 800 1.4rem/1 "Barlow Condensed", sans-serif; font-variant-numeric: tabular-nums; }
+.mm-text { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.mm-pct { font-weight: 700; color: var(--orange-text); font-variant-numeric: tabular-nums; }
+.mm-item.is-low .mm-pct { color: var(--muted); }
+/* Weekly Reports: Plan als To-dos (1.119.0) */
+.wr-plan { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin: 10px 0; display: grid; gap: 8px; }
+.wr-plan p { margin: 0; }
+.wr-plan .check-row { display: flex; gap: 10px; align-items: flex-start; }
+.wr-plan .check-row input { margin-top: 3px; flex: none; }
+/* Freies Training: passender Trainingstag (1.120.0) */
+.plan-day-match p { margin: 0 0 8px; }
+/* Overview „Reduziert“: geführter Tagesablauf (1.120.0) */
+.ov-flow h3 .muted { font-weight: 400; text-transform: none; letter-spacing: 0; }
+.ov-flow__next { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 10px; }
+.ov-flow__steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ov-flow__steps li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.ov-flow__steps li.is-done > span:nth-child(2) { color: var(--muted); }
+.ov-flow__mark { width: 18px; height: 18px; border-radius: 999px; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; }
+.ov-flow__steps li.is-done .ov-flow__mark { background: var(--ok); border-color: var(--ok); color: #fff; }
+/* Overview „Reduziert“: Datenqualität (1.120.0) */
+.ov-quality { margin: 0; padding: 8px 12px; font-size: .85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.ov-quality__label { font-weight: 600; color: var(--fg); }
+/* Tagesverlauf: Eintragen per Symbol – Lebensmittel, Supplement, Koffein (1.122.0) */
+.mtl-panel .mtl-adds { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 8px; }
+.mtl-panel .mtl-adds .mtl-add { flex: 0 0 auto; width: 48px; min-width: 48px; height: 40px; padding: 0; font-size: 1.1rem; }
+.mtl-panel .mtl-adds .ghost { flex: 0 0 auto; width: auto; }
+
+/* Mahlzeit erfassen wie am PC (1.125.0): Wie immer?, Suche/Schnelleintrag, Wird eingetragen */
+.plt-tag { display: inline-flex; align-items: center; justify-content: center; flex: none; min-width: 5.2rem; padding: 1px 7px; border: 1px solid currentColor; border-radius: 99px; font-size: .7rem; font-weight: 700; white-space: nowrap; background: var(--surface); }
+.plt-tag--meal { color: #9a6210; }
+.plt-tag--quick { color: var(--orange-text); background: color-mix(in srgb, var(--orange) 14%, var(--surface)); }
+.plt-tag--supplement { color: var(--ok); }
+.plt-tag--caffeine { color: #7a4a21; background: color-mix(in srgb, #7a4a21 10%, var(--surface)); }
+.item.plt-hit .main .plt-tag { justify-self: start; min-width: 0; }
+.plt-usual { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: 8px 0 4px; }
+.plt-usual h4, .plt-head h4 { margin: 4px 0 0; font-size: .95rem; text-transform: uppercase; letter-spacing: .03em; }
+.plt-usual__card { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--fg); text-align: left; }
+.plt-usual__card > span:first-child { flex: 1; min-width: 0; }
+.plt-usual__card.is-taken { border-color: var(--orange); background: color-mix(in srgb, var(--orange) 10%, var(--surface)); }
+.plt-usual__detail { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plt-usual__act { font-size: .8rem; font-weight: 700; color: var(--orange-text); white-space: nowrap; }
+.plt-tabs { display: grid; grid-template-columns: 1fr 1fr; margin: 10px 0 8px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.plt-tabs button { min-height: 42px; border: 0; background: transparent; color: var(--muted); font-weight: 600; }
+.plt-tabs button + button { border-left: 1px solid var(--line); }
+.plt-tabs button.is-active { background: color-mix(in srgb, var(--blue) 12%, var(--surface)); color: var(--fg); }
+#quick-meal #food-q { border-color: var(--orange); }
+.plt-q__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin: 8px 0; }
+.plt-q__field { min-width: 0; }
+.plt-q__field label { display: flex; justify-content: space-between; gap: 6px; height: 1.2rem; margin-bottom: 3px; font-size: .74rem; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; }
+.plt-q__field label > span:first-child { overflow: hidden; text-overflow: ellipsis; }
+.plt-q__star, .plt-q__err, .plt-q__warn { color: var(--orange-text); }
+.plt-q__box { display: grid; grid-template-columns: minmax(0, 1fr) 2.2rem; align-items: center; height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.plt-q__box.is-req { border-color: var(--muted); }
+.plt-q__box.is-err { border: 2px solid var(--orange); background: color-mix(in srgb, var(--orange) 10%, var(--surface)); }
+.plt-q__box input { width: 100%; min-width: 0; height: 100%; padding: 0 10px; border: 0; background: transparent; font-size: 1rem; }
+.plt-q__box span { font-size: .8rem; color: var(--muted); }
+.plt-head { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.plt-list { margin: 6px 0; padding: 0; list-style: none; }
+.plt-empty { padding: 8px 0; }
+.plt-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 30px; align-items: center; gap: 4px 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.plt-row__main { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; min-width: 0; }
+.plt-row__main b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plt-row__main .muted { flex: 1 0 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plt-row__main .plt-tag { min-width: 0; }
+.plt-row__right { font-size: .82rem; text-align: right; white-space: nowrap; }
+.plt-row__x { width: 30px; height: 34px; border: 0; background: transparent; color: var(--muted); }
+.plt-row__edit { width: 8.6rem; }
+.plt-step { display: grid; grid-template-columns: 30px 3.2rem 2.4rem 30px; align-items: center; width: 8.6rem; height: 36px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.plt-step button { height: 100%; border: 0; background: color-mix(in srgb, var(--line) 50%, var(--surface)); color: var(--fg); font-size: 1rem; }
+.plt-step input { width: 100%; min-width: 0; height: 100%; padding: 0 2px; border: 0; background: transparent; text-align: right; font-weight: 600; font-size: .9rem; }
+.plt-step span { overflow: hidden; padding-left: 3px; font-size: .7rem; color: var(--muted); white-space: nowrap; text-overflow: ellipsis; }
+.plt-sum { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.plt-sum span { display: block; font-size: .68rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.plt-sum b { font-size: 1.15rem; }
+.plt-dish-open { border-style: dashed; margin-top: 8px; }
+.plt-dish { margin-top: 8px; padding: 10px; border: 1px solid var(--orange); border-radius: 10px; background: color-mix(in srgb, var(--orange) 8%, var(--surface)); }
+.plt-dish__grid { display: grid; grid-template-columns: minmax(0, 1fr) 5rem; gap: 3px 8px; }
+.plt-dish__grid label { font-size: .74rem; font-weight: 600; color: var(--muted); }
+.plt-dish__grid input { min-width: 0; }
+#quick-meal > .btn.primary { margin-top: 10px; }
+html[data-theme="dark"] .plt-tag--meal { color: #e0aa55; }
+html[data-theme="dark"] .plt-tag--caffeine { color: #c8956a; background: #3a2a1c; }

@@ -8,12 +8,15 @@ import * as D from "./pcdomain.js";
 import * as L from "./label.js";
 import { buildDb, nutritionTabs } from "./diary.js";
 import * as QM from "./quickmeal.js";
+import { extraResultsHtml, initPlate, plateActions, plateCardHtml, plateInput, saveWithoutTime, tagHtml } from "./mealplate.js";
 
 let X = null; // Verbindung zur App (Zustand, Anzeige, Speichern)
 
 /** Wird einmal von app.js aufgerufen. */
 export function initFood(ctx) {
   X = ctx;
+  // Mahlzeit erfassen wie am PC (1.125.0): Teller „Wird eingetragen“
+  initPlate({ X, F, esc, today, trackDate, trackDayLabel, persist, quickData, startAmount, timeFieldHtml, timeHintHtml, mealOptions, foodResults, planItems, defaultTime, foodDupHtml });
   document.addEventListener("pointerdown", cropStart);
   document.addEventListener("pointermove", cropMove);
   document.addEventListener("pointerup", cropEnd);
@@ -137,27 +140,6 @@ function startAmount(food, history) {
 
 const amountText = (v) => String(Math.round(v * 10) / 10).replace(".", ",");
 
-function quickCard() {
-  const s = F();
-  const { history, foods } = quickData();
-  const favs = QM.Q.favoriteFoods(history, today(), { limit: 10 }).filter((x) => foods.has(x.foodId));
-  return `<section class="card hl" id="quick-meal">
-    <h3>Schnell eintragen</h3>
-    <div class="field"><label for="qm-meal">Mahlzeit (${esc(trackDayLabel())})</label><select id="qm-meal" data-ft="mealType">${mealOptions(s.mealType)}</select></div>
-    ${
-      favs.length
-        ? `<p class="muted small">Favoriten – Tippen trägt die übliche Menge ein, lange drücken ändert sie:</p>
-          <div class="chip-row">${favs
-            .map((x) => {
-              const f = foods.get(x.foodId);
-              return `<button type="button" class="chip quick-fav" data-act="qm-fav" data-arg="${esc(f.id)}" data-hold="1">+ ${esc(f.name)} <span class="muted">${esc(amountText(x.amount))} ${esc(f.basis_unit)}</span></button>`;
-            })
-            .join("")}</div>`
-        : `<p class="muted small">Favoriten erscheinen, sobald du Lebensmittel mehrmals eingetragen hast.</p>`
-    }
-  </section>`;
-}
-
 /** Freitext-Erfassung – steht seit 1.58.0 unter „Lebensmittel suchen“ (Wunsch des Nutzers). */
 function freeTextCard() {
   const s = F();
@@ -190,22 +172,6 @@ function parsedHtml(parsed, foods) {
     .join("")}</ul>
     <div class="row"><button class="btn primary" data-act="qm-parsed-save" ${on ? "" : "disabled"}>${on} ${on === 1 ? "Lebensmittel" : "Lebensmittel"} eintragen</button>
       <button class="btn ghost" data-act="qm-parsed-clear">Verwerfen</button></div>`;
-}
-
-function multiHtml() {
-  const s = F();
-  if (!s.multi) return "";
-  const foods = N.allFoods(X.S.catalog, s.local);
-  if (!s.multi.length) return `<p class="muted small">Lebensmittel antippen – sie sammeln sich hier und werden gemeinsam eingetragen.</p>`;
-  return `<ul class="qm-parsed">${s.multi
-    .map((m, i) => {
-      const f = foods.get(m.foodId);
-      return `<li class="qm-parsed__item"><b>${esc(f ? N.foodLabel(f) : "Unbekannt")}</b>
-        <div class="row"><input type="text" inputmode="decimal" data-qm="multi-amount" data-i="${i}" value="${esc(m.amount)}" aria-label="Menge"><span class="muted small">${esc(f?.basis_unit ?? "g")}</span>
-        <button class="btn sm ghost" data-act="qm-multi-del" data-arg="${i}" aria-label="Entfernen">✕</button></div></li>`;
-    })
-    .join("")}</ul>
-    <button class="btn primary block" data-act="qm-multi-save">${s.multi.length} ${s.multi.length === 1 ? "Lebensmittel" : "Lebensmittel"} eintragen</button>`;
 }
 
 /** Mehrere Einträge auf einmal in die gewählte Mahlzeit, mit „Rückgängig“. */
@@ -244,11 +210,12 @@ function openFood(id) {
   requestAnimationFrame(() => document.getElementById("food-track")?.scrollIntoView({ block: "start", behavior: "smooth" }));
 }
 
-const resultAct = () => (F().multi ? "qm-multi-add" : "food-pick");
+// Seit 1.125.0 kommt jeder Treffer auf den Teller („Wird eingetragen“)
+const resultAct = () => "plt-add";
 
 function foodItem(f, act) {
   const portion = f.portion_amount ? ` · ${esc(f.portion_name)} ${num(f.portion_amount)} ${f.basis_unit}` : "";
-  return `<button class="item" data-act="${act}" data-arg="${esc(f.id)}"><span class="main"><b>${esc(N.foodLabel(f))}</b>
+  return `<button class="item${act === "plt-add" ? " plt-hit" : ""}" data-act="${act}" data-arg="${esc(f.id)}"><span class="main">${act === "plt-add" ? tagHtml("meal") : ""}<b>${esc(N.foodLabel(f))}</b>
     <span class="muted small">${Math.round(f.energy_kcal)} kcal · E ${num(f.protein_g)} g je 100 ${f.basis_unit}${portion}</span></span><span class="chev">+</span></button>`;
 }
 
@@ -257,12 +224,15 @@ export function foodResults(query, act) {
   // BLS 4.0 (1.30.0): falls heruntergeladen, Treffer darunter
   // Open Food Facts (1.58.0): falls heruntergeladen, Treffer darunter (Tippen öffnet das Formular)
   const bls = blsResultsHtml(query, act) + offResultsHtml(query, act);
+  // Gerichte, Supplemente, Stacks und Koffein in derselben Suche (1.125.0)
+  const extra = act === "plt-add" ? extraResultsHtml(query) : "";
   if (!list.length) {
+    if (extra) return extra + bls;
     return query.trim()
       ? `${bls ? "" : `<p class="empty">Nichts gefunden. Scanne das Etikett, um das Lebensmittel anzulegen.</p>`}${bls}`
       : `<p class="empty muted small">Name, Marke oder Strichcode eingeben.</p>`;
   }
-  return list.map((f) => foodItem(f, act)).join("") + bls;
+  return list.map((f) => foodItem(f, act)).join("") + extra + bls;
 }
 
 // ------------------------------------------------------------------ Ansicht „Ernährung“
@@ -349,6 +319,8 @@ function formCard() {
       ${L.LABEL_KEYS.map((k) => field(`v.${k}`, L.LABEL_NAMES[k] + hint(k), f.values[k], { unit: k === "energyKcal" ? "kcal" : "g" })).join("")}
       ${field("portionName", "Portion (optional)", f.portionName, { mode: "text" })}
       ${field("portionAmount", "Menge der Portion", f.portionAmount, { unit: f.basis })}
+      ${field("caffeineMg", "Koffein (optional)", f.caffeineMg ?? "", { unit: "mg je 100 " + f.basis })}
+      <p class="muted small wide" id="ff-caffeine-tip">${caffeineTipHtml(f)}</p>
       ${field("barcode", "Strichcode (EAN)", f.barcode, { mode: "numeric", wide: true })}
       <div class="field wide"><label for="ff-notes">Notiz (Vitamine, Mineralstoffe, Koffein …)</label>
         <textarea id="ff-notes" data-ff="notes" rows="2">${esc(f.notes)}</textarea>${e.notes ? `<p class="err small">${esc(e.notes)}</p>` : ""}</div>
@@ -357,6 +329,18 @@ function formCard() {
     ${s.text ? `<details><summary class="muted small">Erkannter Text</summary><pre class="ocr-raw">${esc(s.text)}</pre></details>` : ""}
     <button class="btn primary block" data-act="food-save">${s.form.id ? "Änderungen speichern" : "Als Lebensmittel speichern"}</button>
   </section>`;
+}
+
+/** Richtwert fürs Koffein typischer Getränke (1.126.0, wie PC 1.0.201) – nur auf Klick übernommen. */
+function caffeineTipHtml(f) {
+  const tip = (f.caffeineMg ?? "").trim() === "" ? D.foodCaffeine.caffeineHint(f.name, f.basis) : null;
+  if (!tip) return "Zählt im Tagesverlauf in der Spalte „Koffein“ – auch als Zutat einer Mahlzeit.";
+  return `Richtwert ${esc(tip.label)}: etwa ${tip.mgPer100} mg je 100 ml (Schätzung – Packungsangabe geht vor). <button type="button" class="linkbtn" data-act="food-caffeine-tip" data-arg="${tip.mgPer100}">Übernehmen</button>`;
+}
+
+function updateCaffeineTip() {
+  const el = document.getElementById("ff-caffeine-tip");
+  if (el) el.innerHTML = caffeineTipHtml(F().form);
 }
 
 function trackPreview() {
@@ -452,14 +436,7 @@ export function viewFood() {
     ${!s.planAt && s.trackDate && s.trackDate !== today() ? `<p class="warn small">Einträge gehen in den ${esc(trackDayLabel())} (aus dem Tagebuch). <button class="btn sm ghost" data-act="food-track-today">Lieber heute</button></p>` : ""}
     ${oldExport ? `<p class="warn">Deine Lebensmittel vom PC fehlen noch: Bitte am PC neu exportieren und hier „Neue Exportdatei laden“. Scannen und Tracken geht trotzdem.</p>` : ""}
     ${s.selected && !s.form ? trackCard() : ""}
-    ${quickCard()}
-    <section class="card food-search" id="food-search">
-      <div class="wo-head"><h3>Lebensmittel suchen</h3><button class="linkbtn" data-act="qm-multi-toggle">${s.multi ? "Einzeln auswählen" : "Mehrere auswählen"}</button></div>
-      <input id="food-q" type="search" placeholder="Name, Marke oder Strichcode" value="${esc(s.query)}" autocomplete="off" enterkeyhint="search">
-      <div class="list" id="food-results">${foodResults(s.query, resultAct())}</div>
-      <div id="qm-multi">${multiHtml()}</div>
-      ${foodDupHtml()}
-    </section>
+    ${plateCardHtml()}
     ${freeTextCard()}
     <section class="card">
       <h3>Etikett scannen</h3>
@@ -887,6 +864,7 @@ async function track(items, mealType, label, { time = "", kind = "track", skipTi
 }
 
 export const foodActions = {
+  ...plateActions,
   "food-dup-search": (el) => {
     const s = F();
     s.query = el.dataset.arg ?? "";
@@ -1005,48 +983,18 @@ export const foodActions = {
       items.push({ foodId: l.foodId, amount });
     }
     if (!items.length) return X.toast("Bitte mindestens ein Lebensmittel auswählen.", true);
-    if (await quickTrack(items, `${items.length} Lebensmittel`)) {
-      s.qmParsed = null;
-      s.qmText = "";
-      X.rerender();
-    }
-  },
-  "qm-multi-toggle": () => {
-    const s = F();
-    s.multi = s.multi ? null : [];
+    // Seit 1.125.0 auf den Teller („Wird eingetragen“) statt sofort eintragen
+    for (const it of items) foodActions["plt-add"]({ dataset: { arg: it.foodId } }, it.amount);
+    s.qmParsed = null;
+    s.qmText = "";
+    X.toast(`${items.length} Lebensmittel auf den Teller gelegt – oben „Speichern“.`);
     X.rerender();
+    document.getElementById("quick-meal")?.scrollIntoView({ block: "start", behavior: "smooth" });
   },
-  "qm-multi-add": (el) => {
+  "food-caffeine-tip": (el) => {
     const s = F();
-    if (!s.multi) s.multi = [];
-    const { history, foods } = quickData();
-    const f = foods.get(el.dataset.arg);
-    if (!f) return;
-    if (!s.multi.some((m) => m.foodId === f.id)) s.multi.push({ foodId: f.id, amount: amountText(startAmount(f, history)) });
-    const box = document.getElementById("qm-multi");
-    if (box) box.innerHTML = multiHtml();
-    else X.rerender();
-  },
-  "qm-multi-del": (el) => {
-    F().multi?.splice(Number(el.dataset.arg), 1);
-    const box = document.getElementById("qm-multi");
-    if (box) box.innerHTML = multiHtml();
-  },
-  "qm-multi-save": async () => {
-    const s = F();
-    const items = [];
-    const foods = N.allFoods(X.S.catalog, s.local);
-    for (const m of s.multi ?? []) {
-      const amount = N.parseNum(m.amount);
-      if (!(amount > 0 && amount <= 10000)) return X.toast(`${foods.get(m.foodId)?.name ?? "Eintrag"}: bitte eine Menge zwischen 0 und 10.000 eingeben.`, true);
-      items.push({ foodId: m.foodId, amount });
-    }
-    if (!items.length) return;
-    if (await quickTrack(items, `${items.length} Lebensmittel`)) {
-      s.multi = [];
-      s.query = "";
-      X.rerender();
-    }
+    s.form.caffeineMg = String(el.dataset.arg ?? "");
+    X.rerender();
   },
   "food-save": async () => {
     const s = F();
@@ -1093,7 +1041,8 @@ export const foodActions = {
     X.rerender();
     document.getElementById(el.dataset.arg === "dish" ? "fd-time" : "ft-time")?.focus();
   },
-  "food-time-skip": (el) => (el.dataset.arg === "dish" ? foodActions["dish-track"](el, true) : foodActions["food-track"](el, true)),
+  "food-time-skip": (el) =>
+    el.dataset.arg === "plate" ? saveWithoutTime() : el.dataset.arg === "dish" ? foodActions["dish-track"](el, true) : foodActions["food-track"](el, true),
   "food-track": async (_el, skipTime = false) => {
     const s = F();
     const amount = N.amountOf(s.selected, s.amount, s.unit);
@@ -1166,6 +1115,7 @@ export const foodActions = {
 export function foodInput(el) {
   const s = F();
   if (!s) return false;
+  if (plateInput(el)) return true;
   if (el.id === "food-q") {
     s.query = el.value;
     document.getElementById("food-results").innerHTML = foodResults(s.query, resultAct());
@@ -1203,6 +1153,7 @@ export function foodInput(el) {
     } else {
       s.form[k] = el.value;
       if (k === "name" || k === "brand" || k === "basis") updateDupHint();
+      if (k === "name" || k === "basis" || k === "caffeineMg") updateCaffeineTip();
     }
     return true;
   }

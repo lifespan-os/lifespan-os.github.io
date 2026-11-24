@@ -17,6 +17,7 @@ import { arrangeCards, layoutEditing, setLayoutEditing } from "./layoutedit.js";
 export const DB_LAYOUT_KEY = "ui.training_db_layout";
 
 import { machineDupHtml } from "./reviewparity.js";
+import { activeGym } from "./gymsui.js";
 let X = null;
 
 export function initTrainingDb(ctx) {
@@ -97,6 +98,7 @@ export function viewDatabaseTab() {
   const cards = [
     { id: "exercises", node: exercisesCard() },
     { id: "machines", node: machinesCard() },
+    { id: "muscle-machines", node: muscleMachinesCard() },
     { id: "sports", node: sportsCard() },
   ];
   let arranged = cards;
@@ -231,6 +233,45 @@ function machineModels(catalog) {
     updatedAt: m.updated_at ?? "",
     tags: list(m.tags),
   }));
+}
+
+// Maschinen je Muskel (1.119.0, wie PC 1.0.195 / Verbesserung 29): Maschinen des aktiven Gyms
+function muscleMachinesCard() {
+  const S = X.S;
+  const { gym, entries } = activeGym();
+  const nr = new Map(entries.map((e) => [e.machine_id, e.number?.trim() || null]));
+  const park = machineModels(S.catalog)
+    .filter((m) => nr.has(m.id))
+    .map((m) => ({
+      id: m.id,
+      name: m.name,
+      displayName: m.displayName,
+      manufacturer: m.manufacturer,
+      muscleGroups: m.muscleGroups,
+      archived: m.archived,
+      number: nr.get(m.id) ?? null,
+      focus: (S.catalog.focus?.machines?.[m.id] ?? []).map(([muscle, percent]) => ({ muscle, percent })),
+    }));
+  const rows = park.length ? D.machinesByMuscle.machinesByMuscle(park) : [];
+  const groups = new Map();
+  for (const r of rows) groups.set(r.group, [...(groups.get(r.group) ?? []), r]);
+  const item = (r) => {
+    const b = r.best;
+    if (!b) return `<li class="mm-item"><p class="mm-muscle">${esc(r.label)}</p><p class="muted small">Keine Maschine in diesem Gym trainiert diesen Muskel gezielt.</p></li>`;
+    const more = r.equal.length - 5;
+    return `<li class="mm-item ${r.low ? "is-low" : ""}"><p class="mm-muscle">${esc(r.label)}</p>
+      <div class="mm-best"><span class="mm-nr">${esc(b.number ?? "–")}</span><span class="mm-text"><strong>${esc(b.name)}</strong><span class="muted small">${esc([b.manufacturer, b.pattern, b.setting].filter(Boolean).join(" · "))}</span></span><span class="mm-pct">${b.percent} %</span></div>
+      ${r.equal.length ? `<p class="muted small">Gleich gut: ${esc(r.equal.slice(0, 5).map((c) => `${c.number ?? "–"} ${c.name}`).join(" · "))}${more > 0 ? ` · und ${more} weitere` : ""}</p>` : ""}
+      ${r.alternative ? `<p class="muted small">Alternative: ${esc(`${r.alternative.number ?? "–"} ${r.alternative.name}${r.alternative.pattern ? ` – ${r.alternative.pattern}` : ""} · ${r.alternative.setting}, ${r.alternative.percent} %`)}</p>` : ""}
+      ${r.low ? `<p class="muted small">Kein Gerät setzt hier einen klaren Schwerpunkt – der Muskel arbeitet überall nur mit.</p>` : ""}</li>`;
+  };
+  const body = rows.length
+    ? [...groups.entries()].map(([g, list]) => `<details class="mm-group"><summary>${esc(g)} <span class="muted small">(${list.length})</span></summary><ul class="mm-list">${list.map(item).join("")}</ul></details>`).join("")
+    : `<p class="muted">${gym ? "In diesem Gym sind noch keine Maschinen eingetragen." : "Noch kein Gym angelegt."}</p>`;
+  return `<details class="card ov-card card--training db-card" id="muscle-machines-title" data-card="db-muscle-machines"${cardOpen("db-muscle-machines") ? " open" : ""}><summary class="wo-head ov-card__head"><h3>Maschinen je Muskel</h3></summary>
+    <p class="muted small card-info">Für jeden Muskel die Maschine${gym ? ` im ${esc(gym.name)}` : ""} mit dem höchsten Anteil (Prozent = Anteil des Muskels an der ganzen Bewegung), groß links die Nummer im Gym. Grundlage: dein eigener Muskelfokus einer Maschine, sonst die Verteilung ihres Bewegungsmusters mit dem besten Griff. Gleich gut = gleicher Anteil bei gleicher Bewegung, Alternative = beste andere Bewegung. Gym wechseln: Training → Gyms.</p>
+    ${body}
+  </details>`;
 }
 
 function machinesCard() {

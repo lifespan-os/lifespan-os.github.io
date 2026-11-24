@@ -682,9 +682,13 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
         )
         .join("")}</div><span class="mtl-picks__legend muted small" aria-hidden="true"><i class="slot-dot"></i> frei <i class="slot-dot is-used"></i> schon belegt</span></div>
       <span class="muted small">${handlePlanned ? "Zählt erst, wenn du sie mit „Gegessen“ bestätigst." : "Wird mit dieser Uhrzeit ins Tagebuch eingetragen."}</span>
-      <div class="row"><button class="btn sm primary" data-act="mtl-add" data-arg="${esc(chosen)}">+ Lebensmittel</button>${
-        handlePlanned ? "" : `<button class="btn sm" data-act="mtl-caffeine">Koffein</button>`
-      }<button class="btn sm ghost" data-act="mtl-close">Abbrechen</button></div></div>`
+      <div class="row mtl-adds" role="group" aria-label="Eintragen">${[
+        ["mtl-add", "🍽", `Lebensmittel wählen (${chosenTitle})`, " primary", ` data-arg="${esc(chosen)}"`],
+        ["mtl-supp", "💊", `Supplement um ${handleClock} Uhr eintragen`, "", ""],
+        ["mtl-caffeine", "☕", `Koffein um ${handleClock} Uhr eintragen`, "", ""],
+      ]
+        .map(([act, icon, label, cls, arg]) => `<button class="btn sm mtl-add${cls}" data-act="${act}"${arg} title="${esc(label)}" aria-label="${esc(label)}"><span aria-hidden="true">${icon}</span></button>`)
+        .join("")}<button class="btn sm ghost" data-act="mtl-close">Abbrechen</button></div></div>`
       : "";
 
   const sheet = menu
@@ -1269,6 +1273,8 @@ export const timelineActions = {
     S.mtl = { date, pinned: null, panel: true, key: null };
     S.mtlMenu = null;
     X.rerender();
+    // „Jetzt eintragen“ (1.129.0, wie PC 1.0.203): Tagesverlauf auf die aktuelle Uhrzeit (sonst den Griff) zentrieren
+    requestAnimationFrame(() => (document.querySelector(".mtl .mtl-now") ?? document.querySelector(".mtl .mtl-handle"))?.scrollIntoView({ block: "center", behavior: "smooth" }));
   },
   "mtl-menu": (el) => {
     const S = X.S;
@@ -1362,12 +1368,23 @@ export const timelineActions = {
     releaseHandle();
     X.go("food");
   },
+  // Supplement zu dieser Uhrzeit (1.122.0, wie PC 1.0.198): Einnahme „unabhängig“ mit Uhrzeit
+  "mtl-supp": () => {
+    const S = X.S;
+    const date = S.diaryDate ?? today();
+    const time = clockOf(handleMinute(date));
+    releaseHandle();
+    S.suppEdit = { draft: SP.emptyDraft(date, "independent", time), query: "", error: null };
+    S.fromTimeline = true;
+    X.go("supp-intake");
+  },
   "mtl-caffeine": () => {
     const S = X.S;
     const date = S.diaryDate ?? today();
     const time = clockOf(handleMinute(date));
     releaseHandle();
     S.diaryCf = { id: null, date, drinkId: "espresso", amount: "30", time, errors: {} };
+    S.fromTimeline = true;
     X.rerender();
     requestAnimationFrame(() => document.getElementById("dcf-drink")?.scrollIntoView({ block: "center" }));
   },

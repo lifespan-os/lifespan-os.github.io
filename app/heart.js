@@ -86,16 +86,20 @@ export function recoveryTodayHtml(w, day) {
   const rows_ = W.recoveryToday(w, day);
   const labels = W.polarDayLabels(w, day);
   if (rows_.every((r) => r.today === null) && !labels.length) return "";
+  // Heute noch ohne Messung der Nacht: nicht „–“ oder 0 zeigen (wie PC 1.0.192)
+  const pending = day === today();
   return `<section class="card"><div class="wo-head"><h3>Gemessene Erholung heute</h3></div>
     <ul class="list">${rows_
       .map((r) => {
         const diff =
-          r.difference === null
+          r.today === null
+            ? ""
+            : r.difference === null
             ? r.baselineCount < 5
               ? `Vergleich ab 5 Tagen (bisher ${r.baselineCount})`
               : ""
             : `${signed(r.difference, r.digits)} ${r.unit}${r.baseline ? ` (${signed((r.difference / r.baseline) * 100)} %)` : ""}`;
-        return `<li class="meal-item"><span>${esc(r.label)}<br><span class="muted small">Ø 28 Tage davor: ${r.baseline !== null ? `${num(r.baseline, r.digits)} ${r.unit}` : "–"}${diff ? ` · ${diff}` : ""}</span></span><strong>${r.today !== null ? `${num(r.today, r.digits)} ${r.unit}` : "–"}</strong></li>`;
+        return `<li class="meal-item"><span>${esc(r.label)}<br><span class="muted small">Ø 28 Tage davor: ${r.baseline !== null ? `${num(r.baseline, r.digits)} ${r.unit}` : "–"}${diff ? ` · ${diff}` : ""}</span></span><strong>${r.today !== null ? `${num(r.today, r.digits)} ${r.unit}` : pending ? '<span class="muted small">noch nicht synchronisiert</span>' : "–"}</strong></li>`;
       })
       .join("")}</ul>
     ${labels.length ? `<p class="muted small">${labels.map((l) => `${esc(l.label)} laut Polar: <strong>${esc(l.value)}</strong>`).join(" · ")}</p>` : ""}

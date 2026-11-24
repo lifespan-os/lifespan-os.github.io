@@ -41,7 +41,7 @@ import * as CD from "./checklistdata.js";
 import * as CF from "./caffeinedata.js";
 import * as GLD from "./glucosedata.js";
 import { icoachChange, icoachInput, initICoach, overviewCaffeine, viewICoach } from "./icoach.js";
-import { initSettings, layoutChange, settingsChange, viewSettings } from "./settingsview.js";
+import { initSettings, layoutChange, settingsChange, settingsInput, viewSettings } from "./settingsview.js";
 import * as PS from "./pcsettings.js";
 import * as DP from "./devprefs.js";
 import { enhanceInfo, initInfoNotes } from "./infonotes.js";
@@ -175,6 +175,7 @@ restEl.addEventListener("click", (ev) => {
 app.addEventListener("input", (ev) => {
   const el = ev.target;
   if (searchInput(el)) return;
+  if (settingsInput(el)) return;
   if (foodInput(el)) return;
   if (diaryInput(el)) return;
   if (blsInput(el)) return;

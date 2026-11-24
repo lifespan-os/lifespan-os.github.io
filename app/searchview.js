@@ -214,6 +214,8 @@ export const searchActions = {
   // Aus der Suche zu Settings → FAQ mit derselben Frage (1.103.0)
   "faq-open": (el) => {
     X.S.faqQuery = el.dataset.arg ?? "";
+    // Gruppe „Hilfe und FAQ“ aufklappen (Settings-Gruppen seit 1.117.0)
+    X.S.setGroupsOpen = [...new Set([...(X.S.setGroupsOpen ?? []), "hilfe"])];
     X.go("settings");
     setTimeout(() => document.getElementById("set-faq")?.scrollIntoView({ block: "start" }), 80);
   },

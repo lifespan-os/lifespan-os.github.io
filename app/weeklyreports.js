@@ -5,6 +5,8 @@
 import * as D from "./pcdomain.js";
 import * as PS from "./pcsettings.js";
 import { diaryDays, nowLabel, personOf } from "./pdfparity.js";
+import * as TD from "./todosdata.js";
+import { today } from "./diary.js";
 
 let X = null; // { S, esc, rerender }
 
@@ -48,8 +50,34 @@ export function weeklyReportsCard(card) {
     ${list.length > SHOWN ? `<button class="linkbtn" data-act="wr-all">${st.all ? "Weniger anzeigen" : `Alle ${list.length} Berichte anzeigen`}</button>` : ""}
     ${st.message ? `<p class="${st.message.tone === "error" ? "warn" : "muted small"}">${esc(st.message.text)}</p>` : ""}
     ${st.pdf ? `<a class="btn blue block" href="${st.pdf.url}" download="${esc(st.pdf.name)}">${esc(st.pdf.name)}</a>` : ""}
+    ${open ? planHtml(open) : ""}
     ${open ? `<div class="wr-view">${D.weeklyReportHtml(open, { logoUrl: LOGO_URL, showSuperhuman: secretOn() })}</div>` : ""}`;
   return card("weekly-reports", "Weekly Reports", "jeden Montag", body, { wide: true });
+}
+
+// Wochenrückblick mit Aufgaben (1.119.0, wie PC): Maßnahmen des Plans als To-dos übernehmen
+function planOf(report) {
+  return D.planTodos(report, today());
+}
+
+function planHtml(report) {
+  const esc = X.esc;
+  const plan = planOf(report);
+  if (!plan.length) return "";
+  const st = state();
+  const kw = D.trends.isoWeek(D.trends.shiftDays(report.weekStart, 7)).week;
+  const prefix = D.planPrefix(kw);
+  const off = new Set(st.planOff ?? []);
+  const picked = plan.filter((p) => !off.has(p.text)).length;
+  return `<div class="wr-plan">
+      <p><strong>Plan für KW ${kw} als To-dos übernehmen</strong><br><span class="muted small">Tägliche Maßnahmen stehen an jedem Tag der Woche (ab heute), die übrigen einmal. Der nächste Bericht zeigt, wie viele du abgehakt hast.</span></p>
+      ${plan
+        .map(
+          (p, i) => `<label class="check-row" for="wr-plan-${i}"><input id="wr-plan-${i}" type="checkbox" data-act="wr-plan-toggle" data-arg="${esc(p.text)}" ${off.has(p.text) ? "" : "checked"}><span>${esc(p.text.slice(prefix.length))}<br><span class="muted small">${p.daily ? `täglich (${p.dates.length} Tage)` : "einmal in der Woche"}</span></span></label>`,
+        )
+        .join("")}
+      <div class="row-actions"><button class="btn sm primary" data-act="wr-plan-add" ${picked ? "" : "disabled"}>In To-dos übernehmen</button>${st.planAdded ? `<button class="linkbtn" data-go="todos">Zu den To-dos</button>` : ""}</div>
+    </div>`;
 }
 
 // ------------------------------------------------------------------ Logo fürs PDF
@@ -166,8 +194,39 @@ export function weeklyReportNoticeHtml() {
 }
 
 export const weeklyReportsActions = {
+  "wr-plan-toggle": (el) => {
+    const st = state();
+    const off = new Set(st.planOff ?? []);
+    if (el.checked) off.delete(el.dataset.arg);
+    else off.add(el.dataset.arg);
+    st.planOff = [...off];
+  },
+  "wr-plan-add": async () => {
+    const st = state();
+    const report = reportsOf(X.S.catalog).find((x) => x.row.week_start === st.open)?.report;
+    if (!report) return;
+    const off = new Set(st.planOff ?? []);
+    let added = 0;
+    let skipped = 0;
+    try {
+      for (const p of planOf(report)) {
+        if (off.has(p.text) || !p.dates.length) continue;
+        const r = TD.addTodoDates(X.S.catalog, X.S.todos, p.dates, p.text, { uuid: X.uuid });
+        added += r.added;
+        skipped += r.skipped;
+      }
+    } catch (e) {
+      return X.toast(e.message || "Die To-dos konnten nicht angelegt werden.", true);
+    }
+    await X.store.set("todos", X.S.todos);
+    st.planAdded = true;
+    X.toast(`${added} ${added === 1 ? "To-do" : "To-dos"} eingetragen${skipped ? `, ${skipped} schon vorhanden` : ""}`);
+    X.rerender();
+  },
   "wr-read": (el) => {
     const st = state();
+    st.planOff = [];
+    st.planAdded = false;
     st.open = st.open === el.dataset.arg ? null : el.dataset.arg;
     if (st.open) markSeen(st.open);
     X.rerender();

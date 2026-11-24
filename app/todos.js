@@ -71,7 +71,21 @@ function dayStatusCard(date) {
     planned = [];
   }
   const pOpen = planned.filter((p) => !p.done).length;
-  const st = { ...base, done: base.done + planned.length - pOpen, open: base.open + pOpen };
+  // Punkt „HRT“ bei eingestelltem Injektionsintervall (1.126.0, wie PC 1.0.201)
+  let hrt = [];
+  try {
+    if (secretOn()) {
+      const HS = D.hrtSchedule;
+      const intervals = HS.parseHrtIntervals(PS.effective(S.catalog, S.pcsettings, HS.HRT_INTERVALS_SETTING));
+      const entries = SD.hrtEntriesOf(S.catalog, S.super).filter((e) => e.date <= date);
+      hrt = HS.hrtDayItems(entries, intervals, [date], today());
+    }
+  } catch (e) {
+    console.error(e);
+    hrt = [];
+  }
+  const hOpen = hrt.filter((h) => !h.done).length;
+  const st = { ...base, done: base.done + planned.length - pOpen + hrt.length - hOpen, open: base.open + pOpen + hOpen };
   const isToday = date === today();
   return `<section class="card"><div class="wo-head"><h3>${isToday ? "Heute noch einzutragen" : `Einträge am ${esc(D.formatDate(date))}`}</h3>
       <span class="tag">${st.open === 0 ? "Alles eingetragen" : `${st.done} von ${st.done + st.open} eingetragen`}</span></div>
@@ -86,6 +100,12 @@ function dayStatusCard(date) {
         (p) => `<li class="${p.done ? "is-done" : ""}"><span class="status-icon ${p.done ? "" : "status-icon--open"}" aria-label="${p.done ? "erledigt" : "offen"}">${p.done ? "✓" : ""}</span>
         <span><button class="linkbtn" data-act="menu-go" data-arg="training" data-tab="plans">Training „${esc(p.dayName)}“</button>
         <span class="muted small">${p.done ? `Einheit erfasst${p.time ? ` (geplant ${esc(p.time)} Uhr)` : ""}` : `${p.time ? `Geplant um ${esc(p.time)} Uhr` : "Geplant"} · ${esc(p.planName)}`}</span></span></li>`,
+      )
+      .join("")}${hrt
+      .map(
+        (h) => `<li class="${h.done ? "is-done" : ""}"><span class="status-icon ${h.done ? "" : "status-icon--open"}" aria-label="${h.done ? "erledigt" : "offen"}">${h.done ? "✓" : ""}</span>
+        <span><button class="linkbtn" data-act="menu-go" data-arg="superhuman" data-tab="hrt">${esc(D.hrtSchedule.HRT_ITEM_TITLE)} · ${esc(h.hormone)}</button>
+        <span class="muted small">${esc(h.detail)}</span></span></li>`,
       )
       .join("")}</ul>
     ${S.todoDate && !isToday ? "" : ""}</section>`;
@@ -265,7 +285,13 @@ function scheduleData(date, mode) {
   const workouts = P.workoutsBetween(db, from, to).map((w) => O.workoutSummary(db, w));
   const dayStatus = CD.dayStatusOf(S.catalog, S.checklists, from, to);
   const hrt = secretOn() ? SD.hrtEntriesOf(S.catalog, S.super).filter((e) => e.date >= D.trends.shiftDays(from, -HRT_LOOKBACK_DAYS) && e.date <= to) : [];
-  return { days: SC().periodDays(date, mode), todos, workouts, plans: plansWithSlots(db), dayStatus, hrtDue: D.nextHrtDoses(hrt) };
+  // Präparate mit Injektionsintervall: Punkt „HRT“ am fälligen Tag (1.126.0, wie PC 1.0.201)
+  const HS = D.hrtSchedule;
+  const intervals = secretOn() ? HS.parseHrtIntervals(PS.effective(S.catalog, S.pcsettings, HS.HRT_INTERVALS_SETTING)) : {};
+  const days = SC().periodDays(date, mode);
+  const hrtFixed = HS.hrtDayItems(hrt, intervals, days, today());
+  const hrtDue = D.nextHrtDoses(hrt).filter((d) => !intervals[HS.hrtKey(d.hormone)]);
+  return { days, todos, workouts, plans: plansWithSlots(db), dayStatus, hrtDue, hrtFixed };
 }
 
 function scheduleItem(item) {

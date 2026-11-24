@@ -125,9 +125,14 @@ function virtualReference(catalog) {
 
 function virtualEntries(catalog) {
   if (pcHasReference(catalog)) return [];
+  return virtualEntriesAll(catalog);
+}
+
+/** Einträge des Referenz-Studios aus den dasGym-Nummern der Maschinen. */
+function virtualEntriesAll(catalog, gymId = REFERENCE_ID) {
   return (catalog?.machines ?? [])
     .filter((m) => !m.archived && String(m.gym_number ?? "").trim())
-    .map((m) => ({ id: entryId(REFERENCE_ID, m.id), gym_id: REFERENCE_ID, machine_id: m.id, number: String(m.gym_number).trim(), note: null, created_at: REFERENCE_TS, updated_at: REFERENCE_TS }));
+    .map((m) => ({ id: entryId(gymId, m.id), gym_id: gymId, machine_id: m.id, number: String(m.gym_number).trim(), note: null, created_at: REFERENCE_TS, updated_at: REFERENCE_TS }));
 }
 
 /** Das Referenz-Studio, das bisher nur am Handy besteht, für eine Änderung in die eigene Ablage übernehmen. */
@@ -217,7 +222,20 @@ export function gymEntries(catalog, local, gymId) {
   if (gymId === REFERENCE_ID) for (const r of virtualEntries(catalog)) map.set(`${r.gym_id}|${r.machine_id}`, r);
   for (const r of catalog?.pc?.gym_machine ?? []) if (r.gym_id === gymId) map.set(`${r.gym_id}|${r.machine_id}`, r);
   for (const e of Object.values(l.entries)) if (e.row.gym_id === gymId) map.set(`${e.row.gym_id}|${e.row.machine_id}`, e.row);
+  for (const r of missingReferenceEntries(catalog, gymId, map)) map.set(`${r.gym_id}|${r.machine_id}`, r);
   return [...map.values()].filter((r) => !isGone(l, "gym_machine", r.id));
+}
+
+/**
+ * Maschinen mit dasGym-Nummer, die in der Liste des Referenz-Studios vom PC noch fehlen (Handy 1.134.0,
+ * wie `gym::ensure_reference` am PC): z. B. eine neue Maschine, wenn der PC die Liste seit dem Anlegen
+ * noch nicht ergänzt hat. Vom Benutzer am PC entfernte Einträge (Löschvermerk) bleiben weg.
+ */
+function missingReferenceEntries(catalog, gymId, map) {
+  const pcRef = (catalog?.pc?.gym ?? []).find((r) => r.id === gymId && (r.id === REFERENCE_ID || r.package_id === REFERENCE_PACKAGE));
+  if (!pcRef) return [];
+  const removed = new Set((catalog?.pc?.deleted_record ?? []).filter((d) => d.table_name === "gym_machine").map((d) => d.record_id));
+  return virtualEntriesAll(catalog, gymId).filter((r) => !map.has(`${r.gym_id}|${r.machine_id}`) && !removed.has(r.id));
 }
 
 /** Aktives Gym: Wahl am Handy, sonst die vom PC, sonst das Referenz-Studio, sonst das erste. */

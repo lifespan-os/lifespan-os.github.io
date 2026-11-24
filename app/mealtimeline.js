@@ -660,7 +660,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
           .map((h) => {
             const b = shown.find((x) => x.key === h.barKey);
             const name = h.type === "pre" ? "Pre-Workout" : "Post-Workout";
-            return `<li class="mtl-hint"><span aria-hidden="true">⚠</span><span class="small"><b>${esc(b?.title ?? "")} ${b ? clockOf(b.from) : ""}:</b> ${esc(h.text)}</span><button class="btn sm" data-act="mtl-hint" data-arg="${Math.round(h.minute)}|${esc(name)}">＋ ${esc(name)}</button>${b ? `<button class="btn sm ghost mtl-hint__close" data-act="mtl-hint-off" data-arg="${esc(b.key)}" aria-label="Hinweise zu ${esc(b.title)} ausblenden" title="Hinweise zu diesem Training ausblenden (beim nächsten Training wieder)">✕</button>` : ""}</li>`;
+            return `<li class="mtl-hint"><span aria-hidden="true">⚠</span><span class="small"><b>${esc(b?.title ?? "")} ${b ? clockOf(b.from) : ""}:</b> ${esc(h.text)}</span><button class="btn sm" data-act="mtl-hint" data-arg="${Math.round(h.minute)}|${esc(name)}">＋ ${esc(name)}</button>${b ? `<button class="btn sm ghost mtl-hint__close" data-act="mtl-hint-off" data-arg="${esc(b.key)}|${h.type}" aria-label="${esc(name)}-Hinweis zu ${esc(b.title)} ausblenden" title="${esc(name)}-Hinweis zu diesem Training ausblenden (beim nächsten Training wieder)">✕</button>` : ""}</li>`;
           })
           .join("")}</ul>`
       : "";
@@ -1503,16 +1503,21 @@ export const timelineActions = {
     X.rerender();
     requestAnimationFrame(() => document.querySelector(".mtl-panel")?.scrollIntoView({ block: "center", behavior: "smooth" }));
   },
-  // Hinweise zu einem Training ausblenden; beim nächsten Training wieder (1.110.0)
+  // Einen Hinweis (Pre- oder Post-Workout) zu einem Training ausblenden; beim nächsten Training
+  // wieder (1.110.0, seit 1.139.0 je Hinweis getrennt)
   "mtl-hint-off": async (el) => {
     const S = X.S;
     const date = S.diaryDate ?? today();
-    const b = (S.mtlBars?.date === date ? S.mtlBars.bars : []).find((x) => x.key === el.dataset.arg);
+    const arg = el.dataset.arg ?? "";
+    const cut = arg.lastIndexOf("|");
+    const key = cut >= 0 ? arg.slice(0, cut) : arg;
+    const type = arg.slice(cut + 1) === "post" ? "post" : "pre";
+    const b = (S.mtlBars?.date === date ? S.mtlBars.bars : []).find((x) => x.key === key);
     if (!b) return;
     const db = buildDb();
     const list = WT().parseSkips(db.settings?.get?.(WT().HINTS_OFF_SETTING) ?? null);
-    await putSetting(WT().HINTS_OFF_SETTING, JSON.stringify(WT().addHintOff(list, WT().hintOffKey(date, b), isoMinus(date, 60))));
-    X.toast(`Hinweise zu „${b.title}“ ausgeblendet`);
+    await putSetting(WT().HINTS_OFF_SETTING, JSON.stringify(WT().addHintOff(list, WT().hintTypeOffKey(date, b, type), isoMinus(date, 60))));
+    X.toast(`${type === "pre" ? "Pre" : "Post"}-Workout-Hinweis zu „${b.title}“ ausgeblendet`);
     X.rerender();
   },
   "mtl-tr-cancel": () => {

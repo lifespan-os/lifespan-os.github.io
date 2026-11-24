@@ -886,6 +886,7 @@ __export(workoutTimeline_exports, {
   changedSlots: () => changedSlots,
   durationText: () => durationText,
   hintOffKey: () => hintOffKey,
+  hintTypeOffKey: () => hintTypeOffKey,
   isIntensePlanDay: () => isIntensePlanDay,
   isIntenseWorkout: () => isIntenseWorkout,
   linkedEntries: () => linkedEntries,
@@ -1211,6 +1212,9 @@ function hintOffKey(date, bar) {
   const day = bar.plan?.dayId ?? bar.planDayId;
   return day ? `${date}|d:${day}` : `${date}|${bar.key}`;
 }
+function hintTypeOffKey(date, bar, type) {
+  return `${hintOffKey(date, bar)}|${type}`;
+}
 function addHintOff(list2, key, keepFrom) {
   const out = list2.filter((k) => (k.split("|")[0] ?? "") >= keepFrom && k !== key);
   out.push(key);
@@ -1218,8 +1222,14 @@ function addHintOff(list2, key, keepFrom) {
 }
 function visibleHints(hints, bars, date, off) {
   if (!off.length) return [...hints];
-  const hidden = new Set(bars.filter((b) => off.includes(hintOffKey(date, b))).map((b) => b.key));
-  return hints.filter((h) => !hidden.has(h.barKey));
+  const set = new Set(off);
+  const byKey = new Map(bars.map((b) => [b.key, b]));
+  return hints.filter((h) => {
+    const b = byKey.get(h.barKey);
+    if (!b) return true;
+    const base = hintOffKey(date, b);
+    return !set.has(base) && !set.has(`${base}|${h.type}`);
+  });
 }
 function resolveWorkoutTargets(t = DEFAULT_WORKOUT_TARGETS, weightKg = null) {
   const perKg = t.mode === "perKg" && weightKg !== null && weightKg > 0;

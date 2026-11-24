@@ -1058,6 +1058,7 @@ function initCardMove() {
     c.minute = minute;
     c.slot.style.transform = `translateY(${(yAt(c.anchors, minute) - yAt(c.anchors, c.origin)).toFixed(1)}px)`;
     if (c.time) c.time.textContent = clockOf(minute);
+    if (c.line) c.line.style.top = `${yAt(c.anchors, minute).toFixed(1)}px`;
     if (navigator.vibrate) {
       try {
         navigator.vibrate(5);
@@ -1085,6 +1086,7 @@ function initCardMove() {
     if (!cm) return;
     clearTimeout(cm.timer);
     cancelAnimationFrame(cm.frame);
+    cm.line?.remove();
     if (cm.active) {
       cm.slot.classList.remove("is-moving");
       cm.slot.style.transform = "";
@@ -1119,6 +1121,15 @@ function initCardMove() {
         // Zeiger schon weg
       }
       slot.classList.add("is-moving");
+      // gestrichelte Linie vom Eintrag zur Zeitachse (1.133.0, wie PC 1.0.206)
+      c.line = document.createElement("span");
+      c.line.className = "mtl-move-line";
+      c.line.setAttribute("aria-hidden", "true");
+      const bx = box.getBoundingClientRect();
+      c.line.style.left = `${AXIS_X}px`;
+      c.line.style.width = `${Math.max(0, slot.getBoundingClientRect().left - bx.left - AXIS_X).toFixed(1)}px`;
+      c.line.style.top = `${yAt(anchors, origin).toFixed(1)}px`;
+      box.append(c.line);
       // Symbole: Uhrzeit als Marke daneben
       if (!c.time) {
         c.ownTime = true;
@@ -1181,6 +1192,7 @@ function initCardMove() {
     document.addEventListener("click", stop, { capture: true, once: true });
     setTimeout(() => document.removeEventListener("click", stop, { capture: true }), 350);
     c.slot.classList.remove("is-moving");
+    c.line?.remove();
     if (c.minute === c.origin) {
       c.slot.style.transform = "";
       if (c.ownTime) c.time?.remove();

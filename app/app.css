@@ -2176,6 +2176,8 @@ a.btn { color: var(--fg); text-decoration: none; }
 /* Symbole (Supplemente, Wasser, Koffein) ebenso verschiebbar (1.132.0) */
 .mtl-mark { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .mtl-mark.is-moving { z-index: 4; outline: 2px solid var(--orange); outline-offset: 1px; box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
+.mtl-move-line { position: absolute; z-index: 3; height: 0; border-top: 2px dashed var(--orange); pointer-events: none; }
+.mtl-move-line::before { content: ""; position: absolute; left: -5px; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--orange); }
 .mtl-move-time { position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%); padding: 0 6px; border-radius: 999px; background: var(--orange); color: var(--orange-ink); font-size: 11px; font-weight: 700; white-space: nowrap; pointer-events: none; }
 .mtl-card__head { display: flex; flex-wrap: nowrap; align-items: baseline; gap: 6px; }
 .mtl-card__head b { flex: 1; }

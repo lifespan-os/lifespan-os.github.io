@@ -509,6 +509,9 @@ export function pruneGyms(catalog, local) {
 
 export const PACKAGE_FORMAT = "lifespan-studio";
 export const MAX_PACKAGE_CHARS = 2_000_000;
+/** Datei mit mehreren Gyms zum Teilen (1.137.0, wie `gym::BUNDLE_FORMAT` am PC 1.0.208) */
+export const BUNDLE_FORMAT = "lifespan-studios";
+export const MAX_BUNDLE_CHARS = 20_000_000;
 
 /** Paketdatei prüfen. Liefert { pkg } oder { error }. */
 export function parsePackage(textValue) {
@@ -519,6 +522,39 @@ export function parsePackage(textValue) {
   } catch {
     return { error: "Das ist kein gültiges Studio-Paket (keine JSON-Datei)." };
   }
+  return checkPackage(pkg);
+}
+
+/**
+ * Studio-Paket oder Gym-Datei mit mehreren Studios prüfen (1.137.0, wie `gym::install_file` am PC).
+ * Liefert { pkgs } oder { error }.
+ */
+export function parseGymFile(textValue) {
+  const t = String(textValue ?? "");
+  if (t.length > MAX_BUNDLE_CHARS) return { error: "Die Datei ist zu groß." };
+  let doc;
+  try {
+    doc = JSON.parse(t);
+  } catch {
+    return { error: "Das ist kein gültiges Studio-Paket (keine JSON-Datei)." };
+  }
+  if (doc?.format !== BUNDLE_FORMAT) {
+    if (t.length > MAX_PACKAGE_CHARS) return { error: "Die Paketdatei ist zu groß." };
+    const one = checkPackage(doc);
+    return one.error ? one : { pkgs: [one.pkg] };
+  }
+  if (Number(doc.version) > 1) return { error: "Die Gym-Datei ist neuer als diese Version – bitte die App neu laden." };
+  if (!Array.isArray(doc.studios) || !doc.studios.length) return { error: "Die Datei enthält kein Gym." };
+  const pkgs = [];
+  for (const p of doc.studios) {
+    const one = checkPackage(p);
+    if (one.error) return one;
+    pkgs.push(one.pkg);
+  }
+  return { pkgs };
+}
+
+function checkPackage(pkg) {
   if (!pkg || pkg.format !== PACKAGE_FORMAT) return { error: "Das ist kein Studio-Paket von LIFESPAN OS." };
   if (Number(pkg.version) > 1) return { error: "Das Studio-Paket ist neuer als diese Version – bitte die App neu laden." };
   const id = String(pkg.id ?? "");
@@ -534,9 +570,23 @@ const short = (v, max) => {
   return t ? [...t].slice(0, max).join("") : null;
 };
 
+const sharedPhone = (v) => {
+  const t = short(v, 40);
+  return t && /^[\d +\-/()]+$/.test(t) ? t : null;
+};
+const sharedEmail = (v) => {
+  const t = short(v, 200);
+  return t && /^[^\s@]+@[^\s@]+\.[^\s@.]+$/.test(t) ? t : null;
+};
+const sharedPhoto = (v) => {
+  const t = String(v ?? "").trim();
+  return t.startsWith("data:image/") && t.length <= MAX_PHOTO_CHARS ? t : null;
+};
+
 /**
  * Paket installieren: Gym mit fester ID (`gym:<paket-id>`, wie am PC; „dasgym-wien“ ist das Referenz-Studio), Maschinen
- * ergänzen bzw. Nummern aktualisieren. Eigene Angaben (Mitgliedsnummer, Kontakt, Foto, Notizen) bleiben erhalten.
+ * ergänzen bzw. Nummern aktualisieren. Eigene Angaben (Mitgliedsnummer, Kontakt, Foto, Notizen) bleiben erhalten;
+ * geteilte Angaben (Kontakt, Telefon, E-Mail, Social Media, Foto, Notizen, 1.137.0) füllen nur leere Felder.
  * Liefert { gymId, name, added, updated, unchanged, missing: [Namen] }.
  */
 export function installPackage(catalog, local, pkg, now = new Date()) {
@@ -549,6 +599,11 @@ export function installPackage(catalog, local, pkg, now = new Date()) {
     name: pkg.name,
     address: short(pkg.address, 300) ?? prev?.address ?? null,
     website: short(pkg.website, 300) ?? prev?.website ?? null,
+    contact: prev?.contact ?? short(pkg.contact, 300),
+    phone: prev?.phone ?? sharedPhone(pkg.phone),
+    email: prev?.email ?? sharedEmail(pkg.email),
+    social: prev?.social ?? short(pkg.social, 300),
+    photo: prev?.photo ?? sharedPhoto(pkg.photo),
     package_id: pkg.id,
     archived: 0,
     updated_at: iso,
@@ -570,8 +625,10 @@ export function installPackage(catalog, local, pkg, now = new Date()) {
       continue;
     }
     const number = short(m?.number, 40);
+    const note = short(m?.note, 500);
     const cur = have.get(mid);
-    if (cur && (cur.number === number || number === null)) {
+    const newNote = cur && !cur.note && note;
+    if (cur && (cur.number === number || number === null) && !newNote) {
       report.unchanged += 1;
       continue;
     }
@@ -579,8 +636,8 @@ export function installPackage(catalog, local, pkg, now = new Date()) {
       id: cur?.id ?? entryId(gymId, mid),
       gym_id: gymId,
       machine_id: mid,
-      number,
-      note: cur?.note ?? null,
+      number: number ?? cur?.number ?? null,
+      note: cur?.note ?? note,
       created_at: cur?.created_at ?? iso,
       updated_at: iso,
     };
@@ -591,6 +648,53 @@ export function installPackage(catalog, local, pkg, now = new Date()) {
   }
   return report;
 }
+
+/** Paket-ID wie `gym::slug` am PC. */
+export function slug(name) {
+  const map = { ä: "ae", ö: "oe", ü: "ue", ß: "ss" };
+  const out = [...String(name ?? "").toLowerCase()].map((c) => map[c] ?? (/^[a-z0-9]$/.test(c) ? c : "-")).join("");
+  return out.split("-").filter(Boolean).join("-").slice(0, 60).replace(/-+$/, "");
+}
+
+/** Paket-ID eines Gyms (wie `package_of` am PC): vorhandene Paket-ID, sonst Name + Anfang der ID. */
+export function packageIdOf(g) {
+  if (g.package_id) return g.package_id;
+  return `${slug(g.name) || "studio"}-${String(g.id).slice(0, 8).toLowerCase()}`;
+}
+
+/**
+ * Gyms zum Teilen (1.137.0, wie `gym::export_share` am PC 1.0.208): alle Angaben und Maschinen mit Nummer und
+ * Notiz – ohne Mitgliedsnummer und Zutrittscode. Liefert { bundle } oder { error }.
+ */
+export function shareBundle(catalog, local, gymIds, now = new Date()) {
+  const ids = [...new Set(gymIds ?? [])];
+  if (!ids.length) return { error: "Bitte mindestens ein Gym auswählen." };
+  const gyms = new Map(gymList(catalog, local).map((g) => [g.id, g]));
+  const byId = new Map((catalog?.machines ?? []).map((m) => [m.id, m]));
+  const day = now.toISOString().slice(0, 10);
+  const studios = [];
+  for (const id of ids) {
+    const g = gyms.get(id);
+    if (!g) return { error: "Ein gewähltes Gym gibt es nicht mehr." };
+    const machines = gymEntries(catalog, local, id)
+      .map((e) => ({ e, m: byId.get(e.machine_id) }))
+      .filter((r) => r.m && !r.m.archived)
+      .sort((a, b) => numberCompare(a.e.number, b.e.number) || String(a.m.display_name).localeCompare(String(b.m.display_name), "de"))
+      .map(({ e, m }) => {
+        const out = { machine: m.id, number: e.number ?? null, name: m.display_name };
+        if (e.note) out.note = e.note;
+        return out;
+      });
+    const pkg = { format: PACKAGE_FORMAT, version: 1, id: packageIdOf(g), name: g.name, address: g.address ?? null, website: g.website ?? null, created: day };
+    for (const k of ["contact", "phone", "email", "social", "photo"]) if (g[k]) pkg[k] = g[k];
+    pkg.machines = machines;
+    studios.push(pkg);
+  }
+  return { bundle: { format: BUNDLE_FORMAT, version: 1, created: day, studios } };
+}
+
+/** Dateiname wie am PC: „Gyms teilen 2026-11-24.json“. */
+export const shareFileName = (now = new Date()) => `Gyms teilen ${now.toISOString().slice(0, 10)}.json`;
 
 /** Kurzer Bericht nach der Installation (gleicher Text wie `describeInstall` am PC). */
 export function describeInstall(r) {

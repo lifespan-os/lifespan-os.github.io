@@ -174,7 +174,60 @@ export function viewGymsTab() {
       )
       .join("")}</div>
   </section>
+  ${shareHtml(list)}
   ${packagesHtml(list)}`;
+}
+
+// ------------------------------------------------------------------ Gyms teilen (1.137.0, wie PC 1.0.208)
+
+/** Gewählte Gyms zum Teilen; ohne eigene Wahl alle außer dem Referenz-Studio. */
+function shareSelection(list) {
+  const S = X.S;
+  if (!S.gymShare) S.gymShare = list.filter((g) => g.package_id !== G.REFERENCE_PACKAGE).map((g) => g.id);
+  return new Set(S.gymShare.filter((id) => list.some((g) => g.id === id)));
+}
+
+const machinesText = (n) => `${n} ${n === 1 ? "Maschine" : "Maschinen"}`;
+
+function shareHtml(list) {
+  if (!list.length) return "";
+  const picked = shareSelection(list);
+  return `<section class="card">
+    <h3>Gyms teilen</h3>
+    <p class="card__note">Eine Datei mit den gewählten Gyms: Name, Anschrift, Kontakt, Telefon, E-Mail, Social Media, Website, Foto und die Maschinen mit Nummer und Notiz. Nicht enthalten: Mitgliedsnummer und Zutrittscode (Vorder- und Rückseite). Andere übernehmen sie mit „Paketdatei wählen …“ unter Studio-Pakete bzw. am PC mit „Studio-Paket installieren …“ – ihre eigenen Angaben bleiben dabei erhalten.</p>
+    <div class="gym-share">${list
+      .map(
+        (g) => `<label class="toggle"><input type="checkbox" data-gym="share" value="${esc(g.id)}" ${picked.has(g.id) ? "checked" : ""}> ${esc(g.name)} <span class="muted small">(${machinesText(G.gymEntries(X.S.catalog, X.S.gyms, g.id).length)})</span></label>`,
+      )
+      .join("")}</div>
+    <button class="btn block primary" data-act="gym-share" ${picked.size ? "" : "disabled"}>Exportieren</button>
+    <div id="gym-share-result"></div>
+  </section>`;
+}
+
+async function shareGyms() {
+  const S = X.S;
+  const list = G.gymList(S.catalog, S.gyms);
+  const ids = list.filter((g) => shareSelection(list).has(g.id)).map((g) => g.id);
+  const r = G.shareBundle(S.catalog, S.gyms, ids);
+  if (r.error) return X.toast(r.error, true);
+  const name = G.shareFileName();
+  const blob = new Blob([JSON.stringify(r.bundle, null, 2)], { type: "application/json" });
+  const file = new File([blob], name, { type: "application/json" });
+  const what = ids.length === 1 ? "1 Gym" : `${ids.length} Gyms`;
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: name });
+      return X.toast(`${what} weitergegeben.`);
+    } catch (e) {
+      if (e.name === "AbortError") return X.toast("Abgebrochen");
+    }
+  }
+  const box = document.getElementById("gym-share-result");
+  if (box) {
+    box.innerHTML = `<p class="small">Die Datei mit ${what} ist bereit – zum Öffnen oder Sichern antippen:</p>
+      <a class="btn blue block" href="${URL.createObjectURL(blob)}" download="${esc(name)}">${esc(name)}</a>`;
+  }
 }
 
 // ------------------------------------------------------------------ Studio-Pakete (1.61.0)
@@ -225,15 +278,16 @@ function packagesHtml(list) {
 
 async function installFromText(textValue) {
   const S = X.S;
-  const parsed = G.parsePackage(textValue);
+  // Studio-Paket oder Gym-Datei mit mehreren Studios (1.137.0)
+  const parsed = G.parseGymFile(textValue);
   if (parsed.error) {
     X.toast(parsed.error, true);
     return;
   }
-  const report = G.installPackage(S.catalog, S.gyms, parsed.pkg);
+  const reports = parsed.pkgs.map((pkg) => G.installPackage(S.catalog, S.gyms, pkg));
   await persist();
-  S.gymPkgReport = G.describeInstall(report);
-  X.toast(`„${report.name}“ installiert`);
+  S.gymPkgReport = reports.map(G.describeInstall).join(" ");
+  X.toast(reports.length === 1 ? `„${reports[0].name}“ installiert` : `${reports.length} Gyms installiert`);
   X.rerender();
 }
 
@@ -455,6 +509,7 @@ const toDraft = (g) => ({
 });
 
 export const gymsActions = {
+  "gym-share": () => void shareGyms(),
   "gym-pkg": async (el) => {
     const S = X.S;
     const file = el.dataset.arg;
@@ -615,6 +670,15 @@ export function gymsChange(el) {
     // Auswahl von Hand gilt heute vor dem meistgenutzten Gym (1.117.0)
     S.gyms.choiceDate = appDay();
     void persist().then(() => X.rerender());
+    return true;
+  }
+  if (kind === "share") {
+    const list = G.gymList(S.catalog, S.gyms);
+    const picked = shareSelection(list);
+    if (el.checked) picked.add(el.value);
+    else picked.delete(el.value);
+    S.gymShare = [...picked];
+    X.rerender();
     return true;
   }
   if (kind === "package") {

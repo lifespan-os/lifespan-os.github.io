@@ -410,6 +410,7 @@ const moduleCtx = {
   rerender: () => rerenderKeepScroll(),
   go: (view, arg) => go(view, arg),
   confirmTwice: (el, text) => confirmTwice(el, text),
+  refreshCatalog: () => refreshCatalog(),
   /** Trainings vom Handy als Tabellen (für die Rechnung wie am PC) */
   buildReturnTables: () =>
     C.buildReturnFile(S.catalog, S.localExercises, S.workouts.filter((w) => w.status === "done"), new Date()).tables,

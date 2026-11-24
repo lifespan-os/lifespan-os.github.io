@@ -33346,6 +33346,194 @@ function dayFlow(i) {
     next: shown.find((s) => !s.done) ?? null
   };
 }
+
+// src/domain/machineMatch.ts
+var machineMatch_exports = {};
+__export(machineMatch_exports, {
+  MERGE_THRESHOLD: () => MERGE_THRESHOLD,
+  MIN_SCORE: () => MIN_SCORE,
+  defaultAction: () => defaultAction,
+  findCandidates: () => findCandidates,
+  nameTokens: () => nameTokens,
+  similarity: () => similarity,
+  unknownMachines: () => unknownMachines
+});
+var MERGE_THRESHOLD = 90;
+var MIN_SCORE = 50;
+var STOP3 = /* @__PURE__ */ new Set([
+  "machine",
+  "maschine",
+  "the",
+  "der",
+  "die",
+  "das",
+  "und",
+  "and",
+  "mit",
+  "with",
+  "fur",
+  "for"
+]);
+var COMPACT_GROUPS2 = SYNONYM_GROUPS.map((g) => g.map(compactSearch));
+var maker = (m) => compactSearch(m.manufacturer ?? "");
+function nameText(m) {
+  const base = m.displayName?.trim() || [m.series, m.name].filter(Boolean).join(" ");
+  const man = normalizeSearch2(m.manufacturer ?? "");
+  let t = normalizeSearch2(base);
+  if (man.length >= 3) t = t.split(man).join(" ");
+  return t;
+}
+function nameTokens(m) {
+  const text2 = nameText(m);
+  const words = text2.split(/[^a-z0-9]+/).filter((w) => w && !STOP3.has(w));
+  const compact = compactSearch(text2);
+  const groups = [];
+  COMPACT_GROUPS2.forEach((terms, i) => {
+    if (terms.some((t) => t.length >= 5 && compact.includes(t))) groups.push(`#g${i}`);
+  });
+  return [.../* @__PURE__ */ new Set([...words, ...groups])];
+}
+var sameToken = (a, b) => {
+  if (a === b) return true;
+  if (a.startsWith("#") || b.startsWith("#")) return false;
+  const len = Math.min(a.length, b.length);
+  if (len < 5) return false;
+  const budget = len < 8 ? 1 : 2;
+  return editDistance2(a, b, budget) <= budget;
+};
+function dice(a, b) {
+  if (!a.length || !b.length) return 0;
+  const used = /* @__PURE__ */ new Set();
+  let hits = 0;
+  for (const x of a) {
+    const j = b.findIndex((y, k) => !used.has(k) && sameToken(x, y));
+    if (j >= 0) {
+      used.add(j);
+      hits += 1;
+    }
+  }
+  return 2 * hits / (a.length + b.length);
+}
+var sameMaker = (a, b) => !!a && !!b && (a === b || a.length >= 4 && b.length >= 4 && (a.includes(b) || b.includes(a)));
+function similarity(theirs, mine, sameNumber = false) {
+  const makerOk = sameMaker(maker(theirs), maker(mine));
+  const artA = compactSearch(theirs.articleNumber ?? "");
+  const artB = compactSearch(mine.articleNumber ?? "");
+  if (artA && artA === artB && makerOk) {
+    return { id: mine.id, score: 100, reason: "gleiche Artikelnummer" };
+  }
+  const ca = compactSearch(nameText(theirs));
+  const cb = compactSearch(nameText(mine));
+  let score;
+  let reason;
+  if (ca && ca === cb) {
+    score = makerOk ? 98 : 80;
+    reason = makerOk ? "gleicher Hersteller und Name" : "gleicher Name";
+  } else {
+    score = Math.round(dice(nameTokens(theirs), nameTokens(mine)) * 100);
+    reason = "\xE4hnlicher Name";
+    const contained = Math.min(ca.length, cb.length) >= 6 && (ca.includes(cb) || cb.includes(ca));
+    if (contained) score = Math.max(score, makerOk ? 92 : 72);
+    score = makerOk ? Math.min(95, score + 10) : Math.round(score * 0.8);
+    if (makerOk) reason += ", gleicher Hersteller";
+  }
+  if (sameNumber) {
+    score = Math.min(97, score + 10);
+    reason += ", gleiche Nummer im Studio";
+  }
+  return { id: mine.id, score, reason };
+}
+function findCandidates(theirs, mine, {
+  limit = 3,
+  theirNumber = null,
+  numberOf = () => null
+} = {}) {
+  const num3 = theirNumber?.trim() || null;
+  return mine.filter((m) => !m.archived && m.id !== theirs.id).map((m) => similarity(theirs, m, !!num3 && numberOf(m.id)?.trim() === num3)).filter((c) => c.score >= MIN_SCORE).sort((a, b) => b.score - a.score || a.id.localeCompare(b.id)).slice(0, limit);
+}
+function defaultAction(candidates) {
+  const best = candidates[0];
+  return best && best.score >= MERGE_THRESHOLD ? { action: "map", target: best.id } : { action: "new", target: null };
+}
+function unknownMachines(shared, referenced, known, aliases) {
+  return shared.filter(
+    (m) => referenced.has(m.id) && !known.has(m.id) && aliases[m.id] === void 0
+  );
+}
+
+// src/domain/gymShare.ts
+var gymShare_exports = {};
+__export(gymShare_exports, {
+  BUNDLE_FORMAT: () => BUNDLE_FORMAT,
+  PHOTO_MAX_SIDE: () => PHOTO_MAX_SIDE,
+  PHOTO_QUALITY: () => PHOTO_QUALITY,
+  asMatch: () => asMatch,
+  decisionsOf: () => decisionsOf,
+  describeDecisions: () => describeDecisions,
+  needsPhoto: () => needsPhoto,
+  parseBundle: () => parseBundle,
+  reviewItems: () => reviewItems
+});
+var BUNDLE_FORMAT = "lifespan-studios";
+var PHOTO_MAX_SIDE = 480;
+var PHOTO_QUALITY = 0.72;
+function parseBundle(text2) {
+  try {
+    const doc = JSON.parse(text2);
+    if (doc?.format !== BUNDLE_FORMAT || !Array.isArray(doc.studios)) return null;
+    return { ...doc, machines: Array.isArray(doc.machines) ? doc.machines : [] };
+  } catch {
+    return null;
+  }
+}
+function needsPhoto(m) {
+  return !m.hasOwnPhoto && (m.origin === "app" || m.id.startsWith("eigen-"));
+}
+var asMatch = (m) => ({
+  id: m.id,
+  manufacturer: m.manufacturer,
+  series: m.series,
+  name: m.name,
+  displayName: m.displayName,
+  articleNumber: m.articleNumber ?? null
+});
+function reviewItems(bundle, mine, aliases, numberOf = () => null) {
+  const where = /* @__PURE__ */ new Map();
+  for (const s of bundle.studios) {
+    for (const e of s.machines ?? []) {
+      if (!where.has(e.machine)) where.set(e.machine, { studio: s, number: e.number ?? null });
+    }
+  }
+  const known = new Set(mine.map((m) => m.id));
+  return unknownMachines(bundle.machines ?? [], new Set(where.keys()), known, aliases).map((m) => {
+    const w = where.get(m.id);
+    const candidates = findCandidates(asMatch(m), mine, {
+      theirNumber: w.number,
+      numberOf: (id3) => numberOf(w.studio.id, id3)
+    });
+    return {
+      machine: m,
+      studio: w.studio.name,
+      number: w.number,
+      candidates,
+      ...defaultAction(candidates)
+    };
+  });
+}
+var decisionsOf = (items) => items.map((i) => ({
+  machine: i.machine.id,
+  action: i.action,
+  target: i.action === "map" ? i.target : null
+}));
+function describeDecisions(items) {
+  const n3 = (a) => items.filter((i) => i.action === a).length;
+  const parts2 = [
+    n3("new") ? `${n3("new")} neu` : "",
+    n3("map") ? `${n3("map")} zusammengef\xFChrt` : "",
+    n3("skip") ? `${n3("skip")} weggelassen` : ""
+  ].filter(Boolean);
+  return parts2.length ? `Maschinen: ${parts2.join(", ")}.` : "";
+}
 export {
   AKH_REFERENCES,
   ANS_INFO,
@@ -33494,6 +33682,7 @@ export {
   groupIntakes,
   groupedValues,
   gymPreselect_exports as gymPreselect,
+  gymShare_exports as gymShare,
   heart_exports as heart,
   highlight,
   historyRange_exports as historyRange,
@@ -33519,6 +33708,7 @@ export {
   lifetime_exports as lifetime,
   loadVsNextDay,
   longevity_exports as longevity,
+  machineMatch_exports as machineMatch,
   machinesByMuscle_exports as machinesByMuscle,
   machines_exports as machinesDomain,
   macroBaseKcal,

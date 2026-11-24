@@ -34,7 +34,8 @@ export const REFERENCE_NAME = "dasGym Wien";
 const REFERENCE_TS = "2026-11-20T00:00:00.000Z";
 
 export function emptyGymsLocal() {
-  return { gyms: {}, entries: {}, deleted: {}, active: null };
+  // aliases (1.138.0): gemerkte Entscheidungen für fremde Maschinen aus geteilten Gyms (ID → eigene ID bzw. „-“)
+  return { gyms: {}, entries: {}, deleted: {}, active: null, aliases: {} };
 }
 
 export function gymsState(saved) {
@@ -551,7 +552,9 @@ export function parseGymFile(textValue) {
     if (one.error) return one;
     pkgs.push(one.pkg);
   }
-  return { pkgs };
+  // Angaben der Maschinen (1.138.0, wie PC 1.0.209)
+  const machines = (Array.isArray(doc.machines) ? doc.machines : []).filter((m) => m && typeof m.id === "string" && typeof m.name === "string");
+  return { pkgs, machines };
 }
 
 function checkPackage(pkg) {
@@ -589,7 +592,7 @@ const sharedPhoto = (v) => {
  * geteilte Angaben (Kontakt, Telefon, E-Mail, Social Media, Foto, Notizen, 1.137.0) füllen nur leere Felder.
  * Liefert { gymId, name, added, updated, unchanged, missing: [Namen] }.
  */
-export function installPackage(catalog, local, pkg, now = new Date()) {
+export function installPackage(catalog, local, pkg, now = new Date(), aliases = local?.aliases ?? {}) {
   const iso = now.toISOString();
   const gymId = stableId(`gym:${pkg.id}`);
   const prev = gymList(catalog, local).find((g) => g.id === gymId);
@@ -612,12 +615,19 @@ export function installPackage(catalog, local, pkg, now = new Date()) {
   delete row.machine_count;
   local.gyms[gymId] = { row, sent: false };
   delete local.deleted[`gym:${gymId}`];
-  const report = { gymId, name: pkg.name, added: 0, updated: 0, unchanged: 0, missing: [] };
+  const report = { gymId, name: pkg.name, added: 0, updated: 0, unchanged: 0, missing: [], skipped: 0 };
   const have = new Map(gymEntries(catalog, local, gymId).map((e) => [e.machine_id, e]));
   const machines = new Set((catalog?.machines ?? []).map((m) => m.id));
   const seen = new Set();
   for (const m of pkg.machines) {
-    const mid = String(m?.machine ?? "").trim();
+    const raw = String(m?.machine ?? "").trim();
+    // gemerkte Entscheidung (1.138.0, wie PC 1.0.209): zusammengeführt bzw. weggelassen
+    const alias = aliases?.[raw];
+    if (alias === ALIAS_SKIP) {
+      report.skipped += 1;
+      continue;
+    }
+    const mid = alias && !machines.has(raw) && machines.has(alias) ? alias : raw;
     if (!mid || seen.has(mid)) continue;
     seen.add(mid);
     if (!machines.has(mid)) {
@@ -690,17 +700,71 @@ export function shareBundle(catalog, local, gymIds, now = new Date()) {
     pkg.machines = machines;
     studios.push(pkg);
   }
-  return { bundle: { format: BUNDLE_FORMAT, version: 1, created: day, studios } };
+  // Angaben der Maschinen (1.138.0, wie PC 1.0.209); Fotos eigener Maschinen ergänzt die Oberfläche
+  const shared = [];
+  const seen = new Set();
+  for (const st of studios)
+    for (const e of st.machines) {
+      if (seen.has(e.machine) || !byId.has(e.machine)) continue;
+      seen.add(e.machine);
+      shared.push(sharedMachineOf(catalog, byId.get(e.machine)));
+    }
+  return { bundle: { format: BUNDLE_FORMAT, version: 1, created: day, studios, machines: shared } };
 }
 
 /** Dateiname wie am PC: „Gyms teilen 2026-11-24.json“. */
 export const shareFileName = (now = new Date()) => `Gyms teilen ${now.toISOString().slice(0, 10)}.json`;
+
+/** Wert für „weglassen“ in `aliases` (wie `gym::ALIAS_SKIP` am PC). */
+export const ALIAS_SKIP = "-";
+
+const jsonList = (v) => {
+  if (Array.isArray(v)) return v.map(String);
+  try {
+    const a = JSON.parse(v ?? "[]");
+    return Array.isArray(a) ? a.map(String) : [];
+  } catch {
+    return [];
+  }
+};
+
+/** Maschine für die Gym-Datei (wie `SharedMachine` am PC): Stammdaten, Muskelfokus, eigenes Foto. */
+export function sharedMachineOf(catalog, m) {
+  const focus = (catalog?.focus?.machines?.[m.id] ?? []).map(([muscle, percent]) => ({ muscle, percent }));
+  const out = {
+    id: m.id,
+    manufacturer: m.manufacturer ?? "",
+    series: m.series ?? "",
+    name: m.name ?? m.display_name ?? "",
+    displayName: m.display_name ?? "",
+    category: m.category ?? "",
+    machineType: m.machine_type ?? "",
+    muscleGroups: jsonList(m.muscle_groups),
+    tags: jsonList(m.tags),
+    focus,
+  };
+  if (m.article_number) out.articleNumber = m.article_number;
+  if (m.own_photo) out.photo = m.own_photo;
+  return out;
+}
+
+/** Entscheidungen merken (wie `install_file` am PC): map → eigene ID, skip → „-“, new → keine Zuordnung. */
+export function rememberDecisions(local, decisions) {
+  local.aliases = { ...(local.aliases ?? {}) };
+  for (const d of decisions ?? []) {
+    if (d.action === "map" && d.target) local.aliases[d.machine] = d.target;
+    else if (d.action === "skip") local.aliases[d.machine] = ALIAS_SKIP;
+    else if (d.action === "new") delete local.aliases[d.machine];
+  }
+  return local.aliases;
+}
 
 /** Kurzer Bericht nach der Installation (gleicher Text wie `describeInstall` am PC). */
 export function describeInstall(r) {
   const parts = [`${r.added} Maschinen aufgenommen`];
   if (r.updated) parts.push(`${r.updated} Nummern aktualisiert`);
   if (r.unchanged) parts.push(`${r.unchanged} unverändert`);
+  if (r.skipped) parts.push(`${r.skipped} weggelassen`);
   let s = `„${r.name}“: ${parts.join(", ")}.`;
   if (r.missing.length) {
     const shown = r.missing.slice(0, 3).join(", ");

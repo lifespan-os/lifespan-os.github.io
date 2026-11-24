@@ -13,6 +13,8 @@
 export const TRAIN_TABLES = [
   // Maschinen (1.99.0): eigene Maschinen anlegen, eigene Nummer, Notiz und Schlagworte
   "machine",
+  // Muskelfokus von Maschinen aus geteilten Gyms (1.138.0)
+  "machine_muscle_focus",
   "exercise",
   "sport",
   "neat_day",
@@ -25,7 +27,7 @@ export const TRAIN_TABLES = [
 ];
 
 /** Reihenfolge in der Rückgabedatei (Verweise zuerst). */
-const ORDER = ["machine", "sport", "exercise", "training_plan", "training_plan_day", "training_plan_exercise", "training_plan_set", "training_plan_slot", "neat_day", "checkin_photo"];
+const ORDER = ["machine", "machine_muscle_focus", "sport", "exercise", "training_plan", "training_plan_day", "training_plan_exercise", "training_plan_set", "training_plan_slot", "neat_day", "checkin_photo"];
 
 export function emptyTrainLocal() {
   return { rows: {}, deleted: {} };
@@ -112,6 +114,12 @@ export function overlayCatalog(raw, local, plansFromRows) {
   }
   if (pc.checkin_photo) pc.checkin_date = [...new Set(pc.checkin_photo.map((c) => c.date))].map((date) => ({ date }));
   const out = { ...raw, machines: rowsOf(raw, l, "machine"), exercises: rowsOf(raw, l, "exercise"), sports: rowsOf(raw, l, "sport"), pc };
+  // Muskelfokus vom Handy (1.138.0): Verteilung je Maschine neu zusammenstellen
+  if (l.rows.machine_muscle_focus || Object.keys(l.deleted).some((k) => k.startsWith("machine_muscle_focus:"))) {
+    const machines = {};
+    for (const r of pc.machine_muscle_focus ?? []) (machines[r.machine_id] ??= []).push([r.muscle, r.percent]);
+    out.focus = { ...(raw.focus ?? { exercises: {} }), machines };
+  }
   if (hasTable(raw, "training_plan")) out.plans = plansFromRows((name) => pc[name] ?? []);
   return out;
 }
@@ -657,6 +665,80 @@ export function deleteMachine(raw, local, id, { now = new Date() } = {}) {
 
 export const machineTags = (m) => jsonList(m?.tags);
 
+// ------------------------------------------------------------------ Maschinen aus geteilten Gyms (1.138.0, wie PC 1.0.209)
+
+function addFocus(local, machineId, focus, { uuid, ts, muscles }) {
+  const seen = new Set();
+  for (const f of focus ?? []) {
+    const pct = Number(f?.percent);
+    if (!muscles.has(f?.muscle) || !Number.isInteger(pct) || pct < 1 || pct > 100 || seen.has(f.muscle)) continue;
+    seen.add(f.muscle);
+    put(local, "machine_muscle_focus", { id: uuid(), machine_id: machineId, muscle: f.muscle, percent: pct, created_at: ts, updated_at: ts });
+  }
+}
+
+const sharedPhoto = (v) => {
+  const t = String(v ?? "").trim();
+  return t.startsWith("data:image/") && t.includes(";base64,") && t.length <= 600000 ? t : null;
+};
+
+/**
+ * Fremde Maschine als eigene anlegen (gleiche ID, `origin = app`) mit Muskelfokus und Foto – wie `create_shared`
+ * am PC. `muscles`: erlaubte Muskelteile (Set). Liefert die Zeile; vorhandene Maschinen bleiben unverändert.
+ */
+export function addSharedMachine(raw, local, sm, { uuid, now = new Date(), muscles }) {
+  const ts = iso(now);
+  const id = String(sm?.id ?? "");
+  if (!id || id.length > 120 || !/^[A-Za-z0-9_-]+$/.test(id)) throw new Error(`Ungültige Maschinen-ID „${id}“.`);
+  const old = rowsOf(raw, local, "machine").find((m) => m.id === id);
+  if (old) return old;
+  const name = String(sm.name ?? "").trim().slice(0, 120);
+  if (!name) throw new Error(`Die Maschine „${id}“ hat keinen gültigen Namen.`);
+  const series = String(sm.series ?? "").trim().slice(0, 80);
+  const list = (v, n, max) => (Array.isArray(v) ? v : []).map((x) => String(x).trim()).filter((x) => x && [...x].length <= max).slice(0, n);
+  const row = withColumns(raw, "machine", {
+    id,
+    manufacturer: String(sm.manufacturer ?? "").trim().slice(0, 80) || "Eigene",
+    folder: "Eigene",
+    article_number: String(sm.articleNumber ?? "").trim().slice(0, 60) || null,
+    category: String(sm.category ?? "").trim().slice(0, 60) || "Eigene Maschine",
+    series,
+    name,
+    display_name: String(sm.displayName ?? "").trim().slice(0, 200) || (series ? `${series} | ${name}` : name),
+    machine_type: String(sm.machineType ?? "").trim().slice(0, 60),
+    muscle_groups: JSON.stringify(list(sm.muscleGroups, 12, 60)),
+    features: "[]",
+    images: "[]",
+    product_url: null,
+    own_number: null,
+    gym_number: null,
+    notes: "Aus einem geteilten Gym übernommen.",
+    archived: 0,
+    created_at: ts,
+    updated_at: ts,
+    origin: "app",
+    own_photo: sharedPhoto(sm.photo),
+    tags: JSON.stringify(list(sm.tags, 30, 40)),
+  });
+  put(local, "machine", row);
+  addFocus(local, id, sm.focus, { uuid, ts, muscles });
+  return row;
+}
+
+/**
+ * Mit einer eigenen Maschine zusammenführen (wie `fill_from_shared` am PC): fehlender Muskelfokus und – ohne Bilder
+ * und eigenes Foto – das Foto aus der Datei; vorhandene Angaben bleiben.
+ */
+export function fillFromShared(raw, local, targetId, sm, { uuid, now = new Date(), muscles }) {
+  const ts = iso(now);
+  const target = rowsOf(raw, local, "machine").find((m) => m.id === targetId);
+  if (!target) throw new Error("Die Maschine zum Zusammenführen gibt es nicht.");
+  const hasFocus = rowsOf(raw, local, "machine_muscle_focus").some((r) => r.machine_id === targetId);
+  if (!hasFocus) addFocus(local, targetId, sm.focus, { uuid, ts, muscles });
+  const photo = sharedPhoto(sm.photo);
+  if (photo && !target.own_photo && jsonList(target.images).length === 0) put(local, "machine", { ...target, own_photo: photo, updated_at: ts });
+}
+
 // ------------------------------------------------------------------ Check-Ins (wie checkin::save)
 
 export const POSE_KEYS = [
@@ -762,6 +844,7 @@ export function trainTables(local, { all = false } = {}) {
  */
 export const TRAIN_REFERENCES = [
   ["exercise", "machine_id", "machine"],
+  ["machine_muscle_focus", "machine_id", "machine"],
   ["exercise", "sport_id", "sport"],
   ["training_plan", "gym_id", "gym"],
   ["training_plan_day", "plan_id", "training_plan"],

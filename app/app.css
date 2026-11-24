@@ -1655,6 +1655,11 @@ body.is-searching main.wrap:has(.food-search) { padding-bottom: 100vh; }
 .gym-photo--large { width: 96px; height: 96px; font-size: 40px; }
 .gym-head { display: flex; gap: 12px; align-items: flex-start; margin: 8px 0 12px; }
 .gym-head > div { min-width: 0; display: grid; gap: 4px; }
+/* Prüfliste fremder Maschinen aus geteilten Gyms (1.138.0) */
+.gym-review { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line); }
+.gym-review__img { flex: 0 0 auto; width: 56px; height: 56px; border-radius: 10px; object-fit: cover; }
+.gym-review__main { min-width: 0; flex: 1; display: grid; gap: 4px; }
+.gym-review__main select { width: 100%; margin-top: 4px; }
 .gym-rows { display: grid; gap: 8px; margin-top: 8px; }
 .gym-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto auto; gap: 8px; align-items: start; padding: 8px 0; border-top: 1px solid var(--line); }
 .gym-row__no { width: 100%; min-width: 0; text-align: center; font-weight: 600; }

@@ -9,7 +9,8 @@ import * as G from "./gymsdata.js";
 import * as D from "./pcdomain.js";
 import { appDay } from "./core.js";
 import { cropPhoto } from "./photocrop.js";
-import { thumbButton } from "./machineimages.js";
+import { thumbButton, has as hasImage, imageUrl } from "./machineimages.js";
+import * as TR from "./trainingdata.js";
 import { openImageZoom } from "./mapzoom.js";
 import { autoAttrs, autoSaveHtml, autosaveNow } from "./autosave.js";
 
@@ -174,6 +175,7 @@ export function viewGymsTab() {
       )
       .join("")}</div>
   </section>
+  ${reviewHtml()}
   ${shareHtml(list)}
   ${packagesHtml(list)}`;
 }
@@ -205,12 +207,45 @@ function shareHtml(list) {
   </section>`;
 }
 
+/** Bild (URL) als verkleinertes JPEG (data-URL) wie am PC: Längsseite ≤ 480 px. */
+function scaledPhoto(url) {
+  return new Promise((resolve, reject) => {
+    if (!url) return reject(new Error("kein Bild"));
+    const img = new Image();
+    img.onload = () => {
+      const max = D.gymShare.PHOTO_MAX_SIDE;
+      const f = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.naturalWidth * f));
+      c.height = Math.max(1, Math.round(img.naturalHeight * f));
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL("image/jpeg", D.gymShare.PHOTO_QUALITY));
+    };
+    img.onerror = () => reject(new Error("Bild nicht lesbar"));
+    img.src = url;
+  });
+}
+
 async function shareGyms() {
   const S = X.S;
   const list = G.gymList(S.catalog, S.gyms);
   const ids = list.filter((g) => shareSelection(list).has(g.id)).map((g) => g.id);
   const r = G.shareBundle(S.catalog, S.gyms, ids);
   if (r.error) return X.toast(r.error, true);
+  // eigene Maschinen ohne eigenes Foto: erstes Bild verkleinert mitgeben (1.138.0, wie PC 1.0.209)
+  const byId = new Map(S.catalog.machines.map((m) => [m.id, m]));
+  for (const sm of r.bundle.machines) {
+    const m = byId.get(sm.id);
+    if (sm.photo || !m || !D.gymShare.needsPhoto({ id: m.id, origin: m.origin, hasOwnPhoto: Boolean(m.own_photo) }) || !hasImage(m.id)) continue;
+    try {
+      sm.photo = await scaledPhoto(await imageUrl(m.id));
+    } catch {
+      // ohne Foto weiter
+    }
+  }
   const name = G.shareFileName();
   const blob = new Blob([JSON.stringify(r.bundle, null, 2)], { type: "application/json" });
   const file = new File([blob], name, { type: "application/json" });
@@ -284,11 +319,83 @@ async function installFromText(textValue) {
     X.toast(parsed.error, true);
     return;
   }
-  const reports = parsed.pkgs.map((pkg) => G.installPackage(S.catalog, S.gyms, pkg));
+  // fremde Maschinen (1.138.0, wie PC 1.0.209): erst prüfen lassen
+  if (parsed.machines?.length) {
+    const mine = S.catalog.machines
+      .filter((m) => !m.archived)
+      .map((m) => ({ id: m.id, manufacturer: m.manufacturer ?? "", series: m.series ?? "", name: m.name ?? m.display_name ?? "", displayName: m.display_name ?? "", articleNumber: m.article_number ?? null }));
+    const numberOf = (studioId, machineId) => G.gymEntries(S.catalog, S.gyms, G.stableId(`gym:${studioId}`)).find((e) => e.machine_id === machineId)?.number ?? null;
+    const bundle = { format: G.BUNDLE_FORMAT, version: 1, studios: parsed.pkgs, machines: parsed.machines };
+    const items = D.gymShare.reviewItems(bundle, mine, S.gyms.aliases ?? {}, numberOf);
+    if (items.length) {
+      S.gymReview = { pkgs: parsed.pkgs, machines: parsed.machines, items };
+      S.gymPkgReport = null;
+      X.rerender();
+      setTimeout(() => document.getElementById("gym-review")?.scrollIntoView({ block: "start", behavior: "smooth" }), 50);
+      return;
+    }
+  }
+  await finishInstall(parsed.pkgs, []);
+}
+
+/** Entscheidungen anwenden (neu anlegen bzw. zusammenführen), merken und die Gyms installieren. */
+async function finishInstall(pkgs, items) {
+  const S = X.S;
+  if (items.length) {
+    const muscles = new Set(D.muscleMapAll.MUSCLE_IDS);
+    const opts = { uuid: X.uuid, now: new Date(), muscles };
+    for (const it of items) {
+      if (it.action === "new") TR.addSharedMachine(S.catalogRaw, S.train, it.machine, opts);
+      else if (it.action === "map" && it.target) TR.fillFromShared(S.catalogRaw, S.train, it.target, it.machine, opts);
+    }
+    await X.store.set("train", S.train);
+    X.refreshCatalog?.();
+    G.rememberDecisions(S.gyms, D.gymShare.decisionsOf(items));
+  }
+  const reports = pkgs.map((pkg) => G.installPackage(S.catalog, S.gyms, pkg));
   await persist();
-  S.gymPkgReport = reports.map(G.describeInstall).join(" ");
+  S.gymReview = null;
+  S.gymPkgReport = [...reports.map(G.describeInstall), D.gymShare.describeDecisions(items)].filter(Boolean).join(" ");
   X.toast(reports.length === 1 ? `„${reports[0].name}“ installiert` : `${reports.length} Gyms installiert`);
   X.rerender();
+}
+
+const reviewValue = (it) => (it.action === "map" ? `map:${it.target}` : it.action);
+
+/** Prüfliste fremder Maschinen (1.138.0, wie PC 1.0.209). */
+function reviewHtml() {
+  const S = X.S;
+  const r = S.gymReview;
+  if (!r) return "";
+  const byId = new Map(S.catalog.machines.map((m) => [m.id, m]));
+  const n = r.items.length;
+  return `<section class="card" id="gym-review">
+    <h3>${n === 1 ? "1 neue Maschine" : `${n} neue Maschinen`} aus der Datei</h3>
+    <p class="card__note">Diese Maschinen gibt es in deiner Maschinendatenbank noch nicht. „Zusammenführen“ ordnet sie einer ähnlichen eigenen Maschine zu – fehlender Muskelfokus und, ohne eigene Bilder, das Foto werden ergänzt. „Als neu übernehmen“ legt sie als eigene Maschine mit Muskelfokus und Foto an (geht mit den Trainingsdaten an den PC). „Weglassen“ übernimmt sie nicht. Deine Wahl gilt auch für spätere Dateien.</p>
+    <div class="list">${r.items
+      .map((it, i) => {
+        const m = it.machine;
+        const opts = [
+          ...it.candidates.map((c) => {
+            const own = byId.get(c.id);
+            return [`map:${c.id}`, `Zusammenführen mit ${own ? `${own.display_name} (${own.manufacturer})` : c.id} – ${c.score} %`];
+          }),
+          ["new", "Als neue Maschine übernehmen"],
+          ["skip", "Weglassen"],
+        ];
+        const sub = [m.manufacturer, it.number ? `Nr. ${it.number} in ${it.studio}` : it.studio].filter(Boolean).join(" · ") + (m.focus?.length ? " · mit Muskelfokus" : "");
+        return `<div class="gym-review">
+          ${m.photo ? `<img class="gym-review__img" src="${esc(m.photo)}" alt="">` : ""}
+          <div class="gym-review__main"><b>${esc(m.displayName || m.name)}</b><span class="muted small">${esc(sub)}</span>${it.candidates[0] ? `<span class="muted small">Ähnlich: ${esc(it.candidates[0].reason)}</span>` : ""}
+          <select data-gym="review" data-arg="${i}" aria-label="Übernehmen: ${esc(m.displayName || m.name)}">${opts
+            .map(([v, label]) => `<option value="${esc(v)}" ${v === reviewValue(it) ? "selected" : ""}>${esc(label)}</option>`)
+            .join("")}</select></div>
+        </div>`;
+      })
+      .join("")}</div>
+    <button class="btn block primary" data-act="gym-review-ok">Gym installieren</button>
+    <button class="btn block" data-act="gym-review-cancel">Abbrechen</button>
+  </section>`;
 }
 
 function detailHtml(g, active) {
@@ -510,6 +617,19 @@ const toDraft = (g) => ({
 
 export const gymsActions = {
   "gym-share": () => void shareGyms(),
+  "gym-review-ok": async () => {
+    const r = X.S.gymReview;
+    if (!r) return;
+    try {
+      await finishInstall(r.pkgs, r.items);
+    } catch (e) {
+      X.toast(e.message || "Installieren ging nicht.", true);
+    }
+  },
+  "gym-review-cancel": () => {
+    X.S.gymReview = null;
+    X.rerender();
+  },
   "gym-pkg": async (el) => {
     const S = X.S;
     const file = el.dataset.arg;
@@ -670,6 +790,18 @@ export function gymsChange(el) {
     // Auswahl von Hand gilt heute vor dem meistgenutzten Gym (1.117.0)
     S.gyms.choiceDate = appDay();
     void persist().then(() => X.rerender());
+    return true;
+  }
+  if (kind === "review") {
+    const it = S.gymReview?.items?.[Number(el.dataset.arg)];
+    if (!it) return true;
+    if (el.value.startsWith("map:")) {
+      it.action = "map";
+      it.target = el.value.slice(4);
+    } else {
+      it.action = el.value;
+      it.target = null;
+    }
     return true;
   }
   if (kind === "share") {

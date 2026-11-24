@@ -5,7 +5,7 @@
   "name": "dasGym Wien",
   "address": "Handelskai 340 1020 Wien Österreich",
   "website": "https://www.dasgym.com/",
-  "created": "2026-11-23",
+  "created": "2026-11-24",
   "machines": [
     {
       "machine": "eigen-mw54m4na-m97lg",
@@ -926,6 +926,11 @@
       "machine": "gym80-4112",
       "number": "980",
       "name": "4112 Basic Universalbank light"
+    },
+    {
+      "machine": "eigen-mwuyoto9-ml4q9",
+      "number": "989",
+      "name": "Next Generation R3 | Torso Arm Pull Down"
     },
     {
       "machine": "glutebuilder-dual-45-hip-extension",

@@ -633,7 +633,9 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
         const count = lane === "supplement" ? c.items.reduce((n, e) => n + (e.count || 1), 0) : c.items.length;
         const mg = c.items.reduce((n, e) => n + (e.mg || 0), 0);
         const label = `${LANE_LABEL[lane]}: ${c.items.map((e) => `${e.time} ${e.text}`).join(" · ")}`;
-        return `<button type="button" class="mtl-mark mtl-mark--${lane}" style="top:${Math.max(0, c.y - MARK_H / 2).toFixed(1)}px;left:calc(100% - ${laneRight[lane] + laneW[lane] - 2}px);max-width:${laneW[lane] - 4}px" data-act="mtl-menu" data-arg="${esc(c.items.map((e) => swipeKey(e)).join("\n"))}" aria-label="${esc(label)}"><span aria-hidden="true">${LANE_ICON[lane]}</span>${lane === "caffeine" ? `<span class="mtl-mg">${Math.round(mg)}</span>` : ""}${count > 1 ? `<span class="mtl-badge">${count}</span>` : ""}</button>`;
+        // gedrückt halten und ziehen verschiebt alle Einträge des Symbols (1.132.0)
+        const move = `marks|${c.items.map((e) => `${e.kind}:${e.id}`).join(",")}`;
+        return `<button type="button" class="mtl-mark mtl-mark--${lane}" data-move="${esc(move)}" data-minute="${c.minute}" style="top:${Math.max(0, c.y - MARK_H / 2).toFixed(1)}px;left:calc(100% - ${laneRight[lane] + laneW[lane] - 2}px);max-width:${laneW[lane] - 4}px" data-act="mtl-menu" data-arg="${esc(c.items.map((e) => swipeKey(e)).join("\n"))}" aria-label="${esc(label)}"><span aria-hidden="true">${LANE_ICON[lane]}</span>${lane === "caffeine" ? `<span class="mtl-mg">${Math.round(mg)}</span>` : ""}${count > 1 ? `<span class="mtl-badge">${count}</span>` : ""}</button>`;
       })
       .join(""),
   ).join("");
@@ -1086,12 +1088,13 @@ function initCardMove() {
     if (cm.active) {
       cm.slot.classList.remove("is-moving");
       cm.slot.style.transform = "";
-      if (cm.time) cm.time.textContent = cm.originText;
+      if (cm.ownTime) cm.time?.remove();
+      else if (cm.time) cm.time.textContent = cm.originText;
     }
     cm = null;
   };
   document.addEventListener("pointerdown", (ev) => {
-    const slot = ev.target.closest?.(".mtl .mtl-slot[data-move]");
+    const slot = ev.target.closest?.(".mtl .mtl-slot[data-move], .mtl .mtl-mark[data-move]");
     if (!slot || (ev.pointerType === "mouse" && ev.button !== 0)) return;
     cancel();
     const box = slot.closest(".mtl");
@@ -1103,7 +1106,7 @@ function initCardMove() {
     }
     const origin = Number(slot.dataset.minute);
     if (!Number.isFinite(origin)) return;
-    const time = slot.querySelector(".mtl-card__time");
+    let time = slot.querySelector(".mtl-card__time");
     const c = { slot, box, anchors, origin, minute: origin, offset: 0, start: Number(box.dataset.start) || 0, x0: ev.clientX, y0: ev.clientY, lastY: ev.clientY, id: ev.pointerId, active: false, moved: false, time, originText: time?.textContent ?? "", timer: 0, frame: 0 };
     c.timer = setTimeout(() => {
       if (cm !== c) return;
@@ -1116,6 +1119,14 @@ function initCardMove() {
         // Zeiger schon weg
       }
       slot.classList.add("is-moving");
+      // Symbole: Uhrzeit als Marke daneben
+      if (!c.time) {
+        c.ownTime = true;
+        c.time = document.createElement("span");
+        c.time.className = "mtl-move-time";
+        c.time.textContent = clockOf(origin);
+        slot.append(c.time);
+      }
       if (navigator.vibrate) {
         try {
           navigator.vibrate(15);
@@ -1172,9 +1183,10 @@ function initCardMove() {
     c.slot.classList.remove("is-moving");
     if (c.minute === c.origin) {
       c.slot.style.transform = "";
+      if (c.ownTime) c.time?.remove();
       return;
     }
-    void moveEntry(c.slot.dataset.move, clockOf(c.minute));
+    void moveEntry(c.slot.dataset.move, clockOf(c.minute), c.minute - c.origin);
   });
   document.addEventListener("pointercancel", (ev) => {
     if (cm && ev.pointerId === cm.id) cancel();
@@ -1182,14 +1194,78 @@ function initCardMove() {
 }
 
 /** Mahlzeit bzw. geplante Mahlzeit auf eine neue Uhrzeit setzen und speichern. */
-async function moveEntry(key, time) {
+async function moveEntry(key, time, delta = 0) {
   const S = X.S;
   const [kind, id] = String(key).split("|");
+  if (kind === "marks") return moveMarks(id, delta);
   try {
     if (kind === "meal") N.setMealTime(S.catalog, S.food.local, id, time, new Date());
     else N.movePlanned(S.catalog, S.food.local, id, time, new Date());
     await persistFood();
     X.toast(`${kind === "meal" ? "Mahlzeit" : "Geplante Mahlzeit"} auf ${time} Uhr verschoben.`);
+  } catch (e) {
+    X.toast(e.message, true);
+  }
+  X.rerender();
+}
+
+/**
+ * Symbole verschieben (1.132.0, wie PC 1.0.205): Supplemente, Wasser und Koffein eines Symbols um
+ * `delta` Minuten. Koffein aus der Schnellerfassung am PC (mit Supplement-Eintrag) wird am PC geändert.
+ */
+async function moveMarks(list, delta) {
+  const S = X.S;
+  const date = S.diaryDate ?? today();
+  const start = dayStartMinutesOn(date);
+  const now = new Date();
+  const db = buildDb();
+  const intakes = P.intakesOn(db, date);
+  const cafs = CF.intakesOn(S.catalog, S.caffeine, date);
+  const glasses = P.waterDay(db, date).glasses;
+  const shifted = (t) => {
+    const m = axisMinuteOf(t, start);
+    return m === null ? null : clockOf(snapMinute(m + delta, 1, start));
+  };
+  const opts = { uuid: X.uuid, now };
+  const touched = new Set();
+  let n = 0;
+  let at = "";
+  let label = "";
+  const mealTimes = new Map(P.mealDay(db, date).meals.map((m) => [m.id, m.time]));
+  try {
+    for (const part of String(list).split(",")) {
+      const [kind, id] = part.split(":");
+      if (kind === "water") {
+        const g = glasses.find((x) => x.id === id);
+        const t = g ? shifted(g.time) : null;
+        if (!t) continue;
+        P.moveWaterGlass(db, S.water, id, t, now);
+        touched.add("water");
+        label = "Glas Wasser";
+        at = t;
+      } else if (kind === "caffeine") {
+        const c = cafs.find((x) => x.id === id);
+        const t = c ? shifted(c.time) : null;
+        if (!t) continue;
+        CF.updateIntake(S.catalog, S.caffeine, id, { time: t, drinkId: c.drinkId, label: c.label, ml: c.ml, mg: c.mg }, now);
+        touched.add("caffeine");
+        label = `„${c.label}“`;
+        at = t;
+      } else if (kind === "supplement") {
+        const i = intakes.find((x) => x.id === id);
+        const t = i ? shifted(i.time ?? (i.mealId ? mealTimes.get(i.mealId) : null)) : null;
+        if (!t) continue;
+        SP.saveIntake(db, S.supp, { ...SP.draftFromIntake(i), time: t }, { ...opts, ensureMeal: (d, type) => N.ensureMeal(S.catalog, S.food.local, d, type, opts) });
+        touched.add("supp");
+        label = `„${i.name}“`;
+        at = t;
+      } else continue;
+      n++;
+    }
+    if (touched.has("water")) await X.store.set("water", S.water);
+    if (touched.has("caffeine")) await X.store.set("caffeine", S.caffeine);
+    if (touched.has("supp")) await persistSupp();
+    if (n) X.toast(n === 1 ? `${label} auf ${at} Uhr verschoben.` : `${n} Einträge um ${delta > 0 ? "+" : "−"}${Math.abs(delta)} Min. verschoben.`);
   } catch (e) {
     X.toast(e.message, true);
   }

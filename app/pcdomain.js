@@ -7100,8 +7100,10 @@ var PATTERN_MACHINE_IDS = {
     // MedX – Pullover (zugeordnet 13.11.2026)
     "eigen-mwayk3xt-vn0km",
     // Nautilus – Chain Driven SPO-3 Pullover (zugeordnet 13.11.2026)
-    "eigen-mwcmwuad-0n2h8"
+    "eigen-mwcmwuad-0n2h8",
     // Eisenhauer Training – C1 Dual Pullover (zugeordnet 13.11.2026)
+    "eigen-mwuyoto9-ml4q9"
+    // Nautilus – Next Generation R3 | Torso Arm Pull Down (zugeordnet 24.11.2026, wie 3012N)
   ]),
   shrug: /* @__PURE__ */ new Set([
     "lifefitness-plate-loaded-seated-standing-shrug",
@@ -17339,6 +17341,38 @@ var MAGAZINE_CATEGORY_ORDER = [
   "longevity"
 ];
 var MAGAZINES = [
+  {
+    id: "straight-saetze",
+    title: "Weniger Show. Mehr Kontrolle. Straight-S\xE4tze.",
+    series: "iCoach.Me Magazin \xB7 Training \xB7 Ausgabe 11",
+    category: "training",
+    pages: 3,
+    issued: "November 2026",
+    summary: "Drop-S\xE4tze und Rest-Pause wirken hart und effizient \u2013 aber bringen sie mehr Muskeln? Das Heft vergleicht die drei Satzarten anhand der aktuellen Studienlage und zeigt, warum der klassische Arbeitssatz mit ordentlicher Pause oft die kl\xFCgere Grundlage ist.",
+    learn: [
+      "Straight-Satz, Drop-Satz und Rest-Pause im direkten Vergleich \u2013 Muskelaufbau, Kraft, Erm\xFCdung, Progression, Zeit",
+      "Was die Metaanalyse von Havers et al. (2026, 12 Studien, 274 Teilnehmer) zu Drop-S\xE4tzen fand",
+      "Vier Vorteile von Straight-S\xE4tzen: mehr Reiz pro Erm\xFCdung, bessere Satzqualit\xE4t, klare Progression mit RIR",
+      "Wann Drop- und Rest-Pause-S\xE4tze sinnvoll sind: bei Zeitmangel, am Ende der Einheit, an Maschinen"
+    ],
+    bytes: 443830
+  },
+  {
+    id: "griffkraft",
+    title: "Dein Griff verr\xE4t mehr, als du denkst.",
+    series: "iCoach.Me Performance-Report \xB7 Ausgabe 11",
+    category: "gesundheit",
+    pages: 5,
+    issued: "November 2026",
+    summary: "Ein paar Sekunden Dr\xFCcken und ein g\xFCnstiges Messger\xE4t liefern einen der st\xE4rksten Gesundheitsmarker \xFCberhaupt. Das Heft zeigt, was die Griffkraft \xFCber dein Altern und dein Nervensystem sagt, wie du sie richtig misst und wie du sie als Morgen-Check nutzt.",
+    learn: [
+      "Was die PURE-Studie (Lancet 2015, \u2248 140.000 Menschen) fand: +16 % Sterberisiko pro 5 kg weniger Griffkraft",
+      "Sarkopenie-Warnsignal nach EWGSOP2: unter 27 kg bei M\xE4nnern, unter 16 kg bei Frauen",
+      "Griffkraft und ZNS-Erm\xFCdung \u2013 was daf\xFCr und was dagegen spricht",
+      "Das Messprotokoll in 6 Schritten und die Ampel gegen deinen 7-Tage-Schnitt"
+    ],
+    bytes: 737860
+  },
   {
     id: "soja-oestrogen",
     title: "Macht Soja dich weiblich?",

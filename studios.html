@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Studio-Pakete für LIFESPAN OS: Fitnessstudios mit ihrer Maschinenliste und den Gerätenummern im Studio.">
+<meta name="description" content="Studio-Pakete und geteilte Gyms für LIFESPAN OS: Fitnessstudios mit ihrer Maschinenliste und den Gerätenummern im Studio.">
 <link rel="icon" type="image/png" href="app/icons/icon-192.png">
 <title>Studio-Pakete · LIFESPAN OS</title>
 <style>
@@ -48,6 +48,14 @@ h1 { font-family: var(--f-display); font-size: clamp(2rem, 6vw, 3.2rem); line-he
 .dl:hover { background: #166ca6; }
 .dl svg { width: 16px; height: 16px; }
 .note { color: var(--muted); font-size: .9rem; margin: 0 0 40px; }
+h2.section { font-family: var(--f-display); font-size: clamp(1.5rem, 4vw, 2.1rem); letter-spacing: -0.02em; margin: 56px 0 10px; }
+.submit { margin: 0 0 56px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.submit h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.submit p { margin: 0 0 8px; color: var(--muted); font-size: .95rem; }
+.mailrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.mailrow code { font-size: 1rem; padding: 6px 10px; background: var(--surface-2); border-radius: 8px; user-select: all; }
+.copy { min-height: 44px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; font-size: .9rem; cursor: pointer; }
+.tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #fff1e0; color: #8a4500; font-size: .78rem; font-weight: 600; vertical-align: middle; }
 footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--muted); font-size: .85rem; }
 @media (max-width: 600px) {
   .pkg { grid-template-columns: 1fr; }
@@ -76,6 +84,24 @@ footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--m
     <li class="note">Liste wird geladen …</li>
   </ul>
   <p class="note">Studio-Pakete enthalten nur Studioname, Anschrift, Website und die Maschinen mit Nummer – keine Mitgliedsnummern, Kontakte, Fotos oder Notizen. Du kannst dein eigenes Studio in LIFESPAN OS am PC unter Meine Gyms → „Als Studio-Paket exportieren“ als Paket speichern. Studionamen gehören den jeweiligen Betreibern; LIFESPAN OS steht in keiner Verbindung zu ihnen.</p>
+
+  <h2 class="section" id="geteilte-gyms">Geteilte Gyms</h2>
+  <p class="lead">Gyms, die andere mit „Gyms teilen“ weitergegeben haben – mit ihren eigenen Maschinen samt Foto und Muskelfokus. Beim Installieren gleicht LIFESPAN OS jede fremde Maschine mit deiner Datenbank ab und zeigt die Ähnlichkeit in Prozent: du entscheidest je Maschine, ob sie mit einer vorhandenen zusammengeführt, neu übernommen oder weggelassen wird.</p>
+  <div class="steps">
+    <ol>
+      <li><b>PC:</b> Datei herunterladen, unter <b>Training → Datenbank → Meine Gyms</b> auf „Studio-Paket installieren …“ klicken und die Datei wählen.</li>
+      <li><b>Handy-App:</b> Datei herunterladen, unter <b>Training → Meine Gyms</b> „Paketdatei wählen …“ antippen.</li>
+    </ol>
+  </div>
+  <ul class="list" id="gyms" aria-live="polite">
+    <li class="note">Liste wird geladen …</li>
+  </ul>
+  <div class="submit">
+    <h3>Dein Gym einreichen</h3>
+    <p>In LIFESPAN OS unter Training → Datenbank → Meine Gyms auf „Gyms teilen …“ tippen bzw. klicken und die Datei per E-Mail schicken an:</p>
+    <div class="mailrow"><code id="mail">lifespan@phinance.family</code> <button type="button" class="copy" id="copy-mail">Adresse kopieren</button></div>
+    <p style="margin-top:10px">Die Datei enthält keine Mitgliedsnummer und keinen Zutrittscode. Wir sehen sie vor der Veröffentlichung durch. Mit dem Einsenden bist du einverstanden, dass die Datei hier zum Download steht; Fotos bitte nur, wenn du sie selbst gemacht hast.</p>
+  </div>
 </main>
 <footer>
   <div class="wrap">© 2026 LIFESPAN OS · Non-Profit-Projekt · <a href="./#impressum">Impressum</a> · <a href="./#datenschutz">Datenschutz</a></div>
@@ -100,6 +126,28 @@ footer { border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--m
     .catch(function () {
       list.innerHTML = '<li class="note">Die Liste konnte nicht geladen werden. Bitte später erneut versuchen.</li>';
     });
+  // Geteilte Gyms (Gym-Dateien „lifespan-studios“ von Nutzern, 25.11.2026)
+  var gyms = document.getElementById("gyms");
+  var kb = function (b) { return b >= 1048576 ? (b / 1048576).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB"; };
+  fetch("app/gyms/index.json", { cache: "no-cache" })
+    .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+    .then(function (d) {
+      var g = (d.gyms || []).slice().sort(function (a, b) { return a.name.localeCompare(b.name, "de"); });
+      gyms.innerHTML = g.length ? g.map(function (x) {
+        return '<li class="pkg"><div><h2>' + esc(x.name) + (x.own ? '<span class="tag">' + num(x.own) + ' eigene Maschinen</span>' : '') + '</h2>' + (x.address ? '<p>' + esc(x.address) + '</p>' : '') +
+          '<p class="meta">' + num(x.machines) + ' Maschinen · Stand ' + stand(x.created) + (x.size ? ' · ' + kb(x.size) : '') + (x.by ? ' · eingereicht von ' + esc(x.by) : '') + '</p></div>' +
+          '<a class="dl" href="app/gyms/' + encodeURIComponent(x.file) + '" download="' + esc(x.file) + '">' + icon + 'Herunterladen</a></li>';
+      }).join("") : '<li class="note">Noch keine geteilten Gyms – schick uns deins (siehe unten).</li>';
+    })
+    .catch(function () {
+      gyms.innerHTML = '<li class="note">Noch keine geteilten Gyms – schick uns deins (siehe unten).</li>';
+    });
+  var copy = document.getElementById("copy-mail");
+  copy.addEventListener("click", function () {
+    var t = document.getElementById("mail").textContent;
+    var done = function () { copy.textContent = "Kopiert"; setTimeout(function () { copy.textContent = "Adresse kopieren"; }, 1600); };
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function () {});
+  });
 })();
 </script>
 </body>

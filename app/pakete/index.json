@@ -2,6 +2,16 @@
  "format": "lifespan-os-paketliste",
  "packages": [
   {
+   "key": "anovona",
+   "manufacturer": "AnovonA",
+   "title": "AnovonA – amineo, casineo, veganeo, defineo",
+   "version": "2026.11.25",
+   "file": "Anovona.json",
+   "foods": 7,
+   "supplements": 0,
+   "bytes": 4441
+  },
+  {
    "key": "bodylab24",
    "manufacturer": "Bodylab24",
    "title": "Bodylab24-Shop – Lebensmittel und Supplements (viele Marken)",
@@ -22,6 +32,16 @@
    "bytes": 416171
   },
   {
+   "key": "evo",
+   "manufacturer": "EVO Sports Fuel",
+   "title": "EVO Sports Fuel – Lebensmittel und Supplements",
+   "version": "2026.11.25",
+   "file": "EVO.json",
+   "foods": 50,
+   "supplements": 23,
+   "bytes": 51893
+  },
+  {
    "key": "foodtastic",
    "manufacturer": "Foodtastic",
    "title": "Foodtastic – Power Cakes, Vital Sirups, Erythrit",
@@ -40,6 +60,16 @@
    "foods": 1059,
    "supplements": 1416,
    "bytes": 1340618
+  },
+  {
+   "key": "hsn",
+   "manufacturer": "HSN",
+   "title": "HSN – Sportnahrung und Gesunde Ernährung",
+   "version": "2026.11.25",
+   "file": "HSN.json",
+   "foods": 626,
+   "supplements": 485,
+   "bytes": 689420
   },
   {
    "key": "inlead",
@@ -72,6 +102,26 @@
    "bytes": 248885
   },
   {
+   "key": "mucki",
+   "manufacturer": "mucki®",
+   "title": "mucki® – Protein-Drinks, Whey Protein+ und Müsli",
+   "version": "2026.11.25",
+   "file": "Mucki.json",
+   "foods": 10,
+   "supplements": 0,
+   "bytes": 5503
+  },
+  {
+   "key": "myprotein",
+   "manufacturer": "Myprotein",
+   "title": "Myprotein – Protein, Supplemente, Vitamine, Food und Vegan",
+   "version": "2026.11.25",
+   "file": "Myprotein.json",
+   "foods": 352,
+   "supplements": 155,
+   "bytes": 355048
+  },
+  {
    "key": "peak-performance",
    "manufacturer": "PEAK",
    "title": "PEAK Performance – Lebensmittel und Supplements",
@@ -90,6 +140,26 @@
    "foods": 694,
    "supplements": 766,
    "bytes": 948902
+  },
+  {
+   "key": "prozis",
+   "manufacturer": "Prozis",
+   "title": "Prozis – Sportnahrung und Gesunde Ernährung",
+   "version": "2026.11.25",
+   "file": "Prozis.json",
+   "foods": 852,
+   "supplements": 439,
+   "bytes": 792452
+  },
+  {
+   "key": "rittersport",
+   "manufacturer": "Ritter Sport",
+   "title": "Ritter Sport – Schokoladen",
+   "version": "2026.11.25",
+   "file": "RitterSport.json",
+   "foods": 82,
+   "supplements": 0,
+   "bytes": 44267
   },
   {
    "key": "ruehl24",

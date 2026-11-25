@@ -7,7 +7,7 @@ import { today as todayIso } from "./diary.js";
 import * as DP from "./devprefs.js";
 import { app, esc, go, render, S } from "./appbase.js";
 import { actions } from "./appactions.js";
-import { hrtAlarmHtml, hrtStateNow, openHrtAlarms, markTitle, marksOf, openItemsNow, phoneTab, resetOpenItems } from "./openitems.js";
+import { applyPageMarks, hrtAlarmHtml, hrtStateNow, openHrtAlarms, markTitle, marksOf, openItemsNow, phoneTab, resetOpenItems } from "./openitems.js";
 
 // ------------------------------------------------------------------ Menü (wie die linke Leiste am PC)
 
@@ -61,6 +61,8 @@ export function renderNav() {
   // Mit Knopf unten entfällt der Reiter-Knopf oben links
   document.body.classList.toggle("has-submenu", Boolean(bar && S.subMenu));
   document.body.classList.toggle("menu-open", Boolean(S.menuOpen || (bar && S.quickOpen)));
+  // Orange Punkte auch auf der Seite (1.143.0): Knöpfe/Überschriften, wo heute noch etwas fehlt
+  applyPageMarks(app, openItemsNow());
 }
 
 /** Schnell erfassen (Design C): Ziel je Eintrag. */
@@ -250,4 +252,5 @@ setInterval(() => {
   if (document.hidden || !S.catalog || S.menuOpen || S.quickOpen) return;
   resetOpenItems();
   if (marksKey(navMarks()) !== lastMarks) renderNav();
+  else applyPageMarks(app, openItemsNow());
 }, 30_000);

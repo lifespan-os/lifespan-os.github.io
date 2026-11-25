@@ -2298,6 +2298,10 @@ html[data-theme="dark"] .mtl-mark--water { background: #12324a; }
 .tabbar__item .nav__dot { left: calc(50% + 10px); top: 22px; width: 9px; height: 9px; }
 body.bar-icons .tabbar__item .nav__dot { top: auto; bottom: 10px; }
 .tab__dot { right: 3px; bottom: 3px; width: 7px; height: 7px; }
+/* Orange Punkte auf der Seite (1.143.0): Knöpfe und Felder, bei denen heute noch etwas einzutragen ist */
+.open-mark { position: relative; }
+.open-mark::after { content: ""; position: absolute; top: -4px; right: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 2px var(--surface); pointer-events: none; }
+label.open-mark::after, h2.open-mark::after, h3.open-mark::after { position: static; display: inline-block; margin-left: 6px; vertical-align: middle; box-shadow: none; }
 .tabbar--inline .tabbar__sub { position: relative; }
 .tabbar__sub .nav__dot { right: -3px; bottom: -3px; width: 13px; height: 13px; box-shadow: 0 0 0 2px var(--navy, #0b2a4a); }
 .bsheet__grid .tab__dot { right: 10px; bottom: 10px; width: 9px; height: 9px; }

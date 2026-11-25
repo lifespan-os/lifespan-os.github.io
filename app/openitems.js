@@ -168,5 +168,44 @@ export function phoneTab(item) {
   return null;
 }
 
+/**
+ * Orange Punkte auf der Seite (1.143.0, wie PC 1.0.213, Wunsch 25.11.2026): Knöpfe und
+ * Überschriften, über die heute noch etwas einzutragen ist, bekommen die Klasse `open-mark`
+ * (Punkt per CSS). Zuordnung offener Punkt → Stelle der Handy-Ansicht; „todo-*“ = alle Punkte,
+ * deren Schlüssel so beginnt (wie `marksMatch` am PC).
+ */
+export const PAGE_MARKS = [
+  ["status-sleep", '[data-act="sleep-new"]'],
+  ["status-hrv status-restingHr", '[data-act="vitals-new"]'],
+  ["status-recovery", '[data-act="rec-today"]'],
+  ["status-steps", 'label[for="neat-steps"]'],
+  ["status-nutrition", '[data-act="diary-add"], .meals-card > .card__head > h3'],
+  ["body-values", '[data-act="body-day-open"]'],
+  ["hrt-*", '[data-act="hrt-new"]'],
+  ["todo-*", '[data-act="todo-add"]'],
+  ["plan-* train-*", '[data-act="train-start-plan-day"], [data-act="train-start-day"]'],
+];
+
+/** Passt einer der offenen Punkte zu den Stichwörtern („status-hrv status-restingHr“, „todo-*“)? */
+export function marksMatch(items, tokens) {
+  const list = String(tokens ?? "").split(/\s+/).filter(Boolean);
+  if (!list.length) return false;
+  return items.some((i) => list.some((t) => (t.endsWith("*") ? i.key.startsWith(t.slice(0, -1)) : i.key === t)));
+}
+
+/** Punkte in `root` setzen bzw. entfernen (nach jedem Neuzeichnen) */
+export function applyPageMarks(root, items = openItemsNow()) {
+  if (!root?.querySelectorAll) return;
+  const on = new Set();
+  for (const [tokens, selector] of PAGE_MARKS) {
+    if (!marksMatch(items, tokens)) continue;
+    root.querySelectorAll(selector).forEach((el) => on.add(el));
+  }
+  root.querySelectorAll(".open-mark").forEach((el) => {
+    if (!on.has(el)) el.classList.remove("open-mark");
+  });
+  on.forEach((el) => el.classList.add("open-mark"));
+}
+
 /** Kleiner oranger Punkt (für Reiter) */
 export const dotHtml = () => `<i class="tab__dot" aria-label="offen"></i>`;

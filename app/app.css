@@ -2657,6 +2657,6 @@ html[data-theme="dark"] .plt-tag--caffeine { color: #c8956a; background: #3a2a1c
 /* 1.150.0: Grafik groß im Querformat (mapzoom.js openChartZoom), z. B. Health → Heart */
 .chart-zoomable { position: relative; cursor: zoom-in; }
 .chart-zoomable__hint { display: block; text-align: right; margin-top: 2px; }
-.mapzoom--chart .mapzoom__inner { align-items: center; min-height: 100%; }
-.mapzoom--chart .mapzoom__inner svg { display: block; flex: none; width: 100%; height: auto; max-width: none; }
+.mapzoom--chart .mapzoom__inner { justify-content: center; align-items: center; min-height: 100%; }
+.mapzoom--chart .mapzoom__inner svg { display: block; flex: none; width: var(--fit, 100%); height: auto; max-width: none; }
 .mapzoom--chart.is-rotated { inset: auto; top: 0; left: 100vw; width: 100vh; width: 100dvh; height: 100vw; transform-origin: 0 0; transform: rotate(90deg); }

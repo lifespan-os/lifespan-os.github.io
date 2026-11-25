@@ -177,7 +177,7 @@ export function openImageZoom(src, title, info = "Mit zwei Fingern oder Doppelti
  * Grafik bildschirmfüllend im Querformat (1.150.0, Wunsch des Nutzers: Health → Heart → Herzfrequenz und
  * Schritte am Tag). Hochkant gehaltenes Handy: die Ansicht wird um 90° gedreht (eine Web-App kann die
  * Ausrichtung am iPhone nicht festlegen); dreht man das Handy quer, entfällt die Drehung. Zoomen mit zwei
- * Fingern, Doppeltippen oder − / +.
+ * Fingern, Doppeltippen oder − / +. Seit 1.152.0 passt die Grafik bei 100 % ganz ins Fenster (Breite oder Höhe).
  */
 export function openChartZoom(el, title) {
   const svg = el?.matches?.("svg") ? el : el?.querySelector?.("svg");
@@ -188,9 +188,19 @@ export function openChartZoom(el, title) {
     x.removeAttribute("data-chart-zoom");
   });
   const portrait = () => window.innerHeight > window.innerWidth;
+  // Seitenverhältnis der Grafik (viewBox), damit sie bei 100 % ganz ins Fenster passt (1.152.0)
+  const vb = svg.viewBox?.baseVal;
+  const ratio = vb && vb.width > 0 && vb.height > 0 ? vb.width / vb.height : 2;
+  const fit = () => {
+    const box = r.querySelector(".mapzoom__scroll");
+    if (!box || !box.clientWidth || !box.clientHeight) return;
+    const w = Math.min(box.clientWidth, box.clientHeight * ratio);
+    r.querySelector(".mapzoom__inner").style.setProperty("--fit", `${Math.max(30, (w / box.clientWidth) * 100)}%`);
+  };
   const apply = () => {
     if (!root || root !== r) return window.removeEventListener("resize", apply);
     r.classList.toggle("is-rotated", portrait());
+    fit();
   };
   apply();
   window.addEventListener("resize", apply);

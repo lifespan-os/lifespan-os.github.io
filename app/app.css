@@ -2480,12 +2480,14 @@ button.pcal-done { display: flex; align-items: center; justify-content: space-be
 .plt-usual__card > span:first-child { flex: 1; min-width: 0; }
 .plt-usual__card.is-taken { border-color: var(--orange); background: color-mix(in srgb, var(--orange) 10%, var(--surface)); }
 .plt-usual__detail { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 1.144.0: ganzer Inhalt sichtbar (Handy hat kein Darüberfahren) */
+.plt-usual__detail { overflow: visible; white-space: normal; }
 .plt-usual__act { font-size: .8rem; font-weight: 700; color: var(--orange-text); white-space: nowrap; }
 .plt-tabs { display: grid; grid-template-columns: 1fr 1fr; margin: 10px 0 8px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .plt-tabs button { min-height: 42px; border: 0; background: transparent; color: var(--muted); font-weight: 600; }
 .plt-tabs button + button { border-left: 1px solid var(--line); }
 .plt-tabs button.is-active { background: color-mix(in srgb, var(--blue) 12%, var(--surface)); color: var(--fg); }
-#quick-meal #food-q { border-color: var(--orange); }
+#quick-meal #food-q { border: 2px solid var(--orange); }
 .plt-q__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin: 8px 0; }
 .plt-q__field { min-width: 0; }
 .plt-q__field label { display: flex; justify-content: space-between; gap: 6px; height: 1.2rem; margin-bottom: 3px; font-size: .74rem; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; }

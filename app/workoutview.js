@@ -268,10 +268,14 @@ export function exerciseCard(we, i, exs, machines) {
       <div class="settings-grid">
         ${Object.entries(C.SETTING_LABELS)
           .map(
-            ([k, l]) => `<div class="field"><label for="st-${we.id}-${k}">${l}</label>
-            <input id="st-${we.id}-${k}" type="text" maxlength="40"${k === "bandCount" ? ' inputmode="numeric"' : ""}${k === "bandResistance" ? ` list="st-${we.id}-band-options"` : ""} value="${esc(st[k] ?? "")}" data-we="${we.id}" data-setting="${k}">${
+            ([k, l]) => `<div class="field${k === "bandResistance" ? " band-field" : ""}"><label for="st-${we.id}-${k}">${l}</label>
+            <input id="st-${we.id}-${k}" type="text" maxlength="40"${k === "bandCount" ? ' inputmode="numeric"' : ""} value="${esc(st[k] ?? "")}" data-we="${we.id}" data-setting="${k}">${
+              // Resistanceband: Farben kombinierbar (zum An-/Abwählen antippen), eigene Angaben möglich
               k === "bandResistance"
-                ? `<datalist id="st-${we.id}-band-options">${C.BAND_RESISTANCE_OPTIONS.map((o) => `<option value="${esc(o)}"></option>`).join("")}</datalist>`
+                ? `<div class="band-colors" role="group" aria-label="Bandfarben kombinieren">${C.BAND_RESISTANCE_OPTIONS.map((o) => {
+                    const on = C.hasBandColor(st.bandResistance, o);
+                    return `<button type="button" class="chip${on ? " on" : ""}" aria-pressed="${on}" data-act="band-color" data-we="${we.id}" data-color="${esc(o)}">${esc(o)}</button>`;
+                  }).join("")}</div>`
                 : ""
             }</div>${
               // Griffstellung direkt neben der Griffbreite

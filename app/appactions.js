@@ -201,6 +201,15 @@ export const actions = {
     S.exOpen[we.id] = !isOpen(S.active, we);
     rerenderKeepScroll();
   },
+  // Resistanceband: Farbe an-/abwählen, Farben sind kombinierbar (1.155.0)
+  "band-color": (el) => {
+    const we = findWe(el.dataset.we);
+    if (!we) return;
+    const v = C.toggleBandColor(we.settings.bandResistance, el.dataset.color);
+    we.settings.bandResistance = v.slice(0, 40) || null;
+    saveSoon();
+    rerenderKeepScroll();
+  },
   "add-set": (el) => {
     const we = findWe(el.dataset.we);
     const prev = we.sets[we.sets.length - 1] || null;

@@ -109,8 +109,32 @@ export const SETTING_LABELS = {
   bandResistance: "Resistanceband Widerstand/Farbe",
 };
 
-/** Vorschläge für Resistanceband Widerstand/Farbe, von leicht nach schwer (wie PC `BAND_RESISTANCE_OPTIONS`). */
-export const BAND_RESISTANCE_OPTIONS = ["Beige", "Gelb", "Rot", "Grün", "Blau", "Schwarz", "Silber", "Gold"];
+/** Farben für Resistanceband Widerstand/Farbe, von leicht nach schwer, kombinierbar (wie PC `BAND_RESISTANCE_OPTIONS`). */
+export const BAND_RESISTANCE_OPTIONS = ["Beige", "Gelb", "Rot", "Grün", "Blau", "Schwarz", "Lila", "Silber", "Gold"];
+
+const sameColor = (a, b) => a.toLowerCase() === b.toLowerCase();
+
+/** Teile einer Bandangabe, z. B. „Rot + Blau“ → ["Rot", "Blau"] (wie PC `bandParts`). */
+export function bandParts(value) {
+  return String(value ?? "")
+    .split("+")
+    .map((p) => p.trim())
+    .filter((p) => p !== "");
+}
+
+/** Ist die Farbe gewählt? */
+export function hasBandColor(value, color) {
+  return bandParts(value).some((p) => sameColor(p, color));
+}
+
+/** Farbe an-/abwählen: bekannte Farben von leicht nach schwer, eigene Angaben dahinter (wie PC `toggleBandColor`). */
+export function toggleBandColor(value, color) {
+  const parts = bandParts(value);
+  const next = hasBandColor(value, color) ? parts.filter((p) => !sameColor(p, color)) : [...parts, color];
+  const known = BAND_RESISTANCE_OPTIONS.filter((o) => next.some((p) => sameColor(p, o)));
+  const own = next.filter((p) => !BAND_RESISTANCE_OPTIONS.some((o) => sameColor(o, p)));
+  return [...known, ...own].join(" + ");
+}
 
 export const GRIP_LABELS = { supinated: "Untergriff", neutral: "Neutral", pronated: "Obergriff" };
 

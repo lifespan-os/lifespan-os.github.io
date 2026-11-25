@@ -133,6 +133,9 @@ textarea { min-height: 80px; resize: vertical; }
 .chip { min-height: 34px; padding: 4px 11px; border-radius: 99px; border: 1px solid var(--line); background: transparent; font-size: .82rem; color: var(--muted); }
 .chip.on { border-color: var(--orange); color: var(--orange-text); background: rgba(242,138,26,.12); }
 .chip.del { color: var(--danger); }
+/* Resistanceband: Farben kombinierbar (1.155.0) */
+.settings-grid .band-field { grid-column: 1 / -1; }
+.band-colors { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .ex-foot { display: flex; gap: 8px; padding: 10px 14px 14px; flex-wrap: wrap; }
 .ex-foot .btn { flex: 1 1 120px; }
 details.settings { padding: 0 14px 10px; }

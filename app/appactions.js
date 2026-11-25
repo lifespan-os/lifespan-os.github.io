@@ -340,6 +340,29 @@ export const actions = {
     await saveNow();
     go("workout");
   },
+  // „Als Plan anlegen“ (1.148.0, wie PC 1.0.217): Einheit als neuer Plan, sofort unter Training → Pläne
+  "train-as-plan": async (el) => {
+    const arg = el.dataset.arg;
+    const w = arg === "active" ? S.active : (S.workouts.find((x) => x.id === arg) ?? pcWorkout(arg));
+    if (!w) return toast("Einheit nicht gefunden.", true);
+    try {
+      const all = [...S.catalog.exercises, ...(S.localExercises ?? [])];
+      const fallbackName = /^\d{4}-\d{2}-\d{2}$/.test(w.date ?? "") ? `Training vom ${w.date.split("-").reverse().join(".")}` : "Neuer Plan";
+      const input = TR.planInputFromWorkout(S.catalogRaw, S.train, w, { fallbackName, weights: C.profileWeights });
+      // Übungen, die nur am Handy angelegt wurden, gehen mit dem Plan an den PC
+      for (const ex of input.days[0].exercises) {
+        const local = (S.localExercises ?? []).find((e) => e.id === ex.exerciseId);
+        if (local) TR.addExerciseRow(S.catalogRaw, S.train, local);
+      }
+      TR.savePlan(S.catalogRaw, S.train, input, { uuid: () => C.uuidv7(), now: new Date(), exercises: all });
+      await store.set("train", S.train);
+      refreshCatalog();
+      toast(`Plan „${input.name}“ angelegt – ab sofort unter Training → Pläne in der Liste und im Kalender wählbar.`);
+      rerenderKeepScroll();
+    } catch (e) {
+      toast(e.message || "Der Plan konnte nicht angelegt werden.", true);
+    }
+  },
   "delete-workout": async (el) => {
     if (!confirmTwice(el, "Nochmal tippen: Training löschen")) return;
     S.workouts = S.workouts.filter((w) => w.id !== el.dataset.arg);

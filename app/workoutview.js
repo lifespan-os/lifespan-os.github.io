@@ -93,6 +93,7 @@ export function viewWorkout() {
     ${workoutBodyMapHtml(w, C.allExercises(S.catalog, S.localExercises))}
     ${w.competition || !isHyroxWorkout(w) ? "" : `<button class="btn ghost block" data-act="comp-add">HYROX-Wettkampf-Angaben hinzufügen</button>`}
     <button class="btn danger block" data-act="discard">${w.backfill ? "Verwerfen" : edit ? "Änderungen verwerfen" : "Training verwerfen"}</button>
+    <button class="btn block" data-act="train-as-plan" data-arg="active">Als Plan anlegen</button>
   </main>
   <div class="bottom"><div class="inner"><button class="btn primary" data-go="finish">${w.backfill ? "Weiter zum Speichern" : edit ? "Änderungen speichern" : "Training beenden"}</button></div></div>`;
 }
@@ -665,6 +666,7 @@ export function viewDetail() {
       .join("")}
     ${workoutBodyMapHtml(w, C.allExercises(S.catalog, S.localExercises), { finished: true })}
     <button class="btn block" data-act="edit-workout" data-arg="${w.id}">Training bearbeiten</button>
+    <button class="btn block" data-act="train-as-plan" data-arg="${w.id}">Als Plan anlegen</button>
     ${!own || w.exported || w.fromPc ? "" : `<button class="btn danger block" data-act="delete-workout" data-arg="${w.id}">Training löschen</button>`}
   </main>`;
 }

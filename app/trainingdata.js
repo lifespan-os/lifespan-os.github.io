@@ -389,6 +389,71 @@ function planGym(raw, gymId) {
 }
 
 /** Name der Kopie wie `plan::copy_name`. */
+/**
+ * „Als Plan anlegen“ (1.148.0, wie PC 1.0.217): freier Planname – „Name“, sonst „Name (2)“ …
+ * (Vergleich ohne Groß-/Kleinschreibung).
+ */
+export function freePlanName(raw, local, name) {
+  const taken = new Set(rowsOf(raw, local, "training_plan").map((p) => String(p.name).trim().toLocaleLowerCase("de-DE")));
+  const base = [...String(name ?? "").trim()].slice(0, 70).join("").trimEnd();
+  if (!taken.has(base.toLocaleLowerCase("de-DE"))) return base;
+  for (let n = 2; ; n++) {
+    const c = `${base} (${n})`;
+    if (!taken.has(c.toLocaleLowerCase("de-DE"))) return c;
+  }
+}
+
+/**
+ * Einheit (Form der Handy-App) als Eingabe für `savePlan`: ein Trainingstag mit den Übungen, Sätzen,
+ * Einstellungen und Notizen als Richtwerte, Gym der Einheit; „Done“/„Fail“ zählen nicht.
+ * `weights(rp)` = Profilgewichte in Spaltenform (core.js `profileWeights`).
+ */
+export function planInputFromWorkout(raw, local, w, { fallbackName, weights = () => ({}) }) {
+  if (!w?.exercises?.length) throw new Error("Die Einheit hat noch keine Übungen – nichts für einen Plan.");
+  const title = String(w.title ?? "").trim() || fallbackName;
+  return {
+    id: null,
+    name: freePlanName(raw, local, title),
+    description: null,
+    icon: null,
+    gymId: w.gymId ?? null,
+    archived: false,
+    days: [
+      {
+        id: null,
+        name: [...title].slice(0, 80).join(""),
+        notes: w.notes ? String(w.notes).slice(0, 1000) : null,
+        slots: [],
+        exercises: w.exercises.map((we) => {
+          const sets = (we.sets ?? []).slice(0, 50).map((s) => ({
+            reps: s.reps ?? null,
+            weightKg: s.weightKg ?? null,
+            durationSeconds: s.durationSeconds ?? null,
+            distanceM: s.distanceM ?? null,
+            rpe: s.rpe ?? null,
+            isWarmup: !!s.isWarmup,
+            isUnilateral: !!s.isUnilateral,
+            ...weights(s.rp),
+            ...Object.fromEntries(CARDIO.map(([k]) => [k, s[k] ?? null])),
+          }));
+          return {
+            id: null,
+            exerciseId: we.exerciseId,
+            targetSets: sets.length || null,
+            targetRepsMin: null,
+            targetRepsMax: null,
+            targetWeightKg: null,
+            restSeconds: we.restSeconds ?? null,
+            notes: we.notes ? String(we.notes).slice(0, 500) : null,
+            settings: { ...(we.settings ?? {}) },
+            sets,
+          };
+        }),
+      },
+    ],
+  };
+}
+
 export function copyName(raw, local, name) {
   const taken = new Set(rowsOf(raw, local, "training_plan").map((p) => p.name));
   for (let n = 1; n <= 99; n++) {

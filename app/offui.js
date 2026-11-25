@@ -82,6 +82,28 @@ export function offResultsHtml(query, act) {
     .join("")}`;
 }
 
+/**
+ * Nutrition → Datenbanken → Open Food Facts (1.147.0, wie OffTab.tsx am PC): Suche mit bis zu 40
+ * Treffern; schon übernommene Produkte sind markiert und öffnen das eigene Lebensmittel.
+ */
+export function offSearchHtml(query) {
+  const q = String(query ?? "").trim();
+  if (!X.S.offInfo) return "";
+  if (q.length < 2) return `<p class="muted small">Mindestens 2 Zeichen: Name, Marke oder Strichcode (EAN).</p>`;
+  const c = ensureOff();
+  if (!c) return `<p class="muted small">Open Food Facts wird geladen …</p>`;
+  const hits = O.searchOff(c, q, 40);
+  if (!hits.length) return `<p class="empty">Nichts gefunden.</p>`;
+  return hits
+    .map((p) => {
+      const own = N.foodByBarcode(X.S.catalog, X.S.food.local, p.code);
+      if (!own) return hitHtml(p, "food-pick");
+      return `<button class="item" data-act="fdb-edit" data-arg="${esc(own.id)}"><span class="main"><b>${esc(p.name)}</b> <span class="tag">schon übernommen</span>
+      <span class="muted small">${esc([p.brand, p.quantity, `EAN ${p.code}`].filter(Boolean).join(" · "))}</span></span><span class="chev">›</span></button>`;
+    })
+    .join("");
+}
+
 /** Settings-Karte (Import/Export, neben BLS 4.0). */
 export function offCard() {
   const S = X.S;

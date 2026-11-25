@@ -413,7 +413,9 @@ export function mergeTables(a, b) {
  * Einnahme nimmt ihre Mahlzeit und ihren Stack mit, wenn sie sonst fehlen würden.
  */
 export function foodTables(all) {
-  const out = mergeTables(mergeTables(N.nutritionTables(S.catalog, S.food.local, { all }), P.waterTables(S.water, { all })), SP.suppTables(S.supp, buildDb(), { all, withSupplements: Boolean(S.catalog?.startpaket) }));
+  const db = buildDb();
+  // Supplemente in Gerichten gehen mit, wenn sie sonst in der Datei fehlen (1.147.0)
+  const out = SP.withRecipeSupplements(mergeTables(mergeTables(N.nutritionTables(S.catalog, S.food.local, { all }), P.waterTables(S.water, { all })), SP.suppTables(S.supp, db, { all, withSupplements: Boolean(S.catalog?.startpaket) })), db);
   // Verwendeter Stack (vom PC) und Mahlzeit gehen mit – sonst lehnt der PC die Datei ab (1.45.1)
   const pcMeals = S.catalog?.pc?.meal ?? [];
   // Fasttracking (1.55.0): Werte an einer Mahlzeit nehmen ihre Mahlzeit mit, wenn sie sonst fehlt

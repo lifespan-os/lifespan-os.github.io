@@ -13,7 +13,8 @@ import { foodChange, foodInput, foodState, initFood, viewDish, viewFood, viewFoo
 import { bodyChange, bodyInput, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
 import { barSlots } from "./nav.js";
 import * as P from "./pcdb.js";
-import { diaryCaffeineChange, diaryChange, diaryInput, initDiary, initTimelineDrag, timelineChange, today as todayIso, viewDiary, viewFastEntry, viewNutritionHistory, viewSuppIntake } from "./diary.js";
+import { openTabsOf } from "./openitems.js";
+import { setNutritionMarks, diaryCaffeineChange, diaryChange, diaryInput, initDiary, initTimelineDrag, timelineChange, today as todayIso, viewDiary, viewFastEntry, viewNutritionHistory, viewSuppIntake } from "./diary.js";
 import * as FT from "./fastdata.js";
 import * as SP from "./supplements.js";
 import { initVendor, vendorChange, viewVendor } from "./vendorui.js";
@@ -54,6 +55,8 @@ import * as HX from "./hyrox.js";
 import * as GY from "./gymsui.js";
 import { initExtras, quickFillInput, quickFillUpload, viewQuickFill } from "./extras.js";
 import { viewMealPlan } from "./planparity.js";
+import { recipeChange, recipeInput, viewRecipeEdit, viewRecipes } from "./recipesui.js";
+import { nutriDbChange, nutriDbInput, viewBlsDb, viewFoodDb, viewOffDb, viewSuppDb, viewSuppEdit } from "./nutridb.js";
 import { viewSearch, searchInput } from "./searchview.js";
 import { reviewChange } from "./reviewparity.js";
 import { pdfParityChange } from "./pdfparity.js";
@@ -124,6 +127,14 @@ const VIEWS = {
   help: viewHelp,
   quickfill: viewQuickFill,
   "meal-plan": viewMealPlan,
+  // Nutrition wie am PC (1.147.0): Vorlagen & Rezepte, Datenbanken
+  recipes: viewRecipes,
+  "recipe-edit": viewRecipeEdit,
+  "food-db": viewFoodDb,
+  "bls-db": viewBlsDb,
+  "off-db": viewOffDb,
+  "supp-db": viewSuppDb,
+  "supp-db-edit": viewSuppEdit,
   search: viewSearch,
 };
 
@@ -178,6 +189,8 @@ app.addEventListener("input", (ev) => {
   const el = ev.target;
   if (searchInput(el)) return;
   if (settingsInput(el)) return;
+  if (recipeInput(el)) return;
+  if (nutriDbInput(el)) return;
   if (foodInput(el)) return;
   if (diaryInput(el)) return;
   if (blsInput(el)) return;
@@ -278,6 +291,8 @@ app.addEventListener("input", (ev) => {
 app.addEventListener("change", async (ev) => {
   const el = ev.target;
   if (el.dataset?.qfUpload !== undefined) return void quickFillUpload(el);
+  if (recipeChange(el)) return;
+  if (nutriDbChange(el)) return;
   if (foodChange(el)) return;
   if (protocolsChange(el)) return;
   if (bodyChange(el)) return;
@@ -424,6 +439,7 @@ initProtocols(moduleCtx);
 GY.initGyms(moduleCtx);
 
 initDiary(moduleCtx);
+setNutritionMarks(() => openTabsOf("nutrition"));
 initTimelineDrag();
 
 initVendor(moduleCtx);

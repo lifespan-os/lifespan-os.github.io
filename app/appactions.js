@@ -3,6 +3,8 @@ import * as C from "./core.js";
 import { bodyParityActions } from "./bodyparity.js";
 import { goalsParityActions } from "./goalsparity.js";
 import { planParityActions } from "./planparity.js";
+import { recipeActions } from "./recipesui.js";
+import { nutriDbActions } from "./nutridb.js";
 import { searchActions } from "./searchview.js";
 import { pdfParityActions } from "./pdfparity.js";
 import { watchParityActions } from "./watchparity.js";
@@ -50,6 +52,8 @@ import { backupActions, exportAccount, markSent, sendFile } from "./transferview
 export const actions = {
   ...backupActions,
   ...foodActions,
+  ...recipeActions,
+  ...nutriDbActions,
   ...diaryActions,
   ...diaryCaffeineActions,
   ...timelineActions,

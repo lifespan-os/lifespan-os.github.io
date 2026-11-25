@@ -9,6 +9,7 @@ import * as PS from "./pcsettings.js";
 import { arrangeCards } from "./layoutedit.js";
 import * as D from "./pcdomain.js";
 import * as N from "./nutrition.js";
+import * as RC from "./recipes.js";
 import * as SP from "./supplements.js";
 import * as GL from "./goals.js";
 import { phoneLogs } from "./logsdata.js";
@@ -93,6 +94,8 @@ export function buildDb() {
     supp: SP.phoneSupp(S.supp),
     goals: GL.phoneGoals(S.goals),
     fast: FT.phoneFast(S.fast),
+    // Vorlagen & Rezepte am Handy bearbeitet (1.147.0)
+    recipes: food ? RC.phoneRecipes(food) : null,
   });
   // Mahlzeitenliste wie am PC (Settings → Mahlzeiten: meal_name.*, meal_hidden, meal_extra)
   D.setMealList(N.setMealConfig(db.settings));
@@ -138,17 +141,62 @@ export function nutrientCatalog(db) {
 
 // ------------------------------------------------------------------ Kopf mit Reitern
 
-export const TABS = [
-  ["diary", "Tagebuch"],
-  ["food", "Scanner & Tracken"],
-  ["food-history", "Verlauf"],
-  ["meal-plan", "Planen"],
+/**
+ * Reiter wie am PC (`NutritionPage.tsx`, 1.147.0): fünf Gruppen, „Gerichte & Planen“ und
+ * „Datenbanken“ mit Unterreitern. Jeder Unterreiter ist eine Ansicht (data-go).
+ */
+export const GROUPS_N = [
+  ["diary", "Tagebuch", [["diary", "Tagebuch"]]],
+  ["scanner", "Scanner & Tracken", [["food", "Scanner & Tracken"]]],
+  ["recipes", "Gerichte & Planen", [["recipes", "Vorlagen & Rezepte"], ["meal-plan", "Planen"]]],
+  ["history", "Verlauf", [["food-history", "Verlauf"]]],
+  [
+    "databases",
+    "Datenbanken",
+    [
+      ["food-db", "Lebensmitteldatenbank"],
+      ["bls-db", "BLS-Datenbank"],
+      ["off-db", "Open Food Facts"],
+      ["supp-db", "Supplementdatenbank"],
+    ],
+  ],
 ];
 
+/** Bisherige Liste (Ansicht → Name) für Verweise. */
+export const TABS = GROUPS_N.flatMap(([, , subs]) => subs);
+
+/** Ansichten, die zu einem Unterreiter gehören (Bearbeiten-Formulare). */
+const VIEW_OF = { "recipe-edit": "recipes", "supp-db-edit": "supp-db" };
+
+// Orange Punkte je Reiter (wie Training): app.js meldet die Quelle an – so bleibt diary.js ohne
+// Abhängigkeit von der Oberfläche (Tests mit node)
+let tabMarks = () => new Set();
+export function setNutritionMarks(fn) {
+  tabMarks = fn;
+}
+const dotHtml = () => `<i class="tab__dot" aria-label="offen"></i>`;
+
 export function nutritionTabs(active) {
-  return `<nav class="tabs" aria-label="Nutrition">${TABS.map(
-    ([v, l]) => `<button class="tab ${v === active ? "active" : ""}" data-go="${v}" ${v === active ? 'aria-current="page"' : ""}>${l}</button>`,
-  ).join("")}</nav>`;
+  const view = VIEW_OF[active] ?? active;
+  const group = GROUPS_N.find(([, , subs]) => subs.some(([v]) => v === view)) ?? GROUPS_N[0];
+  let marks = new Set();
+  try {
+    marks = tabMarks() ?? new Set();
+  } catch {
+    marks = new Set();
+  }
+  const marked = (subs) => subs.some(([v]) => marks.has(v));
+  const subs = group[2];
+  return `<nav class="tabs" aria-label="Nutrition">${GROUPS_N.map(
+    ([g, l, list]) =>
+      `<button class="tab ${g === group[0] ? "active" : ""}" data-go="${list[0][0]}" ${g === group[0] ? 'aria-current="page"' : ""}>${l}${marked(list) ? dotHtml() : ""}</button>`,
+  ).join("")}</nav>${
+    subs.length > 1
+      ? `<div class="subtabs-row"><div class="segmented subtabs" role="radiogroup" aria-label="${group[1]}">${subs
+          .map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === view}" class="${v === view ? "is-active" : ""}" data-go="${v}">${l}${marks.has(v) ? dotHtml() : ""}</button>`)
+          .join("")}</div></div>`
+      : ""
+  }`;
 }
 
 export function dayNav(date, act) {

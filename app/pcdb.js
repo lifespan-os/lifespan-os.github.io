@@ -122,10 +122,11 @@ export function pcFromRows(rows) {
   ]);
   pc.supplement_stack_item = rows("supplement_stack_item");
   // Seit 1.26.0 alle nicht archivierten Supplements (Auswahl beim Erfassen am Handy), archivierte nur,
-  // soweit Einnahmen oder Stacks sie nutzen; ohne Notizen (oft lange Links)
+  // soweit Einnahmen oder Stacks sie nutzen. Seit 1.147.0 mit Notizen (Supplementdatenbank am Handy
+  // bearbeiten, ohne die Notiz am PC zu überschreiben)
   pc.supplement = rows("supplement")
     .filter((s) => !s.archived || used.has(s.id))
-    .map(({ id, name, manufacturer, unit, serving_amount, daily_dose, archived, created_at, updated_at }) => ({
+    .map(({ id, name, manufacturer, unit, serving_amount, daily_dose, archived, notes, created_at, updated_at }) => ({
       id,
       name,
       manufacturer,
@@ -133,15 +134,18 @@ export function pcFromRows(rows) {
       serving_amount,
       daily_dose,
       archived,
+      notes: notes ?? null,
       created_at,
       updated_at,
     }));
   const kept = new Set(pc.supplement.map((s) => s.id));
   pc.supplement_value = rows("supplement_value")
     .filter((v) => kept.has(v.supplement_id))
-    .map(({ supplement_id, nutrient, amount }) => ({ supplement_id, nutrient, amount }));
+    // mit ID (1.147.0): am Handy entfernte Werte gehen als Löschvermerk an den PC
+    .map(({ id, supplement_id, nutrient, amount }) => ({ id, supplement_id, nutrient, amount }));
   pc.nutrient_field = rows("nutrient_field").map(({ id, key, group_key, label, unit, builtin }) => ({ id, key, group_key, label, unit, builtin }));
-  const mealFoods = new Set(rows("meal_item").map((i) => i.food_id));
+  // archivierte Lebensmittel, soweit Mahlzeiten oder (seit 1.147.0) Gerichte sie nutzen
+  const mealFoods = new Set([...rows("meal_item").map((i) => i.food_id), ...rows("recipe_item").map((i) => i.food_id)]);
   pc.archived_food = rows("food").filter((f) => f.archived && mealFoods.has(f.id));
   // Overview (1.6.0): Messgrößen auch archiviert (Einheit, Nachkommastellen, Kategorie) und nur
   // das Datum der Check-In-Fotos (für die Erinnerungen), ohne Bilder
@@ -237,6 +241,22 @@ export function makeDb(catalog, phone = {}) {
     gone("grip_strength_measurement"),
   );
 
+  // Vorlagen & Rezepte (1.147.0): am Handy angelegt/geändert ersetzt den Stand vom PC (mit allen
+  // Zutaten und Supplementen), Löschvermerke blenden aus
+  const pr = phone.recipes ?? null;
+  let pcView = pc;
+  if (pr) {
+    const goneRecipes = new Set(pr.deleted ?? []);
+    const owned = new Set([...(pr.owned ?? []), ...goneRecipes]);
+    pcView = {
+      ...pc,
+      recipe: merge(t("recipe"), pr.rows ?? [], goneRecipes),
+      recipe_item: [...t("recipe_item").filter((i) => !owned.has(i.recipe_id)), ...(pr.items ?? [])],
+      recipe_supplement: [...t("recipe_supplement").filter((i) => !owned.has(i.recipe_id)), ...(pr.supplements ?? [])],
+      meal_plan_entry: t("meal_plan_entry").filter((e) => !goneRecipes.has(e.recipe_id)),
+    };
+  }
+
   const settings = new Map(t("settings").map((s) => [s.key, s.value]));
   for (const [k, v] of Object.entries(phone.settings ?? {})) settings.set(k, v);
   // Am Handy gelöschte Einstellungen (1.48.0, z. B. alle Mahlzeiten wieder eingeblendet)
@@ -280,7 +300,7 @@ export function makeDb(catalog, phone = {}) {
     naps,
     recovery,
     grip,
-    pc,
+    pc: pcView,
   };
 }
 

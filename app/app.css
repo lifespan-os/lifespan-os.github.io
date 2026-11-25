@@ -2627,3 +2627,29 @@ html[data-theme="dark"] .plt-tag--caffeine { color: #c8956a; background: #3a2a1c
 .gym-pick__tag { padding: 0 6px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: .72rem; white-space: nowrap; }
 .gym-pick__tag--trained { border-color: var(--ok); color: var(--ok-text, var(--ok)); font-weight: 700; }
 .gym-pick__tag--in { border-color: var(--orange); color: var(--orange-text); }
+
+/* Nutrition wie am PC (1.147.0): Vorlagen & Rezepte, Datenbanken */
+.tag.tag--phone { background: color-mix(in srgb, var(--orange) 16%, transparent); color: var(--orange-text); }
+.rcp-card .wo-head { flex-wrap: wrap; gap: 6px; }
+.rcp-table td { padding: 4px 6px; vertical-align: top; }
+.rcp-table td.num { text-align: right; white-space: nowrap; }
+.rcp-actions { flex-wrap: wrap; gap: 6px; }
+.rcp-log { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.fdb-row { display: flex; align-items: center; gap: 6px; }
+.fdb-row__main { flex: 1; min-width: 0; }
+.fdb-row__arch { flex: none; }
+.fdb-row.is-archived .fdb-row__main b { color: var(--muted); }
+.fdb-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.fdb-tags:empty { display: none; }
+.sdb-group { border-top: 1px solid var(--line); padding: 6px 0; }
+.sdb-group > summary { cursor: pointer; padding: 4px 0; }
+.sdb-group .nf-grid { align-items: end; }
+
+/* Werte nachtragen → Griffkraft sauber gesetzt (1.147.0): Felder mit Beschriftung, gleiche Breite */
+.qf-grip { display: grid; gap: 10px; padding-top: 4px; }
+.qf-grip__last { margin: 0; }
+.qf-grip__fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: end; }
+.qf-grip__fields .qf-grip__time { grid-column: 1 / -1; max-width: calc(50% - 5px); }
+.qf-grip__fields .field { margin: 0; min-width: 0; }
+.qf-grip__fields .qf-input { width: 100%; text-align: center; }
+.qf-grip .err { margin: 0; }

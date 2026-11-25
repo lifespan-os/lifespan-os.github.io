@@ -4,6 +4,7 @@
 
 import { LABEL_KEYS, extrasNote, guessName, validBarcode } from "./label.js";
 import { appDay } from "./appday.js";
+import * as RC from "./recipes.js";
 
 const pad = (n) => String(n).padStart(2, "0");
 const localDate = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -138,7 +139,7 @@ export function nutritionFromRows(rows, exportedAt = null) {
 }
 
 export function emptyLocal() {
-  return { foods: {}, barcodes: {}, meals: {}, recipes: {}, dish: emptyDish(), planned: {}, plannedDeleted: {} };
+  return { foods: {}, barcodes: {}, meals: {}, recipes: {}, recipesDeleted: {}, dish: emptyDish(), planned: {}, plannedDeleted: {} };
 }
 
 export function emptyDish() {
@@ -162,7 +163,8 @@ const norm = (s) => String(s ?? "").toLocaleLowerCase("de-DE").normalize("NFKD")
 /** Suche nach Name, Marke oder Strichcode; zuletzt am Handy verwendete zuerst. */
 export function searchFoods(catalog, local, query, limit = 30) {
   const q = norm(query).trim();
-  const foods = [...allFoods(catalog, local).values()];
+  // archivierte Lebensmittel (1.147.0 auch am Handy archivierbar) erscheinen nicht bei der Auswahl
+  const foods = [...allFoods(catalog, local).values()].filter((f) => !f.archived);
   if (/^\d{8,14}$/.test(q)) {
     const f = foodByBarcode(catalog, local, q);
     return f ? [f] : [];
@@ -173,7 +175,7 @@ export function searchFoods(catalog, local, query, limit = 30) {
       for (const it of m.items) recent.add(it.food_id);
     }
     const byId = allFoods(catalog, local);
-    return [...recent].map((id) => byId.get(id)).filter(Boolean).slice(0, limit);
+    return [...recent].map((id) => byId.get(id)).filter((f) => f && !f.archived).slice(0, limit);
   }
   const words = q.split(/\s+/);
   return foods
@@ -336,13 +338,56 @@ export function saveFood(catalog, local, form, { uuid, now = new Date() }) {
   const row = {
     id: existing?.id ?? uuid(),
     ...checked.values,
-    archived: 0,
+    // beim Bearbeiten bleibt „archiviert“ erhalten (1.147.0)
+    archived: form.id && existing?.archived ? 1 : 0,
     created_at: existing?.created_at ?? iso,
     updated_at: iso,
   };
   local.foods[row.id] = { row, sent: false };
   if (checked.barcode) local.barcodes[checked.barcode] = { foodId: row.id, updatedAt: iso, sent: false };
   return { ok: true, food: row, merged: !form.id && Boolean(same) };
+}
+
+/**
+ * Lebensmittel archivieren bzw. zurückholen (1.147.0, Datenbanken → Lebensmitteldatenbank wie am
+ * PC). `food` = Zeile (vom PC oder Handy). Archivierte erscheinen nicht mehr bei der Auswahl.
+ */
+export function setFoodArchived(local, food, archived, now = new Date()) {
+  const row = { ...food, archived: archived ? 1 : 0, updated_at: now.toISOString() };
+  local.foods[row.id] = { row, sent: false };
+  return row;
+}
+
+/** Sortierungen der Lebensmitteldatenbank (1.147.0). */
+export const FOOD_SORTS = [
+  ["name", "Name"],
+  ["kcal", "kcal (absteigend)"],
+  ["protein", "Protein (absteigend)"],
+  ["carbs", "Kohlenhydrate (absteigend)"],
+  ["fat", "Fett (absteigend)"],
+  ["used", "Am häufigsten benutzt"],
+];
+
+/** Alle bekannten Lebensmittel mit Verwendung, gefiltert und sortiert (rein, getestet). */
+export function foodRows(foods, { query = "", archived = false, sort = "name", usedBy = new Map(), unsent = new Set() } = {}) {
+  const words = norm(query).trim().split(/\s+/).filter(Boolean);
+  const list = [...foods.values()]
+    .filter((f) => archived || !f.archived)
+    .filter((f) => {
+      if (!words.length) return true;
+      const hay = norm(`${f.name} ${f.brand ?? ""}`);
+      return words.every((w) => hay.includes(w));
+    })
+    .map((f) => ({ f, used: usedBy.get(f.id) ?? 0, unsent: unsent.has(f.id) }));
+  const by = {
+    kcal: (r) => r.f.energy_kcal ?? -1,
+    protein: (r) => r.f.protein_g ?? -1,
+    carbs: (r) => r.f.carbs_g ?? -1,
+    fat: (r) => r.f.fat_g ?? -1,
+    used: (r) => r.used,
+  }[sort];
+  const byName = (a, b) => Number(Boolean(a.f.archived)) - Number(Boolean(b.f.archived)) || String(a.f.name).localeCompare(String(b.f.name), "de", { sensitivity: "base" });
+  return list.sort(by ? (a, b) => by(b) - by(a) || byName(a, b) : byName);
 }
 
 // ------------------------------------------------------------------ Mengen und Nährwerte
@@ -518,9 +563,13 @@ export function discardFood(local, foodId) {
   for (const [code, b] of Object.entries(local.barcodes)) if (b.foodId === foodId && !b.sent) delete local.barcodes[code];
 }
 
-/** Noch nicht gesendetes Rezept bzw. Strichcode verwerfen. */
+/**
+ * Noch nicht gesendetes Rezept bzw. Strichcode verwerfen. Bei einem geänderten Gericht vom PC gilt
+ * danach wieder der Stand vom PC; eine Löschung am Handy wird zurückgenommen (1.147.0).
+ */
 export function discardRecipe(local, id) {
   if (local.recipes[id] && !local.recipes[id].sent) delete local.recipes[id];
+  if (local.recipesDeleted?.[id] && !local.recipesDeleted[id].sent) delete local.recipesDeleted[id];
 }
 export function discardBarcode(local, code) {
   if (local.barcodes[code] && !local.barcodes[code].sent) delete local.barcodes[code];
@@ -540,6 +589,7 @@ export function discardUnsentFood(local) {
     if (!m.items.length) delete local.meals[id];
   }
   for (const [id, r] of Object.entries(local.recipes)) if (!r.sent) (delete local.recipes[id], n++);
+  for (const [id, d] of Object.entries(local.recipesDeleted ?? {})) if (!d.sent) (delete local.recipesDeleted[id], n++);
   for (const [code, c] of Object.entries(local.barcodes)) if (!c.sent) (delete local.barcodes[code], n++);
   for (const [id, f] of Object.entries(local.foods)) {
     if (f.sent || f.pkg) continue;
@@ -707,7 +757,8 @@ export function unsentCount(local) {
     Object.values(local.barcodes).filter((b) => !b.sent).length +
     Object.values(local.meals).reduce((n, m) => n + m.items.filter((i) => !i.sent).length, 0) +
     Object.values(local.meals).filter((m) => m.rowChanged && !m.sent && m.items.every((i) => i.sent)).length +
-    Object.values(local.recipes).filter((r) => !r.sent).length
+    Object.values(local.recipes).filter((r) => !r.sent).length +
+    Object.values(local.recipesDeleted ?? {}).filter((d) => !d.sent).length
   );
 }
 
@@ -721,8 +772,10 @@ const clean = ({ sent: _sent, ...row }) => row;
 export function nutritionTables(catalog, local, { all = false } = {}) {
   const foods = allFoods(catalog, local);
   const out = { food: new Map(), meal: [], meal_item: [], recipe: [], recipe_item: [], recipe_supplement: [], settings: [], planned_meal: [], planned_meal_item: [], deleted_record: [] };
+  // archivierte Lebensmittel vom PC (in Mahlzeiten und Gerichten, 1.147.0) gehen mit, damit die Datei vollständig ist
+  const archived = new Map((catalog.pc?.archived_food ?? []).map((f) => [f.id, f]));
   const needFood = (id) => {
-    const f = foods.get(id);
+    const f = foods.get(id) ?? archived.get(id);
     if (!f) throw new Error("Ein Lebensmittel fehlt. Bitte neue Daten vom PC laden.");
     out.food.set(id, f);
   };
@@ -752,6 +805,9 @@ export function nutritionTables(catalog, local, { all = false } = {}) {
     }
     for (const it of r.supplements ?? []) out.recipe_supplement.push({ ...it });
   }
+  // Vorlagen & Rezepte am Handy bearbeitet bzw. gelöscht (1.147.0): Löschvermerke für entfernte
+  // Zutaten/Supplemente und gelöschte Gerichte
+  out.deleted_record.push(...RC.recipeDeletions(local, { all }));
   // Geplante Mahlzeiten (1.100.0, Schema 74): die ganze Mahlzeit mit allen Lebensmitteln; am PC
   // entfallene Lebensmittel löscht der Abgleich über die Löschvermerke der Einträge
   for (const p of Object.values(local.planned ?? {})) {
@@ -786,6 +842,7 @@ export function markNutritionSent(local) {
     for (const i of m.items) i.sent = true;
   }
   for (const r of Object.values(local.recipes)) r.sent = true;
+  for (const d of Object.values(local.recipesDeleted ?? {})) d.sent = true;
   for (const p of Object.values(local.planned ?? {})) p.sent = true;
   for (const d of Object.values(local.plannedDeleted ?? {})) d.sent = true;
 }
@@ -822,9 +879,8 @@ export function pruneLocal(catalog, local, today = localDate()) {
   for (const [code, b] of Object.entries(local.barcodes)) {
     if (b.sent && pcCodes[code] === b.foodId) delete local.barcodes[code];
   }
-  for (const [id, r] of Object.entries(local.recipes)) {
-    if (r.sent && (catalog.nutrition?.recipeNames ?? []).some((n) => norm(n) === norm(r.row.name))) delete local.recipes[id];
-  }
+  // Gerichte (1.147.0): gleiche ID mindestens so neu am PC, sonst wie bisher über den Namen
+  RC.pruneRecipes(catalog, local);
   // Geplante Mahlzeiten: Übertragenes, das der PC (mindestens so neu) hat bzw. gelöscht hat, entfällt
   const pcPlanned = new Map((catalog.pc?.planned_meal ?? []).map((r) => [r.id, r]));
   for (const [id, p] of Object.entries(local.planned ?? {})) {

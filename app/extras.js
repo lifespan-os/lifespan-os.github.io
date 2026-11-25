@@ -161,12 +161,17 @@ export function viewQuickFill() {
     : "";
   const gripHtml = grip
     ? `<section class="card"><div class="wo-head"><h3>Griffkraft · ${esc(Q().RHYTHM_LABELS[grip.rhythm])}</h3><button class="linkbtn" data-act="qf-skip-grip">überspringen</button></div>
-      <div class="qf-row"><div><strong>Links und rechts</strong><span class="muted small">${
-        grip.lastDate ? `zuletzt ${esc(F(grip.lastLeftKg ?? 0, 1))} / ${esc(F(grip.lastRightKg ?? 0, 1))} kg am ${esc(D.formatDate(grip.lastDate))}` : "noch keine Messung"
-      }</span></div>
-      <div class="qf-times">${input("grip|left", 'inputmode="decimal" placeholder="Links" aria-label="Griffkraft links in kg"')}${input("grip|right", 'inputmode="decimal" placeholder="Rechts" aria-label="Griffkraft rechts in kg"')}<span class="muted small">kg</span></div>
-      <div class="qf-times"><label class="muted small" for="qf-grip-time">Uhrzeit</label><input id="qf-grip-time" class="qf-input" type="time" data-qf="grip|time" value="${esc(f.inputs["grip|time"] ?? gripTimeDefault(grip))}" aria-label="Uhrzeit der Griffkraft-Messung"></div>
-      <p class="muted small">${esc(D.gripTiming.gripWindowText(gripWindow()))}</p>${err("grip")}</div></section>`
+      <div class="qf-grip">
+        <p class="qf-grip__last muted small">${
+          grip.lastDate ? `Zuletzt: links ${esc(F(grip.lastLeftKg ?? 0, 1))} kg, rechts ${esc(F(grip.lastRightKg ?? 0, 1))} kg am ${esc(D.formatDate(grip.lastDate))}` : "Noch keine Messung"
+        }</p>
+        <div class="qf-grip__fields">
+          <div class="field"><label for="qf-grip-left">Links <span class="muted">(kg)</span></label>${input("grip|left", 'inputmode="decimal" aria-label="Griffkraft links in kg"')}</div>
+          <div class="field"><label for="qf-grip-right">Rechts <span class="muted">(kg)</span></label>${input("grip|right", 'inputmode="decimal" aria-label="Griffkraft rechts in kg"')}</div>
+          <div class="field qf-grip__time"><label for="qf-grip-time">Uhrzeit</label><input id="qf-grip-time" class="qf-input" type="time" data-qf="grip|time" value="${esc(f.inputs["grip|time"] ?? gripTimeDefault(grip))}"></div>
+        </div>
+        <p class="muted small">${esc(D.gripTiming.gripWindowText(gripWindow()))}</p>${err("grip")}
+      </div></section>`
     : "";
   const valuesHtml = [...groups.entries()]
     .map(

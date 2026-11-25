@@ -79,17 +79,21 @@ export function blsCard() {
 export function viewBls() {
   const S = X.S;
   if (!S.blsInfo) return `${X.header("BLS 4.0", { back: "transfer" })}<main class="wrap"><section class="card"><p>Der BLS ist auf diesem Gerät nicht gespeichert.</p></section>${blsCard()}</main>`;
+  return `${X.header("BLS 4.0", { back: "transfer" })}<main class="wrap">${blsSearchHtml()}</main>`;
+}
+
+/** Suche und Einzelansicht des BLS (Import/Export → BLS und Nutrition → Datenbanken, 1.147.0). */
+export function blsSearchHtml() {
+  const S = X.S;
   const b = ensureBls();
   const q = S.blsQuery ?? "";
   const f = b && S.blsCode ? B.foodByCode(b, S.blsCode) : null;
-  return `${X.header("BLS 4.0", { back: "transfer" })}<main class="wrap">
-    <section class="card">
+  return `<section class="card">
       <div class="field"><label for="bls-q">Lebensmittel suchen</label>
         <input id="bls-q" type="search" autocomplete="off" data-bls="q" value="${esc(q)}" placeholder="z. B. Haferflocken, Apfel, Lachs"></div>
       <div class="list" id="bls-results">${b ? resultsHtml(b, q) : `<p class="muted small">Wird geladen …</p>`}</div>
     </section>
-    ${f ? detailHtml(b, f) : ""}
-  </main>`;
+    ${f ? detailHtml(b, f) : ""}`;
 }
 
 function resultsHtml(b, q) {

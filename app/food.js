@@ -483,13 +483,16 @@ export function viewFoodReview() {
   // Lebensmittel aus Herstellerpaketen stehen beim Paket (Settings → Herstellerpakete), nicht einzeln
   const foods = Object.values(local.foods).filter((f) => !f.sent && !f.pkg);
   const recipes = Object.values(local.recipes).filter((r) => !r.sent);
+  // am Handy gelöschte Gerichte (1.147.0); Name aus dem Stand vom PC
+  const pcRecipes = new Map((X.S.catalog?.pc?.recipe ?? []).map((r) => [r.id, r]));
+  const goneRecipes = Object.entries(local.recipesDeleted ?? {}).filter(([, d]) => !d.sent);
   const allCodes = Object.entries(local.barcodes).filter(([, b]) => !b.sent);
   // Strichcodes neuer Lebensmittel stehen beim Lebensmittel, nur die übrigen (z. B. für ein Lebensmittel vom PC) einzeln
   const newIds = new Set(foods.map((f) => f.row.id));
   const codesOf = (id) => allCodes.filter(([, b]) => b.foodId === id).map(([c]) => c);
   const codes = allCodes.filter(([, b]) => !newIds.has(b.foodId));
   const all = N.allFoods(X.S.catalog, local);
-  const empty = !days.length && !foods.length && !recipes.length && !codes.length;
+  const empty = !days.length && !foods.length && !recipes.length && !goneRecipes.length && !codes.length;
   const itemRow = (m, it) => `<div class="rv-item">
       <div class="rv-name"><b>${esc(it.food ? N.foodLabel(it.food) : "Unbekanntes Lebensmittel")}</b>
         <span class="muted small">${it.n ? esc(N.describeNutrients(it.n)) : ""}</span></div>
@@ -539,13 +542,24 @@ export function viewFoodReview() {
     }
     ${
       recipes.length
-        ? `<section class="card"><h3>Neue Rezepte</h3>
+        ? `<section class="card"><h3>Neue und geänderte Gerichte</h3>
           ${recipes
             .map(
               (r) => `<div class="meal-item"><span><b>${esc(r.row.name)}</b> <span class="muted small">${num(r.row.servings)} Portion(en) · ${r.items
                 .map((i) => `${esc(all.get(i.food_id)?.name ?? "?")} ${num(i.amount)}`)
                 .join(", ")}</span></span>
               <button class="btn sm ghost" data-act="rv-recipe-discard" data-arg="${esc(r.row.id)}" aria-label="Rezept verwerfen">✕</button></div>`,
+            )
+            .join("")}</section>`
+        : ""
+    }
+    ${
+      goneRecipes.length
+        ? `<section class="card"><h3>Gelöschte Gerichte</h3>
+          ${goneRecipes
+            .map(
+              ([id]) => `<div class="meal-item"><span><b>${esc(pcRecipes.get(id)?.name ?? "Gericht")}</b> <span class="muted small">wird am PC gelöscht</span></span>
+              <button class="btn sm ghost" data-act="rv-recipe-discard" data-arg="${esc(id)}" aria-label="Löschen zurücknehmen">✕</button></div>`,
             )
             .join("")}</section>`
         : ""

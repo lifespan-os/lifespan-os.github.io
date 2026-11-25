@@ -40,7 +40,10 @@ export function phoneSupp(local) {
     deletedItems: gone("supplement_intake_item"),
     // Herstellerpakete (1.27.0): am Handy angelegte Supplements mit Nährwerten und eigene Felder
     supplements: Object.values(l.supplements).map((e) => e.row),
-    values: Object.values(l.supplements).flatMap((e) => Object.entries(e.values ?? {}).map(([nutrient, amount]) => ({ supplement_id: e.row.id, nutrient, amount }))),
+    // mit ID der Wertezeile (1.147.0, Supplementdatenbank am Handy): trifft beim Abgleich dieselbe Zeile
+    values: Object.values(l.supplements).flatMap((e) =>
+      Object.entries(e.values ?? {}).map(([nutrient, amount]) => ({ id: e.valueIds?.[nutrient] ?? valueId(e.row.id, nutrient), supplement_id: e.row.id, nutrient, amount })),
+    ),
     fields: Object.values(l.fields).map((e) => e.row),
   };
 }
@@ -298,7 +301,9 @@ export const unsentSupp = (local) => {
   return (
     Object.values(l.intakes).filter((e) => !e.sent).length +
     Object.values(l.deleted).filter((d) => !d.sent && d.table === "supplement_intake").length +
-    Object.values(l.packages).filter((p) => !p.sent).length
+    Object.values(l.packages).filter((p) => !p.sent).length +
+    // Supplementdatenbank am Handy bearbeitet (1.147.0)
+    Object.values(l.supplements).filter((e) => e.edited && !e.sent).length
   );
 };
 
@@ -405,6 +410,37 @@ export function withIntakeParents(tables, { stacks = [], mealOf = () => null } =
     }
   }
   return out;
+}
+
+/**
+ * Gerichte mit Supplementen (1.147.0): Verwendete Supplements gehen mit, wenn sie in der Datei
+ * fehlen – der PC prüft die Datei vollständig (Fremdschlüssel). Zeile wie in `suppTables`, ohne
+ * Nährwerte (am PC bleibt der gleiche oder neuere Stand).
+ */
+export function withRecipeSupplements(tables, db, now = new Date()) {
+  const refs = (tables.recipe_supplement ?? []).map((r) => r.supplement_id);
+  if (!refs.length) return tables;
+  const have = new Set((tables.supplement ?? []).map((r) => r.id));
+  const iso = now.toISOString();
+  const add = [];
+  for (const id of new Set(refs)) {
+    if (have.has(id)) continue;
+    const s = db.supplements?.get(id);
+    if (!s) continue;
+    add.push({
+      id: s.id,
+      name: s.name,
+      unit: s.unit,
+      notes: s.notes ?? null,
+      archived: s.archived ? 1 : 0,
+      created_at: s.created_at ?? iso,
+      updated_at: s.updated_at ?? iso,
+      manufacturer: s.manufacturer ?? null,
+      serving_amount: s.serving_amount,
+      daily_dose: s.daily_dose ? 1 : 0,
+    });
+  }
+  return add.length ? { ...tables, supplement: [...(tables.supplement ?? []), ...add] } : tables;
 }
 
 /** Feste ID je Supplement und Nährstoff (der PC gleicht ohnehin über Supplement + Nährstoff ab). */

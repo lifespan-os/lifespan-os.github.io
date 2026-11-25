@@ -2604,3 +2604,26 @@ html[data-theme="dark"] .plt-tag--caffeine { color: #c8956a; background: #3a2a1c
 .heart-fields .field > span:first-child { font-size: .8rem; font-weight: 600; color: var(--muted); }
 .heart-field--calc input::placeholder { color: var(--fg); opacity: .75; }
 .heart-field--calc > span:first-child::after { content: " *"; color: var(--orange-text); }
+
+/* Maschinen fürs Gym auswählen (1.146.0, wie PC 1.0.216): Filter, alle Treffer, trainierte zuerst, Mehrfachauswahl */
+.gym-pick__filters { margin-bottom: 4px; }
+.gym-pick__filters select { width: 100%; min-width: 0; }
+.gym-pick__search { scroll-margin-top: 8px; }
+#gym-q { border: 2px solid var(--orange); }
+.gym-pick__bar { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; background: var(--surface); border-bottom: 1px solid var(--line); }
+.gym-pick__list { max-height: calc(100dvh - 190px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.gym-pick__row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.gym-pick__img:empty { display: none; }
+.gym-pick__img { width: 56px; }
+.gym-pick__row:has(.gym-pick__img:empty) { grid-template-columns: minmax(0, 1fr); }
+.gym-pick__row.is-checked { background: color-mix(in srgb, var(--orange) 10%, var(--surface)); }
+.gym-pick__row.is-here { opacity: .7; }
+.gym-pick__main { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 4px 0; border: 0; background: transparent; color: var(--fg); text-align: left; }
+.gym-pick__main .main { display: grid; gap: 1px; min-width: 0; }
+.gym-pick__box { flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; border: 2px solid var(--line); border-radius: 6px; color: #fff; font-weight: 800; }
+.gym-pick__row.is-checked .gym-pick__box { border-color: var(--orange); background: var(--orange); }
+.gym-pick__row.is-here .gym-pick__box { border-color: var(--ok); background: var(--ok); }
+.gym-pick__tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.gym-pick__tag { padding: 0 6px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: .72rem; white-space: nowrap; }
+.gym-pick__tag--trained { border-color: var(--ok); color: var(--ok-text, var(--ok)); font-weight: 700; }
+.gym-pick__tag--in { border-color: var(--orange); color: var(--orange-text); }

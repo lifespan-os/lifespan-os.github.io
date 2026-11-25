@@ -26842,6 +26842,49 @@ var LEVEL_BOUNDS_MATCH = CATEGORY_BOUNDS.every(
   (b) => GRIP_LEVELS.some((l) => l.category === b.category && l.from === b.minPercentile)
 );
 
+// src/domain/gymMachinePick.ts
+var gymMachinePick_exports = {};
+__export(gymMachinePick_exports, {
+  pickChoices: () => pickChoices,
+  pickList: () => pickList
+});
+function pickChoices(machines) {
+  const sort = (set) => [...set].sort((a, b) => a.localeCompare(b, "de"));
+  const makers = /* @__PURE__ */ new Set();
+  const muscles = /* @__PURE__ */ new Set();
+  for (const m of machines) {
+    if (m.manufacturer.trim()) makers.add(m.manufacturer.trim());
+    for (const g of m.muscleGroups) if (g.trim()) muscles.add(g.trim());
+  }
+  return { manufacturers: sort(makers), muscles: sort(muscles) };
+}
+function pickList(machines, filter, trained, inGym) {
+  const query = filter.query.trim();
+  if (!query && !filter.manufacturer && !filter.muscle) return [];
+  const options = machines.filter((m) => !filter.manufacturer || m.manufacturer.trim() === filter.manufacturer).filter((m) => !filter.muscle || m.muscleGroups.some((g) => g.trim() === filter.muscle)).map((m) => {
+    const count = trained.get(m.id) ?? 0;
+    return {
+      id: m.id,
+      label: m.displayName,
+      detail: [m.manufacturer, m.series, m.muscleGroups.join(", ")].filter(Boolean).join(" \xB7 "),
+      keywords: [...m.keywords],
+      exact: [...m.exact, ...inGym.get(m.id) ? [inGym.get(m.id)] : []],
+      priority: count > 0 ? 0 : 1,
+      usage: count,
+      manufacturer: m.manufacturer,
+      trained: count,
+      inGym: inGym.has(m.id),
+      number: inGym.get(m.id) ?? null
+    };
+  });
+  if (!query) {
+    return options.sort(
+      (a, b) => (a.priority ?? 0) - (b.priority ?? 0) || b.trained - a.trained || a.label.localeCompare(b.label, "de")
+    );
+  }
+  return smartFilter(options, query, options.length).map((h) => h.option);
+}
+
 // src/domain/protocols.ts
 var protocols_exports = {};
 __export(protocols_exports, {
@@ -32852,10 +32895,7 @@ function openItems(input) {
       label: input.dueValues > 1 ? `${input.dueValues} K\xF6rperwerte eintragen` : weightOpen && input.dueValues <= 1 ? "Gewicht eintragen" : "K\xF6rperwert eintragen",
       section: "body",
       tab: "entry",
-      fields: [
-        ...input.dueFields ?? [],
-        ...weightOpen ? [`metric:${WEIGHT_METRIC_ID}`] : []
-      ]
+      fields: [...input.dueFields ?? [], ...weightOpen ? [`metric:${WEIGHT_METRIC_ID}`] : []]
     });
   }
   for (const r2 of input.status) {
@@ -34115,6 +34155,7 @@ export {
   groupInsights,
   groupIntakes,
   groupedValues,
+  gymMachinePick_exports as gymMachinePick,
   gymPreselect_exports as gymPreselect,
   gymShare_exports as gymShare,
   heart_exports as heart,

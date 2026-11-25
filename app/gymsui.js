@@ -7,7 +7,7 @@
 
 import * as G from "./gymsdata.js";
 import * as D from "./pcdomain.js";
-import { appDay } from "./core.js";
+import { appDay, allExercises, machineMuscles, usageOf } from "./core.js";
 import { cropPhoto } from "./photocrop.js";
 import { thumbButton, has as hasImage, imageUrl } from "./machineimages.js";
 import * as TR from "./trainingdata.js";
@@ -18,6 +18,10 @@ let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwic
 
 export function initGyms(ctx) {
   X = ctx;
+  // Suche (1.146.0): beim Hineintippen springt das Feld nach oben – mehr Platz für die Treffer
+  document.addEventListener("focusin", (ev) => {
+    if (ev.target?.id === "gym-q") setTimeout(() => ev.target.closest(".gym-pick__search")?.scrollIntoView({ block: "start", behavior: "smooth" }), 250);
+  });
 }
 
 const esc = (v) => X.esc(v);
@@ -430,9 +434,11 @@ function detailHtml(g, active) {
   ${accessHtml(g)}
   <section class="card">
     <div class="wo-head"><h3>Maschinen (${rows.length})</h3></div>
-    <div class="field"><label for="gym-q">Maschine hinzufügen</label>
-      <input id="gym-q" type="search" data-gym="query" placeholder="Name, Hersteller, Muskel oder Nummer …" value="${esc(S.gymQuery ?? "")}" autocomplete="off"></div>
-    <div class="list" id="gym-hits">${hitsHtml(hits)}</div>
+    ${filtersHtml(S)}
+    <div class="field gym-pick__search"><label for="gym-q">Maschine hinzufügen</label>
+      <input id="gym-q" type="search" data-gym="query" placeholder="Name, Hersteller, Muskel oder Nummer …" value="${esc(S.gymQuery ?? "")}" autocomplete="off">
+      <p class="muted small">Bereits trainierte Maschinen stehen oben. Bild antippen = Großansicht, Zeile antippen = auswählen.</p></div>
+    <div id="gym-hits">${hitsHtml(hits)}</div>
     ${
       rows.length
         ? `<div class="gym-rows">${rows
@@ -540,36 +546,75 @@ function zoomAccessCode(g, startBack = false) {
 }
 
 /**
- * Treffer für „Maschine hinzufügen“ (seit 1.140.0 wie am PC 1.0.211): intelligente Suche über die
- * ganze Maschinendatenbank, auch per Nummer (Studionummer, dasGym-Nummer, Artikelnummer; eine
- * genau passende Nummer steht vorn). Maschinen, die schon im Gym stehen, sind markiert.
+ * Maschinen für „Maschine hinzufügen“ (seit 1.146.0 wie am PC 1.0.216, `D.gymMachinePick`):
+ * Filter nach Hersteller und Muskelgruppe, alle Treffer, bereits trainierte zuerst, Maschinen im
+ * Gym markiert. Daten je Katalog einmal aufbereitet.
  */
+let pickCache = { catalog: null, workouts: null, local: null, pick: [], trained: new Map() };
+function pickData(S) {
+  if (pickCache.catalog === S.catalog && pickCache.workouts === S.workouts && pickCache.local === S.localExercises) return pickCache;
+  const active = S.catalog.machines.filter((m) => !m.archived);
+  const exByMachine = new Map();
+  for (const e of allExercises(S.catalog, S.localExercises ?? [])) {
+    if (!e.machine_id || e.archived) continue;
+    exByMachine.set(e.machine_id, [...(exByMachine.get(e.machine_id) ?? []), e.id]);
+  }
+  const trained = new Map();
+  for (const [id, ids] of exByMachine) {
+    const n = usageOf(S.catalog, S.workouts ?? [], ids).count;
+    if (n > 0) trained.set(id, n);
+  }
+  const pick = active.map((m) => ({
+    id: m.id,
+    displayName: String(m.display_name ?? ""),
+    manufacturer: String(m.manufacturer ?? ""),
+    series: String(m.series ?? ""),
+    muscleGroups: machineMuscles(m).map(String),
+    keywords: [],
+    exact: [m.gym_number, m.article_number].map((x) => String(x ?? "").trim()).filter(Boolean),
+  }));
+  pickCache = { catalog: S.catalog, workouts: S.workouts, local: S.localExercises, pick, trained };
+  return pickCache;
+}
+
+function filtersHtml(S) {
+  const P = D.gymMachinePick;
+  const { manufacturers, muscles } = P.pickChoices(pickData(S).pick);
+  const sel = (key, label, all, list, value) => `<label class="field"><span class="muted small">${label}</span><select data-gym="${key}">
+    <option value="">${all}</option>${list.map((x) => `<option value="${esc(x)}" ${x === value ? "selected" : ""}>${esc(x)}</option>`).join("")}</select></label>`;
+  return `<div class="grid2 gym-pick__filters">${sel("maker", "Hersteller", "Alle Hersteller", manufacturers, S.gymMaker ?? "")}${sel("muscle", "Muskelgruppe", "Alle Muskelgruppen", muscles, S.gymMuscle ?? "")}</div>`;
+}
+
 function machineHits(S, query) {
   const q = String(query ?? "").trim();
-  if (q.length < 2 && !/^\d+$/.test(q)) return [];
-  const numbers = new Map(G.gymEntries(S.catalog, S.gyms, S.gymSel).map((e) => [e.machine_id, String(e.number ?? "").trim()]));
-  const options = S.catalog.machines
-    .filter((m) => !m.archived)
-    .map((m) => ({
-      id: m.id,
-      label: String(m.display_name ?? ""),
-      detail: [m.manufacturer, m.series, m.muscle_groups].filter(Boolean).map(String).join(" "),
-      exact: [numbers.get(m.id), m.gym_number, m.article_number].map((x) => String(x ?? "").trim()).filter(Boolean),
-      m,
-      here: numbers.has(m.id),
-      number: numbers.get(m.id) || null,
-    }));
-  return D.smartFilter(options, q, 25).map((h) => h.option);
+  const maker = S.gymMaker ?? "";
+  const muscle = S.gymMuscle ?? "";
+  // ein einzelnes Zeichen (außer Ziffern) wäre fast die ganze Datenbank
+  if (!maker && !muscle && q.length < 2 && !/^\d+$/.test(q)) return [];
+  const numbers = new Map(G.gymEntries(S.catalog, S.gyms, S.gymSel).map((e) => [e.machine_id, String(e.number ?? "").trim() || null]));
+  const { pick, trained } = pickData(S);
+  const byId = new Map(S.catalog.machines.map((m) => [m.id, m]));
+  return D.gymMachinePick.pickList(pick, { query: q, manufacturer: maker, muscle }, trained, numbers).map((o) => ({ ...o, m: byId.get(o.id), here: o.inGym }));
 }
 
 function hitsHtml(hits) {
-  return hits
-    .map(({ m, here, number }) => {
-      const sub = [here ? `steht schon im Gym${number ? ` (Nr. ${number})` : ""}` : "", m.manufacturer, m.series].filter(Boolean).join(" · ");
-      return `<button class="item${here ? " is-here" : ""}" data-act="${here ? "gym-has" : "gym-add"}" data-arg="${esc(m.id)}">${thumbButton(m.id, m.display_name, { inner: true })}<span class="main"><b>${esc(m.display_name)}</b>
-        <span class="muted small">${esc(sub)}</span></span><span class="chev">${here ? "✓" : "+"}</span></button>`;
+  const S = X.S;
+  if (!hits.length) return String(S.gymQuery ?? "").trim() || S.gymMaker || S.gymMuscle ? `<p class="muted small">Keine Treffer.</p>` : "";
+  const picked = new Set(S.gymPicked ?? []);
+  const bar = `<div class="gym-pick__bar"><span class="muted small">${hits.length} Treffer${picked.size ? ` · ${picked.size} ausgewählt` : ""}</span>
+    <button class="btn sm primary" data-act="gym-add-picked" ${picked.size ? "" : "disabled"}>${picked.size ? `${picked.size} hinzufügen` : "Antippen zum Auswählen"}</button></div>`;
+  const rows = hits
+    .map(({ m, here, number, trained, id }) => {
+      const sub = [m.manufacturer, m.series].filter(Boolean).join(" · ");
+      const on = picked.has(id);
+      const tags = `${trained > 0 ? `<span class="gym-pick__tag gym-pick__tag--trained">✓ ${trained}× trainiert</span>` : `<span class="gym-pick__tag">noch nicht trainiert</span>`}${here ? `<span class="gym-pick__tag gym-pick__tag--in">steht schon im Gym${number ? ` (Nr. ${esc(number)})` : ""}</span>` : ""}`;
+      return `<div class="gym-pick__row${here ? " is-here" : ""}${on ? " is-checked" : ""}"><span class="gym-pick__img">${thumbButton(m.id, m.display_name)}</span>
+        <button class="gym-pick__main" data-act="${here ? "gym-has" : "gym-pick"}" data-arg="${esc(id)}" aria-pressed="${on}">
+          <span class="gym-pick__box" aria-hidden="true">${here || on ? "✓" : ""}</span>
+          <span class="main"><b>${esc(m.display_name)}</b><span class="muted small">${esc(sub)}</span><span class="gym-pick__tags">${tags}</span></span></button></div>`;
     })
     .join("");
+  return `${bar}<div class="gym-pick__list">${rows}</div>`;
 }
 
 function editorHtml(d) {
@@ -732,6 +777,27 @@ export const gymsActions = {
     S.gymQuery = "";
     X.rerender();
   },
+  // Mehrfachauswahl (1.146.0): antippen merkt die Maschine, „N hinzufügen“ nimmt alle auf
+  "gym-pick": (el) => {
+    const S = X.S;
+    const set = new Set(S.gymPicked ?? []);
+    if (set.has(el.dataset.arg)) set.delete(el.dataset.arg);
+    else set.add(el.dataset.arg);
+    S.gymPicked = [...set];
+    const box = document.getElementById("gym-hits");
+    if (box) box.innerHTML = hitsHtml(machineHits(S, S.gymQuery));
+    else X.rerender();
+  },
+  "gym-add-picked": async () => {
+    const S = X.S;
+    const ids = (S.gymPicked ?? []).filter((id) => !G.gymEntries(S.catalog, S.gyms, S.gymSel).some((e) => e.machine_id === id));
+    if (!ids.length) return;
+    G.addMachines(S.catalog, S.gyms, S.gymSel, ids, X.uuid);
+    await persist();
+    S.gymPicked = [];
+    X.toast(`${ids.length} ${ids.length === 1 ? "Maschine" : "Maschinen"} aufgenommen.`);
+    X.rerender();
+  },
   // Treffer, der schon im Gym steht (1.140.0): nur Hinweis, nichts doppelt anlegen
   "gym-has": (el) => {
     const S = X.S;
@@ -787,6 +853,13 @@ export function gymsInput(el) {
   const S = X.S;
   if (el.dataset?.gymf && S.gymEdit) {
     S.gymEdit[el.dataset.gymf] = el.value;
+    return true;
+  }
+  // Filter Hersteller/Muskelgruppe (1.146.0)
+  if (el.dataset?.gym === "maker" || el.dataset?.gym === "muscle") {
+    S[el.dataset.gym === "maker" ? "gymMaker" : "gymMuscle"] = el.value;
+    const box = document.getElementById("gym-hits");
+    if (box) box.innerHTML = hitsHtml(machineHits(S, S.gymQuery));
     return true;
   }
   if (el.dataset?.gym === "query") {

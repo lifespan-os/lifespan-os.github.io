@@ -245,11 +245,22 @@ export function makeDb(catalog, phone = {}) {
   // Zutaten und Supplementen), Löschvermerke blenden aus
   const pr = phone.recipes ?? null;
   let pcView = pc;
+  // Stacks am Handy (1.149.0): geänderte ersetzen den Stand vom PC samt Einträgen
+  const ownStacks = ps.stacks ?? [];
+  const goneStacks = new Set(ps.deletedStacks ?? []);
+  if (ownStacks.length || goneStacks.size) {
+    const replaced = new Set([...ownStacks.map((r) => r.id), ...goneStacks]);
+    pcView = {
+      ...pcView,
+      supplement_stack: [...t("supplement_stack").filter((r) => !replaced.has(r.id)), ...ownStacks],
+      supplement_stack_item: [...t("supplement_stack_item").filter((i) => !replaced.has(i.stack_id)), ...(ps.stackItems ?? [])],
+    };
+  }
   if (pr) {
     const goneRecipes = new Set(pr.deleted ?? []);
     const owned = new Set([...(pr.owned ?? []), ...goneRecipes]);
     pcView = {
-      ...pc,
+      ...pcView,
       recipe: merge(t("recipe"), pr.rows ?? [], goneRecipes),
       recipe_item: [...t("recipe_item").filter((i) => !owned.has(i.recipe_id)), ...(pr.items ?? [])],
       recipe_supplement: [...t("recipe_supplement").filter((i) => !owned.has(i.recipe_id)), ...(pr.supplements ?? [])],

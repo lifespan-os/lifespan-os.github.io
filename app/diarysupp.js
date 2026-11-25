@@ -64,7 +64,7 @@ export function viewSuppIntake() {
   const slots = D.daySlots(P.mealDay(db, d.date));
   const options = SP.timingOptions(slots);
   if (d.timing && !options.some((o) => o.value === d.timing)) options.unshift({ value: d.timing, label: "Bisherige Mahlzeit" });
-  const stacks = SP.stackChoices(S.catalog?.pc);
+  const stacks = SP.stackChoices(SP.withPhoneStacks(S.catalog?.pc, S.supp));
   const hits = st.query ? SP.searchSupplements(db, st.query, 25) : [];
   const chosen = new Set(d.items.map((i) => i.supplementId));
   const title = "Einnahme";

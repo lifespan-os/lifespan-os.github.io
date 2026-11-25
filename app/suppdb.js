@@ -229,24 +229,147 @@ export function deleteSupplement(local, model) {
   if (local.supplements) delete local.supplements[model.id];
 }
 
-/** Stacks (vom PC) mit Inhalt für die Anzeige. */
-export function stackModels(db) {
+/**
+ * Stacks (vom PC und vom Handy, `db.pc` aus makeDb) mit Inhalt, in der Reihenfolge wie am PC
+ * (archivierte am Ende). `local` = S.supp (Stand „noch nicht am PC“).
+ */
+export function stackModels(db, local = null) {
   const pc = db.pc ?? {};
   const items = pc.supplement_stack_item ?? [];
+  const used = new Map();
+  for (const list of db.intakesByDate?.values?.() ?? []) for (const i of list) if (i.stack_id) used.set(i.stack_id, (used.get(i.stack_id) ?? 0) + 1);
   return (pc.supplement_stack ?? [])
     .slice()
-    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0) || String(a.name).localeCompare(String(b.name), "de"))
+    .sort((a, b) => Number(Boolean(a.archived)) - Number(Boolean(b.archived)) || (a.position ?? 0) - (b.position ?? 0) || String(a.name).localeCompare(String(b.name), "de"))
     .map((s) => ({
       id: s.id,
       name: s.name,
       archived: Boolean(s.archived),
       notes: s.notes ?? null,
+      position: s.position ?? 0,
+      createdAt: s.created_at,
+      used: used.get(s.id) ?? 0,
+      onPhone: Boolean(local?.stacks?.[s.id] && !local.stacks[s.id].sent),
       items: items
         .filter((i) => i.stack_id === s.id)
         .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
         .map((i) => {
           const sup = db.supplements?.get(i.supplement_id);
-          return { name: sup?.name ?? "Unbekanntes Supplement", unit: sup?.unit ?? "", amount: i.amount };
+          return { id: i.id, supplementId: i.supplement_id, name: sup?.name ?? "Unbekanntes Supplement", unit: sup?.unit ?? "", amount: i.amount };
         }),
     }));
+}
+
+// ------------------------------------------------------------------ Stacks bearbeiten (save_stack)
+
+export const MAX_STACK_ITEMS = 40;
+
+let keySeq = 0;
+const newKey = () => `s${Date.now().toString(36)}${(++keySeq).toString(36)}`;
+
+export function emptyStackDraft() {
+  return { id: null, name: "", notes: "", archived: false, items: [] };
+}
+
+export function stackDraftFromModel(m) {
+  return {
+    id: m.id,
+    name: m.name,
+    notes: m.notes ?? "",
+    archived: m.archived,
+    items: m.items.map((i) => ({ key: newKey(), id: i.id, supplementId: i.supplementId, amount: numText(i.amount, 3) })),
+  };
+}
+
+export function stackDraftItem(supplementId, amountText = "1") {
+  return { key: newKey(), id: null, supplementId, amount: amountText };
+}
+
+/** Prüfen wie `save_stack` am PC. `names` = [{ id, name }] aller Stacks. */
+export function checkStackDraft(draft, { supplements, names = [] }) {
+  const errors = {};
+  const name = String(draft.name ?? "").trim();
+  if (!name) errors.name = "Bitte einen Namen für den Stack eingeben.";
+  else if (name.length > 80) errors.name = "Der Name darf höchstens 80 Zeichen haben.";
+  else if (names.some((s) => s.id !== draft.id && norm(s.name) === norm(name))) errors.name = `Es gibt bereits einen Stack mit dem Namen „${name}“.`;
+  const notes = String(draft.notes ?? "").trim();
+  if (notes.length > 1000) errors.notes = "Höchstens 1000 Zeichen.";
+  if (!draft.items.length) errors.items = "Bitte mindestens ein Supplement hinzufügen.";
+  else if (draft.items.length > MAX_STACK_ITEMS) errors.items = `Höchstens ${MAX_STACK_ITEMS} Supplements je Eintrag.`;
+  const items = draft.items.map((it, i) => {
+    if (!supplements.get(it.supplementId)) {
+      errors[`items.${i}.supplementId`] = "Bitte ein Supplement wählen.";
+      return null;
+    }
+    const a = parseNum(it.amount);
+    if (a === null) errors[`items.${i}.amount`] = "Bitte eine Menge eingeben.";
+    else if (Number.isNaN(a)) errors[`items.${i}.amount`] = "Bitte eine Zahl eingeben, z. B. 1.";
+    else if (a < 0.001 || a > 100000) errors[`items.${i}.amount`] = "Die Menge muss zwischen 0,001 und 100.000 liegen.";
+    else return { id: it.id ?? null, supplementId: it.supplementId, amount: round(a, 3) };
+    return null;
+  });
+  if (Object.keys(errors).length) return { ok: false, errors };
+  return { ok: true, value: { id: draft.id ?? null, name, notes: notes || null, archived: Boolean(draft.archived), items } };
+}
+
+/**
+ * Stack am Handy speichern (neu oder geändert, auch vom PC). Einträge behalten ihre ID; entfernte
+ * bekommen einen Löschvermerk, wenn der PC sie kennen kann. `current` = Modell oder null,
+ * `positions` = Positionen aller Stacks (neue Stacks kommen ans Ende), `onPc` = vom PC.
+ */
+export function saveStack(local, value, current, { uuid, now = new Date(), positions = [], onPc = false }) {
+  if (!local.stacks) local.stacks = {};
+  if (!local.deleted) local.deleted = {};
+  const iso = now.toISOString();
+  const id = value.id ?? uuid();
+  const prev = local.stacks[id];
+  const row = {
+    id,
+    name: value.name,
+    notes: value.notes,
+    archived: value.archived ? 1 : 0,
+    position: current ? current.position : positions.length ? Math.max(...positions) + 1 : 0,
+    created_at: current?.createdAt ?? prev?.row.created_at ?? iso,
+    updated_at: iso,
+  };
+  const old = new Set((current?.items ?? []).map((i) => i.id));
+  const items = value.items.map((it, position) => ({
+    id: it.id && old.has(it.id) ? it.id : uuid(),
+    stack_id: id,
+    supplement_id: it.supplementId,
+    amount: it.amount,
+    position,
+    created_at: iso,
+    updated_at: iso,
+  }));
+  const everSent = Boolean(prev?.sent || prev?.everSent);
+  if (onPc || everSent) {
+    const keep = new Set(items.map((i) => i.id));
+    for (const oldId of old) {
+      if (!keep.has(oldId)) local.deleted[`supplement_stack_item:${oldId}`] = { table: "supplement_stack_item", id: oldId, at: iso, sent: false };
+    }
+  }
+  for (const it of items) delete local.deleted[`supplement_stack_item:${it.id}`];
+  delete local.deleted[`supplement_stack:${id}`];
+  local.stacks[id] = { row, items, everSent, sent: false };
+  return row;
+}
+
+/**
+ * Stack löschen wie `delete_stack`: eingetragene Tage bleiben (ihre Einnahmen verlieren nur den
+ * Verweis). Neu am Handy und ungesendet → einfach weg; sonst Löschvermerk.
+ */
+export function deleteStack(local, id, { onPc = false, now = new Date() } = {}) {
+  if (!local.deleted) local.deleted = {};
+  const e = local.stacks?.[id];
+  const known = onPc || Boolean(e?.sent || e?.everSent);
+  if (local.stacks) delete local.stacks[id];
+  if (known) local.deleted[`supplement_stack:${id}`] = { table: "supplement_stack", id, at: now.toISOString(), sent: false };
+  // Einnahmen am Handy, die auf den Stack verweisen: Verweis entfernen (am PC macht das die Datenbank)
+  for (const it of Object.values(local.intakes ?? {})) {
+    if (it.row.stack_id === id) {
+      it.row = { ...it.row, stack_id: null, updated_at: now.toISOString() };
+      it.sent = false;
+    }
+  }
 }

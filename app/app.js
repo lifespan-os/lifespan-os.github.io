@@ -56,7 +56,7 @@ import * as GY from "./gymsui.js";
 import { initExtras, quickFillInput, quickFillUpload, viewQuickFill } from "./extras.js";
 import { viewMealPlan } from "./planparity.js";
 import { recipeChange, recipeInput, viewRecipeEdit, viewRecipes } from "./recipesui.js";
-import { nutriDbChange, nutriDbInput, viewBlsDb, viewFoodDb, viewOffDb, viewSuppDb, viewSuppEdit } from "./nutridb.js";
+import { nutriDbChange, nutriDbInput, viewBlsDb, viewFoodDb, viewOffDb, viewSuppDb, viewSuppEdit, viewStackEdit } from "./nutridb.js";
 import { viewSearch, searchInput } from "./searchview.js";
 import { reviewChange } from "./reviewparity.js";
 import { pdfParityChange } from "./pdfparity.js";
@@ -135,6 +135,7 @@ const VIEWS = {
   "off-db": viewOffDb,
   "supp-db": viewSuppDb,
   "supp-db-edit": viewSuppEdit,
+  "stack-edit": viewStackEdit,
   search: viewSearch,
 };
 

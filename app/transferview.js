@@ -426,7 +426,7 @@ export function foodTables(all) {
   });
   Object.assign(out, mergeTables(out, fast));
   return SP.withIntakeParents(out, {
-    stacks: S.catalog?.pc?.supplement_stack ?? [],
+    stacks: SP.withPhoneStacks(S.catalog?.pc, S.supp).supplement_stack ?? [],
     mealOf: (id) => S.food.local.meals[id]?.row ?? pcMeals.find((m) => m.id === id) ?? null,
   });
 }

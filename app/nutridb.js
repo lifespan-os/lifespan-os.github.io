@@ -10,6 +10,7 @@ import { X, buildDb, nutrientCatalog, nutritionTabs } from "./diary.js";
 import { blsCard, blsSearchHtml } from "./blsui.js";
 import { offCard, offSearchHtml } from "./offui.js";
 import { foodActions } from "./food.js";
+import * as SP from "./supplements.js";
 
 const esc = (v) => X.esc(v);
 const F = (v, d = 0) => (v === null || v === undefined || Number.isNaN(v) ? "–" : D.formatNumber(v, d));
@@ -154,7 +155,7 @@ export function viewSuppDb() {
   const st = (S.suppDb ??= { query: "", archived: false });
   const { db, list } = suppLookup();
   const shown = SB.filterSupplements(list, st);
-  const stacks = SB.stackModels(db).filter((s) => st.archived || !s.archived);
+  const stacks = SB.stackModels(db, S.supp).filter((s) => st.archived || !s.archived);
   const notice = S.suppNotice ?? null;
   return `${X.header("Nutrition")}<main class="wrap">
     ${nutritionTabs("supp-db")}
@@ -167,19 +168,20 @@ export function viewSuppDb() {
       <div class="list" id="sdb-list">${shown.length ? shown.map(suppRowHtml).join("") : `<p class="empty">${st.query.trim() ? "Nichts gefunden." : "Noch keine Supplemente."}</p>`}</div>
       <p class="muted small">Archivierte vom PC kennt das Handy nur, soweit Einnahmen oder Stacks sie verwenden.</p>
     </section>
-    <section class="card">
-      <h3>Supplement-Stacks</h3>
-      ${
+    <section class="card" id="sdb-stacks">
+      <div class="wo-head"><h3>Supplement-Stacks</h3><button class="btn sm primary" data-act="stk-new">Neuer Stack</button></div>
+      <div class="list">${
         stacks.length
           ? stacks
               .map(
-                (s) => `<div class="meal-block"><p class="small"><b>${esc(s.name)}</b>${s.archived ? ` <span class="tag">Archiviert</span>` : ""}</p>
-              <p class="muted small">${s.items.length ? s.items.map((i) => `${esc(i.name)} (${esc(SB.amountWithUnit(i.amount, i.unit))})`).join(", ") : "leer"}</p></div>`,
+                (s) => `<button class="item" data-act="stk-edit" data-arg="${esc(s.id)}"><span class="main"><b>${esc(s.name)}</b>
+              <span class="muted small">${s.items.length ? s.items.map((i) => `${esc(i.name)} (${esc(SB.amountWithUnit(i.amount, i.unit))})`).join(", ") : "leer"}</span>
+              <span class="fdb-tags">${s.used ? `<span class="tag">${s.used}× eingetragen</span>` : ""}${s.archived ? `<span class="tag">Archiviert</span>` : ""}${s.onPhone ? `<span class="tag tag--phone">noch nicht am PC</span>` : ""}</span></span><span class="chev">›</span></button>`,
               )
               .join("")
           : `<p class="muted small">Noch keine Stacks.</p>`
-      }
-      <p class="muted small">Stacks legst du am PC an und änderst sie dort; im Tagebuch trägst du sie mit einem Tipp ein.</p>
+      }</div>
+      <p class="muted small">Ein Stack fasst Supplements zusammen, die du oft gemeinsam nimmst – im Tagebuch trägst du ihn mit einem Tipp ein.</p>
     </section>
   </main>`;
 }
@@ -251,6 +253,62 @@ export function viewSuppEdit() {
   </main>`;
 }
 
+function stackSupHits(db, query) {
+  const q = String(query ?? "").trim();
+  if (!q) return "";
+  const list = SP.searchSupplements(db, q, 30);
+  if (!list.length) return `<p class="empty">Kein Supplement gefunden – oben unter „Neues Supplement“ anlegen.</p>`;
+  return list
+    .map((s) => `<button class="item" data-act="stk-add" data-arg="${esc(s.id)}"><span class="main"><b>${esc(s.name)}</b><span class="muted small">${esc([s.manufacturer, s.unit].filter(Boolean).join(" · "))}</span></span><span class="chev">+</span></button>`)
+    .join("");
+}
+
+/** Supplement-Stack anlegen oder bearbeiten (wie `StackEditor` am PC). */
+export function viewStackEdit() {
+  const S = X.S;
+  const ed = S.stackEdit;
+  if (!ed) {
+    S.view = "supp-db";
+    return viewSuppDb();
+  }
+  const db = buildDb();
+  const d = ed.draft;
+  const e = ed.errors ?? {};
+  const err = (k) => (e[k] ? `<p class="err small">${esc(e[k])}</p>` : "");
+  const rows = d.items
+    .map((it, i) => {
+      const s = db.supplements?.get(it.supplementId);
+      const ie = e[`items.${i}.amount`] || e[`items.${i}.supplementId`];
+      return `<div class="dish-item"><b>${esc(s?.name ?? "Unbekanntes Supplement")}</b>
+        <div class="row"><input type="text" inputmode="decimal" data-stk-item="${i}" value="${esc(it.amount)}" aria-label="Menge ${esc(s?.name ?? "")} in ${esc(s?.unit ?? "")}" ${ie ? 'aria-invalid="true"' : ""}><span class="unit">${esc(s?.unit ?? "")}</span>
+        <button class="btn sm ghost" data-act="stk-move" data-arg="${i}|-1" ${i === 0 ? "disabled" : ""} aria-label="Nach oben">↑</button>
+        <button class="btn sm ghost" data-act="stk-move" data-arg="${i}|1" ${i === d.items.length - 1 ? "disabled" : ""} aria-label="Nach unten">↓</button>
+        <button class="btn sm ghost" data-act="stk-remove" data-arg="${i}" aria-label="Supplement entfernen">✕</button></div>${ie ? `<p class="err small">${esc(ie)}</p>` : ""}</div>`;
+    })
+    .join("");
+  return `${X.header("Nutrition")}<main class="wrap">
+    ${nutritionTabs("stack-edit")}
+    <section class="card" id="stk-editor">
+      <h3>${d.id ? "Stack bearbeiten" : "Neuer Supplement-Stack"}</h3>
+      <div class="field"><label for="stk-name">Name</label><input id="stk-name" type="text" maxlength="80" data-stkf="name" value="${esc(d.name)}" placeholder="z. B. Morgens" autocomplete="off" ${e.name ? 'aria-invalid="true"' : ""}>${err("name")}</div>
+    </section>
+    <section class="card">
+      <h3>Supplements</h3>
+      ${err("items")}
+      ${rows || `<p class="muted small">Noch keine Supplements. Unten suchen und antippen.</p>`}
+      <div class="field"><label for="stk-q">Supplement hinzufügen</label><input id="stk-q" type="search" placeholder="Supplement suchen, z. B. Magnesium" value="${esc(ed.query ?? "")}" autocomplete="off"></div>
+      <div class="list" id="stk-hits">${stackSupHits(db, ed.query)}</div>
+    </section>
+    <section class="card">
+      <div class="field"><label for="stk-notes">Notizen (optional)</label><textarea id="stk-notes" rows="2" maxlength="1000" data-stkf="notes">${esc(d.notes)}</textarea>${err("notes")}</div>
+      <label class="goal-check"><input type="checkbox" data-stkf="archived" ${d.archived ? "checked" : ""}> Archiviert (beim Hinzufügen im Tagebuch ausblenden)</label>
+      ${ed.message ? `<p class="warn small" role="alert">${esc(ed.message)}</p>` : ""}
+      <div class="row"><button class="btn primary" data-act="stk-save">Speichern</button><button class="btn ghost" data-act="stk-cancel">Abbrechen</button></div>
+      ${d.id ? `<button class="btn ghost danger block" data-act="stk-delete" data-arg="${esc(d.id)}">Stack löschen</button>` : ""}
+    </section>
+  </main>`;
+}
+
 function findHits(ed, nutrients) {
   const q = norm(ed.find ?? "").trim();
   if (q.length < 2) return "";
@@ -300,7 +358,85 @@ function openSuppEditor(model) {
   X.go("supp-db-edit");
 }
 
+function stackLookup() {
+  const db = buildDb();
+  return { db, list: SB.stackModels(db, X.S.supp) };
+}
+
+function openStackEditor(model) {
+  X.S.suppNotice = null;
+  X.S.stackEdit = { draft: model ? SB.stackDraftFromModel(model) : SB.emptyStackDraft(), errors: {}, message: null, query: "" };
+  X.go("stack-edit");
+}
+
 export const nutriDbActions = {
+  // ---------------- Stacks (1.149.0)
+  "stk-new": () => openStackEditor(null),
+  "stk-edit": (el) => {
+    const m = stackLookup().list.find((s) => s.id === el.dataset.arg);
+    if (!m) return X.toast("Stack nicht gefunden.", true);
+    openStackEditor(m);
+  },
+  "stk-cancel": () => {
+    X.S.stackEdit = null;
+    X.go("supp-db");
+  },
+  "stk-add": (el) => {
+    const ed = X.S.stackEdit;
+    const s = buildDb().supplements?.get(el.dataset.arg);
+    if (!ed || !s) return;
+    ed.draft.items.push(SB.stackDraftItem(s.id, String(SP.startAmount(s)).replace(".", ",")));
+    ed.query = "";
+    X.rerender();
+    requestAnimationFrame(() => document.getElementById("stk-q")?.focus());
+  },
+  "stk-remove": (el) => {
+    const ed = X.S.stackEdit;
+    if (!ed) return;
+    ed.draft.items.splice(Number(el.dataset.arg), 1);
+    ed.errors = {};
+    X.rerender();
+  },
+  "stk-move": (el) => {
+    const ed = X.S.stackEdit;
+    if (!ed) return;
+    const [i, dir] = el.dataset.arg.split("|").map(Number);
+    const j = i + dir;
+    const list = ed.draft.items;
+    if (j < 0 || j >= list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+    X.rerender();
+  },
+  "stk-save": async () => {
+    const S = X.S;
+    const ed = S.stackEdit;
+    if (!ed) return;
+    const { db, list } = stackLookup();
+    const checked = SB.checkStackDraft(ed.draft, { supplements: db.supplements ?? new Map(), names: list.map((s) => ({ id: s.id, name: s.name })) });
+    if (!checked.ok) {
+      ed.errors = checked.errors;
+      ed.message = "Bitte die markierten Felder prüfen.";
+      return X.rerender();
+    }
+    const current = ed.draft.id ? list.find((s) => s.id === ed.draft.id) ?? null : null;
+    const onPc = Boolean(ed.draft.id && (S.catalog?.pc?.supplement_stack ?? []).some((s) => s.id === ed.draft.id));
+    const row = SB.saveStack(S.supp, checked.value, current, { uuid: () => X.uuid(), now: new Date(), positions: list.map((s) => s.position), onPc });
+    await persistSupp();
+    S.stackEdit = null;
+    S.suppNotice = { tone: "ok", text: `Stack „${row.name}“ gespeichert – geht mit „An den PC senden“ an den PC.` };
+    X.go("supp-db");
+  },
+  "stk-delete": async (el) => {
+    const S = X.S;
+    if (!X.confirmTwice(el, "Nochmal tippen: Stack löschen")) return;
+    const id = el.dataset.arg;
+    const onPc = (S.catalog?.pc?.supplement_stack ?? []).some((s) => s.id === id);
+    SB.deleteStack(S.supp, id, { onPc, now: new Date() });
+    await persistSupp();
+    S.stackEdit = null;
+    S.suppNotice = { tone: "ok", text: "Stack gelöscht. Bereits eingetragene Tage bleiben unverändert." };
+    X.go("supp-db");
+  },
   // ---------------- Lebensmittel
   "fdb-edit": (el) => {
     const id = el.dataset.arg;
@@ -414,6 +550,24 @@ export function nutriDbInput(el) {
     }
     return true;
   }
+  const sk = S.stackEdit;
+  if (sk) {
+    if (el.id === "stk-q") {
+      sk.query = el.value;
+      const box = document.getElementById("stk-hits");
+      if (box) box.innerHTML = stackSupHits(buildDb(), sk.query);
+      return true;
+    }
+    if (el.dataset?.stkf === "name" || el.dataset?.stkf === "notes") {
+      sk.draft[el.dataset.stkf] = el.value;
+      return true;
+    }
+    if (el.dataset?.stkItem !== undefined) {
+      const it = sk.draft.items[Number(el.dataset.stkItem)];
+      if (it) it.amount = el.value;
+      return true;
+    }
+  }
   const ed = S.suppEditDb;
   if (!ed) return false;
   if (el.id === "sdb-find") {
@@ -456,6 +610,11 @@ export function nutriDbChange(el) {
     return true;
   }
   if (el.dataset?.sdb === "query" || el.dataset?.offdb === "q") return true;
+  if (S.stackEdit && el.dataset?.stkf === "archived") {
+    S.stackEdit.draft.archived = el.checked;
+    return true;
+  }
+  if (S.stackEdit && (el.dataset?.stkf || el.dataset?.stkItem !== undefined || el.id === "stk-q")) return true;
   const ed = S.suppEditDb;
   if (!ed) return false;
   if (el.dataset?.sdbf === "unit") {

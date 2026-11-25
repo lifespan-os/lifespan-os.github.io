@@ -166,7 +166,7 @@ export const GROUPS_N = [
 export const TABS = GROUPS_N.flatMap(([, , subs]) => subs);
 
 /** Ansichten, die zu einem Unterreiter gehören (Bearbeiten-Formulare). */
-const VIEW_OF = { "recipe-edit": "recipes", "supp-db-edit": "supp-db" };
+const VIEW_OF = { "recipe-edit": "recipes", "supp-db-edit": "supp-db", "stack-edit": "supp-db" };
 
 // Orange Punkte je Reiter (wie Training): app.js meldet die Quelle an – so bleibt diary.js ohne
 // Abhängigkeit von der Oberfläche (Tests mit node)

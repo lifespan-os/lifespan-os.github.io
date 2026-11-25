@@ -18,13 +18,13 @@ export const INDEPENDENT_LABEL = "Unabhängig";
 export const MAX_AMOUNT = 100000;
 
 export function emptySupp() {
-  return { intakes: {}, items: {}, deleted: {}, supplements: {}, fields: {}, packages: {} };
+  return { intakes: {}, items: {}, deleted: {}, supplements: {}, fields: {}, packages: {}, stacks: {} };
 }
 
 /** Ältere oder fehlende Ablage vervollständigen. */
 export function normSupp(local) {
   const l = local && typeof local === "object" ? local : {};
-  return { intakes: l.intakes ?? {}, items: l.items ?? {}, deleted: l.deleted ?? {}, supplements: l.supplements ?? {}, fields: l.fields ?? {}, packages: l.packages ?? {} };
+  return { intakes: l.intakes ?? {}, items: l.items ?? {}, deleted: l.deleted ?? {}, supplements: l.supplements ?? {}, fields: l.fields ?? {}, packages: l.packages ?? {}, stacks: l.stacks ?? {} };
 }
 
 // ------------------------------------------------------------------ Zusammenführen (für makeDb)
@@ -45,6 +45,10 @@ export function phoneSupp(local) {
       Object.entries(e.values ?? {}).map(([nutrient, amount]) => ({ id: e.valueIds?.[nutrient] ?? valueId(e.row.id, nutrient), supplement_id: e.row.id, nutrient, amount })),
     ),
     fields: Object.values(l.fields).map((e) => e.row),
+    // Stacks am Handy (1.149.0)
+    stacks: Object.values(l.stacks).map((e) => e.row),
+    stackItems: Object.values(l.stacks).flatMap((e) => e.items),
+    deletedStacks: gone("supplement_stack"),
   };
 }
 
@@ -83,6 +87,25 @@ export function searchSupplements(db, query, limit = 30) {
 /** Startmenge beim Hinzufügen: die Tagesdosis (Portion), falls so markiert, sonst 1 (wie am PC). */
 export function startAmount(s) {
   return s?.daily_dose && s.serving_amount > 0 ? s.serving_amount : 1;
+}
+
+/**
+ * Stacks vom PC mit den Änderungen vom Handy (1.149.0, Supplementdatenbank → Stacks am Handy
+ * bearbeiten): geänderte Stacks ersetzen den Stand vom PC samt Einträgen, gelöschte fallen weg.
+ * `pc` = catalog.pc (oder db.pc), `local` = S.supp. Gibt eine Kopie von `pc` zurück.
+ */
+export function withPhoneStacks(pc, local) {
+  const l = normSupp(local);
+  const own = Object.values(l.stacks);
+  const gone = new Set(Object.values(l.deleted).filter((d) => d.table === "supplement_stack").map((d) => d.id));
+  if (!own.length && !gone.size) return pc ?? {};
+  const ownIds = new Set(own.map((e) => e.row.id));
+  const replaced = new Set([...ownIds, ...gone]);
+  return {
+    ...(pc ?? {}),
+    supplement_stack: [...(pc?.supplement_stack ?? []).filter((s) => !replaced.has(s.id)), ...own.map((e) => e.row)],
+    supplement_stack_item: [...(pc?.supplement_stack_item ?? []).filter((i) => !replaced.has(i.stack_id)), ...own.flatMap((e) => e.items)],
+  };
 }
 
 /** Stacks zur Auswahl (nicht archiviert) mit ihren Einträgen. */
@@ -302,8 +325,10 @@ export const unsentSupp = (local) => {
     Object.values(l.intakes).filter((e) => !e.sent).length +
     Object.values(l.deleted).filter((d) => !d.sent && d.table === "supplement_intake").length +
     Object.values(l.packages).filter((p) => !p.sent).length +
-    // Supplementdatenbank am Handy bearbeitet (1.147.0)
-    Object.values(l.supplements).filter((e) => e.edited && !e.sent).length
+    // Supplementdatenbank am Handy bearbeitet (1.147.0), Stacks (1.149.0)
+    Object.values(l.supplements).filter((e) => e.edited && !e.sent).length +
+    Object.values(l.stacks).filter((e) => !e.sent).length +
+    Object.values(l.deleted).filter((d) => !d.sent && d.table === "supplement_stack").length
   );
 };
 
@@ -345,6 +370,14 @@ export function suppTables(local, db, { all = false, withSupplements = false, no
   // 1.45.2). Nährwerte nur für eigene bzw. bei einem Konto vom Handy; vom PC stammende Supplements
   // bleiben beim Abgleich unverändert (gleicher oder neuerer Stand am PC).
   const withValues = new Set(sendIds);
+  // Stacks am Handy angelegt/geändert (1.149.0): mit allen Einträgen; ihre Supplements gehen mit
+  const stacks = Object.values(l.stacks).filter((e) => all || !e.sent);
+  if (stacks.length) {
+    out.supplement_stack = stacks.map((e) => ({ ...e.row }));
+    const links = stacks.flatMap((e) => e.items.map((i) => ({ ...i })));
+    if (links.length) out.supplement_stack_item = links;
+    for (const i of links) if (db.supplements.has(i.supplement_id)) sendIds.add(i.supplement_id);
+  }
   for (const i of items) {
     if (!db.supplements.has(i.supplement_id)) continue;
     sendIds.add(i.supplement_id);
@@ -463,6 +496,10 @@ export function valueId(supplementId, nutrient) {
 
 export function markSuppSent(local) {
   if (!local) return;
+  for (const e of Object.values(local.stacks ?? {})) {
+    e.sent = true;
+    e.everSent = true;
+  }
   for (const e of Object.values(local.intakes ?? {})) e.sent = true;
   for (const e of Object.values(local.items ?? {})) e.sent = true;
   for (const d of Object.values(local.deleted ?? {})) d.sent = true;
@@ -479,7 +516,7 @@ export function pruneSupp(catalog, local) {
   for (const [id, e] of Object.entries(l.intakes)) if (e.sent && intakes.has(id)) delete l.intakes[id];
   for (const [id, e] of Object.entries(l.items)) if (e.sent && items.has(id)) delete l.items[id];
   for (const [key, d] of Object.entries(l.deleted)) {
-    const set = d.table === "supplement_intake" ? intakes : items;
+    const set = d.table === "supplement_intake" ? intakes : d.table === "supplement_stack" || d.table === "supplement_stack_item" ? has(d.table) : items;
     if (d.sent && !set.has(d.id)) delete l.deleted[key];
   }
   // Herstellerpakete: was der PC jetzt selbst mitbringt, entfällt am Handy
@@ -488,6 +525,12 @@ export function pruneSupp(catalog, local) {
   for (const [id, e] of Object.entries(l.supplements)) if (e.sent && (supps.has(id) || suppNames.has(String(e.row.name).toLowerCase()))) delete l.supplements[id];
   const fieldKeys = new Set((pc.nutrient_field ?? []).map((f) => f.key));
   for (const [k, e] of Object.entries(l.fields)) if (e.sent && fieldKeys.has(k)) delete l.fields[k];
+  // Stacks (1.149.0): Übertragenes entfällt, sobald der PC es mindestens so neu mitbringt
+  const pcStacks = new Map((pc.supplement_stack ?? []).map((r) => [r.id, r]));
+  for (const [id, e] of Object.entries(l.stacks)) {
+    const p = pcStacks.get(id);
+    if (e.sent && p && String(p.updated_at) >= String(e.row.updated_at)) delete l.stacks[id];
+  }
   const packs = new Map((pc.vendor_package ?? []).map((p) => [p.package_key, p]));
   for (const [k, p] of Object.entries(l.packages)) if (p.sent && packs.get(k)?.version === p.row.version) delete l.packages[k];
   return l;

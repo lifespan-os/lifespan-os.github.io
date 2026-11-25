@@ -316,7 +316,7 @@ export function diaryChange(el) {
   if (k === "supp-stack") {
     readSuppForm();
     const st = X.S.suppEdit;
-    const stack = SP.stackChoices(X.S.catalog?.pc).find((s) => s.id === el.value);
+    const stack = SP.stackChoices(SP.withPhoneStacks(X.S.catalog?.pc, X.S.supp)).find((s) => s.id === el.value);
     if (st && stack) {
       st.draft = SP.applyStack(st.draft, stack);
       X.rerender();

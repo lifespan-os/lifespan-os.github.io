@@ -25,7 +25,7 @@ const F = (v, d = 0) => D.formatNumber(v, d);
 function context(db) {
   return {
     glassMl: P.glassMl(db),
-    stacks: SP.stackChoices(X.S.catalog?.pc).map((s) => ({ stackId: s.id, name: s.name })),
+    stacks: SP.stackChoices(SP.withPhoneStacks(X.S.catalog?.pc, X.S.supp)).map((s) => ({ stackId: s.id, name: s.name })),
     nutrients: nutrientCatalog(db).nutrients.map((n) => ({ key: n.key, label: n.label, unit: n.unit })),
   };
 }
@@ -111,7 +111,7 @@ async function save(it, db) {
     await X.store.set("fast", S.fast);
     return `${it.label}: heute ${D.formatNutrient(values[it.key], it.unit)} im Fasttracking.`;
   }
-  const stack = SP.stackChoices(S.catalog?.pc).find((s) => s.id === it.stackId);
+  const stack = SP.stackChoices(SP.withPhoneStacks(S.catalog?.pc, S.supp)).find((s) => s.id === it.stackId);
   if (!stack) throw new Error("Stack nicht gefunden.");
   const draft = SP.applyStack(SP.emptyDraft(t, "independent", time), stack);
   SP.saveIntake(db, S.supp, draft, { ...opts, timingLabel: "Unabhängig", ensureMeal: (d, type) => N.ensureMeal(S.catalog, S.food.local, d, type, opts) });

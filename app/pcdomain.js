@@ -19006,11 +19006,13 @@ __export(planDraft_exports, {
   emptyPlanDay: () => emptyPlanDay,
   emptyPlanDraft: () => emptyPlanDraft,
   emptySlot: () => emptySlot,
+  freePlanName: () => freePlanName,
   move: () => move,
   planDayToWorkoutDraft: () => planDayToWorkoutDraft,
   planDraftToInput: () => planDraftToInput,
   planToDraft: () => planToDraft,
-  slotDates: () => slotDates
+  slotDates: () => slotDates,
+  workoutToPlanDraft: () => workoutToPlanDraft
 });
 var MAX_SLOTS = 100;
 function emptySlot() {
@@ -19086,6 +19088,41 @@ function planDayToWorkoutDraft(day) {
 }
 function applyWorkoutDraft(day, w) {
   return { ...day, name: w.title, notes: w.notes, exercises: w.exercises };
+}
+function freePlanName(name, taken) {
+  const used = new Set(taken.map((t) => t.trim().toLocaleLowerCase("de-DE")));
+  const base = name.trim().slice(0, 70);
+  if (!used.has(base.toLocaleLowerCase("de-DE"))) return base;
+  for (let i = 2; ; i++) {
+    const candidate = `${base} (${i})`;
+    if (!used.has(candidate.toLocaleLowerCase("de-DE"))) return candidate;
+  }
+}
+function workoutToPlanDraft(w, taken, fallbackName) {
+  const title = w.title.trim() || fallbackName;
+  return {
+    ...emptyPlanDraft(),
+    name: freePlanName(title, taken),
+    gymId: w.gymId ?? "",
+    days: [
+      {
+        ...emptyPlanDay(title.slice(0, 80)),
+        notes: w.notes,
+        exercises: w.exercises.map((e) => ({
+          ...e,
+          key: newKey(),
+          id: null,
+          sets: e.sets.map((s) => ({
+            ...s,
+            key: newKey(),
+            id: null,
+            isDone: false,
+            isFailure: false
+          }))
+        }))
+      }
+    ]
+  };
 }
 var CHECK_DATE = "2000-01-01";
 function checkPlanDay(day, defaults = () => []) {
@@ -26845,23 +26882,44 @@ var LEVEL_BOUNDS_MATCH = CATEGORY_BOUNDS.every(
 // src/domain/gymMachinePick.ts
 var gymMachinePick_exports = {};
 __export(gymMachinePick_exports, {
+  MUSCLE_RUBRICS: () => MUSCLE_RUBRICS,
+  muscleRubric: () => muscleRubric,
   pickChoices: () => pickChoices,
   pickList: () => pickList
 });
+var MUSCLE_RUBRICS = [
+  { label: "Schultern", names: ["Schulter", "Schultern"] },
+  { label: "Beine / Quadrizeps", names: ["Beine", "Bein", "Quadrizeps", "Rectus Femoris"] },
+  { label: "Waden / Tibialis", names: ["Wade", "Waden", "Tibialis"] },
+  { label: "Unterarme", names: ["Unterarm", "Unterarme"] },
+  {
+    label: "Bauch / Core",
+    names: ["Core", "Bauch", "Bauchmuskulatur", "Seitliche Bauchmuskulatur"]
+  },
+  { label: "Bizeps / Brachialis", names: ["Bizeps", "Brachialis"] },
+  { label: "Oberer R\xFCcken / Trapez", names: ["Trapez", "Oberer R\xFCcken"] }
+];
+var rubricKey = (s) => s.trim().toLocaleLowerCase("de-DE");
+var RUBRIC_OF = new Map(
+  MUSCLE_RUBRICS.flatMap((r2) => r2.names.map((n3) => [rubricKey(n3), r2.label]))
+);
+function muscleRubric(name) {
+  return RUBRIC_OF.get(rubricKey(name)) ?? name.trim();
+}
 function pickChoices(machines) {
   const sort = (set) => [...set].sort((a, b) => a.localeCompare(b, "de"));
   const makers = /* @__PURE__ */ new Set();
   const muscles = /* @__PURE__ */ new Set();
   for (const m of machines) {
     if (m.manufacturer.trim()) makers.add(m.manufacturer.trim());
-    for (const g of m.muscleGroups) if (g.trim()) muscles.add(g.trim());
+    for (const g of m.muscleGroups) if (g.trim()) muscles.add(muscleRubric(g));
   }
   return { manufacturers: sort(makers), muscles: sort(muscles) };
 }
 function pickList(machines, filter, trained, inGym) {
   const query = filter.query.trim();
   if (!query && !filter.manufacturer && !filter.muscle) return [];
-  const options = machines.filter((m) => !filter.manufacturer || m.manufacturer.trim() === filter.manufacturer).filter((m) => !filter.muscle || m.muscleGroups.some((g) => g.trim() === filter.muscle)).map((m) => {
+  const options = machines.filter((m) => !filter.manufacturer || m.manufacturer.trim() === filter.manufacturer).filter((m) => !filter.muscle || m.muscleGroups.some((g) => muscleRubric(g) === filter.muscle)).map((m) => {
     const count = trained.get(m.id) ?? 0;
     return {
       id: m.id,

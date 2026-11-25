@@ -922,7 +922,7 @@ export const TABLE_SINCE = {
   heart_rate_day: 56, wearable_connection: 56, wearable_day: 56, wearable_exercise: 56, wearable_recovery: 56,
   wearable_sleep: 56, wearable_biosensing: 57, wearable_sleepwise: 57, glucose_reading: 58, wearable_raw: 61,
   weekly_report: 62, appointment: 63, goal: 63, meal_plan_entry: 64, gym: 65, gym_machine: 65,
-  planned_meal: 74, planned_meal_item: 74, recipe_supplement: 75,
+  planned_meal: 74, planned_meal_item: 74, recipe_supplement: 75, todo_list: 79,
 };
 
 /** Fehlertext, wenn die PC-Daten am Handy zu alt für die zu sendenden Tabellen sind (sonst null). */

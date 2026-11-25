@@ -14,7 +14,7 @@ import { settingLabel } from "./pcsettings.js";
 
 export const SOURCES = [
   { store: "logs", area: "sleep", maps: { sleep: "sleep_log", naps: "sleep_nap", recovery: "recovery_log" } },
-  { store: "todos", area: "checklists", maps: { rows: "todo" }, delTable: "todo" },
+  { store: "todos", area: "checklists", maps: { rows: "todo", lists: "todo_list" }, delTable: "todo" },
   { store: "checklists", area: "checklists", maps: { lists: "checklist", items: "checklist_item", status: "training_day_status" } },
   { store: "train", area: "training", nested: true },
   { store: "water", area: "nutrition", maps: { rows: "water_intake" }, delTable: "water_intake" },
@@ -45,6 +45,7 @@ export const TABLE_LABELS = {
   sleep_nap: "Nickerchen",
   recovery_log: "Regeneration",
   todo: "To-do",
+  todo_list: "To-do-Liste",
   checklist: "Checkliste",
   checklist_item: "Punkt",
   training_day_status: "Tageshinweis",
@@ -93,6 +94,7 @@ export const PARENT = {
   training_plan_set: ["plan_exercise_id", "training_plan_exercise"],
   training_plan_slot: ["plan_day_id", "training_plan_day"],
   checklist_item: ["checklist_id", "checklist"],
+  todo: ["list_id", "todo_list"],
   lab_result: ["draw_id", "lab_draw"],
   supplement_intake_item: ["intake_id", "supplement_intake"],
 };
@@ -120,6 +122,7 @@ const FIELD_LABELS = {
   stress: "Stress",
   done: "Erledigt",
   checklist_id: "Checkliste",
+  list_id: "Liste",
   kind: "Art",
   archived: "Archiviert",
   steps: "Schritte",
@@ -354,9 +357,11 @@ export function editTarget(table, row) {
     case "recovery_log":
       return { view: "recovery", act: "rec-edit", arg: id };
     case "todo":
-      return { view: "todos", set: { todoDate: row.date }, act: "todo-edit", arg: id };
+      return { view: "todos", set: { todoDate: row.date, ...(row.list_id ? { tlSel: row.list_id } : {}) }, act: "todo-edit", arg: id };
     case "checklist":
       return { view: "todos", act: "cl-edit", arg: id };
+    case "todo_list":
+      return { view: "todos", set: { tlSel: id, tlForm: null } };
     case "training_day_status":
       return { view: "training", set: { trainTab: "workouts" } };
     case "exercise":

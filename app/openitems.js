@@ -15,6 +15,7 @@ import * as PS from "./pcsettings.js";
 import { missingAll } from "./extras.js";
 import { buildDb, today } from "./diary.js";
 import { S } from "./appbase.js";
+import * as store from "./store.js";
 
 const OI = () => D.openItems;
 const WT = () => D.workoutTimeline;
@@ -59,6 +60,8 @@ function compute() {
   } catch {
     dueValues = 0;
   }
+  // Offene To-dos der letzten Tage zuerst auf heute ziehen (1.156.0, wie openItemsStore.ts am PC)
+  if (S.todos && T.carryForward(S.catalog, S.todos, t)) store.set("todos", S.todos).catch(() => {});
   const todos = T.todosFor(S.catalog, S.todos, t)
     .filter((x) => !Number(x.done))
     .map((x) => ({ id: x.id, text: x.text }));

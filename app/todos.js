@@ -112,15 +112,10 @@ function dayStatusCard(date) {
     ${S.todoDate && !isToday ? "" : ""}</section>`;
 }
 
-function todosCard(date) {
-  const S = X.S;
-  const list = T.todosFor(S.catalog, S.todos, date);
-  const open = list.filter((t) => !t.done).length;
-  const yesterday = D.trends.shiftDays(date, -1);
-  const openYesterday = T.todosFor(S.catalog, S.todos, yesterday).filter((t) => !t.done).length;
-  const add = S.todoAdd ?? { text: "", when: "day", end: "" };
-  const editing = S.todoEdit;
-  const rows = list
+/** Zeilen einer To-do-Liste (Tag oder eigene Liste): Haken, Text, ↑ ↓, ✎ bearbeiten, ✕ löschen. */
+function todoRows(list) {
+  const editing = X.S.todoEdit;
+  return list
     .map((t, i) => {
       if (editing?.id === t.id && editing.where !== "review") {
         return `<li class="todo-item is-editing" ${autoAttrs("todo-edit")}><input type="text" data-todo="edit" value="${esc(editing.text)}" maxlength="${T.TEXT_MAX_CHARS}" aria-label="Aufgabe">
@@ -132,10 +127,20 @@ function todosCard(date) {
         <span class="todo-item__move">
           <button class="btn sm" data-act="todo-move" data-arg="${esc(t.id)}|-1" ${i === 0 ? "disabled" : ""} aria-label="Nach oben">↑</button>
           <button class="btn sm" data-act="todo-move" data-arg="${esc(t.id)}|1" ${i === list.length - 1 ? "disabled" : ""} aria-label="Nach unten">↓</button>
-          <button class="btn sm danger" data-act="todo-delete" data-arg="${esc(t.id)}" aria-label="Löschen">✕</button>
+          <button class="btn sm" data-act="todo-edit" data-arg="${esc(t.id)}" aria-label="Bearbeiten" title="Bearbeiten">✎</button>
+          <button class="btn sm danger" data-act="todo-delete" data-arg="${esc(t.id)}" aria-label="Löschen" title="Löschen">✕</button>
         </span></li>`;
     })
     .join("");
+}
+
+function todosCard(date) {
+  const S = X.S;
+  // Nur die To-dos des Tages; Punkte eigener Listen stehen in der Karte „Listen“ (1.156.0)
+  const list = T.todosFor(S.catalog, S.todos, date, null);
+  const open = list.filter((t) => !Number(t.done)).length;
+  const add = S.todoAdd ?? { text: "", when: "day", end: "" };
+  const rows = todoRows(list);
   const repeating = add.when === "daily" || add.when === "weekly" || add.when === "monthly";
   return `<section class="card" id="todos-card"><div class="wo-head"><h3>To-dos</h3><span class="tag">${list.length ? `${open} offen von ${list.length}` : "keine"}</span></div>
     <div class="todos-daynav"><button class="btn sm" data-act="todo-shift" data-arg="-1" aria-label="To-dos vom Vortag">‹</button><strong>${esc(D.formatWeekdayDate(date))}</strong><button class="btn sm" data-act="todo-shift" data-arg="1" aria-label="To-dos vom Folgetag">›</button></div>
@@ -157,11 +162,62 @@ function todosCard(date) {
       </div>
       <button class="btn primary block" data-act="todo-add">Hinzufügen</button>
     </div>
-    <div class="todo-tools">
-      ${openYesterday ? `<button class="btn" data-act="todo-carry">${openYesterday} offene vom Vortag übernehmen</button>` : ""}
-      ${list.some((t) => t.done) ? `<button class="btn" data-act="todo-clear">Erledigte entfernen</button>` : ""}
-    </div>
-    <p class="card__note">Antippen eines To-dos ändert den Text. Eigene Checklisten anlegen und als To-dos übernehmen geht bisher am PC.</p></section>`;
+    ${list.some((t) => Number(t.done)) ? `<div class="todo-tools"><button class="btn" data-act="todo-clear">Erledigte entfernen</button></div>` : ""}
+    <p class="card__note">Offene To-dos wandern automatisch auf den nächsten Tag. ✎ oder Antippen ändert den Text.</p></section>`;
+}
+
+// ------------------------------------------------------------------ Eigene To-do-Listen (1.156.0, wie TodoListsCard.tsx)
+
+const LIST_PREF = "lifespan.todoList";
+
+function chosenList(lists) {
+  let id = X.S.tlSel;
+  if (id === undefined) {
+    try {
+      id = localStorage.getItem(LIST_PREF);
+    } catch {
+      id = null;
+    }
+  }
+  return lists.find((l) => l.id === id) ?? lists[0] ?? null;
+}
+
+function chooseList(id) {
+  X.S.tlSel = id;
+  try {
+    if (id) localStorage.setItem(LIST_PREF, id);
+    else localStorage.removeItem(LIST_PREF);
+  } catch {
+    /* nur Komfort */
+  }
+}
+
+function listsCard(date) {
+  const S = X.S;
+  const lists = T.todoLists(S.catalog, S.todos);
+  const cur = chosenList(lists);
+  const form = S.tlForm;
+  const items = cur ? T.todosFor(S.catalog, S.todos, date, cur.id) : [];
+  const open = items.filter((t) => !Number(t.done)).length;
+  const head = `<div class="wo-head"><h3>Listen</h3><span class="tag">${cur ? (items.length ? `${open} offen von ${items.length}` : "leer") : `${lists.length} von ${T.MAX_TODO_LISTS}`}</span></div>`;
+  const nameForm = form
+    ? `<div class="todo-add"><input type="text" data-tl="name" value="${esc(form.name)}" placeholder="Name der Liste" maxlength="${T.LIST_NAME_MAX_CHARS}" aria-label="Name der Liste">
+      <div class="todo-lists__tools"><button class="btn primary" data-act="tl-name-save">${form.id ? "Umbenennen" : "Anlegen"}</button><button class="btn" data-act="tl-name-cancel">Abbrechen</button></div></div>`
+    : "";
+  const pick = lists.length
+    ? `<div class="todo-lists__pick"><select data-tl="pick" aria-label="Liste wählen">${lists.map((l) => `<option value="${esc(l.id)}" ${cur?.id === l.id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select>
+      <button class="btn sm" data-act="tl-rename" aria-label="Liste umbenennen" title="Umbenennen">✎</button>
+      <button class="btn sm danger" data-act="tl-delete" aria-label="Liste löschen" title="Liste löschen">✕</button>
+      <button class="btn sm" data-act="tl-new" ${lists.length >= T.MAX_TODO_LISTS ? "disabled" : ""} aria-label="Neue Liste" title="${lists.length >= T.MAX_TODO_LISTS ? `Höchstens ${T.MAX_TODO_LISTS} Listen` : "Neue Liste"}">+</button></div>`
+    : form
+      ? ""
+      : `<p class="muted">Noch keine eigenen Listen (bis zu ${T.MAX_TODO_LISTS}, z. B. Einkauf, Arbeit, Haushalt).</p><button class="btn block" data-act="tl-new">Neue Liste</button>`;
+  if (!cur) return `<section class="card todo-lists" id="todo-lists-card">${head}${pick}${nameForm}</section>`;
+  return `<section class="card todo-lists" id="todo-lists-card">${head}${pick}${nameForm}
+    ${items.length ? `<ul class="todo-list">${todoRows(items)}</ul>` : `<p class="muted">In „${esc(cur.name)}“ steht für diesen Tag nichts.</p>`}
+    <div class="todo-add"><input type="text" data-tl="text" value="${esc(S.tlAdd ?? "")}" placeholder="Neuer Punkt in „${esc(cur.name)}“" maxlength="${T.TEXT_MAX_CHARS}" aria-label="Neuer Punkt">
+      <button class="btn primary block" data-act="tl-add">Hinzufügen</button></div>
+    ${items.some((t) => Number(t.done)) ? `<div class="todo-tools"><button class="btn" data-act="tl-clear">Erledigte entfernen</button></div>` : ""}</section>`;
 }
 
 // ------------------------------------------------------------------ Wochenabschluss am Sonntag (1.47.0, WeekReviewCard.tsx)
@@ -217,10 +273,12 @@ export function viewTodos() {
   const date = dateOf();
   const t = today();
   const wd = WEEKDAYS[new Date(`${date}T12:00:00`).getDay()];
+  // Offene To-dos und Listenpunkte der letzten Tage wandern automatisch auf heute (1.156.0)
+  if (date === t && T.carryForward(S.catalog, S.todos, t)) persist();
   const pending = T.unsentTodos(S.todos) + CD.unsentChecklists(S.checklists);
-  // To-dos ganz oben (1.145.0, Wunsch des Nutzers)
+  // To-dos ganz oben (1.145.0, Wunsch des Nutzers), daneben bzw. darunter die eigenen Listen
   return `${X.header("Checklisten")}<main class="wrap">
-    ${todosCard(date)}
+    <div class="todos-pair">${todosCard(date)}${listsCard(date)}</div>
     <section class="card day-nav">
       <button class="btn sm" data-act="todo-shift" data-arg="-1" aria-label="Vortag">‹</button>
       <label class="day-nav__date"><span class="muted small">${date === t ? `Heute · ${esc(D.weekdayName(date))}` : esc(D.formatWeekdayDate(date))}</span>
@@ -591,11 +649,62 @@ export const todoActions = {
   },
   "todo-clear": (el) => {
     if (!X.confirmTwice(el, "Nochmal tippen: Erledigte entfernen")) return;
-    change(() => T.clearDone(X.S.catalog, X.S.todos, dateOf()), (n) => `${n} erledigte entfernt.`);
+    change(() => T.clearDone(X.S.catalog, X.S.todos, dateOf(), new Date(), null), (n) => `${n} erledigte entfernt.`);
   },
-  "todo-carry": () => {
-    const date = dateOf();
-    change(() => T.carryOver(X.S.catalog, X.S.todos, D.trends.shiftDays(date, -1), date, opts()), (n) => (n ? `${n} übernommen.` : "Schon alle vorhanden."));
+  "tl-new": () => {
+    X.S.tlForm = { id: null, name: "" };
+    X.rerender();
+    requestAnimationFrame(() => document.querySelector("[data-tl=name]")?.focus());
+  },
+  "tl-rename": () => {
+    const cur = chosenList(T.todoLists(X.S.catalog, X.S.todos));
+    if (!cur) return;
+    X.S.tlForm = { id: cur.id, name: cur.name };
+    X.rerender();
+    requestAnimationFrame(() => document.querySelector("[data-tl=name]")?.focus());
+  },
+  "tl-name-cancel": () => {
+    X.S.tlForm = null;
+    X.rerender();
+  },
+  "tl-name-save": () => {
+    const S = X.S;
+    const f = S.tlForm;
+    if (!f) return;
+    change(
+      () => {
+        const id = T.saveList(S.catalog, S.todos, f.id, f.name, opts());
+        chooseList(id);
+        S.tlForm = null;
+        return f.id;
+      },
+      (wasRename) => (wasRename ? "Liste umbenannt." : "Liste angelegt."),
+    );
+  },
+  "tl-delete": (el) => {
+    const S = X.S;
+    const cur = chosenList(T.todoLists(S.catalog, S.todos));
+    if (!cur || !X.confirmTwice(el, `Nochmal tippen: „${cur.name}“ samt Punkten löschen`)) return;
+    change(() => {
+      T.deleteList(S.catalog, S.todos, cur.id);
+      chooseList(null);
+      S.tlForm = null;
+    }, `„${cur.name}“ gelöscht.`);
+  },
+  "tl-add": () => {
+    const S = X.S;
+    const cur = chosenList(T.todoLists(S.catalog, S.todos));
+    if (!cur) return;
+    change(() => {
+      T.addTodo(S.catalog, S.todos, dateOf(), S.tlAdd ?? "", { ...opts(), listId: cur.id });
+      S.tlAdd = "";
+    });
+  },
+  "tl-clear": (el) => {
+    const S = X.S;
+    const cur = chosenList(T.todoLists(S.catalog, S.todos));
+    if (!cur || !X.confirmTwice(el, "Nochmal tippen: Erledigte entfernen")) return;
+    change(() => T.clearDone(S.catalog, S.todos, dateOf(), new Date(), cur.id), (n) => `${n} erledigte entfernt.`);
   },
   "sched-open": () => {
     X.S.schedOpen = !X.S.schedOpen;
@@ -831,6 +940,15 @@ export function todoInput(el) {
     } else return false;
     return true;
   }
+  const tl = el.dataset?.tl;
+  if (tl === "name" && S.tlForm) {
+    S.tlForm.name = el.value;
+    return true;
+  }
+  if (tl === "text") {
+    S.tlAdd = el.value;
+    return true;
+  }
   const k = el.dataset?.todo;
   if (!k) return false;
   if (k === "edit" && S.todoEdit) S.todoEdit.text = el.value;
@@ -860,6 +978,13 @@ export function todoChange(el) {
     return true;
   }
   if (el.dataset?.sched || el.dataset?.cl) return todoInput(el);
+  if (el.dataset?.tl === "pick") {
+    chooseList(el.value);
+    S.tlForm = null;
+    X.rerender();
+    return true;
+  }
+  if (el.dataset?.tl) return todoInput(el);
   const k = el.dataset?.todo;
   if (!k) return false;
   if (k === "date") {

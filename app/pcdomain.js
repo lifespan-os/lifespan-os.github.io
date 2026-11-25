@@ -26890,15 +26890,9 @@ __export(gymMachinePick_exports, {
 var MUSCLE_RUBRICS = [
   {
     label: "Schultern",
-    names: [
-      "Schulter",
-      "Schultern",
-      "Vordere Schulter",
-      "Seitliche Schulter",
-      "Hintere Schulter"
-    ]
+    names: ["Schulter", "Schultern", "Vordere Schulter", "Seitliche Schulter", "Hintere Schulter"]
   },
-  { label: "Brust", names: ["Brust", "Obere Brust"] },
+  { label: "Brust", names: ["Brust", "Obere Brust", "Untere Brust"] },
   { label: "R\xFCcken / Latissimus", names: ["R\xFCcken", "Latissimus"] },
   { label: "Beine / Quadrizeps", names: ["Beine", "Bein", "Quadrizeps", "Rectus Femoris"] },
   { label: "Waden / Tibialis", names: ["Wade", "Waden", "Tibialis"] },

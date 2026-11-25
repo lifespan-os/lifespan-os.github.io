@@ -137,7 +137,7 @@ function todosCard(date) {
     })
     .join("");
   const repeating = add.when === "daily" || add.when === "weekly" || add.when === "monthly";
-  return `<section class="card"><div class="wo-head"><h3>To-dos</h3><span class="tag">${list.length ? `${open} offen von ${list.length}` : "keine"}</span></div>
+  return `<section class="card" id="todos-card"><div class="wo-head"><h3>To-dos</h3><span class="tag">${list.length ? `${open} offen von ${list.length}` : "keine"}</span></div>
     <div class="todos-daynav"><button class="btn sm" data-act="todo-shift" data-arg="-1" aria-label="To-dos vom Vortag">‹</button><strong>${esc(D.formatWeekdayDate(date))}</strong><button class="btn sm" data-act="todo-shift" data-arg="1" aria-label="To-dos vom Folgetag">›</button></div>
     ${list.length ? `<ul class="todo-list">${rows}</ul>` : `<p class="muted">Für diesen Tag sind keine To-dos eingetragen.</p>`}
     <div class="todo-add">
@@ -218,7 +218,9 @@ export function viewTodos() {
   const t = today();
   const wd = WEEKDAYS[new Date(`${date}T12:00:00`).getDay()];
   const pending = T.unsentTodos(S.todos) + CD.unsentChecklists(S.checklists);
+  // To-dos ganz oben (1.145.0, Wunsch des Nutzers)
   return `${X.header("Checklisten")}<main class="wrap">
+    ${todosCard(date)}
     <section class="card day-nav">
       <button class="btn sm" data-act="todo-shift" data-arg="-1" aria-label="Vortag">‹</button>
       <label class="day-nav__date"><span class="muted small">${date === t ? `Heute · ${esc(D.weekdayName(date))}` : esc(D.formatWeekdayDate(date))}</span>
@@ -229,7 +231,6 @@ export function viewTodos() {
     ${scheduleCard(date)}
     ${pending ? `<p class="muted small">${pending} ${pending === 1 ? "Änderung" : "Änderungen"} an To-dos und Checklisten noch nicht am PC · <button class="linkbtn" data-go="send">An den PC senden</button></p>` : ""}
     ${dayStatusCard(date)}
-    ${todosCard(date)}
     ${D.weekReview.isWeekReviewDay(date) ? weekReviewCard(date) : ""}
     ${libraryCard(date)}
   </main>`;

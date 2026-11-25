@@ -2301,7 +2301,7 @@ body.bar-icons .tabbar__item .nav__dot { top: auto; bottom: 10px; }
 /* Orange Punkte auf der Seite (1.143.0): Knöpfe und Felder, bei denen heute noch etwas einzutragen ist */
 .open-mark { position: relative; }
 .open-mark::after { content: ""; position: absolute; top: -4px; right: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 2px var(--surface); pointer-events: none; }
-label.open-mark::after, h2.open-mark::after, h3.open-mark::after { position: static; display: inline-block; margin-left: 6px; vertical-align: middle; box-shadow: none; }
+label.open-mark::after, h2.open-mark::after, h3.open-mark::after, h4.open-mark::after, span.open-mark::after { position: static; display: inline-block; margin-left: 6px; vertical-align: middle; box-shadow: none; }
 .tabbar--inline .tabbar__sub { position: relative; }
 .tabbar__sub .nav__dot { right: -3px; bottom: -3px; width: 13px; height: 13px; box-shadow: 0 0 0 2px var(--navy, #0b2a4a); }
 .bsheet__grid .tab__dot { right: 10px; bottom: 10px; width: 9px; height: 9px; }
@@ -2540,3 +2540,67 @@ html[data-theme="dark"] .plt-tag--caffeine { color: #c8956a; background: #3a2a1c
 .one-input__row .btn { flex: none; }
 .one-input__preview { margin: 6px 0 0; min-height: 1.2em; }
 .one-input__preview.is-error { color: var(--warn, #b45309); }
+
+/* Griffkraft erfassen (1.145.0, wie GripPanel.tsx am PC) */
+.grip { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.grip h4 { margin: 0 0 8px; font-size: 1rem; }
+.grip .field { display: grid; gap: 4px; min-width: 0; }
+.grip .field > span:first-child { font-size: .8rem; font-weight: 600; color: var(--muted); }
+.grip .field select, .grip .field textarea, .grip .field input[type="time"] { width: 100%; min-width: 0; }
+.grip .row-actions { margin-top: 6px; }
+.grip-eval { margin: 10px 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.grip-eval--empty { background: color-mix(in srgb, var(--line) 25%, var(--surface)); }
+.grip-eval__head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.grip-eval__head p { margin: 0; }
+.grip-eval__value { font-size: 1.5rem; font-weight: 800; }
+.grip-eval__verdict { text-align: right; }
+.grip-eval__pct { font-weight: 700; }
+.grip-eval__facts { display: grid; gap: 6px; margin: 8px 0 0; }
+.grip-eval__facts div { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 8px; }
+.grip-eval__facts dt { color: var(--muted); }
+.grip-eval__facts dd { margin: 0; }
+.grip-lv { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: .78rem; font-weight: 700; color: #fff; }
+.grip-lv--0 { background: var(--danger); }
+.grip-lv--1 { background: color-mix(in srgb, var(--danger) 55%, var(--orange)); }
+.grip-lv--2 { background: var(--muted); }
+.grip-lv--3 { background: color-mix(in srgb, var(--ok) 70%, var(--blue)); }
+.grip-lv--4 { background: var(--ok); }
+.grip-scale { position: relative; display: flex; height: 10px; margin: 12px 0 4px; border-radius: 99px; overflow: visible; }
+.grip-scale__seg { height: 100%; opacity: .45; }
+.grip-scale__seg:first-child { border-radius: 99px 0 0 99px; }
+.grip-scale__seg:nth-last-child(2) { border-radius: 0 99px 99px 0; }
+.grip-scale__seg.is-current { opacity: 1; }
+.grip-scale__marker { position: absolute; top: -4px; width: 4px; height: 18px; margin-left: -2px; border-radius: 2px; background: var(--fg); }
+.grip-scale__kg { position: relative; height: 1.1rem; }
+.grip-scale__kg span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.grip-warn { color: var(--orange-text); font-weight: 600; }
+.grip__protocol { margin: 8px 0; }
+.grip__protocol ul { margin: 6px 0; padding-left: 18px; }
+.grip-history h4 { margin: 12px 0 6px; }
+.grip-chart { display: block; width: 100%; height: auto; }
+.grip-chart polyline { stroke-linejoin: round; stroke-linecap: round; }
+.grip-chart__avg { stroke: var(--orange); stroke-width: 3; }
+.grip-chart__left { stroke: var(--blue); stroke-width: 1.5; }
+.grip-chart__right { stroke: var(--ok); stroke-width: 1.5; }
+.grip-chart__p90 { stroke: var(--ok); stroke-dasharray: 4 4; }
+.grip-chart__p10 { stroke: var(--danger); stroke-dasharray: 4 4; }
+.grip-chart__mean { stroke: var(--muted); stroke-dasharray: 2 4; }
+.grip-chart__ref, .grip-chart__tick { fill: var(--muted); font-size: 10px; }
+.grip-chart__legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.grip-key { display: inline-block; width: 14px; height: 3px; border-radius: 2px; }
+.grip-key--avg { background: var(--orange); height: 4px; }
+.grip-key--left { background: var(--blue); }
+.grip-key--right { background: var(--ok); }
+.grip-rows { display: grid; }
+.grip-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.grip-row.is-selected { background: color-mix(in srgb, var(--orange) 8%, var(--surface)); }
+.grip-row__main, .grip-row__right { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.grip-row__right { align-items: flex-end; text-align: right; }
+
+/* Maximale Herzfrequenz & Trainingszonen (1.145.0, wie HeartFields am PC) */
+.heart-fields { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.heart-fields h4 { margin: 0 0 6px; font-size: 1rem; }
+.heart-fields .field { display: grid; gap: 3px; min-width: 0; }
+.heart-fields .field > span:first-child { font-size: .8rem; font-weight: 600; color: var(--muted); }
+.heart-field--calc input::placeholder { color: var(--fg); opacity: .75; }
+.heart-field--calc > span:first-child::after { content: " *"; color: var(--orange-text); }

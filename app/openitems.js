@@ -50,9 +50,12 @@ function compute() {
   const db = buildDb();
   const status = D.dayStatus(O.overviewFor(db, t), P.intakesOn(db, t).length).rows;
   let dueValues = 0;
+  // Punkt bis aufs Feld (1.145.0, wie PC 1.0.215): fällige Messgrößen und Griffkraft
+  let dueFields = [];
   try {
     const m = missingAll(db);
     dueValues = m.values.length + (m.grip ? 1 : 0);
+    dueFields = [...m.values.map((v) => `metric:${v.metricId}`), ...(m.grip ? ["grip"] : [])];
   } catch {
     dueValues = 0;
   }
@@ -99,7 +102,7 @@ function compute() {
     console.error(e);
     hrtDue = [];
   }
-  return OI().openItems({ status, dueValues, todos, planned, workoutsToday, hrtDue });
+  return OI().openItems({ status, dueValues, dueFields, todos, planned, workoutsToday, hrtDue });
 }
 
 /** Stand der Hormongaben (nach `openItemsNow`) */
@@ -190,7 +193,8 @@ export const PAGE_MARKS = [
 export function marksMatch(items, tokens) {
   const list = String(tokens ?? "").split(/\s+/).filter(Boolean);
   if (!list.length) return false;
-  return items.some((i) => list.some((t) => (t.endsWith("*") ? i.key.startsWith(t.slice(0, -1)) : i.key === t)));
+  const hit = (name, t) => (t.endsWith("*") ? name.startsWith(t.slice(0, -1)) : name === t);
+  return items.some((i) => list.some((t) => hit(i.key, t) || (i.fields ?? []).some((f) => hit(f, t))));
 }
 
 /** Punkte in `root` setzen bzw. entfernen (nach jedem Neuzeichnen) */
@@ -201,6 +205,10 @@ export function applyPageMarks(root, items = openItemsNow()) {
     if (!marksMatch(items, tokens)) continue;
     root.querySelectorAll(selector).forEach((el) => on.add(el));
   }
+  // Elemente mit eigenen Stichwörtern (1.145.0): `data-open="metric:<id> grip"` wie am PC
+  root.querySelectorAll("[data-open]").forEach((el) => {
+    if (marksMatch(items, el.dataset.open)) on.add(el);
+  });
   root.querySelectorAll(".open-mark").forEach((el) => {
     if (!on.has(el)) el.classList.remove("open-mark");
   });

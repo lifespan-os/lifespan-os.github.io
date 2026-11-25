@@ -254,6 +254,9 @@ function ageOn(profile, date) {
  * Griffkraft speichern wie `grip::save` (Quick Fill, 1.56.0): `draft` = { date, leftKg, rightKg }
  * als Zahlen. Gibt es für den Tag schon eine Messung, wird sie ersetzt (gleiche ID). Geschlecht,
  * Alter und Körpergröße kommen aus dem Profil, Messhand und Methode aus der letzten Messung.
+ * Seit 1.145.0 (Body & Longevity → Erfassen wie GripPanel.tsx am PC) optional auch
+ * `dominantHand` ("left"/"right"/null), `method`, `notes` und `sex` (nur ohne Geschlecht im Profil);
+ * fehlt ein Feld (undefined), bleibt der bisherige Stand.
  * Rückgabe { errors } oder { row }.
  */
 export function saveGrip(db, local, draft, { uuid, now = new Date() }) {
@@ -271,8 +274,12 @@ export function saveGrip(db, local, draft, { uuid, now = new Date() }) {
   const left = hand("leftKg", "Die linke Hand", draft.leftKg);
   const right = hand("rightKg", "Die rechte Hand", draft.rightKg);
   const profile = db.profile;
+  const draftSex = draft.sex === "male" || draft.sex === "female" ? draft.sex : null;
+  if (draft.dominantHand !== undefined && draft.dominantHand !== null && draft.dominantHand !== "left" && draft.dominantHand !== "right") errors.dominantHand = "Bitte links oder rechts wählen.";
+  if (typeof draft.method === "string" && draft.method.trim().length > 40) errors.method = "Die Messmethode darf höchstens 40 Zeichen lang sein.";
+  if (typeof draft.notes === "string" && draft.notes.length > 2000) errors.notes = "Die Notiz darf höchstens 2000 Zeichen lang sein.";
   if (!profile) errors.date = "Bitte zuerst unter Settings ein Profil mit Körpergröße und Geburtsdatum anlegen.";
-  else if (profile.sex !== "male" && profile.sex !== "female") errors.date = "Bitte im Profil das Geschlecht wählen – die Normwerte unterscheiden Männer und Frauen.";
+  else if (profile.sex !== "male" && profile.sex !== "female" && !draftSex) errors.date = "Bitte das Geschlecht wählen – die Normwerte unterscheiden Männer und Frauen.";
   if (Object.keys(errors).length) return { errors };
   const list = listOf(db, "grip") ?? [];
   const same = list.find((g) => g.date === date);
@@ -285,14 +292,14 @@ export function saveGrip(db, local, draft, { uuid, now = new Date() }) {
     time: time ?? same?.time ?? null,
     left_kg: left,
     right_kg: right,
-    dominant_hand: same?.dominant_hand ?? last?.dominant_hand ?? null,
-    sex: profile.sex,
+    dominant_hand: draft.dominantHand !== undefined ? draft.dominantHand || null : (same?.dominant_hand ?? last?.dominant_hand ?? null),
+    sex: profile.sex === "male" || profile.sex === "female" ? profile.sex : draftSex,
     age_years: ageOn(profile, date),
     height_cm: profile.height_cm ?? null,
-    notes: same?.notes ?? null,
+    notes: draft.notes !== undefined ? (String(draft.notes ?? "").trim() === "" ? null : String(draft.notes)) : (same?.notes ?? null),
     created_at: same?.created_at ?? iso,
     updated_at: iso,
-    method: same?.method ?? last?.method ?? null,
+    method: draft.method !== undefined ? (String(draft.method ?? "").trim() || null) : (same?.method ?? last?.method ?? null),
   };
   local.grip[id] = { row, sent: false };
   delete local.deleted[`grip_strength_measurement:${id}`];

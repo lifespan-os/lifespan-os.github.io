@@ -24213,24 +24213,24 @@ function evaluateGrip(norms, input) {
   const found = findNorm(norms, input.sex, input.ageYears, input.heightCm);
   if (!found) return null;
   const { norm: norm5, heightClamped } = found;
-  const averageKg = round13((input.leftKg + input.rightKg) / 2);
-  const zScore = (averageKg - norm5.mean_kg) / norm5.sd_kg;
+  const averageKg2 = round13((input.leftKg + input.rightKg) / 2);
+  const zScore = (averageKg2 - norm5.mean_kg) / norm5.sd_kg;
   const percentile = round13(normalCdf(zScore) * 100);
   const category = CATEGORY_BOUNDS.find((b) => percentile >= b.minPercentile).category;
   const nextBound = [...CATEGORY_BOUNDS].reverse().find((b) => b.minPercentile > percentile);
   let kgToNextLevel = null;
   if (nextBound) {
     const target = nextBound.minPercentile === 10 ? norm5.p10_kg : nextBound.minPercentile === 90 ? norm5.p90_kg : norm5.mean_kg + (Z[nextBound.minPercentile] ?? 0) * norm5.sd_kg;
-    kgToNextLevel = round13(Math.max(0, target - averageKg));
+    kgToNextLevel = round13(Math.max(0, target - averageKg2));
   }
   return {
-    averageKg,
+    averageKg: averageKg2,
     norm: norm5,
     percentile,
     zScore: Math.round(zScore * 100) / 100,
     category,
-    diffToMeanKg: round13(averageKg - norm5.mean_kg),
-    percentOfMean: Math.round(averageKg / norm5.mean_kg * 100),
+    diffToMeanKg: round13(averageKg2 - norm5.mean_kg),
+    percentOfMean: Math.round(averageKg2 / norm5.mean_kg * 100),
     kgToNextLevel,
     heightClamped,
     asymmetry: evaluateAsymmetry(input.leftKg, input.rightKg, input.dominantHand)
@@ -24495,6 +24495,32 @@ var LONGEVITY_METRICS = {
   bodyFat: "00000000-0000-7000-8000-000000000002",
   muscleMass: "00000000-0000-7000-8000-000000000003"
 };
+
+// src/domain/grip.ts
+var grip_exports = {};
+__export(grip_exports, {
+  GRIP_DATASET: () => GRIP_DATASET,
+  GRIP_LEVELS: () => GRIP_LEVELS,
+  GRIP_MAX_KG: () => GRIP_MAX_KG2,
+  GRIP_NORMS: () => GRIP_NORMS,
+  GRIP_PROTOCOL: () => GRIP_PROTOCOL,
+  GRIP_SOURCE: () => GRIP_SOURCE,
+  HAND_LABEL: () => HAND_LABEL,
+  HAND_OPTIONS: () => HAND_OPTIONS,
+  LEVEL_BOUNDS_MATCH: () => LEVEL_BOUNDS_MATCH,
+  averageKg: () => averageKg,
+  changeToPrevious: () => changeToPrevious,
+  describeNorm: () => describeNorm,
+  evaluateFor: () => evaluateFor,
+  evaluateMeasurement: () => evaluateMeasurement,
+  gripChartPoints: () => gripChartPoints,
+  levelLimitsKg: () => levelLimitsKg,
+  levelOf: () => levelOf,
+  markerPosition: () => markerPosition,
+  nextLevelLabel: () => nextLevelLabel,
+  personFor: () => personFor,
+  profileAgeOn: () => profileAgeOn
+});
 
 // src/data/grip_strength_norms.json
 var grip_strength_norms_default = {
@@ -26659,6 +26685,13 @@ var grip_strength_norms_default = {
 var GRIP_NORMS = grip_strength_norms_default.norms;
 var GRIP_SOURCE = grip_strength_norms_default.meta.source;
 var GRIP_DATASET = grip_strength_norms_default.meta.dataset;
+var GRIP_MAX_KG2 = 150;
+var HAND_LABEL = { left: "links", right: "rechts" };
+var HAND_OPTIONS = [
+  { value: "", label: "Keine Angabe" },
+  { value: "right", label: "Rechts" },
+  { value: "left", label: "Links" }
+];
 var GRIP_LEVELS = [
   {
     category: "unzureichend",
@@ -26701,6 +26734,110 @@ var GRIP_LEVELS = [
     text: "Unter den st\xE4rksten 10 % deiner Vergleichsgruppe."
   }
 ];
+function levelOf(category) {
+  for (const level of GRIP_LEVELS) if (level.category === category) return level;
+  throw new Error(`Unbekannte Griffkraft-Stufe: ${category}`);
+}
+function nextLevelLabel(category) {
+  const i = GRIP_LEVELS.findIndex((l) => l.category === category);
+  return i >= 0 ? GRIP_LEVELS[i + 1]?.label ?? null : null;
+}
+var GRIP_PROTOCOL = [
+  "Stehend, Oberarm locker am Rumpf, Ellbogen 90\xB0 gebeugt, Handgelenk gerade.",
+  "3\u20135 Sekunden mit voller Kraft dr\xFCcken, je Hand 2\u20133 Versuche mit kurzer Pause.",
+  "Je Hand den besten Versuch eintragen. Bewertet wird der Durchschnitt beider H\xE4nde.",
+  "F\xFCr vergleichbare Werte: gleiches Ger\xE4t, \xE4hnliche Tageszeit, nicht direkt nach dem Training."
+];
+function profileAgeOn(profile, date) {
+  if (!profile) return null;
+  if (profile.birthDate) return ageOn(profile.birthDate, date);
+  return ageInYear(profile.birthYear, Number(date.slice(0, 4)));
+}
+function personFor(m, profile) {
+  if (m.sex && m.ageYears !== null && m.heightCm !== null) {
+    return { sex: m.sex, ageYears: m.ageYears, heightCm: m.heightCm, fromProfile: false };
+  }
+  return {
+    sex: m.sex ?? profile?.sex ?? null,
+    ageYears: m.ageYears ?? profileAgeOn(profile, m.date),
+    heightCm: m.heightCm ?? profile?.heightCm ?? null,
+    fromProfile: true
+  };
+}
+function evaluateFor(leftKg, rightKg, dominantHand, person) {
+  if (!person.sex) {
+    return {
+      ok: false,
+      person,
+      reason: "F\xFCr die Einordnung fehlt das Geschlecht (Settings \u2192 Profil oder Feld oben)."
+    };
+  }
+  if (person.ageYears === null || person.heightCm === null) {
+    return {
+      ok: false,
+      person,
+      reason: "F\xFCr die Einordnung fehlen Alter und K\xF6rpergr\xF6\xDFe im Profil (Settings)."
+    };
+  }
+  const result = evaluateGrip(GRIP_NORMS, {
+    leftKg,
+    rightKg,
+    sex: person.sex,
+    ageYears: person.ageYears,
+    heightCm: person.heightCm,
+    dominantHand: dominantHand ?? void 0
+  });
+  if (!result) {
+    return {
+      ok: false,
+      person,
+      reason: `Normwerte gibt es nur f\xFCr 17 bis 90 Jahre (Alter bei der Messung: ${person.ageYears}).`
+    };
+  }
+  return { ok: true, result, person };
+}
+var evaluateMeasurement = (m, profile) => evaluateFor(m.leftKg, m.rightKg, m.dominantHand, personFor(m, profile));
+function describeNorm(norm5) {
+  const sex = norm5.sex === "male" ? "M\xE4nner" : "Frauen";
+  const height = norm5.height_max_cm === null ? `ab ${norm5.height_min_cm} cm` : `${norm5.height_min_cm}\u2013${norm5.height_max_cm} cm`;
+  return `${sex}, ${norm5.age_min}\u2013${norm5.age_max} Jahre, ${height}`;
+}
+var averageKg = (leftKg, rightKg) => Math.round((leftKg + rightKg) / 2 * 10) / 10;
+var markerPosition = (percentile) => Math.min(99, Math.max(1, percentile));
+function levelLimitsKg(norm5) {
+  const round5 = (n3) => Math.round(n3 * 10) / 10;
+  return {
+    p10: norm5.p10_kg,
+    p25: round5(norm5.mean_kg - 0.6745 * norm5.sd_kg),
+    p75: round5(norm5.mean_kg + 0.6745 * norm5.sd_kg),
+    p90: norm5.p90_kg
+  };
+}
+function gripChartPoints(measurements, profile) {
+  return [...measurements].sort((a, b) => a.date.localeCompare(b.date)).map((m) => {
+    const ev = evaluateMeasurement(m, profile);
+    return {
+      date: m.date,
+      left: m.leftKg,
+      right: m.rightKg,
+      average: averageKg(m.leftKg, m.rightKg),
+      percentile: ev.ok ? ev.result.percentile : null
+    };
+  });
+}
+function changeToPrevious(measurements, date) {
+  const sorted = [...measurements].sort((a, b) => a.date.localeCompare(b.date));
+  const i = sorted.findIndex((m) => m.date === date);
+  const current2 = sorted[i];
+  const previous = i > 0 ? sorted[i - 1] : void 0;
+  if (!current2 || !previous) return null;
+  return {
+    kg: Math.round(
+      (averageKg(current2.leftKg, current2.rightKg) - averageKg(previous.leftKg, previous.rightKg)) * 10
+    ) / 10,
+    previousDate: previous.date
+  };
+}
 var LEVEL_BOUNDS_MATCH = CATEGORY_BOUNDS.every(
   (b) => GRIP_LEVELS.some((l) => l.category === b.category && l.from === b.minPercentile)
 );
@@ -32701,6 +32838,8 @@ var openItems_exports = {};
 __export(openItems_exports, {
   itemsOf: () => itemsOf,
   markTitle: () => markTitle,
+  marksMatch: () => marksMatch,
+  openAnchors: () => openAnchors,
   openItems: () => openItems,
   openTabs: () => openTabs
 });
@@ -32712,7 +32851,11 @@ function openItems(input) {
       key: "body-values",
       label: input.dueValues > 1 ? `${input.dueValues} K\xF6rperwerte eintragen` : weightOpen && input.dueValues <= 1 ? "Gewicht eintragen" : "K\xF6rperwert eintragen",
       section: "body",
-      tab: "entry"
+      tab: "entry",
+      fields: [
+        ...input.dueFields ?? [],
+        ...weightOpen ? [`metric:${WEIGHT_METRIC_ID}`] : []
+      ]
     });
   }
   for (const r2 of input.status) {
@@ -32748,6 +32891,17 @@ function itemsOf(items, section) {
 }
 function openTabs(items, section) {
   return new Set(items.filter((i) => i.section === section && i.tab).map((i) => i.tab));
+}
+function marksMatch(items, tokens2) {
+  const list2 = tokens2.split(/\s+/).filter(Boolean);
+  if (list2.length === 0) return false;
+  const hit = (name, t) => t.endsWith("*") ? name.startsWith(t.slice(0, -1)) : name === t;
+  return items.some(
+    (i) => list2.some((t) => hit(i.key, t) || (i.fields ?? []).some((f) => hit(f, t)))
+  );
+}
+function openAnchors(items) {
+  return new Set(items.filter((i) => i.anchor).map((i) => i.anchor));
 }
 function markTitle(items) {
   if (items.length === 0) return "";
@@ -33956,6 +34110,7 @@ export {
   goalProgress,
   goalSuggestions_exports as goalSuggestions,
   gramsFromPercent,
+  grip_exports as grip,
   gripTiming_exports as gripTiming,
   groupInsights,
   groupIntakes,

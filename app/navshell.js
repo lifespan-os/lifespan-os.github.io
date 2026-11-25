@@ -91,7 +91,13 @@ export function quickGo(id) {
   }
   if (id === "body") return bodyOpenEntry(null);
   if (id === "caffeine") S.icTab = "widgets";
-  if (id === "todo") S.todoDate = t;
+  if (id === "todo") {
+    // To-do (1.145.0): Checklisten mit der To-do-Liste oben, Feld „Neue Aufgabe“ im Blick
+    S.todoDate = t;
+    go("todos");
+    requestAnimationFrame(() => document.getElementById("todos-card")?.scrollIntoView({ block: "start" }));
+    return;
+  }
   const view = { body: "body", training: "training", sleep: "sleep", recovery: "recovery", todo: "todos", caffeine: "icoach" }[id];
   return go(view ?? "home");
 }

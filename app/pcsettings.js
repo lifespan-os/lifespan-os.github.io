@@ -56,6 +56,9 @@ export const SYNC_KEYS = [
   "ui.tdee_mode",
   "ui.carb_cycling",
   "ui.lab_schedule",
+  // Body & Longevity → Erfassen → Vitalwerte: maximale Herzfrequenz und Trainingszonen (1.145.0)
+  "heart.max",
+  "heart.zones",
 ];
 export const DEFAULT_MEALS = ["breakfast", "lunch", "snack", "dinner"];
 export const MEAL_LABELS = { breakfast: "Frühstück", lunch: "Mittagessen", snack: "Snacks", dinner: "Abendessen" };

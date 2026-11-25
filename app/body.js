@@ -11,11 +11,24 @@ import { longevityTabHtml } from "./longevityview.js";
 import { protocolsTabHtml } from "./protocolsview.js";
 import { dotHtml, openTabsOf } from "./openitems.js";
 import { autoAttrs, autoSaveHtml } from "./autosave.js";
+import { gripActions, gripPanelHtml, initGrip } from "./gripview.js";
+import { heartActions, heartFieldsHtml, initHeartFields } from "./heartfields.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
 export function initBody(ctx) {
   X = ctx;
+  initHeartFields(ctx);
+  // Griffkraft unter „Fitness & Longevity“ (1.145.0): „Öffnen“ im Verlauf springt zum Tag
+  initGrip({
+    ...ctx,
+    openGripDay: (date) => {
+      autoSave();
+      S().day = B.dayForm(X.S.catalog, S().local, date);
+      X.rerender();
+      requestAnimationFrame(() => document.getElementById("grip-panel")?.scrollIntoView({ block: "start" }));
+    },
+  });
   // Bereich verlassen (z. B. von Umfänge zu Vitalwerte): ungespeicherte Werte sofort sichern (1.40.0)
   document.addEventListener("focusout", (ev) => {
     const from = ev.target?.closest?.(".body-entry section[id^='be-']");
@@ -549,7 +562,11 @@ export function viewBodyEntry() {
     ${sections
       .map((sec) => {
         const methods = B.methodsInCategory(X.S.catalog, st.local, sec.category);
-        return `<section class="card" id="be-${sec.category}"><h3>${esc(sec.label)}</h3>
+        // Oranger Punkt bis aufs Feld (1.145.0, wie PC 1.0.215): Überschrift und fällige Felder
+        const isToday = d.date === today();
+        const ids = sec.groups.flatMap((g) => g.metrics.map((m) => `metric:${m.id}`));
+        const secOpen = [...ids, ...(sec.category === "fitness" ? ["grip"] : [])].join(" ");
+        return `<section class="card" id="be-${sec.category}"><h3${isToday ? ` data-open="${esc(secOpen)}"` : ""}>${esc(sec.label)}</h3>
         <div class="grid2 entry-meta">
           <label class="field"><span>Messmethode</span>
             <input type="text" data-bd="method" data-cat="${sec.category}" list="bm-${sec.category}" value="${esc(d.methods[sec.category] ?? "")}" placeholder="optional"></label>
@@ -566,7 +583,7 @@ export function viewBodyEntry() {
                 const hint = B.metricHint(m);
                 const calc = derived[m.id];
                 return `<label class="entry-row" ${hint ? `title="${esc(hint)}"` : ""}>
-                  <span class="entry-row__name">${esc(m.name)}${hint ? ` <span class="info" aria-hidden="true">ⓘ</span>` : ""}
+                  <span class="entry-row__name"${d.date === today() ? ` data-open="metric:${esc(m.id)}"` : ""}>${esc(m.name)}${hint ? ` <span class="info" aria-hidden="true">ⓘ</span>` : ""}
                     ${last ? `<span class="muted small">zuletzt ${fmtNum(last.row.value, m.decimals)} (${fmtShort(last.row.date)})</span>` : ""}</span>
                   <span class="entry-row__input"><input type="text" inputmode="decimal" enterkeyhint="next" data-bd="value" data-id="${esc(m.id)}"
                     value="${esc(calc ? fmtNum(calc.value, m.decimals ?? 1) : (d.values[m.id] ?? ""))}" ${calc ? "disabled" : ""} ${d.errors[m.id] ? 'aria-invalid="true"' : ""} aria-label="${esc(m.name)}"><span class="unit">${esc(m.unit)}</span></span>
@@ -577,9 +594,12 @@ export function viewBodyEntry() {
               .join("")}`,
           )
           .join("")}
+        ${sec.category === "fitness" ? gripPanelHtml(d.date) : ""}
+        ${sec.category === "vital" ? heartFieldsHtml(d.date) : ""}
       </section>`;
       })
       .join("")}
+    ${sections.some((sec) => sec.category === "fitness") ? "" : `<section class="card" id="be-fitness"><h3${d.date === today() ? ' data-open="grip"' : ""}>Fitness &amp; Longevity</h3>${gripPanelHtml(d.date)}</section>`}
     <div class="entry-save">${autoSaveHtml("body-day-save", { note: "Jeder Wert wird beim Verlassen des Feldes automatisch gespeichert." })}</div>
     <p class="muted small">Messmethode und Uhrzeit gelten für alle Werte ihres Bereichs. Ein geleertes Feld entfernt einen noch nicht gesendeten Wert dieses Tages; Werte vom PC bleiben bestehen.</p>
   </main>`;
@@ -588,6 +608,8 @@ export function viewBodyEntry() {
 // ------------------------------------------------------------------ Ereignisse
 
 export const bodyActions = {
+  ...gripActions,
+  ...heartActions,
   "body-tab": (el) => {
     X.S.bodyTab = el.dataset.arg;
     X.S.trainNotice = null;

@@ -30,10 +30,14 @@ export function allTodos(catalog, local) {
 }
 
 /** To-dos eines Tages wie `todos_for_date` (nach Reihenfolge, dann Anlegezeit). */
+/** Erledigt (0/1, true/false) als Zahl für die Sortierung */
+const doneRank = (t) => (t.done && Number(t.done) !== 0 ? 1 : 0);
+
+/** To-dos eines Tages: offene zuerst, Erledigte unten (1.145.0, wie checklist.rs ORDER BY done, position). */
 export function todosFor(catalog, local, date) {
   return allTodos(catalog, local)
     .filter((t) => t.date === date)
-    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0) || cmp(a.created_at, b.created_at));
+    .sort((a, b) => doneRank(a) - doneRank(b) || (a.position ?? 0) - (b.position ?? 0) || cmp(a.created_at, b.created_at));
 }
 
 /** Offene und alle To-dos je Tag im Zeitraum wie `open_counts`. */

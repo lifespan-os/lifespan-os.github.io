@@ -2,6 +2,7 @@
 import * as N from "./nutrition.js";
 import { bodyOpenEntry } from "./body.js";
 import { drawerHtml, QUICK, quickSheetHtml, SECTIONS, tabbarHtml } from "./nav.js";
+import { oneInputHtml, oneInputInput } from "./oneinput.js";
 import { today as todayIso } from "./diary.js";
 import * as DP from "./devprefs.js";
 import { app, esc, go, render, S } from "./appbase.js";
@@ -53,7 +54,7 @@ export function renderNav() {
   lastMarks = marksKey(marks);
   navRoot.innerHTML =
     drawerHtml({ view: S.view, arg: S.arg, open: S.menuOpen, esc, back: S.logEdit?.back ?? null, marks }) +
-    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen), slots: S.prefs.barSlots, sub: S.subMenu, marks }) + quickSheetHtml(Boolean(S.quickOpen), DP.quickItems(QUICK, S.prefs.quick)) : "") +
+    (bar ? tabbarHtml({ view: S.view, arg: S.arg, back: S.logEdit?.back ?? null, quickOpen: Boolean(S.quickOpen), slots: S.prefs.barSlots, sub: S.subMenu, marks }) + quickSheetHtml(Boolean(S.quickOpen), DP.quickItems(QUICK, S.prefs.quick), oneInputHtml()) : "") +
     // Warnung: Hormongabe seit 12 Stunden überfällig (1.113.0)
     hrtAlarmHtml(esc);
   document.body.classList.toggle("has-tabbar", bar);
@@ -123,6 +124,8 @@ navRoot.addEventListener("click", (ev) => {
     return renderNav();
   }
   if (el.dataset.act === "quick-go") return quickGo(el.dataset.arg);
+  // „Eingabe für alles“ in der Schnellerfassung (1.141.0)
+  if (el.dataset.act === "one-save") return actions["one-save"](el);
   // Untermenü-Knopf (1.32.0): Fach mit den Reitern der Seite
   if (el.dataset.act === "tabs-fold") {
     S.quickOpen = false;
@@ -147,6 +150,14 @@ navRoot.addEventListener("click", (ev) => {
     if (el.dataset.tab) return actions["menu-go"](el);
     const sec = SECTIONS.find((x) => x.id === el.dataset.arg);
     return sec?.view ? go(sec.view) : go("pc-only", el.dataset.arg);
+  }
+});
+
+navRoot.addEventListener("input", (ev) => oneInputInput(ev.target));
+navRoot.addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter" && ev.target?.dataset?.one === "text") {
+    ev.preventDefault();
+    if (!navRoot.querySelector('[data-act="one-save"]')?.disabled) void actions["one-save"]();
   }
 });
 

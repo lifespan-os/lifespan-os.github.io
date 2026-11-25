@@ -154,9 +154,49 @@ export function targetGoalsCard(db, card, t = today()) {
           ? ""
           : `<p class="muted">Noch kein Ziel. Lege z. B. „Kniebeuge 140 kg“ (geschätztes 1RM) oder „Körperfett unter 15 %“ an – der Fortschritt kommt automatisch aus deinen Einheiten und Messwerten.</p>`
     }
+    ${editing ? "" : suggestionsHtml(db, all, t)}
     ${archived ? `<button class="linkbtn small" data-act="tg-archived">${S.tgShowArchived ? "Archivierte ausblenden" : `${archived} archivierte anzeigen`}</button>` : ""}
     <p class="card__note">Fortschritt = Weg vom Ausgangswert zum Ziel, gemessen am besten Wert seit Beginn (höchster bzw. bei sinkenden Zielen niedrigster). Geschätztes 1RM nach Epley aus dem besten Arbeitssatz je Einheit (1–12 Wdh.), höchstes Gewicht aus Arbeitssätzen. Neue und geänderte Ziele gehen mit „An den PC senden“ an den PC.</p>`;
   return card("goals", "Ziele", `${all.filter((g) => !g.archived).length}`, body, { wide: true });
+}
+
+/**
+ * Vorschläge aus den Hauptzielen (1.141.0, wie PC 1.0.195 `GoalsCard`): meistgenutzte Kraftübung der
+ * letzten 12 Wochen und letzte Messwerte; „Übernehmen“ legt das Ziel an.
+ */
+function suggestionList(db, goals, t) {
+  const G = D.goalAdvice;
+  const mainGoals = G.parseMainGoals(PS.effective(X.S.catalog, X.S.pcsettings, G.MAIN_GOALS_KEY));
+  if (!mainGoals.length) return [];
+  const since = D.trends.shiftDays(t, -84);
+  const log = O.setLog(db);
+  const count = new Map();
+  for (const e of log) if (!e.isWarmup && e.exerciseCategory === "strength" && e.date >= since) count.set(e.exerciseId, (count.get(e.exerciseId) ?? 0) + 1);
+  const topId = [...count.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+  const topLog = topId ? log.filter((e) => e.exerciseId === topId && e.date >= since) : [];
+  const best = D.trainingVolume.bestE1RM(topLog);
+  const measured = O.measurementsBetween(db, null, "1900-01-01", t);
+  const latest = (id) => measured.filter((m) => m.metricId === id).at(-1)?.value ?? null;
+  return D.goalSuggestions.goalSuggestions({
+    today: t,
+    mainGoals,
+    latest,
+    topExercise: topId && best ? { id: topId, name: topLog[0]?.exerciseName ?? "Übung", e1rm: Math.round(best.value * 10) / 10 } : null,
+    existing: goals,
+  });
+}
+
+function suggestionsHtml(db, goals, t) {
+  const list = suggestionList(db, goals, t);
+  if (!list.length) return "";
+  X.S.tgSuggest = Object.fromEntries(list.map((s) => [s.key, s.input]));
+  return `<div class="goal-suggest"><h4>Vorschläge aus deinen Hauptzielen</h4><ul class="plain-list">${list
+    .map(
+      (s) => `<li class="goal-suggest__row"><span><span class="muted small">${esc(D.goalAdvice.MAIN_GOAL_LABELS[s.mainGoal] ?? "")}</span><br>${esc(s.text)}</span>${
+        s.input ? `<button class="btn sm" data-act="tg-adopt" data-arg="${esc(s.key)}">Übernehmen</button>` : ""
+      }</li>`,
+    )
+    .join("")}</ul></div>`;
 }
 
 function readTg() {
@@ -323,6 +363,32 @@ export const goalsParityActions = {
   },
   "tg-archived": () => {
     X.S.tgShowArchived = !X.S.tgShowArchived;
+    X.rerender();
+  },
+  // Vorschlag aus den Hauptzielen übernehmen (1.141.0)
+  "tg-adopt": async (el) => {
+    const S = X.S;
+    const input = S.tgSuggest?.[el.dataset.arg];
+    if (!input) return;
+    const r = validateGoal({
+      id: X.uuid(),
+      title: input.title,
+      kind: input.kind,
+      exerciseId: input.exerciseId ?? "",
+      metricId: input.metricId ?? "",
+      startDate: input.startDate,
+      startValue: input.startValue === null ? "" : String(input.startValue),
+      targetValue: String(input.targetValue),
+      targetDate: input.targetDate ?? "",
+      milestones: (input.milestones ?? []).join("; "),
+      archived: false,
+      notes: input.notes ?? "",
+    });
+    if (!r.ok) return X.toast(Object.values(r.errors)[0] ?? "Ziel ungültig", true);
+    S.parity = PR.normParity(S.parity);
+    PR.putRow(S.parity, "goal", r.row);
+    await saveParity();
+    X.toast(`Ziel „${input.title}“ angelegt`);
     X.rerender();
   },
   "tg-save": async () => {

@@ -3,6 +3,7 @@
 import * as GL from "./goals.js";
 import * as P from "./pcdb.js";
 import * as D from "./pcdomain.js";
+import * as PS from "./pcsettings.js";
 import { buildDb, today } from "./diary.js";
 import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
@@ -130,6 +131,7 @@ export function viewGoals() {
       ${autoSaveHtml("goal-save")}
       ${d.id ? `<button class="btn block ghost" data-act="goal-new">Fertig</button>` : ""}
     </section>
+    ${extrasCard()}
     <section class="card">
       <h3>Bisherige Zielstände</h3>
       ${
@@ -156,6 +158,48 @@ export function viewGoals() {
       ${GL.unsentGoals(own) ? `<p class="card__note">Änderungen gehen mit „Körperwerte … senden“ an den PC.</p>` : ""}
     </section>
   </main>`;
+}
+
+// ------------------------------------------------------------- Verbrauch und Carb-Cycling (1.141.0)
+// Wie am PC (Settings → Tagesziele, GoalsPanel.tsx `TdeeModeField`/`CarbCycleField`): gespeichert
+// sofort als `ui.tdee_mode` bzw. `ui.carb_cycling`, gehen mit „An den PC senden“ zurück.
+
+const setting = (key) => PS.effective(X.S.catalog, X.S.pcsettings, key);
+
+async function putSetting(key, value) {
+  const S = X.S;
+  S.pcsettings = PS.normSync(S.pcsettings);
+  const changed = PS.setSetting(S.pcsettings, key, value, setting(key));
+  if (changed) await X.store.set("pcsettings", S.pcsettings);
+  return changed;
+}
+
+function extrasCard() {
+  const T = D.adaptiveTdee;
+  const CC = D.carbCycle;
+  const mode = T.parseTdeeMode(setting(T.TDEE_MODE_KEY));
+  const cc = CC.parseCarbCycle(setting(CC.CARB_CYCLE_KEY));
+  const seg = (label, items) => `<div class="segmented" role="radiogroup" aria-label="${esc(label)}">${items
+    .map(([act, arg, text, on]) => `<button type="button" role="radio" aria-checked="${on}" class="${on ? "is-active" : ""}" data-act="${act}" data-arg="${esc(arg)}">${esc(text)}</button>`)
+    .join("")}</div>`;
+  return `<section class="card">
+    <h3>Verbrauch und Carb-Cycling</h3>
+    <p class="muted small card-info">Verbrauch: „Aus Gewichtsverlauf“ zeigt unter Insights den echten Verbrauch aus Aufnahme und Gewichtstrend (ab 14 Tagen) mit „Übernehmen“; „Beide“ stellt ihn neben den berechneten Verbrauch. Carb-Cycling: Trainingstag = Einheit an dem Tag erfasst oder im Trainingsplan eingetragen; Fett gleicht die Energie aus, das Kalorienziel bleibt gleich. Gilt für Tagebuch und Overview, auch am PC. Beides speichert sofort und geht mit „An den PC senden“ an den PC.</p>
+    <div class="field"><span class="field-label">Verbrauch</span>
+      ${seg("Verbrauch", Object.keys(T.TDEE_MODE_LABELS).map((m) => ["goal-tdee", m, T.TDEE_MODE_LABELS[m], mode === m]))}
+    </div>
+    <div class="field"><span class="field-label">Carb-Cycling</span>
+      <label class="goal-check"><input type="checkbox" data-goalx="carb-on" ${cc.on ? "checked" : ""}> An Trainingstagen mehr, an Ruhetagen weniger Kohlenhydrate</label>
+      ${cc.on ? seg("Carb-Cycling", CC.CARB_CYCLE_PERCENTS.map((p) => ["goal-carb-pct", String(p), `± ${p} %`, cc.percent === p])) : ""}
+    </div>
+  </section>`;
+}
+
+async function saveCarb(next) {
+  const CC = D.carbCycle;
+  await putSetting(CC.CARB_CYCLE_KEY, JSON.stringify(next));
+  X.toast(next.on ? `Carb-Cycling an (± ${next.percent} %)` : "Carb-Cycling aus");
+  X.rerender();
 }
 
 /** Eingaben ins Formular übernehmen. */
@@ -211,6 +255,18 @@ export const goalActions = {
     X.toast("Ziele gespeichert.");
     X.rerender();
   },
+  "goal-tdee": async (el) => {
+    const T = D.adaptiveTdee;
+    const m = T.parseTdeeMode(el.dataset.arg);
+    await putSetting(T.TDEE_MODE_KEY, m === "calculated" ? null : m);
+    X.toast(`Verbrauch: ${T.TDEE_MODE_LABELS[m]}`);
+    X.rerender();
+  },
+  "goal-carb-pct": async (el) => {
+    const CC = D.carbCycle;
+    const cur = CC.parseCarbCycle(setting(CC.CARB_CYCLE_KEY));
+    await saveCarb({ ...cur, on: true, percent: Number(el.dataset.arg) });
+  },
   "goal-delete": async (el) => {
     if (!X.confirmTwice(el, "Nochmal: löschen")) return;
     X.S.goals = GL.normGoals(X.S.goals);
@@ -225,6 +281,12 @@ export const goalActions = {
 
 /** Auswahlfelder, die das Formular verändern (Modus, Einheiten); true = behandelt. */
 export function goalChange(el) {
+  if (el.dataset?.goalx === "carb-on") {
+    const CC = D.carbCycle;
+    const cur = CC.parseCarbCycle(setting(CC.CARB_CYCLE_KEY));
+    void saveCarb({ ...cur, on: el.checked });
+    return true;
+  }
   if (!el.dataset?.goal) return false;
   readForm();
   const f = X.S.goalForm;

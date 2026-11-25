@@ -52,6 +52,10 @@ export const SYNC_KEYS = [
   "ui.week_goals",
   "ui.main_goals",
   "ui.ai_consent",
+  // Settings → Tagesziele: Verbrauch und Carb-Cycling; Superhuman → HRT: Laborabstände (1.141.0)
+  "ui.tdee_mode",
+  "ui.carb_cycling",
+  "ui.lab_schedule",
 ];
 export const DEFAULT_MEALS = ["breakfast", "lunch", "snack", "dinner"];
 export const MEAL_LABELS = { breakfast: "Frühstück", lunch: "Mittagessen", snack: "Snacks", dinner: "Abendessen" };

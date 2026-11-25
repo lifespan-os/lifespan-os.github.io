@@ -678,7 +678,7 @@ export function timelineHtml(db, date, slots, glucoseOf = () => "") {
       ${
         te.ask
           ? `<div class="row"><span class="small">${weekly && te.scope === "day" ? `Training am ${germanDay(date)} auslassen?` : "Termin aus dem Trainingsplan entfernen?"}</span><button class="btn sm danger" data-act="mtl-tr-del">Ja</button><button class="btn sm ghost" data-act="mtl-tr-ask" data-arg="0">Nein</button></div>`
-          : `${autoSaveHtml("mtl-tr-save", { note: "Änderungen an Beginn und Dauer werden sofort gespeichert (gilt wie oben gewählt)." })}<div class="row"><button class="btn sm" data-act="mtl-tr-ask" data-arg="1">🗑 Löschen</button><button class="btn sm ghost" data-act="mtl-tr-cancel">Fertig</button></div>`
+          : `${autoSaveHtml("mtl-tr-save", { note: "Beginn und Dauer speichern sofort. Die Auswahl „Nur am … / Jeden …“ und „mitverschieben“ speichert ebenfalls sofort und bleibt fürs nächste Mal." })}<div class="row"><button class="btn sm" data-act="mtl-tr-ask" data-arg="1">🗑 Löschen</button><button class="btn sm ghost" data-act="mtl-tr-cancel">Fertig</button></div>`
       }</div>`;
   }
   const ask = S.mtlAsk && S.mtlAsk.date === date ? S.mtlAsk : null;
@@ -935,7 +935,9 @@ function startTrainEdit(key) {
   if (!b || b.kind !== "planned") return;
   releaseHandle();
   S.mtlMenu = null;
-  S.mtlTrain = { date, key, from: b.from, dur: b.to - b.from, scope: "day", shift: true, ask: false };
+  // Geltung und „mitverschieben“ wie zuletzt gewählt (1.141.0, je Gerät gemerkt)
+  const last = S.prefs?.trainEdit ?? {};
+  S.mtlTrain = { date, key, from: b.from, dur: b.to - b.from, scope: last.scope === "series" ? "series" : "day", shift: last.shift !== false, ask: false };
   X.rerender();
   requestAnimationFrame(() => document.querySelector(".mtl-panel--train")?.scrollIntoView({ block: "center", behavior: "smooth" }));
 }
@@ -1712,7 +1714,17 @@ export const timelineActions = {
 /** Auswahl der Mahlzeit im Fenster des Knopfes; true = behandelt. */
 export function timelineChange(el) {
   if (el.dataset?.diary === "mtl-tr") {
-    readTrainForm();
+    const te = readTrainForm();
+    // Geltung und „Workout-Mahlzeiten mitverschieben“ speichern sofort als Auswahl dieses Geräts
+    // (1.141.0) – sie gelten für die Änderungen an Beginn und Dauer und beim nächsten Bearbeiten
+    if (te && (el.name === "mtl-tr-scope" || el.id === "mtl-tr-shift")) {
+      const prev = X.S.prefs?.trainEdit ?? {};
+      if (prev.scope !== te.scope || prev.shift !== te.shift) {
+        X.S.prefs = { ...(X.S.prefs ?? {}), trainEdit: { scope: te.scope, shift: te.shift } };
+        void X.saveNow?.();
+        X.toast(el.id === "mtl-tr-shift" ? (te.shift ? "Workout-Mahlzeiten werden mitverschoben" : "Workout-Mahlzeiten bleiben stehen") : te.scope === "series" ? "Änderungen gelten jede Woche" : "Änderungen gelten nur an diesem Tag");
+      }
+    }
     X.rerender();
     return true;
   }

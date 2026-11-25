@@ -111,7 +111,17 @@ function labScheduleCard(all, t) {
       <p class="lab-schedule__due ${plan.overdue ? "is-over" : ""}"><strong>${esc(D.formatDate(plan.due))}</strong> · ${esc(when)}</p>
       <p class="muted small">${plan.anchorKind === "change" ? "Letzte Dosisänderung" : "Beginn"} am ${esc(D.formatDate(plan.anchor))}${plan.lastDraw ? ` · letzte Abnahme am ${esc(D.formatDate(plan.lastDraw))}` : " · seitdem keine Abnahme"}</p>
       <p class="muted small">Werte: ${esc(LS.LAB_PANEL.map((p) => p.label).join(", "))}${plan.missing.length ? ` – bei der letzten Abnahme fehlten: <strong>${esc(plan.missing.join(", "))}</strong>` : ""}</p>
-      <p class="muted small card-info">${settings.weeksAfterChange} Wochen nach Beginn bzw. nach einer Dosisänderung, danach alle ${settings.months} Monate nach der letzten Abnahme. Die Abstände änderst du am PC (Superhuman → HRT). Keine ärztliche Empfehlung.</p>
+      <p class="muted small card-info">${settings.weeksAfterChange} Wochen nach Beginn bzw. nach einer Dosisänderung, danach alle ${settings.months} Monate nach der letzten Abnahme. Keine ärztliche Empfehlung – die Abstände legst du mit deiner Ärztin oder deinem Arzt fest.</p>
+      <details class="lab-schedule__edit">
+        <summary>Abstände ändern</summary>
+        <div class="grid2">
+          <div class="field"><label for="lab-weeks">Wochen nach Beginn/Änderung</label>
+            <input id="lab-weeks" type="number" inputmode="numeric" min="2" max="26" data-labsched="weeksAfterChange" value="${settings.weeksAfterChange}"></div>
+          <div class="field"><label for="lab-months">danach alle … Monate</label>
+            <input id="lab-months" type="number" inputmode="numeric" min="1" max="12" data-labsched="months" value="${settings.months}"></div>
+        </div>
+        <p class="muted small">Speichert sofort und geht mit „An den PC senden“ an den PC.</p>
+      </details>
     </section>`;
 }
 

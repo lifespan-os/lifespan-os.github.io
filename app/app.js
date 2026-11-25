@@ -28,6 +28,7 @@ import { initDaySwipe } from "./dayswipe.js";
 import { initLogs, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
 import { initInsights, viewInsights } from "./insightsview.js";
+import { initOneInput } from "./oneinput.js";
 import { initWeeklyReports } from "./weeklyreports.js";
 import { initTodos, todoChange, todoInput, viewChecklistEdit, viewTodos } from "./todos.js";
 import * as TD from "./todosdata.js";
@@ -476,6 +477,7 @@ initDaySwipe(
 initLogs(moduleCtx);
 
 initInsights(moduleCtx);
+initOneInput(moduleCtx);
 
 initExtras(moduleCtx);
 

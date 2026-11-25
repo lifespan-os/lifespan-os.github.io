@@ -22,6 +22,7 @@ import { overviewActions } from "./overview.js";
 import { parityActions } from "./parity.js";
 import { logsActions } from "./logs.js";
 import { insightsActions } from "./insightsview.js";
+import { oneInputActions } from "./oneinput.js";
 import { weeklyReportsActions } from "./weeklyreports.js";
 import { todoActions } from "./todos.js";
 import { healthActions } from "./health.js";
@@ -78,6 +79,7 @@ export const actions = {
   ...setupActions,
   ...logsActions,
   ...insightsActions,
+  ...oneInputActions,
   ...weeklyReportsActions,
   ...todoActions,
   ...icoachActions,

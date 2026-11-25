@@ -406,14 +406,7 @@ function detailHtml(g, active) {
     .map((e) => ({ e, m: byId.get(e.machine_id) }))
     .filter((r) => r.m && !r.m.archived)
     .sort((a, b) => G.numberCompare(a.e.number, b.e.number) || String(a.m.display_name).localeCompare(String(b.m.display_name), "de"));
-  const inGym = new Set(rows.map((r) => r.m.id));
-  const q = String(S.gymQuery ?? "").trim().toLowerCase();
-  const hits = q.length >= 2
-    ? S.catalog.machines
-        .filter((m) => !m.archived && !inGym.has(m.id))
-        .filter((m) => q.split(/\s+/).every((w) => `${m.display_name} ${m.manufacturer} ${m.series ?? ""} ${m.muscle_groups ?? ""}`.toLowerCase().includes(w)))
-        .slice(0, 25)
-    : [];
+  const hits = machineHits(S, S.gymQuery);
   const fact = (label, value) => `<p class="small"><span class="muted">${label}:</span> ${value}</p>`;
   const link = (text, url, external = false) =>
     url ? `<a href="${esc(url)}"${external ? ' target="_blank" rel="noopener noreferrer"' : ""}>${esc(text)}</a>` : esc(text);
@@ -438,7 +431,7 @@ function detailHtml(g, active) {
   <section class="card">
     <div class="wo-head"><h3>Maschinen (${rows.length})</h3></div>
     <div class="field"><label for="gym-q">Maschine hinzufügen</label>
-      <input id="gym-q" type="search" data-gym="query" placeholder="Name, Hersteller, Muskel …" value="${esc(S.gymQuery ?? "")}" autocomplete="off"></div>
+      <input id="gym-q" type="search" data-gym="query" placeholder="Name, Hersteller, Muskel oder Nummer …" value="${esc(S.gymQuery ?? "")}" autocomplete="off"></div>
     <div class="list" id="gym-hits">${hitsHtml(hits)}</div>
     ${
       rows.length
@@ -546,12 +539,36 @@ function zoomAccessCode(g, startBack = false) {
   return Boolean(front);
 }
 
+/**
+ * Treffer für „Maschine hinzufügen“ (seit 1.140.0 wie am PC 1.0.211): intelligente Suche über die
+ * ganze Maschinendatenbank, auch per Nummer (Studionummer, dasGym-Nummer, Artikelnummer; eine
+ * genau passende Nummer steht vorn). Maschinen, die schon im Gym stehen, sind markiert.
+ */
+function machineHits(S, query) {
+  const q = String(query ?? "").trim();
+  if (q.length < 2 && !/^\d+$/.test(q)) return [];
+  const numbers = new Map(G.gymEntries(S.catalog, S.gyms, S.gymSel).map((e) => [e.machine_id, String(e.number ?? "").trim()]));
+  const options = S.catalog.machines
+    .filter((m) => !m.archived)
+    .map((m) => ({
+      id: m.id,
+      label: String(m.display_name ?? ""),
+      detail: [m.manufacturer, m.series, m.muscle_groups].filter(Boolean).map(String).join(" "),
+      exact: [numbers.get(m.id), m.gym_number, m.article_number].map((x) => String(x ?? "").trim()).filter(Boolean),
+      m,
+      here: numbers.has(m.id),
+      number: numbers.get(m.id) || null,
+    }));
+  return D.smartFilter(options, q, 25).map((h) => h.option);
+}
+
 function hitsHtml(hits) {
   return hits
-    .map(
-      (m) => `<button class="item" data-act="gym-add" data-arg="${esc(m.id)}">${thumbButton(m.id, m.display_name, { inner: true })}<span class="main"><b>${esc(m.display_name)}</b>
-        <span class="muted small">${esc([m.manufacturer, m.series].filter(Boolean).join(" · "))}</span></span><span class="chev">+</span></button>`,
-    )
+    .map(({ m, here, number }) => {
+      const sub = [here ? `steht schon im Gym${number ? ` (Nr. ${number})` : ""}` : "", m.manufacturer, m.series].filter(Boolean).join(" · ");
+      return `<button class="item${here ? " is-here" : ""}" data-act="${here ? "gym-has" : "gym-add"}" data-arg="${esc(m.id)}">${thumbButton(m.id, m.display_name, { inner: true })}<span class="main"><b>${esc(m.display_name)}</b>
+        <span class="muted small">${esc(sub)}</span></span><span class="chev">${here ? "✓" : "+"}</span></button>`;
+    })
     .join("");
 }
 
@@ -715,6 +732,15 @@ export const gymsActions = {
     S.gymQuery = "";
     X.rerender();
   },
+  // Treffer, der schon im Gym steht (1.140.0): nur Hinweis, nichts doppelt anlegen
+  "gym-has": (el) => {
+    const S = X.S;
+    const m = S.catalog.machines.find((x) => x.id === el.dataset.arg);
+    const e = G.gymEntries(S.catalog, S.gyms, S.gymSel).find((x) => x.machine_id === el.dataset.arg);
+    const g = G.gymList(S.catalog, S.gyms).find((x) => x.id === S.gymSel);
+    const nr = String(e?.number ?? "").trim();
+    X.toast(`„${m?.display_name ?? "Maschine"}“ steht schon ${g?.name ? `in ${g.name}` : "im Gym"}${nr ? ` (Nr. ${nr})` : ""}.`);
+  },
   "gym-remove": async (el) => {
     G.removeMachine(X.S.catalog, X.S.gyms, X.S.gymSel, el.dataset.arg);
     await persist();
@@ -765,16 +791,8 @@ export function gymsInput(el) {
   }
   if (el.dataset?.gym === "query") {
     S.gymQuery = el.value;
-    const byId = new Set(G.gymEntries(S.catalog, S.gyms, S.gymSel).map((e) => e.machine_id));
-    const q = el.value.trim().toLowerCase();
-    const hits = q.length >= 2
-      ? S.catalog.machines
-          .filter((m) => !m.archived && !byId.has(m.id))
-          .filter((m) => q.split(/\s+/).every((w) => `${m.display_name} ${m.manufacturer} ${m.series ?? ""} ${m.muscle_groups ?? ""}`.toLowerCase().includes(w)))
-          .slice(0, 25)
-      : [];
     const box = document.getElementById("gym-hits");
-    if (box) box.innerHTML = hitsHtml(hits);
+    if (box) box.innerHTML = hitsHtml(machineHits(S, el.value));
     return true;
   }
   return false;

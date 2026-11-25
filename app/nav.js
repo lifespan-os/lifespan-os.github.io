@@ -197,10 +197,11 @@ export const QUICK = [
 ];
 
 /** `items` = Einträge in gewählter Reihenfolge (Settings → Schnellerfassung, 1.48.0). */
-export function quickSheetHtml(open, items = QUICK) {
+export function quickSheetHtml(open, items = QUICK, top = "") {
   return `<div class="quick-backdrop ${open ? "open" : ""}" data-act="quick-close"></div>
   <section class="quick-sheet ${open ? "open" : ""}" aria-label="Schnell erfassen" ${open ? "" : 'aria-hidden="true" inert'}>
     <h2 class="quick-sheet__title">Schnell erfassen</h2>
+    ${open ? top : ""}
     <div class="quick-sheet__grid">${items.map(
       (q) => `<button class="quick-sheet__item" data-act="quick-go" data-arg="${q.id}">${ICONS[q.icon]}<span>${q.label}</span></button>`,
     ).join("")}</div>

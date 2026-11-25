@@ -13,6 +13,9 @@
   /* Orange als Schrift auf Weiß (ausreichender Kontrast) */
   --orange-text: #b35a00;
   --ok: #1f9d5c;
+  /* Grün für Text und volle Flächen mit weißem Zeichen (Kontrast ≥ 4,5:1, Prüfrunde 1.141.0) */
+  --ok-text: #157a45;
+  --ok-strong: #17834b;
   --danger: #c93c3c;
   --shadow: 0 1px 2px rgba(15, 27, 45, .06);
   --radius: 14px;
@@ -589,7 +592,7 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .coverage-list li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; }
 .coverage-list li p { margin: 2px 0 0; }
 .coverage-list__icon { display: inline-flex; width: 20px; height: 20px; border-radius: 50%; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; background: #FFF4E8; color: var(--orange-text); }
-.coverage-list li.is-ok .coverage-list__icon { background: #E5F5EC; color: var(--ok); }
+.coverage-list li.is-ok .coverage-list__icon { background: #E5F5EC; color: var(--ok-text); }
 .note-list li + li { margin-top: 8px; }
 /* Checklisten (1.9.0) */
 .todo-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 10px 0; }
@@ -608,7 +611,7 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .todo-item__move .btn.sm, .todo-item__actions .btn.sm { min-height: 36px; min-width: 36px; padding: 4px 8px; }
 .todo-item__actions { display: flex; gap: 8px; }
 .todo-check { width: 32px; height: 32px; border-radius: 8px; border: 2px solid #c3cedc; background: var(--surface); font-weight: 800; color: #fff; }
-.todo-check.is-done { background: var(--ok); border-color: var(--ok); }
+.todo-check.is-done { background: var(--ok-strong); border-color: var(--ok-strong); }
 .todo-add { display: grid; gap: 8px; margin-top: 8px; }
 .todo-add__row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .todo-add__row select { flex: 1; min-width: 160px; }
@@ -617,7 +620,7 @@ button.water-glass:active { background: var(--c-sunken); border-color: var(--lin
 .status-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .status-grid li { display: grid; grid-template-columns: 24px 1fr; gap: 8px; align-items: start; }
 .status-grid li > span:last-child { display: grid; gap: 1px; }
-.status-icon { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; align-items: center; justify-content: center; font-size: .8rem; font-weight: 800; background: var(--ok); color: #fff; }
+.status-icon { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; align-items: center; justify-content: center; font-size: .8rem; font-weight: 800; background: var(--ok-strong); color: #fff; }
 .status-icon--open { background: transparent; border: 2px solid #c3cedc; }
 .todo-item.is-done .tag { display: inline-block; text-decoration: none; }
 
@@ -1019,6 +1022,9 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 1.5rem; letter-sp
 .btn.blue:active { background: var(--navy-2); }
 .tag { border-color: var(--line); }
 .item { border-color: #e1ebf1; }
+/* „Maschine hinzufügen“: Treffer, der schon im Gym steht (1.140.0) */
+.item.is-here { background: var(--surface-2, #f4f6fa); box-shadow: none; }
+.item.is-here .chev { color: var(--ok, #1a7f4b); }
 .num { color: var(--orange-text); font-family: var(--display); font-size: 1.15rem; }
 
 /* Reiter-Auswahl (1.20.0) im Sportstil */
@@ -1338,6 +1344,8 @@ html[data-theme="dark"] {
   --cyan: #3ec3e3;
   --orange-text: #f7b65e;
   --ok: #46c486;
+  --ok-text: #6fd9a4;
+  --ok-strong: #1f7a4c;
   --danger: #ff7b72;
   --shadow: 0 1px 2px rgba(0, 0, 0, .4);
   --c-protein: #7f9ff0; --c-carbs: #e0a54a; --c-fat: #49b8ad; --c-nutrition: #e0a54a;
@@ -1353,6 +1361,11 @@ html[data-theme="dark"] .segmented > button.is-active { background: var(--surfac
 html[data-theme="dark"] .balance--exact, html[data-theme="dark"] .day-pill--rest, html[data-theme="dark"] .day-status-banner--rest { background: #1b2f55; color: #b9cbf5; }
 html[data-theme="dark"] .quick-sheet__item:active { background: #3a2a14; }
 html[data-theme="dark"] .tabbar .tabbar__fab { background: var(--surface); }
+/* Prüfrunde Dunkelmodus (1.141.0): helle Flächen mit hellem Text */
+html[data-theme="dark"] .coverage-list__icon { background: #3a2a14; color: var(--orange-text); }
+html[data-theme="dark"] .coverage-list li.is-ok .coverage-list__icon { background: #12352a; color: var(--ok-text); }
+html[data-theme="dark"] .todo-week__day.is-active { background: var(--surface-2); color: var(--fg); }
+html[data-theme="dark"] .bottom { background: rgba(15, 33, 51, .96); box-shadow: 0 -2px 10px rgba(0, 0, 0, .4); }
 html[data-theme="dark"] .tabbar .tabbar__fab:active { background: #3a2a14; }
 html[data-theme="dark"] input:not([type]), html[data-theme="dark"] input[type="text"], html[data-theme="dark"] input[type="search"], html[data-theme="dark"] input[type="number"],
 html[data-theme="dark"] input[type="date"], html[data-theme="dark"] input[type="time"], html[data-theme="dark"] input[type="datetime-local"], html[data-theme="dark"] textarea, html[data-theme="dark"] select { background: var(--c-sunken); color: var(--fg); border-color: var(--line); }
@@ -1866,6 +1879,7 @@ body.mapzoom-open { overflow: hidden; }
 .lng-tile__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 6px; }
 .lng-tile__title { min-width: 0; font-size: .86rem; font-weight: 700; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; }
 .lng-tile__level { font-size: .74rem; font-weight: 700; color: var(--tile-level); }
+.lng-tile.is-good .lng-tile__level, .lng-tile.is-excellent .lng-tile__level { color: var(--ok-text); }
 .lng-tile__value { font-size: 1.6rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .lng-tile__unit { font-size: .82rem; font-weight: 500; color: var(--muted); }
 .lng-tile__bar { position: relative; height: 6px; margin: 6px 0 3px; border-radius: 999px; background: linear-gradient(90deg, var(--danger) 0%, var(--orange) 30%, var(--line) 50%, var(--ok) 75%); }
@@ -2504,3 +2518,19 @@ button.pcal-done { display: flex; align-items: center; justify-content: space-be
 #quick-meal > .btn.primary { margin-top: 10px; }
 html[data-theme="dark"] .plt-tag--meal { color: #e0aa55; }
 html[data-theme="dark"] .plt-tag--caffeine { color: #c8956a; background: #3a2a1c; }
+
+/* Insights → Ziele: Vorschläge aus den Hauptzielen (1.141.0) */
+.goal-suggest { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 12px 0; background: var(--surface-2); }
+.goal-suggest h4 { margin: 0 0 8px; font-size: .95rem; }
+.goal-suggest__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.goal-suggest__row + .goal-suggest__row { border-top: 1px solid var(--line); }
+.goal-suggest__row .btn { flex: none; }
+
+/* Schnellerfassung: „Eingabe für alles“ (1.141.0) */
+.one-input { margin: 0 0 14px; }
+.one-input__label { display: block; font-weight: 650; margin-bottom: 6px; }
+.one-input__row { display: flex; gap: 8px; }
+.one-input__row input { flex: 1 1 auto; min-width: 0; }
+.one-input__row .btn { flex: none; }
+.one-input__preview { margin: 6px 0 0; min-height: 1.2em; }
+.one-input__preview.is-error { color: var(--warn, #b45309); }

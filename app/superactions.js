@@ -378,6 +378,19 @@ export function rerenderLater() {
 export function superChange(el) {
   const S = X.S;
   const k = el.dataset ?? {};
+  // Nächste Laborkontrolle: Abstände ändern (1.141.0, wie PC; `ui.lab_schedule`)
+  if (k.labsched) {
+    const LS = D.labSchedule;
+    const key = LS.LAB_SCHEDULE_KEY;
+    S.pcsettings = PS.normSync(S.pcsettings);
+    const current = PS.effective(S.catalog, S.pcsettings, key);
+    const next = LS.parseLabSchedule(JSON.stringify({ ...LS.parseLabSchedule(current), [k.labsched]: Number(el.value) }));
+    if (PS.setSetting(S.pcsettings, key, JSON.stringify(next), current)) {
+      void X.store.set("pcsettings", S.pcsettings).then(() => X.toast(`Laborabstände: ${next.weeksAfterChange} Wochen, dann alle ${next.months} Monate`));
+    }
+    X.rerender();
+    return true;
+  }
   if (k.super === "range") {
     S.hrtRange = el.value;
     X.rerender();

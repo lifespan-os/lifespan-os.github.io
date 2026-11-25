@@ -36,7 +36,10 @@ export function normPrefs(prefs) {
   const overviewMode = p.overviewMode === "full" ? "full" : "reduced";
   // Ausgeblendete Punkte im Tagesablauf (1.130.0, wie PC 1.0.204): nur bekannte Schlüssel
   const flowHidden = Array.isArray(p.flowHidden) ? p.flowHidden.filter((x) => ["check", "weigh", "meals", "training", "water", "steps", "open"].includes(x)) : [];
-  return { ...p, theme, barLabels, reminders, quick, transfer, remShown, overviewMode, flowHidden };
+  // Tagesverlauf → geplantes Training bearbeiten: zuletzt gewählte Geltung und „mitverschieben“ (1.141.0)
+  const te = p.trainEdit ?? {};
+  const trainEdit = { scope: te.scope === "series" ? "series" : "day", shift: te.shift !== false };
+  return { ...p, theme, barLabels, reminders, quick, transfer, remShown, overviewMode, flowHidden, trainEdit };
 }
 
 /** Wirksames Design: „system“ folgt dem Handy. */

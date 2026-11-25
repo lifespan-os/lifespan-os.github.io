@@ -13,6 +13,8 @@ import { contextHtml as glucoseContextHtml, readingsOf } from "./glucose.js";
 import * as O from "./pcoverview.js";
 import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
+import * as GL from "./goals.js";
+import * as P from "./pcdb.js";
 import { weeklyReportsCard } from "./weeklyreports.js";
 import { dataQualityCard, goalAdviceCard } from "./extras.js";
 import { targetGoalsCard } from "./goalsparity.js";
@@ -210,6 +212,15 @@ function coverageCard(data, t) {
 
 const AREA_TITLES = { sleep: "Schlaf", recovery: "Regeneration", training: "Training", nutrition: "Ernährung", body: "Körper" };
 
+/** „Als Kalorienziel übernehmen“ (1.141.0, wie PC `AdaptiveTdeeCard`): ab heute festes Kalorienziel,
+ *  übrige Ziele bleiben; ein eingestelltes Defizit bzw. Überschuss in kcal wird mitgerechnet. */
+function adoptTdeeHtml(tdee, t) {
+  const g = P.goalFor(buildDb(), t);
+  if (!g) return `<p class="muted small">Zum Übernehmen zuerst Tagesziele anlegen (Settings → Tagesziele).</p>`;
+  const kcal = Math.round(tdee + (g.energyAdjustKcal ?? 0));
+  return `<button class="btn sm" data-act="ins-tdee-adopt" data-arg="${kcal}">Als Kalorienziel übernehmen (${D.formatNumber(kcal, 0)} kcal)</button>`;
+}
+
 function adaptiveTdeeCard(data, today) {
   const A = D.adaptiveTdee;
   const r = A.adaptiveTdee(data.nutrition, data.measurements.filter((m) => m.metricId === "00000000-0000-7000-8000-000000000001"), today);
@@ -217,7 +228,7 @@ function adaptiveTdeeCard(data, today) {
   const body =
     r.kind === "insufficient"
       ? `<p class="muted">Dafür braucht es mindestens ${A.TDEE_MIN_SPAN} Tage mit ${A.TDEE_MIN_FOOD_DAYS} vollständig erfassten Ernährungstagen und ${A.TDEE_MIN_WEIGHINS} Wiegungen (bisher ${r.spanDays} Tage, ${r.foodDays} Ernährungstage, ${r.weighIns} Wiegungen).</p>`
-      : `<p><strong>${F(r.tdee)} kcal</strong> je Tag – Aufnahme Ø ${F(r.intakeAvg)} kcal, Gewicht ${r.trendKgPerWeek >= 0 ? "+" : "−"}${F(Math.abs(r.trendKgPerWeek), 2)} kg je Woche.</p><p class="muted small">Als Kalorienziel übernehmen geht am PC (Insights → Echter Verbrauch).</p>`;
+      : `<p><strong>${F(r.tdee)} kcal</strong> je Tag – Aufnahme Ø ${F(r.intakeAvg)} kcal, Gewicht ${r.trendKgPerWeek >= 0 ? "+" : "−"}${F(Math.abs(r.trendKgPerWeek), 2)} kg je Woche.</p>${adoptTdeeHtml(r.tdee, today)}`;
   return card(
     "adaptive-tdee",
     "Echter Verbrauch",
@@ -347,6 +358,22 @@ export function viewInsights() {
 }
 
 export const insightsActions = {
+  "ins-tdee-adopt": async (el) => {
+    const t = today();
+    const db = buildDb();
+    const g = P.goalFor(db, t);
+    if (!g) return;
+    const draft = { ...GL.toDraft(g, t), energyMode: "fixed", energyKcal: String(Number(el.dataset.arg)), direction: "maintain", adjustAmount: "" };
+    X.S.goals = GL.normGoals(X.S.goals);
+    try {
+      GL.saveGoal(X.S.goals, db.goals, draft, { uuid: X.uuid, now: new Date() });
+      await X.store.set("goals", X.S.goals);
+    } catch (e) {
+      return X.toast(e.message, true);
+    }
+    X.toast(`Ab heute gilt ${D.formatNumber(Number(el.dataset.arg), 0)} kcal als Kalorienziel (Settings → Tagesziele).`);
+    X.rerender();
+  },
   "ins-week": (el) => {
     const S = X.S;
     const t = today();

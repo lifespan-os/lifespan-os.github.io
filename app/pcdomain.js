@@ -39,14 +39,20 @@ function formatDate(value2) {
   const date = typeof value2 === "string" ? parseIsoDate(value2) : value2;
   return dateFormatter.format(date);
 }
+var numberFormatters = /* @__PURE__ */ new Map();
 function formatNumber(value2, fractionDigits = 0) {
   if (!Number.isFinite(value2)) {
     return "\u2013";
   }
-  return new Intl.NumberFormat(LOCALE, {
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits
-  }).format(value2);
+  let nf = numberFormatters.get(fractionDigits);
+  if (!nf) {
+    nf = new Intl.NumberFormat(LOCALE, {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits
+    });
+    numberFormatters.set(fractionDigits, nf);
+  }
+  return nf.format(value2);
 }
 var DECIMAL = /^[-+−]?\d+(?:[.,]\d+)?$/;
 var INTEGER = /^-?\d+$/;
@@ -2362,8 +2368,8 @@ function machineCardioKind(m) {
   return "other";
 }
 function sameCardioDevice(a, b) {
-  const norm4 = (k) => k === "walk" ? "run" : k;
-  return norm4(a) === norm4(b);
+  const norm5 = (k) => k === "walk" ? "run" : k;
+  return norm5(a) === norm5(b);
 }
 
 // src/domain/workoutDraft.ts
@@ -13690,9 +13696,9 @@ function fieldOfRow(row) {
   const text2 = normalizeLabel(row);
   if (text2.length < 3) return null;
   let best = null;
-  for (const { field, norm: norm4 } of NORMALIZED) {
-    if (text2.length > norm4.length + 4) continue;
-    const score = 1 - editDistance(text2, norm4) / Math.max(text2.length, norm4.length);
+  for (const { field, norm: norm5 } of NORMALIZED) {
+    if (text2.length > norm5.length + 4) continue;
+    const score = 1 - editDistance(text2, norm5) / Math.max(text2.length, norm5.length);
     if (!best || score > best.score) best = { field, score };
   }
   return best && best.score >= 0.7 ? best.field : null;
@@ -22675,6 +22681,268 @@ function goalProgress2(goal, series2, today, decimals = 1) {
   };
 }
 
+// src/domain/goalSuggestions.ts
+var goalSuggestions_exports = {};
+__export(goalSuggestions_exports, {
+  BODY_FAT_ID: () => BODY_FAT_ID,
+  HRV_ID: () => HRV_ID,
+  MUSCLE_MASS_ID: () => MUSCLE_MASS_ID,
+  SUGGEST_WEEKS: () => SUGGEST_WEEKS,
+  VO2MAX_ID: () => VO2MAX_ID,
+  goalSuggestions: () => goalSuggestions
+});
+var SUGGEST_WEEKS = 12;
+var BODY_FAT_ID = "00000000-0000-7000-8000-000000000002";
+var MUSCLE_MASS_ID = "00000000-0000-7000-8000-000000000003";
+var VO2MAX_ID = "00000000-0000-7000-8000-000000000016";
+var HRV_ID = "00000000-0000-7000-8000-000000000019";
+var round1 = (v) => Math.round(v * 10) / 10;
+function goalSuggestions(i) {
+  const end = shiftDays(i.today, SUGGEST_WEEKS * 7);
+  const has3 = (kind, id3) => i.existing.some(
+    (g) => !g.archived && g.kind === kind && (g.metricId === id3 || g.exerciseId === id3)
+  );
+  const out = [];
+  const metric = (mainGoal, id3, title, delta, unit) => {
+    const v = i.latest(id3);
+    if (v === null || has3("body_metric", id3)) return;
+    const target = round1(delta(v));
+    out.push({
+      key: `${mainGoal}:${id3}`,
+      mainGoal,
+      text: `${title}: von ${String(round1(v)).replace(".", ",")} auf ${String(target).replace(".", ",")} ${unit} in ${SUGGEST_WEEKS} Wochen`,
+      input: {
+        id: null,
+        title,
+        kind: "body_metric",
+        exerciseId: null,
+        metricId: id3,
+        startDate: i.today,
+        startValue: v,
+        targetValue: target,
+        targetDate: end,
+        milestones: [],
+        archived: false,
+        notes: `Vorschlag aus dem Hauptziel (${SUGGEST_WEEKS} Wochen)`
+      }
+    });
+  };
+  const e1rm = (mainGoal, pct) => {
+    const t = i.topExercise;
+    if (!t || has3("exercise_e1rm", t.id) || out.some((s) => s.key === `e1rm:${t.id}`)) return;
+    const target = round1(t.e1rm * (1 + pct / 100));
+    out.push({
+      key: `e1rm:${t.id}`,
+      mainGoal,
+      text: `${t.name}: gesch\xE4tztes 1RM von ${String(round1(t.e1rm)).replace(".", ",")} auf ${String(target).replace(".", ",")} kg (+${String(pct).replace(".", ",")} %) in ${SUGGEST_WEEKS} Wochen`,
+      input: {
+        id: null,
+        title: `${t.name} 1RM`,
+        kind: "exercise_e1rm",
+        exerciseId: t.id,
+        metricId: null,
+        startDate: i.today,
+        startValue: t.e1rm,
+        targetValue: target,
+        targetDate: end,
+        milestones: [],
+        archived: false,
+        notes: `Vorschlag aus dem Hauptziel (${SUGGEST_WEEKS} Wochen)`
+      }
+    });
+  };
+  for (const g of i.mainGoals) {
+    if (g === "fat_loss") metric(g, BODY_FAT_ID, "K\xF6rperfett", (v) => Math.max(3, v - 2), "%");
+    if (g === "muscle_gain") {
+      metric(g, MUSCLE_MASS_ID, "Skelettmuskelmasse", (v) => v + 1, "kg");
+      e1rm(g, 5);
+    }
+    if (g === "strength") e1rm(g, 7.5);
+    if (g === "endurance") metric(g, VO2MAX_ID, "VO2max", (v) => v + 2, "ml/kg/min");
+    if (g === "recovery") metric(g, HRV_ID, "HRV", (v) => v * 1.05, "ms");
+    if (g === "longevity") metric(g, VO2MAX_ID, "VO2max", (v) => v + 1, "ml/kg/min");
+    if (g === "sleep")
+      out.push({
+        key: "sleep:rule",
+        mainGoal: g,
+        text: "Schlaf: an 5 von 7 N\xE4chten mindestens 7 Stunden und Zubettgehen jeden Abend innerhalb \xB1 30 Minuten deiner \xFCblichen Zeit (Insights \u2192 Schlaf-Regelm\xE4\xDFigkeit zeigt den Stand).",
+        input: null
+      });
+  }
+  return out;
+}
+
+// src/domain/oneInput.ts
+var oneInput_exports = {};
+__export(oneInput_exports, {
+  ONE_INPUT_EXAMPLES: () => ONE_INPUT_EXAMPLES,
+  parseOneInput: () => parseOneInput
+});
+
+// src/domain/quickEntry.ts
+var quickEntry_exports = {};
+__export(quickEntry_exports, {
+  QUICK_CAFFEINE_LINKS: () => QUICK_CAFFEINE_LINKS,
+  WEIGHT_MAX_KG: () => WEIGHT_MAX_KG,
+  WEIGHT_MIN_KG: () => WEIGHT_MIN_KG,
+  addFastValue: () => addFastValue,
+  addFastValues: () => addFastValues,
+  caffeineEntry: () => caffeineEntry,
+  fastMacroFields: () => fastMacroFields,
+  fastNutrientGroups: () => fastNutrientGroups,
+  fastOtherGroups: () => fastOtherGroups,
+  otherIntakes: () => otherIntakes,
+  parseWeight: () => parseWeight,
+  stackChecklist: () => stackChecklist
+});
+function stackChecklist(stacks, intakes) {
+  return stacks.filter((s) => !s.archived).sort((a, b) => a.position - b.position || a.name.localeCompare(b.name, "de")).map((s) => {
+    const ids = intakes.filter((i) => i.stackId === s.id).map((i) => i.id);
+    return { stackId: s.id, name: s.name, intakeIds: ids, taken: ids.length > 0 };
+  });
+}
+function otherIntakes(stacks, intakes, caffeineIntakeIds = []) {
+  const ids = new Set(stacks.filter((s) => !s.archived).map((s) => s.id));
+  const caffeine = new Set(caffeineIntakeIds);
+  return intakes.filter((i) => (i.stackId === null || !ids.has(i.stackId)) && !caffeine.has(i.id));
+}
+var QUICK_CAFFEINE_LINKS = { inWater: true, toSupplements: true };
+var WEIGHT_MIN_KG = 20;
+var WEIGHT_MAX_KG = 400;
+function parseWeight(text2) {
+  const t = text2.trim().replace(",", ".");
+  if (t === "") return { ok: false, error: "Bitte ein Gewicht eingeben." };
+  const n3 = Number(t);
+  if (!Number.isFinite(n3)) return { ok: false, error: "Bitte eine Zahl eingeben, z. B. 82,4." };
+  if (n3 < WEIGHT_MIN_KG || n3 > WEIGHT_MAX_KG) {
+    return {
+      ok: false,
+      error: `Das Gewicht muss zwischen ${WEIGHT_MIN_KG} und ${WEIGHT_MAX_KG} kg liegen.`
+    };
+  }
+  return { ok: true, kg: Math.round(n3 * 10) / 10 };
+}
+function caffeineEntry(drinkId, time, amount) {
+  const r2 = buildIntake({ drinkId, time, amount });
+  if (!r2.ok) return r2;
+  const drink2 = findDrink(r2.intake.drinkId);
+  return {
+    ok: true,
+    entry: {
+      drinkId: r2.intake.drinkId,
+      label: drink2?.label ?? r2.intake.drinkId,
+      time: r2.intake.time,
+      ml: r2.intake.ml,
+      mg: Math.round(r2.intake.mg * 10) / 10
+    }
+  };
+}
+function fastNutrientGroups(catalog) {
+  return catalog.groups.map((g) => ({ label: g.label, nutrients: catalog.nutrients.filter((n3) => n3.group === g.key) })).filter((g) => g.nutrients.length > 0);
+}
+function fastMacroFields(catalog) {
+  return catalog.nutrients.filter((n3) => n3.group === MACRO_GROUP);
+}
+function fastOtherGroups(catalog) {
+  return fastNutrientGroups(catalog).filter(
+    (g) => g.nutrients.every((n3) => n3.group !== MACRO_GROUP)
+  );
+}
+function addFastValues(entry2, date, amounts) {
+  const values = { ...entry2?.values ?? {} };
+  const totals4 = {};
+  for (const [key, amount] of Object.entries(amounts)) {
+    if (key === "") return { ok: false, error: "Bitte einen N\xE4hrwert w\xE4hlen." };
+    if (Number.isNaN(amount)) continue;
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return { ok: false, error: "Bitte eine Menge gr\xF6\xDFer als 0 eingeben.", key };
+    }
+    const total = Math.round(((values[key] ?? 0) + amount) * 1e3) / 1e3;
+    values[key] = total;
+    totals4[key] = total;
+  }
+  if (Object.keys(totals4).length === 0) {
+    return { ok: false, error: "Bitte mindestens eine Menge eingeben." };
+  }
+  return { ok: true, totals: totals4, input: { date, notes: entry2?.notes ?? null, values } };
+}
+function addFastValue(entry2, date, key, amount) {
+  if (key === "") return { ok: false, error: "Bitte einen N\xE4hrwert w\xE4hlen." };
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { ok: false, error: "Bitte eine Menge gr\xF6\xDFer als 0 eingeben." };
+  }
+  const r2 = addFastValues(entry2, date, { [key]: amount });
+  return r2.ok ? { ok: true, input: r2.input, total: r2.totals[key] ?? amount } : r2;
+}
+
+// src/domain/oneInput.ts
+var ONE_INPUT_EXAMPLES = "82,4 kg \xB7 2 Glas Wasser \xB7 500 ml \xB7 Espresso \xB7 Kaffee 250 ml \xB7 Protein 30";
+var DRINK_WORDS = {
+  espresso: ["espresso"],
+  "flat-white": ["flat white", "flatwhite", "cappuccino", "latte"],
+  filter: ["filterkaffee", "kaffee", "coffee"],
+  monster: ["monster"],
+  "red-bull": ["red bull", "redbull"],
+  "black-tea": ["schwarzer tee", "schwarztee"],
+  "green-tea": ["gr\xFCner tee", "gr\xFCntee"],
+  "pre-workout": ["pre-workout", "preworkout", "pre workout"]
+};
+var norm4 = (t) => t.trim().toLowerCase().replace(/\s+/g, " ");
+var numberIn = (t) => {
+  const m = /(\d+(?:[.,]\d+)?)/.exec(t);
+  return m ? Number(m[1].replace(",", ".")) : null;
+};
+function parseOneInput(text2, ctx) {
+  const t = norm4(text2);
+  if (t === "") return { ok: false, error: `Beispiele: ${ONE_INPUT_EXAMPLES}` };
+  const num3 = numberIn(t);
+  if (/\bkg\b/.test(t) || /^gewicht\b/.test(t) || /^\d+(?:[.,]\d+)?$/.test(t)) {
+    if (num3 === null) return { ok: false, error: "Bitte ein Gewicht eingeben, z. B. 82,4 kg." };
+    const w = parseWeight(String(num3));
+    return w.ok ? { ok: true, intent: { kind: "weight", kg: w.kg } } : { ok: false, error: w.error };
+  }
+  for (const d of ctx.drinks ?? CAFFEINE_DRINKS) {
+    const words = DRINK_WORDS[d.id] ?? [norm4(d.label)];
+    if (!words.some((w) => t.includes(w))) continue;
+    const free = d.portionMl === null;
+    const amount = num3 ?? (free ? d.portionMg : d.portionMl);
+    if (amount === null || !(amount > 0))
+      return { ok: false, error: `${d.label}: bitte die Menge angeben.` };
+    return { ok: true, intent: { kind: "caffeine", drinkId: d.id, label: d.label, amount } };
+  }
+  const ml = /(\d+(?:[.,]\d+)?)\s*(ml|l)\b/.exec(t);
+  if (ml || /\bwasser\b|\bglas\b|\bgläser\b/.test(t)) {
+    let glasses;
+    if (ml) {
+      const v = Number(ml[1].replace(",", ".")) * (ml[2] === "l" ? 1e3 : 1);
+      glasses = Math.max(1, Math.round(v / Math.max(1, ctx.glassMl)));
+    } else glasses = num3 !== null ? Math.round(num3) : 1;
+    if (!(glasses >= 1 && glasses <= 20))
+      return { ok: false, error: "Wasser: 1 bis 20 Gl\xE4ser auf einmal." };
+    return { ok: true, intent: { kind: "water", glasses } };
+  }
+  if (num3 !== null) {
+    const words = t.replace(/(\d+(?:[.,]\d+)?)\s*(g|mg|µg|kcal)?/g, " ").trim();
+    const hit = ctx.nutrients.find((n3) => {
+      const l = norm4(n3.label);
+      return words.length >= 3 && (l === words || l.startsWith(words) || words.startsWith(l));
+    });
+    if (hit && num3 > 0)
+      return {
+        ok: true,
+        intent: { kind: "fast", key: hit.key, label: hit.label, unit: hit.unit, amount: num3 }
+      };
+  }
+  const stacks = ctx.stacks.filter((s) => norm4(s.name).includes(t) || t.includes(norm4(s.name)));
+  if (stacks.length === 1) {
+    const s = stacks[0];
+    return { ok: true, intent: { kind: "stack", stackId: s.stackId, name: s.name } };
+  }
+  if (stacks.length > 1)
+    return { ok: false, error: `Mehrere Stacks passen: ${stacks.map((s) => s.name).join(", ")}.` };
+  return { ok: false, error: `Nicht erkannt. Beispiele: ${ONE_INPUT_EXAMPLES}` };
+}
+
 // src/domain/mealPlan.ts
 var mealPlan_exports = {};
 __export(mealPlan_exports, {
@@ -23145,7 +23413,7 @@ function emptyQuickForm() {
 function quickIsEmpty(f) {
   return QUICK_FIELDS.every((d) => f[d.field].trim() === "");
 }
-var round1 = (x) => Math.round(x * 10) / 10;
+var round12 = (x) => Math.round(x * 10) / 10;
 function checkQuick(f, strict = false) {
   const errors = {};
   const num3 = {};
@@ -23174,7 +23442,7 @@ function checkQuick(f, strict = false) {
   let kcal3 = num3.kcal ?? null;
   let kcalDerived = false;
   if (kcal3 === null && num3.kj !== void 0) {
-    kcal3 = round1(num3.kj / KJ_PER_KCAL);
+    kcal3 = round12(num3.kj / KJ_PER_KCAL);
     kcalDerived = true;
   }
   if (kcal3 === null && num3.fat !== void 0 && num3.carbs !== void 0 && num3.protein !== void 0) {
@@ -23927,7 +24195,7 @@ function normalCdf(z) {
   const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-(z * z) / 2);
   return z >= 0 ? (1 + y) / 2 : (1 - y) / 2;
 }
-var round12 = (n3) => Math.round(n3 * 10) / 10;
+var round13 = (n3) => Math.round(n3 * 10) / 10;
 function findNorm(norms, sex, ageYears, heightCm) {
   const group = norms.filter((n3) => n3.sex === sex && ageYears >= n3.age_min && ageYears <= n3.age_max).sort((a, b) => a.height_min_cm - b.height_min_cm);
   if (group.length === 0) return null;
@@ -23938,31 +24206,31 @@ function findNorm(norms, sex, ageYears, heightCm) {
   const first = group[0];
   const last = group[group.length - 1];
   if (!first || !last) return null;
-  const norm4 = heightCm < first.height_min_cm ? first : last;
-  return { norm: norm4, heightClamped: true };
+  const norm5 = heightCm < first.height_min_cm ? first : last;
+  return { norm: norm5, heightClamped: true };
 }
 function evaluateGrip(norms, input) {
   const found = findNorm(norms, input.sex, input.ageYears, input.heightCm);
   if (!found) return null;
-  const { norm: norm4, heightClamped } = found;
-  const averageKg = round12((input.leftKg + input.rightKg) / 2);
-  const zScore = (averageKg - norm4.mean_kg) / norm4.sd_kg;
-  const percentile = round12(normalCdf(zScore) * 100);
+  const { norm: norm5, heightClamped } = found;
+  const averageKg = round13((input.leftKg + input.rightKg) / 2);
+  const zScore = (averageKg - norm5.mean_kg) / norm5.sd_kg;
+  const percentile = round13(normalCdf(zScore) * 100);
   const category = CATEGORY_BOUNDS.find((b) => percentile >= b.minPercentile).category;
   const nextBound = [...CATEGORY_BOUNDS].reverse().find((b) => b.minPercentile > percentile);
   let kgToNextLevel = null;
   if (nextBound) {
-    const target = nextBound.minPercentile === 10 ? norm4.p10_kg : nextBound.minPercentile === 90 ? norm4.p90_kg : norm4.mean_kg + (Z[nextBound.minPercentile] ?? 0) * norm4.sd_kg;
-    kgToNextLevel = round12(Math.max(0, target - averageKg));
+    const target = nextBound.minPercentile === 10 ? norm5.p10_kg : nextBound.minPercentile === 90 ? norm5.p90_kg : norm5.mean_kg + (Z[nextBound.minPercentile] ?? 0) * norm5.sd_kg;
+    kgToNextLevel = round13(Math.max(0, target - averageKg));
   }
   return {
     averageKg,
-    norm: norm4,
+    norm: norm5,
     percentile,
     zScore: Math.round(zScore * 100) / 100,
     category,
-    diffToMeanKg: round12(averageKg - norm4.mean_kg),
-    percentOfMean: Math.round(averageKg / norm4.mean_kg * 100),
+    diffToMeanKg: round13(averageKg - norm5.mean_kg),
+    percentOfMean: Math.round(averageKg / norm5.mean_kg * 100),
     kgToNextLevel,
     heightClamped,
     asymmetry: evaluateAsymmetry(input.leftKg, input.rightKg, input.dominantHand)
@@ -23971,7 +24239,7 @@ function evaluateGrip(norms, input) {
 function evaluateAsymmetry(leftKg, rightKg, dominant) {
   const strong = Math.max(leftKg, rightKg);
   const weak = Math.min(leftKg, rightKg);
-  const percent = weak > 0 ? round12((strong - weak) / weak * 100) : 0;
+  const percent = weak > 0 ? round13((strong - weak) / weak * 100) : 0;
   const strongerHand = leftKg === rightKg ? "equal" : leftKg > rightKg ? "left" : "right";
   let message = null;
   const shown = String(percent).replace(".", ",");
@@ -28719,7 +28987,7 @@ function dayNumber5(date) {
 function weekday(date) {
   return (dayNumber5(date) + 3) % 7;
 }
-var round13 = (v) => Math.round(v * 10) / 10;
+var round14 = (v) => Math.round(v * 10) / 10;
 function regularity(nights) {
   const pts = points(nights);
   if (pts.length < MIN_NIGHTS2) return null;
@@ -28736,11 +29004,11 @@ function regularity(nights) {
     meanBed: axisClock(mean7(pts.map((p) => p.bed))),
     meanWake: axisClock(mean7(pts.map((p) => p.wake))),
     meanMid: axisClock(mean7(pts.map((p) => p.mid))),
-    sdBedMin: round13(sampleSd(pts.map((p) => p.bed))),
-    sdWakeMin: round13(sampleSd(pts.map((p) => p.wake))),
-    sdMidMin: round13(sampleSd(pts.map((p) => p.mid))),
-    meanShiftMin: shifts.length ? round13(mean7(shifts)) : null,
-    socialJetlagMin: weekend.length && workdays.length ? round13(mean7(weekend) - mean7(workdays)) : null
+    sdBedMin: round14(sampleSd(pts.map((p) => p.bed))),
+    sdWakeMin: round14(sampleSd(pts.map((p) => p.wake))),
+    sdMidMin: round14(sampleSd(pts.map((p) => p.mid))),
+    meanShiftMin: shifts.length ? round14(mean7(shifts)) : null,
+    socialJetlagMin: weekend.length && workdays.length ? round14(mean7(weekend) - mean7(workdays)) : null
   };
 }
 
@@ -33686,6 +33954,7 @@ export {
   goalAdvice_exports as goalAdvice,
   goalGlasses,
   goalProgress,
+  goalSuggestions_exports as goalSuggestions,
   gramsFromPercent,
   gripTiming_exports as gripTiming,
   groupInsights,
@@ -33750,6 +34019,7 @@ export {
   nutritionExport_exports as nutritionExport,
   nutritionExportPdf_exports as nutritionExportPdf,
   onboarding_exports as onboarding,
+  oneInput_exports as oneInput,
   openItems_exports as openItems,
   optionalOf,
   overviewToday_exports as overviewToday,
@@ -33781,6 +34051,7 @@ export {
   progressText,
   protocol_exports as protocol,
   protocols_exports as protocols,
+  quickEntry_exports as quickEntry,
   quickFill_exports as quickFill,
   readXlsx,
   recordHistory_exports as recordHistory,

@@ -488,9 +488,9 @@ export function mealsCard(slots, fast, date, db) {
     const pk = pickKey(slot);
     const picked = new Set(X.S.mealPick?.[pk] ?? []);
     const act = X.S.mealAct?.pk === pk ? X.S.mealAct : null;
-    // Wie am PC: gefüllte Mahlzeiten anfangs zugeklappt, leere aufgeklappt; Wahl bleibt je Mahlzeit
     const key = slot.ref.name ? N.extraKey(slot.ref.name) : slot.ref.mealType;
-    const expanded = X.S.mealOpen?.[key] ?? !has;
+    // Voreinstellung (1.150.0, Wunsch des Nutzers): alle Mahlzeiten zugeklappt, auch leere
+    const expanded = X.S.mealOpen?.[key] ?? false;
     return `<div class="meal-slot ${has ? "" : "is-empty"} ${expanded ? "" : "meal-slot--collapsed"}" data-meal-key="${esc(key)}">
       <div class="meal-slot__head"><button type="button" class="meal-slot__toggle" data-act="meal-toggle" data-arg="${esc(key)}|${expanded ? 0 : 1}" aria-expanded="${expanded}" title="${expanded ? "Zuklappen" : "Aufklappen"}"><span class="meal-slot__chevron" aria-hidden="true">${expanded ? "▾" : "▸"}</span><b>${esc(slot.title)}</b>${m?.time ? ` <span class="muted small">${esc(m.time)}</span>` : ""}</button>
         ${has ? `<span class="meal-slot__kcal">${esc(D.formatKcal(m.energyKcal))}</span>` : ""}</div>

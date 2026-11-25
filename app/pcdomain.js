@@ -26888,16 +26888,33 @@ __export(gymMachinePick_exports, {
   pickList: () => pickList
 });
 var MUSCLE_RUBRICS = [
-  { label: "Schultern", names: ["Schulter", "Schultern"] },
+  {
+    label: "Schultern",
+    names: [
+      "Schulter",
+      "Schultern",
+      "Vordere Schulter",
+      "Seitliche Schulter",
+      "Hintere Schulter"
+    ]
+  },
+  { label: "Brust", names: ["Brust", "Obere Brust"] },
+  { label: "R\xFCcken / Latissimus", names: ["R\xFCcken", "Latissimus"] },
   { label: "Beine / Quadrizeps", names: ["Beine", "Bein", "Quadrizeps", "Rectus Femoris"] },
   { label: "Waden / Tibialis", names: ["Wade", "Waden", "Tibialis"] },
   { label: "Unterarme", names: ["Unterarm", "Unterarme"] },
   {
     label: "Bauch / Core",
-    names: ["Core", "Bauch", "Bauchmuskulatur", "Seitliche Bauchmuskulatur"]
+    names: [
+      "Core",
+      "Bauch",
+      "Bauchmuskulatur",
+      "Seitliche Bauchmuskulatur",
+      "Gerade Bauchmuskulatur"
+    ]
   },
   { label: "Bizeps / Brachialis", names: ["Bizeps", "Brachialis"] },
-  { label: "Oberer R\xFCcken / Trapez", names: ["Trapez", "Oberer R\xFCcken"] }
+  { label: "Oberer R\xFCcken / Trapez", names: ["Trapez", "Oberer R\xFCcken", "Nacken"] }
 ];
 var rubricKey = (s) => s.trim().toLocaleLowerCase("de-DE");
 var RUBRIC_OF = new Map(

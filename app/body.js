@@ -11,7 +11,7 @@ import { longevityTabHtml } from "./longevityview.js";
 import { protocolsTabHtml } from "./protocolsview.js";
 import { dotHtml, openTabsOf } from "./openitems.js";
 import { autoAttrs, autoSaveHtml } from "./autosave.js";
-import { gripActions, gripPanelHtml, initGrip } from "./gripview.js";
+import { gripActions, gripLatestText, gripPanelHtml, initGrip } from "./gripview.js";
 import { heartActions, heartFieldsHtml, initHeartFields } from "./heartfields.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
@@ -229,6 +229,7 @@ export function viewBody() {
         : ""
     }
     <button class="btn primary block big-entry" data-act="body-day-open">Werte erfassen<small>Alle Messgrößen eines Tages auf einen Blick</small></button>
+    ${gripCardHtml()}
     ${
       sections.length
         ? sections
@@ -540,6 +541,17 @@ function humeMethod(category) {
   }
 }
 
+/**
+ * Griffkraft direkt unter Body & Longevity (1.150.0, Wunsch des Nutzers): letzter Wert und Knopf, der
+ * „Werte erfassen“ für heute öffnet und zur Griffkraft springt (wie GripPanel am PC).
+ */
+function gripCardHtml() {
+  const last = gripLatestText();
+  return `<section class="card body-grip"><div class="wo-head"><h3 data-open="grip">Griffkraft</h3></div>
+    <p class="muted small">${esc(last ?? "Noch keine Messung – beide Hände, jeweils der beste Versuch.")}</p>
+    <button class="btn block" data-act="body-grip-open">Griffkraft eintragen</button></section>`;
+}
+
 export function viewBodyEntry() {
   const st = S();
   if (!X.S.catalog?.body) return viewBody();
@@ -558,7 +570,7 @@ export function viewBodyEntry() {
     </section>
     ${d.errors.date ? `<p class="err small">${esc(d.errors.date)}</p>` : ""}
     ${scaleCard()}
-    <nav class="entry-jump">${sections.map((sec) => `<button type="button" data-act="body-jump" data-arg="be-${sec.category}">${esc(sec.label)}</button>`).join("")}</nav>
+    <nav class="entry-jump">${sections.map((sec) => `<button type="button" data-act="body-jump" data-arg="be-${sec.category}">${esc(sec.label)}</button>`).join("")}<button type="button" data-act="body-jump" data-arg="grip-panel">Griffkraft</button></nav>
     ${sections
       .map((sec) => {
         const methods = B.methodsInCategory(X.S.catalog, st.local, sec.category);
@@ -648,6 +660,11 @@ export const bodyActions = {
   "body-day-open": () => {
     S().day = B.dayForm(X.S.catalog, S().local, today());
     X.go("body-entry");
+  },
+  "body-grip-open": () => {
+    S().day = B.dayForm(X.S.catalog, S().local, today());
+    X.go("body-entry");
+    requestAnimationFrame(() => document.getElementById("grip-panel")?.scrollIntoView({ block: "start", behavior: "smooth" }));
   },
   "body-day-shift": (el) => {
     autoSave();

@@ -411,7 +411,7 @@ export function heartTabHtml(catalog, state = {}) {
           <label class="toggle"><input type="checkbox" data-heart="hideHr" ${hide.hr ? "" : "checked"} ${hd ? "" : "disabled"}> <span style="color:${COLOR.body}">━</span> Herzfrequenz</label>
           <label class="toggle"><input type="checkbox" data-heart="hideSteps" ${hide.steps ? "" : "checked"} ${hasSteps ? "" : "disabled"}> <span style="color:${COLOR.nutrition}">■</span> Schritte je 5 Minuten</label>
         </div>
-        ${timelineSvg(hd?.samples ?? [], stepSamples, hide)}
+        <div class="chart-zoomable" data-chart-zoom="${esc(`Herzfrequenz und Schritte · ${D.formatDate(day)}`)}" role="button" tabindex="0" aria-label="Grafik groß im Querformat anzeigen">${timelineSvg(hd?.samples ?? [], stepSamples, hide)}<span class="chart-zoomable__hint muted small">Antippen: groß im Querformat</span></div>
         ${hasSteps ? "" : `<p class="muted small">Schritte über den Tag gibt es ab der Synchronisierung mit PC-Version 1.0.130 (Polar) oder aus dem Apple-Health-Export.</p>`}`
           : ""
       }

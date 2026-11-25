@@ -212,6 +212,15 @@ function historyHtml(list, profile, selected) {
 }
 
 /** Griffkraft für den Tag `date` (unter „Fitness & Longevity“ in „Werte erfassen“). */
+/** Letzte Messung als kurzer Text für die Übersicht (1.150.0), sonst null. */
+export function gripLatestText() {
+  if (!G()) return null;
+  const list = gripMeasurements(buildDb());
+  const m = list[list.length - 1];
+  if (!m) return null;
+  return `Zuletzt links ${kg(m.leftKg)}, rechts ${kg(m.rightKg)} am ${fmtDate(m.date)}`;
+}
+
 export function gripPanelHtml(date) {
   if (!G()) return "";
   const db = buildDb();

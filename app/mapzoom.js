@@ -173,6 +173,41 @@ export function openImageZoom(src, title, info = "Mit zwei Fingern oder Doppelti
   if (img.complete) fit();
 }
 
+/**
+ * Grafik bildschirmfüllend im Querformat (1.150.0, Wunsch des Nutzers: Health → Heart → Herzfrequenz und
+ * Schritte am Tag). Hochkant gehaltenes Handy: die Ansicht wird um 90° gedreht (eine Web-App kann die
+ * Ausrichtung am iPhone nicht festlegen); dreht man das Handy quer, entfällt die Drehung. Zoomen mit zwei
+ * Fingern, Doppeltippen oder − / +.
+ */
+export function openChartZoom(el, title) {
+  const svg = el?.matches?.("svg") ? el : el?.querySelector?.("svg");
+  if (!svg) return;
+  const r = openOverlay({ title, inner: svg.outerHTML, info: "Mit zwei Fingern oder Doppeltippen zoomen", kind: "chart" });
+  r.querySelectorAll(".mapzoom__inner [data-act], .mapzoom__inner [data-chart-zoom]").forEach((x) => {
+    x.removeAttribute("data-act");
+    x.removeAttribute("data-chart-zoom");
+  });
+  const portrait = () => window.innerHeight > window.innerWidth;
+  const apply = () => {
+    if (!root || root !== r) return window.removeEventListener("resize", apply);
+    r.classList.toggle("is-rotated", portrait());
+  };
+  apply();
+  window.addEventListener("resize", apply);
+}
+
+// Grafik antippen (`data-chart-zoom`): Querformat-Ansicht
+document.addEventListener(
+  "click",
+  (e) => {
+    const c = e.target.closest?.("[data-chart-zoom]");
+    if (!c || c.closest(".mapzoom")) return;
+    e.preventDefault();
+    openChartZoom(c, c.dataset.chartZoom || "Grafik");
+  },
+  true,
+);
+
 // Lupe an der Karte (`heatmapHtml`): eigener Klick-Abgriff, unabhängig von den `data-act`-Aktionen
 document.addEventListener(
   "click",

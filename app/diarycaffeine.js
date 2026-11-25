@@ -38,7 +38,8 @@ export function caffeineSlotHtml(date, appDay = today()) {
   }
   const f = X.S.diaryCf?.date === date ? X.S.diaryCf : null;
   const totalMg = list.reduce((s, i) => s + i.mg, 0);
-  const expanded = f !== null || (X.S.mealOpen?.["__caffeine"] ?? list.length === 0);
+  // Voreinstellung zugeklappt wie alle Mahlzeiten (1.150.0)
+  const expanded = f !== null || (X.S.mealOpen?.["__caffeine"] ?? false);
   const editable = (i) => C().isEditableIntake(i) && !i.linked;
   const rows = list
     .map(

@@ -182,6 +182,16 @@
    "bytes": 91089
   },
   {
+   "key": "sweets",
+   "manufacturer": "Sweets",
+   "title": "Sweets – Fruchtgummi, Schokolade, Waffeln und Pralinen",
+   "version": "2026.11.25",
+   "file": "Sweets.json",
+   "foods": 617,
+   "supplements": 0,
+   "bytes": 323928
+  },
+  {
    "key": "vast-sports",
    "manufacturer": "VAST Sports",
    "title": "VAST Sports – Lebensmittel und Supplements",

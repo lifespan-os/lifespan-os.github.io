@@ -269,14 +269,22 @@ export function exerciseCard(we, i, exs, machines) {
         ${Object.entries(C.SETTING_LABELS)
           .map(
             ([k, l]) => `<div class="field"><label for="st-${we.id}-${k}">${l}</label>
-            <input id="st-${we.id}-${k}" type="text" maxlength="40" value="${esc(st[k] ?? "")}" data-we="${we.id}" data-setting="${k}"></div>`,
-          )
-          .join("")}
-        <div class="field"><label for="st-${we.id}-grip">Griffstellung</label>
+            <input id="st-${we.id}-${k}" type="text" maxlength="40"${k === "bandCount" ? ' inputmode="numeric"' : ""}${k === "bandResistance" ? ` list="st-${we.id}-band-options"` : ""} value="${esc(st[k] ?? "")}" data-we="${we.id}" data-setting="${k}">${
+              k === "bandResistance"
+                ? `<datalist id="st-${we.id}-band-options">${C.BAND_RESISTANCE_OPTIONS.map((o) => `<option value="${esc(o)}"></option>`).join("")}</datalist>`
+                : ""
+            }</div>${
+              // Griffstellung direkt neben der Griffbreite
+              k === "gripWidth"
+                ? `<div class="field"><label for="st-${we.id}-grip">Griffstellung</label>
           <select id="st-${we.id}-grip" data-we="${we.id}" data-setting="gripPosition">
             <option value="">–</option>
-            ${Object.entries(C.GRIP_LABELS).map(([k, l]) => `<option value="${k}"${st.gripPosition === k ? " selected" : ""}>${l}</option>`).join("")}
-          </select></div>
+            ${Object.entries(C.GRIP_LABELS).map(([g, gl]) => `<option value="${g}"${st.gripPosition === g ? " selected" : ""}>${gl}</option>`).join("")}
+          </select></div>`
+                : ""
+            }`,
+          )
+          .join("")}
         <div class="field"><label for="rest-${we.id}">Pause (Sekunden)</label>
           <input id="rest-${we.id}" type="text" inputmode="numeric" value="${we.restSeconds ?? ""}" data-we="${we.id}" data-field="restSeconds"></div>
       </div>

@@ -1352,7 +1352,12 @@ var NO_SETTINGS = {
   gripWidth: null,
   backrest: null,
   footrest: null,
-  gripPosition: null
+  gripPosition: null,
+  footrestAngle: null,
+  pivotAxis1: null,
+  pivotAxis2: null,
+  bandCount: null,
+  bandResistance: null
 };
 function planWithSlots(plan, dayId, slots) {
   return {
@@ -1716,7 +1721,12 @@ var SETTING_KEYS = [
   "gripWidth",
   "gripPosition",
   "backrest",
-  "footrest"
+  "footrest",
+  "footrestAngle",
+  "pivotAxis1",
+  "pivotAxis2",
+  "bandCount",
+  "bandResistance"
 ];
 function emptySettingsDraft() {
   return {
@@ -1727,7 +1737,12 @@ function emptySettingsDraft() {
     gripWidth: "",
     gripPosition: "",
     backrest: "",
-    footrest: ""
+    footrest: "",
+    footrestAngle: "",
+    pivotAxis1: "",
+    pivotAxis2: "",
+    bandCount: "",
+    bandResistance: ""
   };
 }
 function settingsToDraft(s) {

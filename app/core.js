@@ -85,17 +85,32 @@ const SETTING_KEYS = [
   ["backrest", "backrest"],
   ["footrest", "footrest"],
   ["grip_position", "gripPosition"],
+  ["footrest_angle", "footrestAngle"],
+  ["pivot_axis_1", "pivotAxis1"],
+  ["pivot_axis_2", "pivotAxis2"],
+  ["band_count", "bandCount"],
+  ["band_resistance", "bandResistance"],
 ];
 
+/** Freitext-Felder der Geräteeinstellungen in Anzeigereihenfolge (wie PC 1.0.221, Schema 78);
+ * die Griffstellung (Auswahl) steht direkt neben der Griffbreite. */
 export const SETTING_LABELS = {
   seatHeight: "Sitzhöhe",
-  seatDepth: "Sitztiefe",
-  chestPadHeight: "Brustpolster Höhe",
+  seatDepth: "Sitzweite",
+  chestPadHeight: "Brustpolster",
   chestPadAngle: "Brustpolster Winkel",
   gripWidth: "Griffbreite",
   backrest: "Rückenlehne",
   footrest: "Fußstütze",
+  footrestAngle: "Fußstütze Winkel",
+  pivotAxis1: "Drehachse 1",
+  pivotAxis2: "Drehachse 2",
+  bandCount: "Resistanceband Anzahl",
+  bandResistance: "Resistanceband Widerstand/Farbe",
 };
+
+/** Vorschläge für Resistanceband Widerstand/Farbe, von leicht nach schwer (wie PC `BAND_RESISTANCE_OPTIONS`). */
+export const BAND_RESISTANCE_OPTIONS = ["Beige", "Gelb", "Rot", "Grün", "Blau", "Schwarz", "Silber", "Gold"];
 
 export const GRIP_LABELS = { supinated: "Untergriff", neutral: "Neutral", pronated: "Obergriff" };
 
@@ -982,6 +997,11 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
         footrest: txt(st.footrest, 40),
         rest_seconds: nn(we.restSeconds),
         grip_position: st.gripPosition || null,
+        footrest_angle: txt(st.footrestAngle, 40),
+        pivot_axis_1: txt(st.pivotAxis1, 40),
+        pivot_axis_2: txt(st.pivotAxis2, 40),
+        band_count: txt(st.bandCount, 40),
+        band_resistance: txt(st.bandResistance, 40),
         machine_id: we.machineId ?? null,
       });
       we.sets.forEach((s, si) => {

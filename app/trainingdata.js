@@ -135,6 +135,11 @@ const settingsOf = (r) => ({
   backrest: r.backrest ?? null,
   footrest: r.footrest ?? null,
   gripPosition: r.grip_position ?? null,
+  footrestAngle: r.footrest_angle ?? null,
+  pivotAxis1: r.pivot_axis_1 ?? null,
+  pivotAxis2: r.pivot_axis_2 ?? null,
+  bandCount: r.band_count ?? null,
+  bandResistance: r.band_resistance ?? null,
 });
 
 const RP = [
@@ -319,6 +324,11 @@ export function savePlan(raw, local, input, { uuid, now = new Date(), exercises 
         backrest: st.backrest ?? null,
         footrest: st.footrest ?? null,
         grip_position: st.gripPosition ?? null,
+        footrest_angle: st.footrestAngle ?? null,
+        pivot_axis_1: st.pivotAxis1 ?? null,
+        pivot_axis_2: st.pivotAxis2 ?? null,
+        band_count: st.bandCount ?? null,
+        band_resistance: st.bandResistance ?? null,
         created_at: oldEx?.created_at ?? ts,
         updated_at: ts,
       }));

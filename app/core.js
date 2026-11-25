@@ -11,7 +11,7 @@ import { appDay } from "./appday.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.152.0";
+export const MOBILE_VERSION = "1.153.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -870,6 +870,34 @@ const txt = (v, max) => {
 };
 
 /**
+ * Tabellen, die erst ab einem bestimmten Schemastand der Desktop-App existieren (Migrationen ab 0039;
+ * das Handy verlangt mindestens Schemastand 38). Die Rückgabedatei trägt den Schemastand der geladenen
+ * PC-Exportdatei; enthält sie eine Tabelle, die es bei diesem Stand noch nicht gab, lehnt der PC den
+ * Import ab („Tabelle … passt nicht zum Schemastand …“). Seit 1.153.0 meldet das Handy das vorher.
+ * Neue Tabellen in späteren Migrationen hier ergänzen (Test in core.test.mjs vergleicht mit den Migrationen).
+ */
+export const TABLE_SINCE = {
+  vendor_package: 42, vendor_package_item: 42, hrt_entry: 43, hrt_product: 44,
+  exercise_muscle_focus: 45, machine_muscle_focus: 45, deleted_record: 47,
+  lab_analyte: 49, lab_draw: 49, lab_result: 49, lifetime_record: 50, caffeine_intake: 51,
+  heart_rate_day: 56, wearable_connection: 56, wearable_day: 56, wearable_exercise: 56, wearable_recovery: 56,
+  wearable_sleep: 56, wearable_biosensing: 57, wearable_sleepwise: 57, glucose_reading: 58, wearable_raw: 61,
+  weekly_report: 62, appointment: 63, goal: 63, meal_plan_entry: 64, gym: 65, gym_machine: 65,
+  planned_meal: 74, planned_meal_item: 74, recipe_supplement: 75,
+};
+
+/** Fehlertext, wenn die PC-Daten am Handy zu alt für die zu sendenden Tabellen sind (sonst null). */
+export function staleSchemaMessage(schemaVersion, tableNames) {
+  const need = Math.max(0, ...tableNames.map((t) => TABLE_SINCE[t] ?? 0));
+  if (!Number.isInteger(schemaVersion) || need <= schemaVersion) return null;
+  return (
+    `Die Daten vom PC auf diesem Handy sind zu alt (Schemastand ${schemaVersion}, nötig ist mindestens ${need}). ` +
+    "Bitte am PC unter Import/Export „Für die Handy-App exportieren“, die Datei hier unter Import/Export → " +
+    "„Daten vom PC“ laden und danach erneut senden. Deine Einträge vom Handy bleiben dabei erhalten."
+  );
+}
+
+/**
  * Baut eine Teil-Exportdatei mit den abgeschlossenen Trainings vom Handy.
  * Enthält alle Einträge, auf die die Trainings verweisen (Übungen, Maschinen,
  * Sportarten, Planttage), damit die Desktop-App sie vollständig prüfen kann.
@@ -1007,6 +1035,8 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
     if (list.length) tables[name] = [...(tables[name] ?? []), ...list.map((r) => fit(name, r))];
   }
   if (!Object.keys(tables).length) throw new Error("Es gibt nichts zu senden.");
+  const stale = staleSchemaMessage(catalog.schemaVersion, Object.keys(tables));
+  if (stale) throw new Error(stale);
 
   return {
     format: FORMAT_NAME,

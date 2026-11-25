@@ -152,16 +152,6 @@
    "bytes": 792452
   },
   {
-   "key": "rittersport",
-   "manufacturer": "Ritter Sport",
-   "title": "Ritter Sport – Schokoladen",
-   "version": "2026.11.25",
-   "file": "RitterSport.json",
-   "foods": 82,
-   "supplements": 0,
-   "bytes": 44267
-  },
-  {
    "key": "ruehl24",
    "manufacturer": "Rühl24",
    "title": "Rühl24 – Rühls Bestes, Lebensmittel und Supplements",
@@ -187,9 +177,9 @@
    "title": "Sweets – Fruchtgummi, Schokolade, Waffeln und Pralinen",
    "version": "2026.11.25",
    "file": "Sweets.json",
-   "foods": 617,
+   "foods": 699,
    "supplements": 0,
-   "bytes": 323928
+   "bytes": 365478
   },
   {
    "key": "vast-sports",

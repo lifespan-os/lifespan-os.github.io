@@ -218,10 +218,25 @@ export function emptyForm() {
     portionName: "",
     portionAmount: "",
     caffeineMg: "",
+    details: Object.fromEntries(DETAIL_KEYS.map((k) => [k, ""])),
     barcode: "",
     notes: "",
   };
 }
+
+/**
+ * Weitere Angaben in g je 100 g/ml (1.163.0, wie PC 1.0.228, Schema 80): Formularfeld → Spalte.
+ * Alle optional; für die Details der Tagessumme und das Wasser aus Lebensmitteln.
+ */
+export const DETAIL_KEYS = ["monoFatG", "polyFatG", "transFatG", "starchG", "waterG"];
+export const DETAIL_COLUMN = { monoFatG: "mono_fat_g", polyFatG: "poly_fat_g", transFatG: "trans_fat_g", starchG: "starch_g", waterG: "water_g" };
+export const DETAIL_NAMES = {
+  monoFatG: "davon einfach ungesättigte Fettsäuren",
+  polyFatG: "davon mehrfach ungesättigte Fettsäuren",
+  transFatG: "davon Trans-Fettsäuren",
+  starchG: "davon Stärke",
+  waterG: "Wasser",
+};
 
 /** Formular aus einem Scan vorbelegen. */
 export function scanToForm(scan, text) {
@@ -252,6 +267,7 @@ export function foodToForm(food, barcode = "") {
     portionName: food.portion_name ?? "",
     portionAmount: num(food.portion_amount, 1),
     caffeineMg: num(food.caffeine_mg ?? null, 1),
+    details: Object.fromEntries(DETAIL_KEYS.map((k) => [k, num(food[DETAIL_COLUMN[k]] ?? null)])),
     barcode,
     notes: food.notes ?? "",
   };
@@ -294,6 +310,13 @@ export function checkForm(f) {
   const caffeine = parseNum(f.caffeineMg ?? "");
   if (Number.isNaN(caffeine)) errors.caffeineMg = "Bitte eine Zahl eingeben, z. B. 40.";
   else if (caffeine !== null && (caffeine < 0 || caffeine > 100000)) errors.caffeineMg = "Bitte 0 bis 100.000 mg je 100 angeben.";
+  const details = {};
+  for (const k of DETAIL_KEYS) {
+    const n = parseNum(f.details?.[k] ?? "");
+    if (Number.isNaN(n)) errors[`d.${k}`] = "Bitte eine Zahl eingeben, z. B. 4,5.";
+    else if (n !== null && n > 100) errors[`d.${k}`] = "Höchstens 100 g je 100.";
+    details[DETAIL_COLUMN[k]] = n === null || Number.isNaN(n) ? null : Math.round(n * 100) / 100;
+  }
   const notes = f.notes.trim();
   if (notes.length > 1000) errors.notes = "Höchstens 1000 Zeichen.";
   const code = f.barcode.replace(/[\s-]/g, "");
@@ -317,6 +340,7 @@ export function checkForm(f) {
       portion_name: pAmount !== null ? pName : null,
       portion_amount: pAmount,
       caffeine_mg: caffeine === null || Number.isNaN(caffeine) ? null : Math.round(caffeine * 10) / 10,
+      ...details,
       notes: notes || null,
     },
   };

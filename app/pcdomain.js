@@ -116,6 +116,643 @@ function formatSigned(value2, fractionDigits = 1) {
   return `\xB1${abs}`;
 }
 
+// src/domain/macroDetails.ts
+var macroDetails_exports = {};
+__export(macroDetails_exports, {
+  AMINO_PARTS: () => AMINO_PARTS,
+  CARB_PARTS: () => CARB_PARTS,
+  FAT_PARTS: () => FAT_PARTS,
+  KCAL_PER_G: () => KCAL_PER_G,
+  MACRO_DETAIL_KEYS: () => MACRO_DETAIL_KEYS,
+  MACRO_DETAIL_LABELS: () => MACRO_DETAIL_LABELS,
+  MACRO_HISTORY_DAYS: () => MACRO_HISTORY_DAYS,
+  MACRO_REFERENCES: () => MACRO_REFERENCES,
+  POLY_PARTS: () => POLY_PARTS,
+  SUGAR_PARTS: () => SUGAR_PARTS,
+  macroDetail: () => macroDetail,
+  macroHistory: () => macroHistory,
+  omegaRatio: () => omegaRatio,
+  partOf: () => partOf
+});
+
+// src/domain/blsMicro.ts
+var blsMicro_exports = {};
+__export(blsMicro_exports, {
+  BLS_FOOD_COLUMNS: () => BLS_FOOD_COLUMNS,
+  BLS_TO_CATALOG: () => BLS_TO_CATALOG,
+  LOW_REFERENCE_SHARE: () => LOW_REFERENCE_SHARE,
+  blsCodeOf: () => blsCodeOf,
+  foodMicro: () => foodMicro,
+  lowReferenceHint: () => lowReferenceHint,
+  supplementsWith: () => supplementsWith
+});
+
+// src/domain/forms.ts
+function textOrNull(value2) {
+  const clean2 = value2.trim();
+  return clean2 === "" ? null : clean2;
+}
+function numberToInput(value2, maxDecimals = 2) {
+  if (value2 === null || value2 === void 0 || !Number.isFinite(value2)) return "";
+  const factor = 10 ** maxDecimals;
+  const rounded = Math.round(value2 * factor) / factor;
+  return String(rounded).replace(".", ",");
+}
+var FormParser = class {
+  constructor() {
+    __publicField(this, "errors", {});
+  }
+  get ok() {
+    return Object.keys(this.errors).length === 0;
+  }
+  fail(field, message) {
+    if (!(field in this.errors)) this.errors[field] = message;
+  }
+  /** Eigener Fehler für ein Feld (z. B. aus einer Umrechnung). */
+  error(field, message) {
+    this.fail(field, message);
+  }
+  /** Optionale Kommazahl. */
+  decimal(field, text2) {
+    if (text2.trim() === "") return null;
+    const value2 = parseDecimal(text2);
+    if (Number.isNaN(value2)) {
+      this.fail(field, "Bitte eine Zahl eingeben, z. B. 80 oder 80,5.");
+      return null;
+    }
+    return value2;
+  }
+  /** Pflicht-Kommazahl. */
+  requiredDecimal(field, text2, label) {
+    if (text2.trim() === "") {
+      this.fail(field, `Bitte ${label} eingeben.`);
+      return 0;
+    }
+    return this.decimal(field, text2) ?? 0;
+  }
+  /** Optionale ganze Zahl. */
+  integer(field, text2) {
+    if (text2.trim() === "") return null;
+    const value2 = parseInteger(text2);
+    if (Number.isNaN(value2)) {
+      this.fail(field, "Bitte eine ganze Zahl eingeben.");
+      return null;
+    }
+    return value2;
+  }
+  requiredInteger(field, text2, label) {
+    if (text2.trim() === "") {
+      this.fail(field, `Bitte ${label} eingeben.`);
+      return 0;
+    }
+    return this.integer(field, text2) ?? 0;
+  }
+  /** Pflichtauswahl (z. B. Übung, Lebensmittel). */
+  required(field, value2, message) {
+    if (value2.trim() === "") this.fail(field, message);
+    return value2;
+  }
+  /** Dauer in Minuten (Kommazahl) → Sekunden. */
+  minutesToSeconds(field, text2) {
+    const minutes = this.decimal(field, text2);
+    return minutes === null ? null : Math.round(minutes * 60);
+  }
+  /** Strecke in km (Kommazahl) → Meter. */
+  kmToMeters(field, text2) {
+    const km = this.decimal(field, text2);
+    return km === null ? null : Math.round(km * 1e3 * 10) / 10;
+  }
+};
+function secondsToMinutesInput(seconds) {
+  return seconds === null ? "" : numberToInput(seconds / 60, 2);
+}
+function metersToKmInput(meters) {
+  return meters === null ? "" : numberToInput(meters / 1e3, 3);
+}
+
+// src/domain/bls.ts
+function neededDecimals(value2) {
+  for (let d = 0; d < 3; d += 1) {
+    const f = 10 ** d;
+    if (Math.abs(Math.round(value2 * f) / f - value2) < 1e-9) return d;
+  }
+  return 3;
+}
+var BLS_BRAND = "BLS 4.0";
+
+// src/domain/blsMicro.ts
+var BLS_TO_CATALOG = {
+  VITA: { key: "vit_a", factor: 1 },
+  VITD: { key: "vit_d", factor: 1 },
+  VITE: { key: "vit_e", factor: 1 },
+  VITK: { key: "vit_k", factor: 1 },
+  THIA: { key: "vit_b1", factor: 1 },
+  RIBF: { key: "vit_b2", factor: 1 },
+  NIAEQ: { key: "vit_b3", factor: 1 },
+  PANTAC: { key: "vit_b5", factor: 1 },
+  // BLS in µg, Katalog in mg
+  VITB6: { key: "vit_b6", factor: 1e-3 },
+  BIOT: { key: "vit_b7", factor: 1 },
+  FOL: { key: "vit_b9", factor: 1 },
+  VITB12: { key: "vit_b12", factor: 1 },
+  VITC: { key: "vit_c", factor: 1 },
+  NA: { key: "sodium", factor: 1 },
+  CLD: { key: "chloride", factor: 1 },
+  K: { key: "potassium", factor: 1 },
+  CA: { key: "calcium", factor: 1 },
+  MG: { key: "magnesium", factor: 1 },
+  P: { key: "phosphorus", factor: 1 },
+  S: { key: "sulfur", factor: 1 },
+  FE: { key: "iron", factor: 1 },
+  ZN: { key: "zinc", factor: 1 },
+  ID: { key: "iodine", factor: 1 },
+  CU: { key: "copper", factor: 1e-3 },
+  MN: { key: "manganese", factor: 1e-3 },
+  FD: { key: "fluoride", factor: 1e-3 },
+  CR: { key: "chromium", factor: 1 },
+  MO: { key: "molybdenum", factor: 1 },
+  CHORL: { key: "cholesterol", factor: 1 },
+  // Fettsäuren und Aminosäuren: BLS in g, Katalog in mg
+  "F18:3CN3": { key: "ala", factor: 1e3 },
+  "F20:5CN3": { key: "epa", factor: 1e3 },
+  "F22:5CN3": { key: "dpa", factor: 1e3 },
+  "F22:6CN3": { key: "dha", factor: 1e3 },
+  FAPUN3: { key: "omega3_total", factor: 1e3 },
+  HIS: { key: "histidine", factor: 1e3 },
+  ILE: { key: "isoleucine", factor: 1e3 },
+  LEU: { key: "leucine", factor: 1e3 },
+  LYS: { key: "lysine", factor: 1e3 },
+  MET: { key: "methionine", factor: 1e3 },
+  PHE: { key: "phenylalanine", factor: 1e3 },
+  THR: { key: "threonine", factor: 1e3 },
+  TRP: { key: "tryptophan", factor: 1e3 },
+  VAL: { key: "valine", factor: 1e3 },
+  ARG: { key: "arginine", factor: 1e3 },
+  CYSTE: { key: "cysteine", factor: 1e3 },
+  GLY: { key: "glycine", factor: 1e3 },
+  PRO: { key: "proline", factor: 1e3 },
+  TYR: { key: "tyrosine", factor: 1e3 },
+  ALA: { key: "alanine", factor: 1e3 },
+  ASP: { key: "aspartic_acid", factor: 1e3 },
+  GLU: { key: "glutamic_acid", factor: 1e3 },
+  SER: { key: "serine", factor: 1e3 }
+};
+var BLS_FOOD_COLUMNS = /* @__PURE__ */ new Set([
+  "ENERCJ",
+  "ENERCC",
+  "PROT625",
+  "FAT",
+  "CHO",
+  "FIBT",
+  "SUGAR",
+  "FASAT",
+  "NACL"
+]);
+var LOW_REFERENCE_SHARE = 70;
+var CODE = /Code\s+([A-Z][A-Z0-9]{2,})/;
+function blsCodeOf(food) {
+  if ((food.brand ?? "").trim() !== BLS_BRAND) return null;
+  const m = CODE.exec(food.notes ?? "");
+  return m?.[1] ?? null;
+}
+function foodMicro(items, foods, bls) {
+  const out = { values: {}, extra: {}, withData: 0, without: [], missing: {} };
+  const seenWith = /* @__PURE__ */ new Set();
+  const seenWithout = /* @__PURE__ */ new Set();
+  for (const it of items) {
+    if (!(it.amount > 0)) continue;
+    const food = foods.get(it.foodId);
+    if (!food) continue;
+    const code = blsCodeOf(food);
+    const entry2 = code ? bls.get(code) : void 0;
+    if (!entry2) {
+      if (!seenWithout.has(it.foodId)) {
+        seenWithout.add(it.foodId);
+        out.without.push(food.name);
+      }
+      continue;
+    }
+    if (!seenWith.has(it.foodId)) {
+      seenWith.add(it.foodId);
+      out.withData += 1;
+    }
+    const share2 = it.amount / 100;
+    for (const v of entry2.values) {
+      if (BLS_FOOD_COLUMNS.has(v.code)) continue;
+      const map = BLS_TO_CATALOG[v.code];
+      const amount = v.amount !== null ? v.amount : v.flag ? 0 : null;
+      if (amount === null) {
+        if (map) out.missing[map.key] = (out.missing[map.key] ?? 0) + 1;
+        continue;
+      }
+      if (map) out.values[map.key] = (out.values[map.key] ?? 0) + amount * share2 * map.factor;
+      else out.extra[v.code] = (out.extra[v.code] ?? 0) + amount * share2;
+    }
+  }
+  const tidy = (rec) => {
+    for (const [k, v] of Object.entries(rec)) {
+      if (!(v > 0)) delete rec[k];
+      else
+        rec[k] = v >= 100 ? Math.round(v) : v >= 10 ? Math.round(v * 10) / 10 : Math.round(v * 1e3) / 1e3;
+    }
+  };
+  tidy(out.values);
+  tidy(out.extra);
+  return out;
+}
+function supplementsWith(key, supplements) {
+  return supplements.filter((s) => !s.archived && (s.values[key] ?? 0) > 0).map((s) => s.name).sort((a, b) => a.localeCompare(b, "de"));
+}
+function lowReferenceHint(percent, supplementNames) {
+  if (percent === null || percent >= LOW_REFERENCE_SHARE) return null;
+  if (supplementNames.length === 0) return `unter ${LOW_REFERENCE_SHARE} % des Referenzwerts`;
+  const list2 = supplementNames.slice(0, 2).join(", ");
+  const more = supplementNames.length > 2 ? ` und ${supplementNames.length - 2} weitere` : "";
+  return `unter ${LOW_REFERENCE_SHARE} % \u2013 enthalten in deinem Supplement ${list2}${more}`;
+}
+
+// src/domain/trends.ts
+var trends_exports = {};
+__export(trends_exports, {
+  RANGE_PRESETS: () => RANGE_PRESETS,
+  comparePeriods: () => comparePeriods,
+  dailySeries: () => dailySeries,
+  daysBetween: () => daysBetween,
+  formatRange: () => formatRange,
+  groupByPeriod: () => groupByPeriod,
+  isoFromUtc: () => isoFromUtc,
+  isoWeek: () => isoWeek,
+  periodStartBack: () => periodStartBack,
+  presetRanges: () => presetRanges,
+  rangeStats: () => rangeStats,
+  shiftDays: () => shiftDays,
+  utcDay: () => utcDay,
+  weekStart: () => weekStart
+});
+var DAY_MS = 864e5;
+var ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
+var MONTHS = [
+  "Jan.",
+  "Feb.",
+  "M\xE4rz",
+  "Apr.",
+  "Mai",
+  "Juni",
+  "Juli",
+  "Aug.",
+  "Sept.",
+  "Okt.",
+  "Nov.",
+  "Dez."
+];
+function utcDay(iso2) {
+  const m = ISO.exec(iso2);
+  if (!m) throw new Error(`Ung\xFCltiges Datum: "${iso2}" (erwartet JJJJ-MM-TT)`);
+  const d = /* @__PURE__ */ new Date(0);
+  d.setUTCFullYear(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  if (d.getUTCDate() !== Number(m[3]) || d.getUTCMonth() !== Number(m[2]) - 1) {
+    throw new Error(`Ung\xFCltiges Datum: "${iso2}"`);
+  }
+  return d.getTime();
+}
+function isoFromUtc(t) {
+  return new Date(t).toISOString().slice(0, 10);
+}
+function shiftDays(iso2, days3) {
+  return isoFromUtc(utcDay(iso2) + days3 * DAY_MS);
+}
+function daysBetween(from, to) {
+  return Math.round((utcDay(to) - utcDay(from)) / DAY_MS) + 1;
+}
+function weekStart(iso2) {
+  const t = utcDay(iso2);
+  const weekday2 = (new Date(t).getUTCDay() + 6) % 7;
+  return isoFromUtc(t - weekday2 * DAY_MS);
+}
+function isoWeek(iso2) {
+  const monday = utcDay(weekStart(iso2));
+  const thursday = new Date(monday + 3 * DAY_MS);
+  const year = thursday.getUTCFullYear();
+  const jan1 = Date.UTC(year, 0, 1);
+  const week = Math.floor((thursday.getTime() - jan1) / DAY_MS / 7) + 1;
+  return { year, week };
+}
+function periodOf(iso2, period) {
+  if (period === "week") {
+    const start2 = weekStart(iso2);
+    const { year, week } = isoWeek(iso2);
+    return {
+      key: `${year}-W${String(week).padStart(2, "0")}`,
+      start: start2,
+      end: shiftDays(start2, 6),
+      label: `KW ${week}`
+    };
+  }
+  const [y, m] = iso2.split("-").map(Number);
+  const start = `${y}-${String(m).padStart(2, "0")}-01`;
+  const end = isoFromUtc(Date.UTC(y, m, 0));
+  return { key: start.slice(0, 7), start, end, label: `${MONTHS[m - 1]} ${y}` };
+}
+function stats(values) {
+  let sum = 0;
+  let min = Infinity;
+  let max = -Infinity;
+  for (const v of values) {
+    sum += v;
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+  return { count: values.length, mean: sum / values.length, min, max };
+}
+function groupByPeriod(points2, period) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const p of points2) {
+    if (!Number.isFinite(p.value)) continue;
+    const info = periodOf(p.date, period);
+    const g = groups.get(info.key) ?? { info, values: [] };
+    g.values.push(p.value);
+    groups.set(info.key, g);
+  }
+  return [...groups.values()].sort((a, b) => a.info.start.localeCompare(b.info.start)).map(({ info, values }) => ({
+    ...info,
+    ...stats(values),
+    days: daysBetween(info.start, info.end)
+  }));
+}
+function rangeStats(points2, from, to) {
+  if (from > to) throw new Error("Der Beginn des Zeitraums muss vor dem Ende liegen.");
+  const inside = points2.filter((p) => p.date >= from && p.date <= to && Number.isFinite(p.value)).sort((a, b) => a.date.localeCompare(b.date));
+  const days3 = daysBetween(from, to);
+  if (inside.length === 0) {
+    return { from, to, days: days3, count: 0, mean: null, min: null, max: null, first: null, last: null };
+  }
+  const s = stats(inside.map((p) => p.value));
+  return {
+    from,
+    to,
+    days: days3,
+    count: s.count,
+    mean: s.mean,
+    min: s.min,
+    max: s.max,
+    first: inside[0] ?? null,
+    last: inside.at(-1) ?? null
+  };
+}
+function comparePeriods(points2, a, b, minCount = 2) {
+  const sa = rangeStats(points2, a.from, a.to);
+  const sb = rangeStats(points2, b.from, b.to);
+  if (sa.count < minCount || sb.count < minCount) {
+    const few = sa.count < minCount ? "im ersten Zeitraum" : "im zweiten Zeitraum";
+    const n3 = Math.min(sa.count, sb.count);
+    return {
+      a: sa,
+      b: sb,
+      difference: null,
+      reason: n3 === 0 ? `Kein Vergleich m\xF6glich: ${few} gibt es keine Werte.` : `Kein Vergleich m\xF6glich: ${few} gibt es nur ${n3} ${n3 === 1 ? "Wert" : "Werte"} (mindestens ${minCount} n\xF6tig).`
+    };
+  }
+  return { a: sa, b: sb, difference: sb.mean - sa.mean, reason: null };
+}
+var RANGE_PRESETS = [
+  { value: "4w", label: "4 Wochen", days: 28 },
+  { value: "12w", label: "12 Wochen", days: 84 },
+  { value: "6m", label: "6 Monate", days: 182 },
+  { value: "12m", label: "12 Monate", days: 364 }
+];
+function presetRanges(preset, today) {
+  const p = RANGE_PRESETS.find((r2) => r2.value === preset);
+  if (!p) throw new Error(`Unbekannter Zeitraum: ${preset}`);
+  const from = shiftDays(today, -(p.days - 1));
+  return {
+    current: { from, to: today },
+    previous: { from: shiftDays(from, -p.days), to: shiftDays(from, -1) }
+  };
+}
+function dailySeries(points2, from, to) {
+  const byDate = new Map(points2.map((p) => [p.date, p.value]));
+  const n3 = daysBetween(from, to);
+  const out = [];
+  for (let i = 0; i < n3; i++) {
+    const date = shiftDays(from, i);
+    out.push({ date, value: byDate.get(date) ?? null });
+  }
+  return out;
+}
+function formatRange(from, to) {
+  const [fy, fm, fd] = from.split("-");
+  const [ty, tm, td] = to.split("-");
+  const end = `${td}.${tm}.${ty}`;
+  if (from === to) return end;
+  return fy === ty ? `${fd}.${fm}.\u2013${end}` : `${fd}.${fm}.${fy}\u2013${end}`;
+}
+function periodStartBack(today, period, count) {
+  if (period === "week") return shiftDays(weekStart(today), -7 * (count - 1));
+  const [y, m] = today.split("-").map(Number);
+  const index = y * 12 + (m - 1) - (count - 1);
+  return `${Math.floor(index / 12)}-${String(index % 12 + 1).padStart(2, "0")}-01`;
+}
+
+// src/domain/macroDetails.ts
+var MACRO_DETAIL_KEYS = ["fat", "protein", "carbs"];
+var MACRO_DETAIL_LABELS = {
+  fat: "Fett",
+  protein: "Protein",
+  carbs: "Kohlenhydrate"
+};
+var KCAL_PER_G = { fat: 9, protein: 4, carbs: 4 };
+var MACRO_HISTORY_DAYS = 14;
+var FAT_PARTS = [
+  {
+    key: "saturated",
+    label: "Ges\xE4ttigte Fetts\xE4uren",
+    field: "saturatedFatG",
+    bls: "FASAT",
+    supplement: { key: "saturated_fat", factor: 1 }
+  },
+  { key: "mono", label: "Einfach unges\xE4ttigte Fetts\xE4uren", field: "monoFatG", bls: "FAMS" },
+  {
+    key: "poly",
+    label: "Mehrfach unges\xE4ttigte Fetts\xE4uren",
+    field: "polyFatG",
+    bls: "FAPU",
+    supplement: { key: "omega3_total", factor: 1e-3 }
+  },
+  { key: "trans", label: "Trans-Fetts\xE4uren", field: "transFatG", bls: null }
+];
+var POLY_PARTS = [
+  {
+    key: "omega3",
+    label: "davon Omega-3",
+    field: null,
+    bls: "FAPUN3",
+    supplement: { key: "omega3_total", factor: 1e-3 }
+  },
+  { key: "omega6", label: "davon Omega-6", field: null, bls: "FAPUN6" }
+];
+var CARB_PARTS = [
+  {
+    key: "sugar",
+    label: "Zucker",
+    field: "sugarG",
+    bls: "SUGAR",
+    supplement: { key: "sugar", factor: 1 }
+  },
+  { key: "starch", label: "St\xE4rke", field: "starchG", bls: "STARCH" }
+];
+var SUGAR_PARTS = [
+  { key: "glucose", label: "Glucose", field: null, bls: "GLUS" },
+  { key: "fructose", label: "Fructose", field: null, bls: "FRUS" },
+  { key: "sucrose", label: "Saccharose", field: null, bls: "SUCS" },
+  { key: "lactose", label: "Lactose", field: null, bls: "LACS" },
+  { key: "maltose", label: "Maltose", field: null, bls: "MALS" },
+  { key: "galactose", label: "Galactose", field: null, bls: "GALS" }
+];
+var AMINO_PARTS = [
+  { key: "leucine", label: "Leucin", field: null, bls: "LEU", supplement: { key: "leucine", factor: 1e-3 } },
+  { key: "isoleucine", label: "Isoleucin", field: null, bls: "ILE", supplement: { key: "isoleucine", factor: 1e-3 } },
+  { key: "valine", label: "Valin", field: null, bls: "VAL", supplement: { key: "valine", factor: 1e-3 } },
+  { key: "lysine", label: "Lysin", field: null, bls: "LYS", supplement: { key: "lysine", factor: 1e-3 } }
+];
+var MACRO_FIELD = {
+  fat: "fatG",
+  protein: "proteinG",
+  carbs: "carbsG"
+};
+var SUPP_MACRO = { fat: "fat", protein: "protein", carbs: "carbs" };
+var nameOf = (i) => i.foodBrand ? `${i.foodName} (${i.foodBrand})` : i.foodName;
+function blsValue(i, code, foods, bls) {
+  const food = foods.get(i.foodId);
+  const c = food ? blsCodeOf(food) : null;
+  const entry2 = c ? bls.get(c) : void 0;
+  const v = entry2?.values.find((x) => x.code === code);
+  if (!v) return null;
+  const amount = v.amount !== null ? v.amount : v.flag ? 0 : null;
+  return amount === null ? null : amount * i.amount / 100;
+}
+function partOf(i, part, foods, bls) {
+  if (part.field) {
+    const own = i[part.field];
+    if (own !== null && own !== void 0) return own;
+  }
+  return part.bls ? blsValue(i, part.bls, foods, bls) : null;
+}
+function partValues(defs, items, input, key, totalG) {
+  return defs.map((d) => {
+    let grams = 0;
+    let missingMacroG = 0;
+    const missing = /* @__PURE__ */ new Set();
+    for (const i of items) {
+      const v = partOf(i, d, input.foods, input.bls);
+      if (v === null) {
+        if (i[MACRO_FIELD[key]] > 0) {
+          missing.add(nameOf(i));
+          missingMacroG += i[MACRO_FIELD[key]];
+        }
+      } else grams += v;
+    }
+    if (d.supplement) grams += (input.supplements[d.supplement.key] ?? 0) * d.supplement.factor;
+    return {
+      key: d.key,
+      label: d.label,
+      grams,
+      share: totalG > 0 ? grams / totalG : 0,
+      energyPct: input.energyKcal > 0 ? grams * KCAL_PER_G[key] / input.energyKcal * 100 : null,
+      missing: [...missing].sort((a, b) => a.localeCompare(b, "de")),
+      missingMacroG
+    };
+  });
+}
+function macroDetail(input, key) {
+  const items = input.meals.flatMap((m) => m.items).filter((i) => i.amount > 0);
+  const field = MACRO_FIELD[key];
+  const fromFoods = items.reduce((a, i) => a + i[field], 0);
+  const supplementsG = input.supplements[SUPP_MACRO[key]] ?? 0;
+  const otherG = input.other[field];
+  const totalG = fromFoods + supplementsG + otherG;
+  const defs = key === "fat" ? FAT_PARTS : key === "carbs" ? CARB_PARTS : [];
+  const subDefs = key === "fat" ? POLY_PARTS : key === "carbs" ? SUGAR_PARTS : AMINO_PARTS;
+  const byFood = /* @__PURE__ */ new Map();
+  for (const i of items) {
+    const s = byFood.get(i.foodId);
+    if (s) {
+      s.amount += i.amount;
+      s.grams += i[field];
+    } else
+      byFood.set(i.foodId, {
+        foodId: i.foodId,
+        name: nameOf(i),
+        amount: i.amount,
+        unit: i.basisUnit,
+        grams: i[field],
+        share: 0
+      });
+  }
+  const sources = [...byFood.values()].filter((s) => s.grams > 0);
+  for (const s of sources) s.share = totalG > 0 ? s.grams / totalG : 0;
+  sources.sort((a, b) => b.grams - a.grams || a.name.localeCompare(b.name, "de"));
+  const meals = input.meals.map((m) => {
+    const grams = m.items.reduce((a, i) => a + (i.amount > 0 ? i[field] : 0), 0);
+    return { id: m.id, label: m.label, time: m.time, grams, share: totalG > 0 ? grams / totalG : 0 };
+  }).filter((m) => m.grams > 0);
+  const sub = partValues(subDefs, items, input, key, totalG).filter(
+    (p) => p.grams > 0 || p.missing.length < items.length
+  );
+  return {
+    key,
+    totalG,
+    energyPct: input.energyKcal > 0 ? totalG * KCAL_PER_G[key] / input.energyKcal * 100 : null,
+    perKg: key === "protein" && input.weightKg && input.weightKg > 0 ? totalG / input.weightKg : null,
+    parts: partValues(defs, items, input, key, totalG),
+    subParts: sub.filter((p) => p.grams > 0),
+    sources,
+    meals,
+    supplementsG,
+    otherG
+  };
+}
+function omegaRatio(d) {
+  const n3 = d.subParts.find((p) => p.key === "omega3")?.grams ?? 0;
+  const n6 = d.subParts.find((p) => p.key === "omega6")?.grams ?? 0;
+  return n3 > 0 && n6 > 0 ? n6 / n3 : null;
+}
+var MACRO_REFERENCES = {
+  fat: "etwa 30 % der Energie",
+  saturated: "h\xF6chstens 10 % der Energie",
+  mono: "der Rest der Fettzufuhr",
+  poly: "7 bis 10 % der Energie",
+  trans: "unter 1 % der Energie",
+  omega: "Omega-6 zu Omega-3 h\xF6chstens 5 : 1",
+  protein: "0,8 g je kg K\xF6rpergewicht (ab 65 Jahren 1,0 g)",
+  carbs: "mehr als 50 % der Energie",
+  sugar: "h\xF6chstens 10 % der Energie"
+};
+function macroHistory(days3, date, key, foods, bls) {
+  const byDate = new Map(days3.map((d) => [d.date, d]));
+  const defs = key === "fat" ? FAT_PARTS : key === "carbs" ? CARB_PARTS : [];
+  const field = MACRO_FIELD[key];
+  const out = [];
+  for (let n3 = MACRO_HISTORY_DAYS - 1; n3 >= 0; n3 -= 1) {
+    const d = shiftDays(date, -n3);
+    const items = (byDate.get(d)?.meals ?? []).flatMap((m) => m.items).filter((i) => i.amount > 0);
+    if (items.length === 0) {
+      out.push({ date: d, values: {}, totalG: null });
+      continue;
+    }
+    const totalG = items.reduce((a, i) => a + i[field], 0);
+    const values = {};
+    let known = 0;
+    for (const p of defs) {
+      const g = items.reduce((a, i) => a + (partOf(i, p, foods, bls) ?? 0), 0);
+      values[p.key] = g;
+      known += g;
+    }
+    values.rest = Math.max(0, totalG - known);
+    out.push({ date: d, values, totalG });
+  }
+  return out;
+}
+
 // src/domain/water.ts
 var GLASS_SIZES_ML = [200, 330, 500, 1e3];
 function formatLiters(ml) {
@@ -166,6 +803,32 @@ function waterSummary(day) {
   const glasses = `${n3} ${n3 === 1 ? "Glas" : "Gl\xE4ser"}`;
   const ml = drinksMl(day);
   return ml > 0 ? `${glasses} + ${ml} ml aus Koffein-Getr\xE4nken` : glasses;
+}
+var WATER_FOOD_KEY = "ui.water_food_in_goal";
+function parseWaterFoodInGoal(raw) {
+  return raw === "1";
+}
+function foodWater(items, foods, bls) {
+  let ml = 0;
+  const withData = /* @__PURE__ */ new Set();
+  const missing = /* @__PURE__ */ new Set();
+  for (const i of items) {
+    if (!(i.amount > 0)) continue;
+    const g = partOf(i, { field: "waterG", bls: "WATER" }, foods, bls);
+    if (g === null) missing.add(i.foodBrand ? `${i.foodName} (${i.foodBrand})` : i.foodName);
+    else {
+      ml += g;
+      withData.add(i.foodId);
+    }
+  }
+  return {
+    ml,
+    withData: withData.size,
+    missing: [...missing].sort((a, b) => a.localeCompare(b, "de"))
+  };
+}
+function waterForGoal(drinksTotalMl, food, inGoal) {
+  return drinksTotalMl + (inGoal && food ? food.ml : 0);
 }
 
 // src/domain/nutrition.ts
@@ -680,99 +1343,6 @@ function describeGoalProgress(p, unit) {
   }
 }
 
-// src/domain/forms.ts
-function textOrNull(value2) {
-  const clean2 = value2.trim();
-  return clean2 === "" ? null : clean2;
-}
-function numberToInput(value2, maxDecimals = 2) {
-  if (value2 === null || value2 === void 0 || !Number.isFinite(value2)) return "";
-  const factor = 10 ** maxDecimals;
-  const rounded = Math.round(value2 * factor) / factor;
-  return String(rounded).replace(".", ",");
-}
-var FormParser = class {
-  constructor() {
-    __publicField(this, "errors", {});
-  }
-  get ok() {
-    return Object.keys(this.errors).length === 0;
-  }
-  fail(field, message) {
-    if (!(field in this.errors)) this.errors[field] = message;
-  }
-  /** Eigener Fehler für ein Feld (z. B. aus einer Umrechnung). */
-  error(field, message) {
-    this.fail(field, message);
-  }
-  /** Optionale Kommazahl. */
-  decimal(field, text2) {
-    if (text2.trim() === "") return null;
-    const value2 = parseDecimal(text2);
-    if (Number.isNaN(value2)) {
-      this.fail(field, "Bitte eine Zahl eingeben, z. B. 80 oder 80,5.");
-      return null;
-    }
-    return value2;
-  }
-  /** Pflicht-Kommazahl. */
-  requiredDecimal(field, text2, label) {
-    if (text2.trim() === "") {
-      this.fail(field, `Bitte ${label} eingeben.`);
-      return 0;
-    }
-    return this.decimal(field, text2) ?? 0;
-  }
-  /** Optionale ganze Zahl. */
-  integer(field, text2) {
-    if (text2.trim() === "") return null;
-    const value2 = parseInteger(text2);
-    if (Number.isNaN(value2)) {
-      this.fail(field, "Bitte eine ganze Zahl eingeben.");
-      return null;
-    }
-    return value2;
-  }
-  requiredInteger(field, text2, label) {
-    if (text2.trim() === "") {
-      this.fail(field, `Bitte ${label} eingeben.`);
-      return 0;
-    }
-    return this.integer(field, text2) ?? 0;
-  }
-  /** Pflichtauswahl (z. B. Übung, Lebensmittel). */
-  required(field, value2, message) {
-    if (value2.trim() === "") this.fail(field, message);
-    return value2;
-  }
-  /** Dauer in Minuten (Kommazahl) → Sekunden. */
-  minutesToSeconds(field, text2) {
-    const minutes = this.decimal(field, text2);
-    return minutes === null ? null : Math.round(minutes * 60);
-  }
-  /** Strecke in km (Kommazahl) → Meter. */
-  kmToMeters(field, text2) {
-    const km = this.decimal(field, text2);
-    return km === null ? null : Math.round(km * 1e3 * 10) / 10;
-  }
-};
-function secondsToMinutesInput(seconds) {
-  return seconds === null ? "" : numberToInput(seconds / 60, 2);
-}
-function metersToKmInput(meters) {
-  return meters === null ? "" : numberToInput(meters / 1e3, 3);
-}
-
-// src/domain/bls.ts
-function neededDecimals(value2) {
-  for (let d = 0; d < 3; d += 1) {
-    const f = 10 ** d;
-    if (Math.abs(Math.round(value2 * f) / f - value2) < 1e-9) return d;
-  }
-  return 3;
-}
-var BLS_BRAND = "BLS 4.0";
-
 // src/domain/fasttrack.ts
 var MACRO_GROUP = "macros";
 var MACRO_KEYS = {
@@ -957,7 +1527,7 @@ function germanDate(iso2) {
   const [y, m, d] = iso2.split("-");
   return `${d}.${m}.${y}`;
 }
-function daysBetween(a, b) {
+function daysBetween2(a, b) {
   const ms = (iso2) => {
     const [y, m, d] = iso2.split("-").map(Number);
     return Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1);
@@ -972,7 +1542,7 @@ function describeSlot(slot) {
   return "";
 }
 function describeScheduled(date, time, today) {
-  const diff = daysBetween(today, date);
+  const diff = daysBetween2(today, date);
   const day = diff === 0 ? "heute" : diff === 1 ? "morgen" : `${WEEKDAY_LABELS[isoWeekday(date)]}, ${germanDate(date)}`;
   return `${day}${time ? ` um ${time} Uhr` : ""}`;
 }
@@ -1577,7 +2147,7 @@ __export(workoutDraft_exports, {
   profileToDraft: () => profileToDraft,
   setColumns: () => setColumns,
   startDraft: () => startDraft,
-  weekStart: () => weekStart,
+  weekStart: () => weekStart2,
   weeklyTotals: () => weeklyTotals,
   workoutToDraft: () => workoutToDraft
 });
@@ -2787,7 +3357,7 @@ function setColumns(category) {
       return { reps: true, weight: true, duration: false, distance: false, rpe: true };
   }
 }
-function weekStart(isoDate) {
+function weekStart2(isoDate) {
   const [y, m, d] = isoDate.split("-").map(Number);
   const date = new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
   const weekday2 = (date.getDay() + 6) % 7;
@@ -2797,7 +3367,7 @@ function weekStart(isoDate) {
   return `${date.getFullYear()}-${mm}-${dd}`;
 }
 function weeklyTotals(workouts, today, weeks) {
-  const current2 = weekStart(today);
+  const current2 = weekStart2(today);
   const result = [];
   for (let i = weeks - 1; i >= 0; i -= 1) {
     const [y, m, d] = current2.split("-").map(Number);
@@ -2806,7 +3376,7 @@ function weeklyTotals(workouts, today, weeks) {
     result.push({ date: iso2, value: 0, workouts: 0 });
   }
   for (const w of workouts) {
-    const bucket = result.find((r2) => r2.date === weekStart(w.date));
+    const bucket = result.find((r2) => r2.date === weekStart2(w.date));
     if (bucket) {
       bucket.value += w.volumeKg;
       bucket.workouts += 1;
@@ -3437,190 +4007,6 @@ __export(trainingVolume_exports, {
   epley1RM: () => epley1RM,
   weeklyMuscleSets: () => weeklyMuscleSets
 });
-
-// src/domain/trends.ts
-var trends_exports = {};
-__export(trends_exports, {
-  RANGE_PRESETS: () => RANGE_PRESETS,
-  comparePeriods: () => comparePeriods,
-  dailySeries: () => dailySeries,
-  daysBetween: () => daysBetween2,
-  formatRange: () => formatRange,
-  groupByPeriod: () => groupByPeriod,
-  isoFromUtc: () => isoFromUtc,
-  isoWeek: () => isoWeek,
-  periodStartBack: () => periodStartBack,
-  presetRanges: () => presetRanges,
-  rangeStats: () => rangeStats,
-  shiftDays: () => shiftDays,
-  utcDay: () => utcDay,
-  weekStart: () => weekStart2
-});
-var DAY_MS = 864e5;
-var ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
-var MONTHS = [
-  "Jan.",
-  "Feb.",
-  "M\xE4rz",
-  "Apr.",
-  "Mai",
-  "Juni",
-  "Juli",
-  "Aug.",
-  "Sept.",
-  "Okt.",
-  "Nov.",
-  "Dez."
-];
-function utcDay(iso2) {
-  const m = ISO.exec(iso2);
-  if (!m) throw new Error(`Ung\xFCltiges Datum: "${iso2}" (erwartet JJJJ-MM-TT)`);
-  const d = /* @__PURE__ */ new Date(0);
-  d.setUTCFullYear(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  if (d.getUTCDate() !== Number(m[3]) || d.getUTCMonth() !== Number(m[2]) - 1) {
-    throw new Error(`Ung\xFCltiges Datum: "${iso2}"`);
-  }
-  return d.getTime();
-}
-function isoFromUtc(t) {
-  return new Date(t).toISOString().slice(0, 10);
-}
-function shiftDays(iso2, days3) {
-  return isoFromUtc(utcDay(iso2) + days3 * DAY_MS);
-}
-function daysBetween2(from, to) {
-  return Math.round((utcDay(to) - utcDay(from)) / DAY_MS) + 1;
-}
-function weekStart2(iso2) {
-  const t = utcDay(iso2);
-  const weekday2 = (new Date(t).getUTCDay() + 6) % 7;
-  return isoFromUtc(t - weekday2 * DAY_MS);
-}
-function isoWeek(iso2) {
-  const monday = utcDay(weekStart2(iso2));
-  const thursday = new Date(monday + 3 * DAY_MS);
-  const year = thursday.getUTCFullYear();
-  const jan1 = Date.UTC(year, 0, 1);
-  const week = Math.floor((thursday.getTime() - jan1) / DAY_MS / 7) + 1;
-  return { year, week };
-}
-function periodOf(iso2, period) {
-  if (period === "week") {
-    const start2 = weekStart2(iso2);
-    const { year, week } = isoWeek(iso2);
-    return {
-      key: `${year}-W${String(week).padStart(2, "0")}`,
-      start: start2,
-      end: shiftDays(start2, 6),
-      label: `KW ${week}`
-    };
-  }
-  const [y, m] = iso2.split("-").map(Number);
-  const start = `${y}-${String(m).padStart(2, "0")}-01`;
-  const end = isoFromUtc(Date.UTC(y, m, 0));
-  return { key: start.slice(0, 7), start, end, label: `${MONTHS[m - 1]} ${y}` };
-}
-function stats(values) {
-  let sum = 0;
-  let min = Infinity;
-  let max = -Infinity;
-  for (const v of values) {
-    sum += v;
-    if (v < min) min = v;
-    if (v > max) max = v;
-  }
-  return { count: values.length, mean: sum / values.length, min, max };
-}
-function groupByPeriod(points2, period) {
-  const groups = /* @__PURE__ */ new Map();
-  for (const p of points2) {
-    if (!Number.isFinite(p.value)) continue;
-    const info = periodOf(p.date, period);
-    const g = groups.get(info.key) ?? { info, values: [] };
-    g.values.push(p.value);
-    groups.set(info.key, g);
-  }
-  return [...groups.values()].sort((a, b) => a.info.start.localeCompare(b.info.start)).map(({ info, values }) => ({
-    ...info,
-    ...stats(values),
-    days: daysBetween2(info.start, info.end)
-  }));
-}
-function rangeStats(points2, from, to) {
-  if (from > to) throw new Error("Der Beginn des Zeitraums muss vor dem Ende liegen.");
-  const inside = points2.filter((p) => p.date >= from && p.date <= to && Number.isFinite(p.value)).sort((a, b) => a.date.localeCompare(b.date));
-  const days3 = daysBetween2(from, to);
-  if (inside.length === 0) {
-    return { from, to, days: days3, count: 0, mean: null, min: null, max: null, first: null, last: null };
-  }
-  const s = stats(inside.map((p) => p.value));
-  return {
-    from,
-    to,
-    days: days3,
-    count: s.count,
-    mean: s.mean,
-    min: s.min,
-    max: s.max,
-    first: inside[0] ?? null,
-    last: inside.at(-1) ?? null
-  };
-}
-function comparePeriods(points2, a, b, minCount = 2) {
-  const sa = rangeStats(points2, a.from, a.to);
-  const sb = rangeStats(points2, b.from, b.to);
-  if (sa.count < minCount || sb.count < minCount) {
-    const few = sa.count < minCount ? "im ersten Zeitraum" : "im zweiten Zeitraum";
-    const n3 = Math.min(sa.count, sb.count);
-    return {
-      a: sa,
-      b: sb,
-      difference: null,
-      reason: n3 === 0 ? `Kein Vergleich m\xF6glich: ${few} gibt es keine Werte.` : `Kein Vergleich m\xF6glich: ${few} gibt es nur ${n3} ${n3 === 1 ? "Wert" : "Werte"} (mindestens ${minCount} n\xF6tig).`
-    };
-  }
-  return { a: sa, b: sb, difference: sb.mean - sa.mean, reason: null };
-}
-var RANGE_PRESETS = [
-  { value: "4w", label: "4 Wochen", days: 28 },
-  { value: "12w", label: "12 Wochen", days: 84 },
-  { value: "6m", label: "6 Monate", days: 182 },
-  { value: "12m", label: "12 Monate", days: 364 }
-];
-function presetRanges(preset, today) {
-  const p = RANGE_PRESETS.find((r2) => r2.value === preset);
-  if (!p) throw new Error(`Unbekannter Zeitraum: ${preset}`);
-  const from = shiftDays(today, -(p.days - 1));
-  return {
-    current: { from, to: today },
-    previous: { from: shiftDays(from, -p.days), to: shiftDays(from, -1) }
-  };
-}
-function dailySeries(points2, from, to) {
-  const byDate = new Map(points2.map((p) => [p.date, p.value]));
-  const n3 = daysBetween2(from, to);
-  const out = [];
-  for (let i = 0; i < n3; i++) {
-    const date = shiftDays(from, i);
-    out.push({ date, value: byDate.get(date) ?? null });
-  }
-  return out;
-}
-function formatRange(from, to) {
-  const [fy, fm, fd] = from.split("-");
-  const [ty, tm, td] = to.split("-");
-  const end = `${td}.${tm}.${ty}`;
-  if (from === to) return end;
-  return fy === ty ? `${fd}.${fm}.\u2013${end}` : `${fd}.${fm}.${fy}\u2013${end}`;
-}
-function periodStartBack(today, period, count) {
-  if (period === "week") return shiftDays(weekStart2(today), -7 * (count - 1));
-  const [y, m] = today.split("-").map(Number);
-  const index = y * 12 + (m - 1) - (count - 1);
-  return `${Math.floor(index / 12)}-${String(index % 12 + 1).padStart(2, "0")}-01`;
-}
-
-// src/domain/trainingVolume.ts
 var E1RM_MAX_REPS = 12;
 var NO_MUSCLE_GROUP = "Ohne Muskelgruppe";
 function epley1RM(weightKg, reps) {
@@ -3656,7 +4042,7 @@ function bestE1RM(log) {
   );
 }
 function weeklyMuscleSets(log, exercises, today, count = 4) {
-  const lastMonday = weekStart2(today);
+  const lastMonday = weekStart(today);
   const weeks = [];
   for (let i = count - 1; i >= 0; i--) {
     const start = shiftDays(lastMonday, -7 * i);
@@ -10679,8 +11065,8 @@ function proteinTarget(goal, weightKg) {
 function weeklyGoals(input) {
   const own = input.settings ?? NO_WEEK_GOALS;
   const { today, data } = input;
-  const monday = weekStart2(today);
-  const elapsed = daysBetween2(monday, today);
+  const monday = weekStart(today);
+  const elapsed = daysBetween(monday, today);
   const inWeek2 = (d) => inRange2(d, monday, today);
   const out = [];
   const fromPlan = own.trainings === null && !!input.planDays && input.planDays > 0;
@@ -10931,7 +11317,7 @@ function dueReminders(dashboard, today) {
         });
       continue;
     }
-    const since = daysBetween2(last, today) - 1;
+    const since = daysBetween(last, today) - 1;
     if (since >= rule.days) {
       out.push({
         key: rule.key,
@@ -11278,10 +11664,10 @@ __export(weekReview_exports, {
 });
 var WEEK_REVIEW_KEY = "ui.week_review";
 function isWeekReviewDay(date) {
-  return shiftDays(weekStart2(date), 6) === date;
+  return shiftDays(weekStart(date), 6) === date;
 }
 function reviewWeek(date) {
-  const from = weekStart2(date);
+  const from = weekStart(date);
   return { from, to: shiftDays(from, 6) };
 }
 function parseWeekAck(raw, from) {
@@ -18000,7 +18386,7 @@ function workingSetCount(sets2) {
 }
 var UNDER_TARGET_WEEKS = 3;
 function lastCompletedWeeks(today, count) {
-  const thisMonday = weekStart2(today);
+  const thisMonday = weekStart(today);
   return Array.from({ length: count }, (_, i) => {
     const from = shiftDays(thisMonday, -7 * (count - i));
     return { from, to: shiftDays(from, 6) };
@@ -18179,11 +18565,11 @@ function totals(list2) {
   };
 }
 function weeklyMinutes(list2, today, weeks) {
-  const last = weekStart(today);
+  const last = weekStart2(today);
   const starts = Array.from({ length: weeks }, (_, i) => addDaysIso(last, -7 * (weeks - 1 - i)));
   const sums = new Map(starts.map((d) => [d, 0]));
   for (const s of list2) {
-    const w = weekStart(s.date);
+    const w = weekStart2(s.date);
     if (sums.has(w)) sums.set(w, (sums.get(w) ?? 0) + s.durationSeconds / 60);
   }
   return starts.map((d) => ({ date: d, value: Math.round(sums.get(d) ?? 0) }));
@@ -20211,7 +20597,7 @@ function appointmentLine(a) {
   return `${wd} ${dayMonth(a.date)}${a.time ? `, ${a.time} Uhr` : ""} \u2013 ${a.title}${a.detail && a.detail !== a.title ? ` (${a.detail})` : ""}`;
 }
 function lastCompletedWeek(today) {
-  return shiftDays(weekStart2(today), -7);
+  return shiftDays(weekStart(today), -7);
 }
 function parseWeeklyReport(json) {
   if (!json) return null;
@@ -30913,7 +31299,7 @@ __export(reportRanges_exports, {
   previousWeek: () => previousWeek
 });
 function previousWeek(today) {
-  const thisMonday = weekStart2(today);
+  const thisMonday = weekStart(today);
   return { from: shiftDays(thisMonday, -7), to: shiftDays(thisMonday, -1) };
 }
 function previousMonth(today) {
@@ -33182,14 +33568,14 @@ function extraLevel(key, grams, energyKcal) {
   const caution = key === "sugar" ? 15 : 13;
   return pct <= 10 ? "good" : pct <= caution ? "caution" : "low";
 }
-var nameOf = (i) => i.foodBrand ? `${i.foodName} (${i.foodBrand})` : i.foodName;
+var nameOf2 = (i) => i.foodBrand ? `${i.foodName} (${i.foodBrand})` : i.foodName;
 function extraSources(day, key) {
   const byFood = /* @__PURE__ */ new Map();
   const missing = /* @__PURE__ */ new Set();
   for (const i of itemsOf2(day)) {
     const g = i[FIELD[key]];
     if (g === null) {
-      missing.add(nameOf(i));
+      missing.add(nameOf2(i));
       continue;
     }
     const s = byFood.get(i.foodId);
@@ -33199,7 +33585,7 @@ function extraSources(day, key) {
     } else {
       byFood.set(i.foodId, {
         foodId: i.foodId,
-        name: nameOf(i),
+        name: nameOf2(i),
         amount: i.amount,
         unit: i.basisUnit,
         grams: g,
@@ -33367,147 +33753,6 @@ function moveLine(i) {
 }
 function overviewToday(i) {
   return [recoveryLine(i), foodLine(i), trainingLine(i), openLine(i), moveLine(i)];
-}
-
-// src/domain/blsMicro.ts
-var blsMicro_exports = {};
-__export(blsMicro_exports, {
-  BLS_FOOD_COLUMNS: () => BLS_FOOD_COLUMNS,
-  BLS_TO_CATALOG: () => BLS_TO_CATALOG,
-  LOW_REFERENCE_SHARE: () => LOW_REFERENCE_SHARE,
-  blsCodeOf: () => blsCodeOf,
-  foodMicro: () => foodMicro,
-  lowReferenceHint: () => lowReferenceHint,
-  supplementsWith: () => supplementsWith
-});
-var BLS_TO_CATALOG = {
-  VITA: { key: "vit_a", factor: 1 },
-  VITD: { key: "vit_d", factor: 1 },
-  VITE: { key: "vit_e", factor: 1 },
-  VITK: { key: "vit_k", factor: 1 },
-  THIA: { key: "vit_b1", factor: 1 },
-  RIBF: { key: "vit_b2", factor: 1 },
-  NIAEQ: { key: "vit_b3", factor: 1 },
-  PANTAC: { key: "vit_b5", factor: 1 },
-  // BLS in µg, Katalog in mg
-  VITB6: { key: "vit_b6", factor: 1e-3 },
-  BIOT: { key: "vit_b7", factor: 1 },
-  FOL: { key: "vit_b9", factor: 1 },
-  VITB12: { key: "vit_b12", factor: 1 },
-  VITC: { key: "vit_c", factor: 1 },
-  NA: { key: "sodium", factor: 1 },
-  CLD: { key: "chloride", factor: 1 },
-  K: { key: "potassium", factor: 1 },
-  CA: { key: "calcium", factor: 1 },
-  MG: { key: "magnesium", factor: 1 },
-  P: { key: "phosphorus", factor: 1 },
-  S: { key: "sulfur", factor: 1 },
-  FE: { key: "iron", factor: 1 },
-  ZN: { key: "zinc", factor: 1 },
-  ID: { key: "iodine", factor: 1 },
-  CU: { key: "copper", factor: 1e-3 },
-  MN: { key: "manganese", factor: 1e-3 },
-  FD: { key: "fluoride", factor: 1e-3 },
-  CR: { key: "chromium", factor: 1 },
-  MO: { key: "molybdenum", factor: 1 },
-  CHORL: { key: "cholesterol", factor: 1 },
-  // Fettsäuren und Aminosäuren: BLS in g, Katalog in mg
-  "F18:3CN3": { key: "ala", factor: 1e3 },
-  "F20:5CN3": { key: "epa", factor: 1e3 },
-  "F22:5CN3": { key: "dpa", factor: 1e3 },
-  "F22:6CN3": { key: "dha", factor: 1e3 },
-  FAPUN3: { key: "omega3_total", factor: 1e3 },
-  HIS: { key: "histidine", factor: 1e3 },
-  ILE: { key: "isoleucine", factor: 1e3 },
-  LEU: { key: "leucine", factor: 1e3 },
-  LYS: { key: "lysine", factor: 1e3 },
-  MET: { key: "methionine", factor: 1e3 },
-  PHE: { key: "phenylalanine", factor: 1e3 },
-  THR: { key: "threonine", factor: 1e3 },
-  TRP: { key: "tryptophan", factor: 1e3 },
-  VAL: { key: "valine", factor: 1e3 },
-  ARG: { key: "arginine", factor: 1e3 },
-  CYSTE: { key: "cysteine", factor: 1e3 },
-  GLY: { key: "glycine", factor: 1e3 },
-  PRO: { key: "proline", factor: 1e3 },
-  TYR: { key: "tyrosine", factor: 1e3 },
-  ALA: { key: "alanine", factor: 1e3 },
-  ASP: { key: "aspartic_acid", factor: 1e3 },
-  GLU: { key: "glutamic_acid", factor: 1e3 },
-  SER: { key: "serine", factor: 1e3 }
-};
-var BLS_FOOD_COLUMNS = /* @__PURE__ */ new Set([
-  "ENERCJ",
-  "ENERCC",
-  "PROT625",
-  "FAT",
-  "CHO",
-  "FIBT",
-  "SUGAR",
-  "FASAT",
-  "NACL"
-]);
-var LOW_REFERENCE_SHARE = 70;
-var CODE = /Code\s+([A-Z][A-Z0-9]{2,})/;
-function blsCodeOf(food) {
-  if ((food.brand ?? "").trim() !== BLS_BRAND) return null;
-  const m = CODE.exec(food.notes ?? "");
-  return m?.[1] ?? null;
-}
-function foodMicro(items, foods, bls) {
-  const out = { values: {}, extra: {}, withData: 0, without: [], missing: {} };
-  const seenWith = /* @__PURE__ */ new Set();
-  const seenWithout = /* @__PURE__ */ new Set();
-  for (const it of items) {
-    if (!(it.amount > 0)) continue;
-    const food = foods.get(it.foodId);
-    if (!food) continue;
-    const code = blsCodeOf(food);
-    const entry2 = code ? bls.get(code) : void 0;
-    if (!entry2) {
-      if (!seenWithout.has(it.foodId)) {
-        seenWithout.add(it.foodId);
-        out.without.push(food.name);
-      }
-      continue;
-    }
-    if (!seenWith.has(it.foodId)) {
-      seenWith.add(it.foodId);
-      out.withData += 1;
-    }
-    const share2 = it.amount / 100;
-    for (const v of entry2.values) {
-      if (BLS_FOOD_COLUMNS.has(v.code)) continue;
-      const map = BLS_TO_CATALOG[v.code];
-      const amount = v.amount !== null ? v.amount : v.flag ? 0 : null;
-      if (amount === null) {
-        if (map) out.missing[map.key] = (out.missing[map.key] ?? 0) + 1;
-        continue;
-      }
-      if (map) out.values[map.key] = (out.values[map.key] ?? 0) + amount * share2 * map.factor;
-      else out.extra[v.code] = (out.extra[v.code] ?? 0) + amount * share2;
-    }
-  }
-  const tidy = (rec) => {
-    for (const [k, v] of Object.entries(rec)) {
-      if (!(v > 0)) delete rec[k];
-      else
-        rec[k] = v >= 100 ? Math.round(v) : v >= 10 ? Math.round(v * 10) / 10 : Math.round(v * 1e3) / 1e3;
-    }
-  };
-  tidy(out.values);
-  tidy(out.extra);
-  return out;
-}
-function supplementsWith(key, supplements) {
-  return supplements.filter((s) => !s.archived && (s.values[key] ?? 0) > 0).map((s) => s.name).sort((a, b) => a.localeCompare(b, "de"));
-}
-function lowReferenceHint(percent, supplementNames) {
-  if (percent === null || percent >= LOW_REFERENCE_SHARE) return null;
-  if (supplementNames.length === 0) return `unter ${LOW_REFERENCE_SHARE} % des Referenzwerts`;
-  const list2 = supplementNames.slice(0, 2).join(", ");
-  const more = supplementNames.length > 2 ? ` und ${supplementNames.length - 2} weitere` : "";
-  return `unter ${LOW_REFERENCE_SHARE} % \u2013 enthalten in deinem Supplement ${list2}${more}`;
 }
 
 // src/domain/lateTraining.ts
@@ -34688,6 +34933,7 @@ export {
   SCALE_MODE_LABELS,
   SEX_OPTIONS,
   SOURCE_LABEL,
+  WATER_FOOD_KEY,
   ZERO,
   acwr,
   adaptiveTdee_exports as adaptiveTdee,
@@ -34768,6 +35014,7 @@ export {
   fileStem,
   firstPage,
   foodCaffeine_exports as foodCaffeine,
+  foodWater,
   formatAmount,
   formatDate,
   formatDuration,
@@ -34828,6 +35075,7 @@ export {
   machinesByMuscle_exports as machinesByMuscle,
   machines_exports as machinesDomain,
   macroBaseKcal,
+  macroDetails_exports as macroDetails,
   macroEnergyShares,
   macroGoalRows,
   macroLevel,
@@ -34868,6 +35116,7 @@ export {
   parseLayout,
   parseMuscleMapSettings,
   parseReminderSettings,
+  parseWaterFoodInGoal,
   parseWeeklyReport,
   pendingKinds,
   perServing,
@@ -34936,6 +35185,7 @@ export {
   trends_exports as trends,
   validTime,
   validateProfile,
+  waterForGoal,
   waterGlasses,
   waterPercent,
   waterSummary,

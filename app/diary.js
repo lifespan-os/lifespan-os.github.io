@@ -29,6 +29,7 @@ export { diaryActions, diaryChange, diaryInput } from "./diaryactions.js";
 
 import { diaryExportHtml } from "./pdfparity.js";
 import { extrasCard } from "./diaryextras.js";
+import { macroDetailsHtml } from "./diarymacros.js";
 import * as BL from "./bls.js";
 import { ensureBls } from "./blsui.js";
 export let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice, buildReturnTables }
@@ -266,7 +267,9 @@ export function viewDiary() {
       : withFast(withFast(withFast(D.sumOptional(allItems, key), fast?.values[D.OPTIONAL_KEYS[key]]), D.optionalOf(supps, key)), mealValues[D.OPTIONAL_KEYS[key]]);
 
   // ---------------- Karten
-  const totalsCard = `<section class="card card--nutrition"><div class="card__head"><h3>Tagessumme</h3>
+  const macroOpen = Boolean(S.macroOpen);
+  const macro = totals.energyKcal + totals.fatG + totals.proteinG + totals.carbsG > 0 ? macroInputFor(db, date, slots, supps, fast, mealValues, totals, weightKg) : null;
+  const totalsCard = `<section class="card card--nutrition${macroOpen ? " extras-card--open" : ""}"><div class="card__head"><h3>Tagessumme</h3>
       <span class="card__meta">${goal ? `Ziele gültig ab ${esc(D.formatDate(goal.validFrom))}` : `<button class="linkbtn" data-act="goals-open">Tagesziele festlegen</button>`}</span></div>
     ${
       goalBased && goal
@@ -284,6 +287,7 @@ export function viewDiary() {
           ${plannedForSum.length ? `<p class="muted small">Geplant: ${esc(D.formatKcal(plannedForSum.reduce((x, p) => x + p.energyKcal, 0)))} (${plannedForSum.length === 1 ? "1 Mahlzeit" : `${plannedForSum.length} Mahlzeiten`}, zählt erst nach „Gegessen“)</p>` : ""}
           <p class="card__note">Mit Tageszielen für Energie und Makronährstoffe (Settings → Tagesziele) zeigt die Tagessumme, wie viel noch offen ist (Defizit) oder darüber liegt (Überschuss).</p>`
     }
+    ${macro ? macroDetailsHtml(macro.input, macro.days, date, macroOpen) : ""}
     ${
       allItems.length > 0 || fast || hasSuppMacros || hasMealValues
         ? `<details class="optional-nutrients"><summary>Weitere Nährwerte</summary><dl>${OPTIONALS.map(
@@ -296,7 +300,7 @@ export function viewDiary() {
 
   const cards = [
     { id: "totals", node: totalsCard },
-    { id: "water", node: waterCard(db, date, goal) },
+    { id: "water", node: waterCard(db, date, goal, foodWaterOf(db, allItems)) },
     { id: "extras", node: extrasCard(db, date, Boolean(S.extrasOpen)) },
     { id: "micro", node: microCard(catalog, microGroups, micro, refGroup, fast || hasMealValues, fromFoods, db) },
     { id: "fasttrack", empty: !fast, node: fast ? fastCard(catalog, fast, date) : "" },
@@ -340,17 +344,21 @@ export function glassLabel(g, filledCount) {
   return add === 1 ? `Ein Glas (${amount}) als getrunken eintragen` : `${add} Gläser (je ${amount}) als getrunken eintragen`;
 }
 
-export function waterCard(db, date, goal) {
+export function waterCard(db, date, goal, food = null) {
   const day = P.waterDay(db, date);
   const goalL = goal?.waterL ?? null;
   const glasses = D.waterGlasses(day, goalL);
-  const percent = D.waterPercent(day.totalMl, goalL);
+  // Wasser aus Lebensmitteln (1.164.0, wie PC 1.0.229): getrennt; zählt nur mit Schalter (je Gerät, Standard aus)
+  const foodInGoal = X.S.prefs?.waterFoodInGoal === true;
+  const forGoalMl = D.waterForGoal(day.totalMl, food, foodInGoal);
+  const hasFood = food !== null && (food.ml > 0 || food.missing.length > 0);
+  const percent = D.waterPercent(forGoalMl, goalL);
   const target = D.goalGlasses(goalL, day.glassMl);
   const unsent = P.unsentWater(X.S.water);
   return `<section class="card card--nutrition water-card"><div class="card__head"><h3>Wasserhaushalt</h3>
       <span class="card__meta">${goalL !== null ? `Ziel ${esc(D.formatLiters(goalL * 1000))}` : `<button class="linkbtn" data-act="goals-open">Trinkziel festlegen</button>`}</span></div>
     <div class="water-card__summary">
-      <p class="water-card__amount"><strong>${esc(D.formatLiters(day.totalMl))}</strong>${goalL !== null ? `<span class="of">von ${esc(D.formatLiters(goalL * 1000))}</span>` : ""}
+      <p class="water-card__amount"><strong>${esc(D.formatLiters(forGoalMl))}</strong>${goalL !== null ? `<span class="of">von ${esc(D.formatLiters(goalL * 1000))}</span>` : ""}
         <span class="muted small">${esc(D.waterSummary(day))}${target !== null ? ` · Ziel ≈ ${target} ${target === 1 ? "Glas" : "Gläser"} à ${esc(D.formatLiters(day.glassMl))}` : ""}</span></p>
       <label class="field water-card__size"><span>Menge je Glas</span>
         <select data-diary="glass">${D.GLASS_SIZES_ML.map((ml) => `<option value="${ml}" ${ml === day.glassMl ? "selected" : ""}>${esc(D.formatLiters(ml))}</option>`).join("")}</select></label>
@@ -363,6 +371,14 @@ export function waterCard(db, date, goal) {
       )
       .join("")}</ul>
     ${day.drinks.length ? `<p class="muted small">Aus der Koffein-Erfassung: ${esc(day.drinks.map(D.drinkText).join(", "))}</p>` : ""}
+    ${
+      hasFood
+        ? `<div class="water-card__food"><p class="small">Aus Lebensmitteln: <strong>${esc(D.formatLiters(food.ml))}</strong> · Getränke ${esc(D.formatLiters(day.totalMl))} + Lebensmittel ${esc(D.formatLiters(food.ml))} = <strong>${esc(D.formatLiters(day.totalMl + food.ml))}</strong>${foodInGoal && goalL !== null ? " (zählt zum Trinkziel)" : ""}</p>
+          ${food.missing.length ? `<p class="muted small">Ohne Wasserangabe (zählt nicht mit): ${esc(food.missing.slice(0, 4).join(", "))}${food.missing.length > 4 ? ` und ${food.missing.length - 4} weitere` : ""}</p>` : ""}
+          <label class="check-row"><input type="checkbox" data-act="water-food-goal" ${foodInGoal ? "checked" : ""}> Wasser aus Lebensmitteln zum Trinkziel zählen</label>
+          <p class="muted small">Die DGE-Empfehlung von etwa 1,5 l gilt für Getränke; rund 0,9 l kommen zusätzlich über das Essen. Deshalb ist der Schalter anfangs aus (gilt für dieses Handy).</p></div>`
+        : ""
+    }
     <p class="card__note">Tippen auf ein leeres Glas trägt es als getrunken ein, Tippen auf ein volles Glas nimmt es wieder heraus.${
       unsent ? ` ${unsent} ${unsent === 1 ? "Änderung geht" : "Änderungen gehen"} mit „Lebensmittel senden“ an den PC.` : ""
     }</p>
@@ -576,13 +592,9 @@ export async function quickAdd(key, items, label) {
   });  return res;
 }
 
-/** BLS-Einträge der Lebensmittel eines Tages als `BlsFood` (wie am PC `bls_food`) */
-function blsFoodMicro(db, meals) {
-  const empty = { values: {}, extra: {}, withData: 0, without: [], missing: {}, noBls: true };
-  const items = meals.flatMap((m) => m.items.map((i) => ({ foodId: i.foodId, amount: i.amount })));
-  if (!items.length) return empty;
+/** BLS-Einträge der Lebensmittel als `BlsFood` (wie am PC `bls_food`); `b` = geladener BLS oder null */
+function blsEntries(db, items, b = ensureBls()) {
   const foods = new Map([...db.foods.values()].map((f) => [f.id, { name: f.name, brand: f.brand, notes: f.notes }]));
-  const b = ensureBls();
   const bls = new Map();
   if (b) {
     for (const it of items) {
@@ -603,7 +615,42 @@ function blsFoodMicro(db, meals) {
       });
     }
   }
+  return { foods, bls };
+}
+
+/** Stoffe aus den BLS-Lebensmitteln eines Tages */
+function blsFoodMicro(db, meals) {
+  const empty = { values: {}, extra: {}, withData: 0, without: [], missing: {}, noBls: true };
+  const items = meals.flatMap((m) => m.items.map((i) => ({ foodId: i.foodId, amount: i.amount })));
+  if (!items.length) return empty;
+  const b = ensureBls();
+  const { foods, bls } = blsEntries(db, items, b);
   return { ...D.blsMicro.foodMicro(items, foods, bls), noBls: !b };
+}
+
+/** Wasser aus den Lebensmitteln eines Tages (1.164.0): eigenes Feld, sonst BLS (wenn er auf dem Handy liegt) */
+function foodWaterOf(db, items) {
+  const { foods, bls } = blsEntries(db, items);
+  return D.foodWater(items, foods, bls);
+}
+
+/** Eingabe für die Details der Tagessumme (1.164.0, wie DiaryTab am PC 1.0.229) */
+function macroInputFor(db, date, slots, supps, fast, mealValues, totals, weightKg) {
+  const days = Array.from({ length: D.macroDetails.MACRO_HISTORY_DAYS }, (_, i) => P.mealDay(db, D.trends.shiftDays(date, -i)));
+  const items = days.flatMap((d) => d.meals.flatMap((m) => m.items.map((i) => ({ foodId: i.foodId, amount: i.amount }))));
+  const { foods, bls } = blsEntries(db, items);
+  const fastN = D.fastNutrients(fast);
+  const direct = D.macrosOf(mealValues);
+  const input = {
+    meals: slots.filter((x) => x.meal).map((x) => ({ id: x.meal.id, label: x.title, time: x.meal.time ?? null, items: x.meal.items })),
+    foods,
+    bls,
+    supplements: supps,
+    other: { fatG: fastN.fatG + direct.fatG, proteinG: fastN.proteinG + direct.proteinG, carbsG: fastN.carbsG + direct.carbsG },
+    energyKcal: totals.energyKcal,
+    weightKg: weightKg ?? null,
+  };
+  return { input, days };
 }
 
 const suppList = (db) =>

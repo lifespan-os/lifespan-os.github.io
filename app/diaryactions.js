@@ -29,6 +29,17 @@ export const diaryActions = {
     X.S.extrasOpen = !X.S.extrasOpen;
     X.rerender();
   },
+  // Wasser aus Lebensmitteln zum Trinkziel zählen (1.164.0, je Gerät)
+  "water-food-goal": async () => {
+    X.S.prefs = { ...(X.S.prefs ?? {}), waterFoodInGoal: !(X.S.prefs?.waterFoodInGoal === true) };
+    await X.store.set("prefs", X.S.prefs);
+    X.rerender();
+  },
+  // Details der Tagessumme auf- und zuklappen (1.164.0)
+  "macro-toggle": () => {
+    X.S.macroOpen = !X.S.macroOpen;
+    X.rerender();
+  },
   "qm-repeat": (el) => {
     const [key, kind] = el.dataset.arg.split("|");
     const db = buildDb();

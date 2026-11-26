@@ -122,6 +122,12 @@ export function foodRow(r, id, iso) {
     salt_g: between(r.saltG, 0, 100, "Salz", { optional: true }),
     // Koffein in mg je 100 g/ml (1.127.0, wie PC 1.0.202: Schema 77)
     caffeine_mg: caffeineOf(r.caffeineMg),
+    // Fettsäuren, Stärke, Wasser in g je 100 g/ml (1.163.0, wie PC 1.0.228: Schema 80)
+    mono_fat_g: between(r.monoFatG, 0, 100, "Einfach ungesättigte Fettsäuren", { optional: true }),
+    poly_fat_g: between(r.polyFatG, 0, 100, "Mehrfach ungesättigte Fettsäuren", { optional: true }),
+    trans_fat_g: between(r.transFatG, 0, 100, "Trans-Fettsäuren", { optional: true }),
+    starch_g: between(r.starchG, 0, 100, "Stärke", { optional: true }),
+    water_g: between(r.waterG, 0, 100, "Wasser", { optional: true }),
     portion_name: optTxt(r.portionName, 40),
     portion_amount: r.portionAmount === null || r.portionAmount === undefined ? null : between(r.portionAmount, 0.01, 5000, "Portionsmenge"),
     notes: optTxt(r.notes, 1000),

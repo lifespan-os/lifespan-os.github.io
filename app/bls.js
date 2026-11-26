@@ -118,15 +118,28 @@ export function describe(item) {
  * Als eigenes Lebensmittel übernehmen (wie `blsFoodInput`). Ergebnis { ok, row, zeroed } bzw.
  * { ok: false, message } (Pflichtangabe fehlt oder Werte passen nicht zu den Prüfregeln).
  */
+const DETAIL_FIELDS = [
+  { code: "FAMS", label: "einfach ungesättigte Fettsäuren" },
+  { code: "FAPU", label: "mehrfach ungesättigte Fettsäuren" },
+  { code: "STARCH", label: "Stärke" },
+  { code: "WATER", label: "Wasser" },
+];
+
 export function takeover(b, f, { id, now = new Date() }) {
   const v = (field) => {
     const raw = f[4][b.pos[FOOD_FIELDS[field].code]];
     if (typeof raw === "number") return Math.round(raw * 100) / 100;
     return typeof raw === "string" ? 0 : null;
   };
-  const zeroed = Object.entries(FOOD_FIELDS)
-    .filter(([, d]) => typeof f[4][b.pos[d.code]] === "string")
-    .map(([, d]) => `${d.label} (${flagLabel(f[4][b.pos[d.code]])})`);
+  // Weitere Angaben (1.163.0, wie `BLS_DETAIL_FIELDS` am PC); Werte über 100 g auf 100 begrenzt
+  const d = (code) => {
+    const raw = b.pos[code] === undefined ? undefined : f[4][b.pos[code]];
+    if (typeof raw === "number") return Math.min(100, Math.round(raw * 100) / 100);
+    return typeof raw === "string" ? 0 : null;
+  };
+  const zeroed = [...Object.values(FOOD_FIELDS), ...DETAIL_FIELDS]
+    .filter((x) => b.pos[x.code] !== undefined && typeof f[4][b.pos[x.code]] === "string")
+    .map((x) => `${x.label} (${flagLabel(f[4][b.pos[x.code]])})`);
   const missing = REQUIRED.filter((k) => v(k) === null).map((k) => FOOD_FIELDS[k].label);
   if (missing.length) return { ok: false, message: `Im BLS fehlt: ${missing.join(", ")}. Bitte das Lebensmittel selbst anlegen.` };
   const parts = [`Quelle: ${CITATION_SHORT}, Code ${f[0]}. Werte je 100 g essbarer Anteil.`];
@@ -146,6 +159,11 @@ export function takeover(b, f, { id, now = new Date() }) {
         sugarG: v("sugarG"),
         saturatedFatG: v("saturatedFatG"),
         saltG: v("saltG"),
+        monoFatG: d("FAMS"),
+        polyFatG: d("FAPU"),
+        transFatG: null,
+        starchG: d("STARCH"),
+        waterG: d("WATER"),
         portionName: null,
         portionAmount: null,
         notes: parts.join(" ").slice(0, 1000),

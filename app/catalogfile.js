@@ -12,6 +12,15 @@
 
 import { foodRow, nutrientMap, planInstall, supplementRow } from "./vendor.js";
 
+/** Weitere Angaben der Lebensmittel (Schema 80, wie PC 1.0.228): Spalte → Feld der Datei. */
+const DETAIL_COLS = [
+  ["mono_fat_g", "monoFatG"],
+  ["poly_fat_g", "polyFatG"],
+  ["trans_fat_g", "transFatG"],
+  ["starch_g", "starchG"],
+  ["water_g", "waterG"],
+];
+
 export const FORMAT = "lifespan-os-katalog";
 export const VERSION = 1;
 export const MAX_ITEMS = 20000;
@@ -41,6 +50,9 @@ export function buildCatalogFile(kind, db, nutrients, now = new Date()) {
         saturatedFatG: opt(f.saturated_fat_g),
         saltG: opt(f.salt_g),
         ...(f.caffeine_mg === null || f.caffeine_mg === undefined ? {} : { caffeineMg: f.caffeine_mg }),
+        ...Object.fromEntries(
+          DETAIL_COLS.filter(([col]) => f[col] !== null && f[col] !== undefined).map(([col, key]) => [key, f[col]]),
+        ),
         portionName: opt(f.portion_name),
         portionAmount: opt(f.portion_amount),
         notes: opt(f.notes),
@@ -112,7 +124,7 @@ export function parseCatalogFile(content, kind) {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const norm = (s) => String(s ?? "").trim().toLowerCase();
-const FOOD_COLS = ["name", "brand", "basis_unit", "energy_kcal", "protein_g", "carbs_g", "fat_g", "fiber_g", "sugar_g", "saturated_fat_g", "salt_g", "caffeine_mg", "portion_name", "portion_amount", "notes"];
+const FOOD_COLS = ["name", "brand", "basis_unit", "energy_kcal", "protein_g", "carbs_g", "fat_g", "fiber_g", "sugar_g", "saturated_fat_g", "salt_g", "caffeine_mg", "mono_fat_g", "poly_fat_g", "trans_fat_g", "starch_g", "water_g", "portion_name", "portion_amount", "notes"];
 const SUPP_COLS = ["name", "unit", "notes", "manufacturer", "serving_amount", "daily_dose"];
 const same = (a, b) => (a ?? null) === (b ?? null) || (typeof a === "number" && typeof b === "number" && Math.abs(a - b) < 1e-9);
 

@@ -372,6 +372,12 @@ function mealItem(db, it) {
     portionName: f?.portion_name ?? null,
     portionAmount: f?.portion_amount ?? null,
     caffeineMg: per("caffeine_mg"),
+    // Fettsäuren, Stärke, Wasser dieser Menge (Schema 80, wie `MealItem` am PC 1.0.228)
+    monoFatG: per("mono_fat_g"),
+    polyFatG: per("poly_fat_g"),
+    transFatG: per("trans_fat_g"),
+    starchG: per("starch_g"),
+    waterG: per("water_g"),
     position: it.position ?? 0,
     known: Boolean(f),
   };

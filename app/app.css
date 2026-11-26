@@ -2390,6 +2390,25 @@ button.pcal-done { display: flex; align-items: center; justify-content: space-be
 .xh__bar--none { fill: var(--muted); }
 .xh__limit { fill: none; stroke: var(--fg); stroke-width: 1.4; stroke-dasharray: 4 3; }
 
+/* Wasser aus Lebensmitteln (1.164.0, wie PC 1.0.229) */
+.water-card__food { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.water-card__food .check-row { display: flex; gap: 10px; align-items: flex-start; margin: 6px 0 2px; font-size: .9rem; }
+.water-card__food .check-row input { margin-top: 3px; flex: none; }
+
+/* Details der Tagessumme (1.164.0, wie PC 1.0.229) */
+.md__head { margin: 10px 0 2px; font-size: .82rem; font-weight: 600; color: var(--muted); }
+.md__missing { margin: 0 0 6px; padding-left: 16px; }
+.md__legend { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 4px 0 0; color: var(--muted); }
+.md__swatch { display: inline-block; width: 10px; height: 10px; margin-right: 4px; border-radius: 2px; vertical-align: middle; }
+.md__bar--sat, .md__swatch--sat { fill: var(--c-nutrition); background: var(--c-nutrition); }
+.md__bar--mono, .md__swatch--mono { fill: var(--c-fat); background: var(--c-fat); }
+.md__bar--poly, .md__swatch--poly { fill: var(--c-water); background: var(--c-water); }
+.md__bar--trans, .md__swatch--trans { fill: var(--c-danger); background: var(--c-danger); }
+.md__bar--sugar, .md__swatch--sugar { fill: var(--c-danger); background: var(--c-danger); }
+.md__bar--starch, .md__swatch--starch { fill: var(--c-carbs); background: var(--c-carbs); }
+.md__bar--rest, .md__swatch--rest { fill: var(--line); background: var(--line); }
+.md__bar--total { fill: var(--c-protein); }
+
 /* Makroziele zweistufig (1.116.0): Strich = Minimum (Grundbedarf), Ende = Tagesziel */
 .goal-bar__marker--min { top: 0; bottom: 0; width: 2px; background: var(--muted); }
 .day-chart__min { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--muted); }

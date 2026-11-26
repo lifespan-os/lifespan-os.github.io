@@ -323,6 +323,11 @@ function formCard() {
       ${field("portionAmount", "Menge der Portion", f.portionAmount, { unit: f.basis })}
       ${field("caffeineMg", "Koffein (optional)", f.caffeineMg ?? "", { unit: "mg je 100 " + f.basis })}
       <p class="muted small wide" id="ff-caffeine-tip">${caffeineTipHtml(f)}</p>
+      <details class="wide nf-details" ${N.DETAIL_KEYS.some((k) => (f.details?.[k] ?? "").trim() !== "" || e[`d.${k}`]) ? "open" : ""}>
+        <summary>Weitere Angaben (optional): Fettsäuren, Stärke, Wasser</summary>
+        <p class="muted small">Für die Details der Tagessumme und das Wasser aus Lebensmitteln, je 100 ${esc(f.basis)}. Leer = keine Angabe.</p>
+        <div class="nf-grid">${N.DETAIL_KEYS.map((k) => field(`d.${k}`, N.DETAIL_NAMES[k], f.details?.[k] ?? "", { unit: "g" })).join("")}</div>
+      </details>
       ${field("barcode", "Strichcode (EAN)", f.barcode, { mode: "numeric", wide: true })}
       <div class="field wide"><label for="ff-notes">Notiz (Vitamine, Mineralstoffe, Koffein …)</label>
         <textarea id="ff-notes" data-ff="notes" rows="2">${esc(f.notes)}</textarea>${e.notes ? `<p class="err small">${esc(e.notes)}</p>` : ""}</div>
@@ -1181,6 +1186,8 @@ export function foodInput(el) {
     if (k.startsWith("v.")) {
       s.form.values[k.slice(2)] = el.value;
       updateWarnings();
+    } else if (k.startsWith("d.")) {
+      s.form.details = { ...(s.form.details ?? {}), [k.slice(2)]: el.value };
     } else {
       s.form[k] = el.value;
       if (k === "name" || k === "brand" || k === "basis") updateDupHint();

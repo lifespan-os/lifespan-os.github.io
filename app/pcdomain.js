@@ -3395,7 +3395,9 @@ function parseLayout(json) {
     const ids = (a) => Array.isArray(a) ? a.filter((x) => typeof x === "string") : [];
     const layout = {
       order: ids(v.order),
-      hidden: ids(v.hidden),
+      // Seit 1.0.226 blendet das Auge im Verschiebe-Modus aus (`domain/cardArrange.ts`); die alte
+      // Liste der „… anpassen“-Fenster gilt nicht mehr, früher ausgeblendete Karten erscheinen wieder.
+      hidden: [],
       emptyLast: v.emptyLast !== false
     };
     if (Array.isArray(v.introduced)) layout.introduced = ids(v.introduced);
@@ -34137,6 +34139,513 @@ function describeDecisions(items) {
   ].filter(Boolean);
   return parts2.length ? `Maschinen: ${parts2.join(", ")}.` : "";
 }
+
+// src/domain/cardArrange.ts
+var cardArrange_exports = {};
+__export(cardArrange_exports, {
+  ARRANGE_HOLD_MS: () => ARRANGE_HOLD_MS,
+  ARRANGE_MOVE_TOLERANCE: () => ARRANGE_MOVE_TOLERANCE,
+  arrangeSettingKey: () => arrangeSettingKey,
+  arrangedIds: () => arrangedIds,
+  cardKey: () => cardKey,
+  moveCard: () => moveCard,
+  pageKey: () => pageKey,
+  parseArrange: () => parseArrange,
+  parsePageArrange: () => parsePageArrange,
+  toggleCardHidden: () => toggleCardHidden,
+  uniqueKeys: () => uniqueKeys,
+  withPage: () => withPage
+});
+var ARRANGE_HOLD_MS = 3e3;
+var ARRANGE_MOVE_TOLERANCE = 10;
+var MAX_PAGES = 200;
+var MAX_IDS = 120;
+function cardKey(title) {
+  return title.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss").replace(/[0-9]+/g, " ").replace(/[^a-z]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+}
+function uniqueKeys(titles) {
+  const seen = /* @__PURE__ */ new Map();
+  return titles.map((t) => {
+    const k = cardKey(t);
+    if (!k) return null;
+    const n3 = (seen.get(k) ?? 0) + 1;
+    seen.set(k, n3);
+    return n3 === 1 ? k : `${k}-${n3}`;
+  });
+}
+var strList = (v) => Array.isArray(v) ? [
+  ...new Set(
+    v.filter((x) => typeof x === "string" && x.length > 0 && x.length <= 80)
+  )
+].slice(0, MAX_IDS) : [];
+function parseArrange(json) {
+  if (!json) return {};
+  try {
+    const raw = JSON.parse(json);
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+    const out = {};
+    for (const [page, v] of Object.entries(raw).slice(0, MAX_PAGES)) {
+      if (!v || typeof v !== "object") continue;
+      const e = v;
+      const entry2 = { order: strList(e.order), hidden: strList(e.hidden) };
+      if (entry2.order.length || entry2.hidden.length) out[page] = entry2;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+function arrangedIds(natural, entry2) {
+  if (!entry2 || entry2.order.length === 0) return [...natural];
+  const result = entry2.order.filter((id3) => natural.includes(id3));
+  natural.forEach((id3, i) => {
+    if (result.includes(id3)) return;
+    const before = natural.slice(0, i).reverse().find((x) => result.includes(x));
+    result.splice(before ? result.indexOf(before) + 1 : 0, 0, id3);
+  });
+  return result;
+}
+function moveCard(entry2, natural, id3, target, after) {
+  const base = entry2 ?? { order: [], hidden: [] };
+  if (id3 === target) return base;
+  const list2 = arrangedIds(natural, base).filter((x) => x !== id3);
+  const at = list2.indexOf(target);
+  if (at < 0) return base;
+  list2.splice(after ? at + 1 : at, 0, id3);
+  const others = base.order.filter((x) => !natural.includes(x));
+  return { order: [...others, ...list2], hidden: base.hidden };
+}
+function toggleCardHidden(entry2, id3) {
+  const base = entry2 ?? { order: [], hidden: [] };
+  return {
+    order: base.order,
+    hidden: base.hidden.includes(id3) ? base.hidden.filter((x) => x !== id3) : [...base.hidden, id3]
+  };
+}
+function withPage(state, page, entry2) {
+  const next = { ...state };
+  if (!entry2 || entry2.order.length === 0 && entry2.hidden.length === 0) delete next[page];
+  else
+    next[page] = { order: entry2.order.slice(0, MAX_IDS), hidden: entry2.hidden.slice(0, MAX_IDS) };
+  return next;
+}
+function pageKey(route, tabs) {
+  const r2 = route.replace(/^#/, "").split("?")[0] || "/";
+  const t = tabs.map((x) => cardKey(x)).filter(Boolean);
+  return t.length ? `${r2}|${t.join("/")}` : r2;
+}
+function arrangeSettingKey(page) {
+  const safe2 = page.replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "start";
+  const key = `ui.arrange.${safe2}`;
+  if (key.length <= 64) return key;
+  let h = 5381;
+  for (const ch of page) h = (h * 33 ^ ch.charCodeAt(0)) >>> 0;
+  return `ui.arrange.${safe2.slice(0, 44)}_${h.toString(36)}`.slice(0, 64);
+}
+function parsePageArrange(json) {
+  return parseArrange(json ? `{"p":${json}}` : null).p;
+}
+
+// src/ui/cardArrangeEngine.ts
+var INTERACTIVE = "input, textarea, select, button, a, label, [contenteditable], [role='slider'], [role='button'], [role='tab'], [data-no-arrange]";
+var SKIP = "dialog, [role='dialog'], .sheet, .modal, [data-arrange-skip]";
+var EDGE = 70;
+function titleOf(card2) {
+  const h = card2.querySelector(".card__title, h2, h3");
+  return (h?.textContent ?? "").trim();
+}
+function collectGroups(root) {
+  const cards = Array.from(root.querySelectorAll(".card")).filter(
+    (c) => !c.parentElement?.closest(".card") && !c.closest(SKIP)
+  );
+  const raw = [];
+  for (const card2 of cards) {
+    let el = card2;
+    while (el.parentElement && el.parentElement !== root && el.parentElement.childElementCount === 1)
+      el = el.parentElement;
+    if (!el.parentElement || raw.some((r2) => r2.el === el)) continue;
+    raw.push({ el, card: card2, title: titleOf(card2) });
+  }
+  const fixed = raw.map((r2) => r2.card.dataset.arrangeId ?? r2.card.dataset.card ?? null);
+  const keys = uniqueKeys(raw.map((r2, i) => fixed[i] ? `id ${fixed[i]}` : r2.title));
+  const byContainer = /* @__PURE__ */ new Map();
+  raw.forEach((r2, i) => {
+    const id3 = keys[i];
+    if (!id3) return;
+    const c = r2.el.parentElement;
+    const list2 = byContainer.get(c) ?? [];
+    list2.push({ el: r2.el, card: r2.card, id: id3 });
+    byContainer.set(c, list2);
+  });
+  return [...byContainer.entries()].filter(([, units]) => units.length >= 2).map(([container, units]) => ({ container, units }));
+}
+function startArranger(o) {
+  const holdMs = o.holdMs ?? ARRANGE_HOLD_MS;
+  const html = document.documentElement;
+  const cache = /* @__PURE__ */ new Map();
+  const requested = /* @__PURE__ */ new Set();
+  let arranging = false;
+  let pending = null;
+  let drag = null;
+  let frame = 0;
+  let scrollFrame = 0;
+  let bar = null;
+  let layer = null;
+  const page = () => pageKey(o.route(), o.tabs());
+  const entry2 = () => cache.get(page());
+  const setEntry = (e, store) => {
+    const p = page();
+    const clean2 = withPage({}, p, e)[p];
+    cache.set(p, clean2);
+    if (store) o.save(p, clean2 ?? null);
+  };
+  function apply() {
+    const p = page();
+    if (!cache.has(p) && !requested.has(p)) {
+      requested.add(p);
+      o.fetch(p).then((e2) => {
+        if (!cache.has(p)) cache.set(p, e2);
+        schedule();
+      }).catch(() => cache.set(p, void 0));
+    }
+    const e = entry2();
+    for (const g of collectGroups(o.root)) {
+      const natural = g.units.map((u) => u.id);
+      const ordered = e && e.order.length ? arrangedIds(natural, e) : natural;
+      const changed = ordered.some((id3, i) => id3 !== natural[i]);
+      const children = Array.from(g.container.children);
+      const slots = g.units.map((u) => children.indexOf(u.el));
+      const orderOf = /* @__PURE__ */ new Map();
+      ordered.forEach((id3, k) => {
+        const u = g.units.find((x) => x.id === id3);
+        if (u) orderOf.set(u.el, slots[k] ?? k);
+      });
+      children.forEach((child, i) => {
+        if (changed || arranging) child.style.order = String(orderOf.get(child) ?? i);
+        else if (child.style.order) child.style.order = "";
+      });
+      if (changed || arranging) {
+        if (!g.container.dataset.arrangeFlow) {
+          const d = getComputedStyle(g.container).display;
+          g.container.dataset.arrangeFlow = d.includes("grid") || d.includes("flex") ? "own" : "column";
+        }
+      } else delete g.container.dataset.arrangeFlow;
+      g.units.forEach((u, i) => {
+        u.el.dataset.arrangeUnit = u.id;
+        if (!u.el.style.getPropertyValue("--arrange-delay"))
+          u.el.style.setProperty("--arrange-delay", `${-(i * 97 % 280)}ms`);
+        if (e?.hidden.includes(u.id)) u.el.dataset.arrangeHidden = "1";
+        else delete u.el.dataset.arrangeHidden;
+      });
+    }
+    if (arranging) placeEyes();
+  }
+  const schedule = () => {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      apply();
+    });
+  };
+  function enter() {
+    if (arranging) return;
+    arranging = true;
+    html.dataset.arranging = "1";
+    bar = document.createElement("div");
+    bar.className = "arrange-bar";
+    bar.setAttribute("role", "toolbar");
+    bar.innerHTML = `<span class="arrange-bar__text"><strong>Bereiche anordnen</strong> Ziehen zum Verschieben \xB7 Auge = ein-/ausblenden</span>
+      <button type="button" class="arrange-bar__btn" data-arrange-reset>Standard</button>
+      <button type="button" class="arrange-bar__btn arrange-bar__btn--primary" data-arrange-done>Fertig</button>`;
+    bar.addEventListener("click", (ev) => {
+      const t = ev.target;
+      if (t.closest("[data-arrange-done]")) leave();
+      else if (t.closest("[data-arrange-reset]")) {
+        setEntry(null, true);
+        apply();
+      }
+    });
+    layer = document.createElement("div");
+    layer.className = "arrange-layer";
+    layer.addEventListener("click", (ev) => {
+      const b = ev.target.closest("[data-arrange-eye]");
+      if (!b) return;
+      const id3 = b.dataset.arrangeEye ?? "";
+      setEntry(toggleCardHidden(entry2(), id3), true);
+      apply();
+    });
+    document.body.append(bar, layer);
+    apply();
+    tick();
+    try {
+      navigator.vibrate?.(15);
+    } catch {
+    }
+  }
+  function leave() {
+    if (!arranging) return;
+    arranging = false;
+    endDrag(false);
+    delete html.dataset.arranging;
+    bar?.remove();
+    layer?.remove();
+    bar = layer = null;
+    apply();
+  }
+  function placeEyes() {
+    if (!layer) return;
+    const e = entry2();
+    const units = collectGroups(o.root).flatMap((g) => g.units);
+    const have = new Map(
+      Array.from(layer.children).map((b) => [
+        b.dataset.arrangeEye ?? "",
+        b
+      ])
+    );
+    for (const u of units) {
+      let b = have.get(u.id);
+      if (!b) {
+        b = document.createElement("button");
+        b.setAttribute("type", "button");
+        b.className = "arrange-eye";
+        b.dataset.arrangeEye = u.id;
+        layer.append(b);
+      }
+      have.delete(u.id);
+      const hidden = e?.hidden.includes(u.id) ?? false;
+      const label = hidden ? "Einblenden" : "Ausblenden";
+      if (b.getAttribute("aria-label") !== label) {
+        b.setAttribute("aria-label", label);
+        b.title = label;
+        b.dataset.hidden = hidden ? "1" : "";
+        b.innerHTML = hidden ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.9 8.3 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+      }
+      const r2 = u.el.getBoundingClientRect();
+      const visible = r2.bottom > 0 && r2.top < innerHeight && r2.width > 0;
+      b.style.display = visible && u !== drag?.unit ? "" : "none";
+      b.style.transform = `translate(${Math.round(r2.right - 40)}px, ${Math.round(r2.top + 8)}px)`;
+    }
+    for (const b of have.values()) b.remove();
+  }
+  function tick() {
+    if (!arranging) return;
+    placeEyes();
+    requestAnimationFrame(tick);
+  }
+  function unitAt(target) {
+    const el = target instanceof Element ? target : null;
+    if (!el || !o.root.contains(el)) return null;
+    for (const g of collectGroups(o.root))
+      for (const u of g.units) if (u.el.contains(el)) return { unit: u, group: g };
+    return null;
+  }
+  function beginDrag(unit, group, pointerId, x, y) {
+    const r2 = unit.el.getBoundingClientRect();
+    drag = {
+      unit,
+      group,
+      pointerId,
+      grabX: x - r2.left,
+      grabY: y - r2.top,
+      x,
+      y,
+      startY: y,
+      scrolls: false,
+      last: ""
+    };
+    unit.el.dataset.arrangeDrag = "1";
+    try {
+      o.root.setPointerCapture?.(pointerId);
+    } catch {
+    }
+    autoScroll();
+  }
+  function follow() {
+    if (!drag) return;
+    const el = drag.unit.el;
+    const prev = el.style.translate;
+    el.style.translate = "";
+    const slot = el.getBoundingClientRect();
+    el.style.translate = prev;
+    el.style.translate = `${Math.round(drag.x - drag.grabX - slot.left)}px ${Math.round(drag.y - drag.grabY - slot.top)}px`;
+  }
+  function moveTo(x, y) {
+    if (!drag) return;
+    drag.x = x;
+    drag.y = y;
+    if (Math.abs(y - drag.startY) > 24) drag.scrolls = true;
+    follow();
+    const group = collectGroups(o.root).find((g) => g.container === drag?.group.container);
+    if (!group) return;
+    drag.group = group;
+    let target = null;
+    let after = false;
+    for (const u of group.units) {
+      if (u.id === drag.unit.id) continue;
+      const r2 = u.el.getBoundingClientRect();
+      if (x >= r2.left && x <= r2.right && y >= r2.top && y <= r2.bottom) {
+        target = u;
+        const sameRow = Math.abs(y - (r2.top + r2.height / 2)) < r2.height / 4;
+        after = sameRow ? x > r2.left + r2.width / 2 : y > r2.top + r2.height / 2;
+        break;
+      }
+    }
+    if (!target) return;
+    const key = `${target.id}|${after}`;
+    if (key === drag.last) return;
+    drag.last = key;
+    const natural = group.units.map((u) => u.id);
+    const next = moveCard(entry2(), natural, drag.unit.id, target.id, after);
+    const before = arrangedIds(natural, entry2()).join(",");
+    if (arrangedIds(natural, next).join(",") === before) return;
+    setEntry(next, false);
+    apply();
+    follow();
+  }
+  function autoScroll() {
+    cancelAnimationFrame(scrollFrame);
+    const step = () => {
+      if (!drag) return;
+      if (!drag.scrolls) {
+        scrollFrame = requestAnimationFrame(step);
+        return;
+      }
+      const top = o.scroller ? o.scroller.getBoundingClientRect().top : 0;
+      const bottom = o.scroller ? o.scroller.getBoundingClientRect().bottom : innerHeight;
+      let dy = 0;
+      if (drag.y < top + EDGE) dy = -Math.ceil((top + EDGE - drag.y) / EDGE * 18);
+      else if (drag.y > bottom - EDGE) dy = Math.ceil((drag.y - (bottom - EDGE)) / EDGE * 18);
+      if (dy) {
+        if (o.scroller) o.scroller.scrollBy(0, dy);
+        else window.scrollBy(0, dy);
+        moveTo(drag.x, drag.y);
+      }
+      scrollFrame = requestAnimationFrame(step);
+    };
+    scrollFrame = requestAnimationFrame(step);
+  }
+  function endDrag(saveNow) {
+    cancelAnimationFrame(scrollFrame);
+    if (!drag) return;
+    const el = drag.unit.el;
+    delete el.dataset.arrangeDrag;
+    el.style.translate = "";
+    try {
+      o.root.releasePointerCapture?.(drag.pointerId);
+    } catch {
+    }
+    drag = null;
+    if (saveNow) {
+      const e = entry2();
+      o.save(page(), e ?? null);
+    }
+    apply();
+  }
+  function cancelPending() {
+    if (!pending) return;
+    clearTimeout(pending.timer);
+    pending = null;
+    delete html.dataset.arrangePending;
+  }
+  const onDown = (ev) => {
+    if (ev.button !== 0) return;
+    const hit = unitAt(ev.target);
+    if (arranging) {
+      if (!hit) return;
+      ev.preventDefault();
+      beginDrag(hit.unit, hit.group, ev.pointerId, ev.clientX, ev.clientY);
+      return;
+    }
+    if (!hit || ev.target.closest(INTERACTIVE)) return;
+    cancelPending();
+    html.dataset.arrangePending = "1";
+    const p = { unit: hit.unit, x: ev.clientX, y: ev.clientY, id: ev.pointerId, timer: 0 };
+    p.timer = window.setTimeout(() => {
+      if (pending !== p) return;
+      pending = null;
+      delete html.dataset.arrangePending;
+      window.getSelection?.()?.removeAllRanges();
+      enter();
+      const now = unitAt(p.unit.el);
+      if (now) beginDrag(now.unit, now.group, p.id, p.x, p.y);
+    }, holdMs);
+    pending = p;
+  };
+  const onMove = (ev) => {
+    if (pending && ev.pointerId === pending.id) {
+      if (Math.hypot(ev.clientX - pending.x, ev.clientY - pending.y) > ARRANGE_MOVE_TOLERANCE)
+        cancelPending();
+      else {
+        pending.x = ev.clientX;
+        pending.y = ev.clientY;
+      }
+    }
+    if (drag && ev.pointerId === drag.pointerId) {
+      ev.preventDefault();
+      moveTo(ev.clientX, ev.clientY);
+    }
+  };
+  const onUp = (ev) => {
+    if (pending && ev.pointerId === pending.id) cancelPending();
+    if (drag && ev.pointerId === drag.pointerId) endDrag(true);
+  };
+  const onClick = (ev) => {
+    if (arranging && unitAt(ev.target)) {
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
+  };
+  const onMenu = (ev) => {
+    if (pending || drag || arranging && unitAt(ev.target)) ev.preventDefault();
+  };
+  let touchOwned = false;
+  const onTouchMove = (ev) => {
+    if (!drag) return;
+    touchOwned = true;
+    if (ev.cancelable) ev.preventDefault();
+    ev.stopPropagation();
+  };
+  const onTouchEnd = (ev) => {
+    if (!touchOwned && !drag) return;
+    touchOwned = false;
+    ev.stopPropagation();
+  };
+  const onKey = (ev) => {
+    if (arranging && ev.key === "Escape") leave();
+  };
+  const onRoute = () => leave();
+  const observer = new MutationObserver(schedule);
+  observer.observe(o.root, { childList: true, subtree: true });
+  o.root.addEventListener("pointerdown", onDown);
+  window.addEventListener("pointermove", onMove, { passive: false });
+  window.addEventListener("pointerup", onUp);
+  window.addEventListener("pointercancel", onUp);
+  o.root.addEventListener("click", onClick, true);
+  o.root.addEventListener("contextmenu", onMenu);
+  window.addEventListener("touchmove", onTouchMove, { capture: true, passive: false });
+  window.addEventListener("touchend", onTouchEnd, true);
+  window.addEventListener("touchcancel", onTouchEnd, true);
+  window.addEventListener("keydown", onKey);
+  window.addEventListener("hashchange", onRoute);
+  schedule();
+  return () => {
+    leave();
+    cancelPending();
+    observer.disconnect();
+    cancelAnimationFrame(frame);
+    o.root.removeEventListener("pointerdown", onDown);
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    window.removeEventListener("pointercancel", onUp);
+    o.root.removeEventListener("click", onClick, true);
+    o.root.removeEventListener("contextmenu", onMenu);
+    window.removeEventListener("touchmove", onTouchMove, true);
+    window.removeEventListener("touchend", onTouchEnd, true);
+    window.removeEventListener("touchcancel", onTouchEnd, true);
+    window.removeEventListener("keydown", onKey);
+    window.removeEventListener("hashchange", onRoute);
+  };
+}
 export {
   AKH_REFERENCES,
   ANS_INFO,
@@ -34198,6 +34707,7 @@ export {
   buildLibrary,
   caffeine_exports as caffeine,
   carbCycle_exports as carbCycle,
+  cardArrange_exports as cardArrange,
   cardio_exports as cardio,
   cardioMachines_exports as cardioMachines,
   cardioMuscles_exports as cardioMuscles,
@@ -34406,6 +34916,7 @@ export {
   smartFilter,
   sorting_exports as sorting,
   sports_exports as sports,
+  startArranger,
   stats_exports as stats,
   stepsByTime_exports as stepsByTime,
   sumNutrients,

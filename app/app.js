@@ -9,6 +9,7 @@ import { parityChangeB as parityChange } from "./parity.js";
 import "./navshell.js";
 import * as C from "./core.js";
 import * as store from "./store.js";
+import * as D from "./pcdomain.js";
 import { foodChange, foodInput, foodState, initFood, viewDish, viewFood, viewFoodReview } from "./food.js";
 import { bodyChange, bodyInput, bodyState, initBody, viewBody, viewBodyEntry, viewBodyMetric } from "./body.js";
 import { barSlots } from "./nav.js";
@@ -589,6 +590,33 @@ async function reloadKeys(keys) {
 }
 initAutosave({ S, actions, store, toast, reload: reloadKeys });
 
+/**
+ * Bereiche verschieben (1.160.0, wie PC 1.0.226): Karte 3 Sekunden halten, dann ziehen; „Fertig“ oben.
+ * Gleicher Ablauf wie am PC (`startArranger` aus pcdomain.js). Anordnung je Seite auf diesem Gerät
+ * (Speicher „cardArrange“, Seite = Ansicht + gewählte Reiter).
+ */
+let stopArrange = null;
+async function startCardArrange() {
+  if (stopArrange) return;
+  let saved = {};
+  try {
+    saved = D.cardArrange.parseArrange(JSON.stringify((await store.get("cardArrange")) ?? {}));
+  } catch {
+    saved = {};
+  }
+  stopArrange = D.startArranger({
+    root: document.getElementById("app"),
+    scroller: null,
+    route: () => S.view || "home",
+    tabs: () => [...document.querySelectorAll('#app [data-act="tabs-fold"]')].map((b) => b.textContent.trim()),
+    fetch: async (page) => saved[page],
+    save: (page, entry) => {
+      saved = D.cardArrange.withPage(saved, page, entry);
+      store.set("cardArrange", saved).catch(() => {});
+    },
+  });
+}
+
 /** Schlüssel, die der Start auf einmal liest (Reihenfolge egal). */
 const BOOT_KEYS = ["catalog", "train", "localExercises", "workouts", "active", "prefs", "nutrition", "body", "water", "fast", "supp", "goals", "parity", "pcsettings", `${store.GLOBAL}blsInfo`, `${store.GLOBAL}offInfo`, "gyms", "logs", "todos", "checklists", "caffeine", "caffeineSettings", "weekReview", "glucose", "health", "super"];
 
@@ -643,6 +671,7 @@ async function boot() {
   applyPrefs();
   S.view = S.catalog ? (S.active ? "workout" : "home") : "setup";
   render();
+  startCardArrange();
   startReminders();
   if (S.active) wakeLock(true);
   if ("serviceWorker" in navigator && location.protocol === "https:") {

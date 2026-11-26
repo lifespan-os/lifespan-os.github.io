@@ -448,18 +448,10 @@ function quickCard() {
   </section>`;
 }
 
-function layoutsCard(db) {
+function layoutsCard() {
   return `<section class="card" id="set-layouts">
-    <h3>Seiten anpassen</h3>
-    <p class="muted small card-info">Karten einer Seite umsortieren oder ausblenden – „Anpassen“ öffnet die Seite im Bearbeiten-Modus.</p>
-    <ul class="list">${LAYOUT_PAGES.filter(([key]) => key !== "ui.transfer_layout")
-      .map(([key, view, label]) => {
-        const l = D.parseLayout(setting(db, key));
-        const info = l.order.length || l.hidden.length ? `angepasst${l.hidden.length ? ` · ${l.hidden.length} ausgeblendet` : ""}` : "Standard";
-        return `<li class="meal-item"><span><b>${esc(label)}</b><br><span class="muted small">${esc(info)}</span></span><button class="btn sm" data-act="layout-edit" data-arg="${esc(key)}|${esc(view)}">Anpassen</button></li>`;
-      })
-      .join("")}</ul>
-    ${syncNote}
+    <h3>Bereiche anordnen</h3>
+    <p class="muted small">Auf jeder Seite: eine Karte <b>3 Sekunden halten</b> – alle Karten klappen zu und wackeln. Dann ziehen und ablegen, mit dem Auge aus- oder einblenden, oben „Fertig“. „Standard“ stellt die Seite zurück. Gilt für dieses Handy.</p>
   </section>`;
 }
 
@@ -475,15 +467,13 @@ function secretCard(db) {
 
 function transferCard(db) {
   const p = X.S.prefs;
-  const l = D.parseLayout(setting(db, "ui.transfer_layout"));
   return `<section class="card" id="set-transfer">
     <h3>Import/Export</h3>
     <div class="field"><label for="send-remind">Erinnerung ans Senden</label>
       <select id="send-remind" data-transfer="remindDays">${DP.SEND_REMIND_DAYS.map((d) => `<option value="${d}" ${d === p.transfer.remindDays ? "selected" : ""}>${d === 0 ? "aus" : d === 1 ? "nach 1 Tag" : `nach ${d} Tagen`}</option>`).join("")}</select>
       <p class="muted small card-info">Hinweis in der Overview, wenn Daten offen sind und so lange nichts an den PC gesendet wurde.</p></div>
     <label class="toggle"><input type="checkbox" data-transfer="autoMark" ${p.transfer.autoMark ? "checked" : ""}> <span>Nach dem Senden automatisch als übertragen markieren (sobald die Datei weitergegeben oder gesichert ist)</span></label>
-    <div class="meal-item"><span><b>Karten der Seite</b><br><span class="muted small">${l.order.length || l.hidden.length ? "angepasst" : "Standard"}</span></span><button class="btn sm" data-act="layout-edit" data-arg="ui.transfer_layout|transfer">Anordnen</button></div>
-    ${deviceNote.replace("(am PC gibt es eine eigene Einstellung)", "– bis auf die Anordnung der Karten, die gilt wie am PC")}
+    ${deviceNote}
   </section>`;
 }
 

@@ -13,6 +13,7 @@
 // senden“ an den PC (dort `vendor_package` + `vendor_package_item`, Abgleich über den Paketschlüssel).
 
 import { CATALOG, EDITABLE_GROUPS } from "./nutrientcatalog.js";
+import { checkedAminosText, parseAminos, aminosText } from "./aminos.js";
 
 export const FORMAT = "lifespan-os-paket";
 export const VERSION = 1;
@@ -128,6 +129,8 @@ export function foodRow(r, id, iso) {
     trans_fat_g: between(r.transFatG, 0, 100, "Trans-Fettsäuren", { optional: true }),
     starch_g: between(r.starchG, 0, 100, "Stärke", { optional: true }),
     water_g: between(r.waterG, 0, 100, "Wasser", { optional: true }),
+    // Aminosäuren in g je 100 g/ml (1.165.0, wie PC 1.0.230: Schema 81)
+    aminos: checkedAminosText(r.aminos),
     portion_name: optTxt(r.portionName, 40),
     portion_amount: r.portionAmount === null || r.portionAmount === undefined ? null : between(r.portionAmount, 0.01, 5000, "Portionsmenge"),
     notes: optTxt(r.notes, 1000),
@@ -198,6 +201,61 @@ const isCustomKey = (k) => typeof k === "string" && k.length <= 60 && k.startsWi
  * supplements: Map id → Zeile, fields: Zeilen `nutrient_field`, installed: { version } | null, uuid, now }.
  * Ergebnis: Bericht wie am PC plus die neuen Zeilen.
  */
+/** Werte, die eine neue Paketversion bei vorhandenen Lebensmitteln ergänzt (1.165.0, wie PC 1.0.230). */
+const FILL_COLS = ["fiber_g", "sugar_g", "saturated_fat_g", "salt_g", "caffeine_mg", "mono_fat_g", "poly_fat_g", "trans_fat_g", "starch_g", "water_g"];
+
+/** Wie `completing_notes` am PC: Quelle (Link) und Herkunft der Aminosäuren anhängen, wenn sie fehlen. */
+export function completingNotes(current, fromFile) {
+  if (!fromFile) return null;
+  const cur = current ?? "";
+  const add = [];
+  for (const marker of ["Quelle: http", "Aminosäuren laut Produktseite"]) {
+    const start = fromFile.indexOf(marker);
+    if (start < 0) continue;
+    const rest = fromFile.slice(start);
+    const i = rest.indexOf(").");
+    const sentence = (i >= 0 ? rest.slice(0, i + 2) : rest).trim();
+    const key = marker.startsWith("Quelle") ? (sentence.split(/\s+/)[1] ?? sentence) : marker;
+    if (!cur.includes(key)) add.push(sentence);
+  }
+  if (!add.length) return null;
+  const text = [cur.trim(), ...add].filter(Boolean).join(" ");
+  return [...text].length > 1000 ? null : text;
+}
+
+/** Fehlende Werte eines vorhandenen Lebensmittels aus der Paketzeile ergänzen; null = nichts zu tun. */
+function completeFood(old, fresh, iso) {
+  const row = { ...old };
+  let changed = false;
+  for (const c of FILL_COLS) {
+    if ((old[c] === null || old[c] === undefined) && fresh[c] !== null && fresh[c] !== undefined) {
+      row[c] = fresh[c];
+      changed = true;
+    }
+  }
+  const have = parseAminos(old.aminos) ?? {};
+  const more = parseAminos(fresh.aminos) ?? {};
+  let aminoAdded = false;
+  for (const [k, v] of Object.entries(more)) {
+    if (!(k in have)) {
+      have[k] = v;
+      aminoAdded = true;
+    }
+  }
+  if (aminoAdded) {
+    row.aminos = aminosText(have);
+    changed = true;
+  }
+  const notes = completingNotes(old.notes, fresh.notes);
+  if (notes) {
+    row.notes = notes;
+    changed = true;
+  }
+  if (!changed) return null;
+  row.updated_at = iso;
+  return row;
+}
+
 export function planInstall(pkg, ctx) {
   const iso = (ctx.now ?? new Date()).toISOString();
   const skipped = [];
@@ -209,15 +267,31 @@ export function planInstall(pkg, ctx) {
   // Lebensmittel
   const foodKey = (name, brand) => `${norm(name)}|${norm(brand)}`;
   const foodIndex = new Map([...ctx.foods.values()].map((f) => [foodKey(f.name, f.brand), f.id]));
-  const foods = { inFile: pkg.foods.length, added: 0, kept: 0 };
+  const foods = { inFile: pkg.foods.length, added: 0, kept: 0, completed: 0 };
   const newFoods = [];
   const keptFoods = [];
+  const completedFoods = [];
   for (const r of pkg.foods) {
     const ownId = UUID.test(String(r.id ?? "")) ? String(r.id).toLowerCase() : null;
     const existing = (ownId && ctx.foods.has(ownId) ? ownId : null) ?? foodIndex.get(foodKey(r.name, r.brand));
     if (existing) {
+      if (existing === ownId && ctx.complete) {
+        keptFoods.push(ownId);
+        // Eintrag dieses Pakets: fehlende Werte ergänzen (eigene Angaben bleiben)
+        let done = null;
+        try {
+          done = completeFood(ctx.foods.get(ownId), foodRow(r, ownId, iso), iso);
+        } catch {
+          done = null;
+        }
+        if (done) {
+          completedFoods.push(done);
+          foods.completed += 1;
+          continue;
+        }
+      }
+      if (existing === ownId && !ctx.complete) keptFoods.push(ownId);
       foods.kept += 1;
-      if (existing === ownId) keptFoods.push(ownId);
       continue;
     }
     try {
@@ -263,15 +337,38 @@ export function planInstall(pkg, ctx) {
 
   // Supplements
   const suppIndex = new Map([...ctx.supplements.values()].map((s) => [norm(s.name), s.id]));
-  const supplements = { inFile: pkg.supplements.length, added: 0, kept: 0 };
+  const supplements = { inFile: pkg.supplements.length, added: 0, kept: 0, completed: 0 };
   const newSupps = [];
   const keptSupps = [];
+  const completedSupps = [];
   for (const r of pkg.supplements) {
     const ownId = UUID.test(String(r.id ?? "")) ? String(r.id).toLowerCase() : null;
     const existing = (ownId && ctx.supplements.has(ownId) ? ownId : null) ?? suppIndex.get(norm(r.name));
     if (existing) {
+      if (existing === ownId && ctx.complete) {
+        keptSupps.push(ownId);
+        // Fehlende Werte (bekannte Felder gleicher Einheit) und Notizen ergänzen
+        const old = ctx.supplements.get(ownId);
+        const before = Object.fromEntries(((ctx.supValues ?? new Map()).get(ownId) ?? []).map((v) => [v.nutrient, v.amount]));
+        const values = { ...before };
+        let changed = false;
+        for (const [k, v] of Object.entries(r.values ?? {})) {
+          const target = remap.has(k) ? remap.get(k) : k;
+          if (!target || !nutrients.has(target) || target in values) continue;
+          const n = Number(v);
+          if (!Number.isFinite(n) || n < 0) continue;
+          values[target] = n;
+          changed = true;
+        }
+        const notes = completingNotes(old?.notes, r.notes);
+        if (old && (changed || notes)) {
+          completedSupps.push({ row: { ...old, notes: notes ?? old.notes, updated_at: iso }, values });
+          supplements.completed += 1;
+          continue;
+        }
+      }
+      if (existing === ownId && !ctx.complete) keptSupps.push(ownId);
       supplements.kept += 1;
-      if (existing === ownId) keptSupps.push(ownId);
       continue;
     }
     const values = {};
@@ -302,6 +399,8 @@ export function planInstall(pkg, ctx) {
     newFields,
     keptFoods,
     keptSupps,
+    completedFoods,
+    completedSupps,
   };
 }
 
@@ -318,6 +417,10 @@ export function applyInstall(plan, food, supp, { uuid, now = new Date(), pcPacka
   for (const row of plan.newFoods) food.foods[row.id] = { row, sent: false, pkg: key };
   for (const s of plan.newSupps) supp.supplements[s.row.id] = { row: s.row, values: s.values, sent: false, pkg: key };
   for (const row of plan.newFields) supp.fields[row.key] = { row, sent: false, pkg: key };
+  // Ergänzte Einträge (1.165.0): als geänderte Zeilen, gehen mit der Rückgabedatei an den PC
+  for (const row of plan.completedFoods ?? []) food.foods[row.id] = { ...(food.foods[row.id] ?? {}), row, sent: false };
+  for (const s of plan.completedSupps ?? [])
+    supp.supplements[s.row.id] = { ...(supp.supplements[s.row.id] ?? {}), row: s.row, values: s.values, sent: false };
   const old = supp.packages[key];
   const pkgId = old?.row.id ?? pcPackage?.id ?? uuid();
   const items = [...(old?.items ?? [])];

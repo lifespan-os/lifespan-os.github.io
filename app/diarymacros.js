@@ -101,8 +101,21 @@ function detailHtml(input, days, date, k) {
     <p class="xd__sub">Referenz (DGE): ${esc(R[k])}${k === "fat" ? ` · gesättigt ${esc(R.saturated)} · mehrfach ungesättigt ${esc(R.poly)} · Trans ${esc(R.trans)}` : ""}${k === "carbs" ? ` · Zucker ${esc(R.sugar)}` : ""}</p>
     ${d.parts.length && d.totalG > 0 ? `<p class="md__head">Aufteilung</p>${partRows(d.parts, d.totalG)}${missingHtml(d.parts, label)}` : ""}
     ${
-      d.subParts.length
-        ? `<p class="md__head">${k === "fat" ? "Mehrfach ungesättigt im Einzelnen" : k === "carbs" ? "Zucker im Einzelnen (nur BLS-Lebensmittel)" : "Essenzielle Aminosäuren (BLS-Lebensmittel und Supplements)"}</p>${partRows(d.subParts, d.totalG)}${
+      k === "protein" && d.subParts.length
+        ? ["essential", "nonessential"]
+            .map((g) => {
+              const list = d.subParts.filter((p) => p.group === g);
+              return list.length
+                ? `<p class="md__head">${g === "essential" ? "Essenzielle Aminosäuren" : "Nicht essenzielle Aminosäuren"}</p>${partRows(list, d.totalG)}`
+                : "";
+            })
+            .join("") +
+          `<p class="muted small">Aus dem Aminogramm der Lebensmittel (Hersteller bzw. BLS) und den Supplements; Lebensmittel ohne Angabe zählen nicht mit.</p>`
+        : ""
+    }
+    ${
+      k !== "protein" && d.subParts.length
+        ? `<p class="md__head">${k === "fat" ? "Mehrfach ungesättigt im Einzelnen" : "Zucker im Einzelnen (nur BLS-Lebensmittel)"}</p>${partRows(d.subParts, d.totalG)}${
             ratio !== null ? `<p class="muted small">Omega-6 zu Omega-3 heute ${F(ratio, 1)} : 1 · Referenz ${esc(R.omega)}</p>` : ""
           }`
         : ""

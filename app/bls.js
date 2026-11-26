@@ -10,6 +10,7 @@
 // in der Notiz; fehlen Energie, Protein, Kohlenhydrate oder Fett, ist keine Übernahme möglich.
 
 import { foodRow } from "./vendor.js";
+import { AMINOS } from "./aminos.js";
 
 export const BLS_FILE = "bls/bls_4_0.json";
 export const BLS_BRAND = "BLS 4.0";
@@ -164,6 +165,12 @@ export function takeover(b, f, { id, now = new Date() }) {
         transFatG: null,
         starchG: d("STARCH"),
         waterG: d("WATER"),
+        // Aminosäuren (1.165.0, wie `blsAminos` am PC): nur Zahlen, Kennzeichen bleiben leer
+        aminos: Object.fromEntries(
+          AMINOS.map((a) => [a.key, b.pos[a.bls] === undefined ? undefined : f[4][b.pos[a.bls]]])
+            .filter(([, x]) => typeof x === "number")
+            .map(([k, x]) => [k, Math.min(100, Math.round(x * 1000) / 1000)]),
+        ),
         portionName: null,
         portionAmount: null,
         notes: parts.join(" ").slice(0, 1000),

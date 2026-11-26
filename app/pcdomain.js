@@ -128,12 +128,44 @@ __export(macroDetails_exports, {
   MACRO_HISTORY_DAYS: () => MACRO_HISTORY_DAYS,
   MACRO_REFERENCES: () => MACRO_REFERENCES,
   POLY_PARTS: () => POLY_PARTS,
+  PROTEIN_PARTS: () => PROTEIN_PARTS,
   SUGAR_PARTS: () => SUGAR_PARTS,
   macroDetail: () => macroDetail,
   macroHistory: () => macroHistory,
   omegaRatio: () => omegaRatio,
   partOf: () => partOf
 });
+
+// src/domain/aminos.ts
+var AMINOS = [
+  { key: "histidine", label: "Histidin", essential: true, bls: "HIS" },
+  { key: "isoleucine", label: "Isoleucin", essential: true, bls: "ILE" },
+  { key: "leucine", label: "Leucin", essential: true, bls: "LEU" },
+  { key: "lysine", label: "Lysin", essential: true, bls: "LYS" },
+  { key: "methionine", label: "Methionin", essential: true, bls: "MET" },
+  { key: "phenylalanine", label: "Phenylalanin", essential: true, bls: "PHE" },
+  { key: "threonine", label: "Threonin", essential: true, bls: "THR" },
+  { key: "tryptophan", label: "Tryptophan", essential: true, bls: "TRP" },
+  { key: "valine", label: "Valin", essential: true, bls: "VAL" },
+  { key: "alanine", label: "Alanin", essential: false, bls: "ALA" },
+  { key: "arginine", label: "Arginin", essential: false, bls: "ARG" },
+  { key: "aspartic_acid", label: "Asparagins\xE4ure", essential: false, bls: "ASP" },
+  { key: "cysteine", label: "Cystein", essential: false, bls: "CYSTE" },
+  { key: "glutamic_acid", label: "Glutamins\xE4ure", essential: false, bls: "GLU" },
+  { key: "glycine", label: "Glycin", essential: false, bls: "GLY" },
+  { key: "proline", label: "Prolin", essential: false, bls: "PRO" },
+  { key: "serine", label: "Serin", essential: false, bls: "SER" },
+  { key: "tyrosine", label: "Tyrosin", essential: false, bls: "TYR" }
+];
+var AMINO_KEYS = AMINOS.map((a) => a.key);
+var AMINO_GROUPS = [
+  { title: "Essenzielle Aminos\xE4uren", essential: true, items: AMINOS.filter((a) => a.essential) },
+  {
+    title: "Nicht essenzielle Aminos\xE4uren",
+    essential: false,
+    items: AMINOS.filter((a) => !a.essential)
+  }
+];
 
 // src/domain/blsMicro.ts
 var blsMicro_exports = {};
@@ -608,11 +640,24 @@ var SUGAR_PARTS = [
   { key: "maltose", label: "Maltose", field: null, bls: "MALS" },
   { key: "galactose", label: "Galactose", field: null, bls: "GALS" }
 ];
-var AMINO_PARTS = [
-  { key: "leucine", label: "Leucin", field: null, bls: "LEU", supplement: { key: "leucine", factor: 1e-3 } },
-  { key: "isoleucine", label: "Isoleucin", field: null, bls: "ILE", supplement: { key: "isoleucine", factor: 1e-3 } },
-  { key: "valine", label: "Valin", field: null, bls: "VAL", supplement: { key: "valine", factor: 1e-3 } },
-  { key: "lysine", label: "Lysin", field: null, bls: "LYS", supplement: { key: "lysine", factor: 1e-3 } }
+var AMINO_PARTS = AMINOS.map((a) => ({
+  key: a.key,
+  label: a.label,
+  field: null,
+  bls: a.bls,
+  amino: a.key,
+  group: a.essential ? "essential" : "nonessential",
+  supplement: { key: a.key, factor: 1e-3 }
+}));
+var PROTEIN_PARTS = [
+  { key: "essential", label: "Essenzielle Aminos\xE4uren", field: null, bls: null, aminoGroup: "essential" },
+  {
+    key: "nonessential",
+    label: "Nicht essenzielle Aminos\xE4uren",
+    field: null,
+    bls: null,
+    aminoGroup: "nonessential"
+  }
 ];
 var MACRO_FIELD = {
   fat: "fatG",
@@ -631,6 +676,23 @@ function blsValue(i, code, foods, bls) {
   return amount === null ? null : amount * i.amount / 100;
 }
 function partOf(i, part, foods, bls) {
+  if (part.aminoGroup) {
+    let sum = 0;
+    let any = false;
+    for (const a of AMINOS) {
+      if (a.essential !== (part.aminoGroup === "essential")) continue;
+      const v = partOf(i, { field: null, bls: a.bls, amino: a.key }, foods, bls);
+      if (v !== null) {
+        sum += v;
+        any = true;
+      }
+    }
+    return any ? sum : null;
+  }
+  if (part.amino) {
+    const own = i.aminos?.[part.amino];
+    if (own !== null && own !== void 0) return own;
+  }
   if (part.field) {
     const own = i[part.field];
     if (own !== null && own !== void 0) return own;
@@ -652,9 +714,15 @@ function partValues(defs, items, input, key, totalG) {
       } else grams += v;
     }
     if (d.supplement) grams += (input.supplements[d.supplement.key] ?? 0) * d.supplement.factor;
+    if (d.aminoGroup) {
+      for (const a of AMINOS)
+        if (a.essential === (d.aminoGroup === "essential"))
+          grams += (input.supplements[a.key] ?? 0) * 1e-3;
+    }
     return {
       key: d.key,
       label: d.label,
+      ...d.group ? { group: d.group } : {},
       grams,
       share: totalG > 0 ? grams / totalG : 0,
       energyPct: input.energyKcal > 0 ? grams * KCAL_PER_G[key] / input.energyKcal * 100 : null,
@@ -670,7 +738,7 @@ function macroDetail(input, key) {
   const supplementsG = input.supplements[SUPP_MACRO[key]] ?? 0;
   const otherG = input.other[field];
   const totalG = fromFoods + supplementsG + otherG;
-  const defs = key === "fat" ? FAT_PARTS : key === "carbs" ? CARB_PARTS : [];
+  const defs = key === "fat" ? FAT_PARTS : key === "carbs" ? CARB_PARTS : PROTEIN_PARTS;
   const subDefs = key === "fat" ? POLY_PARTS : key === "carbs" ? SUGAR_PARTS : AMINO_PARTS;
   const byFood = /* @__PURE__ */ new Map();
   for (const i of items) {

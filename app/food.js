@@ -328,6 +328,19 @@ function formCard() {
         <p class="muted small">Für die Details der Tagessumme und das Wasser aus Lebensmitteln, je 100 ${esc(f.basis)}. Leer = keine Angabe.</p>
         <div class="nf-grid">${N.DETAIL_KEYS.map((k) => field(`d.${k}`, N.DETAIL_NAMES[k], f.details?.[k] ?? "", { unit: "g" })).join("")}</div>
       </details>
+      <details class="wide nf-details" ${N.AMINO_KEYS.some((k) => (f.aminos?.[k] ?? "").trim() !== "" || e[`a.${k}`]) || e.aminos ? "open" : ""}>
+        <summary>Aminosäuren (optional)</summary>
+        <p class="muted small">Aminogramm je 100 ${esc(f.basis)} (nicht je 100 g Protein). Aus dem BLS und den Herstellerpaketen übernommen, wenn bekannt. Leer = keine Angabe.</p>
+        ${[true, false]
+          .map(
+            (ess) => `<p class="nf-amino-head small">${ess ? "Essenzielle Aminosäuren" : "Nicht essenzielle Aminosäuren"}</p>
+        <div class="nf-grid">${N.AMINOS.filter((a) => a.essential === ess)
+          .map((a) => field(`a.${a.key}`, a.label, f.aminos?.[a.key] ?? "", { unit: "g" }))
+          .join("")}</div>`,
+          )
+          .join("")}
+        ${e.aminos ? `<p class="err small">${esc(e.aminos)}</p>` : ""}
+      </details>
       ${field("barcode", "Strichcode (EAN)", f.barcode, { mode: "numeric", wide: true })}
       <div class="field wide"><label for="ff-notes">Notiz (Vitamine, Mineralstoffe, Koffein …)</label>
         <textarea id="ff-notes" data-ff="notes" rows="2">${esc(f.notes)}</textarea>${e.notes ? `<p class="err small">${esc(e.notes)}</p>` : ""}</div>
@@ -1188,6 +1201,8 @@ export function foodInput(el) {
       updateWarnings();
     } else if (k.startsWith("d.")) {
       s.form.details = { ...(s.form.details ?? {}), [k.slice(2)]: el.value };
+    } else if (k.startsWith("a.")) {
+      s.form.aminos = { ...(s.form.aminos ?? {}), [k.slice(2)]: el.value };
     } else {
       s.form[k] = el.value;
       if (k === "name" || k === "brand" || k === "basis") updateDupHint();

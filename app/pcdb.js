@@ -6,6 +6,22 @@
 
 // ------------------------------------------------------------------ Hilfen
 
+/** Aminosäuren eines Lebensmittels (Spalte `aminos`, JSON-Text in g je 100) für eine Menge; null ohne Angabe. */
+function scaledAminos(raw, amount) {
+  let o = raw;
+  if (typeof raw === "string") {
+    try {
+      o = JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  if (!o || typeof o !== "object" || Array.isArray(o)) return null;
+  const out = {};
+  for (const [k, v] of Object.entries(o)) if (typeof v === "number" && v >= 0) out[k] = (v * amount) / 100;
+  return Object.keys(out).length ? out : null;
+}
+
 /** Rundung wie Rust `f64::round` (halbe Werte von der Null weg). */
 export const rround = (x) => Math.sign(x) * Math.round(Math.abs(x));
 const DAY_MS = 86400000;
@@ -351,7 +367,7 @@ export function goalFor(db, date) {
 const MEAL_ORDER = { breakfast: 0, lunch: 1, snack: 2, dinner: 3 };
 const mealRank = (m) => MEAL_ORDER[m.meal_type] ?? 4;
 
-function mealItem(db, it) {
+export function mealItem(db, it) {
   const f = db.foods.get(it.food_id);
   const per = (col) => (f && f[col] !== null && f[col] !== undefined ? (it.amount / 100) * f[col] : null);
   return {
@@ -378,6 +394,8 @@ function mealItem(db, it) {
     transFatG: per("trans_fat_g"),
     starchG: per("starch_g"),
     waterG: per("water_g"),
+    // Aminosäuren dieser Menge in g (Schema 81, wie `MealItem` am PC 1.0.230)
+    aminos: scaledAminos(f?.aminos, it.amount),
     position: it.position ?? 0,
     known: Boolean(f),
   };

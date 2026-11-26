@@ -189,6 +189,7 @@ details.settings summary { color: var(--blue); font-size: .9rem; padding: 6px 0;
 .nf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .nf-grid .wide { grid-column: 1 / -1; }
 .nf-grid .field label { min-height: 2.3em; }
+.nf-amino-head { margin: 10px 0 4px; font-weight: 600; } /* Aminosäuren-Gruppen (1.165.0) */
 .err { color: var(--danger); margin: 0; }
 input[aria-invalid="true"] { border-color: var(--danger); }
 details.livetext summary { color: var(--blue); font-size: .92rem; padding: 6px 0; cursor: pointer; }

@@ -84,12 +84,12 @@ export function viewVendor() {
 }
 
 function report(label, r) {
-  return `<p class="small"><b>${esc(label)}:</b> ${n(r.added)} neu${r.kept ? `, ${n(r.kept)} schon vorhanden` : ""} <span class="muted">(${n(r.inFile)} im Paket)</span></p>`;
+  return `<p class="small"><b>${esc(label)}:</b> ${n(r.added)} neu${r.completed ? `, ${n(r.completed)} ergänzt (fehlende Werte)` : ""}${r.kept ? `, ${n(r.kept)} schon vorhanden` : ""} <span class="muted">(${n(r.inFile)} im Paket)</span></p>`;
 }
 
 function previewCard(plan) {
   const p = plan.package;
-  const nothing = !plan.foods.added && !plan.supplements.added;
+  const nothing = !plan.foods.added && !plan.supplements.added && !plan.foods.completed && !plan.supplements.completed;
   return `<section class="card vendor-preview">
     <h3>${esc(p.manufacturer)}</h3>
     <p class="small"><b>${esc(p.title)}</b><br><span class="muted">Version ${esc(p.version)}${plan.installedVersion ? ` · installiert: ${esc(plan.installedVersion)}` : ""}</span></p>
@@ -118,6 +118,9 @@ function plan(pkg) {
   return V.planInstall(pkg, {
     foods: db.foods,
     supplements: db.supplements,
+    supValues: db.supValues,
+    // Neue Paketversion ergänzt fehlende Werte (1.165.0)
+    complete: true,
     fields: db.nutrientFields,
     installed: local?.row ?? pcRow ?? null,
     uuid: X.uuid,

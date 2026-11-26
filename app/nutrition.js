@@ -219,10 +219,15 @@ export function emptyForm() {
     portionAmount: "",
     caffeineMg: "",
     details: Object.fromEntries(DETAIL_KEYS.map((k) => [k, ""])),
+    aminos: {},
     barcode: "",
     notes: "",
   };
 }
+
+// Aminosäuren (1.165.0): Liste und Hilfen in aminos.js
+export { AMINOS, AMINO_KEYS, parseAminos, aminosText } from "./aminos.js";
+import { AMINO_KEYS, parseAminos, aminosText } from "./aminos.js";
 
 /**
  * Weitere Angaben in g je 100 g/ml (1.163.0, wie PC 1.0.228, Schema 80): Formularfeld → Spalte.
@@ -268,6 +273,9 @@ export function foodToForm(food, barcode = "") {
     portionAmount: num(food.portion_amount, 1),
     caffeineMg: num(food.caffeine_mg ?? null, 1),
     details: Object.fromEntries(DETAIL_KEYS.map((k) => [k, num(food[DETAIL_COLUMN[k]] ?? null)])),
+    aminos: Object.fromEntries(
+      Object.entries(parseAminos(food.aminos) ?? {}).map(([k, v]) => [k, num(v, 3)]),
+    ),
     barcode,
     notes: food.notes ?? "",
   };
@@ -317,6 +325,17 @@ export function checkForm(f) {
     else if (n !== null && n > 100) errors[`d.${k}`] = "Höchstens 100 g je 100.";
     details[DETAIL_COLUMN[k]] = n === null || Number.isNaN(n) ? null : Math.round(n * 100) / 100;
   }
+  // Aminosäuren (1.165.0): je 0–100 g, zusammen höchstens 100 g je 100
+  const aminos = {};
+  for (const k of AMINO_KEYS) {
+    const n = parseNum(f.aminos?.[k] ?? "");
+    if (Number.isNaN(n)) errors[`a.${k}`] = "Bitte eine Zahl eingeben, z. B. 4,5.";
+    else if (n !== null && n > 100) errors[`a.${k}`] = "Höchstens 100 g je 100.";
+    else if (n !== null) aminos[k] = Math.round(n * 1000) / 1000;
+  }
+  if (Object.values(aminos).reduce((a, b) => a + b, 0) > 100.5) {
+    errors.aminos = "Die Aminosäuren ergeben zusammen mehr als 100 g je 100 g.";
+  }
   const notes = f.notes.trim();
   if (notes.length > 1000) errors.notes = "Höchstens 1000 Zeichen.";
   const code = f.barcode.replace(/[\s-]/g, "");
@@ -341,6 +360,7 @@ export function checkForm(f) {
       portion_amount: pAmount,
       caffeine_mg: caffeine === null || Number.isNaN(caffeine) ? null : Math.round(caffeine * 10) / 10,
       ...details,
+      aminos: aminosText(aminos),
       notes: notes || null,
     },
   };

@@ -33,15 +33,33 @@ function partRows(parts, totalG) {
     .join("")}</ul>`;
 }
 
+/** Auf- und zuklappbarer Teil (1.167.0, wie PC 1.0.232), anfangs geschlossen */
+const fold = (title, note, body) =>
+  `<details class="md__fold"><summary class="md__fold-head"><span class="md__fold-chev" aria-hidden="true">▾</span><span>${esc(title)}</span>${note ? `<span class="md__fold-note">${esc(note)}</span>` : ""}</summary>${body}</details>`;
+
+/** Heutiges Omega-6 zu Omega-3 auf einer Skala mit der Referenz-Obergrenze (wie PC) */
+function omegaScaleHtml(ratio, n6, n3) {
+  const sc = M().omegaScale(ratio);
+  const value = `${F(ratio, 1)} : 1`;
+  return `<div class="omega">
+    <p class="small omega__head">Omega-6 zu Omega-3 heute <b>${value}</b><span class="muted"> · Omega-6 ${grams(n6)} · Omega-3 ${grams(n3)} · Referenz (DGE) höchstens 5 : 1</span></p>
+    <div class="omega__track" role="img" aria-label="Omega-6 zu Omega-3 heute ${value}, Referenz höchstens 5 : 1, Skala bis ${sc.max} : 1">
+      <span class="omega__fill" style="width:${sc.valuePct}%"></span><span class="omega__ref" style="left:${sc.referencePct}%"></span><span class="omega__mark" style="left:${sc.valuePct}%"></span>
+    </div>
+    <div class="omega__ticks small muted" aria-hidden="true"><span>0</span><span class="omega__ref-label" style="left:${sc.referencePct}%">5 : 1</span><span>${sc.beyond ? "über " : ""}${sc.max} : 1</span></div>
+  </div>`;
+}
+
 function missingHtml(parts, unit) {
   const gaps = parts.filter((p) => p.missing.length);
   if (!gaps.length) return "";
-  return `<ul class="muted small md__missing">${gaps
+  const foods = new Set(gaps.flatMap((p) => p.missing)).size;
+  return fold("Ohne Angabe", foods === 1 ? "1 Lebensmittel" : `${foods} Lebensmittel`, `<ul class="muted small md__missing">${gaps
     .map(
       (p) =>
         `<li>${esc(p.label)} ohne Angabe bei ${esc(p.missing.slice(0, 3).join(", "))}${p.missing.length > 3 ? ` und ${p.missing.length - 3} weiteren` : ""} (${grams(p.missingMacroG)} ${esc(unit)}, zählt nicht mit)</li>`,
     )
-    .join("")}</ul>`;
+    .join("")}</ul>`);
 }
 
 /** Gestapelte Säulen je Tag (Teile), bei Protein gestrichelt 0,8 g je kg */
@@ -106,7 +124,11 @@ function detailHtml(input, days, date, k) {
             .map((g) => {
               const list = d.subParts.filter((p) => p.group === g);
               return list.length
-                ? `<p class="md__head">${g === "essential" ? "Essenzielle Aminosäuren" : "Nicht essenzielle Aminosäuren"}</p>${partRows(list, d.totalG)}`
+                ? fold(
+                    g === "essential" ? "Essenzielle Aminosäuren" : "Nicht essenzielle Aminosäuren",
+                    `${list.length} · ${grams(list.reduce((a, p) => a + p.grams, 0))}`,
+                    partRows(list, d.totalG),
+                  )
                 : "";
             })
             .join("") +
@@ -116,7 +138,9 @@ function detailHtml(input, days, date, k) {
     ${
       k !== "protein" && d.subParts.length
         ? `<p class="md__head">${k === "fat" ? "Mehrfach ungesättigt im Einzelnen" : "Zucker im Einzelnen (nur BLS-Lebensmittel)"}</p>${partRows(d.subParts, d.totalG)}${
-            ratio !== null ? `<p class="muted small">Omega-6 zu Omega-3 heute ${F(ratio, 1)} : 1 · Referenz ${esc(R.omega)}</p>` : ""
+            ratio !== null
+              ? omegaScaleHtml(ratio, d.subParts.find((p) => p.key === "omega6")?.grams ?? 0, d.subParts.find((p) => p.key === "omega3")?.grams ?? 0)
+              : ""
           }`
         : ""
     }

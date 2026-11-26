@@ -95,8 +95,8 @@ async function persist() {
   }
 }
 
-function card(title, meta, body, area = "") {
-  return `<section class="card ${area ? `ov-card card--${area}` : ""}"><div class="wo-head"><h3>${esc(title)}</h3>${meta ? `<span class="tag">${esc(meta)}</span>` : ""}</div>${body}</section>`;
+function card(title, meta, body, area = "", open = "") {
+  return `<section class="card ${area ? `ov-card card--${area}` : ""}"><div class="wo-head"><h3${open ? ` data-open="${esc(open)}"` : ""}>${esc(title)}</h3>${meta ? `<span class="tag">${esc(meta)}</span>` : ""}</div>${body}</section>`;
 }
 const note = (t) => (t ? `<p class="card__note">${t}</p>` : "");
 
@@ -677,6 +677,8 @@ function recoveryListCard(logs, data) {
           <span class="tag">${st || "Bearbeiten"}</span></button>`;
       })
       .join(""), logs.length),
+    "",
+    "status-recovery", // oranger Punkt, solange heute noch nicht eingeschätzt (1.167.0)
   );
 }
 

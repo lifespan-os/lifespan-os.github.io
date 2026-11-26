@@ -127,12 +127,14 @@ __export(macroDetails_exports, {
   MACRO_DETAIL_LABELS: () => MACRO_DETAIL_LABELS,
   MACRO_HISTORY_DAYS: () => MACRO_HISTORY_DAYS,
   MACRO_REFERENCES: () => MACRO_REFERENCES,
+  OMEGA_REFERENCE_MAX: () => OMEGA_REFERENCE_MAX,
   POLY_PARTS: () => POLY_PARTS,
   PROTEIN_PARTS: () => PROTEIN_PARTS,
   SUGAR_PARTS: () => SUGAR_PARTS,
   macroDetail: () => macroDetail,
   macroHistory: () => macroHistory,
   omegaRatio: () => omegaRatio,
+  omegaScale: () => omegaScale,
   partOf: () => partOf
 });
 
@@ -799,6 +801,17 @@ function omegaRatio(d) {
   const n3 = d.subParts.find((p) => p.key === "omega3")?.grams ?? 0;
   const n6 = d.subParts.find((p) => p.key === "omega6")?.grams ?? 0;
   return n3 > 0 && n6 > 0 ? n6 / n3 : null;
+}
+var OMEGA_REFERENCE_MAX = 5;
+function omegaScale(ratio) {
+  const r2 = Number.isFinite(ratio) && ratio > 0 ? ratio : 0;
+  const max = Math.min(30, Math.max(10, Math.ceil(r2 / 5) * 5));
+  return {
+    max,
+    valuePct: Math.min(r2, max) / max * 100,
+    referencePct: OMEGA_REFERENCE_MAX / max * 100,
+    beyond: r2 > max
+  };
 }
 var MACRO_REFERENCES = {
   fat: "etwa 30 % der Energie",
@@ -32346,16 +32359,27 @@ var APP_FAQ = [
     area: "Erste Schritte",
     device: "pc",
     question: "Was zeigt die Overview?",
-    answer: "Die Overview fasst den Tag zusammen: Trainingsbereitschaft, Ern\xE4hrung, Energieverbrauch, Schritte, Wochenziele, Muskel-K\xF6rperkarte, Schlaf und mehr. \xDCber \u201E\xDCbersicht anpassen\u201C legst du fest, welche Karten in welcher Reihenfolge erscheinen.",
+    answer: "Die Overview fasst den Tag zusammen: Trainingsbereitschaft, Ern\xE4hrung, Energieverbrauch, Schritte, Wochenziele, Muskel-K\xF6rperkarte, Schlaf und mehr. Welche Karten in welcher Reihenfolge erscheinen, legst du selbst fest: eine Karte drei Sekunden gedr\xFCckt halten, dann verschieben oder \xFCber das Auge ausblenden.",
     keywords: ["startseite", "dashboard", "\xFCbersicht", "tag"]
   },
   {
     id: "wie-passe-ich-die-karten-der-overview-an",
     area: "Erste Schritte",
-    device: "pc",
+    device: "beide",
     question: "Wie passe ich die Karten der Overview an?",
-    answer: "In der Overview oben rechts \u201E\xDCbersicht anpassen\u201C w\xE4hlen. Dort Karten ein- und ausblenden und verschieben. Dasselbe gibt es in vielen Bereichen (z. B. Tagebuch, Sleep, Recovery) \xFCber \u201E\u2026 anpassen\u201C.",
-    keywords: ["karten", "widgets", "reihenfolge", "ausblenden", "anordnen", "layout"]
+    answer: "Eine Karte drei Sekunden gedr\xFCckt halten (Maus oder Finger): Alle Karten klappen zu und wackeln leicht. Jetzt eine Karte an die gew\xFCnschte Stelle ziehen \u2013 die Seite l\xE4uft am Rand mit. \xDCber das Auge blendest du eine Karte aus oder wieder ein, \u201EStandard\u201C stellt die urspr\xFCngliche Anordnung her, \u201EFertig\u201C speichert. Das geht auf allen Seiten mit Karten, am PC und am Handy; verschoben wird innerhalb einer Spalte bzw. eines Kartenblocks.",
+    keywords: [
+      "karten",
+      "widgets",
+      "reihenfolge",
+      "ausblenden",
+      "anordnen",
+      "layout",
+      "verschieben",
+      "gedr\xFCckt halten",
+      "wackeln",
+      "fertig"
+    ]
   },
   {
     id: "wie-funktioniert-die-suche",
@@ -32570,8 +32594,25 @@ var APP_FAQ = [
     area: "Training",
     device: "beide",
     question: "Was zeigt die Muskel-K\xF6rperkarte?",
-    answer: "Sie f\xE4rbt die Muskeln nach den erledigten Arbeitss\xE4tzen \u2013 in der Einheit, der Woche oder dem gew\xE4hlten Zeitraum. \u201EStandard\u201C, \u201EIndividuell\u201C (eigene Zielwerte je Muskel) und \u201ERelativ\u201C sind w\xE4hlbar.",
-    keywords: ["k\xF6rperkarte", "muskelkarte", "heatmap", "muskeln", "belastung"]
+    answer: "Sie f\xE4rbt die Muskeln nach den erledigten Arbeitss\xE4tzen \u2013 in der Einheit, der Woche oder dem gew\xE4hlten Zeitraum. \u201EStandard\u201C, \u201EIndividuell\u201C (eigene Zielwerte je Muskel) und \u201ERelativ\u201C sind w\xE4hlbar. Am PC zeigt der Umschalter \u201E2D | 3D\u201C die Muskeln auch als drehbares 3D-Modell (Muskelvolumen, Kopf und Skelett einstellbar).",
+    keywords: [
+      "k\xF6rperkarte",
+      "muskelkarte",
+      "heatmap",
+      "muskeln",
+      "belastung",
+      "3d",
+      "drehen",
+      "modell"
+    ]
+  },
+  {
+    id: "muskelkarte-3d",
+    area: "Training",
+    device: "pc",
+    question: "Wie nutze ich die 3D-Ansicht der Muskelkarte?",
+    answer: "Bei der Muskel-K\xF6rperkarte oben auf \u201E3D\u201C umschalten. Ziehen dreht das Modell, das Mausrad zoomt, die rechte Maustaste verschiebt, ein Klick w\xE4hlt einen Muskel aus; die Farben zeigen wie in 2D die Arbeitss\xE4tze je Muskel. Unter dem Modell stellst du das Muskelvolumen (nur Darstellung) ein und blendest Kopf mit Gesicht und Skelett ein oder aus. Grundlage ist das Modell BodyParts3D (Quelle in der Ansicht); die Brust ist klar von S\xE4gemuskel und Bauch getrennt.",
+    keywords: ["3d", "muskelkarte", "k\xF6rperkarte", "drehen", "modell", "bodyparts3d"]
   },
   {
     id: "wie-lege-ich-zielwerte-je-muskel-fuer-die-koerpe",
@@ -32634,8 +32675,16 @@ var APP_FAQ = [
     area: "Gyms & Maschinen",
     device: "beide",
     question: "Wie f\xFCge ich einem Gym Maschinen hinzu?",
-    answer: "In Meine Gyms das Gym \xF6ffnen, Maschinen suchen (Name, Hersteller, Nummer) und mit Studionummer und Notiz hinzuf\xFCgen.",
-    keywords: ["maschinen hinzuf\xFCgen", "studionummer", "ger\xE4t zuordnen"]
+    answer: "In Meine Gyms das Gym \xF6ffnen und \u201EMaschine hinzuf\xFCgen\u201C w\xE4hlen. \xDCber dem Suchfeld filterst du nach Hersteller und Muskelgruppe; gesucht wird nach Name, Hersteller und Nummer. Maschinen, an denen du schon trainiert hast, stehen vorn, jede Zeile zeigt ein Bild (Klick vergr\xF6\xDFert). Mit den H\xE4kchen w\xE4hlst du mehrere auf einmal aus und f\xFCgst sie mit Studionummer und Notiz hinzu.",
+    keywords: [
+      "maschinen hinzuf\xFCgen",
+      "studionummer",
+      "ger\xE4t zuordnen",
+      "filter",
+      "hersteller",
+      "mehrere",
+      "h\xE4kchen"
+    ]
   },
   {
     id: "eine-maschine-fehlt-in-der-datenbank-was-nun",
@@ -32674,6 +32723,22 @@ var APP_FAQ = [
     question: "Wie aktualisiere ich die Maschinen am Handy ohne PC?",
     answer: "Maschinen kommen mit der Exportdatei vom PC \u2013 ohne PC in der Handy-App unter Import/Export \u2192 \u201EMaschinen aktualisieren\u201C. Eigene Maschinen und Nummern bleiben erhalten.",
     keywords: ["maschinen aktualisieren", "master", "update", "datenbank"]
+  },
+  {
+    id: "hersteller-maschinen",
+    area: "Gyms & Maschinen",
+    device: "beide",
+    question: "Von welchen Herstellern sind Maschinen in der Datenbank?",
+    answer: "Die Maschinendatenbank umfasst rund 2.800 Ger\xE4te vieler Hersteller, darunter seit Ende November auch DRAX (VECTOR, TWMA, PUREPLATE, TWF, Cardio) und Synergy Fitness. Bei diesen Ger\xE4ten stehen Beschreibung und technische Daten (\xFCbersetzt) in der Notiz, dazu ein Bild. Fehlt dein Ger\xE4t, legst du es selbst an.",
+    keywords: ["hersteller", "drax", "synergy", "marke", "maschinendatenbank"]
+  },
+  {
+    id: "geraeteeinstellungen",
+    area: "Gyms & Maschinen",
+    device: "beide",
+    question: "Wie merke ich mir die Einstellungen an einer Maschine?",
+    answer: "Beim Erfassen einer \xDCbung (im Training und im Plan) gibt es Felder f\xFCr die Einstellungen, z. B. Sitzh\xF6he, Sitzweite, R\xFCckenlehne, Brustpolster und Brustpolster Winkel, Fu\xDFst\xFCtze und Fu\xDFst\xFCtze Winkel, Drehachse 1 und 2, Griffbreite/Fu\xDFstellung und Griffstellung sowie Anzahl und Widerstand bzw. Farbe der Resistanceb\xE4nder. Bandfarben lassen sich \xFCber die Farbschalter kombinieren (z. B. \u201ERot + Blau\u201C). Die Werte werden mit der \xDCbung gespeichert.",
+    keywords: ["sitzh\xF6he", "polster", "einstellung", "widerstandsband", "bandfarbe", "griffbreite"]
   },
   {
     id: "wie-trage-ich-eine-mahlzeit-ein",
@@ -32788,7 +32853,7 @@ var APP_FAQ = [
     area: "Erste Schritte",
     device: "beide",
     question: "Was bedeuten die orangen Punkte in der Navigation?",
-    answer: "Ein oranger Punkt unten rechts an einem Bereich zeigt, dass dort f\xFCr heute noch etwas offen ist \u2013 etwa K\xF6rperwerte am Morgen, Schlaf, HRV, Ern\xE4hrung, ein geplantes Training, ein To-do oder eine f\xE4llige Hormongabe. Ein Klick auf den Bereich f\xFChrt direkt zur Stelle zum Eintragen; dort tr\xE4gt auch der passende Reiter (z. B. \u201EErfassen\u201C) einen Punkt. Der Punkt verschwindet, sobald alles Offene des Bereichs erledigt ist. Geplante Trainings stehen au\xDFerdem unter Checklisten im Tages\xFCberblick.",
+    answer: "Ein oranger Punkt unten rechts an einem Bereich zeigt, dass dort f\xFCr heute noch etwas offen ist \u2013 etwa K\xF6rperwerte am Morgen, Schlaf, HRV, die Einsch\xE4tzung unter Recovery, Ern\xE4hrung, ein geplantes Training, ein To-do oder eine f\xE4llige Hormongabe. Ein Klick auf den Bereich f\xFChrt direkt zur Stelle zum Eintragen; dort tragen auch der passende Reiter, der Knopf (z. B. \u201EHeute einsch\xE4tzen\u201C) und die \xDCberschrift der Karte (z. B. \u201EEinsch\xE4tzungen\u201C) einen Punkt. Der Punkt verschwindet, sobald alles Offene des Bereichs erledigt ist. Geplante Trainings stehen au\xDFerdem unter Checklisten im Tages\xFCberblick.",
     keywords: [
       "punkt",
       "orange",
@@ -32868,8 +32933,49 @@ var APP_FAQ = [
     area: "Ern\xE4hrung",
     device: "beide",
     question: "Was zeigt die Tagessumme?",
-    answer: "Energie und Makron\xE4hrstoffe des Tages gegen deine Tagesziele, mit Defizit bzw. \xDCberschuss. Geplante Mahlzeiten stehen hellgrau dahinter (mehrere durch einen Strich getrennt) und z\xE4hlen erst nach \u201EGegessen\u201C.",
-    keywords: ["tagessumme", "kalorien", "makros", "defizit", "\xFCberschuss", "ziel"]
+    answer: "Energie und Makron\xE4hrstoffe des Tages gegen deine Tagesziele, mit Defizit bzw. \xDCberschuss. Geplante Mahlzeiten stehen hellgrau dahinter (mehrere durch einen Strich getrennt) und z\xE4hlen erst nach \u201EGegessen\u201C. Unter \u201EDetails\u201C siehst du, woher Fett, Protein und Kohlenhydrate kommen; der Pfeil \u201EWeitere N\xE4hrwerte\u201C rechts daneben klappt Ballaststoffe, Zucker, Salz und weitere Werte auf.",
+    keywords: [
+      "tagessumme",
+      "kalorien",
+      "makros",
+      "defizit",
+      "\xFCberschuss",
+      "ziel",
+      "details",
+      "weitere n\xE4hrwerte"
+    ]
+  },
+  {
+    id: "makro-details",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Woher kommen Fett, Protein und Kohlenhydrate meines Tages?",
+    answer: "In der Tagessumme auf \u201EDetails\u201C tippen. F\xFCr Fett, Protein und Kohlenhydrate steht die Aufteilung (z. B. ges\xE4ttigte, einfach und mehrfach unges\xE4ttigte Fetts\xE4uren, Zucker und St\xE4rke, essenzielle und nicht essenzielle Aminos\xE4uren), die Menge je Mahlzeit, die Lebensmittel mit dem gr\xF6\xDFten Anteil und der Verlauf der letzten 14 Tage. Die Referenzwerte der DGE stehen zur Einordnung dabei \u2013 bewertet wird nichts.",
+    keywords: ["makros", "fett", "protein", "kohlenhydrate", "aufteilung", "herkunft", "details"]
+  },
+  {
+    id: "aminosaeuren",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Wo sehe ich die Aminos\xE4uren meines Tages?",
+    answer: "In der Tagessumme unter \u201EDetails\u201C beim Protein. Die essenziellen und die nicht essenziellen Aminos\xE4uren sind je eine eigene Gruppe, die du mit einem Tipp auf- und zuklappst (anfangs zu). Die Werte kommen aus dem Aminogramm der Lebensmittel (Herstellerangabe oder BLS) und aus deinen Supplements. Fehlt die Angabe bei einem Lebensmittel, z\xE4hlt es nicht mit \u2013 erg\xE4nze sie beim Lebensmittel unter \u201EWeitere Angaben\u201C.",
+    keywords: ["aminos\xE4uren", "aminogramm", "essenziell", "leucin", "eaa", "bcaa"]
+  },
+  {
+    id: "omega-verhaeltnis",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Was zeigt das Verh\xE4ltnis von Omega-6 zu Omega-3?",
+    answer: "In der Tagessumme unter \u201EDetails\u201C beim Fett, sobald an diesem Tag Omega-3 und Omega-6 erfasst sind. Eine Skala zeigt den heutigen Wert (z. B. 3,2 : 1) und als gestrichelte Linie die Referenz der DGE (h\xF6chstens 5 : 1), dazu die Gramm beider Fetts\xE4uren. Die Skala reicht bis 10 : 1, bei h\xF6heren Werten weiter. Es ist eine Einordnung, keine Bewertung.",
+    keywords: ["omega", "omega-3", "omega-6", "verh\xE4ltnis", "fetts\xE4uren", "fisch\xF6l"]
+  },
+  {
+    id: "ohne-angabe",
+    area: "Ern\xE4hrung",
+    device: "beide",
+    question: "Was bedeutet \u201Eohne Angabe\u201C in den Details?",
+    answer: "Ein Lebensmittel hat f\xFCr diesen Wert weder eine eigene Angabe noch einen BLS-Wert. Es z\xE4hlt dann nicht mit (nicht als 0). In den Details steht die Zeile \u201EOhne Angabe\u201C mit der Zahl der Lebensmittel; aufgeklappt siehst du, welche es sind und wie viel Fett, Protein bzw. Kohlenhydrate dadurch nicht aufgeteilt sind. Erg\xE4nze die Werte beim Lebensmittel unter \u201EWeitere Angaben\u201C.",
+    keywords: ["ohne angabe", "fehlt", "nicht gez\xE4hlt", "l\xFCcke", "unvollst\xE4ndig"]
   },
   {
     id: "wo-sehe-ich-meine-ernaehrung-ueber-wochen",
@@ -32884,8 +32990,16 @@ var APP_FAQ = [
     area: "Ern\xE4hrung",
     device: "beide",
     question: "Wie trage ich Wasser ein?",
-    answer: "Im Tagebuch in der Karte \u201EWasserhaushalt\u201C ein Glas antippen (Gr\xF6\xDFe w\xE4hlbar) oder \xFCber \u201ESchnell erfassen\u201C. Getr\xE4nke mit Koffein z\xE4hlen mit ihrer Menge zum Wasser.",
-    keywords: ["wasser", "trinken", "glas", "fl\xFCssigkeit", "hydration"]
+    answer: "Im Tagebuch in der Karte \u201EWasserhaushalt\u201C ein Glas antippen (Gr\xF6\xDFe w\xE4hlbar) oder \xFCber \u201ESchnell erfassen\u201C. Getr\xE4nke mit Koffein z\xE4hlen mit ihrer Menge zum Wasser. Unter \u201EDetails\u201C in der Karte stehen die Koffein-Getr\xE4nke, das Wasser aus Lebensmitteln (mit Schalter, ob es mitz\xE4hlt) und Hinweise zur Bedienung.",
+    keywords: [
+      "wasser",
+      "trinken",
+      "glas",
+      "fl\xFCssigkeit",
+      "hydration",
+      "wasser aus lebensmitteln",
+      "details"
+    ]
   },
   {
     id: "was-bedeuten-minimum-und-tagesziel",
@@ -33229,8 +33343,18 @@ var APP_FAQ = [
     area: "Checklisten",
     device: "beide",
     question: "Wie lege ich eine Checkliste oder ein To-do an?",
-    answer: "Unter Checklisten eine eigene Checkliste anlegen oder eine Liste aus Excel bzw. Apple Notizen importieren. To-dos des Tages und was heute noch einzutragen ist, stehen dort ebenfalls.",
-    keywords: ["checkliste", "todo", "aufgabe", "liste", "erinnerung"]
+    answer: "Unter Checklisten eine eigene Checkliste anlegen oder eine Liste aus Excel bzw. Apple Notizen importieren. Unter To-dos stehen die To-dos des Tages und daneben bis zu drei eigene Listen (Auswahl oben in der Karte). Was offen bleibt, wandert automatisch in den n\xE4chsten Tag; Bearbeiten und L\xF6schen gehen \xFCber die Symbole in der Zeile.",
+    keywords: [
+      "checkliste",
+      "todo",
+      "aufgabe",
+      "liste",
+      "erinnerung",
+      "todo-liste",
+      "listen",
+      "\xFCbernehmen",
+      "n\xE4chster tag"
+    ]
   },
   {
     id: "wie-erstelle-ich-eine-datensicherung-am-pc",
@@ -33341,7 +33465,7 @@ var APP_FAQ = [
     area: "Probleme l\xF6sen",
     device: "beide",
     question: "Ich finde eine Funktion nicht.",
-    answer: "Nutze die Suche (am PC Strg+K) oder Settings \u2192 FAQ und gib einen Begriff ein, z. B. \u201EGym anlegen\u201C oder \u201EKoffein\u201C. Bereiche lassen sich \xFCber \u201E\u2026 anpassen\u201C ein- und ausblenden \u2013 vielleicht ist eine Karte ausgeblendet.",
+    answer: "Nutze die Suche (am PC Strg+K) oder Settings \u2192 FAQ und gib einen Begriff ein, z. B. \u201EGym anlegen\u201C oder \u201EKoffein\u201C. Vielleicht ist die Karte ausgeblendet: eine Karte der Seite drei Sekunden gedr\xFCckt halten \u2013 dann erscheinen auch die ausgeblendeten Karten und lassen sich \xFCber das Auge wieder einblenden.",
     keywords: ["finde nicht", "wo ist", "ausgeblendet", "versteckt", "fehlt"]
   }
 ];

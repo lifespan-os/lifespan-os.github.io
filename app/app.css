@@ -2409,6 +2409,22 @@ button.sum-card__more { display: inline-flex; align-items: center; gap: 4px; mar
 /* Details der Tagessumme (1.164.0, wie PC 1.0.229) */
 .md__head { margin: 10px 0 2px; font-size: .82rem; font-weight: 600; color: var(--muted); }
 .md__missing { margin: 0 0 6px; padding-left: 16px; }
+/* Aufklappbare Teile (1.167.0): Aminosäuren-Gruppen, „Ohne Angabe“ – anfangs zu */
+.md__fold { margin: 6px 0; }
+.md__fold-head { display: flex; align-items: center; gap: 6px; min-height: 36px; font-size: .82rem; font-weight: 600; color: var(--muted); cursor: pointer; list-style: none; }
+.md__fold-head::-webkit-details-marker { display: none; }
+.md__fold-chev { display: inline-block; transform: rotate(-90deg); transition: transform .2s ease; }
+.md__fold[open] > .md__fold-head .md__fold-chev { transform: none; }
+.md__fold-note { font-weight: 400; }
+/* Omega-6 zu Omega-3 auf einer Skala (1.167.0) – nur Lage und Referenz */
+.omega { margin: 8px 0 12px; }
+.omega__head { margin: 0 0 8px; }
+.omega__track { position: relative; height: 10px; border-radius: 999px; background: var(--c-sunken, var(--bg)); border: 1px solid var(--line); }
+.omega__fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--c-water); }
+.omega__ref { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 2px dashed var(--fg); }
+.omega__mark { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 3px solid var(--c-water); transform: translate(-50%, -50%); }
+.omega__ticks { position: relative; display: flex; justify-content: space-between; margin-top: 4px; font-size: .75rem; }
+.omega__ref-label { position: absolute; transform: translateX(-50%); }
 .md__legend { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 4px 0 0; color: var(--muted); }
 .md__swatch { display: inline-block; width: 10px; height: 10px; margin-right: 4px; border-radius: 2px; vertical-align: middle; }
 .md__bar--sat, .md__swatch--sat { fill: var(--c-nutrition); background: var(--c-nutrition); }

@@ -53,6 +53,7 @@ import { initTrainingDb, saveExerciseRow } from "./trainingdb.js";
 import * as TR from "./trainingdata.js";
 import * as HX from "./hyrox.js";
 import * as GY from "./gymsui.js";
+import { gymsState } from "./gymsdata.js";
 import { initExtras, quickFillInput, quickFillUpload, viewQuickFill } from "./extras.js";
 import { viewMealPlan } from "./planparity.js";
 import { recipeChange, recipeInput, viewRecipeEdit, viewRecipes } from "./recipesui.js";
@@ -588,6 +589,9 @@ async function reloadKeys(keys) {
 }
 initAutosave({ S, actions, store, toast, reload: reloadKeys });
 
+/** Schlüssel, die der Start auf einmal liest (Reihenfolge egal). */
+const BOOT_KEYS = ["catalog", "train", "localExercises", "workouts", "active", "prefs", "nutrition", "body", "water", "fast", "supp", "goals", "parity", "pcsettings", `${store.GLOBAL}blsInfo`, `${store.GLOBAL}offInfo`, "gyms", "logs", "todos", "checklists", "caffeine", "caffeineSettings", "weekReview", "glucose", "health", "super"];
+
 async function boot() {
   fixSafeTop();
   try {
@@ -597,32 +601,34 @@ async function boot() {
     const activeId = (await store.getGlobal("activeAccount")) || "";
     S.accountId = activeId && S.accounts.some((a) => a.id === activeId) ? activeId : "";
     store.useAccount(S.accountId);
-    S.catalogRaw = await store.get("catalog");
-    S.train = TR.trainState(await store.get("train"));
-    S.localExercises = (await store.get("localExercises")) || [];
-    S.workouts = (await store.get("workouts")) || [];
-    S.active = await store.get("active");
-    S.prefs = DP.normPrefs({ ...S.prefs, ...((await store.get("prefs")) || {}) });
-    S.food = foodState(await store.get("nutrition"));
-    S.body = bodyState(await store.get("body"));
-    S.water = (await store.get("water")) || P.emptyWaterLocal();
-    S.fast = FT.normFast(await store.get("fast"));
-    S.supp = SP.normSupp(await store.get("supp"));
-    S.goals = GL.normGoals(await store.get("goals"));
-    S.parity = PR.normParity(await store.get("parity"));
-    S.pcsettings = PS.normSync(await store.get("pcsettings"));
-    await blsBoot();
-    await offBoot();
-    await GY.gymsBoot();
-    S.logs = LG.logsState(await store.get("logs"));
-    S.todos = TD.todosState(await store.get("todos"));
-    S.checklists = CD.checklistState(await store.get("checklists"));
-    S.caffeine = CF.caffeineState(await store.get("caffeine"));
-    S.caffeineSettings = (await store.get("caffeineSettings")) ?? null; // 1.47.0: Einschlafzeit, Halbwertszeit
-    S.weekAck = (await store.get("weekReview")) ?? null; // 1.47.0: quittierte To-dos im Wochenabschluss
-    S.glucose = GLD.glucoseState(await store.get("glucose"));
-    S.health = HD.healthState(await store.get("health"));
-    S.super = SD.superState(await store.get("super"));
+    // Alle Werte des Kontos in einem Lesevorgang statt nacheinander (1.158.0, schnellerer Start)
+    const v = await store.getMany(BOOT_KEYS);
+    S.catalogRaw = v.catalog;
+    S.train = TR.trainState(v.train);
+    S.localExercises = v.localExercises || [];
+    S.workouts = v.workouts || [];
+    S.active = v.active;
+    S.prefs = DP.normPrefs({ ...S.prefs, ...(v.prefs || {}) });
+    S.food = foodState(v.nutrition);
+    S.body = bodyState(v.body);
+    S.water = v.water || P.emptyWaterLocal();
+    S.fast = FT.normFast(v.fast);
+    S.supp = SP.normSupp(v.supp);
+    S.goals = GL.normGoals(v.goals);
+    S.parity = PR.normParity(v.parity);
+    S.pcsettings = PS.normSync(v.pcsettings);
+    S.blsInfo = v[`${store.GLOBAL}blsInfo`] ?? null; // wie blsBoot()
+    S.offInfo = v[`${store.GLOBAL}offInfo`] ?? null; // wie offBoot()
+    S.gyms = gymsState(v.gyms); // wie gymsBoot()
+    S.logs = LG.logsState(v.logs);
+    S.todos = TD.todosState(v.todos);
+    S.checklists = CD.checklistState(v.checklists);
+    S.caffeine = CF.caffeineState(v.caffeine);
+    S.caffeineSettings = v.caffeineSettings ?? null; // 1.47.0: Einschlafzeit, Halbwertszeit
+    S.weekAck = v.weekReview ?? null; // 1.47.0: quittierte To-dos im Wochenabschluss
+    S.glucose = GLD.glucoseState(v.glucose);
+    S.health = HD.healthState(v.health);
+    S.super = SD.superState(v.super);
     delete S.prefs.topOffset; // Einstellung aus 1.1.7 entfällt
     refreshCatalog();
   } catch (e) {
@@ -640,6 +646,18 @@ async function boot() {
   startReminders();
   if (S.active) wakeLock(true);
   if ("serviceWorker" in navigator && location.protocol === "https:") {
+    // Neue Version (1.158.0): Die App startet aus dem Speicher des Geräts; eine neue Version lädt der
+    // Service Worker im Hintergrund. Übernimmt er, lädt die Startseite (ohne laufendes Training und ohne
+    // offene Eingabe) gleich neu, sonst gilt die neue Version ab dem nächsten Öffnen.
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hadController || S.updateReloaded) return;
+      const typing = document.activeElement?.matches?.("input, textarea, select");
+      if (S.view === "home" && !S.active && !typing) {
+        S.updateReloaded = true;
+        location.reload();
+      } else toast("Neue Version geladen – sie gilt ab dem nächsten Öffnen der App.");
+    });
     navigator.serviceWorker.register("sw.js").catch(() => {});
   }
 }

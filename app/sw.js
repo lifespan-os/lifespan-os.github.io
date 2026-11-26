@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar. Speichert nur die App-Dateien,
 // niemals Trainingsdaten (die liegen in IndexedDB auf dem Gerät).
-const VERSION = "lifespan-mobil-1.157.0";
+const VERSION = "lifespan-mobil-1.158.0";
 const FILES = [
   "./",
   "index.html",
@@ -8,130 +8,15 @@ const FILES = [
   "fonts/barlow-condensed-latin-700-normal.woff2",
   "fonts/barlow-condensed-latin-800-normal.woff2",
   "fonts/barlow-condensed-latin-800-italic.woff2",
-  "app.js",
-  "appbase.js",
-  "autosave.js",
-  "sheets.js",
-  "navshell.js",
-  "resttimer.js",
-  "devsettings.js",
-  "accounts.js",
-  "catalogload.js",
-  "homeview.js",
-  "workoutview.js",
-  "transferview.js",
-  "backup.js",
-  "machinesync.js",
-  "appactions.js",
-  "core.js",
-  "store.js",
-  "label.js",
-  "nutrition.js",
-  "food.js",
-  "mealplate.js",
-  "body.js",
-  "bodydata.js",
-  "gripview.js",
-  "heartfields.js",
-  "nav.js",
-  "focusinfo.js",
-  "focusdata.js",
-  "pcdb.js",
-  "pcdomain.js",
-  "pcview.js",
-  "cardiomap.js",
-  "parity.js",
-  "paritydata.js",
-  "bodyparity.js",
-  "goalsparity.js",
-  "planparity.js",
-  "recipes.js",
-  "recipesui.js",
-  "nutridb.js",
-  "suppdb.js",
-  "reviewparity.js",
-  "searchview.js",
-  "pdfparity.js",
-  "watchparity.js",
-  "setupparity.js",
-  "swiperow.js",
-  "extras.js",
-  "diary.js",
-  "diarycaffeine.js",
-  "diaryextras.js",
-  "mealtimeline.js",
-  "diarysupp.js",
-  "diaryactions.js",
-  "fastdata.js",
-  "quickmeal.js",
+  // Alle Programmteile in einer Datei (1.158.0, schnellerer Start; erzeugt mit
+  // scripts/tools/handy/handy-buendeln.cmd aus den Modulen in mobile/)
+  "app.bundle.js",
   // „Eingabe für alles“ in der Schnellerfassung (1.141.0)
-  "oneinput.js",
-  "overview.js",
-  "carbcycle.js",
-  "mapzoom.js",
-  "longevityview.js",
-  "protocolsview.js",
-  "logs.js",
-  "logsdata.js",
-  "insightsview.js",
-  "weeklyreports.js",
   "lifespan-logo-freigestellt.png",
-  "todos.js",
-  "todosdata.js",
-  "checklistdata.js",
-  "caffeinedata.js",
-  "icoach.js",
-  "health.js",
-  "heart.js",
-  "glucose.js",
-  "glucosedata.js",
-  "wearabledata.js",
-  "healthdata.js",
-  "super.js",
-  "supertabs.js",
-  "superactions.js",
-  "superdata.js",
-  "training.js",
-  "trainingplans.js",
-  "plancalendar.js",
-  "openitems.js",
-  "trainingactions.js",
-  "trainingdata.js",
-  "trainingstats.js",
-  "trainingdb.js",
-  "pending.js",
-  "supplements.js",
-  "vendor.js",
-  "vendorui.js",
-  "catalogfile.js",
-  "catalogui.js",
-  "hyrox.js",
-  "goals.js",
-  "goalsui.js",
-  "accountexport.js",
-  "bls.js",
-  "blsui.js",
   // Open Food Facts (1.59.0): Programmteile; der Katalog selbst (off/off-de-at.tsv.gz) nur bei Bedarf
-  "off.js",
-  "offui.js",
   // Meine Gyms (1.60.0)
-  "gymsdata.js",
-  "gymsui.js",
-  "photocrop.js",
-  "infonotes.js",
-  "dayswipe.js",
-  "machineimages.js",
-  "pcoverview.js",
-  "settingsview.js",
-  "pcsettings.js",
-  "devprefs.js",
-  "appday.js",
-  "layoutedit.js",
-  "musclemap/regions.js",
   "musclemap/male.webp",
   "musclemap/female.webp",
-  "nutrientcatalog.js",
-  "ocr.js",
   "manifest.webmanifest",
   "icons/icon-192.png",
   "icons/figur.png",
@@ -162,8 +47,8 @@ self.addEventListener("install", (ev) => {
     caches
       .open(VERSION)
       .then(async (c) => {
-        await c.addAll(FILES);
-        await Promise.all(OCR_FILES.map((f) => c.add(f).catch(() => {})));
+        await c.addAll(FILES.map((f) => new Request(f, { cache: "reload" })));
+        await Promise.all(OCR_FILES.map((f) => c.add(new Request(f, { cache: "reload" })).catch(() => {})));
       })
       .then(() => self.skipWaiting()),
   );
@@ -178,15 +63,39 @@ self.addEventListener("activate", (ev) => {
   );
 });
 
-// Online zuerst aus dem Netz (so kommen Updates sofort an), nach 3 s oder offline aus dem Speicher.
-// Schrift „Barlow Condensed“ liegt seit 1.52.0 in der App (fonts/) – keine Anfrage an Google mehr.
+// Schneller Start (1.158.0): App-Dateien kommen sofort aus dem Speicher des Geräts (cache first). Bisher
+// wartete jeder Start bei jeder der über 100 Dateien auf das Netz. Neue Versionen kommen trotzdem an: Der
+// Browser prüft sw.js bei jedem Öffnen; ändert sich VERSION, lädt der neue Service Worker alle Dateien
+// frisch (cache: "reload") in einen neuen Speicher und übernimmt – ab dem nächsten Öffnen läuft die neue
+// Version. Jeder Speicher enthält genau eine Version, Dateien verschiedener Versionen mischen sich nicht.
+// Alles andere (Herstellerpakete, Studio-Pakete …): online zuerst aus dem Netz, nach 3 s oder offline aus
+// dem Speicher. Schrift „Barlow Condensed“ liegt seit 1.52.0 in der App (fonts/) – keine Anfrage an Google.
+
+const APP_PATHS = new Set(FILES.map((f) => new URL(f, self.location).pathname));
 
 self.addEventListener("fetch", (ev) => {
   const req = ev.request;
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
+  const path = new URL(req.url).pathname;
   // Bilderpakete (1.67.0, bis 8 MB je Datei) nicht zusätzlich im Speicher des Service Workers ablegen –
   // die Bilder landen ohnehin in der IndexedDB „lifespan-bilder“
-  if (new URL(req.url).pathname.includes("/bilder/")) return;
+  if (path.includes("/bilder/")) return;
+  if (APP_PATHS.has(path) || req.mode === "navigate") {
+    ev.respondWith(
+      caches.open(VERSION).then(async (cache) => {
+        const hit = await cache.match(req, { ignoreSearch: true });
+        if (hit) return hit;
+        // Nicht im Speicher (z. B. Speicher vom System geleert): aus dem Netz holen und ablegen
+        return fetch(req, { cache: "no-cache" })
+          .then((res) => {
+            if (res.ok) cache.put(req, res.clone());
+            return res;
+          })
+          .catch(() => new Response("Offline", { status: 503 }));
+      }),
+    );
+    return;
+  }
   ev.respondWith(
     caches.open(VERSION).then(async (cache) => {
       const net = fetch(req, { cache: "no-cache" }).then((res) => {

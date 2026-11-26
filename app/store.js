@@ -103,6 +103,29 @@ export async function replaceAccount(values) {
   });
 }
 
+/**
+ * Mehrere Werte in einem Lesevorgang (1.158.0, schnellerer Start): `{ Schlüssel: Wert|null }`.
+ * `keys` ohne Konto-Vorsatz; Schlüssel mit „global:“ werden unverändert gelesen.
+ */
+export async function getMany(keys) {
+  const db = await open();
+  const full = keys.map((k) => (k.startsWith(GLOBAL) ? k : ns + k));
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE);
+    const os = tx.objectStore(STORE);
+    const out = {};
+    full.forEach((fk, i) => {
+      const req = os.get(fk);
+      req.onsuccess = () => {
+        out[keys[i]] = req.result ?? null;
+      };
+    });
+    tx.oncomplete = () => resolve(out);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
 async function getRaw(key) {
   const db = await open();
   return new Promise((resolve, reject) => {

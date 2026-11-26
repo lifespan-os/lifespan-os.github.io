@@ -422,6 +422,25 @@ export function fastDay(db, date) {
 }
 
 /** Supplement-Einnahmen eines Tages wie `supplement::list_intakes` (mit Nährwerten). */
+/**
+ * Omega-3 als Fett wie `supplement::with_omega3_fat` (Handy 1.162.0): Ist kein Fett (> 0)
+ * eingetragen, gilt Omega-3 als Fett – „Omega-3 Gesamt“, sonst ALA + EPA + DHA + DPA (mg → g);
+ * ohne eingetragene Energie kommt dieses Fett × 9 kcal dazu. `values` = { Schlüssel: Menge }.
+ */
+export function withOmega3Fat(values) {
+  const pos = (v) => (typeof v === "number" && v > 0 ? v : undefined);
+  if (pos(values.fat) !== undefined) return values;
+  const omegaMg = pos(values.omega3_total) ?? ["ala", "epa", "dha", "dpa"].reduce((s, k) => s + (pos(values[k]) ?? 0), 0);
+  if (omegaMg <= 0) return values;
+  const fat = omegaMg / 1000;
+  const out = { ...values, fat };
+  if (pos(values.energy) === undefined) out.energy = fat * 9;
+  return out;
+}
+
+/** Werte je Portion eines Supplements (mit Omega-3 als Fett). */
+const supplementValues = (db, id) => withOmega3Fat(Object.fromEntries((db.supValues.get(id) ?? []).map((v) => [v.nutrient, v.amount])));
+
 export function intakesOn(db, date) {
   const meals = new Map((db.mealsByDate.get(date) ?? []).map((m) => [m.id, m]));
   return [...(db.intakesByDate.get(date) ?? [])]
@@ -434,7 +453,7 @@ export function intakesOn(db, date) {
           if (!s) return [];
           const factor = it.amount / s.serving_amount;
           const nutrients = {};
-          for (const v of db.supValues.get(s.id) ?? []) nutrients[v.nutrient] = v.amount * factor;
+          for (const [k, v] of Object.entries(supplementValues(db, s.id))) nutrients[k] = v * factor;
           return [{ id: it.id, supplementId: s.id, name: s.name, unit: s.unit, amount: it.amount, nutrients }];
         });
       const nutrients = {};
@@ -502,10 +521,10 @@ export function dailyTotals(db, from, to) {
       for (const it of db.intakeItems.get(i.id) ?? []) {
         const s = db.supplements.get(it.supplement_id);
         if (!s) continue;
-        for (const v of db.supValues.get(s.id) ?? []) {
-          if (!MACRO_KEYS[v.nutrient]) continue;
+        for (const [k, v] of Object.entries(supplementValues(db, s.id))) {
+          if (!MACRO_KEYS[k]) continue;
           any = true;
-          sums[MACRO_KEYS[v.nutrient]] += (v.amount * it.amount) / s.serving_amount;
+          sums[MACRO_KEYS[k]] += (v * it.amount) / s.serving_amount;
         }
       }
     }

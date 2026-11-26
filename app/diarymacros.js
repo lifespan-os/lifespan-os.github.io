@@ -140,8 +140,8 @@ function detailHtml(input, days, date, k) {
 }
 
 /** „Details“-Knopf und aufgeklappte Details für die Tagessumme */
-export function macroDetailsHtml(input, days, date, open) {
-  return `<button class="btn sm ghost extras-card__toggle" data-act="macro-toggle" aria-expanded="${open}">Details <span class="extras-card__chev" aria-hidden="true">▾</span></button>
+export function macroDetailsHtml(input, days, date, open, aside = "") {
+  return `<div class="sum-card__toggles"><button class="btn sm ghost extras-card__toggle" data-act="macro-toggle" aria-expanded="${open}">Details <span class="extras-card__chev" aria-hidden="true">▾</span></button>${aside}</div>
     ${
       open
         ? `<div class="xd md"><p class="card__note">Woher Fett, Protein und Kohlenhydrate an diesem Tag kommen und wie sie sich aufteilen. Je Lebensmittel zählt der eigene Wert, sonst der Wert aus dem BLS (wenn er auf dem Handy liegt); fehlt beides, steht das Lebensmittel unter „ohne Angabe“. Ergänze die Werte beim Lebensmittel unter „Weitere Angaben“.</p>

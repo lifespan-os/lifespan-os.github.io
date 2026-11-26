@@ -40,6 +40,16 @@ export const diaryActions = {
     X.S.macroOpen = !X.S.macroOpen;
     X.rerender();
   },
+  // „Weitere Nährwerte“ der Tagessumme auf- und zuklappen (1.166.0)
+  "sum-more-toggle": () => {
+    X.S.sumMoreOpen = !X.S.sumMoreOpen;
+    X.rerender();
+  },
+  // Details des Wasserhaushalts auf- und zuklappen (1.166.0)
+  "water-details-toggle": () => {
+    X.S.waterDetailsOpen = !X.S.waterDetailsOpen;
+    X.rerender();
+  },
   "qm-repeat": (el) => {
     const [key, kind] = el.dataset.arg.split("|");
     const db = buildDb();

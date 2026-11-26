@@ -268,6 +268,12 @@ export function viewDiary() {
 
   // ---------------- Karten
   const macroOpen = Boolean(S.macroOpen);
+  // „Weitere Nährwerte“ rechts neben „Details“ (1.166.0, wie PC 1.0.231)
+  const moreOpen = Boolean(S.sumMoreOpen);
+  const hasMore = allItems.length > 0 || Boolean(fast) || hasSuppMacros || hasMealValues;
+  const moreToggle = hasMore
+    ? `<button type="button" class="sum-card__more" data-act="sum-more-toggle" aria-expanded="${moreOpen}"><span class="sum-card__more-icon" aria-hidden="true">▸</span> Weitere Nährwerte</button>`
+    : "";
   const macro = totals.energyKcal + totals.fatG + totals.proteinG + totals.carbsG > 0 ? macroInputFor(db, date, slots, supps, fast, mealValues, totals, weightKg) : null;
   const totalsCard = `<section class="card card--nutrition${macroOpen ? " extras-card--open" : ""}"><div class="card__head"><h3>Tagessumme</h3>
       <span class="card__meta">${goal ? `Ziele gültig ab ${esc(D.formatDate(goal.validFrom))}` : `<button class="linkbtn" data-act="goals-open">Tagesziele festlegen</button>`}</span></div>
@@ -287,12 +293,12 @@ export function viewDiary() {
           ${plannedForSum.length ? `<p class="muted small">Geplant: ${esc(D.formatKcal(plannedForSum.reduce((x, p) => x + p.energyKcal, 0)))} (${plannedForSum.length === 1 ? "1 Mahlzeit" : `${plannedForSum.length} Mahlzeiten`}, zählt erst nach „Gegessen“)</p>` : ""}
           <p class="card__note">Mit Tageszielen für Energie und Makronährstoffe (Settings → Tagesziele) zeigt die Tagessumme, wie viel noch offen ist (Defizit) oder darüber liegt (Überschuss).</p>`
     }
-    ${macro ? macroDetailsHtml(macro.input, macro.days, date, macroOpen) : ""}
+    ${macro ? macroDetailsHtml(macro.input, macro.days, date, macroOpen, moreToggle) : moreToggle ? `<div class="sum-card__toggles">${moreToggle}</div>` : ""}
     ${
-      allItems.length > 0 || fast || hasSuppMacros || hasMealValues
-        ? `<details class="optional-nutrients"><summary>Weitere Nährwerte</summary><dl>${OPTIONALS.map(
+      hasMore && moreOpen
+        ? `<div class="optional-nutrients"><dl>${OPTIONALS.map(
             (k) => `<div><dt>${esc(D.OPTIONAL_LABELS[k])}</dt><dd>${esc(D.describeOptional(optional(k)))}</dd></div>`,
-          ).join("")}</dl><p class="card__note">Fehlende Angaben werden nicht als 0 g gezählt.</p></details>`
+          ).join("")}</dl><p class="card__note">Fehlende Angaben werden nicht als 0 g gezählt.</p></div>`
         : ""
     }
     <p class="card__note">Summen aus ungerundeten Werten; angezeigt auf ganze kcal und 0,1 g gerundet.${fast || hasMealValues ? " Enthält die Fasttracking-Werte dieses Tages." : ""}${hasSuppMacros ? " Enthält Energie und Makronährstoffe aus Supplements." : ""}</p>
@@ -355,6 +361,20 @@ export function waterCard(db, date, goal, food = null) {
   const percent = D.waterPercent(forGoalMl, goalL);
   const target = D.goalGlasses(goalL, day.glassMl);
   const unsent = P.unsentWater(X.S.water);
+  // Koffein-Getränke, Wasser aus Lebensmitteln und Hinweise hinter „Details“ (1.166.0, wie PC 1.0.231)
+  const detailsOpen = Boolean(X.S.waterDetailsOpen);
+  const detailsHtml = `
+    ${day.drinks.length ? `<p class="muted small">Aus der Koffein-Erfassung: ${esc(day.drinks.map(D.drinkText).join(", "))}</p>` : ""}
+    ${
+      hasFood
+        ? `<div class="water-card__food"><p class="small">Aus Lebensmitteln: <strong>${esc(D.formatLiters(food.ml))}</strong> · Getränke ${esc(D.formatLiters(day.totalMl))} + Lebensmittel ${esc(D.formatLiters(food.ml))} = <strong>${esc(D.formatLiters(day.totalMl + food.ml))}</strong>${foodInGoal && goalL !== null ? " (zählt zum Trinkziel)" : ""}</p>
+          ${food.missing.length ? `<p class="muted small">Ohne Wasserangabe (zählt nicht mit): ${esc(food.missing.slice(0, 4).join(", "))}${food.missing.length > 4 ? ` und ${food.missing.length - 4} weitere` : ""}</p>` : ""}
+          <label class="check-row"><input type="checkbox" data-act="water-food-goal" ${foodInGoal ? "checked" : ""}> Wasser aus Lebensmitteln zum Trinkziel zählen</label>
+          <p class="muted small">Die DGE-Empfehlung von etwa 1,5 l gilt für Getränke; rund 0,9 l kommen zusätzlich über das Essen. Deshalb ist der Schalter anfangs aus (gilt für dieses Handy).</p></div>`
+        : ""
+    }
+    <p class="card__note card__note--keep">Tippen auf ein leeres Glas trägt es als getrunken ein, Tippen auf ein volles Glas nimmt es wieder heraus.</p>
+`;
   return `<section class="card card--nutrition water-card"><div class="card__head"><h3>Wasserhaushalt</h3>
       <span class="card__meta">${goalL !== null ? `Ziel ${esc(D.formatLiters(goalL * 1000))}` : `<button class="linkbtn" data-act="goals-open">Trinkziel festlegen</button>`}</span></div>
     <div class="water-card__summary">
@@ -370,18 +390,9 @@ export function waterCard(db, date, goal, food = null) {
           aria-pressed="${g.filled}" aria-label="${esc(glassLabel(g, day.glasses.length))}">${glassSvg(g)}<span class="water-glass__amount">${esc(D.formatLiters(g.amountMl))}</span></button></li>`,
       )
       .join("")}</ul>
-    ${day.drinks.length ? `<p class="muted small">Aus der Koffein-Erfassung: ${esc(day.drinks.map(D.drinkText).join(", "))}</p>` : ""}
-    ${
-      hasFood
-        ? `<div class="water-card__food"><p class="small">Aus Lebensmitteln: <strong>${esc(D.formatLiters(food.ml))}</strong> · Getränke ${esc(D.formatLiters(day.totalMl))} + Lebensmittel ${esc(D.formatLiters(food.ml))} = <strong>${esc(D.formatLiters(day.totalMl + food.ml))}</strong>${foodInGoal && goalL !== null ? " (zählt zum Trinkziel)" : ""}</p>
-          ${food.missing.length ? `<p class="muted small">Ohne Wasserangabe (zählt nicht mit): ${esc(food.missing.slice(0, 4).join(", "))}${food.missing.length > 4 ? ` und ${food.missing.length - 4} weitere` : ""}</p>` : ""}
-          <label class="check-row"><input type="checkbox" data-act="water-food-goal" ${foodInGoal ? "checked" : ""}> Wasser aus Lebensmitteln zum Trinkziel zählen</label>
-          <p class="muted small">Die DGE-Empfehlung von etwa 1,5 l gilt für Getränke; rund 0,9 l kommen zusätzlich über das Essen. Deshalb ist der Schalter anfangs aus (gilt für dieses Handy).</p></div>`
-        : ""
-    }
-    <p class="card__note">Tippen auf ein leeres Glas trägt es als getrunken ein, Tippen auf ein volles Glas nimmt es wieder heraus.${
-      unsent ? ` ${unsent} ${unsent === 1 ? "Änderung geht" : "Änderungen gehen"} mit „Lebensmittel senden“ an den PC.` : ""
-    }</p>
+    <button type="button" class="btn sm ghost extras-card__toggle water-card__toggle" data-act="water-details-toggle" aria-expanded="${detailsOpen}">Details <span class="extras-card__chev" aria-hidden="true">▾</span></button>
+    ${detailsOpen ? `<div class="water-card__details">${detailsHtml}</div>` : ""}
+    ${unsent ? `<p class="muted small">${unsent} ${unsent === 1 ? "Änderung geht" : "Änderungen gehen"} mit „Lebensmittel senden“ an den PC.</p>` : ""}
   </section>`;
 }
 

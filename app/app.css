@@ -2369,6 +2369,16 @@ button.pcal-done { display: flex; align-items: center; justify-content: space-be
 .extras-card__toggle { margin-bottom: 10px; }
 .extras-card__chev { display: inline-block; transition: transform .2s ease; }
 .extras-card--open .extras-card__chev { transform: rotate(180deg); }
+/* Tagessumme (1.166.0): „Details“ links, „Weitere Nährwerte“ rechts in einer Zeile */
+.sum-card__toggles { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 10px; }
+.sum-card__toggles .extras-card__toggle { margin-bottom: 0; }
+button.sum-card__more { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; padding: 0; border: 0; background: none; font-size: .88rem; font-weight: 600; }
+.sum-card__more-icon { display: inline-block; transition: transform .2s ease; }
+.sum-card__more[aria-expanded="true"] .sum-card__more-icon { transform: rotate(90deg); }
+/* Wasserhaushalt (1.166.0): Lebensmittel-Wasser und Hinweise hinter „Details“ */
+.water-card__toggle { margin-top: 10px; }
+.water-card__toggle[aria-expanded="true"] .extras-card__chev { transform: rotate(180deg); }
+.water-card__details .water-card__food { margin-top: 0; padding-top: 0; border-top: 0; }
 .xd { border-top: 1px solid var(--line); padding-top: 10px; margin-bottom: 10px; }
 .xd__item { margin-top: 14px; }
 .xd__title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 2px; font-size: 1rem; }

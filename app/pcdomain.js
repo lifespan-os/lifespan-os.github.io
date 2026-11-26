@@ -650,7 +650,13 @@ var AMINO_PARTS = AMINOS.map((a) => ({
   supplement: { key: a.key, factor: 1e-3 }
 }));
 var PROTEIN_PARTS = [
-  { key: "essential", label: "Essenzielle Aminos\xE4uren", field: null, bls: null, aminoGroup: "essential" },
+  {
+    key: "essential",
+    label: "Essenzielle Aminos\xE4uren",
+    field: null,
+    bls: null,
+    aminoGroup: "essential"
+  },
   {
     key: "nonessential",
     label: "Nicht essenzielle Aminos\xE4uren",
@@ -664,7 +670,11 @@ var MACRO_FIELD = {
   protein: "proteinG",
   carbs: "carbsG"
 };
-var SUPP_MACRO = { fat: "fat", protein: "protein", carbs: "carbs" };
+var SUPP_MACRO = {
+  fat: "fat",
+  protein: "protein",
+  carbs: "carbs"
+};
 var nameOf = (i) => i.foodBrand ? `${i.foodName} (${i.foodBrand})` : i.foodName;
 function blsValue(i, code, foods, bls) {
   const food = foods.get(i.foodId);
@@ -761,7 +771,13 @@ function macroDetail(input, key) {
   sources.sort((a, b) => b.grams - a.grams || a.name.localeCompare(b.name, "de"));
   const meals = input.meals.map((m) => {
     const grams = m.items.reduce((a, i) => a + (i.amount > 0 ? i[field] : 0), 0);
-    return { id: m.id, label: m.label, time: m.time, grams, share: totalG > 0 ? grams / totalG : 0 };
+    return {
+      id: m.id,
+      label: m.label,
+      time: m.time,
+      grams,
+      share: totalG > 0 ? grams / totalG : 0
+    };
   }).filter((m) => m.grams > 0);
   const sub = partValues(subDefs, items, input, key, totalG).filter(
     (p) => p.grams > 0 || p.missing.length < items.length

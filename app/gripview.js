@@ -242,8 +242,11 @@ export function gripPanelHtml(date) {
   const methods = methodsList(db, f.method);
   const err = (k) => (f.errors?.[k] ? `<span class="err small">${esc(f.errors[k])}</span>` : "");
   const mark = isToday ? ' data-open="grip"' : "";
+  // Vor der Messung (heute, noch nichts gespeichert): wann ist eine Messung am sinnvollsten? (1.157.0)
+  const hint = !existing && isToday && D.gripTiming.gripTimingHint ? D.gripTiming.gripTimingHint(window90, nowTime()) : null;
   return `<div class="grip" id="grip-panel">
     <h4 id="grip-title"${mark}>Griffkraft</h4>
+    ${hint ? `<p class="grip__hint grip__hint--${hint.tone}" role="status">${esc(hint.text)}</p>` : ""}
     <div class="grip__entry" ${autoAttrs("grip")}>
       <div class="grid2">
         <label class="field"><span${mark}>Linke Hand (bester Versuch)</span><span class="entry-row__input"><input id="grip-left" type="text" inputmode="decimal" data-grip="left" value="${esc(f.left)}" ${f.errors?.leftKg ? 'aria-invalid="true"' : ""}><span class="unit">kg</span></span>${err("leftKg")}</label>

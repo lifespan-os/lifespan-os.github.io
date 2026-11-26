@@ -2584,6 +2584,9 @@ html[data-theme="dark"] .plt-tag--caffeine { color: #c8956a; background: #3a2a1c
 .grip-scale__kg { position: relative; height: 1.1rem; }
 .grip-scale__kg span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .grip-warn { color: var(--orange-text); font-weight: 600; }
+.grip__hint { margin: 0 0 10px; padding: 8px 10px; border-left: 3px solid var(--blue); border-radius: 8px; background: var(--c-sunken); color: var(--fg); font-size: .88rem; }
+.grip__hint--ok { border-left-color: var(--ok-strong); }
+.grip__hint--warn { border-left-color: var(--orange); }
 .grip__protocol { margin: 8px 0; }
 .grip__protocol ul { margin: 6px 0; padding-left: 18px; }
 .grip-history h4 { margin: 12px 0 6px; }

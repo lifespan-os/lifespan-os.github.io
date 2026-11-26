@@ -23587,6 +23587,7 @@ var gripTiming_exports = {};
 __export(gripTiming_exports, {
   GRIP_WINDOW_MIN: () => GRIP_WINDOW_MIN,
   GRIP_WINDOW_MIN_COUNT: () => GRIP_WINDOW_MIN_COUNT,
+  gripTimingHint: () => gripTimingHint,
   gripWindowText: () => gripWindowText,
   inGripWindow: () => inGripWindow,
   minutesOf: () => minutesOf2,
@@ -23638,6 +23639,36 @@ function gripWindowText(w) {
   if (!w)
     return "Miss m\xF6glichst immer zur selben Tageszeit (innerhalb von 90 Minuten) \u2013 ab drei Messungen mit Uhrzeit schl\xE4gt die App dein \xFCbliches Messfenster vor.";
   return `Deine \xFCbliche Messzeit: ${w.start}\u2013${w.end} Uhr (${w.count} von ${w.total} Messungen). Griffkraft ist nur im selben 90-Minuten-Fenster gut vergleichbar.`;
+}
+var duration = (min) => {
+  const h = Math.floor(min / 60);
+  const m = Math.round(min % 60);
+  if (h === 0) return `${m} min`;
+  return m === 0 ? `${h} h` : `${h} h ${m} min`;
+};
+function gripTimingHint(w, now) {
+  const t = minutesOf2(now);
+  const s = minutesOf2(w?.start);
+  if (!w || s === null || t === null)
+    return {
+      tone: "info",
+      text: "F\xFCr gut vergleichbare Werte: immer zur selben Tageszeit messen (innerhalb von 90 Minuten), m\xF6glichst ausgeruht und nicht direkt nach dem Training. Ab drei Messungen mit Uhrzeit nennt LIFESPAN dir hier dein bestes Messfenster."
+    };
+  const range = `${w.start}\u2013${w.end} Uhr`;
+  if (inGripWindow(now, w))
+    return {
+      tone: "ok",
+      text: `Jetzt ist ein guter Zeitpunkt: Dein Messfenster (${range}) l\xE4uft noch ${duration(s + GRIP_WINDOW_MIN - (t < s ? t + 1440 : t))}.`
+    };
+  if (t < s)
+    return {
+      tone: "info",
+      text: `Am sinnvollsten misst du heute zwischen ${w.start} und ${w.end} Uhr (in ${duration(s - t)}) \u2013 dann sind die Werte gut mit deinen bisherigen vergleichbar.`
+    };
+  return {
+    tone: "warn",
+    text: `Dein Messfenster (${range}) ist f\xFCr heute vorbei. Eine Messung jetzt ist nur eingeschr\xE4nkt vergleichbar \u2013 besser morgen zwischen ${w.start} und ${w.end} Uhr.`
+  };
 }
 
 // src/domain/foodCaffeine.ts

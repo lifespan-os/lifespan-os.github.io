@@ -17373,6 +17373,22 @@ var MAGAZINE_CATEGORY_ORDER = [
 ];
 var MAGAZINES = [
   {
+    id: "kartoffel",
+    title: "Die Kartoffel. Kohlenhydrat mit Upgrade.",
+    series: "iCoach.Me Magazin \xB7 Ern\xE4hrung \xB7 Ausgabe 11",
+    category: "ernaehrung",
+    pages: 8,
+    issued: "November 2026",
+    summary: "G\xFCnstig, s\xE4ttigend, ideal f\xFCrs Training \u2013 und wie du Kartoffeln zubereitest, entscheidet mit, was sie im K\xF6rper bewirken. Das Heft erkl\xE4rt resistente St\xE4rke und den K\xFChl-Trick, ordnet die Studien zu Blutzucker, Darm und Hormonen ehrlich ein und zeigt die Zubereitung Schritt f\xFCr Schritt.",
+    learn: [
+      "Warum Kohlenhydrate f\xFCrs Training z\xE4hlen: Glykogen, Erholung, Kalium und S\xE4ttigung",
+      "Der K\xFChl-Trick: gebacken und \xFCber Nacht gek\xFChlt 5,6 statt 2,3 g resistente St\xE4rke pro 100 g",
+      "Gek\xFChlt mit Essig-Dressing \u221243 % Blutzuckeranstieg \u2013 kleine Studien, klarer, aber moderater Effekt",
+      "Vom Darm zum Testosteron: welche Glieder der Kette belegt sind und welche nie getestet wurden"
+    ],
+    bytes: 1153806
+  },
+  {
     id: "straight-saetze",
     title: "Weniger Show. Mehr Kontrolle. Straight-S\xE4tze.",
     series: "iCoach.Me Magazin \xB7 Training \xB7 Ausgabe 11",

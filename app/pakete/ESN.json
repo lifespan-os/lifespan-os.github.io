@@ -5,9 +5,9 @@
   "key": "esn",
   "manufacturer": "ESN",
   "title": "ESN – Lebensmittel und Supplements",
-  "version": "2026.11.16",
+  "version": "2026.11.26",
   "source": "https://www.esn.com",
-  "description": "Produkte von ESN laut esn.com. Stand 16.11.2026. Nur Werte aus den Nährwerttabellen der Produktseiten."
+  "description": "Produkte von ESN laut esn.com. Stand 16.11.2026. Nur Werte aus den Nährwerttabellen der Produktseiten. Aminosäuren ergänzt am 26.11.2026."
  },
  "fields": [
   {
@@ -1401,8 +1401,28 @@
    "saltG": 0.6,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,18 g) berechnet. Verzehr: 30 g BASIC WHEY mit 200 ml kaltem Wasser, oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Egal ob nach (oder vor) dem Training und als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/basic-whey (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3500 mg; L-Arginin 1680 mg; L-Asparaginsäure (Aspartat) 7000 mg; L-Cystein 1610 mg; Glutaminsäure (Glutamat) 11900 mg; Glycin 1260 mg; L-Histidin 1260 mg; L-Isoleucin 4270 mg; L-Leucin 7000 mg; L-Lysin 6370 mg; L-Methionin 1470 mg; L-Phenylalanin 2240 mg; L-Prolin 4060 mg; L-Serin 3640 mg; L-Threonin 4830 mg; L-Tryptophan 1190 mg; L-Tyrosin 2100 mg; L-Valin 3920 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,18 g) berechnet. Verzehr: 30 g BASIC WHEY mit 200 ml kaltem Wasser, oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Egal ob nach (oder vor) dem Training und als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/basic-whey (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3500 mg; L-Arginin 1680 mg; L-Asparaginsäure (Aspartat) 7000 mg; L-Cystein 1610 mg; Glutaminsäure (Glutamat) 11900 mg; Glycin 1260 mg; L-Histidin 1260 mg; L-Isoleucin 4270 mg; L-Leucin 7000 mg; L-Lysin 6370 mg; L-Methionin 1470 mg; L-Phenylalanin 2240 mg; L-Prolin 4060 mg; L-Serin 3640 mg; L-Threonin 4830 mg; L-Tryptophan 1190 mg; L-Tyrosin 2100 mg; L-Valin 3920 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g). Aminosäuren laut Produktseite (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.5,
+    "arginine": 1.68,
+    "aspartic_acid": 7.0,
+    "cysteine": 1.61,
+    "glutamic_acid": 11.9,
+    "glycine": 1.26,
+    "histidine": 1.26,
+    "isoleucine": 4.27,
+    "leucine": 7.0,
+    "lysine": 6.37,
+    "methionine": 1.47,
+    "phenylalanine": 2.24,
+    "proline": 4.06,
+    "serine": 3.64,
+    "threonine": 4.83,
+    "tryptophan": 1.19,
+    "tyrosine": 2.1,
+    "valine": 3.92
+   }
   },
   {
    "id": "01a18a2f-a0c3-776e-bc31-1dd4fb8809c3",
@@ -1420,7 +1440,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,19 g) berechnet. Verzehr: 30 g BASIC WHEY mit 200 ml kaltem Wasser, oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Egal ob nach (oder vor) dem Training und als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/basic-whey (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3833,333 mg; L-Arginin 1840 mg; L-Asparaginsäure (Aspartat) 7666,667 mg; L-Cystein 1763,333 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 1380 mg; L-Histidin 1380 mg; L-Isoleucin 4676,667 mg; L-Leucin 7666,667 mg; L-Lysin 6976,667 mg; L-Methionin 1610 mg; L-Phenylalanin 2453,333 mg; L-Prolin 4446,667 mg; L-Serin 3986,667 mg; L-Threonin 5290 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2300 mg; L-Valin 4293,333 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.834,
+    "arginine": 1.84,
+    "aspartic_acid": 7.667,
+    "cysteine": 1.763,
+    "glutamic_acid": 13.034,
+    "glycine": 1.38,
+    "histidine": 1.38,
+    "isoleucine": 4.677,
+    "leucine": 7.667,
+    "lysine": 6.977,
+    "methionine": 1.61,
+    "phenylalanine": 2.453,
+    "proline": 4.447,
+    "serine": 3.987,
+    "threonine": 5.29,
+    "tryptophan": 1.303,
+    "tyrosine": 2.3,
+    "valine": 4.294
+   }
   },
   {
    "id": "01a18a2f-a0de-72e2-bf79-8d78ef4b6467",
@@ -1438,7 +1478,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,19 g) berechnet. Verzehr: 30 g BASIC WHEY mit 200 ml kaltem Wasser, oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Egal ob nach (oder vor) dem Training und als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/basic-whey (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3666,667 mg; L-Arginin 1760 mg; L-Asparaginsäure (Aspartat) 7333,333 mg; L-Cystein 1686,667 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 1320 mg; L-Histidin 1320 mg; L-Isoleucin 4473,333 mg; L-Leucin 7333,333 mg; L-Lysin 6673,333 mg; L-Methionin 1540 mg; L-Phenylalanin 2346,667 mg; L-Prolin 4253,333 mg; L-Serin 3813,333 mg; L-Threonin 5060 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2200 mg; L-Valin 4106,667 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.666,
+    "arginine": 1.76,
+    "aspartic_acid": 7.333,
+    "cysteine": 1.687,
+    "glutamic_acid": 12.466,
+    "glycine": 1.32,
+    "histidine": 1.32,
+    "isoleucine": 4.473,
+    "leucine": 7.333,
+    "lysine": 6.673,
+    "methionine": 1.54,
+    "phenylalanine": 2.347,
+    "proline": 4.253,
+    "serine": 3.813,
+    "threonine": 5.06,
+    "tryptophan": 1.247,
+    "tyrosine": 2.2,
+    "valine": 4.106
+   }
   },
   {
    "id": "7f6835af-44ef-4242-9486-8703505756af",
@@ -1905,8 +1965,28 @@
    "saltG": 0.29,
    "portionName": "Portion",
    "portionAmount": 139.0,
-   "notes": "Nährwerte je 100 g Zubereitung laut Hersteller. Allergene: Milch, Gluten (Weizen), Ei. Quelle: https://www.esn.com/products/esn-protein-pancakes-and-waffles (Stand 28.10.2026).",
-   "archived": false
+   "notes": "Nährwerte je 100 g Zubereitung laut Hersteller. Allergene: Milch, Gluten (Weizen), Ei. Quelle: https://www.esn.com/products/esn-protein-pancakes-and-waffles (Stand 28.10.2026). Aminosäuren laut Produktseite je 100 g Protein, umgerechnet mit 13 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 0.13,
+    "arginine": 0.13,
+    "aspartic_acid": 0.234,
+    "cysteine": 0.052,
+    "glutamic_acid": 0.299,
+    "glycine": 0.078,
+    "histidine": 0.052,
+    "isoleucine": 0.117,
+    "leucine": 0.195,
+    "lysine": 0.156,
+    "methionine": 0.078,
+    "phenylalanine": 0.13,
+    "proline": 0.091,
+    "serine": 0.156,
+    "threonine": 0.104,
+    "tryptophan": 0.026,
+    "tyrosine": 0.117,
+    "valine": 0.156
+   }
   },
   {
    "id": "ac4ecffb-832a-472c-bcfb-0675632b58f6",
@@ -1923,8 +2003,28 @@
    "saltG": 0.27,
    "portionName": "Portion",
    "portionAmount": 138.0,
-   "notes": "Nährwerte je 100 g Zubereitung laut Hersteller. Allergene: Milch, Gluten (Weizen), Ei. Quelle: https://www.esn.com/products/esn-protein-pancakes-and-waffles (Stand 28.10.2026).",
-   "archived": false
+   "notes": "Nährwerte je 100 g Zubereitung laut Hersteller. Allergene: Milch, Gluten (Weizen), Ei. Quelle: https://www.esn.com/products/esn-protein-pancakes-and-waffles (Stand 28.10.2026). Aminosäuren laut Produktseite je 100 g Protein, umgerechnet mit 15 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 0.15,
+    "arginine": 0.15,
+    "aspartic_acid": 0.27,
+    "cysteine": 0.06,
+    "glutamic_acid": 0.345,
+    "glycine": 0.09,
+    "histidine": 0.06,
+    "isoleucine": 0.135,
+    "leucine": 0.225,
+    "lysine": 0.18,
+    "methionine": 0.09,
+    "phenylalanine": 0.15,
+    "proline": 0.105,
+    "serine": 0.18,
+    "threonine": 0.12,
+    "tryptophan": 0.03,
+    "tyrosine": 0.135,
+    "valine": 0.18
+   }
   },
   {
    "id": "47440f9a-8b1f-4134-8340-2841decd7fb5",
@@ -1941,8 +2041,28 @@
    "saltG": 0.27,
    "portionName": "Portion",
    "portionAmount": 138.0,
-   "notes": "Nährwerte je 100 g Zubereitung laut Hersteller. Allergene: Milch, Gluten (Weizen), Ei. Quelle: https://www.esn.com/products/esn-protein-pancakes-and-waffles (Stand 28.10.2026).",
-   "archived": false
+   "notes": "Nährwerte je 100 g Zubereitung laut Hersteller. Allergene: Milch, Gluten (Weizen), Ei. Quelle: https://www.esn.com/products/esn-protein-pancakes-and-waffles (Stand 28.10.2026). Aminosäuren laut Produktseite je 100 g Protein, umgerechnet mit 15 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 0.15,
+    "arginine": 0.15,
+    "aspartic_acid": 0.27,
+    "cysteine": 0.06,
+    "glutamic_acid": 0.345,
+    "glycine": 0.09,
+    "histidine": 0.06,
+    "isoleucine": 0.135,
+    "leucine": 0.225,
+    "lysine": 0.18,
+    "methionine": 0.09,
+    "phenylalanine": 0.15,
+    "proline": 0.105,
+    "serine": 0.18,
+    "threonine": 0.12,
+    "tryptophan": 0.03,
+    "tyrosine": 0.135,
+    "valine": 0.18
+   }
   },
   {
    "id": "d0436c2f-b2e3-4068-9313-cc4ce3e18709",
@@ -1978,7 +2098,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,26 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3526,667 mg; L-Arginin 1533,333 mg; L-Asparaginsäure (Aspartat) 8433,333 mg; L-Cystein 2070 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 920 mg; L-Histidin 1150 mg; L-Isoleucin 4676,667 mg; L-Leucin 8433,333 mg; L-Lysin 7206,667 mg; L-Methionin 1380 mg; L-Phenylalanin 2376,667 mg; L-Prolin 3833,333 mg; L-Serin 3603,333 mg; L-Threonin 5980 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2453,333 mg; L-Valin 4600 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "01a18a2f-b21d-70df-834c-e5804ed4bc56",
@@ -1996,7 +2136,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,34 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3373,333 mg; L-Arginin 1466,667 mg; L-Asparaginsäure (Aspartat) 8066,667 mg; L-Cystein 1980 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 880 mg; L-Histidin 1100 mg; L-Isoleucin 4473,333 mg; L-Leucin 8066,667 mg; L-Lysin 6893,333 mg; L-Methionin 1320 mg; L-Phenylalanin 2273,333 mg; L-Prolin 3666,667 mg; L-Serin 3446,667 mg; L-Threonin 5720 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2346,667 mg; L-Valin 4400 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b23c-77d2-a4f5-a03cca6da675",
@@ -2014,7 +2174,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,22 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja, Sulfite. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3603,333 mg; L-Arginin 1763,333 mg; L-Asparaginsäure (Aspartat) 7666,667 mg; L-Cystein 1686,667 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 1303,333 mg; L-Histidin 1303,333 mg; L-Isoleucin 4523,333 mg; L-Leucin 7666,667 mg; L-Lysin 6823,333 mg; L-Methionin 1533,333 mg; L-Phenylalanin 2300 mg; L-Prolin 4293,333 mg; L-Serin 3603,333 mg; L-Threonin 5060 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2146,667 mg; L-Valin 4063,333 mg. Aus der Supplementdatenbank übernommen (umgerec…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "01a18a2f-b25c-721a-93d8-0e3c9498b78a",
@@ -2032,7 +2212,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,27 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3603,333 mg; L-Arginin 1763,333 mg; L-Asparaginsäure (Aspartat) 7666,667 mg; L-Cystein 1686,667 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 1303,333 mg; L-Histidin 1303,333 mg; L-Isoleucin 4523,333 mg; L-Leucin 7666,667 mg; L-Lysin 6823,333 mg; L-Methionin 1533,333 mg; L-Phenylalanin 2300 mg; L-Prolin 4293,333 mg; L-Serin 3603,333 mg; L-Threonin 5060 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2146,667 mg; L-Valin 4063,333 mg. Aus der Supplementdatenbank übernommen (umgerechnet von …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "01a18a2f-b27a-7573-b673-dcc8184b82eb",
@@ -2050,7 +2250,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,37 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3373,333 mg; L-Arginin 1466,667 mg; L-Asparaginsäure (Aspartat) 8066,667 mg; L-Cystein 1980 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 880 mg; L-Histidin 1100 mg; L-Isoleucin 4473,333 mg; L-Leucin 8066,667 mg; L-Lysin 6893,333 mg; L-Methionin 1320 mg; L-Phenylalanin 2273,333 mg; L-Prolin 3666,667 mg; L-Serin 3446,667 mg; L-Threonin 5720 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2346,667 mg; L-Valin 4400 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b298-7763-adb7-51676dbddc77",
@@ -2068,7 +2288,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,45 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3446,667 mg; L-Arginin 1686,667 mg; L-Asparaginsäure (Aspartat) 7333,333 mg; L-Cystein 1613,333 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 1246,667 mg; L-Histidin 1246,667 mg; L-Isoleucin 4326,667 mg; L-Leucin 7333,333 mg; L-Lysin 6526,667 mg; L-Methionin 1466,667 mg; L-Phenylalanin 2200 mg; L-Prolin 4106,667 mg; L-Serin 3446,667 mg; L-Threonin 4840 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2053,333 mg; L-Valin 3886,667 mg. Aus der Supplementdatenbank übernommen (umgerechnet von …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b2bb-757e-9326-8fa38e7d5e90",
@@ -2086,7 +2326,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,43 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3446,667 mg; L-Arginin 1686,667 mg; L-Asparaginsäure (Aspartat) 7333,333 mg; L-Cystein 1613,333 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 1246,667 mg; L-Histidin 1246,667 mg; L-Isoleucin 4326,667 mg; L-Leucin 7333,333 mg; L-Lysin 6526,667 mg; L-Methionin 1466,667 mg; L-Phenylalanin 2200 mg; L-Prolin 4106,667 mg; L-Serin 3446,667 mg; L-Threonin 4840 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2053,333 mg; L-Valin 3886,667 mg. Aus der Supplementdatenbank übernommen (umgerechnet von …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b313-71c2-8851-76b5a9929789",
@@ -2104,7 +2364,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,35 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3446,667 mg; L-Arginin 1686,667 mg; L-Asparaginsäure (Aspartat) 7333,333 mg; L-Cystein 1613,333 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 1246,667 mg; L-Histidin 1246,667 mg; L-Isoleucin 4326,667 mg; L-Leucin 7333,333 mg; L-Lysin 6526,667 mg; L-Methionin 1466,667 mg; L-Phenylalanin 2200 mg; L-Prolin 4106,667 mg; L-Serin 3446,667 mg; L-Threonin 4840 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2053,333 mg; L-Valin 3886,667 mg. Aus der Supplementdatenbank übernommen (umgerechnet von …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b339-729f-9155-b7e52a8f2c7c",
@@ -2122,7 +2402,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,42 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3220 mg; L-Arginin 1400 mg; L-Asparaginsäure (Aspartat) 7700 mg; L-Cystein 1890 mg; Glutaminsäure (Glutamat) 11900 mg; Glycin 840 mg; L-Histidin 1050 mg; L-Isoleucin 4270 mg; L-Leucin 7700 mg; L-Lysin 6580 mg; L-Methionin 1260 mg; L-Phenylalanin 2170 mg; L-Prolin 3500 mg; L-Serin 3290 mg; L-Threonin 5460 mg; L-Tryptophan 1190 mg; L-Tyrosin 2240 mg; L-Valin 4200 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.22,
+    "arginine": 1.4,
+    "aspartic_acid": 7.7,
+    "cysteine": 1.89,
+    "glutamic_acid": 11.9,
+    "glycine": 0.84,
+    "histidine": 1.05,
+    "isoleucine": 4.27,
+    "leucine": 7.7,
+    "lysine": 6.58,
+    "methionine": 1.26,
+    "phenylalanine": 2.17,
+    "proline": 3.5,
+    "serine": 3.29,
+    "threonine": 5.46,
+    "tryptophan": 1.19,
+    "tyrosine": 2.24,
+    "valine": 4.2
+   }
   },
   {
    "id": "01a18a2f-b356-7306-9bc7-703039df640f",
@@ -2140,7 +2440,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,47 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja, Sulfite, Gluten (Gerste). Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3603,333 mg; L-Arginin 1763,333 mg; L-Asparaginsäure (Aspartat) 7666,667 mg; L-Cystein 1686,667 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 1303,333 mg; L-Histidin 1303,333 mg; L-Isoleucin 4523,333 mg; L-Leucin 7666,667 mg; L-Lysin 6823,333 mg; L-Methionin 1533,333 mg; L-Phenylalanin 2300 mg; L-Prolin 4293,333 mg; L-Serin 3603,333 mg; L-Threonin 5060 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2146,667 mg; L-Valin 4063,333 mg. Aus der Supplementdatenbank üb…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "01a18a2f-b377-7686-967b-2a2addbc017d",
@@ -2158,7 +2478,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,36 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja, Gluten (Weizen), Gluten (Gerste). Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3446,667 mg; L-Arginin 1686,667 mg; L-Asparaginsäure (Aspartat) 7333,333 mg; L-Cystein 1613,333 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 1246,667 mg; L-Histidin 1246,667 mg; L-Isoleucin 4326,667 mg; L-Leucin 7333,333 mg; L-Lysin 6526,667 mg; L-Methionin 1466,667 mg; L-Phenylalanin 2200 mg; L-Prolin 4106,667 mg; L-Serin 3446,667 mg; L-Threonin 4840 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2053,333 mg; L-Valin 3886,667 mg. Aus der Supplementdate…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b3a1-70c5-b5fe-ce6571cbff15",
@@ -2176,7 +2516,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,3 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja, Gluten (Weizen). Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3290 mg; L-Arginin 1610 mg; L-Asparaginsäure (Aspartat) 7000 mg; L-Cystein 1540 mg; Glutaminsäure (Glutamat) 11900 mg; Glycin 1190 mg; L-Histidin 1190 mg; L-Isoleucin 4130 mg; L-Leucin 7000 mg; L-Lysin 6230 mg; L-Methionin 1400 mg; L-Phenylalanin 2100 mg; L-Prolin 3920 mg; L-Serin 3290 mg; L-Threonin 4620 mg; L-Tryptophan 1190 mg; L-Tyrosin 1960 mg; L-Valin 3710 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.22,
+    "arginine": 1.4,
+    "aspartic_acid": 7.7,
+    "cysteine": 1.89,
+    "glutamic_acid": 11.9,
+    "glycine": 0.84,
+    "histidine": 1.05,
+    "isoleucine": 4.27,
+    "leucine": 7.7,
+    "lysine": 6.58,
+    "methionine": 1.26,
+    "phenylalanine": 2.17,
+    "proline": 3.5,
+    "serine": 3.29,
+    "threonine": 5.46,
+    "tryptophan": 1.19,
+    "tyrosine": 2.24,
+    "valine": 4.2
+   }
   },
   {
    "id": "01a18a2f-b3bf-779f-a01b-f262f17e701b",
@@ -2194,7 +2554,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,39 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3603,333 mg; L-Arginin 1763,333 mg; L-Asparaginsäure (Aspartat) 7666,667 mg; L-Cystein 1686,667 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 1303,333 mg; L-Histidin 1303,333 mg; L-Isoleucin 4523,333 mg; L-Leucin 7666,667 mg; L-Lysin 6823,333 mg; L-Methionin 1533,333 mg; L-Phenylalanin 2300 mg; L-Prolin 4293,333 mg; L-Serin 3603,333 mg; L-Threonin 5060 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2146,667 mg; L-Valin 4063,333 mg. Aus der Supplementdatenbank übernommen (umgerechnet von …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "01a18a2f-b3e0-76b3-9f8a-f4f749bf96af",
@@ -2212,7 +2592,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,2 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Gluten (Weizen), Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3603,333 mg; L-Arginin 1763,333 mg; L-Asparaginsäure (Aspartat) 7666,667 mg; L-Cystein 1686,667 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 1303,333 mg; L-Histidin 1303,333 mg; L-Isoleucin 4523,333 mg; L-Leucin 7666,667 mg; L-Lysin 6823,333 mg; L-Methionin 1533,333 mg; L-Phenylalanin 2300 mg; L-Prolin 4293,333 mg; L-Serin 3603,333 mg; L-Threonin 5060 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2146,667 mg; L-Valin 4063,333 mg. Aus der Supplementdatenbank übernommen (…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "01a18a2f-b3fe-735e-9a96-a06ece750a98",
@@ -2230,7 +2630,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,17 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3446,667 mg; L-Arginin 1686,667 mg; L-Asparaginsäure (Aspartat) 7333,333 mg; L-Cystein 1613,333 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 1246,667 mg; L-Histidin 1246,667 mg; L-Isoleucin 4326,667 mg; L-Leucin 7333,333 mg; L-Lysin 6526,667 mg; L-Methionin 1466,667 mg; L-Phenylalanin 2200 mg; L-Prolin 4106,667 mg; L-Serin 3446,667 mg; L-Threonin 4840 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2053,333 mg; L-Valin 3886,667 mg. Aus der Supplementdatenbank übernommen (umgerechnet von …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b41a-76eb-be28-f4872d83f167",
@@ -2248,7 +2668,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,42 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja, Gluten (Weizen), Sulfite. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3520 mg; L-Arginin 1393,333 mg; L-Asparaginsäure (Aspartat) 8066,667 mg; L-Cystein 1980 mg; Glutaminsäure (Glutamat) 13200 mg; Glycin 1246,667 mg; L-Histidin 1173,333 mg; L-Isoleucin 4546,667 mg; L-Leucin 7040 mg; L-Lysin 6673,333 mg; L-Methionin 1393,333 mg; L-Phenylalanin 2126,667 mg; L-Prolin 4253,333 mg; L-Serin 3446,667 mg; L-Threonin 5720 mg; L-Tryptophan 1466,667 mg; L-Tyrosin 2273,333 mg; L-Valin 3813,333 mg. Aus der Supplementdatenbank übernommen (um…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b435-7493-b8ba-ac79214ce9cf",
@@ -2266,7 +2706,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,48 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Gluten (Weizen), Soja, Sulfite. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3360 mg; L-Arginin 1330 mg; L-Asparaginsäure (Aspartat) 7700 mg; L-Cystein 1890 mg; Glutaminsäure (Glutamat) 12600 mg; Glycin 1190 mg; L-Histidin 1120 mg; L-Isoleucin 4340 mg; L-Leucin 6720 mg; L-Lysin 6370 mg; L-Methionin 1330 mg; L-Phenylalanin 2030 mg; L-Prolin 4060 mg; L-Serin 3290 mg; L-Threonin 5460 mg; L-Tryptophan 1400 mg; L-Tyrosin 2170 mg; L-Valin 3640 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.22,
+    "arginine": 1.4,
+    "aspartic_acid": 7.7,
+    "cysteine": 1.89,
+    "glutamic_acid": 11.9,
+    "glycine": 0.84,
+    "histidine": 1.05,
+    "isoleucine": 4.27,
+    "leucine": 7.7,
+    "lysine": 6.58,
+    "methionine": 1.26,
+    "phenylalanine": 2.17,
+    "proline": 3.5,
+    "serine": 3.29,
+    "threonine": 5.46,
+    "tryptophan": 1.19,
+    "tyrosine": 2.24,
+    "valine": 4.2
+   }
   },
   {
    "id": "01a18a2f-b451-7542-9868-90b04f545237",
@@ -2284,7 +2744,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,51 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3813,333 mg; L-Arginin 1833,333 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1760 mg; Glutaminsäure (Glutamat) 13933,333 mg; Glycin 1393,333 mg; L-Histidin 1393,333 mg; L-Isoleucin 4840 mg; L-Leucin 8066,667 mg; L-Lysin 7333,333 mg; L-Methionin 1540 mg; L-Phenylalanin 2493,333 mg; L-Prolin 4620 mg; L-Serin 3813,333 mg; L-Threonin 5353,333 mg; L-Tryptophan 1466,667 mg; L-Tyrosin 2200 mg; L-Valin 4400 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b470-76b8-94c9-9e9c16f7444b",
@@ -2302,7 +2782,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,29 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 2760 mg; L-Arginin 1380 mg; L-Asparaginsäure (Aspartat) 5903,333 mg; L-Cystein 1226,667 mg; Glutaminsäure (Glutamat) 9966,667 mg; Glycin 996,667 mg; L-Histidin 996,667 mg; L-Isoleucin 3373,333 mg; L-Leucin 5673,333 mg; L-Lysin 5060 mg; L-Methionin 1150 mg; L-Phenylalanin 1763,333 mg; L-Prolin 3143,333 mg; L-Serin 2760 mg; L-Threonin 3680 mg; L-Tryptophan 920 mg; L-Tyrosin 1610 mg; L-Valin 3143,333 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "01a18a2f-b48e-7371-84f5-d38117941e3b",
@@ -2320,7 +2820,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,19 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja, Sulfite. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3603,333 mg; L-Arginin 1763,333 mg; L-Asparaginsäure (Aspartat) 7666,667 mg; L-Cystein 1686,667 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 1303,333 mg; L-Histidin 1303,333 mg; L-Isoleucin 4523,333 mg; L-Leucin 7666,667 mg; L-Lysin 6823,333 mg; L-Methionin 1533,333 mg; L-Phenylalanin 2300 mg; L-Prolin 4293,333 mg; L-Serin 3603,333 mg; L-Threonin 5060 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2146,667 mg; L-Valin 4063,333 mg. Aus der Supplementdatenbank übernommen (umgerec…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "01a18a2f-b4a7-73d2-98e9-265727c322d9",
@@ -2338,7 +2858,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,24 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja, Sulfite. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3373,333 mg; L-Arginin 1466,667 mg; L-Asparaginsäure (Aspartat) 8066,667 mg; L-Cystein 1980 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 880 mg; L-Histidin 1100 mg; L-Isoleucin 4473,333 mg; L-Leucin 8066,667 mg; L-Lysin 6893,333 mg; L-Methionin 1320 mg; L-Phenylalanin 2273,333 mg; L-Prolin 3666,667 mg; L-Serin 3446,667 mg; L-Threonin 5720 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2346,667 mg; L-Valin 4400 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b4be-74de-b0be-3f60b9f7a88c",
@@ -2356,7 +2896,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,23 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3760 mg; L-Arginin 1840 mg; L-Asparaginsäure (Aspartat) 8000 mg; L-Cystein 1760 mg; Glutaminsäure (Glutamat) 13600 mg; Glycin 1360 mg; L-Histidin 1360 mg; L-Isoleucin 4720 mg; L-Leucin 8000 mg; L-Lysin 7120 mg; L-Methionin 1600 mg; L-Phenylalanin 2400 mg; L-Prolin 4480 mg; L-Serin 3760 mg; L-Threonin 5280 mg; L-Tryptophan 1360 mg; L-Tyrosin 2240 mg; L-Valin 4240 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.68,
+    "arginine": 1.6,
+    "aspartic_acid": 8.8,
+    "cysteine": 2.16,
+    "glutamic_acid": 13.6,
+    "glycine": 0.96,
+    "histidine": 1.2,
+    "isoleucine": 4.88,
+    "leucine": 8.8,
+    "lysine": 7.52,
+    "methionine": 1.44,
+    "phenylalanine": 2.48,
+    "proline": 4.0,
+    "serine": 3.76,
+    "threonine": 6.24,
+    "tryptophan": 1.36,
+    "tyrosine": 2.56,
+    "valine": 4.8
+   }
   },
   {
    "id": "01a18a2f-b4da-77a8-8784-37957641cfa4",
@@ -2374,7 +2934,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,36 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3760 mg; L-Arginin 1840 mg; L-Asparaginsäure (Aspartat) 8000 mg; L-Cystein 1760 mg; Glutaminsäure (Glutamat) 13600 mg; Glycin 1360 mg; L-Histidin 1360 mg; L-Isoleucin 4720 mg; L-Leucin 8000 mg; L-Lysin 7120 mg; L-Methionin 1600 mg; L-Phenylalanin 2400 mg; L-Prolin 4480 mg; L-Serin 3760 mg; L-Threonin 5280 mg; L-Tryptophan 1360 mg; L-Tyrosin 2240 mg; L-Valin 4240 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.68,
+    "arginine": 1.6,
+    "aspartic_acid": 8.8,
+    "cysteine": 2.16,
+    "glutamic_acid": 13.6,
+    "glycine": 0.96,
+    "histidine": 1.2,
+    "isoleucine": 4.88,
+    "leucine": 8.8,
+    "lysine": 7.52,
+    "methionine": 1.44,
+    "phenylalanine": 2.48,
+    "proline": 4.0,
+    "serine": 3.76,
+    "threonine": 6.24,
+    "tryptophan": 1.36,
+    "tyrosine": 2.56,
+    "valine": 4.8
+   }
   },
   {
    "id": "01a18a2f-b4f8-7183-afdd-942965f4bcc0",
@@ -2392,7 +2972,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,36 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3760 mg; L-Arginin 1840 mg; L-Asparaginsäure (Aspartat) 8000 mg; L-Cystein 1760 mg; Glutaminsäure (Glutamat) 13600 mg; Glycin 1360 mg; L-Histidin 1360 mg; L-Isoleucin 4720 mg; L-Leucin 8000 mg; L-Lysin 7120 mg; L-Methionin 1600 mg; L-Phenylalanin 2400 mg; L-Prolin 4480 mg; L-Serin 3760 mg; L-Threonin 5280 mg; L-Tryptophan 1360 mg; L-Tyrosin 2240 mg; L-Valin 4240 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.68,
+    "arginine": 1.6,
+    "aspartic_acid": 8.8,
+    "cysteine": 2.16,
+    "glutamic_acid": 13.6,
+    "glycine": 0.96,
+    "histidine": 1.2,
+    "isoleucine": 4.88,
+    "leucine": 8.8,
+    "lysine": 7.52,
+    "methionine": 1.44,
+    "phenylalanine": 2.48,
+    "proline": 4.0,
+    "serine": 3.76,
+    "threonine": 6.24,
+    "tryptophan": 1.36,
+    "tyrosine": 2.56,
+    "valine": 4.8
+   }
   },
   {
    "id": "01a18a2f-b512-7130-a15a-59d65cef8b8e",
@@ -2410,7 +3010,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,46 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3446,667 mg; L-Arginin 1686,667 mg; L-Asparaginsäure (Aspartat) 7333,333 mg; L-Cystein 1613,333 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 1246,667 mg; L-Histidin 1246,667 mg; L-Isoleucin 4326,667 mg; L-Leucin 7333,333 mg; L-Lysin 6526,667 mg; L-Methionin 1466,667 mg; L-Phenylalanin 2200 mg; L-Prolin 4106,667 mg; L-Serin 3446,667 mg; L-Threonin 4840 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2053,333 mg; L-Valin 3886,667 mg. Aus der Supplementdatenbank übernommen (umgerechnet von …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b52b-7513-83da-cfd134696e46",
@@ -2428,7 +3048,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,55 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3290 mg; L-Arginin 1610 mg; L-Asparaginsäure (Aspartat) 7000 mg; L-Cystein 1540 mg; Glutaminsäure (Glutamat) 11900 mg; Glycin 1190 mg; L-Histidin 1190 mg; L-Isoleucin 4130 mg; L-Leucin 7000 mg; L-Lysin 6230 mg; L-Methionin 1400 mg; L-Phenylalanin 2100 mg; L-Prolin 3920 mg; L-Serin 3290 mg; L-Threonin 4620 mg; L-Tryptophan 1190 mg; L-Tyrosin 1960 mg; L-Valin 3710 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.22,
+    "arginine": 1.4,
+    "aspartic_acid": 7.7,
+    "cysteine": 1.89,
+    "glutamic_acid": 11.9,
+    "glycine": 0.84,
+    "histidine": 1.05,
+    "isoleucine": 4.27,
+    "leucine": 7.7,
+    "lysine": 6.58,
+    "methionine": 1.26,
+    "phenylalanine": 2.17,
+    "proline": 3.5,
+    "serine": 3.29,
+    "threonine": 5.46,
+    "tryptophan": 1.19,
+    "tyrosine": 2.24,
+    "valine": 4.2
+   }
   },
   {
    "id": "01a18a2f-b546-7504-ac17-a5a4e06e1904",
@@ -2446,7 +3086,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,29 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3603,333 mg; L-Arginin 1763,333 mg; L-Asparaginsäure (Aspartat) 7666,667 mg; L-Cystein 1686,667 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 1303,333 mg; L-Histidin 1303,333 mg; L-Isoleucin 4523,333 mg; L-Leucin 7666,667 mg; L-Lysin 6823,333 mg; L-Methionin 1533,333 mg; L-Phenylalanin 2300 mg; L-Prolin 4293,333 mg; L-Serin 3603,333 mg; L-Threonin 5060 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2146,667 mg; L-Valin 4063,333 mg. Aus der Supplementdatenbank übernommen (umgerechnet von …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "01a18a2f-b562-75bf-b04e-4ec8b669e61a",
@@ -2464,7 +3124,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,32 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3373,333 mg; L-Arginin 1466,667 mg; L-Asparaginsäure (Aspartat) 8066,667 mg; L-Cystein 1980 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 880 mg; L-Histidin 1100 mg; L-Isoleucin 4473,333 mg; L-Leucin 8066,667 mg; L-Lysin 6893,333 mg; L-Methionin 1320 mg; L-Phenylalanin 2273,333 mg; L-Prolin 3666,667 mg; L-Serin 3446,667 mg; L-Threonin 5720 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2346,667 mg; L-Valin 4400 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b57c-7689-908f-3c0cc64f7e52",
@@ -2482,7 +3162,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,19 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3603,333 mg; L-Arginin 1763,333 mg; L-Asparaginsäure (Aspartat) 7666,667 mg; L-Cystein 1686,667 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 1303,333 mg; L-Histidin 1303,333 mg; L-Isoleucin 4523,333 mg; L-Leucin 7666,667 mg; L-Lysin 6823,333 mg; L-Methionin 1533,333 mg; L-Phenylalanin 2300 mg; L-Prolin 4293,333 mg; L-Serin 3603,333 mg; L-Threonin 5060 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2146,667 mg; L-Valin 4063,333 mg. Aus der Supplementdatenbank übernommen (umgerechnet von …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "01a18a2f-b595-76d2-b00f-1017b32ee57e",
@@ -2500,7 +3200,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,2 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja, Sulfite, Gluten (Gerste). Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3373,333 mg; L-Arginin 1466,667 mg; L-Asparaginsäure (Aspartat) 8066,667 mg; L-Cystein 1980 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 880 mg; L-Histidin 1100 mg; L-Isoleucin 4473,333 mg; L-Leucin 8066,667 mg; L-Lysin 6893,333 mg; L-Methionin 1320 mg; L-Phenylalanin 2273,333 mg; L-Prolin 3666,667 mg; L-Serin 3446,667 mg; L-Threonin 5720 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2346,667 mg; L-Valin 4400 mg. Aus der Supplementdatenbank übernommen (umgerech…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b5e5-7113-b5ef-d308d17d0e10",
@@ -2518,7 +3238,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,29 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3760 mg; L-Arginin 1840 mg; L-Asparaginsäure (Aspartat) 8000 mg; L-Cystein 1760 mg; Glutaminsäure (Glutamat) 13600 mg; Glycin 1360 mg; L-Histidin 1360 mg; L-Isoleucin 4720 mg; L-Leucin 8000 mg; L-Lysin 7120 mg; L-Methionin 1600 mg; L-Phenylalanin 2400 mg; L-Prolin 4480 mg; L-Serin 3760 mg; L-Threonin 5280 mg; L-Tryptophan 1360 mg; L-Tyrosin 2240 mg; L-Valin 4240 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.68,
+    "arginine": 1.6,
+    "aspartic_acid": 8.8,
+    "cysteine": 2.16,
+    "glutamic_acid": 13.6,
+    "glycine": 0.96,
+    "histidine": 1.2,
+    "isoleucine": 4.88,
+    "leucine": 8.8,
+    "lysine": 7.52,
+    "methionine": 1.44,
+    "phenylalanine": 2.48,
+    "proline": 4.0,
+    "serine": 3.76,
+    "threonine": 6.24,
+    "tryptophan": 1.36,
+    "tyrosine": 2.56,
+    "valine": 4.8
+   }
   },
   {
    "id": "01a18a2f-b602-77d2-a349-99b4ed5fb664",
@@ -2536,7 +3276,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,19 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3603,333 mg; L-Arginin 1763,333 mg; L-Asparaginsäure (Aspartat) 7666,667 mg; L-Cystein 1686,667 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 1303,333 mg; L-Histidin 1303,333 mg; L-Isoleucin 4523,333 mg; L-Leucin 7666,667 mg; L-Lysin 6823,333 mg; L-Methionin 1533,333 mg; L-Phenylalanin 2300 mg; L-Prolin 4293,333 mg; L-Serin 3603,333 mg; L-Threonin 5060 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2146,667 mg; L-Valin 4063,333 mg. Aus der Supplementdatenbank übernommen (umgerechnet von …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "01a18a2f-b619-7422-93e9-ba1fa4ab27b6",
@@ -2554,7 +3314,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,22 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3526,667 mg; L-Arginin 1533,333 mg; L-Asparaginsäure (Aspartat) 8433,333 mg; L-Cystein 2070 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 920 mg; L-Histidin 1150 mg; L-Isoleucin 4676,667 mg; L-Leucin 8433,333 mg; L-Lysin 7206,667 mg; L-Methionin 1380 mg; L-Phenylalanin 2376,667 mg; L-Prolin 3833,333 mg; L-Serin 3603,333 mg; L-Threonin 5980 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2453,333 mg; L-Valin 4600 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "01a18a2f-b631-7504-8d7d-fc3d9bf19d97",
@@ -2572,7 +3352,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,36 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja, Gluten (Weizen), Sulfite. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3373,333 mg; L-Arginin 1466,667 mg; L-Asparaginsäure (Aspartat) 8066,667 mg; L-Cystein 1980 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 880 mg; L-Histidin 1100 mg; L-Isoleucin 4473,333 mg; L-Leucin 8066,667 mg; L-Lysin 6893,333 mg; L-Methionin 1320 mg; L-Phenylalanin 2273,333 mg; L-Prolin 3666,667 mg; L-Serin 3446,667 mg; L-Threonin 5720 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2346,667 mg; L-Valin 4400 mg. Aus der Supplementdatenbank übernommen (umgerec…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b64b-770b-abe2-641597029c2c",
@@ -2590,7 +3390,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,36 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja, Gluten (Weizen), Sulfite. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3446,667 mg; L-Arginin 1686,667 mg; L-Asparaginsäure (Aspartat) 7333,333 mg; L-Cystein 1613,333 mg; Glutaminsäure (Glutamat) 12466,667 mg; Glycin 1246,667 mg; L-Histidin 1246,667 mg; L-Isoleucin 4326,667 mg; L-Leucin 7333,333 mg; L-Lysin 6526,667 mg; L-Methionin 1466,667 mg; L-Phenylalanin 2200 mg; L-Prolin 4106,667 mg; L-Serin 3446,667 mg; L-Threonin 4840 mg; L-Tryptophan 1246,667 mg; L-Tyrosin 2053,333 mg; L-Valin 3886,667 mg. Aus der Supplementdatenbank üb…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.373,
+    "arginine": 1.467,
+    "aspartic_acid": 8.066,
+    "cysteine": 1.98,
+    "glutamic_acid": 12.466,
+    "glycine": 0.88,
+    "histidine": 1.1,
+    "isoleucine": 4.473,
+    "leucine": 8.066,
+    "lysine": 6.893,
+    "methionine": 1.32,
+    "phenylalanine": 2.273,
+    "proline": 3.666,
+    "serine": 3.447,
+    "threonine": 5.72,
+    "tryptophan": 1.247,
+    "tyrosine": 2.347,
+    "valine": 4.4
+   }
   },
   {
    "id": "01a18a2f-b665-73f1-9c40-9f4f79bcc0fd",
@@ -2608,7 +3428,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,31 g) berechnet. Verzehr: 30 g DESIGNER® WHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-designer-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3603,333 mg; L-Arginin 1763,333 mg; L-Asparaginsäure (Aspartat) 7666,667 mg; L-Cystein 1686,667 mg; Glutaminsäure (Glutamat) 13033,333 mg; Glycin 1303,333 mg; L-Histidin 1303,333 mg; L-Isoleucin 4523,333 mg; L-Leucin 7666,667 mg; L-Lysin 6823,333 mg; L-Methionin 1533,333 mg; L-Phenylalanin 2300 mg; L-Prolin 4293,333 mg; L-Serin 3603,333 mg; L-Threonin 5060 mg; L-Tryptophan 1303,333 mg; L-Tyrosin 2146,667 mg; L-Valin 4063,333 mg. Aus der Supplementdatenbank übernommen (umgerechnet von …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.527,
+    "arginine": 1.533,
+    "aspartic_acid": 8.434,
+    "cysteine": 2.07,
+    "glutamic_acid": 13.034,
+    "glycine": 0.92,
+    "histidine": 1.15,
+    "isoleucine": 4.677,
+    "leucine": 8.434,
+    "lysine": 7.207,
+    "methionine": 1.38,
+    "phenylalanine": 2.377,
+    "proline": 3.834,
+    "serine": 3.603,
+    "threonine": 5.98,
+    "tryptophan": 1.303,
+    "tyrosine": 2.453,
+    "valine": 4.6
+   }
   },
   {
    "id": "0d03e918-835c-41e0-9fcd-87f5e36873b5",
@@ -2644,7 +3484,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,01 g) berechnet. Verzehr: 30 g FRUITY WHEY mit 300 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhenlassen. Es wird der Verzehr von 1-3 Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach demTraining oder sogar währenddessen, als proteinreiches Erfrischungsgetränk Allergene: Milch. Quelle: https://www.esn.com/products/fruity-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4680 mg; L-Arginin 1710 mg; L-Asparaginsäure (Aspartat) 10800 mg; L-Cystein 2160 mg; Glutaminsäure (Glutamat) 16200 mg; Glycin 1350 mg; L-Histidin 1260 mg; L-Isoleucin 4860 mg; L-Leucin 9900 mg; L-Lysin 9900 mg; L-Methionin 2070 mg; L-Phenylalanin 2610 mg; L-Prolin 5310 mg; L-Serin 4590 mg; L-Threonin 6030 mg; L-Tryptophan 1800 mg; L-Tyrosin 2520 mg; L-Valin 4590 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.68,
+    "arginine": 1.71,
+    "aspartic_acid": 10.8,
+    "cysteine": 2.16,
+    "glutamic_acid": 16.2,
+    "glycine": 1.35,
+    "histidine": 1.26,
+    "isoleucine": 4.86,
+    "leucine": 9.9,
+    "lysine": 9.9,
+    "methionine": 2.07,
+    "phenylalanine": 2.61,
+    "proline": 5.31,
+    "serine": 4.59,
+    "threonine": 6.03,
+    "tryptophan": 1.8,
+    "tyrosine": 2.52,
+    "valine": 4.59
+   }
   },
   {
    "id": "01a18a2f-b7c3-735d-b628-2c64aa99822c",
@@ -2662,7 +3522,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,01 g) berechnet. Verzehr: 30 g FRUITY WHEY mit 300 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhenlassen. Es wird der Verzehr von 1-3 Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach demTraining oder sogar währenddessen, als proteinreiches Erfrischungsgetränk Allergene: Milch. Quelle: https://www.esn.com/products/fruity-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4680 mg; L-Arginin 1710 mg; L-Asparaginsäure (Aspartat) 10800 mg; L-Cystein 2160 mg; Glutaminsäure (Glutamat) 16200 mg; Glycin 1350 mg; L-Histidin 1260 mg; L-Isoleucin 4860 mg; L-Leucin 9900 mg; L-Lysin 9900 mg; L-Methionin 2070 mg; L-Phenylalanin 2610 mg; L-Prolin 5310 mg; L-Serin 4590 mg; L-Threonin 6030 mg; L-Tryptophan 1800 mg; L-Tyrosin 2520 mg; L-Valin 4590 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.68,
+    "arginine": 1.71,
+    "aspartic_acid": 10.8,
+    "cysteine": 2.16,
+    "glutamic_acid": 16.2,
+    "glycine": 1.35,
+    "histidine": 1.26,
+    "isoleucine": 4.86,
+    "leucine": 9.9,
+    "lysine": 9.9,
+    "methionine": 2.07,
+    "phenylalanine": 2.61,
+    "proline": 5.31,
+    "serine": 4.59,
+    "threonine": 6.03,
+    "tryptophan": 1.8,
+    "tyrosine": 2.52,
+    "valine": 4.59
+   }
   },
   {
    "id": "b3251b3a-fc34-4b7b-b250-4c75330a7b79",
@@ -3364,7 +4244,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,33 g) berechnet. Verzehr: 30 g ISOWHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Gluten (Weizen), Gluten (Gerste), Soja. Quelle: https://www.esn.com/products/esn-iso-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3916,667 mg; L-Arginin 1916,667 mg; L-Asparaginsäure (Aspartat) 8333,333 mg; L-Cystein 1833,333 mg; Glutaminsäure (Glutamat) 14166,667 mg; Glycin 1416,667 mg; L-Histidin 1416,667 mg; L-Isoleucin 4916,667 mg; L-Leucin 8333,333 mg; L-Lysin 7416,667 mg; L-Methionin 1666,667 mg; L-Phenylalanin 2500 mg; L-Prolin 4666,667 mg; L-Serin 3916,667 mg; L-Threonin 5500 mg; L-Tryptophan 1416,667 mg; L-Tyrosin 2333,333 mg; L-Valin 4416,667 mg. Aus der Supplementdatenbank überno…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.917,
+    "arginine": 1.5,
+    "aspartic_acid": 8.333,
+    "cysteine": 1.75,
+    "glutamic_acid": 14.166,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.166,
+    "leucine": 8.166,
+    "lysine": 7.416,
+    "methionine": 1.667,
+    "phenylalanine": 2.5,
+    "proline": 4.583,
+    "serine": 3.583,
+    "threonine": 5.5,
+    "tryptophan": 1.333,
+    "tyrosine": 1.833,
+    "valine": 4.416
+   }
   },
   {
    "id": "01a18a2f-b887-71e0-93bc-ff68f99af4a7",
@@ -3382,7 +4282,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,33 g) berechnet. Verzehr: 30 g ISOWHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja, Gluten (Weizen). Quelle: https://www.esn.com/products/esn-iso-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3916,667 mg; L-Arginin 1916,667 mg; L-Asparaginsäure (Aspartat) 8333,333 mg; L-Cystein 1833,333 mg; Glutaminsäure (Glutamat) 14166,667 mg; Glycin 1416,667 mg; L-Histidin 1416,667 mg; L-Isoleucin 4916,667 mg; L-Leucin 8333,333 mg; L-Lysin 7416,667 mg; L-Methionin 1666,667 mg; L-Phenylalanin 2500 mg; L-Prolin 4666,667 mg; L-Serin 3916,667 mg; L-Threonin 5500 mg; L-Tryptophan 1416,667 mg; L-Tyrosin 2333,333 mg; L-Valin 4416,667 mg. Aus der Supplementdatenbank übernommen (umgerechnet…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.917,
+    "arginine": 1.5,
+    "aspartic_acid": 8.333,
+    "cysteine": 1.75,
+    "glutamic_acid": 14.166,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.166,
+    "leucine": 8.166,
+    "lysine": 7.416,
+    "methionine": 1.667,
+    "phenylalanine": 2.5,
+    "proline": 4.583,
+    "serine": 3.583,
+    "threonine": 5.5,
+    "tryptophan": 1.333,
+    "tyrosine": 1.833,
+    "valine": 4.416
+   }
   },
   {
    "id": "01a18a2f-b8a1-7271-a2ef-9f2a1dd9b395",
@@ -3400,7 +4320,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,31 g) berechnet. Verzehr: 30 g ISOWHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja, Gluten (Weizen). Quelle: https://www.esn.com/products/esn-iso-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4000 mg; L-Arginin 1600 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1840 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1280 mg; L-Histidin 1360 mg; L-Isoleucin 5200 mg; L-Leucin 8000 mg; L-Lysin 7520 mg; L-Methionin 1760 mg; L-Phenylalanin 2400 mg; L-Prolin 4480 mg; L-Serin 3600 mg; L-Threonin 5600 mg; L-Tryptophan 1280 mg; L-Tyrosin 2240 mg; L-Valin 4560 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.76,
+    "arginine": 1.44,
+    "aspartic_acid": 8.0,
+    "cysteine": 1.68,
+    "glutamic_acid": 13.6,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 4.96,
+    "leucine": 7.84,
+    "lysine": 7.12,
+    "methionine": 1.6,
+    "phenylalanine": 2.4,
+    "proline": 4.4,
+    "serine": 3.44,
+    "threonine": 5.28,
+    "tryptophan": 1.28,
+    "tyrosine": 1.76,
+    "valine": 4.24
+   }
   },
   {
    "id": "01a18a2f-b8b8-73ef-a997-832f452f5912",
@@ -3418,7 +4358,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,24 g) berechnet. Verzehr: 30 g ISOWHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-iso-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3916,667 mg; L-Arginin 1500 mg; L-Asparaginsäure (Aspartat) 8333,333 mg; L-Cystein 1750 mg; Glutaminsäure (Glutamat) 14166,667 mg; Glycin 1250 mg; L-Histidin 1333,333 mg; L-Isoleucin 5166,667 mg; L-Leucin 8166,667 mg; L-Lysin 7416,667 mg; L-Methionin 1666,667 mg; L-Phenylalanin 2500 mg; L-Prolin 4583,333 mg; L-Serin 3583,333 mg; L-Threonin 5500 mg; L-Tryptophan 1333,333 mg; L-Tyrosin 1833,333 mg; L-Valin 4416,667 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.917,
+    "arginine": 1.5,
+    "aspartic_acid": 8.333,
+    "cysteine": 1.75,
+    "glutamic_acid": 14.166,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.166,
+    "leucine": 8.166,
+    "lysine": 7.416,
+    "methionine": 1.667,
+    "phenylalanine": 2.5,
+    "proline": 4.583,
+    "serine": 3.583,
+    "threonine": 5.5,
+    "tryptophan": 1.333,
+    "tyrosine": 1.833,
+    "valine": 4.416
+   }
   },
   {
    "id": "01a18a2f-b8cf-7635-bf91-7788bcefaab5",
@@ -3436,7 +4396,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,32 g) berechnet. Verzehr: 30 g ISOWHEY mit 200 ml kaltem Wasser oder fettarmer Milch in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Ideal vor oder nach dem Training oder als Zwischenmahlzeit. Allergene: Milch, Soja. Quelle: https://www.esn.com/products/esn-iso-whey-protein (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4073,333 mg; L-Arginin 1560 mg; L-Asparaginsäure (Aspartat) 8666,667 mg; L-Cystein 1906,667 mg; Glutaminsäure (Glutamat) 14733,333 mg; Glycin 1300 mg; L-Histidin 1386,667 mg; L-Isoleucin 5373,333 mg; L-Leucin 8493,333 mg; L-Lysin 7800 mg; L-Methionin 1733,333 mg; L-Phenylalanin 2600 mg; L-Prolin 4766,667 mg; L-Serin 3726,667 mg; L-Threonin 5720 mg; L-Tryptophan 1386,667 mg; L-Tyrosin 1906,667 mg; L-Valin 4593,333 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.073,
+    "arginine": 1.56,
+    "aspartic_acid": 8.667,
+    "cysteine": 1.82,
+    "glutamic_acid": 14.734,
+    "glycine": 1.3,
+    "histidine": 1.387,
+    "isoleucine": 5.374,
+    "leucine": 8.494,
+    "lysine": 7.714,
+    "methionine": 1.733,
+    "phenylalanine": 2.6,
+    "proline": 4.767,
+    "serine": 3.727,
+    "threonine": 5.72,
+    "tryptophan": 1.387,
+    "tyrosine": 1.907,
+    "valine": 4.594
+   }
   },
   {
    "id": "01a18a2f-b8e5-75b2-bc0c-70b285d41468",
@@ -3454,7 +4434,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Sulfite. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4333,333 mg; L-Arginin 1583,333 mg; L-Asparaginsäure (Aspartat) 9166,667 mg; L-Cystein 1416,667 mg; Glutaminsäure (Glutamat) 15000 mg; Glycin 1166,667 mg; L-Histidin 1250 mg; L-Isoleucin 5333,333 mg; L-Leucin 9166,667 mg; L-Lysin 8000 mg; L-Methionin 1750 mg; L-Phenylalanin 2333,333 mg…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-b8fd-76ea-bd69-217cdd66b2a1",
@@ -3472,7 +4472,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Sulfite. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4833,333 mg; L-Arginin 1750 mg; L-Asparaginsäure (Aspartat) 10000 mg; L-Cystein 1500 mg; Glutaminsäure (Glutamat) 16666,667 mg; Glycin 1250 mg; L-Histidin 1333,333 mg; L-Isoleucin 5916,667 mg; L-Leucin 10000 mg; L-Lysin 9166,667 mg; L-Methionin 1916,667 mg; L-Phenylalanin 2583,333 mg; …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-b914-762b-9d01-0b014b821bef",
@@ -3490,7 +4510,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,04 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4240 mg; L-Arginin 1600 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5200 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1760 mg; L-Phenylalanin 2320 mg; L-Prolin 4960 mg; L-Serin 3680 mg; L-Th…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-b92d-7539-9361-e2e0fe427d3b",
@@ -3508,7 +4548,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,04 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4333,333 mg; L-Arginin 1583,333 mg; L-Asparaginsäure (Aspartat) 9166,667 mg; L-Cystein 1416,667 mg; Glutaminsäure (Glutamat) 15000 mg; Glycin 1166,667 mg; L-Histidin 1250 mg; L-Isoleucin 5333,333 mg; L-Leucin 9166,667 mg; L-Lysin 8000 mg; L-Methionin 1750 mg; L-Phenylalanin 2333,333 mg; L-Serin…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-b946-72ad-91ff-dd32200c720b",
@@ -3526,7 +4586,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Gluten (Gerste), Sulfite. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4333,333 mg; L-Arginin 1583,333 mg; L-Asparaginsäure (Aspartat) 9166,667 mg; L-Cystein 1416,667 mg; Glutaminsäure (Glutamat) 15000 mg; Glycin 1166,667 mg; L-Histidin 1250 mg; L-Isoleucin 5333,333 mg; L-Leucin 9166,667 mg; L-Lysin 8000 mg; L-Methionin 1750 mg; L-Phenyla…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-b961-744a-b814-e91bdd6dc11a",
@@ -3544,7 +4624,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Gluten (Gerste), Sulfite. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4833,333 mg; L-Arginin 1750 mg; L-Asparaginsäure (Aspartat) 10000 mg; L-Cystein 1500 mg; Glutaminsäure (Glutamat) 16666,667 mg; Glycin 1250 mg; L-Histidin 1333,333 mg; L-Isoleucin 5916,667 mg; L-Leucin 9166,667 mg; L-Lysin 1916,667 mg; L-Methionin 1916,667 mg; L-Phenyl…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-b97b-74cf-bcc9-39fac7c61e8b",
@@ -3562,7 +4662,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Sulfite. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4160 mg; L-Arginin 1520 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5120 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1680 mg; L-Phenylalanin 2240 mg; L-Prolin 4880 mg; L-Serin 3600…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-b99d-777d-94d6-4c400c1b49b0",
@@ -3580,7 +4700,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4333,333 mg; L-Arginin 1583,333 mg; L-Asparaginsäure (Aspartat) 9166,667 mg; L-Cystein 1416,667 mg; Glutaminsäure (Glutamat) 15000 mg; Glycin 1166,667 mg; L-Histidin 1250 mg; L-Isoleucin 5333,333 mg; L-Leucin 9166,667 mg; L-Lysin 8000 mg; L-Methionin 1750 mg; L-Phenylalanin 2333,333 mg; L-Proli…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-b9b6-7561-8088-0436c11c6789",
@@ -3598,7 +4738,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,04 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4240 mg; L-Arginin 1600 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5200 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1760 mg; L-Phenylalanin 2320 mg; L-Prolin 4960 mg; L-Serin 3680 mg; L-Th…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-b9cf-7168-aa5c-6f02dc0ae6ce",
@@ -3616,7 +4776,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4833,333 mg; L-Arginin 1750 mg; L-Asparaginsäure (Aspartat) 10000 mg; L-Cystein 1583,333 mg; Glutaminsäure (Glutamat) 16666,667 mg; Glycin 1333,333 mg; L-Histidin 1333,333 mg; L-Isoleucin 5916,667 mg; L-Leucin 10000 mg; L-Lysin 9166,667 mg; L-Methionin 1916,667 mg; L-Phenylalanin 2583,333 mg; L…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-b9e7-772c-b6ab-268d45071504",
@@ -3634,7 +4814,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Tagesportion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Sulfite. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4160 mg; L-Arginin 1520 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5120 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1680 mg; L-Phenylalanin 2240 mg; L-Prolin 4880 mg; L-Serin…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-ba00-759f-b559-0b43f51308ab",
@@ -3652,7 +4852,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Tagesportion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Sulfite. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4160 mg; L-Arginin 1520 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5120 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1680 mg; L-Phenylalanin 2240 mg; L-Prolin 4880 mg; L-Serin…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-ba1b-76f5-996f-f04391f33fae",
@@ -3670,7 +4890,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,05 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4160 mg; L-Arginin 1520 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5120 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1680 mg; L-Phenylalanin 2240 mg; L-Prolin 4880 mg; L-Serin 3600 mg; L-Th…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-ba32-7180-a5c4-1c52391be16e",
@@ -3688,7 +4928,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4640 mg; L-Arginin 1680 mg; L-Asparaginsäure (Aspartat) 9600 mg; L-Cystein 1440 mg; Glutaminsäure (Glutamat) 16000 mg; Glycin 1200 mg; L-Histidin 1280 mg; L-Isoleucin 5680 mg; L-Leucin 9600 mg; L-Lysin 8800 mg; L-Methionin 1840 mg; L-Phenylalanin 1840 mg; L-Prolin 5440 mg; L-Serin 4000 mg; L-Th…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-ba4c-75a0-a063-8af277d77705",
@@ -3706,7 +4966,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4333,333 mg; L-Arginin 1583,333 mg; L-Asparaginsäure (Aspartat) 9166,667 mg; L-Cystein 1416,667 mg; Glutaminsäure (Glutamat) 15000 mg; Glycin 1166,667 mg; L-Histidin 1250 mg; L-Isoleucin 5333,333 mg; L-Leucin 9166,667 mg; L-Lysin 8000 mg; L-Methionin 1750 mg; L-Phenylalanin 2333,333 mg; L-Proli…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-ba63-72b9-be3c-fe6b09da1422",
@@ -3724,7 +5004,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4833,333 mg; L-Arginin 1750 mg; L-Asparaginsäure (Aspartat) 10000 mg; L-Cystein 1583,333 mg; Glutaminsäure (Glutamat) 16666,667 mg; Glycin 1333,333 mg; L-Histidin 1333,333 mg; L-Isoleucin 5916,667 mg; L-Leucin 10000 mg; L-Lysin 9166,667 mg; L-Methionin 2000 mg; L-Phenylalanin 2583,333 mg; L-Pro…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-ba7d-7342-b2ef-d802730a2b4b",
@@ -3742,7 +5042,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4160 mg; L-Arginin 1520 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5120 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1680 mg; L-Phenylalanin 2240 mg; L-Prolin 4880 mg; L-Serin 3600 mg; L-Th…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-ba99-7346-8d1a-d29b7722d7d8",
@@ -3760,7 +5080,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,05 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4160 mg; L-Arginin 1520 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5120 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1680 mg; L-Phenylalanin 2240 mg; L-Prolin 4880 mg; L-Serin 3600 mg; L-Th…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-bad3-7076-9029-e70fe0b7b86b",
@@ -3778,7 +5118,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4833,333 mg; L-Arginin 1750 mg; L-Asparaginsäure (Aspartat) 9666,667 mg; L-Cystein 1500 mg; Glutaminsäure (Glutamat) 16333,333 mg; Glycin 1250 mg; L-Histidin 1333,333 mg; L-Isoleucin 5916,667 mg; L-Leucin 9750 mg; L-Lysin 8833,333 mg; L-Methionin 1916,667 mg; L-Phenylalanin 2583,333 mg; L-Proli…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-baeb-7169-9120-a473f0b7f9dc",
@@ -3796,7 +5156,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,05 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3986,667 mg; L-Arginin 1456,667 mg; L-Asparaginsäure (Aspartat) 8433,333 mg; L-Cystein 1303,333 mg; Glutaminsäure (Glutamat) 13800 mg; Glycin 1073,333 mg; L-Histidin 1150 mg; L-Isoleucin 4906,667 mg; L-Leucin 8433,333 mg; L-Lysin 7360 mg; L-Methionin 1610 mg; L-Phenylalanin 2146,667 mg; L-Proli…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.447,
+    "arginine": 1.61,
+    "aspartic_acid": 9.2,
+    "cysteine": 1.38,
+    "glutamic_acid": 15.334,
+    "glycine": 1.15,
+    "histidine": 1.227,
+    "isoleucine": 5.444,
+    "leucine": 9.2,
+    "lysine": 8.434,
+    "methionine": 1.763,
+    "phenylalanine": 2.377,
+    "proline": 5.214,
+    "serine": 3.834,
+    "threonine": 5.98,
+    "tryptophan": 1.38,
+    "tyrosine": 2.223,
+    "valine": 4.83
+   }
   },
   {
    "id": "01a18a2f-bb0a-74e6-94a5-f49b00b9dfb7",
@@ -3814,7 +5194,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4446,667 mg; L-Arginin 1610 mg; L-Asparaginsäure (Aspartat) 9200 mg; L-Cystein 1380 mg; Glutaminsäure (Glutamat) 15333,333 mg; Glycin 1150 mg; L-Histidin 1226,667 mg; L-Isoleucin 5443,333 mg; L-Leucin 9200 mg; L-Lysin 8433,333 mg; L-Methionin 1763,333 mg; L-Phenylalanin 2376,667 mg; L-Prolin 52…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.447,
+    "arginine": 1.61,
+    "aspartic_acid": 9.2,
+    "cysteine": 1.38,
+    "glutamic_acid": 15.334,
+    "glycine": 1.15,
+    "histidine": 1.227,
+    "isoleucine": 5.444,
+    "leucine": 9.2,
+    "lysine": 8.434,
+    "methionine": 1.763,
+    "phenylalanine": 2.377,
+    "proline": 5.214,
+    "serine": 3.834,
+    "threonine": 5.98,
+    "tryptophan": 1.38,
+    "tyrosine": 2.223,
+    "valine": 4.83
+   }
   },
   {
    "id": "01a18a2f-bb31-75f5-850b-116c83c8d871",
@@ -3832,7 +5232,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Sulfite. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4333,333 mg; L-Arginin 1583,333 mg; L-Asparaginsäure (Aspartat) 9166,667 mg; L-Cystein 1416,667 mg; Glutaminsäure (Glutamat) 15000 mg; Glycin 1166,667 mg; L-Histidin 1250 mg; L-Isoleucin 5333,333 mg; L-Leucin 9166,667 mg; L-Lysin 8000 mg; L-Methionin 1750 mg; L-Phenylalanin 2333,333 mg…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-bb54-75ae-a3e4-93d74424f685",
@@ -3850,7 +5270,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4833,333 mg; L-Arginin 1750 mg; L-Asparaginsäure (Aspartat) 9750 mg; L-Cystein 1500 mg; Glutaminsäure (Glutamat) 16333,333 mg; Glycin 1250 mg; L-Histidin 1333,333 mg; L-Isoleucin 5916,667 mg; L-Leucin 9833,333 mg; L-Lysin 8833,333 mg; L-Methionin 1916,667 mg; L-Phenylalanin 2583,333 mg; L-Proli…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-bb6e-75e8-8a32-48ab7833c68a",
@@ -3868,7 +5308,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,08 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Sulfite. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4333,333 mg; L-Arginin 1583,333 mg; L-Asparaginsäure (Aspartat) 9166,667 mg; L-Cystein 1416,667 mg; Glutaminsäure (Glutamat) 15000 mg; Glycin 1166,667 mg; L-Histidin 1250 mg; L-Isoleucin 5333,333 mg; L-Leucin 9166,667 mg; L-Lysin 8000 mg; L-Methionin 1750 mg; L-Phenylalanin 2333,333 mg…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-bb84-7408-ac44-5355772c2a37",
@@ -3886,7 +5346,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,2 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3866,667 mg; L-Arginin 1400 mg; L-Asparaginsäure (Aspartat) 7733,333 mg; L-Cystein 1200 mg; Glutaminsäure (Glutamat) 13066,667 mg; Glycin 1000 mg; L-Histidin 1066,667 mg; L-Isoleucin 4733,333 mg; L-Leucin 7800 mg; L-Lysin 7066,667 mg; L-Methionin 1533,333 mg; L-Phenylalanin 2066,667 mg; L-Prolin…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.867,
+    "arginine": 1.4,
+    "aspartic_acid": 8.0,
+    "cysteine": 1.2,
+    "glutamic_acid": 13.334,
+    "glycine": 1.0,
+    "histidine": 1.067,
+    "isoleucine": 4.734,
+    "leucine": 8.0,
+    "lysine": 7.334,
+    "methionine": 1.533,
+    "phenylalanine": 2.067,
+    "proline": 4.534,
+    "serine": 3.334,
+    "threonine": 5.2,
+    "tryptophan": 1.2,
+    "tyrosine": 1.933,
+    "valine": 4.2
+   }
   },
   {
    "id": "01a18a2f-bb9b-778e-8216-a27aa046b5f7",
@@ -3904,7 +5384,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,04 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Sulfite. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4160 mg; L-Arginin 1520 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5120 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1680 mg; L-Phenylalanin 2240 mg; L-Prolin 4880 mg; L-Serin 3600…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-bbb9-7348-8892-268136fb5b1d",
@@ -3922,7 +5422,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Sulfite. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4640 mg; L-Arginin 1680 mg; L-Asparaginsäure (Aspartat) 9600 mg; L-Cystein 1440 mg; Glutaminsäure (Glutamat) 16000 mg; Glycin 1200 mg; L-Histidin 1280 mg; L-Isoleucin 5680 mg; L-Leucin 9600 mg; L-Lysin 8800 mg; L-Methionin 1840 mg; L-Phenylalanin 2480 mg; L-Prolin 5440 mg; L-Serin 4000…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-bbd9-75d8-8fb1-0815d099188d",
@@ -3940,7 +5460,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Gluten (Gerste). Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4160 mg; L-Arginin 1520 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5120 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1680 mg; L-Phenylalanin 2240 mg; L-Prolin 4880 mg; L-Se…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-bbfb-735f-aaa4-01e50c00d573",
@@ -3958,7 +5498,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Gluten (Gerste). Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4800 mg; L-Arginin 1680 mg; L-Asparaginsäure (Aspartat) 9600 mg; L-Cystein 1280 mg; Glutaminsäure (Glutamat) 16000 mg; Glycin 1280 mg; L-Histidin 1280 mg; L-Isoleucin 5920 mg; L-Leucin 8800 mg; L-Lysin 8000 mg; L-Methionin 1920 mg; L-Phenylalanin 2320 mg; L-Prolin 5680 mg; L-Se…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-bc11-70f6-bc9f-10c267835228",
@@ -3976,7 +5536,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4333,333 mg; L-Arginin 1583,333 mg; L-Asparaginsäure (Aspartat) 9166,667 mg; L-Cystein 1416,667 mg; Glutaminsäure (Glutamat) 15000 mg; Glycin 1166,667 mg; L-Histidin 1250 mg; L-Isoleucin 5333,333 mg; L-Leucin 9166,667 mg; L-Lysin 8000 mg; L-Methionin 1750 mg; L-Phenylalanin 2333,333 mg; L-Proli…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-bc27-7287-9680-dd46bd4081d9",
@@ -3994,7 +5574,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Gluten (Gerste). Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4416,667 mg; L-Arginin 1750 mg; L-Asparaginsäure (Aspartat) 10000 mg; L-Cystein 1750 mg; Glutaminsäure (Glutamat) 15833,333 mg; Glycin 1166,667 mg; L-Histidin 1416,667 mg; L-Isoleucin 5666,667 mg; L-Leucin 10000 mg; L-Lysin 8333,333 mg; L-Methionin 1916,667 mg; L-Phenylalanin 2…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-bc3f-74fd-8ca4-f0d9ecf50796",
@@ -4012,7 +5612,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4833,333 mg; L-Arginin 1750 mg; L-Asparaginsäure (Aspartat) 10000 mg; L-Cystein 1500 mg; Glutaminsäure (Glutamat) 16666,667 mg; Glycin 1250 mg; L-Histidin 1333,333 mg; L-Isoleucin 5916,667 mg; L-Leucin 10000 mg; L-Lysin 9166,667 mg; L-Methionin 1916,667 mg; L-Phenylalanin 2583,333 mg; L-Prolin …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-bc56-766e-aa9a-14f531a6e6c8",
@@ -4030,7 +5650,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Gluten (Gerste). Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4160 mg; L-Arginin 1520 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5120 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1680 mg; L-Phenylalanin 2240 mg; L-Prolin 4880 mg; L-Se…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-bc6c-735f-9172-34c62310a871",
@@ -4048,7 +5688,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4333,333 mg; L-Arginin 1583,333 mg; L-Asparaginsäure (Aspartat) 9166,667 mg; L-Cystein 1416,667 mg; Glutaminsäure (Glutamat) 15000 mg; Glycin 1166,667 mg; L-Histidin 1250 mg; L-Isoleucin 5333,333 mg; L-Leucin 9166,667 mg; L-Lysin 8000 mg; L-Methionin 1750 mg; L-Phenylalanin 2333,333 mg; L-Proli…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-bc82-7183-8ccd-8a3942fc3996",
@@ -4066,7 +5726,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,04 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4160 mg; L-Arginin 1520 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5120 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1680 mg; L-Phenylalanin 2240 mg; L-Prolin 4880 mg; L-Serin 3600 mg; L-Th…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-bc97-7303-88d3-effade5597e3",
@@ -4084,7 +5764,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,04 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4160 mg; L-Arginin 1520 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5120 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1680 mg; L-Phenylalanin 2240 mg; L-Prolin 4880 mg; L-Serin 3600 mg; L-Th…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-bcaf-712c-ad08-263622a4f5fc",
@@ -4102,7 +5802,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4160 mg; L-Arginin 1520 mg; L-Asparaginsäure (Aspartat) 8800 mg; L-Cystein 1360 mg; Glutaminsäure (Glutamat) 14400 mg; Glycin 1120 mg; L-Histidin 1200 mg; L-Isoleucin 5120 mg; L-Leucin 8800 mg; L-Lysin 7680 mg; L-Methionin 1680 mg; L-Phenylalanin 2240 mg; L-Prolin 4880 mg; L-Serin 3600 mg; L-Th…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-bcc4-7471-b751-2ea92ec43c46",
@@ -4120,7 +5840,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,06 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4800 mg; L-Arginin 1680 mg; L-Asparaginsäure (Aspartat) 9600 mg; L-Cystein 1280 mg; Glutaminsäure (Glutamat) 16000 mg; Glycin 1280 mg; L-Histidin 1280 mg; L-Isoleucin 5920 mg; L-Leucin 8800 mg; L-Lysin 8000 mg; L-Methionin 1920 mg; L-Phenylalanin 2320 mg; L-Prolin 5680 mg; L-Serin 4320 mg; L-Th…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.64,
+    "arginine": 1.68,
+    "aspartic_acid": 9.6,
+    "cysteine": 1.44,
+    "glutamic_acid": 16.0,
+    "glycine": 1.2,
+    "histidine": 1.28,
+    "isoleucine": 5.68,
+    "leucine": 9.6,
+    "lysine": 8.8,
+    "methionine": 1.84,
+    "phenylalanine": 2.48,
+    "proline": 5.44,
+    "serine": 4.0,
+    "threonine": 6.24,
+    "tryptophan": 1.44,
+    "tyrosine": 2.32,
+    "valine": 5.04
+   }
   },
   {
    "id": "01a18a2f-bcdb-7462-86bb-ec900b5101cc",
@@ -4138,7 +5878,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4833,333 mg; L-Arginin 1583,333 mg; L-Asparaginsäure (Aspartat) 9166,667 mg; L-Cystein 1416,667 mg; Glutaminsäure (Glutamat) 15000 mg; Glycin 1166,667 mg; L-Histidin 1250 mg; L-Isoleucin 5333,333 mg; L-Leucin 9166,667 mg; L-Lysin 8000 mg; L-Methionin 1750 mg; L-Phenylalanin 2333,333 mg; L-Proli…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-bcf0-7439-a6ac-4315b0a280cd",
@@ -4156,7 +5916,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4833,333 mg; L-Arginin 1750 mg; L-Asparaginsäure (Aspartat) 10000 mg; L-Cystein 1500 mg; Glutaminsäure (Glutamat) 16666,667 mg; Glycin 1250 mg; L-Histidin 1333,333 mg; L-Isoleucin 5916,667 mg; L-Leucin 10000 mg; L-Lysin 9166,667 mg; L-Methionin 1916,667 mg; L-Phenylalanin 2583,333 mg; L-Prolin …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a189ff-858e-71f3-a7dc-cc0044a346e7",
@@ -4174,7 +5954,27 @@
    "portionName": null,
    "portionAmount": null,
    "notes": "Werte je 100 g laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,11 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4814 mg; L-Arginin 1743 mg; L-Asparaginsäure (Aspartat) 9960 mg; L-Cystein 1494 mg; Glutaminsäure (Glutamat) 16600 mg; Glycin 1245 mg; L-Histidin 1328 mg; L-Isoleucin 5893 mg; L-Leucin 9960 mg; L-Lysin 9130 mg; L-Methionin 1909 mg; L-Phenylalanin 1909 mg; L-Prolin 5644 mg; L-Serin 4150 mg; L-Threon…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.814,
+    "arginine": 1.743,
+    "aspartic_acid": 9.96,
+    "cysteine": 1.494,
+    "glutamic_acid": 16.6,
+    "glycine": 1.245,
+    "histidine": 1.328,
+    "isoleucine": 5.893,
+    "leucine": 9.96,
+    "lysine": 9.13,
+    "methionine": 1.909,
+    "phenylalanine": 2.573,
+    "proline": 5.644,
+    "serine": 4.15,
+    "threonine": 6.474,
+    "tryptophan": 1.494,
+    "tyrosine": 2.407,
+    "valine": 5.229
+   }
   },
   {
    "id": "01a18a2f-bd06-7367-8595-cc81ade3dc84",
@@ -4192,7 +5992,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4333,333 mg; L-Arginin 1583,333 mg; L-Asparaginsäure (Aspartat) 9166,667 mg; L-Cystein 1416,667 mg; Glutaminsäure (Glutamat) 15000 mg; Glycin 1166,667 mg; L-Histidin 1250 mg; L-Isoleucin 5333,333 mg; L-Leucin 9166,667 mg; L-Lysin 8000 mg; L-Methionin 1750 mg; L-Phenylalanin 2333,333 mg; L-Proli…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-bd1f-72c1-86f8-90118f3504c7",
@@ -4210,7 +6030,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,03 g) berechnet. Verzehr: 30 g ISOCLEAR® mit 500 ml kaltem Wasser in einem Shaker mixen und 1-2 Minuten ruhen lassen. Es wird der Verzehr von bis zu drei Portionen à 30 g pro Tag empfohlen; z.B. nach dem Aufstehen, nach dem Training oder sogar währenddessen, als proteinreiches Erfrischungsgetränk. Allergene: Milch, Sulfite. Hinweis: Das Produkt ist kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Quelle: https://www.esn.com/products/esn-isoclear-whey-isolate (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4833,333 mg; L-Arginin 1750 mg; L-Asparaginsäure (Aspartat) 9750 mg; L-Cystein 1500 mg; Glutaminsäure (Glutamat) 16333,333 mg; Glycin 1250 mg; L-Histidin 1333,333 mg; L-Isoleucin 5916,667 mg; L-Leucin 9833,333 mg; L-Lysin 8833,333 mg; L-Methionin 1916,667 mg; L-Phenylalanin 2583,333 mg…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.833,
+    "arginine": 1.75,
+    "aspartic_acid": 10.0,
+    "cysteine": 1.5,
+    "glutamic_acid": 16.666,
+    "glycine": 1.25,
+    "histidine": 1.333,
+    "isoleucine": 5.916,
+    "leucine": 10.0,
+    "lysine": 9.166,
+    "methionine": 1.917,
+    "phenylalanine": 2.583,
+    "proline": 5.666,
+    "serine": 4.166,
+    "threonine": 6.5,
+    "tryptophan": 1.5,
+    "tyrosine": 2.417,
+    "valine": 5.25
+   }
   },
   {
    "id": "01a18a2f-c40f-76eb-bee7-9ae2430a56d3",
@@ -4228,7 +6068,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,11 g) berechnet. Verzehr: 30 g Pulver mit 300 ml kaltem Wasser, oder fettarmer Milch (verändert die Nährwerte) in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Egal ob nach (oder vor) dem Training und als Zwischenmahlzeit. Allergene: Milch, Soja. Hinweis: Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Außerhalb der Reichweite von kleinen Kindern lagern. Quelle: https://www.esn.com/products/performance-whey (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4080 mg; L-Arginin 1360 mg; L-Asparaginsäure (Aspartat) 8800 mg; Bromelain 333,333 mg; L-Cystein 1680 mg; Glutaminsäure (Glutamat) 15200 mg; Glycin 1040 mg; L-Histidin 1040 mg; L-Isoleucin 5520 mg; Laktase 660 FCC; L-Leuc…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.08,
+    "arginine": 1.36,
+    "aspartic_acid": 8.8,
+    "cysteine": 1.68,
+    "glutamic_acid": 15.2,
+    "glycine": 1.04,
+    "histidine": 1.04,
+    "isoleucine": 5.52,
+    "leucine": 8.0,
+    "lysine": 7.76,
+    "methionine": 1.6,
+    "phenylalanine": 2.32,
+    "proline": 4.8,
+    "serine": 3.52,
+    "threonine": 5.44,
+    "tryptophan": 1.04,
+    "tyrosine": 1.84,
+    "valine": 4.88
+   }
   },
   {
    "id": "01a18a2f-c424-726e-9209-d33f896b178a",
@@ -4246,7 +6106,27 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Aminosäuren aus dem Profil je 100 g Protein auf die Portion umgerechnet. Natrium aus Salz (0,12 g) berechnet. Verzehr: 30 g Pulver mit 300 ml kaltem Wasser, oder fettarmer Milch (verändert die Nährwerte) in einem Shaker mischen. Empfohlen werden 1-3 Portionen pro Tag. Egal ob nach (oder vor) dem Training und als Zwischenmahlzeit. Allergene: Milch, Soja. Hinweis: Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Außerhalb der Reichweite von kleinen Kindern lagern. Quelle: https://www.esn.com/products/performance-whey (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 4080 mg; L-Arginin 1360 mg; L-Asparaginsäure (Aspartat) 8800 mg; Bromelain 333,333 mg; L-Cystein 1680 mg; Glutaminsäure (Glutamat) 15200 mg; Glycin 1040 mg; L-Histidin 1040 mg; L-Isoleucin 5520 mg; Laktase 660 FCC; L-Leuc…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 4.08,
+    "arginine": 1.36,
+    "aspartic_acid": 8.8,
+    "cysteine": 1.68,
+    "glutamic_acid": 15.2,
+    "glycine": 1.04,
+    "histidine": 1.04,
+    "isoleucine": 5.52,
+    "leucine": 8.0,
+    "lysine": 7.76,
+    "methionine": 1.6,
+    "phenylalanine": 2.32,
+    "proline": 4.8,
+    "serine": 3.52,
+    "threonine": 5.44,
+    "tryptophan": 1.04,
+    "tyrosine": 1.84,
+    "valine": 4.88
+   }
   },
   {
    "id": "0f900a2b-8b12-45f6-85c3-435afaeba9f3",
@@ -5282,7 +7162,7 @@
    "unit": "Portion(en)",
    "servingAmount": 1.0,
    "dailyDose": false,
-   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 23 g Pulver mit 500 ml kaltem Wasser mischen und ca. 30-60 Minuten vor dem Training trinken. Vorzugsweise in der ersten Tageshälfte verzehren. Hinweis: Die angegebene empfohlene tägliche Verzehrsmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine abwechslungsreiche und ausgewogene Ernährung sowie eine gesunde Lebensweise. Außerhalb der Reichweite von kleinen Kindern lagern. Enthält Koffein (250 mg/Tagesportion), EGCG (40 mg/Tagesportion) und Synephrin (21 mg/Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz-Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollten aus allen Nahrungsquellen nicht mehr als 400 mg Koffein, 21 mg Synephrin und 800 mg Epigallocatechin-3-gallat (EGCG) pro Tag aufgenommen wer…",
+   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 23 g Pulver mit 500 ml kaltem Wasser mischen und ca. 30-60 Minuten vor dem Training trinken. Vorzugsweise in der ersten Tageshälfte verzehren. Hinweis: Die angegebene empfohlene tägliche Verzehrsmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine abwechslungsreiche und ausgewogene Ernährung sowie eine gesunde Lebensweise. Außerhalb der Reichweite von kleinen Kindern lagern. Enthält Koffein (250 mg/Tagesportion), EGCG (40 mg/Tagesportion) und Synephrin (21 mg/Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz-Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollten aus allen Nahrungsquellen nicht mehr als 400 mg Koffein, 21 mg Synephrin und 800 mg Epigallocatechin-3-gallat (EGCG) pro Tag aufgenommen wer… Quelle: https://www.esn.com/products/crank-olympia-iv-shadow-mode (Stand 26.11.2026).",
    "archived": false,
    "values": {
     "arginine": 2800.0,
@@ -5323,7 +7203,7 @@
    "unit": "Portion(en)",
    "servingAmount": 1.0,
    "dailyDose": false,
-   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 30 g Pulver mit 500 ml kaltem Wasser im Shaker mixen und 30-45 Minuten vor dem Training trinken. Hinweis: Enthält Koffein (255 mg / Tagesportion) und Synephringehalt (21 mg / Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz-Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollten aus allen Nahrungsquellen nicht mehr als 400 mg Koffein, 21 mg Synephrin und 800 mg Epigallocatechingallat (EGCG) pro Tag aufgenommen werden. Sollte nicht verzehrt werden, wenn am selben Tag andere Erzeugnisse mit grünem Tee konsumiert werden. Sollte nicht auf nüchternen Magen verzehrt werden. Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie…",
+   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 30 g Pulver mit 500 ml kaltem Wasser im Shaker mixen und 30-45 Minuten vor dem Training trinken. Hinweis: Enthält Koffein (255 mg / Tagesportion) und Synephringehalt (21 mg / Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz-Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollten aus allen Nahrungsquellen nicht mehr als 400 mg Koffein, 21 mg Synephrin und 800 mg Epigallocatechingallat (EGCG) pro Tag aufgenommen werden. Sollte nicht verzehrt werden, wenn am selben Tag andere Erzeugnisse mit grünem Tee konsumiert werden. Sollte nicht auf nüchternen Magen verzehrt werden. Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie… Quelle: https://www.esn.com/products/crank-ultimate (Stand 26.11.2026).",
    "archived": false,
    "values": {
     "arginine": 2800.0,
@@ -5360,7 +7240,7 @@
    "unit": "Portion(en)",
    "servingAmount": 1.0,
    "dailyDose": false,
-   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 30 g Pulver mit 500 ml kaltem Wasser im Shaker mixen und 30-45 Minuten vor dem Training trinken. Hinweis: Enthält Koffein (255 mg / Tagesportion) und Synephringehalt (21 mg / Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz-Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollten aus allen Nahrungsquellen nicht mehr als 400 mg Koffein, 21 mg Synephrin und 800 mg Epigallocatechingallat (EGCG) pro Tag aufgenommen werden. Sollte nicht verzehrt werden, wenn am selben Tag andere Erzeugnisse mit grünem Tee konsumiert werden. Sollte nicht auf nüchternen Magen verzehrt werden. Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie…",
+   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 30 g Pulver mit 500 ml kaltem Wasser im Shaker mixen und 30-45 Minuten vor dem Training trinken. Hinweis: Enthält Koffein (255 mg / Tagesportion) und Synephringehalt (21 mg / Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz-Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollten aus allen Nahrungsquellen nicht mehr als 400 mg Koffein, 21 mg Synephrin und 800 mg Epigallocatechingallat (EGCG) pro Tag aufgenommen werden. Sollte nicht verzehrt werden, wenn am selben Tag andere Erzeugnisse mit grünem Tee konsumiert werden. Sollte nicht auf nüchternen Magen verzehrt werden. Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie… Quelle: https://www.esn.com/products/crank-ultimate (Stand 26.11.2026).",
    "archived": false,
    "values": {
     "arginine": 2800.0,
@@ -5396,7 +7276,7 @@
    "unit": "Portion(en)",
    "servingAmount": 1.0,
    "dailyDose": false,
-   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 30 g Pulver mit 500 ml kaltem Wasser im Shaker mixen und 30-45 Minuten vor dem Training trinken. Hinweis: Enthält Koffein (255 mg / Tagesportion) und Synephringehalt (21 mg / Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz-Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollten aus allen Nahrungsquellen nicht mehr als 400 mg Koffein, 21 mg Synephrin und 800 mg Epigallocatechingallat (EGCG) pro Tag aufgenommen werden. Sollte nicht verzehrt werden, wenn am selben Tag andere Erzeugnisse mit grünem Tee konsumiert werden. Sollte nicht auf nüchternen Magen verzehrt werden. Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie…",
+   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 30 g Pulver mit 500 ml kaltem Wasser im Shaker mixen und 30-45 Minuten vor dem Training trinken. Hinweis: Enthält Koffein (255 mg / Tagesportion) und Synephringehalt (21 mg / Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz-Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollten aus allen Nahrungsquellen nicht mehr als 400 mg Koffein, 21 mg Synephrin und 800 mg Epigallocatechingallat (EGCG) pro Tag aufgenommen werden. Sollte nicht verzehrt werden, wenn am selben Tag andere Erzeugnisse mit grünem Tee konsumiert werden. Sollte nicht auf nüchternen Magen verzehrt werden. Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie… Quelle: https://www.esn.com/products/crank-ultimate (Stand 26.11.2026).",
    "archived": false,
    "values": {
     "arginine": 2800.0,
@@ -5433,7 +7313,7 @@
    "unit": "Portion(en)",
    "servingAmount": 1.0,
    "dailyDose": false,
-   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 30 g Pulver mit 500 ml kaltem Wasser im Shaker mixen und 30-45 Minuten vor dem Training trinken. Allergene: Milch. Hinweis: Enthält Koffein (255 mg / Tagesportion) und Synephringehalt (21 mg / Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz-Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollten aus allen Nahrungsquellen nicht mehr als 400 mg Koffein, 21 mg Synephrin und 800 mg Epigallocatechingallat (EGCG) pro Tag aufgenommen werden. Sollte nicht verzehrt werden, wenn am selben Tag andere Erzeugnisse mit grünem Tee konsumiert werden. Sollte nicht auf nüchternen Magen verzehrt werden. Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreic…",
+   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 30 g Pulver mit 500 ml kaltem Wasser im Shaker mixen und 30-45 Minuten vor dem Training trinken. Allergene: Milch. Hinweis: Enthält Koffein (255 mg / Tagesportion) und Synephringehalt (21 mg / Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz-Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollten aus allen Nahrungsquellen nicht mehr als 400 mg Koffein, 21 mg Synephrin und 800 mg Epigallocatechingallat (EGCG) pro Tag aufgenommen werden. Sollte nicht verzehrt werden, wenn am selben Tag andere Erzeugnisse mit grünem Tee konsumiert werden. Sollte nicht auf nüchternen Magen verzehrt werden. Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreic… Quelle: https://www.esn.com/products/crank-ultimate (Stand 26.11.2026).",
    "archived": false,
    "values": {
     "arginine": 2800.0,
@@ -5470,7 +7350,7 @@
    "unit": "Portion(en)",
    "servingAmount": 1.0,
    "dailyDose": false,
-   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 30 g Pulver mit 500 ml kaltem Wasser im Shaker mixen und 30-45 Minuten vor dem Training trinken. Hinweis: Enthält Koffein (255 mg / Tagesportion) und Synephringehalt (21 mg / Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz-Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollten aus allen Nahrungsquellen nicht mehr als 400 mg Koffein, 21 mg Synephrin und 800 mg Epigallocatechingallat (EGCG) pro Tag aufgenommen werden. Sollte nicht verzehrt werden, wenn am selben Tag andere Erzeugnisse mit grünem Tee konsumiert werden. Sollte nicht auf nüchternen Magen verzehrt werden. Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie…",
+   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 30 g Pulver mit 500 ml kaltem Wasser im Shaker mixen und 30-45 Minuten vor dem Training trinken. Hinweis: Enthält Koffein (255 mg / Tagesportion) und Synephringehalt (21 mg / Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz-Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollten aus allen Nahrungsquellen nicht mehr als 400 mg Koffein, 21 mg Synephrin und 800 mg Epigallocatechingallat (EGCG) pro Tag aufgenommen werden. Sollte nicht verzehrt werden, wenn am selben Tag andere Erzeugnisse mit grünem Tee konsumiert werden. Sollte nicht auf nüchternen Magen verzehrt werden. Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie… Quelle: https://www.esn.com/products/crank-ultimate (Stand 26.11.2026).",
    "archived": false,
    "values": {
     "arginine": 2800.0,
@@ -6303,7 +8183,7 @@
    "unit": "Kapsel(n)",
    "servingAmount": 3.0,
    "dailyDose": false,
-   "notes": "Werte je 1 Tagesportion laut Hersteller (Vitamine & Gesundheit). Tagesportion = 3 Kapsel(n). Verzehr: Täglich 3 Kapseln unzerkaut mit ausreichend Flüssigkeit, vorzugsweise vor einer fetthaltigen Mahlzeit, verzehren. Allergene: Fisch. Hinweis: Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Außerhalb der Reichweite von Kindern lagern. Für Kinder unter 11 Jahren nicht geeignet (wegen Verschluckungsgefahr und Dosierung für Kinder ab 11 Jahren und Erwachsene). Bei Einnahme von Blutgerinnungshemmern Rücksprache mit einem Arzt / einer Ärztin halten. EPA und DHA tragen zu einer normalen Herzfunktion und DHA zur Erhaltung der Gehirnfunktion bei. Die positive Wirkung tritt bei einer täglichen Einnahme von mind. 250 mg EPA und DHA (Herzfunktion) und 250 mg DHA (Gehirnfunktion) ein. Vitamin D trägt zu einer normalen Funktion des Immunsystems bei. Vita…",
+   "notes": "Werte je 1 Tagesportion laut Hersteller (Vitamine & Gesundheit). Tagesportion = 3 Kapsel(n). Verzehr: Täglich 3 Kapseln unzerkaut mit ausreichend Flüssigkeit, vorzugsweise vor einer fetthaltigen Mahlzeit, verzehren. Allergene: Fisch. Hinweis: Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Außerhalb der Reichweite von Kindern lagern. Für Kinder unter 11 Jahren nicht geeignet (wegen Verschluckungsgefahr und Dosierung für Kinder ab 11 Jahren und Erwachsene). Bei Einnahme von Blutgerinnungshemmern Rücksprache mit einem Arzt / einer Ärztin halten. EPA und DHA tragen zu einer normalen Herzfunktion und DHA zur Erhaltung der Gehirnfunktion bei. Die positive Wirkung tritt bei einer täglichen Einnahme von mind. 250 mg EPA und DHA (Herzfunktion) und 250 mg DHA (Gehirnfunktion) ein. Vitamin D trägt zu einer normalen Funktion des Immunsystems bei. Vita… Quelle: https://www.esn.com/products/esn-essentials-pro (Stand 26.11.2026).",
    "archived": false,
    "values": {
     "custom_esn_fischoltriglyceride": 2000.0,
@@ -6321,7 +8201,7 @@
    "unit": "Kapsel(n)",
    "servingAmount": 3.0,
    "dailyDose": false,
-   "notes": "Werte je 1 Tagesportion laut Hersteller (Vitamine & Gesundheit). Tagesportion = 3 Kapsel(n). Verzehr: Täglich 3 Kapseln unzerkaut mit ausreichend Flüssigkeit, vorzugsweise vor einer fetthaltigen Mahlzeit, verzehren. Allergene: Fisch. Hinweis: Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Außerhalb der Reichweite von Kindern lagern. Für Kinder unter 11 Jahren nicht geeignet (wegen Verschluckungsgefahr und Dosierung für Kinder ab 11 Jahren und Erwachsene). Bei Einnahme von Blutgerinnungshemmern Rücksprache mit einem Arzt / einer Ärztin halten. EPA und DHA tragen zu einer normalen Herzfunktion und DHA zur Erhaltung der Gehirnfunktion bei. Die positive Wirkung tritt bei einer täglichen Einnahme von mind. 250 mg EPA und DHA (Herzfunktion) und 250 mg DHA (Gehirnfunktion) ein. Vitamin D trägt zu einer normalen Funktion des Immunsystems bei. Vita…",
+   "notes": "Werte je 1 Tagesportion laut Hersteller (Vitamine & Gesundheit). Tagesportion = 3 Kapsel(n). Verzehr: Täglich 3 Kapseln unzerkaut mit ausreichend Flüssigkeit, vorzugsweise vor einer fetthaltigen Mahlzeit, verzehren. Allergene: Fisch. Hinweis: Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Außerhalb der Reichweite von Kindern lagern. Für Kinder unter 11 Jahren nicht geeignet (wegen Verschluckungsgefahr und Dosierung für Kinder ab 11 Jahren und Erwachsene). Bei Einnahme von Blutgerinnungshemmern Rücksprache mit einem Arzt / einer Ärztin halten. EPA und DHA tragen zu einer normalen Herzfunktion und DHA zur Erhaltung der Gehirnfunktion bei. Die positive Wirkung tritt bei einer täglichen Einnahme von mind. 250 mg EPA und DHA (Herzfunktion) und 250 mg DHA (Gehirnfunktion) ein. Vitamin D trägt zu einer normalen Funktion des Immunsystems bei. Vita… Quelle: https://www.esn.com/products/esn-essentials-pro (Stand 26.11.2026).",
    "archived": false,
    "values": {
     "custom_esn_fischoltriglyceride": 2000.0,
@@ -6339,7 +8219,7 @@
    "unit": "Kapsel(n)",
    "servingAmount": 3.0,
    "dailyDose": false,
-   "notes": "Werte je 1 Tagesportion laut Hersteller (Vitamine & Gesundheit). Tagesportion = 3 Kapsel(n). Verzehr: Täglich 3 Kapseln unzerkaut mit ausreichend Flüssigkeit, vorzugsweise vor einer fetthaltigen Mahlzeit, verzehren. Allergene: Fisch. Hinweis: Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Außerhalb der Reichweite von Kindern lagern. Für Kinder unter 11 Jahren nicht geeignet (wegen Verschluckungsgefahr und Dosierung für Kinder ab 11 Jahren und Erwachsene). Bei Einnahme von Blutgerinnungshemmern Rücksprache mit einem Arzt / einer Ärztin halten. EPA und DHA tragen zu einer normalen Herzfunktion und DHA zur Erhaltung der Gehirnfunktion bei. Die positive Wirkung tritt bei einer täglichen Einnahme von mind. 250 mg EPA und DHA (Herzfunktion) und 250 mg DHA (Gehirnfunktion) ein. Vitamin D trägt zu einer normalen Funktion des Immunsystems bei. Vita…",
+   "notes": "Werte je 1 Tagesportion laut Hersteller (Vitamine & Gesundheit). Tagesportion = 3 Kapsel(n). Verzehr: Täglich 3 Kapseln unzerkaut mit ausreichend Flüssigkeit, vorzugsweise vor einer fetthaltigen Mahlzeit, verzehren. Allergene: Fisch. Hinweis: Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Außerhalb der Reichweite von Kindern lagern. Für Kinder unter 11 Jahren nicht geeignet (wegen Verschluckungsgefahr und Dosierung für Kinder ab 11 Jahren und Erwachsene). Bei Einnahme von Blutgerinnungshemmern Rücksprache mit einem Arzt / einer Ärztin halten. EPA und DHA tragen zu einer normalen Herzfunktion und DHA zur Erhaltung der Gehirnfunktion bei. Die positive Wirkung tritt bei einer täglichen Einnahme von mind. 250 mg EPA und DHA (Herzfunktion) und 250 mg DHA (Gehirnfunktion) ein. Vitamin D trägt zu einer normalen Funktion des Immunsystems bei. Vita… Quelle: https://www.esn.com/products/esn-essentials-pro (Stand 26.11.2026).",
    "archived": false,
    "values": {
     "custom_esn_fischoltriglyceride": 2000.0,
@@ -6753,7 +8633,7 @@
    "unit": "Portion(en)",
    "servingAmount": 1.0,
    "dailyDose": false,
-   "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Natrium aus Salz (0,21 g) berechnet. Verzehr: 30 g Pulver mit 250 ml Wasser oder fettarmer Milch in einem Shaker mixen. Je nach Bedarf 1-2 Portionen täglich, z.B. vor oder nach dem Training, oder morgens nach dem Aufstehen. Der ESN FLEXPRESSO lässt sich auch heiß (bis zu 60 °C) genießen. Allergene: Milch, Soja. Hinweis: Erhöhter Koffeingehalt (32 mg / 100 ml). Für Kinder, Schwangere und Stillende nicht geeignet. Der Decaf-Geschmack enthält kein Koffein. Quelle: https://www.esn.com/products/esn-flexpresso-protein-coffee (Stand 28.10.2026).",
+   "notes": "Werte je 1 Portion laut Hersteller (Proteinpulver). Natrium aus Salz (0,21 g) berechnet. Verzehr: 30 g Pulver mit 250 ml Wasser oder fettarmer Milch in einem Shaker mixen. Je nach Bedarf 1-2 Portionen täglich, z.B. vor oder nach dem Training, oder morgens nach dem Aufstehen. Der ESN FLEXPRESSO lässt sich auch heiß (bis zu 60 °C) genießen. Allergene: Milch, Soja. Hinweis: Erhöhter Koffeingehalt (32 mg / 100 ml). Für Kinder, Schwangere und Stillende nicht geeignet. Der Decaf-Geschmack enthält kein Koffein. Quelle: https://www.esn.com/products/esn-flexpresso-protein-coffee (Stand 28.10.2026). Aminosäuren laut Produktseite je 100 g Protein, umgerechnet mit 23 g Protein (ergänzt 26.11.2026).",
    "archived": false,
    "values": {
     "carbs": 2.3,
@@ -6763,7 +8643,25 @@
     "protein": 23.0,
     "saturated_fat": 0.5,
     "sodium": 84.0,
-    "sugar": 1.1
+    "sugar": 1.1,
+    "alanine": 1081.0,
+    "arginine": 506.0,
+    "aspartic_acid": 2300.0,
+    "cysteine": 506.0,
+    "glutamic_acid": 3910.0,
+    "glycine": 368.0,
+    "histidine": 368.0,
+    "isoleucine": 1403.0,
+    "leucine": 2254.0,
+    "lysine": 2047.0,
+    "methionine": 460.0,
+    "phenylalanine": 667.0,
+    "proline": 1242.0,
+    "serine": 1012.0,
+    "threonine": 1472.0,
+    "tryptophan": 345.0,
+    "tyrosine": 621.0,
+    "valine": 1265.0
    }
   },
   {
@@ -7506,7 +9404,7 @@
    "unit": "Portion(en)",
    "servingAmount": 1.0,
    "dailyDose": false,
-   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 9 g Pulver META X mit 450 ml kaltem Wasser im Shaker mixen und genießen. Hinweis: Enthält Koffein (40 mg / Tagesportion) und Synephringehalt (21 mg / Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollte aus allen Nahrungsquellen nicht mehr als 21 mg Synephrin und 800 mg Epigallocatechingallat (EGCG) pro Tag aufgenommen werden. Sollte nicht verzehrt werden, wenn am selben Tag andere Erzeugnisse mit grünem Tee konsumiert werden. Sollte nicht auf nüchternen Magen verzehrt werden. Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Außerhalb der Reichw…",
+   "notes": "Werte je 1 Tagesportion laut Hersteller (Performance (Booster, Aminos, Carbs)). Verzehr: 9 g Pulver META X mit 450 ml kaltem Wasser im Shaker mixen und genießen. Hinweis: Enthält Koffein (40 mg / Tagesportion) und Synephringehalt (21 mg / Tagesportion). Nicht geeignet für Minderjährige, Schwangere, Stillende, Menschen mit Bluthochdruck oder Herz Kreislauferkrankungen. Bei Einnahme von Medikamenten Rücksprache mit einem Arzt halten. Bei Anzeichen von Unruhe oder Nervosität Einnahme beenden. Es sollte aus allen Nahrungsquellen nicht mehr als 21 mg Synephrin und 800 mg Epigallocatechingallat (EGCG) pro Tag aufgenommen werden. Sollte nicht verzehrt werden, wenn am selben Tag andere Erzeugnisse mit grünem Tee konsumiert werden. Sollte nicht auf nüchternen Magen verzehrt werden. Die angegebene tägliche Verzehrmenge darf nicht überschritten werden. Nahrungsergänzungsmittel sind kein Ersatz für eine ausgewogene und abwechslungsreiche Ernährung sowie gesunde Lebensweise. Außerhalb der Reichw… Quelle: https://www.esn.com/products/meta-x-2-0 (Stand 26.11.2026).",
    "archived": false,
    "values": {
     "caffeine": 40.0,
@@ -8367,7 +10265,7 @@
    "unit": "g",
    "servingAmount": 100.0,
    "dailyDose": false,
-   "notes": "Tagesverzehrempfehlung laut Hersteller 4 Stück. Jedes Gummie hat 5 Gramm.",
+   "notes": "Tagesverzehrempfehlung laut Hersteller 4 Stück. Jedes Gummie hat 5 Gramm. Quelle: https://www.esn.com/products/creatine-gummies (Stand 26.11.2026).",
    "archived": false,
    "values": {
     "carbs": 79.0,

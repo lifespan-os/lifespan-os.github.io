@@ -5,9 +5,9 @@
   "key": "prozis",
   "manufacturer": "Prozis",
   "title": "Prozis – Sportnahrung und Gesunde Ernährung",
-  "version": "2026.11.25",
+  "version": "2026.11.26",
   "source": "https://www.prozis.com/at/de",
-  "description": "Alle Produkte der Kategorien Sportnahrung und Gesunde Ernährung von www.prozis.com/at/de (Stand 25.11.2026), je Geschmacksrichtung ein Eintrag: Lebensmittel (je 100 g/ml) und Supplements (je Portion). Nur Werte aus den Nährwertdeklarationen der Produktseiten."
+  "description": "Alle Produkte der Kategorien Sportnahrung und Gesunde Ernährung von www.prozis.com/at/de (Stand 25.11.2026), je Geschmacksrichtung ein Eintrag: Lebensmittel (je 100 g/ml) und Supplements (je Portion). Nur Werte aus den Nährwertdeklarationen der Produktseiten. Aminosäuren ergänzt am 26.11.2026."
  },
  "fields": [
   {
@@ -2061,8 +2061,13 @@
    "saltG": 0.05,
    "portionName": "Portion",
    "portionAmount": 35.0,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/100-whey-hydro-isolate-clear-700g?sku=1804340014 (Stand 25.11.2026), Sorte Orange; Werte je 100 g. Portion laut Tabelle: Pro Portion (3 Messlöffel(35 g)).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/100-whey-hydro-isolate-clear-700g?sku=1804340014 (Stand 25.11.2026), Sorte Orange; Werte je 100 g. Portion laut Tabelle: Pro Portion (3 Messlöffel(35 g)). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 1.175,
+    "leucine": 2.35,
+    "valine": 1.175
+   }
   },
   {
    "id": "019a49ba-1279-74b9-86d3-88c56821bf1f",
@@ -2079,8 +2084,13 @@
    "saltG": 0.05,
    "portionName": "Portion",
    "portionAmount": 35.0,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/100-whey-hydro-isolate-clear-700g?sku=1804340019 (Stand 25.11.2026), Sorte Zitrone; Werte je 100 g. Portion laut Tabelle: Pro Portion (3 Messlöffel(35 g)).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/100-whey-hydro-isolate-clear-700g?sku=1804340019 (Stand 25.11.2026), Sorte Zitrone; Werte je 100 g. Portion laut Tabelle: Pro Portion (3 Messlöffel(35 g)). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 1.175,
+    "leucine": 2.35,
+    "valine": 1.175
+   }
   },
   {
    "id": "019a5996-cdae-7eae-8d7f-5ec8d7e75d22",
@@ -2097,8 +2107,13 @@
    "saltG": 0.09,
    "portionName": "Portion",
    "portionAmount": 35.0,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/100-whey-hydro-isolate-clear-700g?sku=1804340057 (Stand 25.11.2026), Sorte Wassermelone; Werte je 100 g. Portion laut Tabelle: Pro Portion (3 Messlöffel(35 g)).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/100-whey-hydro-isolate-clear-700g?sku=1804340057 (Stand 25.11.2026), Sorte Wassermelone; Werte je 100 g. Portion laut Tabelle: Pro Portion (3 Messlöffel(35 g)). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 1.175,
+    "leucine": 2.35,
+    "valine": 1.175
+   }
   },
   {
    "id": "019a1e3a-6fad-76d2-816d-ca910bffee32",
@@ -2115,8 +2130,13 @@
    "saltG": 0.05,
    "portionName": "Portion",
    "portionAmount": 35.0,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/100-whey-hydro-isolate-clear-700g?sku=1804340200 (Stand 25.11.2026), Sorte Fruchtpunsch; Werte je 100 g. Portion laut Tabelle: Pro Portion (3 Messlöffel(35 g)).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/100-whey-hydro-isolate-clear-700g?sku=1804340200 (Stand 25.11.2026), Sorte Fruchtpunsch; Werte je 100 g. Portion laut Tabelle: Pro Portion (3 Messlöffel(35 g)). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 1.18,
+    "leucine": 2.35,
+    "valine": 1.18
+   }
   },
   {
    "id": "019abab7-420e-71e8-88eb-d9ebfdff07f9",
@@ -2133,8 +2153,13 @@
    "saltG": 0.07,
    "portionName": "Portion",
    "portionAmount": 35.0,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/100-whey-hydro-isolate-clear-700g?sku=1804341791 (Stand 25.11.2026), Sorte Mango und Pfirsich; Werte je 100 g. Portion laut Tabelle: Pro Portion (3 Messlöffel(35 g)).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/100-whey-hydro-isolate-clear-700g?sku=1804341791 (Stand 25.11.2026), Sorte Mango und Pfirsich; Werte je 100 g. Portion laut Tabelle: Pro Portion (3 Messlöffel(35 g)). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 1.175,
+    "leucine": 2.35,
+    "valine": 1.175
+   }
   },
   {
    "id": "019ac70e-8743-72f9-8e09-4a6d58e3e333",
@@ -2817,8 +2842,13 @@
    "saltG": 0.1,
    "portionName": "Portion",
    "portionAmount": 60.0,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/12-x-n.o.-maxshot-60ml (Stand 25.11.2026); Werte je 100 ml. Portion laut Tabelle: Pro Portion (1 Flasche(n)(60 ml)).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/12-x-n.o.-maxshot-60ml (Stand 25.11.2026); Werte je 100 ml. Portion laut Tabelle: Pro Portion (1 Flasche(n)(60 ml)). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "glycine": 3.33,
+    "phenylalanine": 0.017,
+    "tyrosine": 0.022
+   }
   },
   {
    "id": "019ae8d5-d8b3-7faf-8f57-453e254bcba6",
@@ -7839,8 +7869,13 @@
    "saltG": 0.1,
    "portionName": "Portion",
    "portionAmount": 60.0,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/n.o.-maxshot-60ml-x-2 (Stand 25.11.2026); Werte je 100 ml. Portion laut Tabelle: Pro Portion (1 Flasche(n)(60 ml)).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/n.o.-maxshot-60ml-x-2 (Stand 25.11.2026); Werte je 100 ml. Portion laut Tabelle: Pro Portion (1 Flasche(n)(60 ml)). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "glycine": 3.33,
+    "phenylalanine": 0.017,
+    "tyrosine": 0.022
+   }
   },
   {
    "id": "019aeab4-ac3b-7977-828a-153bc2450bb0",
@@ -9189,8 +9224,13 @@
    "saltG": 0.9,
    "portionName": null,
    "portionAmount": null,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/pre-workout-protein-mug-cake-kaffee-und-karamell-400-g (Stand 25.11.2026); Werte je 100 g. Werte laut Seite für das zubereitete Produkt (Bei Zubereitung nach Anleitung).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/pre-workout-protein-mug-cake-kaffee-und-karamell-400-g (Stand 25.11.2026); Werte je 100 g. Werte laut Seite für das zubereitete Produkt (Bei Zubereitung nach Anleitung). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 0.296,
+    "leucine": 0.593,
+    "valine": 0.296
+   }
   },
   {
    "id": "019aaa02-a220-7502-8eba-3d63693f3ce3",
@@ -9207,8 +9247,13 @@
    "saltG": 1.1,
    "portionName": null,
    "portionAmount": null,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/pre-workout-protein-mug-cake-schokolade-400-g (Stand 25.11.2026); Werte je 100 g. Werte laut Seite für das zubereitete Produkt (Bei Zubereitung nach Anleitung).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/pre-workout-protein-mug-cake-schokolade-400-g (Stand 25.11.2026); Werte je 100 g. Werte laut Seite für das zubereitete Produkt (Bei Zubereitung nach Anleitung). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 0.296,
+    "leucine": 0.593,
+    "valine": 0.296
+   }
   },
   {
    "id": "019ab46e-4f48-7c0f-827e-39acd52058ae",
@@ -9225,8 +9270,13 @@
    "saltG": 0.92,
    "portionName": null,
    "portionAmount": null,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/pre-workout-protein-mug-cake-spekulatius-400-g (Stand 25.11.2026); Werte je 100 g. Werte laut Seite für das zubereitete Produkt (Bei Zubereitung nach Anleitung).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/pre-workout-protein-mug-cake-spekulatius-400-g (Stand 25.11.2026); Werte je 100 g. Werte laut Seite für das zubereitete Produkt (Bei Zubereitung nach Anleitung). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 0.296,
+    "leucine": 0.593,
+    "valine": 0.296
+   }
   },
   {
    "id": "019a958b-8370-78f1-8b9f-9bfc6256f11d",
@@ -9243,8 +9293,13 @@
    "saltG": 0.72,
    "portionName": null,
    "portionAmount": null,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/pre-workout-protein-mug-cake-vanille-und-schokoladenstuckchen-400-g (Stand 25.11.2026); Werte je 100 g. Werte laut Seite für das zubereitete Produkt (Bei Zubereitung nach Anleitung).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/pre-workout-protein-mug-cake-vanille-und-schokoladenstuckchen-400-g (Stand 25.11.2026); Werte je 100 g. Werte laut Seite für das zubereitete Produkt (Bei Zubereitung nach Anleitung). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 0.296,
+    "leucine": 0.593,
+    "valine": 0.296
+   }
   },
   {
    "id": "019a93d8-23f2-7ddf-8f37-1007fc9d2c84",
@@ -9297,8 +9352,13 @@
    "saltG": 0.19,
    "portionName": "Portion",
    "portionAmount": 200.0,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/prime-mass-gainer-2722-g?sku=1605930002 (Stand 25.11.2026), Sorte Schokolade; Werte je 100 g. Portion laut Tabelle: Pro Portion (4 Messlöffel(200 g)).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/prime-mass-gainer-2722-g?sku=1605930002 (Stand 25.11.2026), Sorte Schokolade; Werte je 100 g. Portion laut Tabelle: Pro Portion (4 Messlöffel(200 g)). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 0.25,
+    "leucine": 0.5,
+    "valine": 0.25
+   }
   },
   {
    "id": "019aa1b1-03e3-73d6-8a90-9e0af4720672",
@@ -9315,8 +9375,13 @@
    "saltG": 0.26,
    "portionName": "Portion",
    "portionAmount": 200.0,
-   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/prime-mass-gainer-2722-g?sku=1605930006 (Stand 25.11.2026), Sorte Vanille; Werte je 100 g. Portion laut Tabelle: Pro Portion (4 Messlöffel(200 g)).",
-   "archived": false
+   "notes": "Angaben laut https://www.prozis.com/at/de/prozis/prime-mass-gainer-2722-g?sku=1605930006 (Stand 25.11.2026), Sorte Vanille; Werte je 100 g. Portion laut Tabelle: Pro Portion (4 Messlöffel(200 g)). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 0.25,
+    "leucine": 0.5,
+    "valine": 0.25
+   }
   },
   {
    "id": "019a8c32-fae2-749d-8847-aa2fbc8d62c4",

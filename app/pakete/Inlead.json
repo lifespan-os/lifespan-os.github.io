@@ -5,9 +5,9 @@
   "key": "inlead",
   "manufacturer": "Inlead",
   "title": "Inlead – Saucen, Syrup, Proteine, Food und Vitalstoffe",
-  "version": "2026.11.18",
+  "version": "2026.11.26",
   "source": "https://inlead.de",
-  "description": "Alle Sorten der Kategorien Saucen, Syrup, Proteine und Food (→ Lebensmitteldatenbank) sowie Vitalstoffe (→ Supplementdatenbank) laut inlead.de (Stand 18.11.2026), je Sorte ein Eintrag. Nur Werte aus den Nährwerttabellen der Produktseiten."
+  "description": "Alle Sorten der Kategorien Saucen, Syrup, Proteine und Food (→ Lebensmitteldatenbank) sowie Vitalstoffe (→ Supplementdatenbank) laut inlead.de (Stand 18.11.2026), je Sorte ein Eintrag. Nur Werte aus den Nährwerttabellen der Produktseiten. Aminosäuren ergänzt am 26.11.2026."
  },
  "fields": [
   {
@@ -495,8 +495,28 @@
    "saltG": 0.08,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-clear-whey-isolate?variant=54424883822930 (Stand 18.11.2026), Sorte Lemon Ice Tea; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-clear-whey-isolate?variant=54424883822930 (Stand 18.11.2026), Sorte Lemon Ice Tea; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 82 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 4.346,
+    "arginine": 1.722,
+    "aspartic_acid": 9.02,
+    "cysteine": 1.394,
+    "glutamic_acid": 14.76,
+    "glycine": 1.148,
+    "histidine": 1.23,
+    "isoleucine": 5.33,
+    "leucine": 9.02,
+    "lysine": 7.872,
+    "methionine": 1.804,
+    "phenylalanine": 2.378,
+    "proline": 5.084,
+    "serine": 3.772,
+    "threonine": 5.822,
+    "tryptophan": 1.394,
+    "tyrosine": 2.214,
+    "valine": 4.674
+   }
   },
   {
    "id": "019a1449-3989-7d6f-80ad-a2a8cb37aae7",
@@ -513,8 +533,28 @@
    "saltG": 0.07,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-clear-whey-isolate?variant=54424883855698 (Stand 18.11.2026), Sorte Mango Maracuja; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-clear-whey-isolate?variant=54424883855698 (Stand 18.11.2026), Sorte Mango Maracuja; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 83 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 4.399,
+    "arginine": 1.743,
+    "aspartic_acid": 9.13,
+    "cysteine": 1.411,
+    "glutamic_acid": 14.94,
+    "glycine": 1.162,
+    "histidine": 1.245,
+    "isoleucine": 5.395,
+    "leucine": 9.13,
+    "lysine": 7.968,
+    "methionine": 1.826,
+    "phenylalanine": 2.407,
+    "proline": 5.146,
+    "serine": 3.818,
+    "threonine": 5.893,
+    "tryptophan": 1.411,
+    "tyrosine": 2.241,
+    "valine": 4.731
+   }
   },
   {
    "id": "019a6a86-7f1e-7b91-89fe-c1105cf4191e",
@@ -531,8 +571,28 @@
    "saltG": 0.08,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-clear-whey-isolate?variant=54424883888466 (Stand 18.11.2026), Sorte Tropical; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-clear-whey-isolate?variant=54424883888466 (Stand 18.11.2026), Sorte Tropical; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 83 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 4.399,
+    "arginine": 1.743,
+    "aspartic_acid": 9.13,
+    "cysteine": 1.411,
+    "glutamic_acid": 14.94,
+    "glycine": 1.162,
+    "histidine": 1.245,
+    "isoleucine": 5.395,
+    "leucine": 9.13,
+    "lysine": 7.968,
+    "methionine": 1.826,
+    "phenylalanine": 2.407,
+    "proline": 5.146,
+    "serine": 3.818,
+    "threonine": 5.893,
+    "tryptophan": 1.411,
+    "tyrosine": 2.241,
+    "valine": 4.731
+   }
   },
   {
    "id": "019a8a18-202d-7bb4-8685-6fb42a25d48d",
@@ -549,8 +609,28 @@
    "saltG": 0.08,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-clear-whey-isolate?variant=54424883921234 (Stand 18.11.2026), Sorte Cherry; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-clear-whey-isolate?variant=54424883921234 (Stand 18.11.2026), Sorte Cherry; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 83 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 4.399,
+    "arginine": 1.743,
+    "aspartic_acid": 9.13,
+    "cysteine": 1.411,
+    "glutamic_acid": 14.94,
+    "glycine": 1.162,
+    "histidine": 1.245,
+    "isoleucine": 5.395,
+    "leucine": 9.13,
+    "lysine": 7.968,
+    "methionine": 1.826,
+    "phenylalanine": 2.407,
+    "proline": 5.146,
+    "serine": 3.818,
+    "threonine": 5.893,
+    "tryptophan": 1.411,
+    "tyrosine": 2.241,
+    "valine": 4.731
+   }
   },
   {
    "id": "019ab89c-3f12-780c-89e0-d8c5a18d8db0",
@@ -567,8 +647,28 @@
    "saltG": 0.08,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-clear-whey-isolate?variant=54424883954002 (Stand 18.11.2026), Sorte Green Apple; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-clear-whey-isolate?variant=54424883954002 (Stand 18.11.2026), Sorte Green Apple; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 81 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 4.293,
+    "arginine": 1.701,
+    "aspartic_acid": 8.91,
+    "cysteine": 1.377,
+    "glutamic_acid": 14.58,
+    "glycine": 1.134,
+    "histidine": 1.215,
+    "isoleucine": 5.265,
+    "leucine": 8.91,
+    "lysine": 7.776,
+    "methionine": 1.782,
+    "phenylalanine": 2.349,
+    "proline": 5.022,
+    "serine": 3.726,
+    "threonine": 5.751,
+    "tryptophan": 1.377,
+    "tyrosine": 2.187,
+    "valine": 4.617
+   }
   },
   {
    "id": "019a4ca1-c7a0-7cfe-8811-1e1f1aac7180",
@@ -1755,8 +1855,28 @@
    "saltG": 0.56,
    "portionName": null,
    "portionAmount": null,
-   "notes": "Angaben laut https://inlead.de/products/inlead-protein-sahne?variant=54424897192274 (Stand 18.11.2026); Werte je 100 g.",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-protein-sahne?variant=54424897192274 (Stand 18.11.2026); Werte je 100 g. Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 76 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.116,
+    "arginine": 2.28,
+    "aspartic_acid": 7.068,
+    "cysteine": 1.292,
+    "glutamic_acid": 13.832,
+    "glycine": 1.368,
+    "histidine": 1.596,
+    "isoleucine": 4.408,
+    "leucine": 7.676,
+    "lysine": 6.46,
+    "methionine": 1.596,
+    "phenylalanine": 2.964,
+    "proline": 5.472,
+    "serine": 3.8,
+    "threonine": 4.18,
+    "tryptophan": 1.216,
+    "tyrosine": 2.888,
+    "valine": 4.712
+   }
   },
   {
    "id": "019a8d82-f6c6-780a-8b22-d72d0bc071f0",
@@ -2079,8 +2199,28 @@
    "saltG": 3.0,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424862294354 (Stand 18.11.2026), Sorte Spekulatius; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424862294354 (Stand 18.11.2026), Sorte Spekulatius; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 73 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.139,
+    "arginine": 6.059,
+    "aspartic_acid": 8.322,
+    "cysteine": 0.803,
+    "glutamic_acid": 13.286,
+    "glycine": 3.066,
+    "histidine": 1.898,
+    "isoleucine": 3.431,
+    "leucine": 5.986,
+    "lysine": 4.964,
+    "methionine": 0.876,
+    "phenylalanine": 4.015,
+    "proline": 3.504,
+    "serine": 3.723,
+    "threonine": 2.774,
+    "tryptophan": 0.876,
+    "tyrosine": 2.774,
+    "valine": 3.65
+   }
   },
   {
    "id": "019a2f06-66f5-75f9-8248-a4f63b0808ce",
@@ -2097,8 +2237,28 @@
    "saltG": 3.0,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424862327122 (Stand 18.11.2026), Sorte Vanillekipferl; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424862327122 (Stand 18.11.2026), Sorte Vanillekipferl; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 72 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.096,
+    "arginine": 5.976,
+    "aspartic_acid": 8.208,
+    "cysteine": 0.792,
+    "glutamic_acid": 13.104,
+    "glycine": 3.024,
+    "histidine": 1.872,
+    "isoleucine": 3.384,
+    "leucine": 5.904,
+    "lysine": 4.896,
+    "methionine": 0.864,
+    "phenylalanine": 3.96,
+    "proline": 3.456,
+    "serine": 3.672,
+    "threonine": 2.736,
+    "tryptophan": 0.864,
+    "tyrosine": 2.736,
+    "valine": 3.6
+   }
   },
   {
    "id": "019adf75-1a6e-708f-84cb-d482dd36fbc8",
@@ -2115,8 +2275,28 @@
    "saltG": 3.5,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424877433170 (Stand 18.11.2026), Sorte Creamy Vanilla; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424877433170 (Stand 18.11.2026), Sorte Creamy Vanilla; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 73 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.139,
+    "arginine": 6.059,
+    "aspartic_acid": 8.322,
+    "cysteine": 0.803,
+    "glutamic_acid": 13.359,
+    "glycine": 3.066,
+    "histidine": 1.898,
+    "isoleucine": 3.431,
+    "leucine": 5.986,
+    "lysine": 4.964,
+    "methionine": 0.876,
+    "phenylalanine": 4.015,
+    "proline": 3.504,
+    "serine": 3.723,
+    "threonine": 2.774,
+    "tryptophan": 0.876,
+    "tyrosine": 2.774,
+    "valine": 3.65
+   }
   },
   {
    "id": "019a4fa9-5255-7a08-8882-a62b95a3bc2e",
@@ -2133,8 +2313,28 @@
    "saltG": 3.6,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424877465938 (Stand 18.11.2026), Sorte Cinnamon Cereal; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424877465938 (Stand 18.11.2026), Sorte Cinnamon Cereal; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 75 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.225,
+    "arginine": 6.225,
+    "aspartic_acid": 8.55,
+    "cysteine": 0.825,
+    "glutamic_acid": 13.725,
+    "glycine": 3.15,
+    "histidine": 1.95,
+    "isoleucine": 3.525,
+    "leucine": 6.15,
+    "lysine": 5.1,
+    "methionine": 0.9,
+    "phenylalanine": 4.125,
+    "proline": 3.6,
+    "serine": 3.825,
+    "threonine": 2.85,
+    "tryptophan": 0.9,
+    "tyrosine": 2.85,
+    "valine": 3.75
+   }
   },
   {
    "id": "019a4294-87e4-7545-8075-b18d027a85ee",
@@ -2151,8 +2351,28 @@
    "saltG": 3.4,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424877498706 (Stand 18.11.2026), Sorte Creamy Chocolate; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424877498706 (Stand 18.11.2026), Sorte Creamy Chocolate; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 69 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.967,
+    "arginine": 5.727,
+    "aspartic_acid": 7.866,
+    "cysteine": 0.759,
+    "glutamic_acid": 12.627,
+    "glycine": 2.898,
+    "histidine": 1.794,
+    "isoleucine": 3.243,
+    "leucine": 5.658,
+    "lysine": 4.692,
+    "methionine": 0.828,
+    "phenylalanine": 3.795,
+    "proline": 3.312,
+    "serine": 3.519,
+    "threonine": 2.622,
+    "tryptophan": 0.828,
+    "tyrosine": 2.622,
+    "valine": 3.45
+   }
   },
   {
    "id": "019a401d-c9eb-7f30-8796-5b6cccea98d1",
@@ -2169,8 +2389,28 @@
    "saltG": 3.4,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424877531474 (Stand 18.11.2026), Sorte Nougat Pralines; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424877531474 (Stand 18.11.2026), Sorte Nougat Pralines; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 69 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.967,
+    "arginine": 5.658,
+    "aspartic_acid": 7.797,
+    "cysteine": 0.828,
+    "glutamic_acid": 12.627,
+    "glycine": 2.898,
+    "histidine": 1.794,
+    "isoleucine": 3.243,
+    "leucine": 5.589,
+    "lysine": 4.554,
+    "methionine": 0.828,
+    "phenylalanine": 3.726,
+    "proline": 3.312,
+    "serine": 3.519,
+    "threonine": 2.622,
+    "tryptophan": 0.828,
+    "tyrosine": 2.553,
+    "valine": 3.45
+   }
   },
   {
    "id": "019ae339-2218-7e11-8c9b-19f25f97422a",
@@ -2187,8 +2427,28 @@
    "saltG": 4.3,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424877859154 (Stand 18.11.2026), Sorte Caramel Popcorn; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-vegan-protein?variant=54424877859154 (Stand 18.11.2026), Sorte Caramel Popcorn; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 67 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.881,
+    "arginine": 5.628,
+    "aspartic_acid": 7.504,
+    "cysteine": 0.804,
+    "glutamic_acid": 12.261,
+    "glycine": 2.814,
+    "histidine": 1.742,
+    "isoleucine": 3.149,
+    "leucine": 5.494,
+    "lysine": 4.489,
+    "methionine": 0.804,
+    "phenylalanine": 3.685,
+    "proline": 3.149,
+    "serine": 3.35,
+    "threonine": 2.479,
+    "tryptophan": 0.804,
+    "tyrosine": 2.546,
+    "valine": 3.35
+   }
   },
   {
    "id": "019a170a-1447-7a14-8b1c-080293bfddaa",
@@ -2205,8 +2465,28 @@
    "saltG": 2.04,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-whey-protein?variant=54424818286930 (Stand 18.11.2026), Sorte Butter Biscuit; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 300 ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-whey-protein?variant=54424818286930 (Stand 18.11.2026), Sorte Butter Biscuit; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 300 ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 74 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.552,
+    "arginine": 2.072,
+    "aspartic_acid": 8.14,
+    "cysteine": 1.702,
+    "glutamic_acid": 12.58,
+    "glycine": 1.332,
+    "histidine": 1.406,
+    "isoleucine": 4.44,
+    "leucine": 8.14,
+    "lysine": 6.808,
+    "methionine": 1.554,
+    "phenylalanine": 2.368,
+    "proline": 3.996,
+    "serine": 3.774,
+    "threonine": 4.736,
+    "tryptophan": 1.332,
+    "tyrosine": 2.22,
+    "valine": 4.07
+   }
   },
   {
    "id": "019a2bd6-9ae3-7121-8027-9a0e144c92b8",
@@ -2223,8 +2503,28 @@
    "saltG": 2.04,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-whey-protein?variant=54424878842194 (Stand 18.11.2026), Sorte Cinnamon Cereal; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 300 ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-whey-protein?variant=54424878842194 (Stand 18.11.2026), Sorte Cinnamon Cereal; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 300 ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 73 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.504,
+    "arginine": 2.044,
+    "aspartic_acid": 8.03,
+    "cysteine": 1.679,
+    "glutamic_acid": 12.41,
+    "glycine": 1.314,
+    "histidine": 1.387,
+    "isoleucine": 4.38,
+    "leucine": 8.03,
+    "lysine": 6.716,
+    "methionine": 1.533,
+    "phenylalanine": 2.336,
+    "proline": 3.942,
+    "serine": 3.723,
+    "threonine": 4.672,
+    "tryptophan": 1.314,
+    "tyrosine": 2.19,
+    "valine": 4.015
+   }
   },
   {
    "id": "019ae684-43cc-7751-841d-d89074309b29",
@@ -2241,8 +2541,28 @@
    "saltG": 2.05,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-whey-protein?variant=54424878874962 (Stand 18.11.2026), Sorte Pistachio White Chocolate; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 300 ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-whey-protein?variant=54424878874962 (Stand 18.11.2026), Sorte Pistachio White Chocolate; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 300 ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 75 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.6,
+    "arginine": 2.1,
+    "aspartic_acid": 8.25,
+    "cysteine": 1.725,
+    "glutamic_acid": 12.75,
+    "glycine": 1.35,
+    "histidine": 1.425,
+    "isoleucine": 4.5,
+    "leucine": 8.25,
+    "lysine": 6.9,
+    "methionine": 1.575,
+    "phenylalanine": 2.4,
+    "proline": 4.05,
+    "serine": 3.825,
+    "threonine": 4.8,
+    "tryptophan": 1.35,
+    "tyrosine": 2.25,
+    "valine": 4.125
+   }
   },
   {
    "id": "019aab1c-547c-7799-8999-04e88b003109",
@@ -2259,8 +2579,28 @@
    "saltG": 1.36,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-whey-protein?variant=54424916197714 (Stand 18.11.2026), Sorte Chocolate Nougat; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-whey-protein?variant=54424916197714 (Stand 18.11.2026), Sorte Chocolate Nougat; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 70,6 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.389,
+    "arginine": 2.047,
+    "aspartic_acid": 7.554,
+    "cysteine": 1.553,
+    "glutamic_acid": 11.931,
+    "glycine": 1.341,
+    "histidine": 1.341,
+    "isoleucine": 4.165,
+    "leucine": 7.695,
+    "lysine": 6.354,
+    "methionine": 1.483,
+    "phenylalanine": 2.33,
+    "proline": 3.812,
+    "serine": 3.601,
+    "threonine": 4.518,
+    "tryptophan": 1.271,
+    "tyrosine": 2.118,
+    "valine": 3.883
+   }
   },
   {
    "id": "019a0a98-267c-7623-8c0d-52bfe4ea5765",
@@ -2277,8 +2617,28 @@
    "saltG": 1.35,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-whey-protein?variant=54424916230482 (Stand 18.11.2026), Sorte Double Chocolate; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-whey-protein?variant=54424916230482 (Stand 18.11.2026), Sorte Double Chocolate; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 70,6 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.389,
+    "arginine": 2.047,
+    "aspartic_acid": 7.554,
+    "cysteine": 1.553,
+    "glutamic_acid": 11.931,
+    "glycine": 1.341,
+    "histidine": 1.341,
+    "isoleucine": 4.165,
+    "leucine": 7.766,
+    "lysine": 6.354,
+    "methionine": 1.483,
+    "phenylalanine": 2.33,
+    "proline": 3.812,
+    "serine": 3.601,
+    "threonine": 4.518,
+    "tryptophan": 1.271,
+    "tyrosine": 2.118,
+    "valine": 3.954
+   }
   },
   {
    "id": "019a1aa2-353c-7c01-82bc-3cdeac762526",
@@ -2295,8 +2655,28 @@
    "saltG": 0.75,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://inlead.de/products/inlead-whey-protein?variant=54424916263250 (Stand 18.11.2026), Sorte Vanilla Ice Cream; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser).",
-   "archived": false
+   "notes": "Angaben laut https://inlead.de/products/inlead-whey-protein?variant=54424916263250 (Stand 18.11.2026), Sorte Vanilla Ice Cream; Werte je 100 g. Portion laut Tabelle: pro Portion (30 g in 200ml Wasser). Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 75,6 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.629,
+    "arginine": 2.117,
+    "aspartic_acid": 8.014,
+    "cysteine": 1.739,
+    "glutamic_acid": 12.776,
+    "glycine": 1.361,
+    "histidine": 1.436,
+    "isoleucine": 4.536,
+    "leucine": 8.392,
+    "lysine": 6.955,
+    "methionine": 1.588,
+    "phenylalanine": 2.419,
+    "proline": 4.082,
+    "serine": 3.856,
+    "threonine": 4.838,
+    "tryptophan": 1.361,
+    "tyrosine": 2.268,
+    "valine": 4.158
+   }
   }
  ],
  "supplements": [

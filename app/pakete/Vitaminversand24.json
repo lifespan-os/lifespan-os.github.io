@@ -5,9 +5,9 @@
   "key": "vitaminversand24",
   "manufacturer": "Vitaminversand24",
   "title": "Vitaminversand24 – Supplements (viele Marken)",
-  "version": "2026.11.16",
+  "version": "2026.11.26",
   "source": "https://www.vitaminversand24.com",
-  "description": "Produkte laut vitaminversand24.com (u. a. vit4ever, GEN). Stand 16.11.2026. Nur Werte aus den Nährwerttabellen der Produktseiten."
+  "description": "Produkte laut vitaminversand24.com (u. a. vit4ever, GEN). Stand 16.11.2026. Nur Werte aus den Nährwerttabellen der Produktseiten. Aminosäuren ergänzt am 26.11.2026."
  },
  "fields": [
   {
@@ -2398,7 +2398,26 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte Pro Portion (30 g) laut Shop (Proteine). Sorten: Bananenbrot, Banana Milkshake, Hazelnut Sandwich, Mango Lassi, Minze + Dunkle Schokolade, Schwarzwälder Kirschtorte. Verzehrmenge laut Shop: 30 Gramm. Aminosäuren aus dem Profil je 100 g Eiweiß umgerechnet. Natrium aus Salz (0,2 g) berechnet. Verzehr: 30 g Pulver (= 1 Portion) in 300 ml Wasser oder fettarme Milch einrühren oder mixen. 1 bis 3 Portionen am Tag, z. B. morgens nach dem Aufstehen und nach dem Training. Allergene (Stichwortsuche): Milch. Hinweis: Hinweis: Enthält von Natur aus Zucker. Quelle: https://vitaminversand24.com/products/gen_elite_whey (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3586,667 mg; L-Arginin 2443,333 mg; L-Asparaginsäure (Aspartat) 8396,667 mg; L-Cystin 1373,333 mg; L-Glutamin 12900 mg; Glycin 1146,667 mg; L-Histidin 1146,667 mg; L-Isoleucin 4196,667 mg; L-Leucin 8626,667 mg; L-Lysin 7176,667 mg; L-Methionin 1603,333 mg; L-Phenylalanin 2673,333 mg; L-Prolin 3893,333 mg; L-Serin 4196,…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.588,
+    "arginine": 2.443,
+    "aspartic_acid": 8.396,
+    "glutamic_acid": 12.9,
+    "glycine": 1.145,
+    "histidine": 1.145,
+    "isoleucine": 4.198,
+    "leucine": 8.625,
+    "lysine": 7.175,
+    "methionine": 1.603,
+    "phenylalanine": 2.672,
+    "proline": 3.893,
+    "serine": 4.198,
+    "threonine": 3.969,
+    "tryptophan": 2.214,
+    "tyrosine": 2.901,
+    "valine": 3.893
+   }
   },
   {
    "id": "d0520eba-7dd9-48a2-a3ad-ade727a27b7f",
@@ -2452,7 +2471,26 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte Pro Portion (30 g) laut Shop (Proteine). Sorten: Chocolate, Strawberry Banana, Vanilla Ice Cream, Apfel Strudel, Cookies & Cream, Grießbrei Kirsch, Neutral, Milch mit Honig, Weiße Schokolade, Milch Schokolade, Pistazie, Salted Caramel, Banana + Peanut Butter, Pistazie + Chocolate, Cinnamon Cereals, Strawberry Milk, Milchreis, Pistazie + Weiße Schokolade, Blaubeere Milchshake. Verzehrmenge laut Shop: 30 Gramm. Aminosäuren aus dem Profil je 100 g Eiweiß umgerechnet. Natrium aus Salz (0,27 g) berechnet. Verzehr: 30 g Pulver (= 1 Portion) in 300 ml Wasser* oder fettarme Milch einrühren oder mixen. 1 bis 3 Portionen am Tag, z. B. morgens nach dem Aufstehen und nach dem Training Allergene (Stichwortsuche): Milch. Quelle: https://vitaminversand24.com/products/gen_whey_complex (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3290 mg; L-Arginin 2240 mg; L-Asparaginsäure (Aspartat) 7700 mg; L-Cystin 1260 mg; L-Glutamin 11830 mg; Glycin 1050 mg; L-Histidin 1050 mg; L-Isoleucin …",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.29,
+    "arginine": 2.24,
+    "aspartic_acid": 7.7,
+    "glutamic_acid": 11.83,
+    "glycine": 1.05,
+    "histidine": 1.05,
+    "isoleucine": 3.85,
+    "leucine": 7.91,
+    "lysine": 6.58,
+    "methionine": 1.47,
+    "phenylalanine": 2.45,
+    "proline": 3.57,
+    "serine": 3.85,
+    "threonine": 3.64,
+    "tryptophan": 2.03,
+    "tyrosine": 2.66,
+    "valine": 3.57
+   }
   },
   {
    "id": "01a18a2f-b817-77a4-a943-9b5f0efc973b",
@@ -2470,7 +2508,26 @@
    "portionName": "Portion",
    "portionAmount": 30.0,
    "notes": "Werte Pro Portion (30 g) laut Shop (Proteine). Sorten: Amaretto Americano, Caramel, Classic Coffee, Cinnamon Latte, Dark Coffee, Double Chocolate. Verzehrmenge laut Shop: 30 INHALT. Aminosäuren aus dem Profil je 100 g Eiweiß umgerechnet. Natrium aus Salz (0,5 g) berechnet. Verzehr: 30 g Pulver (1 Messlöffel, innenliegend) mit 350 ml Wasser oder fettarmer Milch in einem Shaker mixen und genießen. Je nach Bedarf 1-2 Portionen täglich, z.B. nach (oder vor) dem Training und morgens nach dem Aufstehen. Der WHEYPRESSO lässt sich kalt oder auch heiß (bis zu 60 °C) genießen. Allergene (Stichwortsuche): Milch. Quelle: https://vitaminversand24.com/products/wheypresso (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: L-Alanin 3750 mg; L-Arginin 1726,667 mg; L-Asparaginsäure (Aspartat) 8100 mg; Koffein 266,667 mg; L-Cystin 1500 mg; L-Glutamin 13050 mg; Glycin 1273,333 mg; L-Histidin 1273,333 mg; L-Isoleucin 4650 mg; Laktase 4500 FCC; L-Leucin 7800 mg; L-Lysin 6826,667 mg; L-Methionin 1573,333 m…",
-   "archived": false
+   "archived": false,
+   "aminos": {
+    "alanine": 3.75,
+    "arginine": 1.8,
+    "aspartic_acid": 8.1,
+    "glutamic_acid": 13.125,
+    "glycine": 1.275,
+    "histidine": 1.275,
+    "isoleucine": 4.65,
+    "leucine": 7.8,
+    "lysine": 6.9,
+    "methionine": 1.575,
+    "phenylalanine": 2.25,
+    "proline": 4.575,
+    "serine": 3.675,
+    "threonine": 5.175,
+    "tryptophan": 1.125,
+    "tyrosine": 2.1,
+    "valine": 4.35
+   }
   },
   {
    "id": "01a18a2f-b857-7047-8f19-9bf2e016aa0d",
@@ -2595,8 +2652,28 @@
    "saltG": 0.33,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Werte Pro Portion (30 g) laut Shop (Proteine). Sorten: Classic, Caramel, Lotus Latte, Matcha, Nougat. Verzehrmenge laut Shop: 30 Gramm. Natrium aus Salz (0,1 g) berechnet. Verzehr: 30 g Pulver (1 Messlöffel) mit 350 ml Wasser oder fettarmer Milch in einem Shaker mixen und genießen. Je nach Bedarf 1-2 Portionen täglich, z.B. nach (oder vor) dem Training und morgens nach dem Aufstehen. Der WHEYPRESSO lässt sich kalt oder auch heiß (bis zu 60 °C) genießen. Hinweis: Erhöhter Koffeingehalt (80 mg pro 30 g Portion). Für Kinder und schwangere oder stillende Frauen nicht empfohlen. Allergene (Stichwortsuche): Milch. Quelle: https://vitaminversand24.com/products/vit4_barista_whey (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: Koffein 266,667 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "notes": "Werte Pro Portion (30 g) laut Shop (Proteine). Sorten: Classic, Caramel, Lotus Latte, Matcha, Nougat. Verzehrmenge laut Shop: 30 Gramm. Natrium aus Salz (0,1 g) berechnet. Verzehr: 30 g Pulver (1 Messlöffel) mit 350 ml Wasser oder fettarmer Milch in einem Shaker mixen und genießen. Je nach Bedarf 1-2 Portionen täglich, z.B. nach (oder vor) dem Training und morgens nach dem Aufstehen. Der WHEYPRESSO lässt sich kalt oder auch heiß (bis zu 60 °C) genießen. Hinweis: Erhöhter Koffeingehalt (80 mg pro 30 g Portion). Für Kinder und schwangere oder stillende Frauen nicht empfohlen. Allergene (Stichwortsuche): Milch. Quelle: https://vitaminversand24.com/products/vit4_barista_whey (Stand 28.10.2026). Weitere Inhaltsstoffe je 100 g: Koffein 266,667 mg. Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g). Aminosäuren laut Produktseite je 100 g Protein, umgerechnet mit 69,67 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.926,
+    "arginine": 6.34,
+    "aspartic_acid": 7.942,
+    "cysteine": 0.766,
+    "glutamic_acid": 12.192,
+    "glycine": 2.856,
+    "histidine": 1.254,
+    "isoleucine": 3.135,
+    "leucine": 5.643,
+    "lysine": 5.086,
+    "methionine": 1.045,
+    "phenylalanine": 3.693,
+    "proline": 3.274,
+    "serine": 3.344,
+    "threonine": 2.508,
+    "tryptophan": 0.766,
+    "tyrosine": 2.438,
+    "valine": 3.832
+   }
   },
   {
    "id": "01a18a2f-cc08-75eb-b634-29e75c6ba8f7",
@@ -2829,8 +2906,28 @@
    "saltG": 0.42,
    "portionName": null,
    "portionAmount": null,
-   "notes": "Nährwerte je 100 g laut Shop. Allergene: Milch. Quelle: https://vitaminversand24.com/products/vit4_yummy_protein_rice_banana (Stand 28.10.2026).",
-   "archived": false
+   "notes": "Nährwerte je 100 g laut Shop. Allergene: Milch. Quelle: https://vitaminversand24.com/products/vit4_yummy_protein_rice_banana (Stand 28.10.2026). Aminosäuren laut Produktseite je 100 g Protein, umgerechnet mit 44,66 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.099,
+    "arginine": 1.429,
+    "aspartic_acid": 4.913,
+    "cysteine": 0.804,
+    "glutamic_acid": 7.548,
+    "glycine": 0.67,
+    "histidine": 0.67,
+    "isoleucine": 2.456,
+    "leucine": 5.047,
+    "lysine": 4.198,
+    "methionine": 0.938,
+    "phenylalanine": 1.563,
+    "proline": 2.278,
+    "serine": 2.456,
+    "threonine": 2.322,
+    "tryptophan": 1.295,
+    "tyrosine": 1.697,
+    "valine": 2.278
+   }
   },
   {
    "id": "a41ee74c-713f-465a-ad28-59c3b17007b7",
@@ -2883,8 +2980,28 @@
    "saltG": 0.67,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Werte Pro 30 g* laut Shop (Proteine). Sorten: Chocolate, Cookie Dough, Golden Nougat Praline, Lemon Cheesecake, Caramel Biscuit, Stracciatella, Vanilla Dream, Choco Country Crunch, Kiba, Pistazie, Wild Caramel Crunch, Dark Cookie Crumble, Birthday Cake, Cinnamon Rice Pudding, Cinnamon Cereal, Honey Milk, Matcha Iced Latte, Pumpkin Spice Latte. Verzehrmenge laut Shop: 30 Gramm. Natrium aus Salz (0,2 g) berechnet. Verzehr: 30 g Pulver (= 1 Portion) in 300 ml Wasser* oder fettarme Milch einrühren oder mixen. 1 bis 3 Portionen am Tag, z. B. morgens nach dem Aufstehen und nach dem Training. Allergene (Stichwortsuche): Milch. Quelle: https://vitaminversand24.com/products/vit4_yummy_whey (Stand 28.10.2026). Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g).",
-   "archived": false
+   "notes": "Werte Pro 30 g* laut Shop (Proteine). Sorten: Chocolate, Cookie Dough, Golden Nougat Praline, Lemon Cheesecake, Caramel Biscuit, Stracciatella, Vanilla Dream, Choco Country Crunch, Kiba, Pistazie, Wild Caramel Crunch, Dark Cookie Crumble, Birthday Cake, Cinnamon Rice Pudding, Cinnamon Cereal, Honey Milk, Matcha Iced Latte, Pumpkin Spice Latte. Verzehrmenge laut Shop: 30 Gramm. Natrium aus Salz (0,2 g) berechnet. Verzehr: 30 g Pulver (= 1 Portion) in 300 ml Wasser* oder fettarme Milch einrühren oder mixen. 1 bis 3 Portionen am Tag, z. B. morgens nach dem Aufstehen und nach dem Training. Allergene (Stichwortsuche): Milch. Quelle: https://vitaminversand24.com/products/vit4_yummy_whey (Stand 28.10.2026). Aus der Supplementdatenbank übernommen (umgerechnet von 30 g auf 100 g). Aminosäuren laut Produktseite je 100 g Protein, umgerechnet mit 72 g Protein (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.384,
+    "arginine": 2.304,
+    "aspartic_acid": 7.92,
+    "cysteine": 1.296,
+    "glutamic_acid": 12.168,
+    "glycine": 1.08,
+    "histidine": 1.08,
+    "isoleucine": 3.888,
+    "leucine": 8.064,
+    "lysine": 6.696,
+    "methionine": 1.512,
+    "phenylalanine": 2.52,
+    "proline": 3.672,
+    "serine": 3.888,
+    "threonine": 3.744,
+    "tryptophan": 2.088,
+    "tyrosine": 2.376,
+    "valine": 3.6
+   }
   }
  ],
  "supplements": [
@@ -4452,7 +4569,7 @@
    "unit": "Portion(en)",
    "servingAmount": 1.0,
    "dailyDose": false,
-   "notes": "Werte Pro 1 g laut Shop (Sport & Performance). Verzehrmenge laut Shop: 10 Gramm. Natrium aus Salz (0,01 g) berechnet. Verzehr: Empfohlene Tagesdosis: 1 g = 1 Messlöffel. Nimm täglich 1 g (entspricht 1 Scoop) mit reichlich Wasser zu dir. Die Anwendung von OxyStorm® Amaranthus-Extrakt ist äußerst vielseitig. Du kannst ihn problemlos in Wasser, Fruchtsaft oder ein bestehendes Pre-Workout-Produkt mischen. Gib eine Portion in deine bevorzugte Flüssigkeit und rühre gut um, um eine homogene Mischung zu erhalten. So kannst du die Wirkung individuell auf deine Vorlieben und Trainingsbedürfnisse abstimmen. Die Einnahme erfolgt idealerweise etwa 30 Minuten vor dem Training, um die optimale Wirkung zu erzielen. Das gibt dir ausreichend Zeit, dich aufzuwärmen und auf dein Training vorzubereiten. Achte darauf, während des Tages und beim Training ausreichend Flüssigkeit zu nehmen, um die volle Potenz von OxyStorm® Amaranthus-Extrakt zu nutzen. Eine gute Hydration ist entscheidend, um die besten Er…",
+   "notes": "Werte Pro 1 g laut Shop (Sport & Performance). Verzehrmenge laut Shop: 10 Gramm. Natrium aus Salz (0,01 g) berechnet. Verzehr: Empfohlene Tagesdosis: 1 g = 1 Messlöffel. Nimm täglich 1 g (entspricht 1 Scoop) mit reichlich Wasser zu dir. Die Anwendung von OxyStorm® Amaranthus-Extrakt ist äußerst vielseitig. Du kannst ihn problemlos in Wasser, Fruchtsaft oder ein bestehendes Pre-Workout-Produkt mischen. Gib eine Portion in deine bevorzugte Flüssigkeit und rühre gut um, um eine homogene Mischung zu erhalten. So kannst du die Wirkung individuell auf deine Vorlieben und Trainingsbedürfnisse abstimmen. Die Einnahme erfolgt idealerweise etwa 30 Minuten vor dem Training, um die optimale Wirkung zu erzielen. Das gibt dir ausreichend Zeit, dich aufzuwärmen und auf dein Training vorzubereiten. Achte darauf, während des Tages und beim Training ausreichend Flüssigkeit zu nehmen, um die volle Potenz von OxyStorm® Amaranthus-Extrakt zu nutzen. Eine gute Hydration ist entscheidend, um die besten Er… Quelle: https://vitaminversand24.com/products/gen_oxystorm (Stand 26.11.2026).",
    "archived": false,
    "values": {
     "carbs": 0.33,

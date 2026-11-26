@@ -15,31 +15,31 @@
    "key": "bodylab24",
    "manufacturer": "Bodylab24",
    "title": "Bodylab24-Shop – Lebensmittel und Supplements (viele Marken)",
-   "version": "2026.11.16",
+   "version": "2026.11.26",
    "file": "Bodylab24.json",
    "foods": 522,
    "supplements": 1495,
-   "bytes": 2279192
+   "bytes": 2366038
   },
   {
    "key": "esn",
    "manufacturer": "ESN",
    "title": "ESN – Lebensmittel und Supplements",
-   "version": "2026.11.16",
+   "version": "2026.11.26",
    "file": "ESN.json",
    "foods": 176,
    "supplements": 180,
-   "bytes": 416171
+   "bytes": 458705
   },
   {
    "key": "evo",
    "manufacturer": "EVO Sports Fuel",
    "title": "EVO Sports Fuel – Lebensmittel und Supplements",
-   "version": "2026.11.25",
+   "version": "2026.11.26",
    "file": "EVO.json",
    "foods": 50,
    "supplements": 23,
-   "bytes": 51893
+   "bytes": 68785
   },
   {
    "key": "foodtastic",
@@ -55,51 +55,51 @@
    "key": "gymbeam-shop",
    "manufacturer": "GymBeam",
    "title": "GymBeam-Shop – Lebensmittel, Protein und Sportnahrung (viele Marken)",
-   "version": "2026.11.16",
+   "version": "2026.11.26",
    "file": "GymBeam-Shop.json",
    "foods": 1059,
    "supplements": 1416,
-   "bytes": 1340618
+   "bytes": 1441428
   },
   {
    "key": "hsn",
    "manufacturer": "HSN",
    "title": "HSN – Sportnahrung und Gesunde Ernährung",
-   "version": "2026.11.25",
+   "version": "2026.11.26",
    "file": "HSN.json",
    "foods": 626,
    "supplements": 485,
-   "bytes": 689420
+   "bytes": 883923
   },
   {
    "key": "inlead",
    "manufacturer": "Inlead",
    "title": "Inlead – Saucen, Syrup, Proteine, Food und Vitalstoffe",
-   "version": "2026.11.18",
+   "version": "2026.11.26",
    "file": "Inlead.json",
    "foods": 117,
    "supplements": 23,
-   "bytes": 82227
+   "bytes": 93573
   },
   {
    "key": "ironmaxx",
    "manufacturer": "IronMaxx",
    "title": "IronMaxx – Lebensmittel und Supplements",
-   "version": "2026.11.16",
+   "version": "2026.11.26",
    "file": "IronMaxx.json",
    "foods": 286,
    "supplements": 100,
-   "bytes": 237262
+   "bytes": 292630
   },
   {
    "key": "more-nutrition",
    "manufacturer": "More Nutrition",
    "title": "More Nutrition – Lebensmittel und Supplements",
-   "version": "2026.11.16",
+   "version": "2026.11.26",
    "file": "More-Nutrition.json",
    "foods": 248,
    "supplements": 36,
-   "bytes": 248885
+   "bytes": 271795
   },
   {
    "key": "mucki",
@@ -115,41 +115,41 @@
    "key": "myprotein",
    "manufacturer": "Myprotein",
    "title": "Myprotein – Protein, Supplemente, Vitamine, Food und Vegan",
-   "version": "2026.11.25",
+   "version": "2026.11.26",
    "file": "Myprotein.json",
    "foods": 352,
    "supplements": 155,
-   "bytes": 355048
+   "bytes": 355375
   },
   {
    "key": "peak-performance",
    "manufacturer": "PEAK",
    "title": "PEAK Performance – Lebensmittel und Supplements",
-   "version": "2026.11.16",
+   "version": "2026.11.26",
    "file": "PEAK-Performance.json",
    "foods": 33,
    "supplements": 142,
-   "bytes": 155670
+   "bytes": 181267
   },
   {
    "key": "proteini-si",
    "manufacturer": "Proteini.si",
    "title": "Proteini.si – Lebensmittel und Supplements (viele Marken)",
-   "version": "2026.11.16",
+   "version": "2026.11.26",
    "file": "Proteini.json",
    "foods": 694,
    "supplements": 766,
-   "bytes": 948902
+   "bytes": 978882
   },
   {
    "key": "prozis",
    "manufacturer": "Prozis",
    "title": "Prozis – Sportnahrung und Gesunde Ernährung",
-   "version": "2026.11.25",
+   "version": "2026.11.26",
    "file": "Prozis.json",
    "foods": 852,
    "supplements": 439,
-   "bytes": 792452
+   "bytes": 794445
   },
   {
    "key": "ruehl24",
@@ -165,11 +165,11 @@
    "key": "sinob",
    "manufacturer": "#sinob",
    "title": "#sinob – Lebensmittel und Supplements",
-   "version": "2026.11.16",
+   "version": "2026.11.26",
    "file": "SINOB.json",
    "foods": 98,
    "supplements": 39,
-   "bytes": 91089
+   "bytes": 91282
   },
   {
    "key": "sweets",
@@ -195,11 +195,11 @@
    "key": "vitaminversand24",
    "manufacturer": "Vitaminversand24",
    "title": "Vitaminversand24 – Supplements (viele Marken)",
-   "version": "2026.11.16",
+   "version": "2026.11.26",
    "file": "Vitaminversand24.json",
    "foods": 31,
    "supplements": 321,
-   "bytes": 314154
+   "bytes": 317154
   }
  ]
 }

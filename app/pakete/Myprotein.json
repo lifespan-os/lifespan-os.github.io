@@ -5,9 +5,9 @@
   "key": "myprotein",
   "manufacturer": "Myprotein",
   "title": "Myprotein – Protein, Supplemente, Vitamine, Food und Vegan",
-  "version": "2026.11.25",
+  "version": "2026.11.26",
   "source": "https://www.myprotein.at",
-  "description": "Produkte der Rubriken Protein, Supplemente, Vitamine, Food, Bars & Snacks und Vegan von www.myprotein.at (Stand 25.11.2026), je Geschmacksrichtung ein Eintrag: Protein, Food und Kohlenhydrate → Lebensmitteldatenbank; Supplemente und Vitamine → Supplementdatenbank. Nur Werte aus den Nährwertangaben der Produktseiten."
+  "description": "Produkte der Rubriken Protein, Supplemente, Vitamine, Food, Bars & Snacks und Vegan von www.myprotein.at (Stand 25.11.2026), je Geschmacksrichtung ein Eintrag: Protein, Food und Kohlenhydrate → Lebensmitteldatenbank; Supplemente und Vitamine → Supplementdatenbank. Nur Werte aus den Nährwertangaben der Produktseiten. Aminosäuren ergänzt am 26.11.2026."
  },
  "fields": [
   {
@@ -5367,8 +5367,13 @@
    "saltG": 1.4,
    "portionName": "Portion",
    "portionAmount": 35.0,
-   "notes": "Angaben laut https://www.myprotein.at/p/sporternahrung/myprotein-the-whey-elite-we/17628448/?variation=16283895 (Stand 25.11.2026), Sorte Milk Chocolate (Informed Sport); Werte je 100 g. Portion laut Tabelle: Pro Portion (35 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.myprotein.at/p/sporternahrung/myprotein-the-whey-elite-we/17628448/?variation=16283895 (Stand 25.11.2026), Sorte Milk Chocolate (Informed Sport); Werte je 100 g. Portion laut Tabelle: Pro Portion (35 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 4.5,
+    "leucine": 7.4,
+    "valine": 4.1
+   }
   },
   {
    "id": "019af833-88ba-7635-8c64-fc691ddaad02",
@@ -6537,8 +6542,13 @@
    "saltG": 1.4,
    "portionName": "Portion",
    "portionAmount": 34.0,
-   "notes": "Angaben laut https://www.myprotein.at/p/sporternahrung/the-whey-geschmacksrichtung-pistazie/14273017/?variation=14273018 (Stand 25.11.2026); Werte je 100 g. Portion laut Tabelle: Pro 34g-Portion.",
-   "archived": false
+   "notes": "Angaben laut https://www.myprotein.at/p/sporternahrung/the-whey-geschmacksrichtung-pistazie/14273017/?variation=14273018 (Stand 25.11.2026); Werte je 100 g. Portion laut Tabelle: Pro 34g-Portion. Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 4.8,
+    "leucine": 8.1,
+    "valine": 4.3
+   }
   },
   {
    "id": "019a3d9b-04f5-7aa9-8ee7-33d990952630",

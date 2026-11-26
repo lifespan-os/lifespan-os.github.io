@@ -5,9 +5,9 @@
   "key": "sinob",
   "manufacturer": "#sinob",
   "title": "#sinob – Lebensmittel und Supplements",
-  "version": "2026.11.16",
+  "version": "2026.11.26",
   "source": "https://sinob.de",
-  "description": "Produkte laut sinob.de, je Sorte ein Eintrag. Stand 16.11.2026. Nur Werte aus den Nährwerttabellen der Produktseiten."
+  "description": "Produkte laut sinob.de, je Sorte ein Eintrag. Stand 16.11.2026. Nur Werte aus den Nährwerttabellen der Produktseiten. Aminosäuren ergänzt am 26.11.2026."
  },
  "fields": [
   {
@@ -2830,7 +2830,7 @@
    "unit": "g",
    "servingAmount": 15.0,
    "dailyDose": false,
-   "notes": "Angaben laut https://sinob.de/products/kollagen-flex-glow?variant=48667471970585 (Stand 12.11.2026); Werte je Portion (15 g). Weitere Angaben: Salz 0,08 g; Kollagenhydrolysat 12,5 g; Natriumhyaluronat 317 mg; Bambusblattextrakt 87,0 mg; – davon Kieselsäure 65,2 mg; – davon Silicium 30,0 mg; L-Glutaminsäure 1,2 g.",
+   "notes": "Angaben laut https://sinob.de/products/kollagen-flex-glow?variant=48667471970585 (Stand 12.11.2026); Werte je Portion (15 g). Weitere Angaben: Salz 0,08 g; Kollagenhydrolysat 12,5 g; Natriumhyaluronat 317 mg; Bambusblattextrakt 87,0 mg; – davon Kieselsäure 65,2 mg; – davon Silicium 30,0 mg; L-Glutaminsäure 1,2 g. Aminosäuren laut Produktseite je 100 g (Seite 76 g Protein), umgerechnet auf 11,4 g Protein je Portion (ergänzt 26.11.2026).",
    "archived": false,
    "values": {
     "alanine": 980.0,
@@ -2860,7 +2860,8 @@
     "tyrosine": 90.0,
     "valine": 270.0,
     "vit_b7": 1500.0,
-    "zinc": 10.0
+    "zinc": 10.0,
+    "glutamic_acid": 1155.0
    }
   },
   {

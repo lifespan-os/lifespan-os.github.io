@@ -5,9 +5,9 @@
   "key": "proteini-si",
   "manufacturer": "Proteini.si",
   "title": "Proteini.si – Lebensmittel und Supplements (viele Marken)",
-  "version": "2026.11.16",
+  "version": "2026.11.26",
   "source": "https://www.proteini.si/en/",
-  "description": "Protein, Snacks, Sporternährung und Vitamine laut proteini.si, Marke laut Produkt. Stand 16.11.2026. Nur Werte aus den Nährwerttabellen der Produktseiten."
+  "description": "Protein, Snacks, Sporternährung und Vitamine laut proteini.si, Marke laut Produkt. Stand 16.11.2026. Nur Werte aus den Nährwerttabellen der Produktseiten. Aminosäuren ergänzt am 26.11.2026."
  },
  "fields": [
   {
@@ -3993,8 +3993,27 @@
    "saltG": 0.09,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/ironmaxx-clear-whey-isolate-zero-400g#green-apple (Stand 14.11.2026), Sorte Green Apple; Werte je 100 g. Portion laut Tabelle: Per serving (30g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/ironmaxx-clear-whey-isolate-zero-400g#green-apple (Stand 14.11.2026), Sorte Green Apple; Werte je 100 g. Portion laut Tabelle: Per serving (30g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 4.214,
+    "arginine": 1.67,
+    "aspartic_acid": 8.427,
+    "cysteine": 1.352,
+    "glycine": 1.113,
+    "histidine": 1.193,
+    "isoleucine": 5.168,
+    "leucine": 8.507,
+    "lysine": 7.632,
+    "methionine": 1.67,
+    "phenylalanine": 2.306,
+    "proline": 4.929,
+    "serine": 3.657,
+    "threonine": 5.645,
+    "tryptophan": 1.352,
+    "tyrosine": 2.147,
+    "valine": 4.532
+   }
   },
   {
    "id": "019ae183-14c6-7a81-8485-e34449a31094",
@@ -4011,8 +4030,27 @@
    "saltG": 0.07,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/ironmaxx-clear-whey-isolate-zero-400g#lemon-ice-tea (Stand 14.11.2026), Sorte Lemon Ice Tea; Werte je 100 g. Portion laut Tabelle: Per serving (30g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/ironmaxx-clear-whey-isolate-zero-400g#lemon-ice-tea (Stand 14.11.2026), Sorte Lemon Ice Tea; Werte je 100 g. Portion laut Tabelle: Per serving (30g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 4.33,
+    "arginine": 1.716,
+    "aspartic_acid": 8.66,
+    "cysteine": 1.389,
+    "glycine": 1.144,
+    "histidine": 1.226,
+    "isoleucine": 5.311,
+    "leucine": 8.742,
+    "lysine": 7.843,
+    "methionine": 1.797,
+    "phenylalanine": 2.369,
+    "proline": 5.065,
+    "serine": 3.758,
+    "threonine": 5.801,
+    "tryptophan": 1.389,
+    "tyrosine": 2.206,
+    "valine": 4.657
+   }
   },
   {
    "id": "019a3320-600c-7896-81c9-7860bb1bd960",
@@ -4029,8 +4067,27 @@
    "saltG": 0.1,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/ironmaxx-clear-whey-isolate-zero-400g#peach-ice-tea (Stand 14.11.2026), Sorte Peach Ice Tea; Werte je 100 g. Portion laut Tabelle: Per serving (30g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/ironmaxx-clear-whey-isolate-zero-400g#peach-ice-tea (Stand 14.11.2026), Sorte Peach Ice Tea; Werte je 100 g. Portion laut Tabelle: Per serving (30g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 5.165,
+    "arginine": 1.999,
+    "aspartic_acid": 10.329,
+    "cysteine": 1.666,
+    "glycine": 1.416,
+    "histidine": 1.499,
+    "isoleucine": 6.248,
+    "leucine": 10.413,
+    "lysine": 9.33,
+    "methionine": 2.083,
+    "phenylalanine": 2.832,
+    "proline": 5.998,
+    "serine": 4.415,
+    "threonine": 6.914,
+    "tryptophan": 1.666,
+    "tyrosine": 2.582,
+    "valine": 5.581
+   }
   },
   {
    "id": "019a8845-3214-7634-87bf-09b55af3e5c1",
@@ -4047,8 +4104,27 @@
    "saltG": 0.07,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/ironmaxx-clear-whey-isolate-zero-400g#strawberry-mojito (Stand 14.11.2026), Sorte Strawberry Mojito; Werte je 100 g. Portion laut Tabelle: Per serving (30g). Als 0 eingetragen (Seite: „kleiner als“): Fat < 0,5 g.",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/ironmaxx-clear-whey-isolate-zero-400g#strawberry-mojito (Stand 14.11.2026), Sorte Strawberry Mojito; Werte je 100 g. Portion laut Tabelle: Per serving (30g). Als 0 eingetragen (Seite: „kleiner als“): Fat < 0,5 g. Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 4.362,
+    "arginine": 1.728,
+    "aspartic_acid": 8.724,
+    "cysteine": 1.399,
+    "glycine": 1.152,
+    "histidine": 1.235,
+    "isoleucine": 5.35,
+    "leucine": 8.806,
+    "lysine": 7.901,
+    "methionine": 1.811,
+    "phenylalanine": 2.387,
+    "proline": 5.103,
+    "serine": 3.786,
+    "threonine": 5.843,
+    "tryptophan": 1.399,
+    "tyrosine": 2.222,
+    "valine": 4.691
+   }
   },
   {
    "id": "019a7da2-4156-78ad-8678-eb6849170577",
@@ -4065,8 +4141,27 @@
    "saltG": 0.07,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/ironmaxx-clear-whey-isolate-zero-400g#wild-berries (Stand 14.11.2026), Sorte Wild Berries; Werte je 100 g. Portion laut Tabelle: Per serving (30g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/ironmaxx-clear-whey-isolate-zero-400g#wild-berries (Stand 14.11.2026), Sorte Wild Berries; Werte je 100 g. Portion laut Tabelle: Per serving (30g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 4.214,
+    "arginine": 1.67,
+    "aspartic_acid": 8.427,
+    "cysteine": 1.352,
+    "glycine": 1.113,
+    "histidine": 1.193,
+    "isoleucine": 5.168,
+    "leucine": 8.507,
+    "lysine": 7.632,
+    "methionine": 1.749,
+    "phenylalanine": 2.306,
+    "proline": 4.929,
+    "serine": 3.657,
+    "threonine": 5.645,
+    "tryptophan": 1.352,
+    "tyrosine": 2.147,
+    "valine": 4.532
+   }
   },
   {
    "id": "019a882b-d737-745a-8cb3-04e5cc3817f4",
@@ -4083,8 +4178,27 @@
    "saltG": 0.68,
    "portionName": null,
    "portionAmount": null,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/ironmaxx-coconut-milk-protein-500g#coconut-milk-style (Stand 14.11.2026), Sorte Coconut Milk Style; Werte je 100 g.",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/ironmaxx-coconut-milk-protein-500g#coconut-milk-style (Stand 14.11.2026), Sorte Coconut Milk Style; Werte je 100 g. Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.86,
+    "arginine": 2.474,
+    "aspartic_acid": 6.493,
+    "cysteine": 1.082,
+    "glycine": 1.391,
+    "histidine": 1.778,
+    "isoleucine": 4.174,
+    "leucine": 7.575,
+    "lysine": 6.339,
+    "methionine": 1.933,
+    "phenylalanine": 3.169,
+    "proline": 6.184,
+    "serine": 4.097,
+    "threonine": 3.942,
+    "tryptophan": 1.16,
+    "tyrosine": 3.324,
+    "valine": 4.561
+   }
   },
   {
    "id": "019aa3fb-8403-7e04-8c6b-a30b49b73ac4",
@@ -4461,8 +4575,27 @@
    "saltG": 1.69,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/drinks/instant-drinks/ironmaxx-proteccino-bag-500g#cappuccino (Stand 14.11.2026), Sorte Cappuccino; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/drinks/instant-drinks/ironmaxx-proteccino-bag-500g#cappuccino (Stand 14.11.2026), Sorte Cappuccino; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.302,
+    "arginine": 2.064,
+    "aspartic_acid": 7.018,
+    "cysteine": 1.445,
+    "glycine": 1.307,
+    "histidine": 1.307,
+    "isoleucine": 4.059,
+    "leucine": 7.568,
+    "lysine": 6.054,
+    "methionine": 1.376,
+    "phenylalanine": 2.27,
+    "proline": 3.371,
+    "serine": 3.509,
+    "threonine": 4.403,
+    "tryptophan": 1.238,
+    "tyrosine": 2.133,
+    "valine": 3.853
+   }
   },
   {
    "id": "019a1f05-2c5e-716a-8aa1-c1d2b26e9346",
@@ -4479,8 +4612,27 @@
    "saltG": 1.73,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/drinks/instant-drinks/ironmaxx-proteccino-bag-500g#chococcino (Stand 14.11.2026), Sorte Chococcino; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/drinks/instant-drinks/ironmaxx-proteccino-bag-500g#chococcino (Stand 14.11.2026), Sorte Chococcino; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.235,
+    "arginine": 2.089,
+    "aspartic_acid": 6.942,
+    "cysteine": 1.415,
+    "glycine": 1.281,
+    "histidine": 1.281,
+    "isoleucine": 3.977,
+    "leucine": 7.374,
+    "lysine": 5.864,
+    "methionine": 1.348,
+    "phenylalanine": 2.224,
+    "proline": 3.235,
+    "serine": 3.437,
+    "threonine": 4.314,
+    "tryptophan": 1.213,
+    "tyrosine": 2.089,
+    "valine": 3.774
+   }
   },
   {
    "id": "019ac471-fe16-7e76-84bb-5fb13f67f0a8",
@@ -4497,8 +4649,27 @@
    "saltG": 1.53,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/drinks/instant-drinks/ironmaxx-proteccino-bag-500g#hazelnut-mocha (Stand 14.11.2026), Sorte Hazelnut Mocha; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/drinks/instant-drinks/ironmaxx-proteccino-bag-500g#hazelnut-mocha (Stand 14.11.2026), Sorte Hazelnut Mocha; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.366,
+    "arginine": 2.13,
+    "aspartic_acid": 7.076,
+    "cysteine": 1.511,
+    "glycine": 1.374,
+    "histidine": 1.374,
+    "isoleucine": 4.053,
+    "leucine": 7.626,
+    "lysine": 6.046,
+    "methionine": 1.374,
+    "phenylalanine": 2.336,
+    "proline": 3.435,
+    "serine": 3.504,
+    "threonine": 4.397,
+    "tryptophan": 1.305,
+    "tyrosine": 2.198,
+    "valine": 3.916
+   }
   },
   {
    "id": "019a9315-d1ff-73fd-80ed-35ea17112333",
@@ -4515,8 +4686,27 @@
    "saltG": 1.7,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/drinks/instant-drinks/ironmaxx-proteccino-bag-500g#pumpkin-spiced-macchiato (Stand 14.11.2026), Sorte Pumpkin Spiced Macchiato; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/drinks/instant-drinks/ironmaxx-proteccino-bag-500g#pumpkin-spiced-macchiato (Stand 14.11.2026), Sorte Pumpkin Spiced Macchiato; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.366,
+    "arginine": 2.061,
+    "aspartic_acid": 7.145,
+    "cysteine": 1.511,
+    "glycine": 1.374,
+    "histidine": 1.374,
+    "isoleucine": 4.122,
+    "leucine": 7.626,
+    "lysine": 6.114,
+    "methionine": 1.374,
+    "phenylalanine": 2.336,
+    "proline": 3.435,
+    "serine": 3.504,
+    "threonine": 4.466,
+    "tryptophan": 1.305,
+    "tyrosine": 2.198,
+    "valine": 3.916
+   }
   },
   {
    "id": "019accbc-5e79-70f2-8091-87ba64dc93e0",
@@ -4533,8 +4723,27 @@
    "saltG": 1.4,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/drinks/instant-drinks/ironmaxx-proteccino-bag-500g#vanilla-chai-latte (Stand 14.11.2026), Sorte Vanilla Chai Latte; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/drinks/instant-drinks/ironmaxx-proteccino-bag-500g#vanilla-chai-latte (Stand 14.11.2026), Sorte Vanilla Chai Latte; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.376,
+    "arginine": 2.067,
+    "aspartic_acid": 7.097,
+    "cysteine": 1.516,
+    "glycine": 1.378,
+    "histidine": 1.378,
+    "isoleucine": 4.134,
+    "leucine": 7.648,
+    "lysine": 6.132,
+    "methionine": 1.378,
+    "phenylalanine": 2.343,
+    "proline": 3.445,
+    "serine": 3.514,
+    "threonine": 4.479,
+    "tryptophan": 1.24,
+    "tyrosine": 2.205,
+    "valine": 3.927
+   }
   },
   {
    "id": "019a8242-2daa-709f-86cc-afa73faa5bb9",
@@ -4551,8 +4760,27 @@
    "saltG": 1.73,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/drinks/instant-drinks/ironmaxx-proteccino-500g#chocolate (Stand 14.11.2026), Sorte Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/drinks/instant-drinks/ironmaxx-proteccino-500g#chocolate (Stand 14.11.2026), Sorte Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.235,
+    "arginine": 2.089,
+    "aspartic_acid": 6.942,
+    "cysteine": 1.415,
+    "glycine": 1.281,
+    "histidine": 1.281,
+    "isoleucine": 3.977,
+    "leucine": 7.374,
+    "lysine": 5.864,
+    "methionine": 1.348,
+    "phenylalanine": 2.224,
+    "proline": 3.235,
+    "serine": 3.437,
+    "threonine": 4.314,
+    "tryptophan": 1.213,
+    "tyrosine": 2.089,
+    "valine": 3.774
+   }
   },
   {
    "id": "019a082c-ea42-72b8-8de6-5b4ab18da476",
@@ -4983,8 +5211,28 @@
    "saltG": 0.2,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/ironmaxx-protein-pudding-300g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Portion laut Tabelle: per portion (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/ironmaxx-protein-pudding-300g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Portion laut Tabelle: per portion (30 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.7,
+    "arginine": 3.6,
+    "aspartic_acid": 6.6,
+    "cysteine": 0.5,
+    "glutamic_acid": 20.8,
+    "glycine": 1.7,
+    "histidine": 3.0,
+    "isoleucine": 5.0,
+    "leucine": 9.1,
+    "lysine": 7.4,
+    "methionine": 2.7,
+    "phenylalanine": 4.8,
+    "proline": 9.6,
+    "serine": 5.6,
+    "threonine": 3.8,
+    "tryptophan": 1.3,
+    "tyrosine": 5.1,
+    "valine": 6.7
+   }
   },
   {
    "id": "019a3913-31cc-75ad-8592-4d5d62534d4c",
@@ -5055,8 +5303,27 @@
    "saltG": 1.4,
    "portionName": "Portion",
    "portionAmount": 50.0,
-   "notes": "Angaben laut https://www.proteini.si/en/snacks/muesli/ironmaxx-pumping-billy-oat-protein-500g#cookies-cream (Stand 14.11.2026), Sorte Cookies & Cream; Werte je 100 g. Portion laut Tabelle: Per serving (50 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/snacks/muesli/ironmaxx-pumping-billy-oat-protein-500g#cookies-cream (Stand 14.11.2026), Sorte Cookies & Cream; Werte je 100 g. Portion laut Tabelle: Per serving (50 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 0.998,
+    "arginine": 1.734,
+    "aspartic_acid": 2.732,
+    "cysteine": 0.428,
+    "glycine": 1.022,
+    "histidine": 0.665,
+    "isoleucine": 1.045,
+    "leucine": 1.853,
+    "lysine": 1.425,
+    "methionine": 0.309,
+    "phenylalanine": 1.235,
+    "proline": 1.33,
+    "serine": 1.14,
+    "threonine": 0.95,
+    "tryptophan": 0.262,
+    "tyrosine": 0.832,
+    "valine": 1.069
+   }
   },
   {
    "id": "019abaf0-100b-7f87-84cc-7ed424f3b34e",
@@ -5721,8 +5988,15 @@
    "saltG": 0.0,
    "portionName": null,
    "portionAmount": null,
-   "notes": "Angaben laut https://www.proteini.si/en/energy-boosters/energy-isotonic-drinks/nutrend-carbonex-12-tabs (Stand 14.11.2026); Werte je 100 g.",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/energy-boosters/energy-isotonic-drinks/nutrend-carbonex-12-tabs (Stand 14.11.2026); Werte je 100 g. Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 7.143,
+    "isoleucine": 0.56,
+    "leucine": 1.12,
+    "tyrosine": 0.891,
+    "valine": 0.56
+   }
   },
   {
    "id": "019a3e09-108c-7147-8b46-8cce4543cf5d",
@@ -7053,8 +7327,28 @@
    "saltG": 1.6,
    "portionName": "Portion",
    "portionAmount": 32.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/nutrend-whey-core-1800g#chocolate-cocoa (Stand 14.11.2026), Sorte Chocolate + Cocoa; Werte je 100 g. Portion laut Tabelle: Per serving (32g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/nutrend-whey-core-1800g#chocolate-cocoa (Stand 14.11.2026), Sorte Chocolate + Cocoa; Werte je 100 g. Portion laut Tabelle: Per serving (32g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.009,
+    "arginine": 1.854,
+    "aspartic_acid": 6.973,
+    "cysteine": 1.643,
+    "glutamic_acid": 10.836,
+    "glycine": 10.518,
+    "histidine": 1.296,
+    "isoleucine": 3.351,
+    "leucine": 7.577,
+    "lysine": 6.263,
+    "methionine": 1.421,
+    "phenylalanine": 2.315,
+    "proline": 3.008,
+    "serine": 2.784,
+    "threonine": 3.186,
+    "tryptophan": 1.259,
+    "tyrosine": 2.195,
+    "valine": 3.133
+   }
   },
   {
    "id": "019a512c-807f-7077-8d73-09e1b677d676",
@@ -7071,8 +7365,28 @@
    "saltG": 1.6,
    "portionName": "Portion",
    "portionAmount": 32.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/nutrend-whey-core-1800g#cookies (Stand 14.11.2026), Sorte Cookies; Werte je 100 g. Portion laut Tabelle: Per serving (32g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/nutrend-whey-core-1800g#cookies (Stand 14.11.2026), Sorte Cookies; Werte je 100 g. Portion laut Tabelle: Per serving (32g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.975,
+    "arginine": 1.806,
+    "aspartic_acid": 6.888,
+    "cysteine": 1.631,
+    "glutamic_acid": 10.679,
+    "glycine": 10.484,
+    "histidine": 1.284,
+    "isoleucine": 3.326,
+    "leucine": 7.528,
+    "lysine": 6.244,
+    "methionine": 1.401,
+    "phenylalanine": 2.276,
+    "proline": 2.976,
+    "serine": 2.743,
+    "threonine": 3.151,
+    "tryptophan": 1.225,
+    "tyrosine": 2.159,
+    "valine": 3.093
+   }
   },
   {
    "id": "019aef37-179d-7bdf-8275-0777b097b748",
@@ -7089,8 +7403,28 @@
    "saltG": 1.6,
    "portionName": "Portion",
    "portionAmount": 32.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/nutrend-whey-core-1800g#strawberry (Stand 14.11.2026), Sorte Strawberry; Werte je 100 g. Portion laut Tabelle: Per serving (32g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/nutrend-whey-core-1800g#strawberry (Stand 14.11.2026), Sorte Strawberry; Werte je 100 g. Portion laut Tabelle: Per serving (32g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.975,
+    "arginine": 1.806,
+    "aspartic_acid": 6.888,
+    "cysteine": 1.631,
+    "glutamic_acid": 10.679,
+    "glycine": 10.484,
+    "histidine": 1.284,
+    "isoleucine": 3.326,
+    "leucine": 7.528,
+    "lysine": 6.244,
+    "methionine": 1.401,
+    "phenylalanine": 2.276,
+    "proline": 2.976,
+    "serine": 2.743,
+    "threonine": 3.151,
+    "tryptophan": 1.225,
+    "tyrosine": 2.159,
+    "valine": 3.093
+   }
   },
   {
    "id": "019a3a97-2358-7ecd-886c-891755eb975f",
@@ -7107,8 +7441,28 @@
    "saltG": 1.6,
    "portionName": "Portion",
    "portionAmount": 32.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/nutrend-whey-core-1800g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Portion laut Tabelle: Per serving (32g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/nutrend-whey-core-1800g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Portion laut Tabelle: Per serving (32g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.975,
+    "arginine": 1.806,
+    "aspartic_acid": 6.888,
+    "cysteine": 1.631,
+    "glutamic_acid": 10.679,
+    "glycine": 10.484,
+    "histidine": 1.284,
+    "isoleucine": 3.326,
+    "leucine": 7.528,
+    "lysine": 6.244,
+    "methionine": 1.401,
+    "phenylalanine": 2.276,
+    "proline": 2.976,
+    "serine": 2.743,
+    "threonine": 3.151,
+    "tryptophan": 1.225,
+    "tyrosine": 2.159,
+    "valine": 3.093
+   }
   },
   {
    "id": "019afec6-4575-734b-8c53-9abaaa0edc98",
@@ -7431,8 +7785,13 @@
    "saltG": 0.33,
    "portionName": "Portion",
    "portionAmount": 80.0,
-   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-fast-gain/olimp-gainerator-1000g#strawberry (Stand 14.11.2026), Sorte Strawberry; Werte je 100 g. Portion laut Tabelle: 1 serving (80g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-fast-gain/olimp-gainerator-1000g#strawberry (Stand 14.11.2026), Sorte Strawberry; Werte je 100 g. Portion laut Tabelle: 1 serving (80g). Aminosäuren laut Produktseite je Portion (Seite 16 g Protein), umgerechnet auf 20 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 1.25,
+    "leucine": 2.26,
+    "valine": 1.37
+   }
   },
   {
    "id": "019a0a0e-f235-74b7-8edf-13cd86a4932b",
@@ -7449,8 +7808,13 @@
    "saltG": 0.33,
    "portionName": "Portion",
    "portionAmount": 80.0,
-   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-fast-gain/olimp-gainerator-1000g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Portion laut Tabelle: 1 serving (80g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-fast-gain/olimp-gainerator-1000g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Portion laut Tabelle: 1 serving (80g). Aminosäuren laut Produktseite je Portion (Seite 16 g Protein), umgerechnet auf 20 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "isoleucine": 1.25,
+    "leucine": 2.26,
+    "valine": 1.37
+   }
   },
   {
    "id": "019a5cd9-88d7-7272-8750-368c8651b7dd",
@@ -7557,8 +7921,28 @@
    "saltG": 0.55,
    "portionName": null,
    "portionAmount": null,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/beef-protein/olimp-gold-beef-pro-amino-300-tabs (Stand 14.11.2026); Werte je 100 g.",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/beef-protein/olimp-gold-beef-pro-amino-300-tabs (Stand 14.11.2026); Werte je 100 g. Aminosäuren laut Produktseite je Portion (Seite 2 g Protein), umgerechnet auf 95 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 9.025,
+    "arginine": 7.6,
+    "aspartic_acid": 5.51,
+    "cysteine": 0.095,
+    "glutamic_acid": 9.88,
+    "glycine": 23.085,
+    "histidine": 0.617,
+    "isoleucine": 1.425,
+    "leucine": 2.945,
+    "lysine": 3.562,
+    "methionine": 0.76,
+    "phenylalanine": 1.948,
+    "proline": 12.778,
+    "serine": 3.135,
+    "threonine": 1.805,
+    "tryptophan": 0.019,
+    "tyrosine": 0.617,
+    "valine": 2.328
+   }
   },
   {
    "id": "019a26c7-2502-7e71-8714-52d7f786a748",
@@ -7647,8 +8031,23 @@
    "saltG": 0.25,
    "portionName": null,
    "portionAmount": null,
-   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-fast-gain/olimp-max-mass-3xl-6000g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g.",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-fast-gain/olimp-max-mass-3xl-6000g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 0.443,
+    "arginine": 0.186,
+    "aspartic_acid": 0.974,
+    "cysteine": 0.195,
+    "glutamic_acid": 1.602,
+    "glycine": 0.124,
+    "histidine": 0.15,
+    "lysine": 0.85,
+    "methionine": 0.195,
+    "proline": 0.487,
+    "serine": 0.407,
+    "threonine": 0.593,
+    "tyrosine": 0.23
+   }
   },
   {
    "id": "019a7d7c-6fea-7a1c-89a1-ac3e1f64737f",
@@ -7791,8 +8190,26 @@
    "saltG": null,
    "portionName": "Portion",
    "portionAmount": 35.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/vegan-protein/olimp-sojavit-85-700g (Stand 14.11.2026); Werte je 100 g. Portion laut Tabelle: 1 serving (35 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/vegan-protein/olimp-sojavit-85-700g (Stand 14.11.2026); Werte je 100 g. Portion laut Tabelle: 1 serving (35 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.631,
+    "arginine": 6.354,
+    "aspartic_acid": 16.096,
+    "cysteine": 1.089,
+    "glycine": 3.522,
+    "histidine": 2.178,
+    "isoleucine": 4.163,
+    "leucine": 6.947,
+    "lysine": 5.301,
+    "methionine": 1.144,
+    "proline": 4.333,
+    "serine": 4.393,
+    "threonine": 3.231,
+    "tryptophan": 1.089,
+    "tyrosine": 3.159,
+    "valine": 4.236
+   }
   },
   {
    "id": "019a862f-8d96-7f6e-85bb-8c0ddb535e55",
@@ -10437,8 +10854,13 @@
    "saltG": 1.6,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-1816g#banana (Stand 14.11.2026), Sorte Banana; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-1816g#banana (Stand 14.11.2026), Sorte Banana; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je Portion (30 g), umgerechnet auf 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "arginine": 1.38,
+    "glutamic_acid": 1.667,
+    "leucine": 0.333
+   }
   },
   {
    "id": "019af914-d64e-7c48-8554-a9b721c9e880",
@@ -10455,8 +10877,13 @@
    "saltG": 1.3,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-780g#chocolate (Stand 14.11.2026), Sorte Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-780g#chocolate (Stand 14.11.2026), Sorte Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je Portion (30 g), umgerechnet auf 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "arginine": 1.38,
+    "glutamic_acid": 1.667,
+    "leucine": 0.333
+   }
   },
   {
    "id": "019a32cf-153c-7477-84d8-2045e169d4d1",
@@ -10473,8 +10900,13 @@
    "saltG": 1.6,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-1816g#chocolate-coconut (Stand 14.11.2026), Sorte Chocolate + Coconut; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-1816g#chocolate-coconut (Stand 14.11.2026), Sorte Chocolate + Coconut; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je Portion (30 g), umgerechnet auf 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "arginine": 1.38,
+    "glutamic_acid": 1.667,
+    "leucine": 0.333
+   }
   },
   {
    "id": "019af7dc-df5f-7e17-888e-ce36abcf329d",
@@ -10491,8 +10923,13 @@
    "saltG": 1.6,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-1816g#chocolate-hazelnut (Stand 14.11.2026), Sorte Chocolate + Hazelnut; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-1816g#chocolate-hazelnut (Stand 14.11.2026), Sorte Chocolate + Hazelnut; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je Portion (30 g), umgerechnet auf 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "arginine": 1.38,
+    "glutamic_acid": 1.667,
+    "leucine": 0.333
+   }
   },
   {
    "id": "019a8f36-53e5-7d64-8fc0-2aaabda46fb3",
@@ -10509,8 +10946,13 @@
    "saltG": 1.4,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-780g#chocolate-cookie-cream (Stand 14.11.2026), Sorte Chocolate Cookie Cream; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-780g#chocolate-cookie-cream (Stand 14.11.2026), Sorte Chocolate Cookie Cream; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je Portion (30 g), umgerechnet auf 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "arginine": 1.38,
+    "glutamic_acid": 1.667,
+    "leucine": 0.333
+   }
   },
   {
    "id": "019a8bb1-d819-7b1b-848f-1f18576c416d",
@@ -10527,8 +10969,13 @@
    "saltG": 1.6,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-1816g#straw-white-choco (Stand 14.11.2026), Sorte Straw. White Choco.; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-1816g#straw-white-choco (Stand 14.11.2026), Sorte Straw. White Choco.; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je Portion (30 g), umgerechnet auf 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "arginine": 1.38,
+    "glutamic_acid": 1.667,
+    "leucine": 0.333
+   }
   },
   {
    "id": "019ab026-35f2-74a1-8262-84398471f5f8",
@@ -10563,8 +11010,13 @@
    "saltG": 1.6,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-1816g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/scitec-100-whey-protein-professional-1816g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je Portion (30 g), umgerechnet auf 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "arginine": 1.38,
+    "glutamic_acid": 1.667,
+    "leucine": 0.333
+   }
   },
   {
    "id": "019a2aac-5181-71d8-8136-1a23f29c6f03",
@@ -10599,8 +11051,19 @@
    "saltG": null,
    "portionName": "Portion",
    "portionAmount": 25.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/scitec-iso-whey-clear-1025g#blueberry (Stand 14.11.2026), Sorte Blueberry; Werte je 100 g. Portion laut Tabelle: 25 g.",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/scitec-iso-whey-clear-1025g#blueberry (Stand 14.11.2026), Sorte Blueberry; Werte je 100 g. Portion laut Tabelle: 25 g. Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "histidine": 1.6,
+    "isoleucine": 4.8,
+    "leucine": 8.8,
+    "lysine": 7.6,
+    "methionine": 1.9,
+    "phenylalanine": 2.6,
+    "threonine": 5.4,
+    "tryptophan": 1.4,
+    "valine": 4.6
+   }
   },
   {
    "id": "019afe97-1d80-7a3b-896d-94fd75b78740",
@@ -10617,8 +11080,16 @@
    "saltG": 0.14,
    "portionName": "Portion",
    "portionAmount": 220.0,
-   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-fast-gain/scitec-jumbo-1320g#chocolate (Stand 14.11.2026), Sorte Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (220 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-fast-gain/scitec-jumbo-1320g#chocolate (Stand 14.11.2026), Sorte Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (220 g). Aminosäuren laut Produktseite je Portion (Seite 53 g Protein), umgerechnet auf 24 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 0.005,
+    "arginine": 0.398,
+    "isoleucine": 0.113,
+    "leucine": 0.226,
+    "tyrosine": 0.034,
+    "valine": 0.113
+   }
   },
   {
    "id": "019aa8f3-612e-7499-882b-7401f8ea8acc",
@@ -10635,8 +11106,16 @@
    "saltG": 0.14,
    "portionName": "Portion",
    "portionAmount": 220.0,
-   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-fast-gain/scitec-jumbo-1320g#strawberry (Stand 14.11.2026), Sorte Strawberry; Werte je 100 g. Portion laut Tabelle: Per serving (220 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-fast-gain/scitec-jumbo-1320g#strawberry (Stand 14.11.2026), Sorte Strawberry; Werte je 100 g. Portion laut Tabelle: Per serving (220 g). Aminosäuren laut Produktseite je Portion (Seite 53 g Protein), umgerechnet auf 24 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 0.005,
+    "arginine": 0.398,
+    "isoleucine": 0.113,
+    "leucine": 0.226,
+    "tyrosine": 0.034,
+    "valine": 0.113
+   }
   },
   {
    "id": "019ab490-841c-7c01-8eec-e5a77e9f2a99",
@@ -10653,8 +11132,16 @@
    "saltG": 0.14,
    "portionName": "Portion",
    "portionAmount": 220.0,
-   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-fast-gain/scitec-jumbo-1320g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Portion laut Tabelle: Per serving (220 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-fast-gain/scitec-jumbo-1320g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Portion laut Tabelle: Per serving (220 g). Aminosäuren laut Produktseite je Portion (Seite 53 g Protein), umgerechnet auf 24 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 0.005,
+    "arginine": 0.398,
+    "isoleucine": 0.113,
+    "leucine": 0.226,
+    "tyrosine": 0.034,
+    "valine": 0.113
+   }
   },
   {
    "id": "019a22d2-cd1e-7be2-81ec-6f9f7618aed3",
@@ -10707,8 +11194,28 @@
    "saltG": 0.32,
    "portionName": "Portion",
    "portionAmount": 25.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/sportnahrung-clear-isolate-new-420g#peach-ice-tea (Stand 14.11.2026), Sorte Peach Ice Tea; Werte je 100 g. Portion laut Tabelle: 1 serving (25 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/sportnahrung-clear-isolate-new-420g#peach-ice-tea (Stand 14.11.2026), Sorte Peach Ice Tea; Werte je 100 g. Portion laut Tabelle: 1 serving (25 g). Aminosäuren laut Produktseite je Portion (Seite 20,87 g Protein), umgerechnet auf 83,46 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 4.927,
+    "arginine": 1.828,
+    "aspartic_acid": 10.525,
+    "cysteine": 2.235,
+    "glutamic_acid": 17.012,
+    "glycine": 1.488,
+    "histidine": 1.416,
+    "isoleucine": 5.623,
+    "leucine": 9.922,
+    "lysine": 9.73,
+    "methionine": 2.115,
+    "phenylalanine": 2.739,
+    "proline": 5.695,
+    "serine": 4.639,
+    "threonine": 6.534,
+    "tryptophan": 1.804,
+    "tyrosine": 2.691,
+    "valine": 5.311
+   }
   },
   {
    "id": "019a42d6-2109-713c-8e71-f5ab8b024a37",
@@ -10725,8 +11232,28 @@
    "saltG": 0.32,
    "portionName": "Portion",
    "portionAmount": 25.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/sportnahrung-clear-isolate-new-420g#pineapple (Stand 14.11.2026), Sorte Pineapple; Werte je 100 g. Portion laut Tabelle: 1 serving (25 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/isolate/sportnahrung-clear-isolate-new-420g#pineapple (Stand 14.11.2026), Sorte Pineapple; Werte je 100 g. Portion laut Tabelle: 1 serving (25 g). Aminosäuren laut Produktseite je Portion (Seite 20,73 g Protein), umgerechnet auf 82,91 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 4.887,
+    "arginine": 1.812,
+    "aspartic_acid": 10.451,
+    "cysteine": 2.22,
+    "glutamic_acid": 16.89,
+    "glycine": 1.48,
+    "histidine": 1.408,
+    "isoleucine": 5.579,
+    "leucine": 9.855,
+    "lysine": 9.667,
+    "methionine": 2.1,
+    "phenylalanine": 2.72,
+    "proline": 5.651,
+    "serine": 4.603,
+    "threonine": 6.483,
+    "tryptophan": 1.792,
+    "tyrosine": 2.676,
+    "valine": 5.271
+   }
   },
   {
    "id": "019a3380-3aa6-79ed-8597-54043295aaf9",
@@ -10797,8 +11324,28 @@
    "saltG": 0.73,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-everyday-whey-new-900g#chocolate-hazelnut (Stand 14.11.2026), Sorte Chocolate - Hazelnut; Werte je 100 g. Portion laut Tabelle: 1 scoop (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-everyday-whey-new-900g#chocolate-hazelnut (Stand 14.11.2026), Sorte Chocolate - Hazelnut; Werte je 100 g. Portion laut Tabelle: 1 scoop (30 g). Aminosäuren laut Produktseite je Portion (Seite 20,71 g Protein), umgerechnet auf 69,03 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.8,
+    "arginine": 1.87,
+    "aspartic_acid": 6.186,
+    "cysteine": 1.01,
+    "glutamic_acid": 11.916,
+    "glycine": 1.18,
+    "histidine": 1.39,
+    "isoleucine": 3.686,
+    "leucine": 7.486,
+    "lysine": 5.583,
+    "methionine": 1.457,
+    "phenylalanine": 2.453,
+    "proline": 4.563,
+    "serine": 3.307,
+    "threonine": 3.77,
+    "tryptophan": 1.043,
+    "tyrosine": 2.46,
+    "valine": 3.83
+   }
   },
   {
    "id": "019af4d8-52d0-7d0f-80cd-50b337130f8d",
@@ -10815,8 +11362,28 @@
    "saltG": 0.83,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-everyday-whey-new-900g#vanilla-milk (Stand 14.11.2026), Sorte Vanilla Milk; Werte je 100 g. Portion laut Tabelle: 1 scoop (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-everyday-whey-new-900g#vanilla-milk (Stand 14.11.2026), Sorte Vanilla Milk; Werte je 100 g. Portion laut Tabelle: 1 scoop (30 g). Aminosäuren laut Produktseite je Portion (Seite 20,57 g Protein), umgerechnet auf 68,57 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.807,
+    "arginine": 1.877,
+    "aspartic_acid": 6.2,
+    "cysteine": 1.01,
+    "glutamic_acid": 11.951,
+    "glycine": 1.18,
+    "histidine": 1.397,
+    "isoleucine": 3.694,
+    "leucine": 7.504,
+    "lysine": 5.597,
+    "methionine": 1.46,
+    "phenylalanine": 2.46,
+    "proline": 4.58,
+    "serine": 3.317,
+    "threonine": 3.777,
+    "tryptophan": 1.043,
+    "tyrosine": 2.47,
+    "valine": 3.84
+   }
   },
   {
    "id": "019ac7fe-646b-74c1-861e-c06d052405c8",
@@ -10833,8 +11400,28 @@
    "saltG": 0.73,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-everyday-whey-new-900g#white-choco-strawberry (Stand 14.11.2026), Sorte White Choco Strawberry; Werte je 100 g. Portion laut Tabelle: 1 scoop (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-everyday-whey-new-900g#white-choco-strawberry (Stand 14.11.2026), Sorte White Choco Strawberry; Werte je 100 g. Portion laut Tabelle: 1 scoop (30 g). Aminosäuren laut Produktseite je Portion (Seite 20,57 g Protein), umgerechnet auf 68,57 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 2.807,
+    "arginine": 1.877,
+    "aspartic_acid": 6.2,
+    "cysteine": 1.01,
+    "glutamic_acid": 11.951,
+    "glycine": 1.18,
+    "histidine": 1.397,
+    "isoleucine": 3.694,
+    "leucine": 7.504,
+    "lysine": 5.597,
+    "methionine": 1.46,
+    "phenylalanine": 2.46,
+    "proline": 4.58,
+    "serine": 3.317,
+    "threonine": 3.777,
+    "tryptophan": 1.043,
+    "tyrosine": 2.47,
+    "valine": 3.84
+   }
   },
   {
    "id": "019a6d8f-e079-71b5-81d8-bad6df392cb8",
@@ -11103,8 +11690,28 @@
    "saltG": 0.64,
    "portionName": "Portion",
    "portionAmount": 28.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-whey-deluxe-new-1000g#banana-milkshake (Stand 14.11.2026), Sorte Banana Milkshake; Werte je 100 g. Portion laut Tabelle: 1 serving (28 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-whey-deluxe-new-1000g#banana-milkshake (Stand 14.11.2026), Sorte Banana Milkshake; Werte je 100 g. Portion laut Tabelle: 1 serving (28 g). Aminosäuren laut Produktseite je Portion (Seite 22,45 g Protein), umgerechnet auf 80,18 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.968,
+    "arginine": 1.836,
+    "aspartic_acid": 8.668,
+    "cysteine": 1.629,
+    "glutamic_acid": 13.372,
+    "glycine": 1.389,
+    "histidine": 1.379,
+    "isoleucine": 4.875,
+    "leucine": 8.286,
+    "lysine": 7.297,
+    "methionine": 1.55,
+    "phenylalanine": 2.429,
+    "proline": 4.4,
+    "serine": 3.768,
+    "threonine": 5.404,
+    "tryptophan": 1.429,
+    "tyrosine": 2.232,
+    "valine": 4.522
+   }
   },
   {
    "id": "019a3d68-8de3-763e-8f8f-07631fa9a131",
@@ -11121,8 +11728,28 @@
    "saltG": 0.61,
    "portionName": "Portion",
    "portionAmount": 28.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-whey-deluxe-new-1000g#chocolate-dream (Stand 14.11.2026), Sorte Chocolate Dream; Werte je 100 g. Portion laut Tabelle: 1 serving (28 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-whey-deluxe-new-1000g#chocolate-dream (Stand 14.11.2026), Sorte Chocolate Dream; Werte je 100 g. Portion laut Tabelle: 1 serving (28 g). Aminosäuren laut Produktseite je Portion (Seite 22,04 g Protein), umgerechnet auf 78,71 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.853,
+    "arginine": 1.782,
+    "aspartic_acid": 8.421,
+    "cysteine": 1.586,
+    "glutamic_acid": 12.989,
+    "glycine": 1.35,
+    "histidine": 1.339,
+    "isoleucine": 4.735,
+    "leucine": 8.05,
+    "lysine": 7.089,
+    "methionine": 1.507,
+    "phenylalanine": 2.361,
+    "proline": 4.275,
+    "serine": 3.657,
+    "threonine": 5.25,
+    "tryptophan": 1.386,
+    "tyrosine": 2.168,
+    "valine": 4.393
+   }
   },
   {
    "id": "019acb0b-33f3-7573-8546-6e9dce67afa0",
@@ -11139,8 +11766,28 @@
    "saltG": 0.64,
    "portionName": "Portion",
    "portionAmount": 28.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-whey-deluxe-new-1000g#cookies-heaven (Stand 14.11.2026), Sorte Cookies Heaven; Werte je 100 g. Portion laut Tabelle: 1 serving (28 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-whey-deluxe-new-1000g#cookies-heaven (Stand 14.11.2026), Sorte Cookies Heaven; Werte je 100 g. Portion laut Tabelle: 1 serving (28 g). Aminosäuren laut Produktseite je Portion (Seite 22,39 g Protein), umgerechnet auf 79,96 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.957,
+    "arginine": 1.836,
+    "aspartic_acid": 8.646,
+    "cysteine": 1.625,
+    "glutamic_acid": 13.335,
+    "glycine": 1.389,
+    "histidine": 1.378,
+    "isoleucine": 4.86,
+    "leucine": 8.264,
+    "lysine": 7.278,
+    "methionine": 1.546,
+    "phenylalanine": 2.425,
+    "proline": 4.389,
+    "serine": 3.757,
+    "threonine": 5.389,
+    "tryptophan": 1.425,
+    "tyrosine": 2.228,
+    "valine": 4.51
+   }
   },
   {
    "id": "019a6408-82b2-739b-8c90-1753a72ee46d",
@@ -11157,8 +11804,28 @@
    "saltG": 0.61,
    "portionName": "Portion",
    "portionAmount": 28.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-whey-deluxe-new-1000g#vanilla-ice-cream (Stand 14.11.2026), Sorte Vanilla Ice Cream; Werte je 100 g. Portion laut Tabelle: 1 serving (28 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/sportnahrung-whey-deluxe-new-1000g#vanilla-ice-cream (Stand 14.11.2026), Sorte Vanilla Ice Cream; Werte je 100 g. Portion laut Tabelle: 1 serving (28 g). Aminosäuren laut Produktseite je Portion (Seite 22,02 g Protein), umgerechnet auf 78,64 g Protein je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.893,
+    "arginine": 1.804,
+    "aspartic_acid": 8.503,
+    "cysteine": 1.596,
+    "glutamic_acid": 13.114,
+    "glycine": 1.364,
+    "histidine": 1.354,
+    "isoleucine": 4.778,
+    "leucine": 8.128,
+    "lysine": 7.157,
+    "methionine": 1.518,
+    "phenylalanine": 2.386,
+    "proline": 4.318,
+    "serine": 3.696,
+    "threonine": 5.3,
+    "tryptophan": 1.4,
+    "tyrosine": 2.189,
+    "valine": 4.436
+   }
   },
   {
    "id": "019aa158-d6b7-7628-8ef1-6900a63c23dd",
@@ -12093,8 +12760,14 @@
    "saltG": 0.7,
    "portionName": "Portion",
    "portionAmount": 150.0,
-   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-quality-gain/usn-muscle-fuel-anabolic-4000g#chocolate (Stand 14.11.2026), Sorte Chocolate; Werte je 100 g. Portion laut Tabelle: 1 portion = 3 scoops (150g) / %RDA.",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-quality-gain/usn-muscle-fuel-anabolic-4000g#chocolate (Stand 14.11.2026), Sorte Chocolate; Werte je 100 g. Portion laut Tabelle: 1 portion = 3 scoops (150g) / %RDA. Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "glycine": 0.8,
+    "isoleucine": 0.2,
+    "leucine": 0.3,
+    "valine": 0.2
+   }
   },
   {
    "id": "019a145d-7f32-7fa5-8ff7-cd097da557c5",
@@ -12111,8 +12784,14 @@
    "saltG": 0.64,
    "portionName": "Portion",
    "portionAmount": 150.0,
-   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-quality-gain/usn-muscle-fuel-anabolic-4000g#strawberry (Stand 14.11.2026), Sorte Strawberry; Werte je 100 g. Portion laut Tabelle: Per serving (150g) / %RI;%RDI.",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-quality-gain/usn-muscle-fuel-anabolic-4000g#strawberry (Stand 14.11.2026), Sorte Strawberry; Werte je 100 g. Portion laut Tabelle: Per serving (150g) / %RI;%RDI. Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "glycine": 0.8,
+    "isoleucine": 0.2,
+    "leucine": 0.3,
+    "valine": 0.2
+   }
   },
   {
    "id": "019a1567-a39c-700e-8de8-3238601bc6af",
@@ -12129,8 +12808,14 @@
    "saltG": 1.5,
    "portionName": "Portion",
    "portionAmount": 150.0,
-   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-quality-gain/usn-muscle-fuel-anabolic-4000g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Portion laut Tabelle: Per serving (150g) / %RI;%RDI.",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/gainers/muscle-mass-quality-gain/usn-muscle-fuel-anabolic-4000g#vanilla (Stand 14.11.2026), Sorte Vanilla; Werte je 100 g. Portion laut Tabelle: Per serving (150g) / %RI;%RDI. Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "glycine": 0.8,
+    "isoleucine": 0.2,
+    "leucine": 0.3,
+    "valine": 0.2
+   }
   },
   {
    "id": "019ad5d9-7797-7284-8c85-efce966a04d8",
@@ -12777,8 +13462,27 @@
    "saltG": 0.09,
    "portionName": "Portion",
    "portionAmount": 32.7,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-muscle-whey-300g#bourbon-vanilla (Stand 14.11.2026), Sorte Bourbon Vanilla; Werte je 100 g. Portion laut Tabelle: Per serving (32,7g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-muscle-whey-300g#bourbon-vanilla (Stand 14.11.2026), Sorte Bourbon Vanilla; Werte je 100 g. Portion laut Tabelle: Per serving (32,7g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 5.0,
+    "arginine": 2.3,
+    "aspartic_acid": 11.8,
+    "cysteine": 2.0,
+    "glycine": 1.7,
+    "histidine": 1.8,
+    "isoleucine": 6.1,
+    "leucine": 10.4,
+    "lysine": 9.3,
+    "methionine": 2.1,
+    "phenylalanine": 3.0,
+    "proline": 5.9,
+    "serine": 4.8,
+    "threonine": 6.9,
+    "tryptophan": 1.5,
+    "tyrosine": 2.6,
+    "valine": 5.6
+   }
   },
   {
    "id": "019a6b54-2393-771a-8264-4a08d7f0726d",
@@ -12795,8 +13499,27 @@
    "saltG": 0.09,
    "portionName": "Portion",
    "portionAmount": 33.9,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-muscle-whey-300g#milk-chocolate (Stand 14.11.2026), Sorte Milk Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (33,9g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-muscle-whey-300g#milk-chocolate (Stand 14.11.2026), Sorte Milk Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (33,9g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 5.0,
+    "arginine": 2.3,
+    "aspartic_acid": 11.8,
+    "cysteine": 2.0,
+    "glycine": 1.7,
+    "histidine": 1.8,
+    "isoleucine": 6.1,
+    "leucine": 10.4,
+    "lysine": 9.3,
+    "methionine": 2.1,
+    "phenylalanine": 3.0,
+    "proline": 5.9,
+    "serine": 4.8,
+    "threonine": 6.9,
+    "tryptophan": 1.5,
+    "tyrosine": 2.6,
+    "valine": 5.6
+   }
   },
   {
    "id": "019abed7-b11b-76bf-8fe6-21aa306e9d30",
@@ -12813,8 +13536,27 @@
    "saltG": 0.1,
    "portionName": "Portion",
    "portionAmount": 32.7,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-muscle-whey-900g#pistachio (Stand 14.11.2026), Sorte Pistachio; Werte je 100 g. Portion laut Tabelle: Per serving (32,7g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-muscle-whey-900g#pistachio (Stand 14.11.2026), Sorte Pistachio; Werte je 100 g. Portion laut Tabelle: Per serving (32,7g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 5.0,
+    "arginine": 2.3,
+    "aspartic_acid": 11.8,
+    "cysteine": 2.0,
+    "glycine": 1.7,
+    "histidine": 1.8,
+    "isoleucine": 6.1,
+    "leucine": 10.4,
+    "lysine": 9.3,
+    "methionine": 2.1,
+    "phenylalanine": 3.0,
+    "proline": 5.9,
+    "serine": 4.8,
+    "threonine": 6.9,
+    "tryptophan": 1.5,
+    "tyrosine": 2.6,
+    "valine": 5.6
+   }
   },
   {
    "id": "019a65e6-e577-74a9-8369-aa2a06abfaf2",
@@ -12831,8 +13573,27 @@
    "saltG": 0.1,
    "portionName": "Portion",
    "portionAmount": 32.8,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-muscle-whey-300g#strawberry-white-chocolate (Stand 14.11.2026), Sorte Strawberry - White Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (32,8g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-muscle-whey-300g#strawberry-white-chocolate (Stand 14.11.2026), Sorte Strawberry - White Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (32,8g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 5.0,
+    "arginine": 2.3,
+    "aspartic_acid": 11.8,
+    "cysteine": 2.0,
+    "glycine": 1.7,
+    "histidine": 1.8,
+    "isoleucine": 6.1,
+    "leucine": 10.4,
+    "lysine": 9.3,
+    "methionine": 2.1,
+    "phenylalanine": 3.0,
+    "proline": 5.9,
+    "serine": 4.8,
+    "threonine": 6.9,
+    "tryptophan": 1.5,
+    "tyrosine": 2.6,
+    "valine": 5.6
+   }
   },
   {
    "id": "019a27b9-a5d4-738a-83e8-33958dcd674f",
@@ -12903,8 +13664,28 @@
    "saltG": 0.1,
    "portionName": "Portion",
    "portionAmount": 33.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/vegan-protein/vast-pro-plant-isolate-900g#banana-bread (Stand 14.11.2026), Sorte Banana Bread; Werte je 100 g. Portion laut Tabelle: Per serving (33 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/vegan-protein/vast-pro-plant-isolate-900g#banana-bread (Stand 14.11.2026), Sorte Banana Bread; Werte je 100 g. Portion laut Tabelle: Per serving (33 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.2,
+    "arginine": 6.7,
+    "aspartic_acid": 7.6,
+    "cysteine": 0.5,
+    "glutamic_acid": 13.0,
+    "glycine": 2.8,
+    "histidine": 1.6,
+    "isoleucine": 3.5,
+    "leucine": 6.4,
+    "lysine": 5.5,
+    "methionine": 0.4,
+    "phenylalanine": 4.1,
+    "proline": 1.6,
+    "serine": 3.6,
+    "threonine": 2.7,
+    "tryptophan": 1.0,
+    "tyrosine": 2.7,
+    "valine": 3.8
+   }
   },
   {
    "id": "019a6717-02ed-7e7f-8abb-e1dcfae5242f",
@@ -12921,8 +13702,28 @@
    "saltG": 1.0,
    "portionName": "Portion",
    "portionAmount": 34.8,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/vegan-protein/vast-pro-plant-isolate-900g#chocolate-fudge (Stand 14.11.2026), Sorte Chocolate Fudge; Werte je 100 g. Portion laut Tabelle: Per serving (34,8 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/vegan-protein/vast-pro-plant-isolate-900g#chocolate-fudge (Stand 14.11.2026), Sorte Chocolate Fudge; Werte je 100 g. Portion laut Tabelle: Per serving (34,8 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.0,
+    "arginine": 6.3,
+    "aspartic_acid": 7.2,
+    "cysteine": 0.5,
+    "glutamic_acid": 12.3,
+    "glycine": 2.7,
+    "histidine": 1.5,
+    "isoleucine": 3.3,
+    "leucine": 6.0,
+    "lysine": 5.2,
+    "methionine": 0.4,
+    "phenylalanine": 3.9,
+    "proline": 1.5,
+    "serine": 3.5,
+    "threonine": 2.5,
+    "tryptophan": 1.0,
+    "tyrosine": 2.5,
+    "valine": 3.6
+   }
   },
   {
    "id": "019aef05-03b7-7290-8e80-1ab5fa887bdb",
@@ -12939,8 +13740,27 @@
    "saltG": 1.2,
    "portionName": "Portion",
    "portionAmount": 32.4,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/vegan-protein/vast-pro-plant-isolate-900g#salted-caramel (Stand 14.11.2026), Sorte Salted Caramel; Werte je 100 g. Portion laut Tabelle: Per serving (32,4 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/vegan-protein/vast-pro-plant-isolate-900g#salted-caramel (Stand 14.11.2026), Sorte Salted Caramel; Werte je 100 g. Portion laut Tabelle: Per serving (32,4 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.3,
+    "aspartic_acid": 7.7,
+    "cysteine": 0.5,
+    "glutamic_acid": 13.3,
+    "glycine": 2.9,
+    "histidine": 1.6,
+    "isoleucine": 3.6,
+    "leucine": 6.6,
+    "lysine": 5.6,
+    "methionine": 0.5,
+    "phenylalanine": 4.2,
+    "proline": 1.6,
+    "serine": 3.7,
+    "threonine": 2.7,
+    "tryptophan": 1.0,
+    "tyrosine": 2.7,
+    "valine": 3.9
+   }
   },
   {
    "id": "019ab439-fe90-7982-8d65-a06fc46d2f11",
@@ -12957,8 +13777,28 @@
    "saltG": 0.3,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-pro-whey-900g#blueberry-vanilla-muffin (Stand 14.11.2026), Sorte Blueberry Vanilla Muffin; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-pro-whey-900g#blueberry-vanilla-muffin (Stand 14.11.2026), Sorte Blueberry Vanilla Muffin; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.7,
+    "arginine": 2.0,
+    "aspartic_acid": 8.8,
+    "cysteine": 2.1,
+    "glutamic_acid": 12.9,
+    "glycine": 1.4,
+    "histidine": 1.1,
+    "isoleucine": 5.1,
+    "leucine": 8.0,
+    "lysine": 6.6,
+    "methionine": 1.5,
+    "phenylalanine": 2.5,
+    "proline": 4.5,
+    "serine": 3.0,
+    "threonine": 4.8,
+    "tryptophan": 1.4,
+    "tyrosine": 2.1,
+    "valine": 4.8
+   }
   },
   {
    "id": "019a7678-047c-7cbb-842a-12b92f17cb7e",
@@ -12975,8 +13815,28 @@
    "saltG": 0.4,
    "portionName": "Portion",
    "portionAmount": 32.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-pro-whey-900g#cookie-dough (Stand 14.11.2026), Sorte Cookie Dough; Werte je 100 g. Portion laut Tabelle: Per serving (32 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-pro-whey-900g#cookie-dough (Stand 14.11.2026), Sorte Cookie Dough; Werte je 100 g. Portion laut Tabelle: Per serving (32 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.7,
+    "arginine": 2.0,
+    "aspartic_acid": 7.6,
+    "cysteine": 1.8,
+    "glutamic_acid": 13.4,
+    "glycine": 1.0,
+    "histidine": 1.5,
+    "isoleucine": 5.1,
+    "leucine": 7.3,
+    "lysine": 7.2,
+    "methionine": 1.4,
+    "phenylalanine": 2.6,
+    "proline": 2.5,
+    "serine": 3.6,
+    "threonine": 5.4,
+    "tryptophan": 1.3,
+    "tyrosine": 2.4,
+    "valine": 4.8
+   }
   },
   {
    "id": "019a802f-bc7c-7676-8dfe-c2a7e40957b2",
@@ -12993,8 +13853,28 @@
    "saltG": 0.4,
    "portionName": "Portion",
    "portionAmount": 31.5,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-pro-whey-900g#double-rich-chocolate (Stand 14.11.2026), Sorte Double Rich Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (31,5 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-pro-whey-900g#double-rich-chocolate (Stand 14.11.2026), Sorte Double Rich Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (31,5 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.7,
+    "arginine": 2.1,
+    "aspartic_acid": 7.7,
+    "cysteine": 1.8,
+    "glutamic_acid": 13.6,
+    "glycine": 1.0,
+    "histidine": 1.6,
+    "isoleucine": 5.2,
+    "leucine": 7.4,
+    "lysine": 7.3,
+    "methionine": 1.4,
+    "phenylalanine": 2.6,
+    "proline": 2.5,
+    "serine": 3.7,
+    "threonine": 5.5,
+    "tryptophan": 1.3,
+    "tyrosine": 2.4,
+    "valine": 4.8
+   }
   },
   {
    "id": "019a3231-2f1e-7010-83c5-f3c118756a05",
@@ -13011,8 +13891,28 @@
    "saltG": 0.3,
    "portionName": "Portion",
    "portionAmount": 30.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-pro-whey-900g#strawberry-cream (Stand 14.11.2026), Sorte Strawberry & Cream; Werte je 100 g. Portion laut Tabelle: Per serving (30 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-pro-whey-900g#strawberry-cream (Stand 14.11.2026), Sorte Strawberry & Cream; Werte je 100 g. Portion laut Tabelle: Per serving (30 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.7,
+    "arginine": 2.0,
+    "aspartic_acid": 8.7,
+    "cysteine": 2.0,
+    "glutamic_acid": 12.8,
+    "glycine": 1.4,
+    "histidine": 1.1,
+    "isoleucine": 5.1,
+    "leucine": 8.0,
+    "lysine": 6.6,
+    "methionine": 1.5,
+    "phenylalanine": 2.5,
+    "proline": 4.5,
+    "serine": 3.0,
+    "threonine": 4.8,
+    "tryptophan": 1.4,
+    "tyrosine": 2.0,
+    "valine": 4.8
+   }
   },
   {
    "id": "019a3ae3-3962-7dda-8cea-20d383c9943e",
@@ -13029,8 +13929,28 @@
    "saltG": 0.4,
    "portionName": "Portion",
    "portionAmount": 31.0,
-   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-pro-whey-900g#vanilla-ice-cream (Stand 14.11.2026), Sorte Vanilla Ice Cream; Werte je 100 g. Portion laut Tabelle: Per serving (31 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/proteins/whey/vast-pro-whey-900g#vanilla-ice-cream (Stand 14.11.2026), Sorte Vanilla Ice Cream; Werte je 100 g. Portion laut Tabelle: Per serving (31 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 3.8,
+    "arginine": 2.1,
+    "aspartic_acid": 7.8,
+    "cysteine": 1.8,
+    "glutamic_acid": 13.8,
+    "glycine": 1.0,
+    "histidine": 1.6,
+    "isoleucine": 5.3,
+    "leucine": 7.5,
+    "lysine": 7.4,
+    "methionine": 1.4,
+    "phenylalanine": 2.7,
+    "proline": 2.6,
+    "serine": 3.7,
+    "threonine": 5.6,
+    "tryptophan": 1.4,
+    "tyrosine": 2.5,
+    "valine": 5.0
+   }
   },
   {
    "id": "019a83ca-2e49-78e9-8a1b-7a00e1ba27cc",
@@ -13047,8 +13967,26 @@
    "saltG": 0.1,
    "portionName": "Portion",
    "portionAmount": 60.0,
-   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/vast-rice-whey-900g#apple-pie (Stand 14.11.2026), Sorte Apple Pie; Werte je 100 g. Portion laut Tabelle: Per serving (60 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/vast-rice-whey-900g#apple-pie (Stand 14.11.2026), Sorte Apple Pie; Werte je 100 g. Portion laut Tabelle: Per serving (60 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 1.6,
+    "arginine": 0.8,
+    "cysteine": 0.6,
+    "glycine": 0.5,
+    "histidine": 0.6,
+    "isoleucine": 2.0,
+    "leucine": 3.4,
+    "lysine": 3.0,
+    "methionine": 0.7,
+    "phenylalanine": 1.0,
+    "proline": 1.9,
+    "serine": 1.6,
+    "threonine": 2.3,
+    "tryptophan": 0.5,
+    "tyrosine": 0.8,
+    "valine": 1.8
+   }
   },
   {
    "id": "019a0489-bc2e-7cbb-855b-c54f1d05f928",
@@ -13065,8 +14003,26 @@
    "saltG": 0.1,
    "portionName": "Portion",
    "portionAmount": 60.0,
-   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/vast-rice-whey-900g#butter-cookie-caramel (Stand 14.11.2026), Sorte Butter Cookie Caramel; Werte je 100 g. Portion laut Tabelle: Per serving (60 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/vast-rice-whey-900g#butter-cookie-caramel (Stand 14.11.2026), Sorte Butter Cookie Caramel; Werte je 100 g. Portion laut Tabelle: Per serving (60 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 1.6,
+    "arginine": 0.8,
+    "cysteine": 0.6,
+    "glycine": 0.5,
+    "histidine": 0.6,
+    "isoleucine": 2.0,
+    "leucine": 3.4,
+    "lysine": 3.0,
+    "methionine": 0.7,
+    "phenylalanine": 1.0,
+    "proline": 1.9,
+    "serine": 1.6,
+    "threonine": 2.3,
+    "tryptophan": 0.5,
+    "tyrosine": 0.8,
+    "valine": 1.8
+   }
   },
   {
    "id": "019aa085-e00a-79eb-82b4-1c5ee1066732",
@@ -13083,8 +14039,26 @@
    "saltG": 0.1,
    "portionName": "Portion",
    "portionAmount": 60.0,
-   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/vast-rice-whey-900g#cinnamon-milk (Stand 14.11.2026), Sorte Cinnamon Milk; Werte je 100 g. Portion laut Tabelle: Per serving (60 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/vast-rice-whey-900g#cinnamon-milk (Stand 14.11.2026), Sorte Cinnamon Milk; Werte je 100 g. Portion laut Tabelle: Per serving (60 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 1.6,
+    "arginine": 0.8,
+    "cysteine": 0.6,
+    "glycine": 0.5,
+    "histidine": 0.6,
+    "isoleucine": 2.0,
+    "leucine": 3.4,
+    "lysine": 3.0,
+    "methionine": 0.7,
+    "phenylalanine": 1.0,
+    "proline": 1.9,
+    "serine": 1.6,
+    "threonine": 2.3,
+    "tryptophan": 0.5,
+    "tyrosine": 0.8,
+    "valine": 1.8
+   }
   },
   {
    "id": "019a6d3b-5c54-7926-8e0f-32d021340b17",
@@ -13101,8 +14075,26 @@
    "saltG": 0.1,
    "portionName": "Portion",
    "portionAmount": 60.0,
-   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/vast-rice-whey-900g#milky-chocolate (Stand 14.11.2026), Sorte Milky Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (60 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/vast-rice-whey-900g#milky-chocolate (Stand 14.11.2026), Sorte Milky Chocolate; Werte je 100 g. Portion laut Tabelle: Per serving (60 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 1.6,
+    "arginine": 0.8,
+    "cysteine": 0.6,
+    "glycine": 0.5,
+    "histidine": 0.6,
+    "isoleucine": 2.0,
+    "leucine": 3.4,
+    "lysine": 3.0,
+    "methionine": 0.7,
+    "phenylalanine": 1.0,
+    "proline": 1.9,
+    "serine": 1.6,
+    "threonine": 2.3,
+    "tryptophan": 0.5,
+    "tyrosine": 0.8,
+    "valine": 1.8
+   }
   },
   {
    "id": "019a8a7b-2dbf-7ceb-8c02-e4deca3209bc",
@@ -13119,8 +14111,26 @@
    "saltG": 0.1,
    "portionName": "Portion",
    "portionAmount": 60.0,
-   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/vast-rice-whey-900g#natty-nougat (Stand 14.11.2026), Sorte Natty Nougat; Werte je 100 g. Portion laut Tabelle: Per serving (60 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/vast-rice-whey-900g#natty-nougat (Stand 14.11.2026), Sorte Natty Nougat; Werte je 100 g. Portion laut Tabelle: Per serving (60 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 1.6,
+    "arginine": 0.8,
+    "cysteine": 0.6,
+    "glycine": 0.5,
+    "histidine": 0.6,
+    "isoleucine": 2.0,
+    "leucine": 3.4,
+    "lysine": 3.0,
+    "methionine": 0.7,
+    "phenylalanine": 1.0,
+    "proline": 1.9,
+    "serine": 1.6,
+    "threonine": 2.3,
+    "tryptophan": 0.5,
+    "tyrosine": 0.8,
+    "valine": 1.8
+   }
   },
   {
    "id": "019acbd3-48c6-7c37-8f05-557cfb94680e",
@@ -13137,8 +14147,26 @@
    "saltG": 0.1,
    "portionName": "Portion",
    "portionAmount": 60.0,
-   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/vast-rice-whey-900g#vanilla-cookie (Stand 14.11.2026), Sorte Vanilla Cookie; Werte je 100 g. Portion laut Tabelle: Per serving (60 g).",
-   "archived": false
+   "notes": "Angaben laut https://www.proteini.si/en/snacks/pudding/vast-rice-whey-900g#vanilla-cookie (Stand 14.11.2026), Sorte Vanilla Cookie; Werte je 100 g. Portion laut Tabelle: Per serving (60 g). Aminosäuren laut Produktseite je 100 g (ergänzt 26.11.2026).",
+   "archived": false,
+   "aminos": {
+    "alanine": 1.6,
+    "arginine": 0.8,
+    "cysteine": 0.6,
+    "glycine": 0.5,
+    "histidine": 0.6,
+    "isoleucine": 2.0,
+    "leucine": 3.4,
+    "lysine": 3.0,
+    "methionine": 0.7,
+    "phenylalanine": 1.0,
+    "proline": 1.9,
+    "serine": 1.6,
+    "threonine": 2.3,
+    "tryptophan": 0.5,
+    "tyrosine": 0.8,
+    "valine": 1.8
+   }
   }
  ],
  "supplements": [
@@ -27101,7 +28129,7 @@
    "unit": "g",
    "servingAmount": 30.0,
    "dailyDose": false,
-   "notes": "Angaben laut https://www.proteini.si/en/energy-boosters/caffeinated-drinks/vast-awhey-coffee-450g#caramel-macchiato (Stand 14.11.2026), Sorte Caramel Macchiato; Werte je serving (30g). Weitere Angaben: Salz 0 g.",
+   "notes": "Angaben laut https://www.proteini.si/en/energy-boosters/caffeinated-drinks/vast-awhey-coffee-450g#caramel-macchiato (Stand 14.11.2026), Sorte Caramel Macchiato; Werte je serving (30g). Weitere Angaben: Salz 0 g. Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 22 g Protein (ergänzt 26.11.2026).",
    "archived": false,
    "values": {
     "caffeine": 80.0,
@@ -27110,7 +28138,25 @@
     "fat": 1.6,
     "protein": 22.0,
     "saturated_fat": 1.1,
-    "sugar": 1.4
+    "sugar": 1.4,
+    "valine": 1364.0,
+    "leucine": 2552.0,
+    "isoleucine": 1540.0,
+    "alanine": 1254.0,
+    "arginine": 462.0,
+    "aspartic_acid": 2530.0,
+    "cysteine": 506.0,
+    "glutamic_acid": 4246.0,
+    "glycine": 330.0,
+    "lysine": 2288.0,
+    "histidine": 352.0,
+    "methionine": 506.0,
+    "phenylalanine": 682.0,
+    "proline": 1474.0,
+    "serine": 1078.0,
+    "threonine": 1694.0,
+    "tryptophan": 418.0,
+    "tyrosine": 638.0
    }
   },
   {
@@ -27120,7 +28166,7 @@
    "unit": "g",
    "servingAmount": 30.0,
    "dailyDose": false,
-   "notes": "Angaben laut https://www.proteini.si/en/energy-boosters/caffeinated-drinks/vast-awhey-coffee-450g#chocolate-hazelnut (Stand 14.11.2026), Sorte Chocolate - Hazelnut; Werte je serving (30g). Weitere Angaben: Salz 0 g.",
+   "notes": "Angaben laut https://www.proteini.si/en/energy-boosters/caffeinated-drinks/vast-awhey-coffee-450g#chocolate-hazelnut (Stand 14.11.2026), Sorte Chocolate - Hazelnut; Werte je serving (30g). Weitere Angaben: Salz 0 g. Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 22 g Protein (ergänzt 26.11.2026).",
    "archived": false,
    "values": {
     "caffeine": 80.0,
@@ -27129,7 +28175,25 @@
     "fat": 1.6,
     "protein": 22.0,
     "saturated_fat": 1.1,
-    "sugar": 1.4
+    "sugar": 1.4,
+    "valine": 1364.0,
+    "leucine": 2552.0,
+    "isoleucine": 1540.0,
+    "alanine": 1254.0,
+    "arginine": 462.0,
+    "aspartic_acid": 2530.0,
+    "cysteine": 506.0,
+    "glutamic_acid": 4246.0,
+    "glycine": 330.0,
+    "lysine": 2288.0,
+    "histidine": 352.0,
+    "methionine": 506.0,
+    "phenylalanine": 682.0,
+    "proline": 1474.0,
+    "serine": 1078.0,
+    "threonine": 1694.0,
+    "tryptophan": 418.0,
+    "tyrosine": 638.0
    }
   },
   {
@@ -27139,7 +28203,7 @@
    "unit": "g",
    "servingAmount": 30.0,
    "dailyDose": false,
-   "notes": "Angaben laut https://www.proteini.si/en/energy-boosters/caffeinated-drinks/vast-awhey-coffee-450g#iced-chocolate-mocha (Stand 14.11.2026), Sorte Iced Chocolate Mocha; Werte je serving (30g). Weitere Angaben: Salz 0 g.",
+   "notes": "Angaben laut https://www.proteini.si/en/energy-boosters/caffeinated-drinks/vast-awhey-coffee-450g#iced-chocolate-mocha (Stand 14.11.2026), Sorte Iced Chocolate Mocha; Werte je serving (30g). Weitere Angaben: Salz 0 g. Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 22 g Protein (ergänzt 26.11.2026).",
    "archived": false,
    "values": {
     "caffeine": 80.0,
@@ -27148,7 +28212,25 @@
     "fat": 1.6,
     "protein": 22.0,
     "saturated_fat": 1.1,
-    "sugar": 1.4
+    "sugar": 1.4,
+    "valine": 1364.0,
+    "leucine": 2552.0,
+    "isoleucine": 1540.0,
+    "alanine": 1254.0,
+    "arginine": 462.0,
+    "aspartic_acid": 2530.0,
+    "cysteine": 506.0,
+    "glutamic_acid": 4246.0,
+    "glycine": 330.0,
+    "lysine": 2288.0,
+    "histidine": 352.0,
+    "methionine": 506.0,
+    "phenylalanine": 682.0,
+    "proline": 1474.0,
+    "serine": 1078.0,
+    "threonine": 1694.0,
+    "tryptophan": 418.0,
+    "tyrosine": 638.0
    }
   },
   {
@@ -27158,7 +28240,7 @@
    "unit": "g",
    "servingAmount": 30.0,
    "dailyDose": false,
-   "notes": "Angaben laut https://www.proteini.si/en/energy-boosters/caffeinated-drinks/vast-awhey-coffee-450g#original-coffee (Stand 14.11.2026), Sorte Original Coffee; Werte je serving (30g). Weitere Angaben: Salz 0 g.",
+   "notes": "Angaben laut https://www.proteini.si/en/energy-boosters/caffeinated-drinks/vast-awhey-coffee-450g#original-coffee (Stand 14.11.2026), Sorte Original Coffee; Werte je serving (30g). Weitere Angaben: Salz 0 g. Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 22 g Protein (ergänzt 26.11.2026).",
    "archived": false,
    "values": {
     "caffeine": 80.0,
@@ -27167,7 +28249,25 @@
     "fat": 1.6,
     "protein": 22.0,
     "saturated_fat": 1.1,
-    "sugar": 1.4
+    "sugar": 1.4,
+    "valine": 1364.0,
+    "leucine": 2552.0,
+    "isoleucine": 1540.0,
+    "alanine": 1254.0,
+    "arginine": 462.0,
+    "aspartic_acid": 2530.0,
+    "cysteine": 506.0,
+    "glutamic_acid": 4246.0,
+    "glycine": 330.0,
+    "lysine": 2288.0,
+    "histidine": 352.0,
+    "methionine": 506.0,
+    "phenylalanine": 682.0,
+    "proline": 1474.0,
+    "serine": 1078.0,
+    "threonine": 1694.0,
+    "tryptophan": 418.0,
+    "tyrosine": 638.0
    }
   },
   {
@@ -27177,7 +28277,7 @@
    "unit": "g",
    "servingAmount": 30.0,
    "dailyDose": false,
-   "notes": "Angaben laut https://www.proteini.si/en/energy-boosters/caffeinated-drinks/vast-awhey-coffee-450g#vanilla-latte (Stand 14.11.2026), Sorte Vanilla Latte; Werte je serving (30g). Weitere Angaben: Salz 0 g.",
+   "notes": "Angaben laut https://www.proteini.si/en/energy-boosters/caffeinated-drinks/vast-awhey-coffee-450g#vanilla-latte (Stand 14.11.2026), Sorte Vanilla Latte; Werte je serving (30g). Weitere Angaben: Salz 0 g. Aminosäuren laut Produktseite je 100 g (zusammen rund 100 g, daher als je 100 g Protein gelesen), umgerechnet mit 22 g Protein (ergänzt 26.11.2026).",
    "archived": false,
    "values": {
     "caffeine": 80.0,
@@ -27186,7 +28286,25 @@
     "fat": 1.6,
     "protein": 22.0,
     "saturated_fat": 1.1,
-    "sugar": 1.4
+    "sugar": 1.4,
+    "valine": 1364.0,
+    "leucine": 2552.0,
+    "isoleucine": 1540.0,
+    "alanine": 1254.0,
+    "arginine": 462.0,
+    "aspartic_acid": 2530.0,
+    "cysteine": 506.0,
+    "glutamic_acid": 4246.0,
+    "glycine": 330.0,
+    "lysine": 2288.0,
+    "histidine": 352.0,
+    "methionine": 506.0,
+    "phenylalanine": 682.0,
+    "proline": 1474.0,
+    "serine": 1078.0,
+    "threonine": 1694.0,
+    "tryptophan": 418.0,
+    "tyrosine": 638.0
    }
   },
   {

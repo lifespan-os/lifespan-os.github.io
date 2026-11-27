@@ -11730,6 +11730,255 @@ function proteinSuggestions(foods, openProteinG, openKcal, limit = 3) {
   return out;
 }
 
+// src/domain/sleepVisual.ts
+var sleepVisual_exports = {};
+__export(sleepVisual_exports, {
+  LATE_CAFFEINE: () => LATE_CAFFEINE,
+  MIN_GROUP: () => MIN_GROUP,
+  caffeineSleepSplit: () => caffeineSleepSplit,
+  clockText: () => clockText,
+  fitLine: () => fitLine,
+  heartNights: () => heartNights,
+  niceRange: () => niceRange,
+  oneNightPerDate: () => oneNightPerDate,
+  phaseAverage: () => phaseAverage,
+  phaseNights: () => phaseNights,
+  rechargeNights: () => rechargeNights,
+  sleepHrvScatter: () => sleepHrvScatter,
+  sleepWindows: () => sleepWindows,
+  windowSummary: () => windowSummary
+});
+
+// src/domain/wearable.ts
+function minuteOf2(clock5) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(clock5.trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  return h < 24 && min < 60 ? h * 60 + min : null;
+}
+function nightSeries(json) {
+  if (!json) return [];
+  let obj;
+  try {
+    obj = JSON.parse(json);
+  } catch {
+    return [];
+  }
+  if (!obj || typeof obj !== "object") return [];
+  const out = [];
+  for (const [k, v] of Object.entries(obj)) {
+    const minute = minuteOf2(k);
+    if (minute === null || typeof v !== "number" || !Number.isFinite(v)) continue;
+    out.push({ minute, value: v });
+  }
+  const order = (m) => m >= 12 * 60 ? m - 1440 : m;
+  return out.sort((a, b) => order(a.minute) - order(b.minute));
+}
+function nightLowestHr(s) {
+  const values = nightSeries(s.hrSamples).map((p) => p.value).filter((v) => v >= 25 && v <= 250);
+  return values.length ? Math.min(...values) : null;
+}
+function measuredSleepMin(s) {
+  const parts2 = [s.lightS, s.deepS, s.remS, s.unrecognizedS].filter((x) => x !== null);
+  const sum = parts2.reduce((a, b) => a + b, 0);
+  return parts2.length && sum > 0 ? Math.round(sum / 60) : null;
+}
+function mean4(values) {
+  const v = values.filter((x) => x !== null && Number.isFinite(x));
+  return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+}
+function bedMinute(s) {
+  const t = s.sleepStart?.split("T")[1];
+  if (!t) return null;
+  const m = minuteOf2(t);
+  if (m === null) return null;
+  return m >= 12 * 60 ? m - 1440 : m;
+}
+function spread(values) {
+  if (values.length < 3) return null;
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+  const variance = values.reduce((a, b) => a + (b - avg) ** 2, 0) / (values.length - 1);
+  return Math.sqrt(variance);
+}
+
+// src/domain/sleepVisual.ts
+function oneNightPerDate(sleep) {
+  const best = /* @__PURE__ */ new Map();
+  for (const s of sleep) {
+    if (measuredSleepMin(s) === null) continue;
+    const prev = best.get(s.date);
+    if (!prev || (measuredSleepMin(s) ?? 0) > (measuredSleepMin(prev) ?? 0)) best.set(s.date, s);
+  }
+  return [...best.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+function recoveryOf(recovery, night) {
+  return recovery.find((r2) => r2.date === night.date && r2.source === night.source) ?? recovery.find((r2) => r2.date === night.date);
+}
+var sec = (s) => s == null ? 0 : s / 60;
+function phaseNights(sleep) {
+  return oneNightPerDate(sleep).map((s) => ({
+    date: s.date,
+    deepMin: Math.round(sec(s.deepS)),
+    lightMin: Math.round(sec(s.lightS)),
+    remMin: Math.round(sec(s.remS)),
+    unknownMin: Math.round(sec(s.unrecognizedS)),
+    wakeMin: Math.round(sec(s.interruptionS)),
+    sleepMin: measuredSleepMin(s) ?? 0
+  }));
+}
+function phaseAverage(sleep) {
+  const nights = oneNightPerDate(sleep).filter(
+    (s) => s.deepS != null && s.lightS != null && s.remS != null
+  );
+  if (nights.length === 0) return null;
+  const avg = (pick3) => nights.reduce((a, s) => a + pick3(s), 0) / nights.length;
+  const deep = avg((s) => sec(s.deepS));
+  const light = avg((s) => sec(s.lightS));
+  const rem = avg((s) => sec(s.remS));
+  const total = deep + light + rem;
+  if (total <= 0) return null;
+  const pct2 = (x) => Math.round(x / total * 1e3) / 10;
+  return {
+    nights: nights.length,
+    deepMin: Math.round(deep),
+    lightMin: Math.round(light),
+    remMin: Math.round(rem),
+    wakeMin: Math.round(avg((s) => sec(s.interruptionS))),
+    deepPct: pct2(deep),
+    lightPct: pct2(light),
+    remPct: pct2(rem)
+  };
+}
+function clockMinute(t) {
+  const c = t?.split("T")[1];
+  return c ? minuteOf2(c) : null;
+}
+function sleepWindows(sleep) {
+  return oneNightPerDate(sleep).flatMap((s) => {
+    const start = bedMinute(s);
+    let end = clockMinute(s.sleepEnd);
+    if (start === null || end === null) return [];
+    if (end >= 18 * 60) end -= 1440;
+    if (end <= start) return [];
+    return [{ date: s.date, start, end, mid: Math.round((start + end) / 2) }];
+  });
+}
+function windowSummary(windows) {
+  if (windows.length === 0) return null;
+  const m = (pick3) => mean4(windows.map(pick3));
+  return {
+    nights: windows.length,
+    start: Math.round(m((w) => w.start)),
+    end: Math.round(m((w) => w.end)),
+    mid: Math.round(m((w) => w.mid)),
+    midSpread: spread(windows.map((w) => w.mid))
+  };
+}
+function clockText(minute) {
+  const m = (Math.round(minute) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+}
+function heartNights(sleep, recovery) {
+  return oneNightPerDate(sleep).flatMap((s) => {
+    const lowestHr = nightLowestHr(s);
+    const hrvMs = recoveryOf(recovery, s)?.hrvMs ?? null;
+    if (lowestHr === null && hrvMs === null) return [];
+    return [{ date: s.date, lowestHr, hrvMs, sleepMin: measuredSleepMin(s) ?? 0 }];
+  });
+}
+function sleepHrvScatter(sleep, recovery) {
+  const points2 = heartNights(sleep, recovery).flatMap(
+    (n3) => n3.hrvMs === null || n3.sleepMin <= 0 ? [] : [{ date: n3.date, x: n3.sleepMin, y: n3.hrvMs }]
+  );
+  const r2 = points2.length >= MIN_PAIRS ? pearson(
+    points2.map((p) => p.x),
+    points2.map((p) => p.y)
+  ) : null;
+  return { points: points2, r: r2, minPairs: MIN_PAIRS };
+}
+function fitLine(points2) {
+  if (points2.length < 2) return null;
+  const mx = points2.reduce((a, p) => a + p.x, 0) / points2.length;
+  const my = points2.reduce((a, p) => a + p.y, 0) / points2.length;
+  let sxy = 0;
+  let sxx = 0;
+  for (const p of points2) {
+    sxy += (p.x - mx) * (p.y - my);
+    sxx += (p.x - mx) ** 2;
+  }
+  if (sxx === 0) return null;
+  const slope = sxy / sxx;
+  return { slope, intercept: my - slope * mx };
+}
+function rechargeNights(recovery) {
+  const byDate2 = /* @__PURE__ */ new Map();
+  for (const r2 of recovery) {
+    if (r2.ansCharge === null && r2.hrvMs === null && r2.hrAvg === null) continue;
+    if (byDate2.has(r2.date)) continue;
+    byDate2.set(r2.date, {
+      date: r2.date,
+      ansCharge: r2.ansCharge,
+      hrvMs: r2.hrvMs,
+      hrAvg: r2.hrAvg,
+      breathingAvg: r2.breathingAvg,
+      rechargeStatus: r2.rechargeStatus
+    });
+  }
+  return [...byDate2.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+var LATE_CAFFEINE = "14:00";
+var MIN_GROUP = 3;
+function caffeineSleepSplit(nights, context, contextFrom, from = LATE_CAFFEINE) {
+  const fromMinute = minuteOf2(from) ?? 14 * 60;
+  const byDate2 = new Map(context.map((c) => [c.date, c]));
+  const out = [];
+  for (const n3 of nights) {
+    if (n3.sleepMin <= 0) continue;
+    const day = shiftIso(n3.date, -1);
+    if (day < contextFrom) continue;
+    const c = byDate2.get(day);
+    const lastMinute = c?.caffeineLast ? minuteOf2(c.caffeineLast) : null;
+    out.push({
+      date: n3.date,
+      sleepMin: n3.sleepMin,
+      lastMinute,
+      mg: c?.caffeineMg ?? null,
+      late: lastMinute !== null && lastMinute >= fromMinute
+    });
+  }
+  out.sort((a, b) => a.date.localeCompare(b.date));
+  const group = (late2) => {
+    const v = out.filter((n3) => n3.late === late2).map((n3) => n3.sleepMin);
+    return { count: v.length, meanMin: mean4(v) };
+  };
+  const late = group(true);
+  const rest = group(false);
+  const difference = late.count >= MIN_GROUP && rest.count >= MIN_GROUP && late.meanMin !== null && rest.meanMin !== null ? late.meanMin - rest.meanMin : null;
+  return { nights: out, late, rest, difference };
+}
+function shiftIso(iso2, days3) {
+  const d = new Date(Date.UTC(+iso2.slice(0, 4), +iso2.slice(5, 7) - 1, +iso2.slice(8, 10) + days3));
+  return d.toISOString().slice(0, 10);
+}
+function niceRange(values, step, minSpan = step) {
+  if (values.length === 0) return { min: 0, max: step, ticks: [0, step] };
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  let s = step;
+  for (; ; ) {
+    const min = Math.floor(lo / s) * s;
+    let max = Math.ceil(hi / s) * s;
+    while (max - min < minSpan || max === min) max += s;
+    const count = Math.round((max - min) / s) + 1;
+    if (count <= 7) {
+      const ticks = Array.from({ length: count }, (_, i) => Math.round((min + i * s) * 1e3) / 1e3);
+      return { min, max, ticks };
+    }
+    s *= 2;
+  }
+}
+
 // src/domain/neat.ts
 var neat_exports = {};
 __export(neat_exports, {
@@ -14840,42 +15089,6 @@ function glucoseStats(readings) {
     max: Math.max(...values),
     ranges
   };
-}
-
-// src/domain/wearable.ts
-function minuteOf2(clock5) {
-  const m = /^(\d{1,2}):(\d{2})/.exec(clock5.trim());
-  if (!m) return null;
-  const h = Number(m[1]);
-  const min = Number(m[2]);
-  return h < 24 && min < 60 ? h * 60 + min : null;
-}
-function nightSeries(json) {
-  if (!json) return [];
-  let obj;
-  try {
-    obj = JSON.parse(json);
-  } catch {
-    return [];
-  }
-  if (!obj || typeof obj !== "object") return [];
-  const out = [];
-  for (const [k, v] of Object.entries(obj)) {
-    const minute = minuteOf2(k);
-    if (minute === null || typeof v !== "number" || !Number.isFinite(v)) continue;
-    out.push({ minute, value: v });
-  }
-  const order = (m) => m >= 12 * 60 ? m - 1440 : m;
-  return out.sort((a, b) => order(a.minute) - order(b.minute));
-}
-function nightLowestHr(s) {
-  const values = nightSeries(s.hrSamples).map((p) => p.value).filter((v) => v >= 25 && v <= 250);
-  return values.length ? Math.min(...values) : null;
-}
-function measuredSleepMin(s) {
-  const parts2 = [s.lightS, s.deepS, s.remS, s.unrecognizedS].filter((x) => x !== null);
-  const sum = parts2.reduce((a, b) => a + b, 0);
-  return parts2.length && sum > 0 ? Math.round(sum / 60) : null;
 }
 
 // src/domain/doctorReport.ts
@@ -22710,7 +22923,7 @@ var LIMITS = {
   /** Regel der App (wie Insights → Wochenanalyse): HRV mehr als 20 % unter dem Mittel der 7 Vortage */
   hrvDrop: 0.2
 };
-var mean4 = (xs) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+var mean5 = (xs) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
 var kcal2 = (v) => `${formatNumber(v, 0)} kcal`;
 var hm2 = (min) => `${Math.floor(min / 60)}:${String(Math.round(min % 60)).padStart(2, "0")} h`;
 var days2 = (n3) => n3 === 1 ? "1 Tag" : `${n3} Tagen`;
@@ -22748,7 +22961,7 @@ function proteinAdvice(input, inside) {
       basis: `${daysWith.length} von ${ADVICE_DAYS} Tagen Ern\xE4hrung erfasst (mind. ${MIN_DAYS})${weight ? "" : ", kein Gewicht erfasst"}`
     };
   }
-  const perKg = (mean4(daysWith.map((d) => d.proteinG)) ?? 0) / weight.value;
+  const perKg = (mean5(daysWith.map((d) => d.proteinG)) ?? 0) / weight.value;
   const basis = `\xD8 ${formatNumber(perKg, 1)} g/kg an ${days2(daysWith.length)} (Gewicht ${formatNumber(weight.value, 1)} kg)`;
   if (perKg < LIMITS.proteinMinGPerKg) {
     const target = Math.round(LIMITS.proteinMinGPerKg * weight.value);
@@ -22776,8 +22989,8 @@ function balance(input, inside) {
   });
   return {
     n: pairs.length,
-    diff: mean4(pairs.map((p) => p.intake - p.total)),
-    total: mean4(pairs.map((p) => p.total))
+    diff: mean5(pairs.map((p) => p.intake - p.total)),
+    total: mean5(pairs.map((p) => p.total))
   };
 }
 function energyAdvice(input, inside) {
@@ -22891,8 +23104,8 @@ function lossRateAdvice(input) {
     title: "Abnahme je Woche",
     source: SOURCES.deficit
   };
-  const a = mean4(prev);
-  const b = mean4(last);
+  const a = mean5(prev);
+  const b = mean5(last);
   if (prev.length < 2 || last.length < 2 || a === null || b === null) {
     return {
       ...base,
@@ -22968,7 +23181,7 @@ function sleepAdvice(input, inside) {
       basis: `${nights.length} von ${ADVICE_DAYS} N\xE4chten erfasst (mind. ${MIN_DAYS})`
     };
   }
-  const m = mean4(nights.map((s) => s.sleepMin)) ?? 0;
+  const m = mean5(nights.map((s) => s.sleepMin)) ?? 0;
   const short = nights.filter((s) => s.sleepMin < LIMITS.sleepMinMin).length;
   const basis = `\xD8 ${hm2(m)} in ${nights.length} N\xE4chten, ${short} davon unter 7 h`;
   if (m < LIMITS.sleepMinMin) {
@@ -23035,7 +23248,7 @@ function sleepQualityAdvice(input, inside, field) {
       basis: `${values.length} von ${ADVICE_DAYS} N\xE4chten mit Angabe (mind. ${MIN_DAYS})`
     };
   }
-  const m = mean4(values) ?? 0;
+  const m = mean5(values) ?? 0;
   const basis = `\xD8 ${formatNumber(m, 0)} Min. in ${values.length} N\xE4chten`;
   const limit = latency ? LIMITS.latencyMaxMin : LIMITS.awakeMaxMin;
   if (m > limit) {
@@ -23066,7 +23279,7 @@ function stepsAdvice(input, inside) {
       basis: `${values.length} von ${ADVICE_DAYS} Tagen erfasst (mind. ${MIN_DAYS})`
     };
   }
-  const m = mean4(values) ?? 0;
+  const m = mean5(values) ?? 0;
   const basis = `\xD8 ${formatNumber(m, 0)} Schritte an ${days2(values.length)}`;
   if (m < LIMITS.stepsMin) {
     return {
@@ -23114,7 +23327,7 @@ function hrvAdvice(input) {
   for (const m of hrv2.filter((x) => x.date >= from)) {
     const start = shiftDays(m.date, -7);
     const baseVals = hrv2.filter((x) => x.date >= start && x.date < m.date).map((x) => x.value);
-    const b = mean4(baseVals);
+    const b = mean5(baseVals);
     if (baseVals.length < 3 || b === null) continue;
     checked += 1;
     if (m.value < b * (1 - LIMITS.hrvDrop)) below.push(m.date);
@@ -24485,9 +24698,9 @@ function usualGripWindow(times, minCount = GRIP_WINDOW_MIN_COUNT) {
     let j = i;
     while (j + 1 < mins.length && mins[j + 1] - from <= GRIP_WINDOW_MIN) j += 1;
     const count = j - i + 1;
-    const spread = mins[j] - from;
-    if (!best || count > best.count || count === best.count && spread < best.spread) {
-      best = { count, spread, from, to: mins[j] };
+    const spread2 = mins[j] - from;
+    if (!best || count > best.count || count === best.count && spread2 < best.spread) {
+      best = { count, spread: spread2, from, to: mins[j] };
     }
   }
   if (!best) return null;
@@ -34239,13 +34452,13 @@ __export(gymPreselect_exports, {
   preselectGym: () => preselectGym
 });
 var GYM_PRESELECT_DAYS = 30;
-function shiftIso(date, days3) {
+function shiftIso2(date, days3) {
   const d = /* @__PURE__ */ new Date(`${date}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days3);
   return d.toISOString().slice(0, 10);
 }
 function mostUsedGym(workouts, today, valid2, days3 = GYM_PRESELECT_DAYS) {
-  const from = shiftIso(today, -(days3 - 1));
+  const from = shiftIso2(today, -(days3 - 1));
   const count = /* @__PURE__ */ new Map();
   for (const w of workouts) {
     const id4 = w.gymId;
@@ -34645,7 +34858,7 @@ __export(lateTraining_exports, {
 var LATE_GAP_MIN = 180;
 var LATE_MIN_DAYS = 6;
 var LATE_MIN_DIFF = 20;
-var bedMinute = (t) => {
+var bedMinute2 = (t) => {
   const [h, m] = t.split(":").map(Number);
   const v = (h ?? 0) * 60 + (m ?? 0);
   return v < 12 * 60 ? v + 1440 : v;
@@ -34666,7 +34879,7 @@ var clock4 = (min) => {
   return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 };
 function lateTraining(workouts, sleep) {
-  const usualBed = median2(sleep.map((s) => bedMinute(s.bedTime)));
+  const usualBed = median2(sleep.map((s) => bedMinute2(s.bedTime)));
   const byWake = new Map(sleep.map((s) => [s.date, s]));
   const late = [];
   const early = [];
@@ -36773,6 +36986,7 @@ export {
   setMealList,
   setMealNames,
   sleep_exports as sleep,
+  sleepVisual_exports as sleepVisual,
   smartFilter,
   sorting_exports as sorting,
   sports_exports as sports,

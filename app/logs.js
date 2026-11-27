@@ -13,7 +13,8 @@ import * as L from "./logsdata.js";
 import * as BD from "./bodydata.js";
 import { barTrendSvg, COLOR, trendSvg } from "./pcview.js";
 import { buildDb, today } from "./diary.js";
-import { measuredSleepHtml } from "./heart.js";
+import { measuredSleepHtml, wearableOf } from "./heart.js";
+import { sleepVizCards } from "./sleepviz.js";
 import { caffeineIntakesOn, caffeineSettings, sleepCaffeineHtml } from "./icoach.js";
 import { autoAttrs, autoSaveHtml } from "./autosave.js";
 
@@ -217,7 +218,8 @@ export function viewSleep() {
       </div>
       ${open ? `<p class="muted small">${open} ${open === 1 ? "Änderung" : "Änderungen"} bei Schlaf/Regeneration noch nicht am PC · <button class="linkbtn" data-go="send">An den PC senden</button></p>` : ""}
     </section>`;
-  const cards = [];
+  // Grafische Karten der gemessenen Nächte (1.180.0, wie SleepVisualCards.tsx am PC) – oben
+  const cards = sleepVizCards(wearableOf(S.catalog), { from, to: t, logs, goalMin: goal?.sleepMin ?? null, pick: S.sleepHypno ?? null });
   if (!logs.length) {
     out += card("Keine Einträge in diesem Zeitraum", "", `<p class="muted">Erfasse eine Nacht mit „Nacht erfassen“. Als Datum gilt der Tag des Aufwachens.</p>`, "sleep");
   } else {
@@ -880,6 +882,7 @@ export function logsChange(el) {
   if (k) {
     if (k === "sleep-days") S.sleepDays = Number(el.value);
     else if (k === "sleep-period") S.sleepPeriod = el.value;
+    else if (k === "sleep-hypno") S.sleepHypno = el.value;
     else if (k === "recovery-days") S.recoveryDays = Number(el.value);
     else if (k === "recovery-scale") S.recoveryScale = el.value;
     X.rerender();

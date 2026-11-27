@@ -2754,3 +2754,20 @@ html[data-arranging] [data-arrange-unit][data-arrange-drag] { position: relative
 .training-rules .sub { display: block; color: var(--muted); font-size: .74rem; }
 .training-rules p { margin: 4px 0 0; }
 .training-rules__img { display: block; width: 100%; max-width: 420px; height: auto; margin: 8px 0; border-radius: 8px; }
+
+/* Sleep: grafische Karten der gemessenen Nächte (1.180.0, wie am PC) */
+.sleep-viz__svg { margin: 6px 0; overflow: visible; }
+.pc-chart .sleep-viz__lane { fill: var(--line); opacity: .35; }
+.pc-chart .sleep-viz__zero { stroke: var(--muted); stroke-width: 1.2; }
+.pc-chart .sleep-viz__goal, .pc-chart .sleep-viz__fit { stroke: var(--orange); stroke-width: 1.8; stroke-dasharray: 5 3; }
+.pc-chart .sleep-viz__mean { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.pc-chart .sleep-viz__groupmean { stroke: var(--fg); stroke-width: 3; stroke-linecap: round; }
+.sleep-viz__donut { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.sleep-viz__donut > svg { flex: none; }
+.sleep-viz__center { fill: var(--fg); font-size: 17px; font-weight: 700; }
+.sleep-viz__donut .sleep-viz__axis { fill: var(--muted); font-size: 11px; }
+.sleep-viz__legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 4px 0; padding: 0; list-style: none; font-size: .8rem; color: var(--muted); }
+.sleep-viz__legend li { display: flex; align-items: center; gap: 6px; }
+.sleep-viz__legend.legend--column { flex-direction: column; align-items: flex-start; }
+.sleep-viz__legend .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.sleep-viz__legend .swatch--line { width: 16px; height: 3px; }

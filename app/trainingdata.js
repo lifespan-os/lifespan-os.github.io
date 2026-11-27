@@ -164,6 +164,7 @@ const CARDIO = [
   ["deviceKcal", "device_kcal"],
   ["powerMaxW", "power_max_w"],
   ["cadenceMax", "cadence_max"],
+  ["deviceKcalNet", "device_kcal_net"],
 ];
 const rpOf = (r) => Object.fromEntries(RP.map(([k, c]) => [k, r[c] ?? null]));
 const cardioOf = (r) => Object.fromEntries(CARDIO.map(([k, c]) => [k, r[c] ?? null]));

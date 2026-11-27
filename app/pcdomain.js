@@ -2998,7 +2998,8 @@ var CARDIO_FIELD_INFO = {
   level: "Stufe bzw. Widerstand am Ger\xE4t. Nur zur Auswertung.",
   hrAvg: "\xD8 Puls in Schl\xE4gen je Minute (z. B. von der Uhr). Ab 90/min f\xFCr die Kalorien nutzbar.",
   hrMax: "H\xF6chster Puls im Block.",
-  deviceKcal: "kcal laut Ger\xE4t oder Uhr \u2013 nur zum Vergleich. Ger\xE4te z\xE4hlen meist brutto (mit Grundumsatz), die App z\xE4hlt nur den Mehrverbrauch."
+  deviceKcal: "kcal brutto: der Gesamtverbrauch im Block laut Ger\xE4t oder Uhr, also inklusive Grundumsatz (was du auch in Ruhe verbraucht h\xE4ttest). Meist der gro\xDFe Wert auf dem Display, z. B. \u201EKalorien\u201C oder \u201EGesamt-kcal\u201C. Nur zum Vergleich \u2013 die App rechnet selbst.",
+  deviceKcalNet: "kcal netto: nur der Mehrverbrauch durch die Bewegung, ohne Grundumsatz. Steht oft als \u201Eaktive kcal\u201C, \u201EAktivkalorien\u201C oder \u201ENetto\u201C auf Ger\xE4t bzw. Uhr. Liegt immer unter brutto. Nur zum Vergleich \u2013 die App z\xE4hlt ebenfalls nur den Mehrverbrauch."
 };
 function formatDuration2(seconds) {
   if (seconds === null || seconds === void 0 || !Number.isFinite(seconds)) return "";
@@ -3140,6 +3141,7 @@ function emptyCardioDraft() {
     cadence: "",
     level: "",
     deviceKcal: "",
+    deviceKcalNet: "",
     powerMaxW: "",
     cadenceMax: ""
   };
@@ -3154,6 +3156,7 @@ function cardioToDraft(s) {
     cadence: numberToInput(s.cadence ?? null, 0),
     level: numberToInput(s.level ?? null, 1),
     deviceKcal: numberToInput(s.deviceKcal ?? null, 0),
+    deviceKcalNet: numberToInput(s.deviceKcalNet ?? null, 0),
     powerMaxW: numberToInput(s.powerMaxW ?? null, 1),
     cadenceMax: numberToInput(s.cadenceMax ?? null, 0)
   };
@@ -3220,6 +3223,7 @@ function copySet(previous) {
       hrAvg: "",
       hrMax: "",
       deviceKcal: "",
+      deviceKcalNet: "",
       powerMaxW: "",
       cadenceMax: ""
     }
@@ -3415,6 +3419,7 @@ function parseCardio(p, f, c) {
     cadence: p.integer(f("cadence"), c.cadence),
     level: p.decimal(f("level"), c.level),
     deviceKcal: p.integer(f("deviceKcal"), c.deviceKcal),
+    deviceKcalNet: p.integer(f("deviceKcalNet"), c.deviceKcalNet),
     powerMaxW: p.decimal(f("powerMaxW"), c.powerMaxW),
     cadenceMax: p.integer(f("cadenceMax"), c.cadenceMax)
   };
@@ -10891,6 +10896,7 @@ __export(energy_exports, {
   describeCalibration: () => describeCalibration,
   describeCardioEnergy: () => describeCardioEnergy,
   describeTraining: () => describeTraining,
+  deviceKcalText: () => deviceKcalText,
   energyRows: () => energyRows,
   formatPal: () => formatPal,
   palLabel: () => palLabel,
@@ -10997,8 +11003,15 @@ function describeCardioEnergy(c) {
   if (pace) parts2.push(pace);
   parts2.push(c.methods.map(cardioMethodLabel).join(" bzw. "));
   let text2 = `${parts2.join(" \xB7 ")}: ${formatNumber(c.kcal, 0)} kcal`;
-  if (c.deviceKcal !== null) text2 += ` (Ger\xE4t: ${formatNumber(c.deviceKcal, 0)} kcal brutto)`;
+  const device = deviceKcalText(c.deviceKcal, c.deviceKcalNet ?? null);
+  if (device) text2 += ` (Ger\xE4t: ${device})`;
   return text2;
+}
+function deviceKcalText(gross, net) {
+  const parts2 = [];
+  if (gross !== null) parts2.push(`${formatNumber(gross, 0)} kcal brutto`);
+  if (net !== null) parts2.push(`${formatNumber(net, 0)} kcal netto`);
+  return parts2.length > 0 ? parts2.join(", ") : null;
 }
 function describeTraining(t) {
   const effort = t.perceivedExertion !== null ? `Anstrengung ${t.perceivedExertion}/10` : "ohne Anstrengung";
@@ -19789,6 +19802,7 @@ function checkPlanDay(day, defaults = () => []) {
         cadence: s.cadence ?? null,
         level: s.level ?? null,
         deviceKcal: s.deviceKcal ?? null,
+        deviceKcalNet: s.deviceKcalNet ?? null,
         powerMaxW: s.powerMaxW ?? null,
         cadenceMax: s.cadenceMax ?? null
       }));
@@ -36277,7 +36291,11 @@ function parseFit(bytes) {
         off += 5;
         const fields = [];
         for (let i = 0; i < n3; i += 1) {
-          fields.push({ num: bytes[off], size: bytes[off + 1], base: bytes[off + 2] });
+          fields.push({
+            num: bytes[off],
+            size: bytes[off + 1],
+            base: bytes[off + 2]
+          });
           off += 3;
         }
         let devSize = 0;
@@ -36311,7 +36329,10 @@ function parseFit(bytes) {
         return {
           format: "fit",
           sport,
-          kind: kindOfSport(sport, sub === 14 ? "indoor_rowing" : sub === 15 ? "elliptical" : sub === 16 ? "stair" : ""),
+          kind: kindOfSport(
+            sport,
+            sub === 14 ? "indoor_rowing" : sub === 15 ? "elliptical" : sub === 16 ? "stair" : ""
+          ),
           start: new Date((start + FIT_EPOCH) * 1e3).toISOString(),
           durationSeconds: Math.round(timer / 1e3),
           distanceM: get(9) === null ? null : Math.round(get(9) / 100),

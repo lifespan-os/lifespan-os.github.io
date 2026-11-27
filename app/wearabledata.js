@@ -14,8 +14,10 @@ function describeSync(r) {
   const added = [];
   if (r.sleepLogNew > 0) added.push(`${r.sleepLogNew} neue N\xE4chte im Schlafprotokoll`);
   if (r.sleepLogCompleted > 0)
-    added.push(`${r.sleepLogCompleted}\xD7 Schlafphasen zu eigenen N\xE4chten erg\xE4nzt`);
+    added.push(`${r.sleepLogCompleted}\xD7 eigene N\xE4chte erg\xE4nzt (Phasen, Effizienz, Qualit\xE4t)`);
   if (r.hrvNew > 0) added.push(`${r.hrvNew}\xD7 HRV in Body & Longevity`);
+  if ((r.restingHrNew ?? 0) > 0)
+    added.push(`${r.restingHrNew}\xD7 Ruhepuls in Body & Longevity`);
   if (r.stepsNew > 0) added.push(`${r.stepsNew}\xD7 Schritte in der Alltagsbewegung`);
   if (r.stepsUpdated > 0)
     added.push(`${r.stepsUpdated}\xD7 Schritte in der Alltagsbewegung aktualisiert`);
@@ -62,6 +64,16 @@ function nightLowestHr(s) {
 function measuredSleepMin(s) {
   const parts = [s.lightS, s.deepS, s.remS, s.unrecognizedS].filter((x) => x !== null);
   return parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / 60) : null;
+}
+function sleepEfficiencyPct(s) {
+  if (!s.sleepStart || !s.sleepEnd) return null;
+  const parts = [s.lightS, s.deepS, s.remS, s.unrecognizedS].filter((x) => x !== null && x !== void 0);
+  if (parts.length === 0) return null;
+  const at = (t) => /[zZ]|[+-]\d{2}:?\d{2}$/.test(t) ? Date.parse(t) : Date.parse(`${t.slice(0, 19)}Z`);
+  const span = (at(s.sleepEnd) - at(s.sleepStart)) / 1e3;
+  if (!Number.isFinite(span) || span <= 0) return null;
+  const pct = Math.round(parts.reduce((a, b) => a + b, 0) * 100 / span);
+  return pct >= 1 && pct <= 100 ? pct : null;
 }
 function phaseShares(s) {
   if (s.lightS === null || s.deepS === null || s.remS === null) return null;
@@ -1245,6 +1257,7 @@ export {
   riseByCarbs,
   secondsInZones,
   signedText,
+  sleepEfficiencyPct,
   sleepGlucoseRows,
   sleepRatingLabel,
   splitCsv,

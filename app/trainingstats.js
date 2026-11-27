@@ -623,7 +623,7 @@ export function cardioSessionsFull(db) {
     const sessionRpe = w.perceived_exertion ?? null;
     for (const ex of o.exercises) {
       if (!ex.cardioKind) continue;
-      const s = { workoutId: w.id, date: w.date, title: w.title, exerciseId: ex.exerciseId, exerciseName: ex.exerciseName, kind: ex.cardioKind, blocks: ex.sets.length, durationSeconds: 0, distanceM: 0, hrAvg: null, hrMax: null, powerAvg: null, powerMax: null, kcal: null, methods: [], deviceKcal: null, zoneSeconds: [0, 0, 0, 0, 0], belowZoneSeconds: 0, withoutZoneSeconds: 0 };
+      const s = { workoutId: w.id, date: w.date, title: w.title, exerciseId: ex.exerciseId, exerciseName: ex.exerciseName, kind: ex.cardioKind, blocks: ex.sets.length, durationSeconds: 0, distanceM: 0, hrAvg: null, hrMax: null, powerAvg: null, powerMax: null, kcal: null, methods: [], deviceKcal: null, deviceKcalNet: null, zoneSeconds: [0, 0, 0, 0, 0], belowZoneSeconds: 0, withoutZoneSeconds: 0 };
       let hrSum = 0;
       let hrTime = 0;
       let pSum = 0;
@@ -647,6 +647,7 @@ export function cardioSessionsFull(db) {
         const pmax = set.power_max_w ?? set.power_w ?? null;
         if (pmax !== null) s.powerMax = s.powerMax === null ? pmax : Math.max(s.powerMax, pmax);
         if (set.device_kcal !== null && set.device_kcal !== undefined) s.deviceKcal = (s.deviceKcal ?? 0) + set.device_kcal;
+        if (set.device_kcal_net !== null && set.device_kcal_net !== undefined) s.deviceKcalNet = (s.deviceKcalNet ?? 0) + set.device_kcal_net;
         if (set.hr_avg !== null && set.hr_avg !== undefined && zones) {
           const z = zoneOf(set.hr_avg, zones);
           if (z === null) s.belowZoneSeconds += sec;
@@ -754,7 +755,7 @@ export function viewCardioTab() {
               .map(
                 (s) => `<li class="train-row"><span class="train-row__date">${fmtDate(s.date)}</span><span class="train-row__main"><strong>${esc(s.exerciseName)}</strong> <span class="muted small">· ${esc(label(s.kind))}</span>
                   <span class="small">${esc(D.cardio.formatDuration(s.durationSeconds) || "–")} · ${s.distanceM > 0 ? `${F(s.distanceM / 1000, 2)} km` : "–"} · ${esc(D.cardio.cardioPace(s.kind, s.durationSeconds, s.distanceM) ?? "–")}</span>
-                  <span class="muted small">Ø Puls ${s.hrAvg !== null ? F(s.hrAvg) : "–"} · Ø Watt ${s.powerAvg !== null ? F(s.powerAvg) : "–"} · ${s.kcal !== null ? `${F(s.kcal)} kcal` : "– kcal"}${s.deviceKcal !== null ? ` (Gerät ${F(s.deviceKcal)})` : ""}</span>
+                  <span class="muted small">Ø Puls ${s.hrAvg !== null ? F(s.hrAvg) : "–"} · Ø Watt ${s.powerAvg !== null ? F(s.powerAvg) : "–"} · ${s.kcal !== null ? `${F(s.kcal)} kcal` : "– kcal"}${s.deviceKcal !== null || s.deviceKcalNet !== null ? ` (Gerät ${[s.deviceKcal !== null ? `${F(s.deviceKcal)} brutto` : "", s.deviceKcalNet !== null ? `${F(s.deviceKcalNet)} netto` : ""].filter(Boolean).join(" / ")})` : ""}</span>
                   <span class="muted small">${esc(s.methods.map(D.cardio.cardioMethodLabel).join(", ") || "–")}</span></span></li>`,
               )
               .join("")}</ul>`

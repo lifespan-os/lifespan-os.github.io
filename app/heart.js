@@ -570,6 +570,24 @@ function nightDetailHtml(n, w, caffeine = null) {
   const gateEnd = W.localClock(sw?.gateEnd ?? null, off);
   const offset = W.bedtimeOffset(start, prefStart);
   const charge = W.usualLabel(n.sleepCharge ?? null);
+  const eff = W.sleepEfficiencyPct(n);
+  const recharge = rec ? W.rechargeStatusLabel(rec.rechargeStatus ?? null) : null;
+  const ansStatus = rec ? W.usualLabel(rec.ansChargeStatus ?? null) : null;
+  const rechargeHtml = rec
+    ? `<h4 class="logs-sub">Nightly Recharge (Polar)</h4>
+    <div class="stat">
+      <div><b>${num(rec.hrAvg)}</b><span>Ø Puls /min (→ Ruhepuls)</span></div>
+      <div><b>${num(rec.hrvMs)}</b><span>Ø HRV ms</span></div>
+      <div><b>${num(rec.breathingAvg, 1)}</b><span>Ø Atemfrequenz /min</span></div>
+    </div>
+    <div class="stat">
+      <div><b>${num(rec.rrAvgMs)}</b><span>Ø Schlag-zu-Schlag ms</span></div>
+      <div><b>${num(rec.ansCharge, 1)}</b><span>ANS Charge (−10…+10)</span></div>
+      <div><b>${recharge ? esc(recharge) : "–"}</b><span>Nightly Recharge</span></div>
+    </div>
+    ${ansStatus ? `<p class="muted small">ANS Charge laut Polar: ${esc(ansStatus)}</p>` : ""}
+    <p class="muted small">Der Ø Puls stammt aus den ersten Stunden des Schlafs. Am PC wird er als Ruhepuls (nachts, Methode Polar) in Body &amp; Longevity eingetragen, wenn für den Tag noch keiner erfasst ist.</p>`
+    : "";
   const swLines = sw
     ? [
         sw.grade !== null && sw.grade !== undefined && `Wachheit am Tag: <strong>${num(sw.grade, 1)}</strong> von 10${sw.gradeClass ? ` (${esc(W.polarLabel(sw.gradeClass))})` : ""}`,
@@ -583,6 +601,7 @@ function nightDetailHtml(n, w, caffeine = null) {
       <div><b>${num(n.sleepScore)}</b><span>Schlafwert (Polar)</span></div>
       <div><b>${num(n.continuity, 1)}</b><span>Kontinuität (1–5)</span></div>
       <div><b>${n.cycles ?? "–"}</b><span>Schlafzyklen</span></div>
+      <div><b>${eff !== null ? `${eff} %` : "–"}</b><span>Schlafeffizienz</span></div>
     </div>
     ${
       n.groupDurationScore != null || n.groupSolidityScore != null || n.groupRegenerationScore != null
@@ -602,10 +621,14 @@ function nightDetailHtml(n, w, caffeine = null) {
           `Schlafziel bei Polar ${dur(n.sleepGoalS / 60)}${sleptMin !== null ? ` – gemessen ${dur(sleptMin)} (${num((sleptMin * 60 * 100) / n.sleepGoalS)} % des Ziels)` : ""}`,
         W.continuityClassLabel(n.continuityClass) && `Kontinuität laut Polar: ${esc(W.continuityClassLabel(n.continuityClass))}`,
         W.sleepRatingLabel(n.sleepRating) && `Deine Bewertung der Nacht bei Polar: ${esc(W.sleepRatingLabel(n.sleepRating))}`,
+        n.sleepRating >= 1 && n.sleepRating <= 5 && `Polar-Bewertung ${n.sleepRating}/5 → Schlafqualität ${n.sleepRating * 2}/10 im Schlafprotokoll (nur wenn dort noch keine steht)`,
+        n.unrecognizedS > 0 && `Nicht erkannte Schlafphase: ${dur(n.unrecognizedS / 60)}`,
+        eff !== null && `Schlafeffizienz = geschlafene Zeit ÷ Zeit von Einschlafen bis Aufwachen (${eff} %)`,
         n.deviceId && `Gerät: ${esc(n.deviceId)}`,
       ].filter(Boolean);
       return lines.length ? `<ul class="list">${lines.map((l) => `<li class="muted small">${l}</li>`).join("")}</ul>` : "";
     })()}
+    ${rechargeHtml}
     ${charge ? `<p class="muted small">Sleep Charge laut Polar: <strong>${esc(charge)}</strong>${skin?.value != null ? ` · Hauttemperatur ${num(skin.value, 1)} °C` : ""}</p>` : skin?.value != null ? `<p class="muted small">Hauttemperatur ${num(skin.value, 1)} °C</p>` : ""}
     ${
       segs.length && total > 0

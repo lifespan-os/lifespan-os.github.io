@@ -803,10 +803,11 @@ export function trainingEnergy(w, person) {
       strength = strength || ex.exerciseCategory === "strength";
       continue;
     }
-    const c = { exerciseName: ex.exerciseName, kind: ex.cardioKind, blocks: 0, durationSeconds: 0, distanceM: 0, methods: [], kcal: 0, deviceKcal: null };
+    const c = { exerciseName: ex.exerciseName, kind: ex.cardioKind, blocks: 0, durationSeconds: 0, distanceM: 0, methods: [], kcal: 0, deviceKcal: null, deviceKcalNet: null };
     let kcal = 0;
     for (const s of ex.sets) {
       if (s.device_kcal !== null && s.device_kcal !== undefined) c.deviceKcal = (c.deviceKcal ?? 0) + s.device_kcal;
+      if (s.device_kcal_net !== null && s.device_kcal_net !== undefined) c.deviceKcalNet = (c.deviceKcalNet ?? 0) + s.device_kcal_net;
       const e = blockEnergy(ex.cardioKind, s, sessionRpe, person);
       if (!e) continue;
       c.blocks += 1;

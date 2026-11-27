@@ -9,7 +9,7 @@ import * as PS from "./pcsettings.js";
 import * as H from "./healthdata.js";
 import * as D from "./pcdomain.js";
 import { masterclassLinkHtml } from "./parity.js";
-import { buildDb, today } from "./diary.js";
+import { buildDb, dayIntakeValues, today } from "./diary.js";
 import * as O from "./pcoverview.js";
 import * as SD from "./superdata.js";
 import { hasWearable, heartTabHtml, wearableOf } from "./heart.js";
@@ -262,7 +262,27 @@ function trendTab({ analytes, draws }) {
     </tbody></table></div>
     ${otherUnits ? `<p class="muted small">${otherUnits} ${otherUnits === 1 ? "Wert hat" : "Werte haben"} eine andere Einheit und ${otherUnits === 1 ? "steht" : "stehen"} nur in der Tabelle – die App rechnet Einheiten nicht um.</p>` : ""}
     <p class="muted small">Grünes Band = Referenzbereich, rote Punkte = Werte außerhalb. Beobachtung ohne Bewertung.</p>
-  </section>`;
+  </section>
+  ${labIntakeHtml(draws)}`;
+}
+
+/** Blutwerte und Zufuhr (1.175.0, wie LabIntakeCard am PC 1.0.240): erst auf Knopfdruck berechnet. */
+function labIntakeHtml(draws) {
+  const LN = D.labNutrition;
+  if (!LN) return "";
+  const dates = LN.intakeDatesFor(draws);
+  const F = (v) => D.formatNumber(v, v < 10 ? 1 : 0);
+  let body;
+  if (!dates.length) body = `<p class="muted">Für Vitamin D, B12, Folsäure, Ferritin, Eisen, Zink, Magnesium, Natrium, Kalium und Calcium ist noch kein Blutwert gespeichert.</p>`;
+  else if (!X.S.labIntake) body = `<button class="btn" data-act="lab-intake">Zufuhr der ${LN.LAB_INTAKE_DAYS} Tage vor den Abnahmen berechnen</button>`;
+  else {
+    const rows = X.S.labIntake;
+    body = `<div class="table-scroll"><table class="data-table"><thead><tr><th>Abnahme</th><th>Blutwert</th><th class="tnum">Wert</th><th class="tnum">Ø Zufuhr je Tag</th></tr></thead><tbody>${rows
+      .map((r) => `<tr><td>${esc(D.formatDate(r.date))}</td><td>${esc(r.analyteName)}${r.link.note ? `<span class="sub">${esc(r.link.note)}</span>` : ""}</td><td class="tnum">${esc(L().formatLabValue(r.value, r.comparator))} ${esc(r.unit)}</td><td class="tnum"><strong>${r.intakeMean === null ? "–" : `${F(r.intakeMean)} ${esc(r.link.unit)} ${esc(r.link.nutrientLabel)}`}</strong><span class="sub">${r.days === 0 ? "keine Tage mit Ernährung" : `${r.days} von ${LN.LAB_INTAKE_DAYS} Tagen erfasst`}</span></td></tr>`)
+      .join("")}</tbody></table></div>`;
+  }
+  return `<section class="card"><h3>Blutwerte und Zufuhr</h3>${body}
+    <p class="muted small">Zufuhr aus Lebensmitteln mit BLS-Bezug, Supplements und Fasttracking; gezählt werden nur Tage mit erfasster Ernährung. Lebensmittel ohne Angabe fehlen – die tatsächliche Zufuhr kann höher sein. Werte nebeneinander, keine Deutung.</p></section>`;
 }
 
 // ------------------------------------------------------------------ Once in a Lifetime
@@ -744,6 +764,17 @@ export const healthActions = {
       GLD.addManual(X.S.catalog, X.S.glucose, { measuredAt: at.slice(0, 16), mgDl: mg }, opts());
     }),
   "glucose-del": (el) => saveGlucose(() => GLD.deleteReading(X.S.catalog, X.S.glucose, el.dataset.arg)),
+  "lab-intake": () => {
+    const LN = D.labNutrition;
+    const { draws } = data();
+    const db = buildDb();
+    const intake = LN.intakeDatesFor(draws).flatMap((date) => {
+      const values = dayIntakeValues(db, date);
+      return values ? [{ date, values }] : [];
+    });
+    X.S.labIntake = LN.labIntakeRows(draws, intake);
+    X.rerender();
+  },
   "health-tab": (el) => {
     X.S.healthTab = el.dataset.arg;
     X.S.lifeEdit = null;

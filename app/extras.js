@@ -113,7 +113,7 @@ function gripTimeDefault(grip) {
 function gripWindow() {
   try {
     const db = buildDb();
-    return D.gripTiming.usualGripWindow((db.grip ?? []).map((g) => g.time));
+    return D.gripTiming.usualGripWindow(D.gripTiming.recentGripTimes(db.grip ?? [], today()));
   } catch {
     return null;
   }

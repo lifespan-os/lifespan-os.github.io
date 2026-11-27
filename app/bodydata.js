@@ -56,7 +56,28 @@ export function metricHint(m) {
   return own || METRIC_HINTS[m.id] || null;
 }
 
-const MEASUREMENT_COLUMNS = ["id", "metric_id", "date", "value", "notes", "method", "time", "created_at", "updated_at"];
+const MEASUREMENT_COLUMNS = ["id", "metric_id", "date", "value", "notes", "method", "time", "created_at", "updated_at", "condition"];
+
+/** Messbedingungen (1.171.0, wie PC Schema 83 / `domain/conditions.ts`); Bereiche mit Auswahl */
+export const CONDITION_KEYS = ["waking", "morning", "day", "evening", "post_training", "night"];
+export const WITH_CONDITION = new Set(["weight", "composition", "vital"]);
+export const CONDITION_LABELS = {
+  waking: "Nach dem Aufstehen (nüchtern)",
+  morning: "Morgens (nach Frühstück oder Kaffee)",
+  day: "Tagsüber",
+  evening: "Abends",
+  post_training: "Nach dem Training",
+  night: "In der Nacht (Uhr bzw. Wearable)",
+};
+export const CONDITION_SHORT = { waking: "nach dem Aufstehen", morning: "morgens", day: "tagsüber", evening: "abends", post_training: "nach dem Training", night: "nachts" };
+/** undefined = unverändert (Wert der Vorlage), "" bzw. null = keine Angabe */
+function conditionOf(input, base) {
+  if (input === undefined) return base?.condition ?? null;
+  const c = String(input ?? "").trim();
+  if (c === "") return null;
+  if (!CONDITION_KEYS.includes(c)) throw new Error("Unbekannte Messbedingung.");
+  return c;
+}
 
 /** Aus der Exportdatei: Messgrößen (ohne archivierte) und alle Messwerte. */
 export function bodyFromRows(rows) {
@@ -167,6 +188,7 @@ export function saveValue(catalog, local, input, { uuid, now = new Date() }) {
     delete local.entries[own.row.id];
   }
   const base = own && keyOf(own.row) === key ? own.row : pc;
+  const condition = conditionOf(input.condition, base);
   const row = {
     id: base?.id ?? uuid(),
     metric_id: metric.id,
@@ -175,6 +197,7 @@ export function saveValue(catalog, local, input, { uuid, now = new Date() }) {
     notes,
     method,
     time,
+    condition,
     created_at: base?.created_at ?? iso,
     updated_at: iso,
   };
@@ -234,7 +257,7 @@ function fmt(v) {
  * noch nicht gesendeten Handy-Wert dieses Tages; Werte vom PC bleiben (dort löschen).
  * Rückgabe { errors, saved, removed, kept }.
  */
-export function saveDay(catalog, local, { date, values, methods = {}, times = {} }, { uuid, now = new Date() }) {
+export function saveDay(catalog, local, { date, values, methods = {}, times = {}, conditions = {} }, { uuid, now = new Date() }) {
   const errors = {};
   const metricsById = new Map((catalog?.body?.metrics ?? []).map((m) => [m.id, m]));
   const existing = allValues(catalog, local);
@@ -266,8 +289,11 @@ export function saveDay(catalog, local, { date, values, methods = {}, times = {}
     const rounded = Math.round(value * f) / f;
     const method = (methods[m.category] || "").trim() || null;
     const time = (times[m.category] || "").trim() || null;
-    if (today && today.row.value === rounded && (today.row.method ?? null) === method && (today.row.time ?? null) === time) continue;
-    plan.push({ kind: "save", m, value: rounded, method, time, notes: today?.row.notes ?? null });
+    // Messbedingung nur in Bereichen mit Auswahl (sonst bleibt die gespeicherte)
+    const condition = WITH_CONDITION.has(m.category) ? (conditions[m.category] ?? "") : undefined;
+    const sameCondition = condition === undefined || (today?.row.condition ?? null) === (condition || null);
+    if (today && today.row.value === rounded && (today.row.method ?? null) === method && (today.row.time ?? null) === time && sameCondition) continue;
+    plan.push({ kind: "save", m, value: rounded, method, time, condition, notes: today?.row.notes ?? null });
   }
   if (Object.keys(errors).length) return { errors, saved: 0, removed: 0, kept: 0 };
   let saved = 0;
@@ -275,7 +301,7 @@ export function saveDay(catalog, local, { date, values, methods = {}, times = {}
   let kept = 0;
   for (const p of plan) {
     if (p.kind === "save") {
-      saveValue(catalog, local, { metricId: p.m.id, date, value: p.value, method: p.method, time: p.time, notes: p.notes }, { uuid, now });
+      saveValue(catalog, local, { metricId: p.m.id, date, value: p.value, method: p.method, time: p.time, condition: p.condition, notes: p.notes }, { uuid, now });
       saved++;
     } else if (p.today.local && !p.today.sent) {
       delete local.entries[p.today.row.id];
@@ -291,14 +317,16 @@ export function dayForm(catalog, local, date) {
   const values = {};
   const methodCount = {};
   const timeCount = {};
+  const condCount = {};
   for (const m of catalog?.body?.metrics ?? []) {
     const v = (all.get(m.id) ?? []).find((x) => x.row.date === date);
     values[m.id] = v ? String(v.row.value).replace(".", ",") : "";
     if (v?.row.method) (methodCount[m.category] ??= {})[v.row.method] = ((methodCount[m.category] ?? {})[v.row.method] ?? 0) + 1;
     if (v?.row.time) (timeCount[m.category] ??= {})[v.row.time] = ((timeCount[m.category] ?? {})[v.row.time] ?? 0) + 1;
+    if (v?.row.condition) (condCount[m.category] ??= {})[v.row.condition] = ((condCount[m.category] ?? {})[v.row.condition] ?? 0) + 1;
   }
   const top = (c) => Object.fromEntries(Object.entries(c).map(([k, o]) => [k, Object.entries(o).sort((a, b) => b[1] - a[1])[0][0]]));
-  return { date, values, methods: top(methodCount), times: top(timeCount), errors: {} };
+  return { date, values, methods: top(methodCount), times: top(timeCount), conditions: top(condCount), errors: {} };
 }
 
 /** Messmethoden, die in einem Bereich schon verwendet wurden (für die Auswahl). */

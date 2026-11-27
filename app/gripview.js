@@ -4,6 +4,7 @@
 // nach Normwerten (D.grip aus src/domain/grip.ts), Verlauf mit Linien und Tabelle, Löschen.
 // Gespeichert wird wie in Quick Fill über `logsdata.saveGrip` (geht mit „An den PC senden“ zurück).
 
+import { CONDITION_LABELS, CONDITION_SHORT } from "./bodydata.js";
 import * as D from "./pcdomain.js";
 import * as L from "./logsdata.js";
 import * as PS from "./pcsettings.js";
@@ -51,6 +52,7 @@ export function gripMeasurements(db) {
       heightCm: g.height_cm ?? null,
       notes: g.notes ?? null,
       method: g.method ?? null,
+      condition: g.condition ?? null,
       updatedAt: g.updated_at ?? null,
     }))
     .sort((a, b) => a.date.localeCompare(b.date));
@@ -83,6 +85,7 @@ function formFor(date, list) {
     right: existing ? inputOf(existing.rightKg) : "",
     dominant: existing ? existing.dominantHand ?? "" : lastWith("dominantHand"),
     method: existing ? existing.method ?? "" : lastWith("method"),
+    condition: existing ? existing.condition ?? "" : lastWith("condition"),
     time: existing?.time ?? (!existing && date === appDay() ? nowTime() : ""),
     sex: existing?.sex ?? "",
     notes: existing?.notes ?? "",
@@ -184,7 +187,7 @@ function historyHtml(list, profile, selected) {
   const latestEval = G().evaluateMeasurement(latest, profile);
   const limits = latestEval.ok ? G().levelLimitsKg(latestEval.result.norm) : null;
   const points = G().gripChartPoints(list, profile);
-  const window90 = D.gripTiming.usualGripWindow(list.map((m) => m.time));
+  const window90 = D.gripTiming.usualGripWindow(D.gripTiming.recentGripTimes(list, appDay()));
   const rows = [...list]
     .reverse()
     .map((m) => {
@@ -194,7 +197,7 @@ function historyHtml(list, profile, selected) {
       return `<div class="grip-row${m.date === selected ? " is-selected" : ""}">
         <div class="grip-row__main"><b>${fmtDate(m.date)}</b>${m.time ? ` <span class="muted small">${esc(m.time)}</span>` : ` <span class="muted small">ohne Uhrzeit</span>`}
           ${outside ? `<span class="grip-warn small">außerhalb des Messfensters</span>` : ""}
-          <span class="muted small">links ${kg(m.leftKg)}${m.dominantHand === "left" ? " (dom.)" : ""} · rechts ${kg(m.rightKg)}${m.dominantHand === "right" ? " (dom.)" : ""}${m.method ? ` · ${esc(m.method)}` : ""}</span>
+          <span class="muted small">links ${kg(m.leftKg)}${m.dominantHand === "left" ? " (dom.)" : ""} · rechts ${kg(m.rightKg)}${m.dominantHand === "right" ? " (dom.)" : ""}${m.method ? ` · ${esc(m.method)}` : ""}${m.condition ? ` · ${esc(CONDITION_SHORT[m.condition] ?? "")}` : ""}</span>
           ${m.notes ? `<span class="muted small">${esc(m.notes)}</span>` : ""}</div>
         <div class="grip-row__right"><b>${kg(G().averageKg(m.leftKg, m.rightKg))}</b>
           ${lv ? `<span class="grip-lv grip-lv--${G().GRIP_LEVELS.indexOf(lv)}">${esc(lv.label)}</span><span class="muted small">${fmt(ev.result.percentile, 1)}. Perz.</span>` : `<span class="muted small">keine Einordnung</span>`}
@@ -229,7 +232,7 @@ export function gripPanelHtml(date) {
   const f = state(date, list);
   const existing = list.find((m) => m.date === date) ?? null;
   const isToday = date === appDay();
-  const window90 = D.gripTiming.usualGripWindow(list.filter((m) => m.date !== date).map((m) => m.time));
+  const window90 = D.gripTiming.usualGripWindow(D.gripTiming.recentGripTimes(list.filter((m) => m.date !== date), appDay()));
   const outside = f.time !== "" && D.gripTiming.inGripWindow(f.time, window90) === false;
   const askSex = profile?.sex !== "male" && profile?.sex !== "female";
   const l = parseKg(f.left);
@@ -253,6 +256,7 @@ export function gripPanelHtml(date) {
         <label class="field"><span${mark}>Rechte Hand (bester Versuch)</span><span class="entry-row__input"><input id="grip-right" type="text" inputmode="decimal" data-grip="right" value="${esc(f.right)}" ${f.errors?.rightKg ? 'aria-invalid="true"' : ""}><span class="unit">kg</span></span>${err("rightKg")}</label>
         ${select("grip-dominant", "dominant", f.dominant, G().HAND_OPTIONS, "Dominante Hand")}
         ${select("grip-method", "method", f.method, [{ value: "", label: "Keine Angabe" }, ...methods.map((m) => ({ value: m, label: m }))], "Messmethode Griffkraft")}
+        ${select("grip-condition", "condition", f.condition ?? "", [{ value: "", label: "Keine Angabe" }, ...Object.entries(CONDITION_LABELS).map(([value, label]) => ({ value, label }))], "Messbedingung")}
         <label class="field"><span>Uhrzeit</span><input id="grip-time" type="time" data-grip="time" value="${esc(f.time)}">${err("time")}
           <span class="muted small">${esc(outside ? `Außerhalb deines üblichen Messfensters (${window90?.start}–${window90?.end} Uhr) – nur eingeschränkt vergleichbar.` : D.gripTiming.gripWindowText(window90))}</span></label>
         ${askSex ? `${select("grip-sex", "sex", f.sex, [{ value: "", label: "Bitte wählen" }, { value: "female", label: "weiblich" }, { value: "male", label: "männlich" }], "Geschlecht (für die Normwerte)")}${err("date")}` : ""}
@@ -292,7 +296,7 @@ export const gripActions = {
     const res = L.saveGrip(
       db,
       X.S.logs,
-      { date: f.date, time: f.time, leftKg: l, rightKg: r, dominantHand: f.dominant || null, method: f.method || null, notes: f.notes ?? "", sex: f.sex || undefined },
+      { date: f.date, time: f.time, leftKg: l, rightKg: r, dominantHand: f.dominant || null, method: f.method || null, condition: f.condition ?? "", notes: f.notes ?? "", sex: f.sex || undefined },
       { uuid: X.uuid, now: new Date() },
     );
     if (res.errors) {

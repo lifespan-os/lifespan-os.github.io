@@ -123,6 +123,8 @@ export function measurement(r, metrics) {
     notes: n(r.notes),
     method: n(r.method),
     time: n(r.time),
+    // Messbedingung (1.171.0, PC Schema 83)
+    condition: n(r.condition),
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -510,6 +512,8 @@ export function setLog(db) {
           machineId: e.workoutMachineId ?? null,
           gripWidth: e.gripWidth,
           gripPosition: e.gripPosition,
+          // Satz-Zeitpunkt (PC Schema 82) für Satzpausen in Insights → Training
+          doneAt: n(s.done_at),
         });
       }
     }

@@ -1,6 +1,6 @@
 // LIFESPAN OS Mobil – Oberfläche „Ernährung“: Etikett scannen, Lebensmittel speichern und
 // tracken, Gerichte zusammenstellen. Logik in nutrition.js und label.js, Texterkennung in ocr.js.
-import { blsResultsHtml } from "./blsui.js";
+import { applyBlsLink, blsLinkHtml, blsResultsHtml } from "./blsui.js";
 import { offReady, offResultsHtml, openOffForm } from "./offui.js";
 import * as OFF from "./off.js";
 import * as N from "./nutrition.js";
@@ -341,6 +341,7 @@ function formCard() {
           .join("")}
         ${e.aminos ? `<p class="err small">${esc(e.aminos)}</p>` : ""}
       </details>
+      ${blsLinkHtml(f, D)}
       ${field("barcode", "Strichcode (EAN)", f.barcode, { mode: "numeric", wide: true })}
       <div class="field wide"><label for="ff-notes">Notiz (Vitamine, Mineralstoffe, Koffein …)</label>
         <textarea id="ff-notes" data-ff="notes" rows="2">${esc(f.notes)}</textarea>${e.notes ? `<p class="err small">${esc(e.notes)}</p>` : ""}</div>
@@ -1052,6 +1053,19 @@ export const foodActions = {
     X.toast(r.merged ? "Vorhandenes Lebensmittel aktualisiert" : "Lebensmittel gespeichert");
     X.rerender();
     requestAnimationFrame(() => document.getElementById("food-track")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+  },
+  // Passender BLS-Eintrag (1.170.0): auf- und zuklappen, leere Felder füllen
+  "bls-link-toggle": () => {
+    X.S.blsLinkOpen = !X.S.blsLinkOpen;
+    X.rerender();
+  },
+  "bls-link-use": (el) => {
+    const s = F();
+    if (!s.form) return;
+    const r = applyBlsLink(s.form, el.dataset.arg, D);
+    if (!r) return X.toast("Der BLS-Eintrag ist nicht geladen.", true);
+    X.toast(r.labels.length ? `Aus dem BLS ergänzt: ${r.labels.join(", ")} – bitte prüfen.` : "BLS-Bezug gesetzt (keine leeren Felder).");
+    X.rerender();
   },
   "food-form-done": () => {
     const s = F();

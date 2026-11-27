@@ -129,6 +129,9 @@ textarea { min-height: 80px; resize: vertical; }
 .check { width: 52px; height: 50px; border-radius: 12px; border: 2px solid var(--line); background: transparent; font-size: 1.4rem; display: grid; place-items: center; color: var(--muted); }
 .check.on { background: var(--ok); border-color: var(--ok); color: #fff; }
 .set-opts { display: flex; gap: 6px; padding: 0 14px 10px 52px; flex-wrap: wrap; }
+.set-opts.effort { align-items: center; margin-top: -4px; }
+.set-opts.effort .effort-label { width: 100%; font-size: .74rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.set-opts.effort .effort-hint { width: 100%; font-size: .8rem; font-weight: 600; color: var(--orange-text); }
 .chip.del { margin-left: auto; min-width: 40px; }
 .chip { min-height: 34px; padding: 4px 11px; border-radius: 99px; border: 1px solid var(--line); background: transparent; font-size: .82rem; color: var(--muted); }
 .chip.on { border-color: var(--orange); color: var(--orange-text); background: rgba(242,138,26,.12); }
@@ -2738,3 +2741,16 @@ html[data-arranging] [data-arrange-unit][data-arrange-drag] { position: relative
 .arrange-eye { position: absolute; top: 0; left: 0; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--fg); pointer-events: auto; }
 .arrange-eye[data-hidden="1"] { color: var(--muted); }
 .arrange-eye svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Passender BLS-Eintrag im Lebensmittel-Formular (1.170.0) */
+.nf-bls .bls-link-row { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--line); }
+.nf-bls .bls-link-row p { margin: 0; }
+.md__complete { margin-bottom: 10px; }
+.md__complete > p { margin: 0 0 6px; }
+/* Persönlicher Normalbereich / andere Messbedingung (1.172.0) */
+.insights-table .sub.is-other { color: var(--orange-text); font-weight: 600; }
+/* Insights → Training: Vorschläge aus dem Regelkatalog (1.173.0) */
+.training-rules > li { padding: 8px 0; border-top: 1px solid var(--line); }
+.training-rules .sub { display: block; color: var(--muted); font-size: .74rem; }
+.training-rules p { margin: 4px 0 0; }
+.training-rules__img { display: block; width: 100%; max-width: 420px; height: auto; margin: 8px 0; border-radius: 8px; }

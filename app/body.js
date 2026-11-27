@@ -107,7 +107,7 @@ async function persist() {
 }
 
 function blankForm(metricId) {
-  return { metricId: metricId ?? metrics()[0]?.id ?? "", date: today(), time: "", value: "", method: "", notes: "", editId: null };
+  return { metricId: metricId ?? metrics()[0]?.id ?? "", date: today(), time: "", value: "", method: "", condition: "", notes: "", editId: null };
 }
 
 // ------------------------------------------------------------------ Formular „Wert erfassen“
@@ -122,6 +122,13 @@ function metricOptions(selected) {
       ),
     )
     .join("");
+}
+
+/** Auswahl der Messbedingung (1.171.0, wie PC 1.0.236). */
+function conditionSelect(attr, value, label = "Messbedingung") {
+  return `<label class="field"><span>${esc(label)}</span><select ${attr}><option value="">Keine Angabe</option>${B.CONDITION_KEYS.map(
+    (k) => `<option value="${k}" ${value === k ? "selected" : ""}>${esc(B.CONDITION_LABELS[k])}</option>`,
+  ).join("")}</select></label>`;
 }
 
 function formCard({ fixed = false } = {}) {
@@ -146,6 +153,7 @@ function formCard({ fixed = false } = {}) {
     <label class="field"><span>Messmethode (optional)</span>
       <input type="text" data-bf="method" list="body-methods" value="${esc(f.method)}" placeholder="z. B. Waage, InBody, Labor"></label>
     <datalist id="body-methods">${methods.map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
+    ${conditionSelect('data-bf="condition"', f.condition ?? "", "Messbedingung (optional)")}
     <label class="field"><span>Notiz (optional)</span><input type="text" data-bf="notes" value="${esc(f.notes)}"></label>
     <p class="muted small">Je Messgröße und Tag gilt ein Wert – ein vorhandener Wert dieses Tages wird ersetzt.</p>
     ${autoSaveHtml("body-save", { mode: f.editId ? "edit" : "new" })}
@@ -284,7 +292,7 @@ export function viewBodyMetric() {
           ? `<div class="list">${values
               .map(
                 (v) => `<div class="meal-item body-value"><span><b>${fmtNum(v.row.value, m.decimals)} ${esc(m.unit)}</b>
-                  <span class="muted small">${fmtDate(v.row.date)}${v.row.time ? `, ${esc(v.row.time)} Uhr` : ""}${v.row.method ? ` · ${esc(v.row.method)}` : ""}${v.row.notes ? ` · ${esc(v.row.notes)}` : ""}</span></span>
+                  <span class="muted small">${fmtDate(v.row.date)}${v.row.time ? `, ${esc(v.row.time)} Uhr` : ""}${v.row.method ? ` · ${esc(v.row.method)}` : ""}${v.row.condition ? ` · ${esc(B.CONDITION_SHORT[v.row.condition] ?? "")}` : ""}${v.row.notes ? ` · ${esc(v.row.notes)}` : ""}</span></span>
                   ${
                     v.local && !v.sent
                       ? `<span class="row"><span class="tag">offen</span><button class="btn sm" data-act="body-edit" data-arg="${esc(v.row.id)}">Ändern</button>
@@ -584,6 +592,7 @@ export function viewBodyEntry() {
             <input type="text" data-bd="method" data-cat="${sec.category}" list="bm-${sec.category}" value="${esc(d.methods[sec.category] ?? "")}" placeholder="optional"></label>
           <label class="field"><span>Uhrzeit</span>
             <input type="time" data-bd="time" data-cat="${sec.category}" value="${esc(d.times[sec.category] ?? "")}"></label>
+          ${B.WITH_CONDITION.has(sec.category) ? conditionSelect(`data-bd="condition" data-cat="${sec.category}"`, d.conditions?.[sec.category] ?? "") : ""}
         </div>
         ${d.errors[`time-${sec.category}`] ? `<p class="err small">${esc(d.errors[`time-${sec.category}`])}</p>` : ""}
         <datalist id="bm-${sec.category}">${methods.map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
@@ -736,6 +745,7 @@ export const bodyActions = {
       time: r.time ?? "",
       value: fmtNum(r.value, m?.decimals ?? 1).replace(/\./g, ""),
       method: r.method ?? "",
+      condition: r.condition ?? "",
       notes: r.notes ?? "",
       editId: r.id,
     };
@@ -776,6 +786,7 @@ export function bodyInput(el) {
       }
     } else if (el.dataset.bd === "method") d.methods[el.dataset.cat] = el.value;
     else if (el.dataset.bd === "time") d.times[el.dataset.cat] = el.value;
+    else if (el.dataset.bd === "condition") d.conditions = { ...(d.conditions ?? {}), [el.dataset.cat]: el.value };
     return el.dataset.bd !== "date";
   }
   if (!el.dataset.bf || !S()?.form) return false;

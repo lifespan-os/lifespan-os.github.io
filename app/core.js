@@ -11,7 +11,7 @@ import { appDay } from "./appday.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.168.0";
+export const MOBILE_VERSION = "1.175.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -664,6 +664,7 @@ export function newSet(from = null) {
     isUnilateral: !!from?.isUnilateral,
     isDone: false,
     isFailure: false,
+    doneAt: null,
     notes: null,
     rp: { ...emptyProfiles(), ...(from?.rp ?? {}) },
   };
@@ -879,6 +880,7 @@ export function workoutFromPc(w, wexRows, setsByWex) {
           isUnilateral: !!s.is_unilateral,
           isDone: true,
           isFailure: !!s.is_failure,
+          doneAt: s.done_at ?? null,
           notes: s.notes ?? null,
           rp: profilesFromRow(s),
           extra: { ...s },
@@ -1048,6 +1050,8 @@ export function buildReturnFile(catalog, localExercises, workouts, now = new Dat
           is_unilateral: s.isUnilateral ? 1 : 0,
           is_done: s.isDone ? 1 : 0,
           is_failure: s.isFailure ? 1 : 0,
+          // Zeitpunkt des Abhakens (PC Schema 82); ältere PC-Stände kennen die Spalte nicht (fit)
+          done_at: s.isDone ? (s.doneAt ?? null) : null,
           ...rpCols,
         });
       });

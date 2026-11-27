@@ -42,6 +42,63 @@ export function ensureBls() {
   return null;
 }
 
+/**
+ * „Passender BLS-Eintrag“ im Lebensmittel-Formular (1.170.0, wie PC 1.0.235): Vorschläge mit
+ * gleichen Wörtern im Namen und ähnlichen Makros; „Übernehmen“ füllt nur leere Felder und setzt
+ * „BLS-Bezug: Code …“ in die Notiz (Vitamine und Mineralstoffe zählen dann über den BLS mit).
+ */
+export function blsLinkHtml(form, D) {
+  if (!form || (form.brand ?? "").trim() === B.BLS_BRAND) return "";
+  const head = `<details class="wide nf-details nf-bls"${X.S.blsLinkOpen ? " open" : ""}><summary data-act="bls-link-toggle">Passender BLS-Eintrag (fehlende Werte ergänzen)${(() => {
+    const code = D.blsMicro.blsCodeOf({ brand: form.brand, notes: form.notes });
+    return code ? ` · verknüpft mit Code ${esc(code)}` : "";
+  })()}</summary>
+    <p class="muted small">Vorschläge aus dem BLS 4.0 mit gleichen Wörtern im Namen und ähnlichen Makros. „Übernehmen“ füllt nur leere Felder (Ballaststoffe, Zucker, Fettsäuren, Salz, Stärke, Wasser, Aminosäuren); die Notiz bekommt den BLS-Bezug.</p>`;
+  if (!X.S.blsLinkOpen) return `${head}</details>`;
+  if (!X.S.blsInfo) return `${head}<p class="muted small">Dafür den BLS unter Datenaustausch → BLS 4.0 auf das Handy laden.</p></details>`;
+  const b = ensureBls();
+  if (!b) return `${head}<p class="muted small">BLS wird geladen …</p></details>`;
+  const n = (v) => N.parseNum(v ?? "");
+  const own = { energyKcal: n(form.values.energyKcal), proteinG: n(form.values.proteinG), carbsG: n(form.values.carbsG), fatG: n(form.values.fatG) };
+  const clean = (v) => (v === null || Number.isNaN(v) ? null : v);
+  for (const k of Object.keys(own)) own[k] = clean(own[k]);
+  const list = D.blsMatch.blsSuggestions({ name: X.S.blsLinkQuery || form.name || "", ...own }, B.indexEntries(b));
+  const line = (m) => `${fmt(m.energyKcal, 0)} kcal · E ${fmt(m.proteinG)} g · KH ${fmt(m.carbsG)} g · F ${fmt(m.fatG)} g`;
+  return `${head}<div class="field"><label for="bls-link-q">Anderer Suchbegriff (optional)</label><input id="bls-link-q" type="search" data-bls="link-q" value="${esc(X.S.blsLinkQuery ?? "")}" placeholder="${esc(form.name || "z. B. Haferflocken")}" autocomplete="off"></div>
+    ${
+      list.length
+        ? list
+            .map(
+              (s) => `<div class="bls-link-row"><p class="small"><b>${esc(s.entry.name)}</b> <span class="muted">Code ${esc(s.entry.code)}</span><br><span class="muted">BLS je 100 g: ${line(s.entry)}<br>Dein Lebensmittel je 100 ${esc(form.basis)}: ${line(own)}</span></p><button class="btn sm" data-act="bls-link-use" data-arg="${esc(s.entry.code)}" data-autosave-click>Übernehmen</button></div>`,
+            )
+            .join("")
+        : `<p class="muted small">Kein passender Eintrag gefunden – einen anderen Suchbegriff versuchen.</p>`
+    }</details>`;
+}
+
+/** Leere Felder des Formulars aus dem BLS füllen (Zahlen mit Komma wie im Formular). */
+export function applyBlsLink(form, code, D) {
+  const b = X.S.bls;
+  const f = b ? B.foodByCode(b, code) : null;
+  if (!f) return null;
+  const txt = (v, d = 2) => String(Math.round(v * 10 ** d) / 10 ** d).replace(".", ",");
+  const val = (k) => (["monoFatG", "polyFatG", "starchG", "waterG"].includes(k) ? form.details?.[k] : form.values[k]) ?? "";
+  const empty = Object.fromEntries(D.blsMatch.BLS_FILL_KEYS.map((k) => [k, String(val(k)).trim() === ""]));
+  const hasAminos = Object.values(form.aminos ?? {}).some((v) => String(v ?? "").trim() !== "");
+  const lim = (k) => {
+    const v = N.parseNum(form.values[k] ?? "");
+    return v === null || Number.isNaN(v) ? null : v;
+  };
+  const fill = D.blsMatch.blsFill(B.asBlsFood(b, f), empty, hasAminos, { carbsG: lim("carbsG"), fatG: lim("fatG") });
+  for (const [k, v] of Object.entries(fill.values)) {
+    if (["monoFatG", "polyFatG", "starchG", "waterG"].includes(k)) form.details = { ...(form.details ?? {}), [k]: txt(v) };
+    else form.values[k] = txt(v);
+  }
+  if (fill.aminos) form.aminos = Object.fromEntries(Object.entries(fill.aminos).map(([k, v]) => [k, txt(v, 3)]));
+  form.notes = D.blsMatch.withBlsLink(form.notes ?? "", code);
+  return { name: f[1], labels: fill.labels };
+}
+
 /** BLS-Treffer unter den eigenen Lebensmitteln (Tracker, Gerichte). */
 export function blsResultsHtml(query, act) {
   if (!X.S.blsInfo || !String(query ?? "").trim() || /^\d{8,14}$/.test(query.trim())) return "";
@@ -205,6 +262,21 @@ export const blsActions = {
 
 /** Eingaben (Suche, Haken); true = behandelt. */
 export function blsInput(el) {
+  if (el.dataset?.bls === "link-q") {
+    X.S.blsLinkQuery = el.value;
+    clearTimeout(blsInput.t);
+    blsInput.t = setTimeout(() => {
+      X.rerender();
+      requestAnimationFrame(() => {
+        const q = document.getElementById("bls-link-q");
+        if (q) {
+          q.focus();
+          q.setSelectionRange(q.value.length, q.value.length);
+        }
+      });
+    }, 350);
+    return true;
+  }
   if (el.dataset?.bls === "q") {
     X.S.blsQuery = el.value;
     const list = document.getElementById("bls-results");

@@ -62,6 +62,25 @@ function missingHtml(parts, unit) {
     .join("")}</ul>`);
 }
 
+/** Anteil der Menge mit vollständigen Angaben (1.170.0, wie PC 1.0.235) */
+function completenessHtml(input) {
+  const c = M().dayCompleteness(input.meals, input.foods, input.bls);
+  if (c.pct === null) return "";
+  const n = c.incomplete.length;
+  return `<div class="md__complete"><p class="small"><b>${c.pct} %</b> der Lebensmittelmenge mit vollständigen Angaben (${F(c.completeAmount)} von ${F(c.totalAmount)} g bzw. ml): Fettsäuren, Zucker und Stärke, Ballaststoffe, Wasser und Aminosäuren – vom Lebensmittel oder aus dem BLS.</p>${
+    n
+      ? fold(
+          "Angaben fehlen",
+          n === 1 ? "1 Lebensmittel" : `${n} Lebensmittel`,
+          `<ul class="muted small md__missing">${c.incomplete
+            .slice(0, 12)
+            .map((f) => `<li>${esc(f.name)} (${F(f.amount)} ${esc(f.unit)}): ${esc(f.missing.join(", "))}</li>`)
+            .join("")}${n > 12 ? `<li>und ${n - 12} weitere</li>` : ""}</ul><p class="muted small">Ergänzen: am PC beim Lebensmittel „Passender BLS-Eintrag“, am Handy unter Datenbanken → Lebensmittel → bearbeiten.</p>`,
+        )
+      : ""
+  }</div>`;
+}
+
 /** Gestapelte Säulen je Tag (Teile), bei Protein gestrichelt 0,8 g je kg */
 function historySvg(points, keys, label, reference) {
   const W = 340, H = 150, L = 30, R = 6, T = 8, B = 22;
@@ -169,6 +188,7 @@ export function macroDetailsHtml(input, days, date, open, aside = "") {
     ${
       open
         ? `<div class="xd md"><p class="card__note">Woher Fett, Protein und Kohlenhydrate an diesem Tag kommen und wie sie sich aufteilen. Je Lebensmittel zählt der eigene Wert, sonst der Wert aus dem BLS (wenn er auf dem Handy liegt); fehlt beides, steht das Lebensmittel unter „ohne Angabe“. Ergänze die Werte beim Lebensmittel unter „Weitere Angaben“.</p>
+          ${completenessHtml(input)}
           ${M().MACRO_DETAIL_KEYS.map((k) => detailHtml(input, days, date, k)).join("")}</div>`
         : ""
     }`;

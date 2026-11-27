@@ -149,6 +149,7 @@ function gripOf(db) {
     heightCm: g.height_cm ?? null,
     notes: g.notes ?? null,
     method: g.method ?? null,
+    condition: g.condition ?? null,
     createdAt: g.created_at,
     updatedAt: g.updated_at,
   }));
@@ -214,6 +215,117 @@ const AREA_TITLES = { sleep: "Schlaf", recovery: "Regeneration", training: "Trai
 
 /** „Als Kalorienziel übernehmen“ (1.141.0, wie PC `AdaptiveTdeeCard`): ab heute festes Kalorienziel,
  *  übrige Ziele bleiben; ein eingestelltes Defizit bzw. Überschuss in kcal wird mitgerechnet. */
+/** Persönlicher Normalbereich (1.172.0, wie NormalRangeCard am PC 1.0.237) */
+function normalRangeCard(db, t) {
+  const NR = D.normalRange;
+  const C = D.conditions;
+  const data = O.insightsFor(db, D.trends.shiftDays(t, -(NR.NORMAL_DAYS - 1)), t);
+  const metric = (id) => data.measurements.filter((m) => m.metricId === id).map((m) => ({ date: m.date, value: m.value, condition: m.condition ?? null }));
+  const profileRow = (db.pc.profile ?? [])[0];
+  const bmi = profileRow?.height_cm ? NR.bmiWeightRange(profileRow.height_cm) : null;
+  const rows = [
+    { key: "hrv", label: "HRV", unit: "ms", d: 0, points: metric(HRV) },
+    { key: "restingHr", label: "Ruhepuls", unit: "/min", d: 0, points: metric(RHR) },
+    { key: "sleep", label: "Schlafdauer", unit: "h", d: 1, points: data.sleep.filter((s) => s.sleepMin > 0).map((s) => ({ date: s.date, value: s.sleepMin / 60, condition: "night" })) },
+    { key: "weight", label: "Körpergewicht", unit: "kg", d: 1, points: metric(P.WEIGHT_METRIC_ID), extra: bmi ? `Bei ${F(profileRow.height_cm)} cm entspricht das ${F(bmi.min, 1)}–${F(bmi.max, 1)} kg.` : "" },
+    { key: "grip", label: "Griffkraft (stärkere Hand)", unit: "kg", d: 1, points: gripOf(db).map((g) => ({ date: g.date, value: Math.max(g.leftKg, g.rightKg), condition: g.condition })) },
+  ];
+  const side = { below: "unter", above: "über" };
+  const body = rows
+    .map((row) => {
+      const r = NR.normalRange(row.points, t);
+      const norm = NR.NORM_REFERENCES[row.key];
+      const v = r ? `${F(r.latest.value, row.d)} ${row.unit} am ${D.formatDate(r.latest.date)}` : "";
+      const status = !r
+        ? ""
+        : r.latestOther
+          ? `Zuletzt ${v} – andere Messbedingung (${C.conditionLabel(r.latest.condition, true)}), nur eingeschränkt vergleichbar.`
+          : r.run >= NR.NORMAL_RUN && r.runSide
+            ? `Zuletzt ${v} – die letzten ${r.run} Werte liegen ${side[r.runSide]} deinem Bereich.`
+            : r.position === "within"
+              ? `Zuletzt ${v} – innerhalb deines Bereichs.`
+              : `Zuletzt ${v} – ${side[r.position]} deinem Bereich.`;
+      return `<tr><td>${esc(row.label)}<span class="sub">${esc(
+        r ? `${r.n} Werte ${D.formatDate(r.from)}–${D.formatDate(r.to)}${r.condition ? ` · ${C.conditionLabel(r.condition, true)}` : ""}` : `noch zu wenige Werte (mindestens ${NR.NORMAL_MIN_N} in ${NR.NORMAL_DAYS} Tagen)`,
+      )}</span></td><td>${
+        r
+          ? `<strong>${F(r.low, row.d)}–${F(r.high, row.d)} ${esc(row.unit)}</strong><span class="sub">Median ${F(r.median, row.d)} ${esc(row.unit)}</span><span class="sub${r.position !== "within" || r.latestOther ? " is-other" : ""}">${esc(status)}</span>`
+          : "–"
+      }<span class="sub">Allgemein: ${esc(norm.text)} ${esc(row.extra ?? "")} (Quelle: ${esc(norm.source)})</span></td></tr>`;
+    })
+    .join("");
+  return card(
+    "normal-range",
+    "Persönlicher Normalbereich",
+    `letzte ${NR.NORMAL_DAYS} Tage`,
+    `<table class="data-table insights-table normal-range"><tbody>${body}</tbody></table>${note(`Dein Bereich = Median ± eine Standardabweichung deiner Werte der letzten ${NR.NORMAL_DAYS} Tage, nur mit derselben Messbedingung (Werte ohne Angabe zählen mit). Das ist eine Beschreibung deiner Werte, keine Bewertung.`)}`,
+    { wide: true },
+  );
+}
+
+/** Insights → Training (1.173.0, wie TrainingInsightsCard am PC 1.0.238) */
+function trainingInsightsCard(db, t) {
+  const TI = D.trainingInsights;
+  const log = O.setLog(db);
+  const sessions = TI.sessionSplits(log, O.exercisesOf(db)).filter((s) => s.date <= t);
+  if (!sessions.length) return card("training-insights", "Training", "letzte 4 Wochen", `<p class="muted">Noch keine abgeschlossenen Krafteinheiten.</p>`, { area: "training", wide: true });
+  const recent = sessions.slice(-12);
+  const model = TI.splitModel(recent);
+  const freq = TI.areaFrequency(sessions, t, 4);
+  const trends = TI.strengthTrends(log, t).slice(0, 8);
+  const cardio = TI.cardioWeeks(log, t, 4);
+  const rest = TI.restStats(log, t, 4);
+  const RC = D.trainingRecovery;
+  const idata = O.insightsFor(db, D.trends.shiftDays(t, -60), t);
+  const nextDay = RC
+    ? RC.nextDayRecovery(
+        idata.workouts,
+        {
+          hrv: D.insights.metricSeries(idata.measurements, HRV),
+          readiness: D.insights.recoverySeries(idata.recovery, "readiness"),
+          soreness: D.insights.recoverySeries(idata.recovery, "soreness"),
+        },
+        t,
+      )
+    : [];
+  const TR = D.trainingRules;
+  const hits = TR ? TR.trainingRuleHits(log, t) : [];
+  const clock = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} min`;
+  const head = (x) => `<p class="list-head small"><b>${esc(x)}</b></p>`;
+  const body = `${head("Split")}<p>${model ? `Trainingsmodell der letzten ${recent.length} Einheiten: <b>${esc(TI.SPLIT_MODEL_LABELS[model])}</b>` : "Für ein Trainingsmodell braucht es mindestens drei eingeordnete Einheiten."}</p>
+    <p class="muted small">${recent.map((s) => `${esc(D.formatDate(s.date).slice(0, 6))} ${esc(TI.SESSION_TYPE_LABELS[s.type])}`).join(" · ")}</p>
+    ${head("Häufigkeit je Bereich")}<table class="data-table insights-table"><tbody>${freq
+      .map((f) => `<tr><td>${esc(TI.SPLIT_AREA_LABELS[f.area])}</td><td class="tnum"><strong>${F(f.perWeek, 1)}× je Woche</strong><span class="sub">${f.sessions} Einheiten mit mindestens 2 Sätzen</span></td></tr>`)
+      .join("")}</tbody></table>
+    ${head("Kraftverlauf (geschätztes 1RM, letzte 8 Wochen)")}${
+      trends.length
+        ? `<table class="data-table insights-table"><tbody>${trends
+            .map(
+              (x) => `<tr><td>${esc(x.name)}<span class="sub">${x.sessions} Einheiten</span></td><td class="tnum"><strong>${x.changePct > 0 ? "+" : ""}${F(x.changePct, 1)} %</strong><span class="sub">${F(x.first.value, 1)} kg (${esc(D.formatDate(x.first.date))}) → ${F(x.last.value, 1)} kg (${esc(D.formatDate(x.last.date))})</span></td></tr>`,
+            )
+            .join("")}</tbody></table>`
+        : `<p class="muted small">Ab drei Einheiten einer Übung mit 1–12 Wiederholungen erscheint der Verlauf.</p>`
+    }
+    ${head("Cardio je Woche")}<p>${cardio.map((w) => `KW ${D.trends.isoWeek(w.start).week}: ${F(w.minutes)} min`).join(" · ")}</p>
+    ${head("Satzpausen")}<p>${rest.medianSeconds === null ? "Noch keine Satz-Zeitpunkte – sie entstehen seit 1.169.0 beim Abhaken im laufenden Training." : `Median ${clock(rest.medianSeconds)} aus ${rest.n} Pausen in ${rest.sessions} Einheiten (ohne Unterbrechungen über 15 min).`}</p>
+    ${head("Erholung am Folgetag")}${
+      nextDay.length
+        ? `<table class="data-table insights-table"><tbody>${nextDay
+            .map((r) => `<tr><td>${esc(D.formatDate(r.date))}<span class="sub">${esc(r.titles.join(", "))}${r.volumeKg > 0 ? ` · ${F(r.volumeKg)} kg` : ""}</span></td><td class="tnum"><strong>${r.hrv === null ? "HRV –" : `HRV ${F(r.hrv)} ms`}</strong><span class="sub">${r.hrvDiffPct !== null ? `${r.hrvDiffPct > 0 ? "+" : ""}${F(r.hrvDiffPct)} % zum eigenen Median · ` : ""}Erholung ${r.readiness ?? "–"}/10 · Muskelkater ${r.soreness ?? "–"}/10</span></td></tr>`)
+            .join("")}</tbody></table>`
+        : `<p class="muted small">Noch keine abgeschlossenen Einheiten mit Folgetag.</p>`
+    }
+    ${head("Vorschläge zur Übungsauswahl")}${
+      hits.length
+        ? `<ul class="plain-list training-rules">${hits
+            .map((h) => `<li><strong>${esc(h.text)}</strong><span class="sub">${esc(h.exercises.join(", "))} · ${esc(D.formatDate(h.from))}–${esc(D.formatDate(h.to))}</span>${h.rule.image === "calf" ? `<img class="training-rules__img" src="icons/wade-anatomie.svg" alt="Wadenmuskulatur von hinten und von der Seite: Musculus gastrocnemius (rot) und Musculus soleus (orange)">` : ""}<p class="small">${esc(h.rule.reason)}</p><p class="muted small">Quelle: ${esc(h.rule.source)}</p></li>`)
+            .join("")}</ul>`
+        : `<p class="muted small">Keine Vorschläge. Eine Regel greift erst ab ${TR?.RULE_MIN_SESSIONS ?? 3} Einheiten mit der Muskelgruppe.</p>`
+    }
+    ${note("Einordnung je Einheit nach den Arbeitssätzen (Muskelgruppe der Übung): Beine ab 70 % → Beine, Drücken bzw. Ziehen ab 70 % → Push bzw. Pull, sonst Oberkörper; gemischt → Ganzkörper. 1RM nach Epley (Schätzung). Folgetag: Werte des nächsten Tages, HRV gegen den Median der 28 Tage vor der Einheit. Vorschläge nach festen Regeln mit Quelle; die App ändert den Plan nicht selbst. Keine Bewertung.")}`;
+  return card("training-insights", "Training", "letzte 4 Wochen", body, { area: "training", wide: true });
+}
+
 function adoptTdeeHtml(tdee, t) {
   const g = P.goalFor(buildDb(), t);
   if (!g) return `<p class="muted small">Zum Übernehmen zuerst Tagesziele anlegen (Settings → Tagesziele).</p>`;
@@ -277,6 +389,8 @@ export function viewInsights() {
   cards.push({ id: "goals", node: targetGoalsCard(db, card, t) });
   cards.push({ id: "period-review", node: periodReviewCard(db, card, t) });
   cards.push({ id: "goal-advice", node: goalAdviceCard(db, card, t) });
+  cards.push({ id: "normal-range", node: normalRangeCard(db, t) });
+  cards.push({ id: "training-insights", node: trainingInsightsCard(db, t) });
   cards.push({ id: "data-quality", node: dataQualityCard(db, card, t) });
   if (hasAny) {
     cards.push({

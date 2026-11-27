@@ -629,6 +629,27 @@ function blsEntries(db, items, b = ensureBls()) {
   return { foods, bls };
 }
 
+/**
+ * Zufuhr eines Tages je Nährstoff-Schlüssel (Lebensmittel mit BLS, Supplements, Fasttracking, Werte an
+ * Mahlzeiten) für „Blutwerte und Zufuhr“ (1.175.0, wie PC 1.0.240); null ohne erfasste Ernährung.
+ */
+export function dayIntakeValues(db, date) {
+  const meals = P.mealDay(db, date).meals;
+  const items = meals.flatMap((m) => m.items).filter((i) => i.amount > 0);
+  const supps = D.addNutrientValues(P.intakesOn(db, date).map((i) => i.nutrients));
+  const fast = P.fastDay(db, date);
+  if (!items.length && !Object.values(supps).some((v) => v > 0) && !fast) return null;
+  const values = {};
+  const add = (rec) => {
+    for (const [k, v] of Object.entries(rec ?? {})) if (Number.isFinite(v)) values[k] = (values[k] ?? 0) + v;
+  };
+  add(blsFoodMicro(db, meals).values);
+  add(supps);
+  add(fast?.values);
+  for (const m of meals) add(m.values);
+  return values;
+}
+
 /** Stoffe aus den BLS-Lebensmitteln eines Tages */
 function blsFoodMicro(db, meals) {
   const empty = { values: {}, extra: {}, withData: 0, without: [], missing: {}, noBls: true };

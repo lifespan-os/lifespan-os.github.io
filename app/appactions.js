@@ -153,6 +153,9 @@ export const actions = {
     const s = findSet(el.dataset.we, el.dataset.set);
     if (!s) return;
     s.isDone = !s.isDone;
+    // Zeitpunkt des Abhakens (unsichtbar, PC Schema 82): nur im laufenden Training
+    if (!s.isDone) s.doneAt = null;
+    else if (!S.active.editOf) s.doneAt = new Date().toISOString();
     if (s.isDone && we.restSeconds) startRest(we.restSeconds);
     // Übung fertig: nächste offene Übung wird die aktuelle (aufgeklappt), diese klappt zu
     if (s.isDone && we.sets.every((x) => x.isDone)) {
@@ -170,6 +173,15 @@ export const actions = {
     }
     // abgehakte Übung wird die aktuelle (wie am PC)
     if (s.isDone && !exComplete(we) && focusExId(S.active) !== we.id) setFocus(S.active, we.id);
+    saveSoon();
+    rerenderKeepScroll();
+  },
+  // „Wie anstrengend?“ beim Cardio: Stufe als RPE, nochmal tippen hebt sie auf
+  "cardio-effort": (el) => {
+    const s = findSet(el.dataset.we, el.dataset.set);
+    if (!s) return;
+    const rpe = Number(el.dataset.arg);
+    s.rpe = s.rpe === rpe ? null : rpe;
     saveSoon();
     rerenderKeepScroll();
   },

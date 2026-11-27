@@ -340,13 +340,15 @@ export function caffeineSleepCard(card, data, caffeineOn) {
   const byDay = new Map();
   for (let d = D.trends.shiftDays(data.from, -1); d <= data.to; d = D.trends.shiftDays(d, 1)) byDay.set(d, caffeineOn(d));
   if (![...byDay.values()].some((l) => l.length > 0)) return "";
-  const series = ID.caffeineAtBedtimeSeries(byDay, data.sleep, ID.diaryDays(data.nutrition));
-  const items = ID.caffeineSleepAssociations(series, data.sleep).map((i) => D.associationItem(i.label, i.association));
+  const diary = ID.diaryDays(data.nutrition);
+  const series = ID.caffeineAtBedtimeSeries(byDay, data.sleep, diary);
+  const late = ID.caffeineAfterSeries ? ID.caffeineAfterSeries(byDay, data.sleep, diary) : undefined;
+  const items = ID.caffeineSleepAssociations(series, data.sleep, late).map((i) => D.associationItem(i.label, i.association));
   return card(
     "caffeine",
     "Koffein und Schlaf",
     `letzte ${ASSOC_WEEKS} Wochen`,
-    `${insightItems(items)}${note("Koffein zur Einschlafzeit ist eine Modellrechnung wie im Koffein-Zeitstrahl: Einnahmen des Vortags, Bettzeit aus dem Schlafeintrag. Tage ohne Koffein zählen mit 0 mg nur, wenn an diesem Tag Ernährung erfasst ist. Eine Korrelation zeigt gemeinsames Schwanken, keine Ursache.")}`,
+    `${insightItems(items)}${note("Koffein zur Einschlafzeit ist eine Modellrechnung wie im Koffein-Zeitstrahl: Einnahmen des Vortags, Bettzeit aus dem Schlafeintrag. Tage ohne Koffein zählen mit 0 mg nur, wenn an diesem Tag Ernährung erfasst ist. „Koffein nach 14 Uhr“ ist die Summe der Einnahmen des Vortags ab 14:00 Uhr. Eine Korrelation zeigt gemeinsames Schwanken, keine Ursache.")}`,
     { area: "sleep" },
   );
 }

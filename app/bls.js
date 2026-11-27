@@ -183,3 +183,28 @@ export function takeover(b, f, { id, now = new Date() }) {
     return { ok: false, message: `Übernahme nicht möglich: ${e.message}.` };
   }
 }
+
+/** Lebensmittel in der Form des PCs (`BlsFood`), für `D.blsMatch.blsFill` (1.170.0). */
+export function asBlsFood(b, f) {
+  return {
+    code: f[0],
+    name: f[1],
+    nameEn: f[2],
+    hint: f[3] ?? null,
+    values: b.data.nutrients.map((n, i) => {
+      const raw = f[4][i];
+      return { code: n.code, amount: typeof raw === "number" ? raw : null, flag: typeof raw === "string" ? raw : null, origin: null };
+    }),
+  };
+}
+
+let indexOf = null;
+let indexList = [];
+/** Kurzwerte aller Lebensmittel (wie `bls_index` am PC), einmal je geladener Datei. */
+export function indexEntries(b) {
+  if (indexOf !== b) {
+    indexList = b.data.foods.map((f) => short(b, f));
+    indexOf = b;
+  }
+  return indexList;
+}

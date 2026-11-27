@@ -28,7 +28,9 @@ export const SLEEP_COLUMNS = [
 ];
 export const NAP_COLUMNS = ["id", "date", "start_time", "end_time", "notes", "created_at", "updated_at"];
 export const RECOVERY_COLUMNS = ["id", "date", "readiness", "fatigue", "soreness", "stress", "notes", "created_at", "updated_at"];
-export const GRIP_COLUMNS = ["id", "date", "time", "left_kg", "right_kg", "dominant_hand", "sex", "age_years", "height_cm", "notes", "created_at", "updated_at", "method"];
+export const GRIP_COLUMNS = ["id", "date", "time", "left_kg", "right_kg", "dominant_hand", "sex", "age_years", "height_cm", "notes", "created_at", "updated_at", "method", "condition"];
+/** Messbedingungen (1.171.0, wie PC Schema 83) */
+const GRIP_CONDITIONS = ["waking", "morning", "day", "evening", "post_training", "night"];
 export const MAX_NAP_MIN = 360;
 /** Grenzen je Hand wie `repo::grip` (1–150 kg, eine Nachkommastelle) */
 export const GRIP_MIN_KG = 1;
@@ -277,6 +279,7 @@ export function saveGrip(db, local, draft, { uuid, now = new Date() }) {
   const draftSex = draft.sex === "male" || draft.sex === "female" ? draft.sex : null;
   if (draft.dominantHand !== undefined && draft.dominantHand !== null && draft.dominantHand !== "left" && draft.dominantHand !== "right") errors.dominantHand = "Bitte links oder rechts wählen.";
   if (typeof draft.method === "string" && draft.method.trim().length > 40) errors.method = "Die Messmethode darf höchstens 40 Zeichen lang sein.";
+  if (typeof draft.condition === "string" && draft.condition.trim() !== "" && !GRIP_CONDITIONS.includes(draft.condition.trim())) errors.condition = "Unbekannte Messbedingung.";
   if (typeof draft.notes === "string" && draft.notes.length > 2000) errors.notes = "Die Notiz darf höchstens 2000 Zeichen lang sein.";
   if (!profile) errors.date = "Bitte zuerst unter Settings ein Profil mit Körpergröße und Geburtsdatum anlegen.";
   else if (profile.sex !== "male" && profile.sex !== "female" && !draftSex) errors.date = "Bitte das Geschlecht wählen – die Normwerte unterscheiden Männer und Frauen.";
@@ -300,6 +303,8 @@ export function saveGrip(db, local, draft, { uuid, now = new Date() }) {
     created_at: same?.created_at ?? iso,
     updated_at: iso,
     method: draft.method !== undefined ? (String(draft.method ?? "").trim() || null) : (same?.method ?? last?.method ?? null),
+    // Messbedingung: fehlt = unverändert, leer = keine Angabe
+    condition: draft.condition !== undefined ? (String(draft.condition ?? "").trim() || null) : (same?.condition ?? null),
   };
   local.grip[id] = { row, sent: false };
   delete local.deleted[`grip_strength_measurement:${id}`];

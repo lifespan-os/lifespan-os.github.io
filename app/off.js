@@ -14,6 +14,21 @@ export const OFF_SOURCE = "Open Food Facts";
 export const OFF_LICENSE_NOTE = "Daten: Open Food Facts (world.openfoodfacts.org), Open Database License (ODbL)";
 
 const NEED = ["code", "name", "marke", "menge", "portion", "kcal", "fett", "gesaettigt", "kh", "zucker", "ballaststoffe", "eiweiss", "salz"];
+/** Weitere Angaben (1.170.0, wie PC 1.0.235): optionale Spalten von Skript 56 */
+const EXTRA = ["einfach", "mehrfach", "trans", "staerke"];
+
+/** Wie `clean_extras` in off.rs: je Wert 0 bis Fett bzw. KH, Fettsäuren zusammen ≤ Fett + 0,5 g, Stärke + Zucker ≤ KH + 0,5 g. */
+export function cleanExtras(p) {
+  const within = (v, max) => (v !== null && v >= 0 && v <= max ? v : null);
+  p.monoFatG = within(p.monoFatG, p.fatG);
+  p.polyFatG = within(p.polyFatG, p.fatG);
+  p.transFatG = within(p.transFatG, p.fatG);
+  p.starchG = within(p.starchG, p.carbsG);
+  const fats = [p.saturatedFatG, p.monoFatG, p.polyFatG, p.transFatG].reduce((a, v) => a + (v ?? 0), 0);
+  if (fats > p.fatG + 0.5) p.monoFatG = p.polyFatG = p.transFatG = null;
+  if ((p.starchG ?? 0) + (p.sugarG ?? 0) > p.carbsG + 0.5) p.starchG = null;
+  return p;
+}
 
 /** Wie `normalize` in off.rs: Kleinbuchstaben, ohne Akzente/Umlautpunkte, „ß“ → „ss“. */
 export const normalize = (s) =>
@@ -80,9 +95,10 @@ export function plausible(p) {
 }
 
 /** Eine Zeile → Produkt (oder null, wenn eine Prüfung nicht besteht). */
-function product(line, idx) {
+function product(line, idx, extra = []) {
   const f = line.split("\t");
   const get = (i) => f[idx[i]] ?? "";
+  const more = (i) => (extra[i] === undefined || extra[i] < 0 ? null : num(f[extra[i]]));
   const code = get(0).trim();
   const name = [...get(1).trim()].slice(0, 100).join("");
   const kcal = num(get(5));
@@ -113,8 +129,12 @@ function product(line, idx) {
     proteinG: protein,
     saltG: num(get(12)),
     macroKcal: Math.round(macroKcal(fat, carbs, protein, fiber) * 10) / 10,
+    monoFatG: more(0),
+    polyFatG: more(1),
+    transFatG: more(2),
+    starchG: more(3),
   };
-  return plausible(p) ? p : null;
+  return plausible(p) ? cleanExtras(p) : null;
 }
 
 /**
@@ -126,6 +146,7 @@ export function prepare(text) {
   const cols = (lines[0] ?? "").replace(/^﻿/, "").split("\t");
   const idx = NEED.map((n) => cols.indexOf(n));
   if (idx.some((i) => i < 0)) throw new Error("Die Open-Food-Facts-Datei ist unvollständig.");
+  const extra = EXTRA.map((n) => cols.indexOf(n));
   const rows = [];
   const keys = [];
   const byCode = new Map();
@@ -133,7 +154,7 @@ export function prepare(text) {
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
     if (!line) continue;
-    const p = product(line, idx);
+    const p = product(line, idx, extra);
     if (!p || byCode.has(p.code)) {
       skipped++;
       continue;
@@ -142,14 +163,14 @@ export function prepare(text) {
     keys.push(normalize(`${p.name} ${p.brand ?? ""}`));
     rows.push(line);
   }
-  return { idx, rows, keys, byCode, skipped };
+  return { idx, extra, rows, keys, byCode, skipped };
 }
 
 export const count = (c) => c?.rows.length ?? 0;
 
 export function byCode(c, code) {
   const i = c?.byCode.get(String(code ?? "").trim());
-  return i === undefined ? null : product(c.rows[i], c.idx);
+  return i === undefined ? null : product(c.rows[i], c.idx, c.extra);
 }
 
 /** Suche wie am PC: Strichcode genau, sonst alle Wörter in Name/Marke; Anfang zuerst, dann kurz. */
@@ -170,7 +191,7 @@ export function searchOff(c, query, limit = 20) {
     hits.push({ i, rank: k.startsWith(first) ? 0 : k.includes(` ${first}`) ? 1 : 2, len: k.length });
   }
   hits.sort((a, b) => a.rank - b.rank || a.len - b.len || a.i - b.i);
-  return hits.slice(0, limit).map((h) => product(c.rows[h.i], c.idx));
+  return hits.slice(0, limit).map((h) => product(c.rows[h.i], c.idx, c.extra));
 }
 
 /** Abweichung der angegebenen kcal von der Rechnung aus den Makros in Prozent (gerundet). */
@@ -196,9 +217,13 @@ export function offToForm(p, form) {
   const values = { ...form.values };
   const map = { energyKcal: Math.round(p.energyKcal), fatG: p.fatG, saturatedFatG: p.saturatedFatG, carbsG: p.carbsG, sugarG: p.sugarG, fiberG: p.fiberG, proteinG: p.proteinG, saltG: p.saltG };
   for (const k of Object.keys(values)) if (k in map) values[k] = txt(map[k]);
+  // Weitere Angaben (1.170.0), nur aus neueren Listen
+  const details = { ...(form.details ?? {}) };
+  for (const k of ["monoFatG", "polyFatG", "transFatG", "starchG"]) if (p[k] !== null && p[k] !== undefined) details[k] = txt(p[k]);
   return {
     ...form,
     values,
+    details,
     name: p.name,
     brand: p.brand ?? "",
     basis: p.basisUnit,

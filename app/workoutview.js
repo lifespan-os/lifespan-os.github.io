@@ -429,7 +429,25 @@ export function setRow(we, s, si, cardio, profiles = [], weighted = false) {
       ${cardio ? "" : `<button class="chip${s.isFailure ? " on" : ""}" data-act="flag" data-flag="isFailure" data-we="${we.id}" data-set="${s.id}">Fail</button>
       <button class="chip${s.isUnilateral ? " on" : ""}" data-act="flag" data-flag="isUnilateral" data-we="${we.id}" data-set="${s.id}">Einseitig</button>`}
       <button class="chip del" data-act="del-set" data-we="${we.id}" data-set="${s.id}" aria-label="Satz löschen">✕</button>
-    </div>`;
+    </div>${cardio ? effortRow(we, s) : ""}`;
+}
+
+/**
+ * „Wie anstrengend?“ je Cardio-Block (PC 1.0.234): fünf Stufen, gespeichert als RPE 2/4/6/8/10.
+ * Ohne Puls bestimmt die Stufe die Zone; ohne Puls und Stufe zählt der Block als Zone 2.
+ */
+export function effortRow(we, s) {
+  const level = PDOM.cardio.cardioEffortLevel(s.rpe);
+  const exact = level !== null && PDOM.cardio.CARDIO_EFFORT_LEVELS[level - 1].rpe === s.rpe;
+  return `<div class="set-opts effort" role="group" aria-label="Wie anstrengend?"><span class="effort-label">Wie anstrengend?</span>${PDOM.cardio.CARDIO_EFFORT_LEVELS.map(
+    (l, i) => `<button class="chip${level === i + 1 ? " on" : ""}" data-act="cardio-effort" data-we="${we.id}" data-set="${s.id}" data-arg="${l.rpe}" title="${esc(l.hint)}" aria-pressed="${level === i + 1}">${i + 1} · ${esc(l.label)}</button>`,
+  ).join("")}${
+    level === null
+      ? `<span class="effort-hint">Ohne Puls und Angabe zählt der Block als Zone 2.</span>`
+      : exact
+        ? ""
+        : `<span class="muted small">eingetragen: RPE ${C.fmtNum(s.rpe, 1)}</span>`
+  }</div>`;
 }
 
 export function viewPicker() {

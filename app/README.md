@@ -1708,3 +1708,15 @@ Wie PC 1.0.177 (Wünsche des Nutzers vom 22.11.2026):
   türkis, Mobilität violett; Ring = geplant, gefüllt = erfasst). Regel `trainingKind` aus `pcdomain.js`.
 - Restdays sind grün gefüllt, Krankheitstage rot; im Tagesdetail steht oben „Restday“ bzw. „Krankheit“.
 - Erfasste Einheiten im Tagesdetail öffnen per Tipp die Einheit. `plancalendar.js`, `app.css`.
+
+## Version 1.182.0 (27.11.2026): Mahlzeit erfassen – Suche ohne Springen
+
+- Suchfeld steht direkt unter Mahlzeit/Uhrzeit (vor „Wie immer?“). Antippen startet den Suchmodus:
+  Titel, Mahlzeit/Uhrzeit, Reiter und „Wie immer?“ werden ausgeblendet, das Suchfeld steht mit
+  „Fertig“ und einer Teller-Zeile (Anzahl, zuletzt hinzugefügt, kcal, Protein) fest unter dem Kopf.
+- Treffer antippen legt auf den Teller, ohne neu zu zeichnen; Suchfeld und Tastatur bleiben offen,
+  der Treffer wird kurz grün markiert. „Suchen“ auf der Tastatur schließt nur die Tastatur.
+- Favoriten-Chips nur ohne Suchbegriff; Hinweis „Durchsucht alles …“ entfällt.
+- „Fertig“ leert die Suche, schließt die Tastatur und springt zu „Wird eingetragen“.
+- „Wie immer“ / „Oft gegessen“ / „Wie gestern“: nochmal antippen nimmt den Vorschlag wieder vom
+  Teller („✓ Entfernen“), ohne dass die Seite springt.

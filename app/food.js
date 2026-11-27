@@ -1182,6 +1182,9 @@ export function foodInput(el) {
   if (el.id === "food-q") {
     s.query = el.value;
     document.getElementById("food-results").innerHTML = foodResults(s.query, resultAct());
+    // Favoriten nur ohne Suchbegriff – Treffer stehen direkt unter dem Feld (1.182.0)
+    const favs = document.getElementById("plt-favs");
+    if (favs) favs.hidden = Boolean(s.query.trim());
     return true;
   }
   if (el.id === "dish-q") {

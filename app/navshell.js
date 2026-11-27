@@ -219,7 +219,8 @@ export const typingField = (el) => el?.matches?.("textarea") || (el?.matches?.("
 document.addEventListener("focusin", (ev) => {
   if (!typingField(ev.target)) return;
   document.body.classList.add("is-typing");
-  const search = ev.target.id === "food-q" || ev.target.id === "dish-q" ? ev.target.closest(".card") : null;
+  // Mahlzeit erfassen (1.182.0): das Suchfeld selbst nach oben (Kopf der Karte wird im Suchmodus ausgeblendet)
+  const search = ev.target.id === "food-q" || ev.target.id === "dish-q" ? (ev.target.closest(".plt-searchbar") ?? ev.target.closest(".card")) : null;
   if (search) {
     document.body.classList.add("is-searching");
     // nach dem Aufgehen der Tastatur (Ansicht wird kleiner) ausrichten

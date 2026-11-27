@@ -2771,3 +2771,33 @@ html[data-arranging] [data-arrange-unit][data-arrange-drag] { position: relative
 .sleep-viz__legend.legend--column { flex-direction: column; align-items: flex-start; }
 .sleep-viz__legend .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; flex: none; }
 .sleep-viz__legend .swatch--line { width: 16px; height: 3px; }
+
+/* 1.182.0: Mahlzeit erfassen – Suche ohne Springen. Suchfeld zuerst, im Suchmodus steht es mit
+   „Fertig“ und der Teller-Zeile direkt unter dem Kopf; Mahlzeit, Uhrzeit, „Wie immer?“ und Reiter
+   sind dann ausgeblendet, die Treffer bekommen den ganzen Platz bis zur Tastatur. */
+#quick-meal .plt-when .field label { min-height: 0; }
+#quick-meal .plt-when .field:nth-child(2) { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 6px; align-items: center; }
+#quick-meal .plt-when .field:nth-child(2) > label { grid-column: 1 / -1; }
+#quick-meal .plt-when .field:nth-child(2) > .muted { grid-column: 1 / -1; }
+#quick-meal .plt-when .field:nth-child(2) > input { min-width: 0; }
+.plt-searchbar { display: grid; gap: 4px; }
+.plt-searchbar__row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.plt-searchbar__row input { min-width: 0; }
+.plt-searchbar__done { display: none; min-height: 44px; }
+.plt-mini { display: none; align-items: center; gap: 8px; min-height: 24px; overflow: hidden; }
+.plt-mini__count { flex: none; padding: 1px 8px; border-radius: 99px; background: color-mix(in srgb, var(--orange) 16%, var(--surface)); color: var(--orange-text); font-size: .8rem; font-weight: 700; }
+.plt-mini__text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plt-usual { margin-top: 12px; }
+.plt-usual__card { min-height: 44px; padding: 6px 10px; }
+#quick-meal #food-results .item.is-added,
+#quick-meal #plt-favs .chip.is-added { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, var(--surface)); transition: background .2s; }
+#quick-meal #food-results .item.is-added .chev::before { content: "✓ "; }
+
+body.is-searching #quick-meal > h3,
+body.is-searching #quick-meal > .plt-when,
+body.is-searching #quick-meal > .plt-tabs,
+body.is-searching #quick-meal > .plt-usual,
+body.is-searching #quick-meal .plt-search-extra { display: none; }
+body.is-searching #quick-meal .plt-searchbar { position: sticky; top: var(--head-h, 90px); z-index: 5; margin: -4px -4px 6px; padding: 6px 4px; background: var(--surface); border-bottom: 1px solid var(--line); }
+body.is-searching #quick-meal .plt-searchbar__done { display: inline-flex; }
+body.is-searching #quick-meal .plt-mini { display: flex; }

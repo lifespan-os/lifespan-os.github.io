@@ -37,7 +37,7 @@ const norm = (s) =>
     .replace(/ß/g, "ss");
 
 export function emptyPlate() {
-  return { items: [], extras: [], quick: MB().emptyQuickForm(), quickValues: {}, quickNames: [], tab: "search", tried: false, taken: null, recipeOpen: false, recipeName: "", recipePortions: "1", recipeDone: "" };
+  return { items: [], extras: [], quick: MB().emptyQuickForm(), quickValues: {}, quickNames: [], tab: "search", tried: false, taken: null, takenIds: {}, recipeOpen: false, recipeName: "", recipePortions: "1", recipeDone: "" };
 }
 
 const P = () => {
@@ -256,7 +256,7 @@ function plateHtml(p) {
         <div class="row"><button class="btn sm" data-act="plt-dish-cancel">Abbrechen</button><button class="btn sm primary" data-act="plt-dish-save">Unter Gerichte speichern</button></div></div>`;
     }
   }
-  return `<ul class="plt-list">${rows.join("") || `<li class="muted small plt-empty">Noch leer – oben suchen, einen Favoriten antippen oder den Schnelleintrag nutzen.</li>`}</ul>
+  return `<ul class="plt-list">${rows.join("") || `<li class="muted small plt-empty">Noch leer – oben suchen, „Wie immer?“ oder einen Favoriten antippen oder den Schnelleintrag nutzen.</li>`}</ul>
     ${dish}
     <div class="plt-sum"><div><span>kcal</span><b>${r0(t.kcal)}</b></div><div><span>Protein</span><b>${r1(t.protein)} g</b></div><div><span>KH</span><b>${r1(t.carbs)} g</b></div><div><span>Fett</span><b>${r1(t.fat)} g</b></div></div>
     <p class="muted small">davon ges. Fettsäuren ${r1(t.sat)} g · Zucker ${r1(t.sugar)} g · Ballaststoffe ${r1(t.fiber)} g · ${r0(t.kcal * 4.184)} kJ${t.mg ? ` · Koffein ${r0(t.mg)} mg` : ""}${t.supps ? ` · ${t.supps} Supplement${t.supps === 1 ? "" : "e"}` : ""}</p>`;
@@ -276,7 +276,8 @@ export function plateCardHtml() {
         .map((u) => {
           const names = u.items.map((i) => foods.get(i.foodId)).filter(Boolean).map((f) => QM.Q.shortFoodName(f.name, 18));
           const kcal = u.items.reduce((a, i) => a + ((foods.get(i.foodId)?.energy_kcal ?? 0) * i.amount) / 100, 0);
-          return `<button class="plt-usual__card${p.taken === u.key ? " is-taken" : ""}" data-act="plt-usual" data-arg="${esc(u.key)}"><span><b>${esc(u.label)}</b>${u.note ? ` <span class="muted">· ${esc(u.note)}</span>` : ""}<span class="muted small plt-usual__detail">${esc(names.join(", "))} · ${r0(kcal)} kcal</span></span><span class="plt-usual__act">${p.taken === u.key ? "✓" : "+ Übernehmen"}</span></button>`;
+          const on = Boolean(p.takenIds?.[u.key]) || p.taken === u.key;
+          return `<button class="plt-usual__card${on ? " is-taken" : ""}" data-act="plt-usual" data-arg="${esc(u.key)}"><span><b>${esc(u.label)}</b>${u.note ? ` <span class="muted">· ${esc(u.note)}</span>` : ""}<span class="muted small plt-usual__detail">${esc(names.join(", "))} · ${r0(kcal)} kcal</span></span><span class="plt-usual__act">${on ? "✓ Entfernen" : "+ Übernehmen"}</span></button>`;
         })
         .join("")}</div>`
     : "";
@@ -292,19 +293,22 @@ export function plateCardHtml() {
   const tabs = planned
     ? ""
     : `<div class="plt-tabs" role="group" aria-label="Hinzufügen über"><button type="button" class="${tab === "search" ? "is-active" : ""}" aria-pressed="${tab === "search"}" data-act="plt-tab" data-arg="search">🔍 Suche</button><button type="button" class="${tab === "quick" ? "is-active" : ""}" aria-pressed="${tab === "quick"}" data-act="plt-tab" data-arg="quick">⚡ Schnelleintrag</button></div>`;
-  const search = `<input id="food-q" type="search" placeholder="${planned ? "Lebensmittel oder Gericht suchen" : "Lebensmittel, Gericht, Supplement, Koffein …"}" value="${esc(s.query)}" autocomplete="off" enterkeyhint="search">
-      <p class="muted small">Durchsucht alles${planned ? "" : " – das Etikett zeigt die Spalte im Tagesverlauf"}.</p>
-      ${favHtml}
+  // Suche (1.182.0): Suchfeld mit „Fertig“ und Teller-Zeile in einer Leiste, die im Suchmodus
+  // oben unter dem Kopf stehen bleibt; Favoriten nur ohne Suchbegriff.
+  const search = `<div class="plt-searchbar"><div class="plt-searchbar__row"><input id="food-q" type="search" placeholder="${planned ? "Lebensmittel oder Gericht suchen" : "Lebensmittel, Gericht, Supplement, Koffein …"}" value="${esc(s.query)}" autocomplete="off" enterkeyhint="search"><button type="button" class="btn sm plt-searchbar__done" data-act="plt-search-done">Fertig</button></div>
+      <div id="plt-mini" class="plt-mini">${miniHtml(p)}</div></div>
+      <div id="plt-favs" ${String(s.query ?? "").trim() ? "hidden" : ""}>${favHtml}</div>
       <div class="list" id="food-results">${H.foodResults(s.query, "plt-add")}</div>
-      ${H.foodDupHtml()}`;
+      <div class="plt-search-extra">${H.foodDupHtml()}</div>`;
+  queueMicrotask(syncSearchMode);
   return `<section class="card hl" id="quick-meal">
     <h3>${planned ? "Mahlzeit planen" : "Mahlzeit erfassen"}</h3>
-    <div class="nf-grid"><div class="field"><label for="qm-meal">Mahlzeit (${esc(H.trackDayLabel())})</label><select id="qm-meal" data-ft="mealType">${H.mealOptions(s.mealType)}</select></div>
+    <div class="nf-grid plt-when"><div class="field"><label for="qm-meal">Mahlzeit (${esc(H.trackDayLabel())})</label><select id="qm-meal" data-ft="mealType">${H.mealOptions(s.mealType)}</select></div>
       ${planned || s.selected ? "" : H.timeFieldHtml("track", H.trackDate(), s.mealType)}</div>
-    ${usualHtml}
     ${tabs}
     <div id="food-search" class="food-search">${tab === "search" ? search : quickFormHtml(p)}</div>
-    <div class="plt-head"><h4>${planned ? "Wird geplant" : "Wird eingetragen"}</h4></div>
+    ${usualHtml}
+    <div class="plt-head" id="plt-head"><h4>${planned ? "Wird geplant" : "Wird eingetragen"}</h4></div>
     <div id="plt-plate">${plateHtml(p)}</div>
     ${H.timeHintHtml("plate")}
     <button class="btn primary block" data-act="plt-save" ${plateEmpty(p) ? "disabled" : ""}>${planned ? "Planen" : "Speichern"}</button>
@@ -312,10 +316,64 @@ export function plateCardHtml() {
   </section>`;
 }
 
+/** Kurzzeile „Auf dem Teller“ in der Suchleiste (ohne Neuzeichnen aktualisiert). */
+function miniHtml(p) {
+  const { foods } = H.quickData();
+  const n = p.items.length + p.extras.length + (Object.keys(p.quickValues).length ? 1 : 0);
+  if (!n) return `<span class="muted small">Teller leer – Treffer antippen legt sie auf den Teller.</span>`;
+  const t = totals(p, foods);
+  const last = p.items.length ? p.items[p.items.length - 1] : null;
+  const lf = last ? foods.get(last.foodId) : null;
+  return `<span class="plt-mini__count">🍽 ${n}</span><span class="small plt-mini__text">${lf ? `${esc(QM.Q.shortFoodName(lf.name, 22))} ${esc(r1(num(last.amount)))} ${esc(lf.basis_unit)} · ` : ""}<b>${r0(t.kcal)} kcal</b> · E ${r1(t.protein)} g</span>`;
+}
+
+/** Suchmodus (body.is-searching) nur, solange gesucht wird. */
+function syncSearchMode() {
+  const q = document.getElementById("food-q");
+  if (!q || (document.activeElement !== q && !q.value.trim())) document.body.classList.remove("is-searching");
+}
+
+/** Suche beenden: Feld leeren, Tastatur zu, zum Teller. */
+function endSearch() {
+  const s = H.F();
+  s.query = "";
+  document.getElementById("food-q")?.blur();
+  document.body.classList.remove("is-searching", "is-typing");
+  H.X.rerender();
+  requestAnimationFrame(() => document.getElementById("plt-head")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+}
+
+// Antippen in der Suche lässt das Suchfeld (und die Tastatur) offen und markiert den Treffer kurz.
+const KEEP_FOCUS = "#quick-meal .plt-searchbar button, #quick-meal #food-results .item, #quick-meal #plt-favs .chip";
+for (const type of ["mousedown", "pointerdown"]) {
+  document.addEventListener(type, (ev) => {
+    if (document.activeElement?.id === "food-q" && ev.target.closest?.(KEEP_FOCUS)) ev.preventDefault();
+  });
+}
+// „Suchen“ auf der Tastatur: Tastatur zu, die Treffer bekommen den ganzen Bildschirm
+document.addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter" && ev.target?.id === "food-q" && ev.target.closest("#quick-meal")) {
+    ev.preventDefault();
+    ev.target.blur();
+  }
+});
+document.addEventListener(
+  "click",
+  (ev) => {
+    const hit = ev.target.closest?.("#quick-meal #food-results .item, #quick-meal #plt-favs .chip");
+    if (!hit) return;
+    hit.classList.add("is-added");
+    setTimeout(() => hit.classList.remove("is-added"), 900);
+  },
+  true,
+);
+
 const refreshPlate = () => {
   const box = document.getElementById("plt-plate");
   if (!box) return H.X.rerender();
   box.innerHTML = plateHtml(P());
+  const mini = document.getElementById("plt-mini");
+  if (mini) mini.innerHTML = miniHtml(P());
   const btn = document.querySelector('[data-act="plt-save"]');
   if (btn) btn.disabled = plateEmpty(P());
 };
@@ -505,14 +563,38 @@ export const plateActions = {
     H.X.rerender();
   },
   "plt-usual": (el) => {
-    const { history, foods } = H.quickData();
-    const u = MB().usualMeals(history, H.F().mealType, H.today()).find((x) => x.key === el.dataset.arg);
-    if (!u) return;
     const p = P();
-    for (const i of u.items) if (foods.has(i.foodId) && !p.items.some((x) => x.foodId === i.foodId)) p.items.push({ foodId: i.foodId, amount: r1(i.amount) });
-    p.taken = u.key;
-    H.X.rerender();
+    const key = el.dataset.arg;
+    p.takenIds = p.takenIds ?? {};
+    // Nochmal antippen nimmt den Vorschlag wieder vom Teller (1.182.0)
+    if (p.taken === key || p.takenIds[key]) {
+      const ids = new Set(p.takenIds[key] ?? []);
+      p.items = p.items.filter((x) => !ids.has(x.foodId));
+      delete p.takenIds[key];
+      if (p.taken === key) p.taken = null;
+    } else {
+      const { history, foods } = H.quickData();
+      const u = MB().usualMeals(history, H.F().mealType, H.today()).find((x) => x.key === key);
+      if (!u) return;
+      const added = [];
+      for (const i of u.items)
+        if (foods.has(i.foodId) && !p.items.some((x) => x.foodId === i.foodId)) {
+          p.items.push({ foodId: i.foodId, amount: r1(i.amount) });
+          added.push(i.foodId);
+        }
+      p.takenIds[key] = added;
+      p.taken = key;
+    }
+    // ohne Neuzeichnen: Seite springt nicht
+    for (const card of document.querySelectorAll(".plt-usual__card")) {
+      const on = Boolean(p.takenIds[card.dataset.arg]);
+      card.classList.toggle("is-taken", on);
+      const act = card.querySelector(".plt-usual__act");
+      if (act) act.textContent = on ? "✓ Entfernen" : "+ Übernehmen";
+    }
+    refreshPlate();
   },
+  "plt-search-done": () => endSearch(),
   "plt-step": (el) => {
     const [kind, i, d] = el.dataset.arg.split("|");
     const p = P();

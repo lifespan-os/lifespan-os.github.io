@@ -1,4 +1,5 @@
 // LIFESPAN OS Mobil – Import/Export: Übersicht, Senden an den PC, offene Einträge, Dateien bauen (aus app.js, 1.74.0).
+import { activityImportHtml } from "./watchparity.js";
 import * as C from "./core.js";
 import * as PR from "./paritydata.js";
 import * as store from "./store.js";
@@ -101,6 +102,7 @@ export function viewTransfer() {
   }
   return `${header("Import/Export")}<main class="wrap">
     ${arranged.map((x) => x.node).join("")}
+    ${activityImportHtml()}
     ${backupCard()}
   </main>`;
 }

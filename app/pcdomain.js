@@ -14671,10 +14671,10 @@ function findPdfImage(bytes) {
   const re = /<<((?:(?!>>\s*stream)[\s\S])*?\/Subtype\s*\/Image[\s\S]*?)>>\s*stream\r?\n/g;
   for (let m = re.exec(text2); m; m = re.exec(text2)) {
     const dict = m[1] ?? "";
-    const num3 = (key) => Number(new RegExp(`/${key}\\s+(\\d+)`).exec(dict)?.[1] ?? NaN);
-    const width = num3("Width");
-    const height = num3("Height");
-    const bitsPerComponent = num3("BitsPerComponent");
+    const num4 = (key) => Number(new RegExp(`/${key}\\s+(\\d+)`).exec(dict)?.[1] ?? NaN);
+    const width = num4("Width");
+    const height = num4("Height");
+    const bitsPerComponent = num4("BitsPerComponent");
     const filter = /\/Filter\s*\/(\w+)/.exec(dict)?.[1];
     if (!Number.isFinite(width) || !Number.isFinite(height)) continue;
     if (filter !== "DCTDecode" && filter !== "FlateDecode") continue;
@@ -16358,19 +16358,19 @@ var clean = (s) => s.replace(/\s+/g, " ").trim().replace(/:$/, "");
 function parseDateCell(text2) {
   const t = clean(text2);
   if (t === "") return null;
-  const pad6 = (n3) => String(n3).padStart(2, "0");
+  const pad7 = (n3) => String(n3).padStart(2, "0");
   const make = (y, m2, d) => {
     const dt = new Date(Date.UTC(y, m2 - 1, d));
     if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m2 - 1 || dt.getUTCDate() !== d)
       return null;
-    return `${y}-${pad6(m2)}-${pad6(d)}`;
+    return `${y}-${pad7(m2)}-${pad7(d)}`;
   };
   const timeOf = (rest) => {
     const m2 = /^(\d{1,2}):(\d{2})/.exec((rest ?? "").trim());
     if (!m2) return null;
     const h = Number(m2[1]);
     const min = Number(m2[2]);
-    return h < 24 && min < 60 ? `${pad6(h)}:${pad6(min)}` : null;
+    return h < 24 && min < 60 ? `${pad7(h)}:${pad7(min)}` : null;
   };
   let m = /^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](.*))?$/.exec(t);
   if (m) {
@@ -16388,11 +16388,11 @@ function parseDateCell(text2) {
     if (serial < 2e4 || serial > 8e4) return null;
     const ms = Math.round((serial - 25569) * 864e5);
     const dt = new Date(ms);
-    const date = `${dt.getUTCFullYear()}-${pad6(dt.getUTCMonth() + 1)}-${pad6(dt.getUTCDate())}`;
+    const date = `${dt.getUTCFullYear()}-${pad7(dt.getUTCMonth() + 1)}-${pad7(dt.getUTCDate())}`;
     const minutes = dt.getUTCHours() * 60 + dt.getUTCMinutes();
     return {
       date,
-      time: minutes > 0 ? `${pad6(dt.getUTCHours())}:${pad6(dt.getUTCMinutes())}` : null
+      time: minutes > 0 ? `${pad7(dt.getUTCHours())}:${pad7(dt.getUTCMinutes())}` : null
     };
   }
   return null;
@@ -16400,15 +16400,15 @@ function parseDateCell(text2) {
 function parseTimeCell(text2) {
   const t = clean(text2);
   const m = /^(\d{1,2}):(\d{2})/.exec(t);
-  const pad6 = (n3) => String(n3).padStart(2, "0");
+  const pad7 = (n3) => String(n3).padStart(2, "0");
   if (m) {
     const h = Number(m[1]);
     const min = Number(m[2]);
-    return h < 24 && min < 60 ? `${pad6(h)}:${pad6(min)}` : null;
+    return h < 24 && min < 60 ? `${pad7(h)}:${pad7(min)}` : null;
   }
   if (/^0?\.\d+$/.test(t)) {
     const minutes = Math.round(Number(t) * 1440);
-    return minutes > 0 && minutes < 1440 ? `${pad6(Math.floor(minutes / 60))}:${pad6(minutes % 60)}` : null;
+    return minutes > 0 && minutes < 1440 ? `${pad7(Math.floor(minutes / 60))}:${pad7(minutes % 60)}` : null;
   }
   return null;
 }
@@ -17337,8 +17337,8 @@ function daysUntil(date, today) {
 function reminderStart(a) {
   if (a.remindDays === null) return null;
   const d = new Date((dayNumber2(a.date) - a.remindDays) * 864e5);
-  const pad6 = (n3) => String(n3).padStart(2, "0");
-  return `${d.getUTCFullYear()}-${pad6(d.getUTCMonth() + 1)}-${pad6(d.getUTCDate())}`;
+  const pad7 = (n3) => String(n3).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${pad7(d.getUTCMonth() + 1)}-${pad7(d.getUTCDate())}`;
 }
 function dueReminders2(appointments, today) {
   return appointments.filter((a) => {
@@ -21333,7 +21333,7 @@ function chartSvg(chart, label) {
 var list = (items, cls = "wr-list") => items.length ? `<ul class="${cls}">${items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : "";
 var box = (title, body, kind = "") => `<div class="wr-box${kind ? ` wr-box--${kind}` : ""}"><h4>${esc(title)}</h4>${body}</div>`;
 var card = (title, body, note = "") => `<div class="wr-card"><h4>${esc(title)}</h4>${body}${note ? `<p class="wr-note">${esc(note)}</p>` : ""}</div>`;
-var head = (num3, title, sub) => `<div class="wr-head"><span class="wr-head__num">${num3}</span><div><h3>${esc(title)}</h3><p>${esc(sub)}</p></div></div>`;
+var head = (num4, title, sub) => `<div class="wr-head"><span class="wr-head__num">${num4}</span><div><h3>${esc(title)}</h3><p>${esc(sub)}</p></div></div>`;
 var table = (cols, rows2, cls = "") => `<table class="wr-table${cls ? ` ${cls}` : ""}"><thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows2.map((r2) => `<tr>${r2.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
 function nutritionDetailHtml(r2) {
   const d = r2.nutrition.detail;
@@ -21659,10 +21659,10 @@ var Writer = class {
     if (this.y + h > BOTTOM2) this.newPage();
   }
   // ------------------------------------------------------------ Bausteine
-  section(num3, title, sub) {
+  section(num4, title, sub) {
     this.newPage();
     const p = this.page;
-    p.text(M2, this.y + 30, num3, { size: 32, bold: true, color: C.orange });
+    p.text(M2, this.y + 30, num4, { size: 32, bold: true, color: C.orange });
     p.text(M2 + 56, this.y + 16, safe(title), { size: 18, bold: true, color: C.navy });
     p.text(M2 + 56, this.y + 30, safe(sub), { size: 8.5, color: C.muted });
     this.y += 50;
@@ -23798,17 +23798,17 @@ var numberIn = (t) => {
 function parseOneInput(text2, ctx) {
   const t = norm4(text2);
   if (t === "") return { ok: false, error: `Beispiele: ${ONE_INPUT_EXAMPLES}` };
-  const num3 = numberIn(t);
+  const num4 = numberIn(t);
   if (/\bkg\b/.test(t) || /^gewicht\b/.test(t) || /^\d+(?:[.,]\d+)?$/.test(t)) {
-    if (num3 === null) return { ok: false, error: "Bitte ein Gewicht eingeben, z. B. 82,4 kg." };
-    const w = parseWeight(String(num3));
+    if (num4 === null) return { ok: false, error: "Bitte ein Gewicht eingeben, z. B. 82,4 kg." };
+    const w = parseWeight(String(num4));
     return w.ok ? { ok: true, intent: { kind: "weight", kg: w.kg } } : { ok: false, error: w.error };
   }
   for (const d of ctx.drinks ?? CAFFEINE_DRINKS) {
     const words = DRINK_WORDS[d.id] ?? [norm4(d.label)];
     if (!words.some((w) => t.includes(w))) continue;
     const free = d.portionMl === null;
-    const amount = num3 ?? (free ? d.portionMg : d.portionMl);
+    const amount = num4 ?? (free ? d.portionMg : d.portionMl);
     if (amount === null || !(amount > 0))
       return { ok: false, error: `${d.label}: bitte die Menge angeben.` };
     return { ok: true, intent: { kind: "caffeine", drinkId: d.id, label: d.label, amount } };
@@ -23819,21 +23819,21 @@ function parseOneInput(text2, ctx) {
     if (ml) {
       const v = Number(ml[1].replace(",", ".")) * (ml[2] === "l" ? 1e3 : 1);
       glasses = Math.max(1, Math.round(v / Math.max(1, ctx.glassMl)));
-    } else glasses = num3 !== null ? Math.round(num3) : 1;
+    } else glasses = num4 !== null ? Math.round(num4) : 1;
     if (!(glasses >= 1 && glasses <= 20))
       return { ok: false, error: "Wasser: 1 bis 20 Gl\xE4ser auf einmal." };
     return { ok: true, intent: { kind: "water", glasses } };
   }
-  if (num3 !== null) {
+  if (num4 !== null) {
     const words = t.replace(/(\d+(?:[.,]\d+)?)\s*(g|mg|µg|kcal)?/g, " ").trim();
     const hit = ctx.nutrients.find((n3) => {
       const l = norm4(n3.label);
       return words.length >= 3 && (l === words || l.startsWith(words) || words.startsWith(l));
     });
-    if (hit && num3 > 0)
+    if (hit && num4 > 0)
       return {
         ok: true,
-        intent: { kind: "fast", key: hit.key, label: hit.label, unit: hit.unit, amount: num3 }
+        intent: { kind: "fast", key: hit.key, label: hit.label, unit: hit.unit, amount: num4 }
       };
   }
   const stacks = ctx.stacks.filter((s) => norm4(s.name).includes(t) || t.includes(norm4(s.name)));
@@ -24319,7 +24319,7 @@ function quickIsEmpty(f) {
 var round12 = (x) => Math.round(x * 10) / 10;
 function checkQuick(f, strict = false) {
   const errors = {};
-  const num3 = {};
+  const num4 = {};
   const missing = [];
   for (const d of QUICK_FIELDS) {
     const text2 = f[d.field].trim();
@@ -24334,30 +24334,30 @@ function checkQuick(f, strict = false) {
     if (!Number.isFinite(v)) errors[d.field] = "keine Zahl";
     else if (v < 0) errors[d.field] = "nicht negativ";
     else if (v > QUICK_MAX) errors[d.field] = "zu gro\xDF";
-    else num3[d.field] = v;
+    else num4[d.field] = v;
   }
-  if (num3.saturatedFat !== void 0 && num3.fat !== void 0 && num3.saturatedFat > num3.fat) {
+  if (num4.saturatedFat !== void 0 && num4.fat !== void 0 && num4.saturatedFat > num4.fat) {
     errors.saturatedFat = "mehr als Fett";
   }
-  if (num3.sugar !== void 0 && num3.carbs !== void 0 && num3.sugar > num3.carbs) {
+  if (num4.sugar !== void 0 && num4.carbs !== void 0 && num4.sugar > num4.carbs) {
     errors.sugar = "mehr als KH";
   }
-  let kcal3 = num3.kcal ?? null;
+  let kcal3 = num4.kcal ?? null;
   let kcalDerived = false;
-  if (kcal3 === null && num3.kj !== void 0) {
-    kcal3 = round12(num3.kj / KJ_PER_KCAL);
+  if (kcal3 === null && num4.kj !== void 0) {
+    kcal3 = round12(num4.kj / KJ_PER_KCAL);
     kcalDerived = true;
   }
-  if (kcal3 === null && num3.fat !== void 0 && num3.carbs !== void 0 && num3.protein !== void 0) {
-    kcal3 = Math.round(9 * num3.fat + 4 * num3.carbs + 4 * num3.protein + 2 * (num3.fiber ?? 0));
+  if (kcal3 === null && num4.fat !== void 0 && num4.carbs !== void 0 && num4.protein !== void 0) {
+    kcal3 = Math.round(9 * num4.fat + 4 * num4.carbs + 4 * num4.protein + 2 * (num4.fiber ?? 0));
     kcalDerived = true;
   }
-  const kj = num3.kj ?? (kcal3 !== null ? Math.round(kcal3 * KJ_PER_KCAL) : null);
+  const kj = num4.kj ?? (kcal3 !== null ? Math.round(kcal3 * KJ_PER_KCAL) : null);
   const ok = missing.length === 0 && Object.keys(errors).length === 0;
   const values = {};
   if (ok) {
     for (const d of QUICK_FIELDS) {
-      const v = num3[d.field];
+      const v = num4[d.field];
       if (d.key && d.key !== "energy" && v !== void 0) values[d.key] = v;
     }
     if (kcal3 !== null) values.energy = kcal3;
@@ -30110,8 +30110,8 @@ function bedAxis(time) {
 }
 function axisClock(value2) {
   const total = ((Math.round(value2) + NOON) % DAY2 + DAY2) % DAY2;
-  const pad6 = (n3) => String(n3).padStart(2, "0");
-  return `${pad6(Math.floor(total / 60))}:${pad6(total % 60)}`;
+  const pad7 = (n3) => String(n3).padStart(2, "0");
+  return `${pad7(Math.floor(total / 60))}:${pad7(total % 60)}`;
 }
 function mean7(values) {
   return values.reduce((s, v) => s + v, 0) / values.length;
@@ -35162,8 +35162,8 @@ function findCandidates(theirs, mine, {
   theirNumber = null,
   numberOf = () => null
 } = {}) {
-  const num3 = theirNumber?.trim() || null;
-  return mine.filter((m) => !m.archived && m.id !== theirs.id).map((m) => similarity(theirs, m, !!num3 && numberOf(m.id)?.trim() === num3)).filter((c) => c.score >= MIN_SCORE).sort((a, b) => b.score - a.score || a.id.localeCompare(b.id)).slice(0, limit);
+  const num4 = theirNumber?.trim() || null;
+  return mine.filter((m) => !m.archived && m.id !== theirs.id).map((m) => similarity(theirs, m, !!num4 && numberOf(m.id)?.trim() === num4)).filter((c) => c.score >= MIN_SCORE).sort((a, b) => b.score - a.score || a.id.localeCompare(b.id)).slice(0, limit);
 }
 function defaultAction(candidates) {
   const best = candidates[0];
@@ -36166,7 +36166,9 @@ function intakeDatesFor(draws, max = LAB_INTAKE_DRAWS) {
     for (let i = 1; i <= LAB_INTAKE_DAYS; i += 1) out.add(shiftDays(d.date, -i));
   return [...out].sort();
 }
-var recentDraws = (draws, max) => [...draws].filter((d) => d.results.some((r2) => LAB_NUTRIENT_LINKS.some((l) => l.analyteId === r2.analyteId))).sort((a, b) => b.date.localeCompare(a.date)).slice(0, max);
+var recentDraws = (draws, max) => [...draws].filter(
+  (d) => d.results.some((r2) => LAB_NUTRIENT_LINKS.some((l) => l.analyteId === r2.analyteId))
+).sort((a, b) => b.date.localeCompare(a.date)).slice(0, max);
 function labIntakeRows(draws, intake, max = LAB_INTAKE_DRAWS) {
   const byDate2 = new Map(intake.map((d) => [d.date, d.values]));
   const rows2 = [];
@@ -36196,6 +36198,282 @@ function labIntakeRows(draws, intake, max = LAB_INTAKE_DRAWS) {
     }
   }
   return rows2;
+}
+
+// src/domain/activityFile.ts
+var activityFile_exports = {};
+__export(activityFile_exports, {
+  KIND_TITLES: () => KIND_TITLES,
+  activityWorkout: () => activityWorkout,
+  cardioExerciseFor: () => cardioExerciseFor,
+  isFit: () => isFit,
+  kindOfSport: () => kindOfSport,
+  localStart: () => localStart,
+  parseActivityFile: () => parseActivityFile,
+  parseFit: () => parseFit,
+  parseTcx: () => parseTcx
+});
+var FIT_SPORTS = {
+  0: "generic",
+  1: "running",
+  2: "cycling",
+  4: "fitness_equipment",
+  5: "swimming",
+  11: "walking",
+  12: "cross_country_skiing",
+  15: "rowing",
+  17: "hiking",
+  21: "e_biking"
+};
+function kindOfSport(sport, subSport = "") {
+  const s = `${sport} ${subSport}`.toLowerCase();
+  if (/elliptical/.test(s)) return "elliptical";
+  if (/stair|step/.test(s)) return "stairs";
+  if (/row/.test(s)) return "row";
+  if (/ski/.test(s)) return "ski";
+  if (/swim/.test(s)) return "swim";
+  if (/cycl|bik|bike/.test(s)) return "cycle";
+  if (/walk|hik/.test(s)) return "walk";
+  if (/run/.test(s)) return "run";
+  return "other";
+}
+var FIT_EPOCH = 631065600;
+function readUint(v, off, size, little) {
+  if (size === 1) {
+    const x = v.getUint8(off);
+    return x === 255 ? null : x;
+  }
+  if (size === 2) {
+    const x = v.getUint16(off, little);
+    return x === 65535 ? null : x;
+  }
+  if (size === 4) {
+    const x = v.getUint32(off, little);
+    return x === 4294967295 ? null : x;
+  }
+  return null;
+}
+function isFit(bytes) {
+  return bytes.length >= 14 && bytes[8] === 46 && bytes[9] === 70 && bytes[10] === 73 && bytes[11] === 84;
+}
+function parseFit(bytes) {
+  if (!isFit(bytes)) return null;
+  const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const headerSize = bytes[0] ?? 0;
+  const dataSize = v.getUint32(4, true);
+  const end = Math.min(bytes.length, headerSize + dataSize);
+  const defs = /* @__PURE__ */ new Map();
+  let off = headerSize;
+  try {
+    while (off < end) {
+      const h = bytes[off];
+      off += 1;
+      if ((h & 128) === 0 && (h & 64) !== 0) {
+        const local2 = h & 15;
+        const hasDev = (h & 32) !== 0;
+        const little = bytes[off + 1] === 0;
+        const global = v.getUint16(off + 2, little);
+        const n3 = bytes[off + 4];
+        off += 5;
+        const fields = [];
+        for (let i = 0; i < n3; i += 1) {
+          fields.push({ num: bytes[off], size: bytes[off + 1], base: bytes[off + 2] });
+          off += 3;
+        }
+        let devSize = 0;
+        if (hasDev) {
+          const nd = bytes[off];
+          off += 1;
+          for (let i = 0; i < nd; i += 1) {
+            devSize += bytes[off + 1];
+            off += 3;
+          }
+        }
+        defs.set(local2, { global, little, fields, devSize });
+        continue;
+      }
+      const local = (h & 128) !== 0 ? h >> 5 & 3 : h & 15;
+      const def = defs.get(local);
+      if (!def) return null;
+      if (def.global === 18) {
+        const f = /* @__PURE__ */ new Map();
+        let p = off;
+        for (const fd of def.fields) {
+          f.set(fd.num, readUint(v, p, fd.size, def.little));
+          p += fd.size;
+        }
+        const get = (k) => f.get(k) ?? null;
+        const start = get(2);
+        const timer = get(8) ?? get(7);
+        if (start === null || timer === null) return null;
+        const sport = FIT_SPORTS[get(5) ?? 0] ?? "generic";
+        const sub = get(6);
+        return {
+          format: "fit",
+          sport,
+          kind: kindOfSport(sport, sub === 14 ? "indoor_rowing" : sub === 15 ? "elliptical" : sub === 16 ? "stair" : ""),
+          start: new Date((start + FIT_EPOCH) * 1e3).toISOString(),
+          durationSeconds: Math.round(timer / 1e3),
+          distanceM: get(9) === null ? null : Math.round(get(9) / 100),
+          hrAvg: get(16),
+          hrMax: get(17),
+          kcal: get(11),
+          powerW: get(20),
+          powerMaxW: get(21),
+          cadence: get(18),
+          cadenceMax: get(19),
+          elevationM: get(22)
+        };
+      }
+      off += def.fields.reduce((a, fd) => a + fd.size, 0) + def.devSize;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+var num3 = (s) => {
+  const x = s === void 0 ? NaN : Number(s);
+  return Number.isFinite(x) ? x : null;
+};
+function parseTcx(text2) {
+  const act = /<Activity\b[^>]*Sport="([^"]*)"[^>]*>([\s\S]*?)<\/Activity>/i.exec(text2);
+  if (!act) return null;
+  const sport = act[1] ?? "Other";
+  const body = act[2] ?? "";
+  const id4 = /<Id>([^<]+)<\/Id>/i.exec(body)?.[1]?.trim();
+  const laps = [...body.matchAll(/<Lap\b([^>]*)>([\s\S]*?)<\/Lap>/gi)];
+  if (laps.length === 0) return null;
+  let time = 0;
+  let dist = 0;
+  let hasDist = false;
+  let kcal3 = 0;
+  let hasKcal = false;
+  let hrWeighted = 0;
+  let hrTime = 0;
+  let hrMax = null;
+  let firstStart = null;
+  for (const lap of laps) {
+    const s = /StartTime="([^"]+)"/i.exec(lap[1] ?? "")?.[1] ?? null;
+    if (firstStart === null && s) firstStart = s;
+    const b = lap[2] ?? "";
+    const t = num3(/<TotalTimeSeconds>([^<]+)</i.exec(b)?.[1]) ?? 0;
+    time += t;
+    const d = num3(/<DistanceMeters>([^<]+)</i.exec(b.replace(/<Track>[\s\S]*<\/Track>/i, ""))?.[1]);
+    if (d !== null) {
+      dist += d;
+      hasDist = true;
+    }
+    const c = num3(/<Calories>([^<]+)</i.exec(b)?.[1]);
+    if (c !== null) {
+      kcal3 += c;
+      hasKcal = true;
+    }
+    const avg = num3(/<AverageHeartRateBpm>\s*<Value>([^<]+)</i.exec(b)?.[1]);
+    if (avg !== null && t > 0) {
+      hrWeighted += avg * t;
+      hrTime += t;
+    }
+    const mx = num3(/<MaximumHeartRateBpm>\s*<Value>([^<]+)</i.exec(b)?.[1]);
+    if (mx !== null) hrMax = Math.max(hrMax ?? 0, mx);
+  }
+  const start = firstStart ?? id4 ?? null;
+  const ms = start ? Date.parse(start) : NaN;
+  if (!Number.isFinite(ms) || time <= 0) return null;
+  return {
+    format: "tcx",
+    sport,
+    kind: kindOfSport(sport),
+    start: new Date(ms).toISOString(),
+    durationSeconds: Math.round(time),
+    distanceM: hasDist ? Math.round(dist) : null,
+    hrAvg: hrTime > 0 ? Math.round(hrWeighted / hrTime) : null,
+    hrMax,
+    kcal: hasKcal ? Math.round(kcal3) : null,
+    powerW: null,
+    powerMaxW: null,
+    cadence: null,
+    cadenceMax: null,
+    elevationM: null
+  };
+}
+function parseActivityFile(bytes) {
+  if (isFit(bytes)) return parseFit(bytes);
+  const text2 = new TextDecoder("utf-8").decode(bytes);
+  return /<TrainingCenterDatabase/i.test(text2) ? parseTcx(text2) : null;
+}
+var KIND_TITLES = {
+  run: "Laufen",
+  walk: "Gehen",
+  cycle: "Radfahren",
+  row: "Rudern",
+  ski: "Skilanglauf",
+  swim: "Schwimmen",
+  elliptical: "Crosstrainer",
+  stairs: "Stepper",
+  other: "Cardio"
+};
+function cardioExerciseFor(exercises, kind) {
+  const cardio = exercises.filter((e) => e.category === "cardio" && !e.archived);
+  return cardio.find((e) => e.cardioKind === kind) ?? cardio.find((e) => e.cardioKind === "other") ?? cardio[0] ?? null;
+}
+var pad6 = (n3) => String(n3).padStart(2, "0");
+function localStart(iso2) {
+  const d = new Date(iso2);
+  return {
+    date: `${d.getFullYear()}-${pad6(d.getMonth() + 1)}-${pad6(d.getDate())}`,
+    time: `${pad6(d.getHours())}:${pad6(d.getMinutes())}`
+  };
+}
+function activityWorkout(a, exerciseId, fileName = "") {
+  const { date, time } = localStart(a.start);
+  const metrics = {
+    hrAvg: a.hrAvg,
+    hrMax: a.hrMax,
+    powerW: a.powerW,
+    powerMaxW: a.powerMaxW,
+    cadence: a.cadence,
+    cadenceMax: a.cadenceMax,
+    elevationM: a.elevationM,
+    deviceKcal: a.kcal
+  };
+  return {
+    id: null,
+    date,
+    startTime: time,
+    durationMin: Math.max(1, Math.round(a.durationSeconds / 60)),
+    title: KIND_TITLES[a.kind],
+    planDayId: null,
+    perceivedExertion: null,
+    notes: `Importiert aus ${a.format.toUpperCase()}-Datei${fileName ? ` \u201E${fileName}\u201C` : ""}.`,
+    status: "done",
+    exercises: [
+      {
+        id: null,
+        exerciseId,
+        notes: null,
+        settings: settingsToInput(emptySettingsDraft()),
+        restSeconds: null,
+        sets: [
+          {
+            id: null,
+            reps: null,
+            weightKg: null,
+            durationSeconds: a.durationSeconds,
+            distanceM: a.distanceM,
+            rpe: null,
+            isWarmup: false,
+            isUnilateral: false,
+            notes: null,
+            isDone: true,
+            isFailure: false,
+            ...emptyProfileWeights(),
+            ...metrics
+          }
+        ]
+      }
+    ]
+  };
 }
 export {
   AKH_REFERENCES,
@@ -36241,6 +36519,7 @@ export {
   SOURCE_LABEL,
   WATER_FOOD_KEY,
   ZERO,
+  activityFile_exports as activityFile,
   acwr,
   adaptiveTdee_exports as adaptiveTdee,
   addDaysIso,

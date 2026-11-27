@@ -1,5 +1,6 @@
 // LIFESPAN OS Mobil – Einstieg: Ansichten-Tabelle, Eingaben, Start. Logik in core.js, Speicher in store.js;
 // Oberfläche seit 1.74.0 auf Module verteilt (appbase, sheets, navshell, workoutview, transferview, appactions …).
+import { readActivityFiles } from "./watchparity.js";
 import "./sheets.js";
 import { bodyParityChange } from "./bodyparity.js";
 import { goalsParityChange } from "./goalsparity.js";
@@ -356,6 +357,10 @@ app.addEventListener("change", async (ev) => {
     await loadFile(el.files[0]);
   } else if (el.id === "master-in" && el.files?.[0]) {
     await readMasterFile(el.files[0]);
+    el.value = "";
+  } else if (el.id === "activity-in" && el.files?.length) {
+    // Aktivitäten aus FIT/TCX (1.176.0)
+    await readActivityFiles([...el.files]);
     el.value = "";
   } else if (el.id === "backup-in" && el.files?.[0]) {
     // Datensicherung wiederherstellen (1.99.0): erst prüfen, dann Rückfrage in der Karte

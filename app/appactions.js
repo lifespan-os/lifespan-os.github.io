@@ -7,7 +7,7 @@ import { recipeActions } from "./recipesui.js";
 import { nutriDbActions } from "./nutridb.js";
 import { searchActions } from "./searchview.js";
 import { pdfParityActions } from "./pdfparity.js";
-import { watchParityActions } from "./watchparity.js";
+import { activityImportActions, watchParityActions } from "./watchparity.js";
 import { setupActions } from "./setupparity.js";
 import * as store from "./store.js";
 import { foodActions } from "./food.js";
@@ -80,6 +80,7 @@ export const actions = {
   ...searchActions,
   ...pdfParityActions,
   ...watchParityActions,
+  ...activityImportActions,
   ...setupActions,
   ...logsActions,
   ...insightsActions,

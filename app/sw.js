@@ -1,6 +1,6 @@
 // Service Worker: hält die App offline verfügbar. Speichert nur die App-Dateien,
 // niemals Trainingsdaten (die liegen in IndexedDB auf dem Gerät).
-const VERSION = "lifespan-mobil-1.168.0";
+const VERSION = "lifespan-mobil-1.175.0";
 const FILES = [
   "./",
   "index.html",
@@ -22,6 +22,8 @@ const FILES = [
   "icons/figur.png",
   "icons/icon-512.png",
   "icons/apple-touch-icon.png",
+  // Abbildung Wadenmuskulatur in Insights → Training (1.173.0)
+  "icons/wade-anatomie.svg",
   // Klänge des Pausentimers wie am PC (1.44.0)
   "sounds/yeah-buddy.mp3",
   "sounds/light-weight-baby.mp3",

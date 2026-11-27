@@ -11972,7 +11972,10 @@ function niceRange(values, step, minSpan = step) {
     while (max - min < minSpan || max === min) max += s;
     const count = Math.round((max - min) / s) + 1;
     if (count <= 7) {
-      const ticks = Array.from({ length: count }, (_, i) => Math.round((min + i * s) * 1e3) / 1e3);
+      const ticks = Array.from(
+        { length: count },
+        (_, i) => Math.round((min + i * s) * 1e3) / 1e3
+      );
       return { min, max, ticks };
     }
     s *= 2;
@@ -18163,9 +18166,20 @@ var BOOKS = {
     parts: 10,
     edition: "Stand November 2026",
     collection: "Masterclass Longevity"
+  },
+  schlaf: {
+    id: "schlaf",
+    title: "Die Masterclass Schlaf",
+    brand: "iCoach.Me",
+    subtitle: "Das gro\xDFe Buch vom Schlaf: verstehen, messen, verbessern",
+    description: "10 Teile mit 44 Kapiteln: Grundlagen und Architektur der Nacht, warum wir schlafen, Tr\xE4ume, alle wichtigen Schlafst\xF6rungen, Schlaf messen mit jedem Wert aus Schlaflabor, Polar-Uhren und anderen Wearables, was den Schlaf st\xF6rt und f\xF6rdert, Schlafformel, Verhaltenstherapie, Entspannung, Nickerchen und Schlafmittel, Schlaf und Gesellschaft sowie die Praxis mit Pl\xE4nen, Rezepten, Fallbeispielen und Checklisten. Dazu Glossar, Quellen- und Stichwortverzeichnis.",
+    pages: 179,
+    parts: 10,
+    edition: "Stand November 2026",
+    collection: "Masterclass Schlaf"
   }
 };
-var BOOK_ORDER = ["masterclass", "blutwerte", "longevity"];
+var BOOK_ORDER = ["masterclass", "blutwerte", "longevity", "schlaf"];
 var BOOK = BOOKS.masterclass;
 function firstPage(pages, book = "masterclass") {
   const max = BOOKS[book].pages;

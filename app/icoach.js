@@ -1,5 +1,5 @@
 // LIFESPAN OS Mobil – iCoach.me wie am PC (1.16.0, ICoachPage.tsx): Evolve (Module; Videos aus dem
-// Video-Ordner gibt es nur am PC), Ask iCoach.me (Fragen & Antworten zu den drei Büchern mit Suche,
+// Video-Ordner gibt es nur am PC), Ask iCoach.me (Fragen & Antworten zu den vier Büchern mit Suche,
 // AskTab.tsx), Downloads (die Bücher als PDF – mit Passwort geschützt), Magazin (Magazine und
 // Reports als PDF, MagazineTab.tsx) und Widgets (Koffein-Zeitstrahl, CaffeineWidget.tsx).
 // Inhalte liegen unter `icoach/` und werden erst beim Öffnen geladen; Rechnung aus pcdomain.js
@@ -39,12 +39,14 @@ const BOOK_FILES = {
   masterclass: `${MEDIA}books/iCoachMe_Die_Masterclass.pdf`,
   blutwerte: `${MEDIA}books/iCoachMe_Die_Masterclass_Blutwerte_Plus.pdf`,
   longevity: `${MEDIA}books/iCoachMe_Die_Masterclass_Longevity.pdf`,
+  schlaf: `${MEDIA}books/iCoachMe_Die_Masterclass_Schlaf.pdf`,
 };
 const magazinePdf = (id) => `${MEDIA}magazin/${encodeURIComponent(id)}.pdf`;
 const FAQ_FILES = [
   ["masterclass", "icoach/icoachme-faq.json"],
   ["blutwerte", "icoach/icoachme-faq-blutwerte-plus.json"],
   ["longevity", "icoach/icoachme-faq-longevity.json"],
+  ["schlaf", "icoach/icoachme-faq-schlaf.json"],
 ];
 const PAGE = 40;
 

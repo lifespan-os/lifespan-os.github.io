@@ -63,7 +63,8 @@ function nightLowestHr(s) {
 }
 function measuredSleepMin(s) {
   const parts = [s.lightS, s.deepS, s.remS, s.unrecognizedS].filter((x) => x !== null);
-  return parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / 60) : null;
+  const sum = parts.reduce((a, b) => a + b, 0);
+  return parts.length && sum > 0 ? Math.round(sum / 60) : null;
 }
 function sleepEfficiencyPct(s) {
   if (!s.sleepStart || !s.sleepEnd) return null;

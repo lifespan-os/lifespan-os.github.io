@@ -102,7 +102,7 @@ export function recoveryTodayHtml(w, day) {
         return `<li class="meal-item"><span>${esc(r.label)}<br><span class="muted small">Ø 28 Tage davor: ${r.baseline !== null ? `${num(r.baseline, r.digits)} ${r.unit}` : "–"}${diff ? ` · ${diff}` : ""}</span></span><strong>${r.today !== null ? `${num(r.today, r.digits)} ${r.unit}` : pending ? '<span class="muted small">noch nicht synchronisiert</span>' : "–"}</strong></li>`;
       })
       .join("")}</ul>
-    ${labels.length ? `<p class="muted small">${labels.map((l) => `${esc(l.label)} laut Polar: <strong>${esc(l.value)}</strong>`).join(" · ")}</p>` : ""}
+    ${labels.length ? `<p class="muted small">${labels.map((l) => `${esc(l.label)}: <strong>${esc(l.value)}</strong>`).join(" · ")}</p>` : ""}
     ${note("Nur Messwerte deiner Uhr und der Vergleich mit deinem eigenen Durchschnitt – keine Bewertung durch LIFESPAN OS. Einstufungen in Worten stammen von Polar.")}
   </section>`;
 }
@@ -585,7 +585,7 @@ function nightDetailHtml(n, w, caffeine = null) {
       <div><b>${num(rec.ansCharge, 1)}</b><span>ANS Charge (−10…+10)</span></div>
       <div><b>${recharge ? esc(recharge) : "–"}</b><span>Nightly Recharge</span></div>
     </div>
-    ${ansStatus ? `<p class="muted small">ANS Charge laut Polar: ${esc(ansStatus)}</p>` : ""}
+    ${ansStatus ? `<p class="muted small">ANS Charge: ${esc(ansStatus)}</p>` : ""}
     <p class="muted small">Der Ø Puls stammt aus den ersten Stunden des Schlafs. Am PC wird er als Ruhepuls (nachts, Methode Polar) in Body &amp; Longevity eingetragen, wenn für den Tag noch keiner erfasst ist.</p>`
     : "";
   const swLines = sw

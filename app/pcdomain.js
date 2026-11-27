@@ -14874,7 +14874,8 @@ function nightLowestHr(s) {
 }
 function measuredSleepMin(s) {
   const parts2 = [s.lightS, s.deepS, s.remS, s.unrecognizedS].filter((x) => x !== null);
-  return parts2.length ? Math.round(parts2.reduce((a, b) => a + b, 0) / 60) : null;
+  const sum = parts2.reduce((a, b) => a + b, 0);
+  return parts2.length && sum > 0 ? Math.round(sum / 60) : null;
 }
 
 // src/domain/doctorReport.ts

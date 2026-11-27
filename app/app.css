@@ -2727,7 +2727,10 @@ html[data-theme="dark"] .plt-tag--caffeine { color: #c8956a; background: #3a2a1c
 html:not([data-arranging]) [data-arrange-hidden] { display: none !important; }
 html[data-arrange-pending] [data-arrange-unit] { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 html[data-arranging] [data-arrange-unit] { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none; animation: arrange-wiggle .28s ease-in-out infinite alternate; animation-delay: var(--arrange-delay, 0ms); }
-html[data-arranging] .card[data-arrange-unit], html[data-arranging] [data-arrange-unit] > .card { max-height: 64px; overflow: hidden; }
+/* 1.184.0 (wie PC 1.0.251): beim Verschieben Miniaturen statt Zuklappen – Überschrift groß, Inhalt verkleinert, unten ausgeblendet */
+html[data-arranging] .card[data-arrange-unit], html[data-arranging] [data-arrange-unit] > .card { max-height: 11rem; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, #000 75%, transparent); mask-image: linear-gradient(to bottom, #000 75%, transparent); }
+html[data-arranging] .card[data-arrange-unit] > :not(:first-child), html[data-arranging] [data-arrange-unit] > .card > :not(:first-child) { zoom: .6; pointer-events: none; }
+html[data-arranging] [data-arrange-unit][data-arrange-drag] > .card, html[data-arranging] .card[data-arrange-unit][data-arrange-drag] { outline: 3px solid var(--orange); outline-offset: 2px; }
 html[data-arranging] [data-arrange-unit][data-arrange-hidden] { opacity: .45; }
 html[data-arranging] [data-arrange-unit][data-arrange-drag] { position: relative; z-index: 30; animation: none; scale: 1.03; rotate: 1deg; filter: drop-shadow(0 12px 22px rgba(11, 42, 74, .28)); }
 @keyframes arrange-wiggle { from { rotate: -.6deg; } to { rotate: .6deg; } }

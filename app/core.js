@@ -11,7 +11,7 @@ import { appDay } from "./appday.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.182.0";
+export const MOBILE_VERSION = "1.183.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -738,14 +738,15 @@ export function checkWorkout(w, { keepUnticked = false } = {}) {
     for (const s of e.sets) {
       for (const [v, lo, hi, label] of [
         [s.reps, 0, 1000, "Wiederholungen"],
-        [s.weightKg, 0, 1000, "Gewicht"],
+        // Gewicht 0,25–600 kg wie am PC (1.183.0); 0 kg = ohne Gewicht
+        [s.weightKg === 0 ? null : s.weightKg, 0.25, 600, "Gewicht"],
         [s.rpe, 1, 10, "RPE"],
         [s.durationSeconds, 1, 86400, "Dauer"],
         [s.distanceM, 0, 1000000, "Strecke"],
         ...PROFILES.map((p) => [s.rp?.[p.key] ?? null, 0, 1000, p.short]),
       ]) {
         if (v === null || v === undefined) continue;
-        if (Number.isNaN(v) || v < lo || v > hi) errors.push(`${label}: Wert ${fmtNum(v)} ist ungültig.`);
+        if (Number.isNaN(v) || v < lo || v > hi) errors.push(`${label}: Wert ${fmtNum(v)} ist ungültig (erlaubt ${fmtNum(lo)} bis ${fmtNum(hi)}).`);
       }
     }
   }

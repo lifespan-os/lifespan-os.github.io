@@ -1,7 +1,8 @@
 // LIFESPAN OS Mobil – Ziele, Wochenziele und Hauptziele am Handy bearbeiten (1.91.0, Angleichung
 // an den PC, Paket D): Insights → Ziele wie `GoalsCard.tsx` (Ziel anlegen, bearbeiten, archivieren,
 // löschen; Meilensteine, Verlauf), Settings → Wochenziele wie `WeekGoalsPanel.tsx`, Settings →
-// Hauptziele mit Einwilligung wie `MainGoalsPanel.tsx`.
+// Hauptziele mit Einwilligung wie `MainGoalsPanel.tsx`, Settings → Trainingsprofil wie
+// `TrainingProfilePanel.tsx` (1.186.0).
 // Rechnung aus pcdomain.js (targetGoals, dashboard, goalAdvice). Ziele liegen in paritydata.js
 // (Tabelle `goal`), Wochen-/Hauptziele und Einwilligung als Einstellungen (pcsettings.js); alles
 // geht mit „An den PC senden“ zurück.
@@ -317,6 +318,122 @@ export function mainGoalsCard(db) {
   </section>`;
 }
 
+// ------------------------------------------------------------------ Settings → Trainingsprofil
+
+const TP_EMPTY_ROW = { region: "", text: "", from: "", to: "" };
+
+/** Formular lesen (wie `TrainingProfileInput` am PC); `drop` = Zeile bzw. Übung, die entfällt. */
+function readTp({ dropRow = null, dropExercise = null } = {}) {
+  const q = (k) => document.querySelector(`[data-tp="${k}"]`);
+  const priorities = {};
+  for (const el of document.querySelectorAll("[data-tp-prio]")) priorities[el.dataset.tpPrio] = el.value;
+  const limitations = [...document.querySelectorAll("[data-tp-limit]")]
+    .filter((row) => row.dataset.tpLimit !== String(dropRow))
+    .map((row) => Object.fromEntries(["region", "text", "from", "to"].map((k) => [k, row.querySelector(`[data-f="${k}"]`)?.value ?? ""])));
+  const excluded = [...document.querySelectorAll("[data-tp-excl]")].map((el) => el.dataset.tpExcl).filter((id) => id !== dropExercise);
+  const add = q("exclude")?.value;
+  if (add && !excluded.includes(add)) excluded.push(add);
+  return {
+    goal: q("goal")?.value ?? "",
+    phase: q("phase")?.value ?? "",
+    experience: q("experience")?.value ?? "",
+    daysPerWeek: q("days")?.value ?? "",
+    minutesPerSession: q("minutes")?.value ?? "",
+    priorities,
+    excludedExerciseIds: excluded,
+    limitations,
+    preExhaustion: q("pre")?.checked !== false,
+  };
+}
+
+/** Prüfen und speichern; bei Fehlern bleibt die Eingabe stehen und die Felder werden markiert. */
+async function saveTp(f) {
+  const S = X.S;
+  const TP = D.trainingProfile;
+  const r = TP.profileFromInput(f);
+  if (!r.ok) {
+    S.tpEdit = f;
+    S.tpErr = r.errors;
+    X.toast("Bitte die markierten Felder prüfen.", true);
+    return X.rerender();
+  }
+  // Beginn der Phase mitführen (steht nicht im Formular)
+  const prev = TP.parseTrainingProfile(buildDb().settings.get(TP.TRAINING_PROFILE_KEY) ?? null);
+  const next = TP.withPhaseSince(prev, r.value, today());
+  const changed = await putSetting(TP.TRAINING_PROFILE_KEY, TP.isEmptyProfile(next) ? null : TP.serializeTrainingProfile(next));
+  S.tpEdit = null;
+  S.tpErr = null;
+  if (changed) X.toast("Trainingsprofil gespeichert");
+  X.rerender();
+}
+
+/** Settings → Trainingsprofil (1.186.0, wie `TrainingProfilePanel.tsx` am PC 1.0.255). */
+export function trainingProfileCard(db) {
+  const S = X.S;
+  const TP = D.trainingProfile;
+  const stored = TP.parseTrainingProfile(setting(db, TP.TRAINING_PROFILE_KEY));
+  const f = S.tpEdit ?? TP.profileToInput(stored);
+  const e = S.tpErr ?? null;
+  const L = TP.PROFILE_LIMITS;
+  // Beschriftung und Feld als direkte Kinder von `.field` (gleiche Höhe und Breite wie überall)
+  const select = (id, attr, label, value, options, empty) =>
+    `<div class="field"><label for="${id}">${esc(label)}</label><select id="${id}" ${attr}><option value="">${esc(empty)}</option>${options
+      .map((o) => `<option value="${esc(o.id)}" ${o.id === value ? "selected" : ""}>${esc(o.label)}</option>`)
+      .join("")}</select></div>`;
+  const input = (key, label, value, ph, unit) =>
+    `<div class="field"><label for="tp-${key}">${esc(label)}${unit ? ` <span class="muted small">(${unit})</span>` : ""}</label><input id="tp-${key}" data-tp="${key}" inputmode="numeric" value="${esc(value)}" placeholder="${esc(ph)}" ${inv(e, key === "days" ? "daysPerWeek" : "minutesPerSession")}>${errOf(e, key === "days" ? "daysPerWeek" : "minutesPerSession")}</div>`;
+  const prio = [
+    { id: "high", label: TP.PRIORITY_LABELS.high },
+    { id: "low", label: TP.PRIORITY_LABELS.low },
+  ];
+  const exercises = O.exercisesOf(db).filter((x) => x.category === "strength");
+  const names = new Map(exercises.map((x) => [x.id, x.name]));
+  const selectable = exercises.filter((x) => !x.archived && !f.excludedExerciseIds.includes(x.id)).sort((a, b) => a.name.localeCompare(b.name, "de"));
+  const limits = f.limitations
+    .map((l, row) => {
+      const regions = [...new Set([...TP.LIMITATION_REGIONS, ...(l.region ? [l.region] : [])])];
+      return `<div class="tp-limit" data-tp-limit="${row}">
+        <div class="grid2">
+          <div class="field"><label for="tp-l${row}-region">Körperregion</label><select id="tp-l${row}-region" data-f="region" ${inv(e, `limitation.${row}`)}><option value="">Bitte wählen …</option>${regions.map((r) => `<option ${r === l.region ? "selected" : ""}>${esc(r)}</option>`).join("")}</select>${errOf(e, `limitation.${row}`)}</div>
+          <div class="field"><label for="tp-l${row}-text">Beschreibung</label><input id="tp-l${row}-text" data-f="text" value="${esc(l.text)}" placeholder="z. B. links" maxlength="${L.textMax}"></div>
+          <div class="field"><label for="tp-l${row}-from">seit</label><input id="tp-l${row}-from" type="date" data-f="from" value="${esc(l.from)}"></div>
+          <div class="field"><label for="tp-l${row}-to">bis <span class="muted small">(leer = offen)</span></label><input id="tp-l${row}-to" type="date" data-f="to" value="${esc(l.to)}"></div>
+        </div>
+        <button type="button" class="linkbtn small" data-act="tp-limit-del" data-arg="${row}">Einschränkung entfernen</button>
+      </div>`;
+    })
+    .join("");
+  return `<section class="card" id="set-training-profile" ${autoAttrs("tp")}>
+    <h3>Trainingsprofil</h3>
+    <div class="muted small card-info"><p>Nach diesen Angaben gelten bzw. ruhen die Trainingsregeln in Insights → Training. Alles ist freiwillig.</p>
+      <ul><li>Ziel: Ohne Auswahl gelten deine Hauptziele.</li><li>Phase: Ohne Auswahl erkennt die App eine Diät aus Gewichtsverlauf und Energiebilanz.</li><li>Schwerpunkt: kein Hinweis auf sehr hohes Volumen. Bewusst wenig: kein Hinweis auf zu geringes Volumen.</li><li>Einschränkung: Regeln, die diese Region belasten würden, ruhen im angegebenen Zeitraum.</li><li>Ausgeschlossene Übungen werden nicht empfohlen.</li><li>Zeit pro Einheit: ${L.minutesEnough - 10}–${L.minutesEnough} Minuten reichen für ein effizientes Training (deine Vorgabe).</li></ul></div>
+    <div class="tp-main">
+      ${select("tp-goal", 'data-tp="goal"', "Ziel", f.goal, TP.TRAINING_GOALS, "aus den Hauptzielen")}
+      ${select("tp-phase", 'data-tp="phase"', `Phase${f.phase && stored.phase === f.phase && stored.phaseSince ? ` (seit ${D.formatDate(stored.phaseSince)})` : ""}`, f.phase, TP.TRAINING_PHASES, "automatisch erkennen")}
+      ${select("tp-experience", 'data-tp="experience"', "Trainingserfahrung", f.experience, TP.TRAINING_EXPERIENCE, "keine Angabe")}
+    </div>
+    <div class="grid2">
+      ${input("days", "Tage pro Woche", f.daysPerWeek, `${L.daysMin}–${L.daysMax}`, "")}
+      ${input("minutes", "Zeit pro Einheit", f.minutesPerSession, `${L.minutesEnough - 10}–${L.minutesEnough}`, "min")}
+    </div>
+    <label class="mg-item tp-check"><input type="checkbox" data-tp="pre" ${f.preExhaustion ? "checked" : ""}><span><strong>Vorermüdung erlaubt</strong></span></label>
+    <h4 class="logs-sub">Schwerpunkte</h4>
+    <div class="grid2">${D.muscleMapAll.MUSCLE_GROUPS.map((g) => select(`tp-prio-${esc(g.id)}`, `data-tp-prio="${esc(g.id)}"`, g.label, f.priorities[g.id] ?? "", prio, "normal")).join("")}</div>
+    <h4 class="logs-sub">Verletzungen und Einschränkungen</h4>
+    ${limits || `<p class="muted small">Keine eingetragen.</p>`}
+    <button type="button" class="btn block" data-act="tp-limit-add" data-autosave-skip>Einschränkung hinzufügen</button>
+    <h4 class="logs-sub">Ausgeschlossene Übungen</h4>
+    <div class="field"><label for="tp-exclude">Übung ausschließen</label><select id="tp-exclude" data-tp="exclude" ${selectable.length ? "" : "disabled"}><option value="">${selectable.length ? "Übung wählen …" : "keine weiteren Übungen"}</option>${selectable.map((x) => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("")}</select></div>
+    ${
+      f.excludedExerciseIds.length
+        ? `<div class="tp-excluded">${f.excludedExerciseIds.map((id) => `<button type="button" class="chip" data-tp-excl="${esc(id)}" data-act="tp-excl-del" data-arg="${esc(id)}" aria-label="${esc(`${names.get(id) ?? "Übung"} wieder zulassen`)}">${esc(names.get(id) ?? "Übung (archiviert oder gelöscht)")} ✕</button>`).join("")}</div>`
+        : `<p class="muted small">Keine ausgeschlossen.</p>`
+    }
+    ${autoSaveHtml("tp-save")}
+    ${syncNote}
+  </section>`;
+}
+
 async function putSetting(key, value) {
   const S = X.S;
   S.pcsettings = PS.normSync(S.pcsettings);
@@ -437,6 +554,20 @@ export const goalsParityActions = {
     X.toast(changed ? "Wochenziele gespeichert" : "Keine Änderung");
     X.rerender();
   },
+  // Aus Insights → Training zum Trainingsprofil (Gruppe „Ziele“ aufklappen)
+  "ta-profile": () => {
+    X.S.setGroupsOpen = [...new Set([...(X.S.setGroupsOpen ?? []), "ziele"])];
+    X.go("settings");
+    setTimeout(() => document.getElementById("set-training-profile")?.scrollIntoView({ block: "start" }), 80);
+  },
+  "tp-save": () => saveTp(readTp()),
+  "tp-limit-add": () => {
+    const f = readTp();
+    X.S.tpEdit = { ...f, limitations: [...f.limitations, { ...TP_EMPTY_ROW }] };
+    X.rerender();
+  },
+  "tp-limit-del": (el) => saveTp(readTp({ dropRow: el.dataset.arg })),
+  "tp-excl-del": (el) => saveTp(readTp({ dropExercise: el.dataset.arg })),
   "mg-accept": async () => {
     await putSetting(D.goalAdvice.AI_CONSENT_KEY, D.goalAdvice.serializeConsent(new Date().toISOString()));
     X.toast("Einwilligung gespeichert");

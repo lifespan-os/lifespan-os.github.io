@@ -10,7 +10,7 @@ import * as N from "./nutrition.js";
 import * as PS from "./pcsettings.js";
 import * as C from "./core.js";
 import { cardioSettingsCard } from "./parity.js";
-import { mainGoalsCard, weekGoalsCard } from "./goalsparity.js";
+import { mainGoalsCard, trainingProfileCard, weekGoalsCard } from "./goalsparity.js";
 import * as DP from "./devprefs.js";
 import * as D from "./pcdomain.js";
 import { buildDb, today } from "./diary.js";
@@ -530,7 +530,7 @@ export function viewSettings() {
     </section>`;
   const groups = {
     profil: [db ? profileCard(db) : "", X.accountsCard()],
-    ziele: [goalsCard, db ? weekGoalsCard(db) : "", db ? mainGoalsCard(db) : ""],
+    ziele: [goalsCard, db ? weekGoalsCard(db) : "", db ? mainGoalsCard(db) : "", db ? trainingProfileCard(db) : ""],
     ernaehrung: [db ? mealsCard(db) : "", db ? cardioSettingsCard(db) : "", db ? methodsCard(db) : ""],
     anzeige: [appearanceCard(), db ? dayStartCard(db) : "", db ? remindersCard(db) : "", quickCard(), db ? layoutsCard(db) : ""],
     daten: [db ? transferCard(db) : "", db ? secretCard(db) : ""],

@@ -215,7 +215,6 @@ export function trendSvg(points, { color = COLOR.body, decimals = 1, height = 16
   if (!points.length) return "";
   const W = 340;
   const H = height;
-  const L = 40;
   const R = 8;
   const T = 10;
   const B = 22;
@@ -230,6 +229,13 @@ export function trendSvg(points, { color = COLOR.body, decimals = 1, height = 16
   const pad = domain ? 0 : (hi - lo) * 0.12;
   lo -= pad;
   hi += pad;
+  const ticks = [hi - pad, (hi + lo) / 2, lo + pad];
+  // Achsenwerte (1.186.0): eine Nachkommastelle mehr, wenn sonst zwei gleich aussähen (10,4 · 10,4 ·
+  // 10,3), und links so viel Platz, wie die längste Beschriftung braucht (Schrift 9 px)
+  const tickTexts = (dec) => ticks.map((v) => D.formatNumber(v, dec));
+  let tickLabels = tickTexts(decimals);
+  if (new Set(tickLabels).size < ticks.length && decimals < 3) tickLabels = tickTexts(decimals + 1);
+  const L = Math.max(40, Math.ceil(Math.max(...tickLabels.map((l) => l.length)) * 5.6) + 8);
   // Zeitachse: erster bis letzter Wert oder fester Zeitraum (für untereinander stehende Grafiken)
   const first = from ?? points[0].date;
   const last = to ?? points[points.length - 1].date;
@@ -238,9 +244,8 @@ export function trendSvg(points, { color = COLOR.body, decimals = 1, height = 16
   const x = (d) => L + (t1 === t0 ? (W - L - R) / 2 : ((Date.parse(`${d}T12:00:00Z`) - t0) / (t1 - t0)) * (W - L - R));
   const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
   const line = (list) => list.map((p) => `${x(p.date).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
-  const ticks = [hi - pad, (hi + lo) / 2, lo + pad];
   return `<svg class="pc-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}">
-    ${ticks.map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="grid"/><text x="${L - 4}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end">${esc(D.formatNumber(v, decimals))}</text>`).join("")}
+    ${ticks.map((v, i) => `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" class="grid"/><text x="${L - 4}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end">${esc(tickLabels[i])}</text>`).join("")}
     ${trend && trend.length > 1 ? `<polyline points="${line(trend)}" fill="none" stroke="${COLOR.ink}" stroke-width="2.5" stroke-linejoin="round"/>` : ""}
     <polyline points="${line(points)}" fill="none" stroke="${color}" stroke-width="${trend ? 1.4 : 2}" stroke-linejoin="round" ${trend ? 'stroke-opacity=".7"' : ""}/>
     ${points.map((p) => `<circle cx="${x(p.date).toFixed(1)}" cy="${y(p.value).toFixed(1)}" r="2.4" fill="${color}"><title>${esc(D.formatDate(p.date))}: ${esc(D.formatNumber(p.value, decimals))}</title></circle>`).join("")}

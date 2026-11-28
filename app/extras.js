@@ -154,8 +154,9 @@ export function viewQuickFill() {
               <div class="qf-times">${input(`${k}|bed`, 'inputmode="numeric" placeholder="Zubettgehen" aria-label="Zubettgehen"')}${input(`${k}|wake`, 'inputmode="numeric" placeholder="Aufstehen" aria-label="Aufstehen"')}</div>${err(k)}</div>`;
           }
           const def = Q().SLEEP_FILL_FIELDS.find((x) => x.key === m.field);
-          return `<div class="qf-row"><div><strong>${esc(def.label)}</strong><span class="muted small">fehlt im Eintrag dieser Nacht</span></div>
-            <div class="qf-value">${input(k, 'inputmode="numeric"')}<span class="muted small">${esc(def.unit)}</span></div>${err(k)}</div>`;
+          return `<div class="qf-row"><div class="qf-head"><strong class="qf-name">${esc(def.label)}</strong></div>
+            <div class="qf-info muted small"><span>fehlt im Eintrag dieser Nacht</span></div>
+            <div class="qf-value">${input(k, 'inputmode="numeric"')}<span class="qf-unit muted small">${esc(def.unit)}</span></div>${err(k)}</div>`;
         })
         .join("")}</section>`
     : "";
@@ -183,10 +184,15 @@ export function viewQuickFill() {
       ${title === "Heute fällig" && (f.upload || f.reading) ? `<p class="${f.upload?.tone === "error" ? "warn" : "muted"} small" id="qf-upload-status" role="status">${esc(f.reading ? f.readStatus ?? "Datei wird gelesen …" : f.upload.text)}</p>` : ""}
       ${list
         .map(
-          (m) => `<div class="qf-row"><div><strong>${esc(m.name)}</strong><span class="muted small">${
-            m.lastDate ? `zuletzt ${esc(F(m.lastValue ?? 0, m.decimals))} ${esc(m.unit)} am ${esc(D.formatDate(m.lastDate))}` : "noch kein Wert"
-          }${m.reason === "due" ? ` · ${esc(Q().RHYTHM_LABELS[m.rhythm])}` : ""}</span></div>
-          <div class="qf-value">${input(valueKey(m), 'inputmode="decimal"')}<span class="muted small">${esc(m.unit)}</span></div>${err(valueKey(m))}</div>`,
+          // Aufbau je Zeile (1.186.0): Name über die ganze Breite (rechts der Rhythmus), darunter links „zuletzt …“
+          // in zwei kurzen Zeilen, rechts Eingabefeld und Einheit – in jeder Zeile an derselben Stelle.
+          (m) => `<div class="qf-row"><div class="qf-head"><strong class="qf-name">${esc(m.name)}</strong>${
+            m.reason === "due" ? `<span class="qf-rhythm muted small">${esc(Q().RHYTHM_LABELS[m.rhythm])}</span>` : ""
+          }</div>
+          <div class="qf-info muted small">${
+            m.lastDate ? `<span>zuletzt ${esc(F(m.lastValue ?? 0, m.decimals))} ${esc(m.unit)}</span><span>am ${esc(D.formatDate(m.lastDate))}</span>` : "<span>noch kein Wert</span>"
+          }</div>
+          <div class="qf-value">${input(valueKey(m), 'inputmode="decimal"')}<span class="qf-unit muted small">${esc(m.unit)}</span></div>${err(valueKey(m))}</div>`,
         )
         .join("")}</section>`,
     )
@@ -195,9 +201,10 @@ export function viewQuickFill() {
     ? `<section class="card"><div class="wo-head"><h3>Weitere Werte aus der Datei · ${esc(D.formatDate(today()))}</h3><button class="linkbtn" data-act="qf-extra-drop">verwerfen</button></div>
       ${f.extra
         .map(
-          (x, i) => `<div class="qf-row"><div><strong>${esc(x.name)}</strong>${x.note ? `<span class="muted small">${esc(x.note)}</span>` : ""}</div>
-          <div class="qf-value"><input class="qf-input" data-qf-extra="${i}" value="${esc(x.text)}" inputmode="decimal" autocomplete="off" ${x.use ? "" : "disabled"}><span class="muted small">${esc(x.unit)}</span>
-          <label class="qf-use"><input type="checkbox" data-qf-extra-use="${i}" ${x.use ? "checked" : ""}> speichern</label></div>${err(`extra|${x.metricId}`)}</div>`,
+          (x, i) => `<div class="qf-row"><div class="qf-head"><strong class="qf-name">${esc(x.name)}</strong>
+          <label class="qf-use"><input type="checkbox" data-qf-extra-use="${i}" ${x.use ? "checked" : ""}> speichern</label></div>
+          <div class="qf-info muted small">${x.note ? `<span>${esc(x.note)}</span>` : ""}</div>
+          <div class="qf-value"><input class="qf-input" data-qf-extra="${i}" value="${esc(x.text)}" inputmode="decimal" autocomplete="off" ${x.use ? "" : "disabled"}><span class="qf-unit muted small">${esc(x.unit)}</span></div>${err(`extra|${x.metricId}`)}</div>`,
         )
         .join("")}</section>`
     : "";

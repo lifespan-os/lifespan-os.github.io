@@ -2489,6 +2489,8 @@ Wie PC 1.0.177 (Wünsche des Nutzers vom 22.11.2026):
   über den Modul-Kontext, damit `connections.js` in den Node-Tests ohne Oberfläche ladbar bleibt).
 - Nutrition → Tagessumme: „Was passt noch?“ (`fitList`, `fitRestHtml`, Aktion `fit-add`) mit Vorschlägen
   aus eigenen Zusammenstellungen und häufigen Lebensmitteln, ein Tipp trägt ein (`quickAdd`, „Rückgängig“).
+- Seit 1.186.0: „Was passt noch?“ ist eingeklappt (`details.fit-rest__box`); nach „Eintragen“ bleibt es für
+  den Tag offen (`S.fitOpen`). Name über die ganze Breite, Werte darunter, Knopf rechts.
 - Tagesaussage (`connections.js`: `verdictData`, `verdictCardBody`, `verdictLineHtml`; Regel
   `D.dayVerdict` wie PC 1.0.254): dieselbe Stufe und Empfehlung in Overview (Karte „Tagesaussage“ statt
   „Bereitschaft“, Karten-Id `readiness` bleibt), Recovery (eigene Karte oben) und Insights (eine Zeile über
@@ -2512,3 +2514,52 @@ Wie PC 1.0.177 (Wünsche des Nutzers vom 22.11.2026):
 - Geprüft im iPhone-13-Format (Playwright) mit einer Testdatei aus 10 Wochen erzeugter Daten: Start,
   Training, Insights, Sleep, Tagessumme mit Eintragen.
 
+
+## Version 1.186.0 (28.11.2026): Merkliste – Gewichtssprung beim Wiegen, Reihenfolgen, „Werte nachtragen“, Trainingsregeln
+
+- Werte erfassen → Gewicht (`body.js`): Hinweis „Gewichtssprung“ direkt unter dem Gewicht, wenn die letzte
+  Wiegung (heute oder gestern) ein Sprung ist (`connections.js` `weightJumpNoteHtml`, Regel
+  `D.connWeightJump` wie PC 1.0.255: Tendenz aus 7 Wiegungen in höchstens 14 Tagen, Werte der Waage,
+  Trinkmenge, sehr späte Mahlzeit, Lebensmittel, nüchtern gewogen). `connData(db, t, stamp)` rechnet neu,
+  sobald sich die letzten Wiegungen ändern.
+- „Werte nachtragen“ (`extras.js`, `.qf-row` in `app.css`): Name über die ganze Breite, darunter links
+  „zuletzt …“, rechts Feld und Einheit in festen Spalten. Vorher verlor `.qf-input { width: 92px }` gegen die
+  allgemeine Regel `input:not([type]) { width: 100% }` – das Feld füllte die Zeile. Reihenfolge je Tag wie am
+  PC unter Erfassen → Körperzusammensetzung (Rechenkern `quickFill.missingValues`).
+- Training → „Cardio erfassen“ (`training.js`): Die Nutzung je Übung ging als Objekt statt als Zahl an
+  `cardioChoices` – die Reihenfolge fiel auf das Alphabet zurück. Jetzt `usageOf(…).count`: das häufigst
+  genutzte Programm steht oben.
+- Trainingsregeln, Stufe 1 (wie PC 1.0.255): `trainingadvice.js` zeigt in Insights → Training den erkannten Split,
+  das Trainingsmodell und die Treffer aus dem freigegebenen Regelkatalog (`D.trainingAdvisor`, `D.trainingCatalog`),
+  je Gruppe; Empfehlung, Begründung und Alternative nur mit Einwilligung, Quellen zum Aufklappen. Geräte des aktiven
+  Gyms aus `gymsui.activeGym()`. Die alten Vorschläge bleiben nur als „Abwechslung“ (`legacyHits`).
+- Settings → Ziele → Trainingsprofil (`goalsparity.js` `trainingProfileCard`, Aktionen `tp-save`, `tp-limit-add`,
+  `tp-limit-del`, `tp-excl-del`, `ta-profile`): Ziel, Phase, Erfahrung, Tage, Zeit, Schwerpunkte, Einschränkungen,
+  ausgeschlossene Übungen, Vorermüdung. Speichert sofort; Einstellung `ui.training_profile` geht mit „An den PC
+  senden“ an den PC (`pcsettings.js` `SYNC_KEYS`).
+- Verlaufsgrafik (`pcview.js` `trendSvg`): linker Rand richtet sich nach der längsten Achsenbeschriftung; sähen zwei
+  Achsenwerte gleich aus (10,4 · 10,4 · 10,3), bekommt die Achse eine Nachkommastelle mehr. Test `pcview.test.mjs`.
+- Trainingsregeln, Stufe 2 (`D.trainingAdvisorMore`): Pausen, Progression, Aufwärmen, Planung, Cardio,
+  Verletzungen, Deload, Fettabbau – `trainingadvice.js` liefert dafür Schlaf, Schritte, Gewicht, Pulszonen
+  (`trainingstats.heartOn`) und die Schmerz-Angaben aus den Notizen. Der Beginn der Phase (`phaseSince`) wird beim
+  Speichern des Trainingsprofils mitgeführt.
+- Hinweise aus den Trainingsregeln am Ort (`trainingHintsHtml`): eingeklappt im laufenden Training
+  (`workoutview.js`) und in Training → Pläne (`trainingplans.js`) – die Treffer, für die die Tabelle in der Spalte
+  „Anzeige“ diesen Ort nennt. Das Ergebnis der Auswertung wird je Datenstand gemerkt (`memo`), weil das laufende
+  Training oft neu zeichnet.
+- Schmerz in Notizen (`painprompt.js`, `D.painNotes`): Steht in einem Notizfeld ein Schmerz ohne Stufe, erscheint
+  darunter die Frage nach der Stufe 1–10 (bei „stark“, „massiv“, „hart“, „intensiv“ ab 5); die Wahl wird als Text
+  angehängt („… – Schmerz 6/10“) und mit dem Formular gespeichert. Gewählt wird schon beim Antippen
+  (`pointerdown`), damit das Feld den Fokus behält und das automatische Speichern erst mit der Stufe läuft.
+- Schmerz-Auswertung über alle Notizfelder (`trainingadvice.js` `allNotes`, `D.painNotes.noteSourcesFromTables`):
+  Tabellen der PC-Datei, darüber die am Handy geänderten Einträge für Mahlzeiten, Ernährungstag, Supplements,
+  Training, Körperwerte, Schlaf, Nickerchen, Recovery und Griffkraft; für die übrigen Tabellen (HRT, Labor,
+  Check-ins …) gilt der Stand der letzten PC-Datei.
+- TR-PR-002 (Planwechsel) aus `TR.plansOf` (Anlagedatum), TR-FA-007 (Ausgangswerte bei Diätbeginn) aus Taillen-/
+  Bauchumfang, `TR.checkinsOf` und den Krafteinheiten.
+- `pcdomain.js` neu: `trainingCatalog`, `trainingProfile`, `trainingAdvisor`, `trainingAdvisorMore`, `painNotes`,
+  `connDiet`.
+- Geprüft im Testbrowser (390 und 320 px) mit der erzeugten Testdatei: „Werte nachtragen“ ausgerichtet,
+  Gewicht mit Sprung eingetragen → Hinweis erscheint; Insights → Training zeigt die Trainingsregeln (10 Treffer in
+  der Testdatei, mit Stufe 2: 19), Sprung zum Trainingsprofil, Profil ändern → Zeile in Insights folgt; Recovery →
+  Notiz „Knie links tut weh“ → Frage erscheint, Stufe 4 gewählt → „… – Schmerz 4/10“ steht im Feld; nicht am iPhone.

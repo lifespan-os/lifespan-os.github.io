@@ -66,6 +66,7 @@ export const diaryActions = {
     const foods = N.allFoods(X.S.catalog, X.S.food.local);
     const items = pick ? QM.onlyKnown(pick.suggestion.items, foods) : [];
     if (!pick || !items.length) return X.toast("Vorschlag nicht mehr vorhanden.", true);
+    X.S.fitOpen = X.S.diaryDate ?? today(); // Liste bleibt nach dem Eintragen offen
     return quickAdd(pick.slot.key, items, `${pick.suggestion.candidate.label} (${D.connFit.portionText(pick.suggestion.factor)})`);
   },
   "qm-suggest": (el) => {

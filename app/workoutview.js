@@ -4,6 +4,7 @@ import { icon } from "./nav.js";
 import { focusInfo, machineNamesOf } from "./focusinfo.js";
 import * as PDOM from "./pcdomain.js";
 import { buildDb, today as todayIso } from "./diary.js";
+import { trainingHintsHtml } from "./trainingadvice.js";
 import * as MI from "./machineimages.js";
 import { workoutBodyMapHtml } from "./trainingstats.js";
 import * as HX from "./hyrox.js";
@@ -70,6 +71,15 @@ function suggestionHtml(we, last, ex) {
     ${we.sets.some((x) => x.isDone) ? "" : `<button class="btn sm ghost" data-act="ex-like-last" data-we="${we.id}">Wie letztes Mal</button>`}</div>`;
 }
 
+/** Hinweise aus den Trainingsregeln (1.186.0); ohne Daten vom PC leer */
+function ruleHints(place) {
+  try {
+    return S.catalog ? trainingHintsHtml(buildDb(), todayIso(), place, esc) : "";
+  } catch {
+    return "";
+  }
+}
+
 export function viewWorkout() {
   const w = S.active;
   if (!w) return viewHome();
@@ -86,6 +96,7 @@ export function viewWorkout() {
       edit ? `<span class="tag">${w.backfill ? "Nachtragen" : "Bearbeitung"}</span>` : `<span class="clock" data-clock>${fmtSec((Date.now() - new Date(w.startedAt)) / 1000)}</span>`
     }</div>
     ${GY.workoutGymSelectHtml(w)}
+    ${ruleHints("Training")}
     ${w.competition ? competitionCard(w.competition) : ""}
     ${planDayMatchHtml(w)}
     ${w.exercises.map((we, i) => exerciseCard(we, i, exs, machines)).join("")}

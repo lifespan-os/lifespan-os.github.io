@@ -68,6 +68,7 @@ import { watchParityChange } from "./watchparity.js";
 import { app, esc, go, header, refreshCatalog, render, restEl, S, saveNow, saveSoon, setRender, toast } from "./appbase.js";
 import { foldTabs, sheetRoot } from "./sheets.js";
 import { initAutosave } from "./autosave.js";
+import { initPainPrompt } from "./painprompt.js";
 import { measureHead, renderNav, rerenderKeepScroll } from "./navshell.js";
 import { readBackupFile, readMasterFile, setBackupRerender } from "./transferview.js";
 import { renderRest, unlockAudio, wakeLock } from "./resttimer.js";
@@ -599,6 +600,8 @@ async function reloadKeys(keys) {
   rerenderKeepScroll();
 }
 initAutosave({ S, actions, store, toast, reload: reloadKeys });
+// Schmerz in einer Notiz ohne Stufe: Frage nach der Einordnung 1–10 unter dem Feld (1.186.0)
+initPainPrompt();
 
 /**
  * Bereiche verschieben (1.160.0, wie PC 1.0.226): Karte 3 Sekunden halten, dann ziehen; „Fertig“ oben.

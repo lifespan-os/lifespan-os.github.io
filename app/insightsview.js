@@ -21,6 +21,7 @@ import { targetGoalsCard } from "./goalsparity.js";
 import { periodReviewCard } from "./reviewparity.js";
 import { reportCard } from "./pdfparity.js";
 import { connData, connectionsCard, verdictData, verdictLineHtml } from "./connections.js";
+import { legacyHits, trainingAdviceHtml } from "./trainingadvice.js";
 
 let X = null; // { S, esc, header, rerender }
 
@@ -264,7 +265,7 @@ function normalRangeCard(db, t) {
   );
 }
 
-/** Insights → Training (1.173.0, wie TrainingInsightsCard am PC 1.0.238) */
+/** Insights → Training (1.173.0, wie TrainingInsightsCard am PC 1.0.238; Trainingsregeln seit 1.186.0) */
 function trainingInsightsCard(db, t) {
   const TI = D.trainingInsights;
   const log = O.setLog(db);
@@ -289,8 +290,8 @@ function trainingInsightsCard(db, t) {
         t,
       )
     : [];
-  const TR = D.trainingRules;
-  const hits = TR ? TR.trainingRuleHits(log, t) : [];
+  // Regeln von 1.173.0, die der freigegebene Katalog (1.186.0) nicht abdeckt
+  const hits = legacyHits(log, t);
   const clock = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} min`;
   const head = (x) => `<p class="list-head small"><b>${esc(x)}</b></p>`;
   const body = `${head("Split")}<p>${model ? `Trainingsmodell der letzten ${recent.length} Einheiten: <b>${esc(TI.SPLIT_MODEL_LABELS[model])}</b>` : "Für ein Trainingsmodell braucht es mindestens drei eingeordnete Einheiten."}</p>
@@ -316,14 +317,15 @@ function trainingInsightsCard(db, t) {
             .join("")}</tbody></table>`
         : `<p class="muted small">Noch keine abgeschlossenen Einheiten mit Folgetag.</p>`
     }
-    ${head("Vorschläge zur Übungsauswahl")}${
+    ${trainingAdviceHtml(db, t, { esc, note, head })}
+    ${
       hits.length
-        ? `<ul class="plain-list training-rules">${hits
+        ? `${head("Abwechslung")}<ul class="plain-list training-rules">${hits
             .map((h) => `<li><strong>${esc(h.text)}</strong><span class="sub">${esc(h.exercises.join(", "))} · ${esc(D.formatDate(h.from))}–${esc(D.formatDate(h.to))}</span>${h.rule.image === "calf" ? `<img class="training-rules__img" src="icons/wade-anatomie.svg" alt="Wadenmuskulatur von hinten und von der Seite: Musculus gastrocnemius (rot) und Musculus soleus (orange)">` : ""}<p class="small">${esc(h.rule.reason)}</p><p class="muted small">Quelle: ${esc(h.rule.source)}</p></li>`)
             .join("")}</ul>`
-        : `<p class="muted small">Keine Vorschläge. Eine Regel greift erst ab ${TR?.RULE_MIN_SESSIONS ?? 3} Einheiten mit der Muskelgruppe.</p>`
+        : ""
     }
-    ${note("Einordnung je Einheit nach den Arbeitssätzen (Muskelgruppe der Übung): Beine ab 70 % → Beine, Drücken bzw. Ziehen ab 70 % → Push bzw. Pull, sonst Oberkörper; gemischt → Ganzkörper. 1RM nach Epley (Schätzung). Folgetag: Werte des nächsten Tages, HRV gegen den Median der 28 Tage vor der Einheit. Vorschläge nach festen Regeln mit Quelle; die App ändert den Plan nicht selbst. Keine Bewertung.")}`;
+    ${note("Einordnung je Einheit nach den Arbeitssätzen (Muskelgruppe der Übung): Beine ab 70 % → Beine, Drücken bzw. Ziehen ab 70 % → Push bzw. Pull, sonst Oberkörper; gemischt → Ganzkörper. 1RM nach Epley (Schätzung). Folgetag: Werte des nächsten Tages, HRV gegen den Median der 28 Tage vor der Einheit. „Abwechslung“: Gegenrichtung einer Übung ohne belegten Vorteil, ab drei Einheiten mit der Muskelgruppe.")}`;
   return card("training-insights", "Training", "letzte 4 Wochen", body, { area: "training", wide: true });
 }
 

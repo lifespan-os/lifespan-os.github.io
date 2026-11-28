@@ -52,6 +52,8 @@ export const SYNC_KEYS = [
   "ui.week_goals",
   "ui.main_goals",
   "ui.ai_consent",
+  // Settings → Trainingsprofil (1.186.0)
+  "ui.training_profile",
   // Settings → Tagesziele: Verbrauch und Carb-Cycling; Superhuman → HRT: Laborabstände (1.141.0)
   "ui.tdee_mode",
   "ui.carb_cycling",
@@ -186,6 +188,7 @@ export function settingLabel(key) {
   if (key === "ui.week_goals") return "Wochenziele";
   if (key === "ui.main_goals") return "Hauptziele";
   if (key === "ui.ai_consent") return "Einwilligung (Empfehlungen)";
+  if (key === "ui.training_profile") return "Trainingsprofil";
   return LAYOUT_NAMES[key] ? `Seite anpassen: ${LAYOUT_NAMES[key]}` : key;
 }
 

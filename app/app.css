@@ -1621,12 +1621,20 @@ details.ov-card:not([open]) { padding-bottom: 12px; }
 .qf-banner > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .qf-banner .btn { flex: 0 0 auto; width: auto; white-space: nowrap; padding-left: 16px; padding-right: 16px; }
 /* Overview: Daten vom PC mit „Importieren“ (1.56.0) */
-.qf-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+/* 1.186.0: Name über die ganze Breite, darunter links „zuletzt …“, rechts Feld und Einheit in festen Spalten –
+   jedes Feld gleich breit und an derselben Stelle. Die frühere Regel `.qf-input { width: 92px }` verlor gegen
+   `input:not([type]) { width: 100% }`; das Feld füllte die Zeile und drückte die Beschriftung zusammen. */
+.qf-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "head head" "info value"; gap: 4px 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
 .qf-row:first-of-type { border-top: 0; }
-.qf-row > div:first-child { display: flex; flex-direction: column; gap: 2px; }
+.qf-head { grid-area: head; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 10px; min-width: 0; }
+.qf-name { min-width: 0; overflow-wrap: anywhere; }
+.qf-rhythm { flex: none; white-space: nowrap; }
+.qf-info { grid-area: info; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .qf-row .err { grid-column: 1 / -1; margin: 0; }
-.qf-value { display: flex; align-items: center; gap: 6px; }
-.qf-input { width: 92px; min-height: 44px; text-align: right; }
+.qf-value { grid-area: value; display: grid; grid-template-columns: 96px 3.4em; align-items: center; gap: 8px; }
+.qf-row .qf-input { width: 100%; min-width: 0; min-height: 44px; text-align: right; }
+.qf-unit { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qf-input { min-height: 44px; text-align: right; }
 .qf-times { display: flex; align-items: center; gap: 6px; }
 .qf-times .qf-input { width: 76px; text-align: center; }
 .advice-list { display: grid; gap: 10px; margin: 10px 0; }
@@ -2151,7 +2159,8 @@ html[data-theme="dark"] .muscle-map__hatch-line { stroke: #e8eef6; }
 a.btn { color: var(--fg); text-decoration: none; }
 .icoach-tile > span { overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; }
 /* 1.95.0: fehlende Nacht – zwei Uhrzeitfelder in voller Breite unter dem Text */
-.qf-row--night { grid-template-columns: minmax(0, 1fr); }
+.qf-row--night { grid-template-columns: minmax(0, 1fr); grid-template-areas: none; }
+.qf-row--night > div:first-child { display: flex; flex-direction: column; gap: 2px; }
 .qf-row--night .qf-times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .qf-row--night .qf-times input { width: 100%; }
 
@@ -2848,3 +2857,39 @@ body.is-searching #quick-meal .plt-mini { display: flex; }
 .strap__result { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; }
 .strap__result dt { font-size: .85rem; color: var(--muted); }
 .strap__result dd { margin: 0; font-size: 1.15rem; font-weight: 700; }
+
+/* 1.186.0: Hinweis „Gewichtssprung“ direkt beim Wiegen – eine Zeile, Einzelheiten zum Aufklappen (wie PC 1.0.255) */
+.weight-jump { margin-top: 12px; padding: 10px 12px; border-left: 4px solid var(--orange); border-radius: 10px; background: var(--bg); }
+.weight-jump__line { margin: 0; }
+.weight-jump__more { margin-top: 6px; }
+.weight-jump__more p { margin: 6px 0 0; }
+
+/* Trainingsregeln in Insights → Training und Settings → Trainingsprofil (1.186.0) */
+.ta-group { margin: 14px 0 0; }
+.ta-items { margin: 4px 0; padding-left: 18px; }
+.ta-source { margin: 4px 0 0; }
+.ta-guards { margin: 0; padding: 0; list-style: none; }
+.ta-guards > li { padding: 8px 0; border-top: 1px solid var(--line); }
+.ta-guards .sub { display: block; }
+#set-training-profile .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+/* sehr schmale Geräte: „seit“ und „bis“ untereinander, damit das Datum ganz lesbar bleibt */
+@media (max-width: 360px) { #set-training-profile .tp-limit .grid2 { grid-template-columns: minmax(0, 1fr); } }
+#set-training-profile .logs-sub { margin: 16px 0 8px; }
+.tp-main { display: grid; gap: 10px; margin-bottom: 10px; }
+/* Auswahlfelder in zwei Spalten: „bewusst wenig“ muss ganz lesbar sein */
+#set-training-profile .grid2 select { padding-left: 8px; padding-right: 2px; font-size: 16px; }
+.tp-check { margin: 10px 0 0; align-items: center; }
+.tp-limit { padding: 10px 0; border-top: 1px solid var(--line); }
+.tp-excluded { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; }
+
+/* Schmerz in einer Notiz einordnen (1.186.0): Frage unter dem Notizfeld */
+.pain-prompt { position: fixed; left: 0; top: 0; z-index: 1050; width: min(340px, calc(100vw - 16px)); padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--orange); border-radius: 12px; background: var(--surface); color: var(--fg); font-size: .9rem; box-shadow: 0 8px 24px rgba(8, 17, 31, .28); }
+.pain-prompt p { margin: 0 0 8px; }
+.pain-prompt__levels { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.pain-prompt__levels .chip { min-width: 40px; min-height: 40px; color: var(--fg); font-weight: 600; }
+.rule-hints { margin: 8px 0 12px; }
+.fit-rest__box > summary { margin-bottom: 0; }
+.fit-rest__open { margin-left: 6px; font-weight: 400; color: var(--muted); }
+.fit-rest__list { padding-left: 0; list-style: none; }
+.fit-rest__list li { padding: 8px 0; border-top: 1px solid var(--line); }
+.fit-rest__name { grid-column: 1 / -1; }

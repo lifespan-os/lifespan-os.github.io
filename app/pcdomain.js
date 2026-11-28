@@ -208,9 +208,9 @@ var FormParser = class {
     this.fail(field, message);
   }
   /** Optionale Kommazahl. */
-  decimal(field, text2) {
-    if (text2.trim() === "") return null;
-    const value2 = parseDecimal(text2);
+  decimal(field, text3) {
+    if (text3.trim() === "") return null;
+    const value2 = parseDecimal(text3);
     if (Number.isNaN(value2)) {
       this.fail(field, "Bitte eine Zahl eingeben, z. B. 80 oder 80,5.");
       return null;
@@ -218,29 +218,29 @@ var FormParser = class {
     return value2;
   }
   /** Pflicht-Kommazahl. */
-  requiredDecimal(field, text2, label) {
-    if (text2.trim() === "") {
+  requiredDecimal(field, text3, label) {
+    if (text3.trim() === "") {
       this.fail(field, `Bitte ${label} eingeben.`);
       return 0;
     }
-    return this.decimal(field, text2) ?? 0;
+    return this.decimal(field, text3) ?? 0;
   }
   /** Optionale ganze Zahl. */
-  integer(field, text2) {
-    if (text2.trim() === "") return null;
-    const value2 = parseInteger(text2);
+  integer(field, text3) {
+    if (text3.trim() === "") return null;
+    const value2 = parseInteger(text3);
     if (Number.isNaN(value2)) {
       this.fail(field, "Bitte eine ganze Zahl eingeben.");
       return null;
     }
     return value2;
   }
-  requiredInteger(field, text2, label) {
-    if (text2.trim() === "") {
+  requiredInteger(field, text3, label) {
+    if (text3.trim() === "") {
       this.fail(field, `Bitte ${label} eingeben.`);
       return 0;
     }
-    return this.integer(field, text2) ?? 0;
+    return this.integer(field, text3) ?? 0;
   }
   /** Pflichtauswahl (z. B. Übung, Lebensmittel). */
   required(field, value2, message) {
@@ -248,13 +248,13 @@ var FormParser = class {
     return value2;
   }
   /** Dauer in Minuten (Kommazahl) → Sekunden. */
-  minutesToSeconds(field, text2) {
-    const minutes = this.decimal(field, text2);
+  minutesToSeconds(field, text3) {
+    const minutes = this.decimal(field, text3);
     return minutes === null ? null : Math.round(minutes * 60);
   }
   /** Strecke in km (Kommazahl) → Meter. */
-  kmToMeters(field, text2) {
-    const km = this.decimal(field, text2);
+  kmToMeters(field, text3) {
+    const km = this.decimal(field, text3);
     return km === null ? null : Math.round(km * 1e3 * 10) / 10;
   }
 };
@@ -1508,8 +1508,8 @@ function fastToDraft(entry2) {
 function fastDraftToInput(d) {
   const p = new FormParser();
   const values = {};
-  for (const [key, text2] of Object.entries(d.values)) {
-    const v = p.decimal(`values.${key}`, text2);
+  for (const [key, text3] of Object.entries(d.values)) {
+    const v = p.decimal(`values.${key}`, text3);
     if (v !== null) values[key] = v;
   }
   if (p.ok && Object.keys(values).length === 0) {
@@ -1537,8 +1537,8 @@ function groupedValues(catalog, entry2) {
     items: catalog.nutrients.filter((n3) => n3.group === g2.key && entry2.values[n3.key] !== void 0).map((def) => ({ def, value: entry2.values[def.key] }))
   })).filter((g2) => g2.items.length > 0);
 }
-function normalizeSearch(text2) {
-  return text2.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss").replace(/[-–/()]/g, " ").replace(/\s+/g, " ").trim();
+function normalizeSearch(text3) {
+  return text3.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ß/g, "ss").replace(/[-–/()]/g, " ").replace(/\s+/g, " ").trim();
 }
 function microValues(catalog, sources) {
   const macros = new Set(
@@ -1676,16 +1676,16 @@ function daysBetween2(a, b) {
   return Math.round((ms(b) - ms(a)) / 864e5);
 }
 function describeSlot(slot) {
-  const time = slot.time ? ` um ${slot.time} Uhr` : "";
-  if (slot.weekday !== null) return `jeden ${WEEKDAY_LABELS[slot.weekday] ?? "?"}${time}`;
+  const time2 = slot.time ? ` um ${slot.time} Uhr` : "";
+  if (slot.weekday !== null) return `jeden ${WEEKDAY_LABELS[slot.weekday] ?? "?"}${time2}`;
   if (slot.date)
-    return `am ${WEEKDAY_SHORT[isoWeekday(slot.date)]}, ${germanDate(slot.date)}${time}`;
+    return `am ${WEEKDAY_SHORT[isoWeekday(slot.date)]}, ${germanDate(slot.date)}${time2}`;
   return "";
 }
-function describeScheduled(date, time, today) {
+function describeScheduled(date, time2, today) {
   const diff = daysBetween2(today, date);
   const day = diff === 0 ? "heute" : diff === 1 ? "morgen" : `${WEEKDAY_LABELS[isoWeekday(date)]}, ${germanDate(date)}`;
-  return `${day}${time ? ` um ${time} Uhr` : ""}`;
+  return `${day}${time2 ? ` um ${time2} Uhr` : ""}`;
 }
 function nextOccurrence(slot, today) {
   if (slot.weekday !== null) {
@@ -1825,9 +1825,9 @@ function plannedBars(plans, date, dayStart, {
     for (const day of plan.days) {
       if (doneDayIds.includes(day.id)) continue;
       (day.slots ?? []).forEach((slot, slotIndex) => {
-        const hit = slot.weekday !== null ? slot.weekday === wd : slot.date === date;
+        const hit2 = slot.weekday !== null ? slot.weekday === wd : slot.date === date;
         const start = minuteOf(slot.time);
-        if (!hit || start === null) return;
+        if (!hit2 || start === null) return;
         if (skips.includes(skipKey(day.id, slot, date))) return;
         const from = axis(start, dayStart);
         const to = Math.min(from + plannedDuration(durations, day.id, date), dayStart + DAY - 1);
@@ -1907,9 +1907,9 @@ function validateWorkoutTargets(draft) {
   const value2 = { ...DEFAULT_WORKOUT_TARGETS, mode: draft.mode };
   for (const k of TARGET_KEYS) {
     const lim = WORKOUT_TARGET_LIMITS[k];
-    const text2 = draft[k].trim().replace(",", ".");
-    const n3 = Number(text2);
-    if (text2 === "" || !Number.isFinite(n3)) {
+    const text3 = draft[k].trim().replace(",", ".");
+    const n3 = Number(text3);
+    if (text3 === "" || !Number.isFinite(n3)) {
       errors[k] = "Bitte eine Zahl eingeben.";
       continue;
     }
@@ -2092,17 +2092,17 @@ function planWithSlots(plan, dayId, slots) {
     }))
   };
 }
-function changedSlots(slots, index, date, time, scope) {
+function changedSlots(slots, index, date, time2, scope) {
   const list2 = slots.map((s) => ({ ...s }));
   const slot = list2[index];
   if (!slot) return { slots: list2, skip: false };
   const weekly = slot.weekday !== null;
   if (weekly && scope === "day") {
-    if (time !== null) list2.push({ weekday: null, date, time });
+    if (time2 !== null) list2.push({ weekday: null, date, time: time2 });
     return { slots: list2, skip: true };
   }
-  if (time === null) return { slots: list2.filter((_, i) => i !== index), skip: false };
-  list2[index] = { ...slot, time };
+  if (time2 === null) return { slots: list2.filter((_, i) => i !== index), skip: false };
+  list2[index] = { ...slot, time: time2 };
   return { slots: list2, skip: false };
 }
 var addDay = (iso2, n3) => {
@@ -2118,8 +2118,8 @@ function plannedEntries(plans, from, to, { skips = [], durations = {} } = {}) {
       if (plan.archived) continue;
       for (const day of plan.days) {
         (day.slots ?? []).forEach((slot, slotIndex) => {
-          const hit = slot.weekday !== null ? slot.weekday === wd : slot.date === date;
-          if (!hit || skips.includes(skipKey(day.id, slot, date))) return;
+          const hit2 = slot.weekday !== null ? slot.weekday === wd : slot.date === date;
+          if (!hit2 || skips.includes(skipKey(day.id, slot, date))) return;
           out.push({
             key: `${plan.id}:${day.id}:${slotIndex}:${date}`,
             date,
@@ -2140,15 +2140,15 @@ function plannedEntries(plans, from, to, { skips = [], durations = {} } = {}) {
     (a, b) => a.date === b.date ? (a.time ?? "99:99").localeCompare(b.time ?? "99:99") : a.date < b.date ? -1 : 1
   );
 }
-function rescheduledSlots(slots, index, toDate, time, scope) {
+function rescheduledSlots(slots, index, toDate, time2, scope) {
   const list2 = slots.map((s) => ({ ...s }));
   const slot = list2[index];
   if (!slot) return { slots: list2, skip: false };
   if (slot.weekday !== null && scope === "day") {
-    list2.push({ weekday: null, date: toDate, time });
+    list2.push({ weekday: null, date: toDate, time: time2 });
     return { slots: list2, skip: true };
   }
-  list2[index] = slot.weekday !== null ? { weekday: isoWeekday(toDate), date: null, time } : { weekday: null, date: toDate, time };
+  list2[index] = slot.weekday !== null ? { weekday: isoWeekday(toDate), date: null, time: time2 } : { weekday: null, date: toDate, time: time2 };
   return { slots: list2, skip: false };
 }
 
@@ -2571,11 +2571,11 @@ function describeSet(set) {
     parts2.push(`${formatNumber(set.powerW, 0)} W`);
   if (set.hrAvg !== null && set.hrAvg !== void 0) parts2.push(`\xD8 Puls ${set.hrAvg}`);
   const profiles = describeProfiles(set);
-  let text2 = parts2.join(" \xB7 ");
-  if (profiles) text2 = text2 ? `${text2} (${profiles})` : profiles;
-  if (set.isUnilateral === true) text2 = `${text2} \xB7 unilateral`;
-  if (set.isFailure === true) text2 = `${text2} \xB7 Fail`;
-  return set.isWarmup ? `Aufw. ${text2}` : text2;
+  let text3 = parts2.join(" \xB7 ");
+  if (profiles) text3 = text3 ? `${text3} (${profiles})` : profiles;
+  if (set.isUnilateral === true) text3 = `${text3} \xB7 unilateral`;
+  if (set.isFailure === true) text3 = `${text3} \xB7 Fail`;
+  return set.isWarmup ? `Aufw. ${text3}` : text3;
 }
 function describeSets(sets2) {
   return sets2.map(describeSet).join("  |  ");
@@ -2739,14 +2739,14 @@ function profileRecords(log) {
   return result;
 }
 function newRecordsInWorkout(workoutId, fullLog) {
-  const byExercise = /* @__PURE__ */ new Map();
+  const byExercise2 = /* @__PURE__ */ new Map();
   for (const s of fullLog) {
-    const list2 = byExercise.get(s.exerciseId) ?? [];
+    const list2 = byExercise2.get(s.exerciseId) ?? [];
     list2.push(s);
-    byExercise.set(s.exerciseId, list2);
+    byExercise2.set(s.exerciseId, list2);
   }
   const result = [];
-  for (const [exerciseId, entries] of byExercise) {
+  for (const [exerciseId, entries] of byExercise2) {
     if (!entries.some((e) => e.workoutId === workoutId)) continue;
     const category = entries[0]?.exerciseCategory;
     const before = personalRecords(
@@ -2893,8 +2893,8 @@ var HYROX_DIVISIONS = [
 function divisionSex(value2) {
   return HYROX_DIVISIONS.find((d) => d.value === value2)?.sex === "men" ? "men" : "women";
 }
-function parseFinishTime(text2) {
-  const t = text2.trim();
+function parseFinishTime(text3) {
+  const t = text3.trim();
   if (t === "") return null;
   const parts2 = t.split(":");
   if (parts2.length < 2 || parts2.length > 3 || parts2.some((p) => !/^\d{1,2}$/.test(p))) return NaN;
@@ -3010,8 +3010,8 @@ function formatDuration2(seconds) {
   const rest = String(s % 60).padStart(2, "0");
   return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${rest}` : `${m}:${rest}`;
 }
-function parseDuration(text2) {
-  const t = text2.trim();
+function parseDuration(text3) {
+  const t = text3.trim();
   if (t === "") return null;
   if (t.includes(":")) {
     const parts2 = t.split(":");
@@ -3093,9 +3093,9 @@ var MACHINE_KIND_WORDS = [
   ["run", ["laufband", "treadmill", "skillmill", "lauf", "run"]]
 ];
 function machineCardioKind(m) {
-  const text2 = ` ${[...m.features ?? [], m.displayName ?? "", m.name].join(" ").toLowerCase()}`;
+  const text3 = ` ${[...m.features ?? [], m.displayName ?? "", m.name].join(" ").toLowerCase()}`;
   for (const [kind, words] of MACHINE_KIND_WORDS) {
-    if (words.some((w) => text2.includes(w))) return kind;
+    if (words.some((w) => text3.includes(w))) return kind;
   }
   return "other";
 }
@@ -3428,8 +3428,8 @@ function parseProfile(p, f, rp) {
   }
   return weights;
 }
-function parseDurationField(p, field, text2) {
-  const seconds = parseDuration(text2);
+function parseDurationField(p, field, text3) {
+  const seconds = parseDuration(text3);
   if (seconds !== null && Number.isNaN(seconds)) {
     p.error(field, "Bitte Minuten (z. B. 32,5) oder m:ss bzw. h:mm:ss (z. B. 32:30) eingeben.");
     return null;
@@ -3452,8 +3452,8 @@ function parseCardio(p, f, c) {
     cadenceMax: lim("cadenceMax", p.integer(f("cadenceMax"), c.cadenceMax))
   };
 }
-function parseSetWeight(p, field, text2) {
-  const value2 = p.decimal(field, text2);
+function parseSetWeight(p, field, text3) {
+  const value2 = p.decimal(field, text3);
   return enforceRange(value2, SET_LIMITS.weightKg, (m) => p.error(field, m));
 }
 var noDefaults = () => [];
@@ -3623,9 +3623,9 @@ function adoptIds(current2, sent, saved) {
 }
 var LIGHT_FACTOR = 0.8;
 function lighterDraft(draft, factor = LIGHT_FACTOR) {
-  const lighter = (text2) => {
-    const v = Number(text2.trim().replace(",", "."));
-    if (text2.trim() === "" || !Number.isFinite(v) || v <= 0) return text2;
+  const lighter = (text3) => {
+    const v = Number(text3.trim().replace(",", "."));
+    if (text3.trim() === "" || !Number.isFinite(v) || v <= 0) return text3;
     const w = Math.round(v * factor * 2) / 2;
     return Number.isInteger(w) ? String(w) : String(w).replace(".", ",");
   };
@@ -3705,8 +3705,8 @@ var SEX_OPTIONS = [
   { value: "female", label: "Weiblich" }
 ];
 var ISO_DATE2 = /^(\d{4})-(\d{2})-(\d{2})$/;
-function isRealDate(text2) {
-  const m = ISO_DATE2.exec(text2);
+function isRealDate(text3) {
+  const m = ISO_DATE2.exec(text3);
   if (!m) return false;
   const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
   const date = new Date(Date.UTC(y, mo - 1, d));
@@ -4094,14 +4094,14 @@ var DAY_START_KEY = "lifespan.dayStart";
 var DEFAULT_DAY_START = "00:00";
 var LATEST_DAY_START = "12:00";
 var TIME2 = /^([01]\d|2[0-3]):([0-5]\d)$/;
-function minutesOf(time) {
-  const m = TIME2.exec(time.trim());
+function minutesOf(time2) {
+  const m = TIME2.exec(time2.trim());
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 }
-function validDayStart(time) {
-  const minutes = minutesOf(time);
+function validDayStart(time2) {
+  const minutes = minutesOf(time2);
   const latest = minutesOf(LATEST_DAY_START) ?? 720;
-  return minutes !== null && minutes <= latest ? time.trim() : null;
+  return minutes !== null && minutes <= latest ? time2.trim() : null;
 }
 var current = DEFAULT_DAY_START;
 function load() {
@@ -4297,8 +4297,8 @@ function exportReminderState(r2, today) {
   const daysSince = r2.lastExportAt ? Math.max(0, Math.round(dayNumber(today) - dayNumber(r2.lastExportAt))) : null;
   const old = daysSince === null || daysSince >= EXPORT_REMINDER_DAYS;
   const snoozed = r2.snoozedUntil !== null && today <= r2.snoozedUntil;
-  const text2 = daysSince === null ? "Du hast deine Daten noch nie exportiert." : daysSince === 0 ? "Letzter Export: heute." : `Letzter Export vor ${daysSince} ${daysSince === 1 ? "Tag" : "Tagen"}.`;
-  return { due: old && !snoozed, daysSince, text: text2 };
+  const text3 = daysSince === null ? "Du hast deine Daten noch nie exportiert." : daysSince === 0 ? "Letzter Export: heute." : `Letzter Export vor ${daysSince} ${daysSince === 1 ? "Tag" : "Tagen"}.`;
+  return { due: old && !snoozed, daysSince, text: text3 };
 }
 
 // src/domain/muscleMap.ts
@@ -8199,7 +8199,7 @@ var NAME_PATTERNS = [
   [/shrug|schulterheben/i, "shrug"],
   [/\bdips?\b|barren/i, "dip"],
   [
-    /überkopf\w*.*trizeps|trizeps.*überkopf|overhead[- ]?(triceps|extension)|french[- ]?press/i,
+    /über[ -]?kopf\w*.*trizeps|trizeps.*über[ -]?kopf|overhead[- ]?(triceps|extension)|french[- ]?press/i,
     "triceps_overhead"
   ],
   [/trizeps|triceps|pushdown|skull ?crusher|kickback/i, "triceps"],
@@ -8280,8 +8280,8 @@ var MACHINE_DEFAULT_WIDTH = /* @__PURE__ */ new Map([
   ["technogym-mn1p", "wide"],
   ["technogym-c94600-anvk", "wide"]
 ]);
-function gripWidthChoice(text2) {
-  const t = (text2 ?? "").trim().toLowerCase();
+function gripWidthChoice(text3) {
+  const t = (text3 ?? "").trim().toLowerCase();
   if (t === "eng") return "narrow";
   if (t === "weit" || t === "breit") return "wide";
   return null;
@@ -8579,9 +8579,9 @@ var LEGACY_MUSCLES = {
   forearms: FOREARMS
 };
 var SECONDARY_FACTOR = 0.5;
-function splitMuscleText(text2) {
-  if (!text2) return [];
-  return text2.split(/[,;/+]|\s+und\s+/i).map((t) => t.trim()).filter((t) => t.length > 0);
+function splitMuscleText(text3) {
+  if (!text3) return [];
+  return text3.split(/[,;/+]|\s+und\s+/i).map((t) => t.trim()).filter((t) => t.length > 0);
 }
 function muscleIdsForTerm(term) {
   return TERMS[term.trim().toLowerCase()] ?? null;
@@ -8640,13 +8640,13 @@ function focusFromInputs(inputs) {
   const entries = [];
   const errors = {};
   for (const m of MUSCLE_IDS) {
-    const text2 = (inputs[m] ?? "").trim();
-    if (text2 === "") continue;
-    if (!/^\d{1,3}$/.test(text2) || Number(text2) > 100) {
+    const text3 = (inputs[m] ?? "").trim();
+    if (text3 === "") continue;
+    if (!/^\d{1,3}$/.test(text3) || Number(text3) > 100) {
       errors[m] = "Ganze Zahl von 0 bis 100";
       continue;
     }
-    const percent = Number(text2);
+    const percent = Number(text3);
     if (percent > 0) entries.push({ muscle: m, percent });
   }
   return Object.keys(errors).length > 0 ? { ok: false, errors } : { ok: true, entries };
@@ -8688,7 +8688,7 @@ function muscleMapData(log, exercises, machines, include, focus = NO_FOCUS) {
       (e) => focusFactors(focus.exercises.get(e.id)) !== null || e.machineId !== null && focusFactors(focus.machines.get(e.machineId)) !== null
     ).map((e) => e.id)
   );
-  const byExercise = new Map(
+  const byExercise2 = new Map(
     exercises.map((e) => [
       e.id,
       exerciseMuscles(
@@ -8716,7 +8716,7 @@ function muscleMapData(log, exercises, machines, include, focus = NO_FOCUS) {
       ex?.machineId ? machineNames.get(ex.machineId) ?? [] : []
     );
     const gripMuscles = grip && (grip.explicit || !ownFocus.has(s.exerciseId)) ? focusFactors(grip.focus) : null;
-    const m = gripMuscles ?? byExercise.get(s.exerciseId) ?? { factors: {}, unmapped: [] };
+    const m = gripMuscles ?? byExercise2.get(s.exerciseId) ?? { factors: {}, unmapped: [] };
     for (const term of m.unmapped) unmapped.set(term, (unmapped.get(term) ?? 0) + 1);
     const entries = Object.entries(m.factors);
     if (entries.length === 0) {
@@ -9005,6 +9005,30 @@ var METRIC_SUBSECTIONS = {
     { label: "Blutdruck", ids: [builtinMetricId(14), builtinMetricId(15)] }
   ]
 };
+function metricSections(metrics) {
+  return METRIC_CATEGORIES.map((c) => {
+    const inCategory = metrics.filter((m) => m.category === c.value);
+    const subsections = METRIC_SUBSECTIONS[c.value];
+    if (!subsections) {
+      return { category: c.value, label: c.label, groups: [{ label: null, metrics: inCategory }] };
+    }
+    const placed = /* @__PURE__ */ new Set();
+    const groups = subsections.map((s) => {
+      const list2 = s.ids.map((id4) => inCategory.find((m) => m.id === id4)).filter((m) => m !== void 0);
+      for (const m of list2) placed.add(m.id);
+      return { label: s.label, metrics: list2 };
+    });
+    groups.push({ label: "Weitere", metrics: inCategory.filter((m) => !placed.has(m.id)) });
+    return { category: c.value, label: c.label, groups };
+  }).map((s) => ({ ...s, groups: s.groups.filter((g2) => g2.metrics.length > 0) })).filter((s) => s.groups.length > 0);
+}
+function orderedMetrics(metrics) {
+  return metricSections(metrics).flatMap(
+    (s) => s.groups.flatMap(
+      (g2) => g2.metrics.map((metric) => ({ metric, section: s.label, group: g2.label }))
+    )
+  );
+}
 var ANS_MIN = -10;
 var ANS_MAX = 10;
 function ansPercent(value2) {
@@ -9014,8 +9038,8 @@ function ansPercent(value2) {
 function previousMean(values, date) {
   const before = values.filter((v) => v.date < date);
   if (before.length === 0) return null;
-  const mean11 = before.reduce((s, v) => s + v.value, 0) / before.length;
-  return { mean: Math.round(mean11 * 10) / 10, count: before.length };
+  const mean12 = before.reduce((s, v) => s + v.value, 0) / before.length;
+  return { mean: Math.round(mean12 * 10) / 10, count: before.length };
 }
 
 // src/domain/helpTexts.ts
@@ -9095,9 +9119,9 @@ function setHints(sets2, exerciseName, keyPrefix) {
   });
   return hints;
 }
-function minutesOfDay(time) {
-  if (!time) return null;
-  const m = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
+function minutesOfDay(time2) {
+  if (!time2) return null;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(time2.trim());
   if (!m) return null;
   return Number(m[1]) * 60 + Number(m[2]);
 }
@@ -9153,8 +9177,8 @@ var STABLE_CATEGORIES = [
 var inWeek = (date, w) => date >= w.from && date <= w.to;
 var prevWeek = (w) => ({ from: shiftDays(w.from, -7), to: shiftDays(w.from, -1) });
 var mean = (xs) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
-function nightMinutes(time) {
-  const m = minutesOfDay(time);
+function nightMinutes(time2) {
+  const m = minutesOfDay(time2);
   if (m === null) return null;
   return m < 12 * 60 ? m + 24 * 60 : m;
 }
@@ -9749,16 +9773,16 @@ function weeklySummary(data, weekFrom) {
     );
   }
   const loads = trainingLoadByDay(data.workouts);
-  const weekLoads = loads.filter((l) => inRange(l.date, week.from, week.to));
+  const weekLoads2 = loads.filter((l) => inRange(l.date, week.from, week.to));
   const prevLoads = loads.filter((l) => inRange(l.date, prev.from, prev.to));
   const sum = (ls, k) => ls.reduce((a, l) => a + l[k], 0);
-  const sessions2 = sum(weekLoads, "sessions");
+  const sessions2 = sum(weekLoads2, "sessions");
   const prevSessions = sum(prevLoads, "sessions");
-  const load2 = sum(weekLoads, "load");
+  const load2 = sum(weekLoads2, "load");
   const prevLoad = sum(prevLoads, "load");
-  const incomplete = sum(weekLoads, "incomplete");
+  const incomplete = sum(weekLoads2, "incomplete");
   const prevIncomplete = sum(prevLoads, "incomplete");
-  const volume = sum(weekLoads, "volumeKg");
+  const volume = sum(weekLoads2, "volumeKg");
   const loadComparable = incomplete === 0 && prevIncomplete === 0 && sessions2 > 0 && prevSessions > 0 && prevLoad > 0;
   sections2.push({
     area: "training",
@@ -9767,12 +9791,12 @@ function weeklySummary(data, weekFrom) {
       {
         label: "Einheiten",
         value: String(sessions2),
-        basis: `an ${weekLoads.length} ${weekLoads.length === 1 ? "Tag" : "Tagen"}`,
+        basis: `an ${weekLoads2.length} ${weekLoads2.length === 1 ? "Tag" : "Tagen"}`,
         change: `Vorwoche: ${prevSessions}`
       },
       {
         label: "Trainingszeit",
-        value: sessions2 > 0 ? formatDuration(sum(weekLoads, "durationMin")) : "\u2013",
+        value: sessions2 > 0 ? formatDuration(sum(weekLoads2, "durationMin")) : "\u2013",
         basis: "Summe der erfassten Dauern",
         change: null
       },
@@ -10097,8 +10121,8 @@ function coverageSummary(items) {
   const ok = items.filter((i) => i.ok).length;
   const missing = items.filter((i) => !i.ok).map((i) => i.label);
   const more = missing.length > 3 ? ` und ${missing.length - 3} weitere` : "";
-  const text2 = missing.length === 0 ? `alle ${items.length} Bereiche reichen f\xFCr die Auswertungen` : `${ok} von ${items.length} Bereichen reichen \xB7 noch zu wenig: ${missing.slice(0, 3).join(", ")}${more}`;
-  return { ok, total: items.length, missing, text: text2 };
+  const text3 = missing.length === 0 ? `alle ${items.length} Bereiche reichen f\xFCr die Auswertungen` : `${ok} von ${items.length} Bereichen reichen \xB7 noch zu wenig: ${missing.slice(0, 3).join(", ")}${more}`;
+  return { ok, total: items.length, missing, text: text3 };
 }
 
 // src/domain/insightsDaily.ts
@@ -10218,8 +10242,8 @@ function mgPer100Ml(drink2) {
   if (drink2.portionMl === null || drink2.portionMg === null) return null;
   return drink2.portionMg / drink2.portionMl * 100;
 }
-function parseClock(time) {
-  const m = TIME3.exec(time.trim());
+function parseClock(time2) {
+  const m = TIME3.exec(time2.trim());
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 }
 function formatClock2(minutes) {
@@ -10296,11 +10320,11 @@ function clearedAt(intakes, halfLifeH, belowMg = CLEARED_BELOW_MG) {
 }
 function formatDayTime(offset) {
   const day = Math.floor(offset / DAY_MIN);
-  const clock6 = `um ${formatClock2(offset)} Uhr`;
-  if (day <= 0) return clock6;
-  if (day === 1) return `am Folgetag ${clock6}`;
-  if (day === 2) return `\xFCbermorgen ${clock6}`;
-  return `in ${day} Tagen ${clock6}`;
+  const clock7 = `um ${formatClock2(offset)} Uhr`;
+  if (day <= 0) return clock7;
+  if (day === 1) return `am Folgetag ${clock7}`;
+  if (day === 2) return `\xFCbermorgen ${clock7}`;
+  return `in ${day} Tagen ${clock7}`;
 }
 function caffeineTimeline(intakes, bedtime, halfLifeH = DEFAULT_HALF_LIFE_H, step = 5) {
   const placed = intakes.map((i) => ({ ...i, offset: parseClock(i.time) })).filter((i) => i.offset !== null).sort((a, b) => a.offset - b.offset);
@@ -10425,9 +10449,9 @@ function relativePerformanceSeries(workouts) {
   const byDay = /* @__PURE__ */ new Map();
   for (const list2 of groups.values()) {
     if (list2.length < MIN_SAME_TITLE) continue;
-    const mean11 = list2.reduce((a, w) => a + w.volumeKg, 0) / list2.length;
+    const mean12 = list2.reduce((a, w) => a + w.volumeKg, 0) / list2.length;
     for (const w of list2)
-      byDay.set(w.date, [...byDay.get(w.date) ?? [], w.volumeKg / mean11 * 100]);
+      byDay.set(w.date, [...byDay.get(w.date) ?? [], w.volumeKg / mean12 * 100]);
   }
   return [...byDay.entries()].map(([date, values]) => ({ date, value: values.reduce((a, b) => a + b, 0) / values.length })).sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -10619,10 +10643,10 @@ __export(sleep_exports, {
   typicalShareText: () => typicalShareText
 });
 var TIME4 = /^([01]\d|2[0-3]):([0-5]\d)$/;
-function toMinutes(time) {
-  const m = TIME4.exec(time);
+function toMinutes(time2) {
+  const m = TIME4.exec(time2);
   if (!m) {
-    throw new Error(`Ung\xFCltige Uhrzeit: "${time}" (erwartet HH:MM)`);
+    throw new Error(`Ung\xFCltige Uhrzeit: "${time2}" (erwartet HH:MM)`);
   }
   return Number(m[1]) * 60 + Number(m[2]);
 }
@@ -10689,14 +10713,14 @@ function phaseShares(values) {
 function totalSleepWithNaps(nightMin, napMinutes) {
   return (nightMin ?? 0) + napMinutes.reduce((a, b) => a + b, 0);
 }
-function parseDurationInput(text2) {
-  const t = text2.trim().toLowerCase();
+function parseDurationInput(text3) {
+  const t = text3.trim().toLowerCase();
   if (t === "") return null;
   if (/^\d+$/.test(t)) return Number(t);
   const colon = /^(\d+):([0-5]\d)$/.exec(t);
   if (colon) return Number(colon[1]) * 60 + Number(colon[2]);
-  const hm4 = /^(\d+)\s*h(?:\s*(\d+)\s*(?:m|min)?)?$/.exec(t);
-  if (hm4) return Number(hm4[1]) * 60 + Number(hm4[2] ?? 0);
+  const hm5 = /^(\d+)\s*h(?:\s*(\d+)\s*(?:m|min)?)?$/.exec(t);
+  if (hm5) return Number(hm5[1]) * 60 + Number(hm5[2] ?? 0);
   return Number.NaN;
 }
 function napMinutesByDate(naps) {
@@ -11048,10 +11072,10 @@ function describeCardioEnergy(c) {
   const pace = cardioPace(c.kind, c.durationSeconds, c.distanceM);
   if (pace) parts2.push(pace);
   parts2.push(c.methods.map(cardioMethodLabel).join(" bzw. "));
-  let text2 = `${parts2.join(" \xB7 ")}: ${formatNumber(c.kcal, 0)} kcal`;
+  let text3 = `${parts2.join(" \xB7 ")}: ${formatNumber(c.kcal, 0)} kcal`;
   const device = deviceKcalText(c.deviceKcal, c.deviceKcalNet ?? null);
-  if (device) text2 += ` (Ger\xE4t: ${device})`;
-  return text2;
+  if (device) text3 += ` (Ger\xE4t: ${device})`;
+  return text3;
 }
 function deviceKcalText(gross, net) {
   const parts2 = [];
@@ -11290,12 +11314,12 @@ function parseWeekGoals(raw) {
 }
 function weekGoalsFromInput(input) {
   const errors = {};
-  const read = (key, max, text2) => {
+  const read = (key, max, text3) => {
     const t = (input[key] ?? "").trim();
     if (t === "") return null;
     const n3 = Number(t);
     if (!/^\d+$/.test(t) || n3 < 1 || n3 > max) {
-      errors[key] = `Bitte eine ganze Zahl von 1 bis ${max} ${text2} angeben.`;
+      errors[key] = `Bitte eine ganze Zahl von 1 bis ${max} ${text3} angeben.`;
       return null;
     }
     return n3;
@@ -11634,7 +11658,7 @@ function sleepRegularity(sleep, today, days3 = 14) {
   const wakeSd = sd(wakes);
   const worst = Math.max(bedSd, wakeSd);
   const level = worst <= 30 ? "good" : worst <= 60 ? "caution" : "low";
-  const text2 = level === "good" ? "Regelm\xE4\xDFig \u2013 dein Schlafrhythmus ist stabil." : level === "caution" ? "Mittel \u2013 die Zeiten schwanken sp\xFCrbar." : "Unregelm\xE4\xDFig \u2013 feste Zeiten (auch am Wochenende) helfen oft mehr als l\xE4ngerer Schlaf.";
+  const text3 = level === "good" ? "Regelm\xE4\xDFig \u2013 dein Schlafrhythmus ist stabil." : level === "caution" ? "Mittel \u2013 die Zeiten schwanken sp\xFCrbar." : "Unregelm\xE4\xDFig \u2013 feste Zeiten (auch am Wochenende) helfen oft mehr als l\xE4ngerer Schlaf.";
   return {
     nights: beds.length,
     bedMean: formatClock3(mean3(beds)),
@@ -11642,7 +11666,7 @@ function sleepRegularity(sleep, today, days3 = 14) {
     bedSd,
     wakeSd,
     level,
-    text: text2
+    text: text3
   };
 }
 function metricChange(measurements, metricId, today, days3 = 30) {
@@ -11663,15 +11687,15 @@ function metricChange(measurements, metricId, today, days3 = 30) {
 }
 function progressExercises(log, today, days3 = 90) {
   const from = shiftDays(today, -(days3 - 1));
-  const byExercise = /* @__PURE__ */ new Map();
+  const byExercise2 = /* @__PURE__ */ new Map();
   for (const s of log) {
     if (s.isWarmup || s.exerciseCategory === "cardio" || !inRange2(s.date, from, today)) continue;
     if (s.weightKg === null || s.reps === null || s.reps < 1 || s.reps > 12) continue;
-    const e = byExercise.get(s.exerciseId) ?? { name: s.exerciseName, workouts: /* @__PURE__ */ new Set() };
+    const e = byExercise2.get(s.exerciseId) ?? { name: s.exerciseName, workouts: /* @__PURE__ */ new Set() };
     e.workouts.add(s.workoutId);
-    byExercise.set(s.exerciseId, e);
+    byExercise2.set(s.exerciseId, e);
   }
-  return [...byExercise.entries()].map(([exerciseId, e]) => ({ exerciseId, name: e.name, sessions: e.workouts.size })).sort((a, b) => b.sessions - a.sessions || a.name.localeCompare(b.name, "de"));
+  return [...byExercise2.entries()].map(([exerciseId, e]) => ({ exerciseId, name: e.name, sessions: e.workouts.size })).sort((a, b) => b.sessions - a.sessions || a.name.localeCompare(b.name, "de"));
 }
 function exerciseProgress(log, exerciseId, today, days3 = 180) {
   const from = shiftDays(today, -(days3 - 1));
@@ -11796,8 +11820,8 @@ __export(sleepVisual_exports, {
 });
 
 // src/domain/wearable.ts
-function minuteOf2(clock6) {
-  const m = /^(\d{1,2}):(\d{2})/.exec(clock6.trim());
+function minuteOf2(clock7) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(clock7.trim());
   if (!m) return null;
   const h = Number(m[1]);
   const min = Number(m[2]);
@@ -12497,8 +12521,8 @@ var SUBSTANCES = [
     note: null
   }
 ];
-function normalizeName(text2) {
-  return text2.toLocaleLowerCase("de").replace(/[()[\]{}.,;:/\\_-]+/g, " ").replace(/\s+/g, " ").trim();
+function normalizeName(text3) {
+  return text3.toLocaleLowerCase("de").replace(/[()[\]{}.,;:/\\_-]+/g, " ").replace(/\s+/g, " ").trim();
 }
 var BY_NAME = /* @__PURE__ */ new Map();
 for (const s of SUBSTANCES) {
@@ -12511,9 +12535,9 @@ function substanceById(id4) {
   return SUBSTANCES.find((s) => s.id === id4) ?? null;
 }
 var DEFAULT_TIME = "08:00";
-function wallClockMs(date, time) {
+function wallClockMs(date, time2) {
   const [y, m, d] = date.split("-").map(Number);
-  const [h, min] = (time ?? DEFAULT_TIME).split(":").map(Number);
+  const [h, min] = (time2 ?? DEFAULT_TIME).split(":").map(Number);
   return Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1, h ?? 0, min ?? 0);
 }
 function nowWallClockMs(now = /* @__PURE__ */ new Date()) {
@@ -12771,8 +12795,8 @@ function formatRange2(range) {
   return "";
 }
 var NUMBER = String.raw`-?\d+(?:[.,]\d+)?`;
-function toNumber(text2) {
-  const t = text2.trim().replace(/\s+/g, "");
+function toNumber(text3) {
+  const t = text3.trim().replace(/\s+/g, "");
   if (!new RegExp(`^${NUMBER}$`).test(t)) {
     if (/^-?\d{1,3}(?:\.\d{3})+,\d+$/.test(t))
       return Number(t.replace(/\./g, "").replace(",", "."));
@@ -12781,15 +12805,15 @@ function toNumber(text2) {
   const n3 = Number(t.replace(",", "."));
   return Number.isFinite(n3) ? n3 : null;
 }
-function parseLabValue(text2) {
-  const t = text2.trim().replace(/≤/g, "<").replace(/≥/g, ">");
+function parseLabValue(text3) {
+  const t = text3.trim().replace(/≤/g, "<").replace(/≥/g, ">");
   const m = /^([<>])\s*=?\s*(.+)$/.exec(t);
   const comparator = m ? m[1] : null;
   const value2 = toNumber(m ? m[2] ?? "" : t);
   return value2 === null ? null : { value: value2, comparator };
 }
-function parseRange(text2) {
-  const t = text2.trim().replace(/[–—]/g, "-").replace(/≤|<=/g, "<").replace(/≥|>=/g, ">");
+function parseRange(text3) {
+  const t = text3.trim().replace(/[–—]/g, "-").replace(/≤|<=/g, "<").replace(/≥|>=/g, ">");
   if (t === "") return { low: null, high: null };
   const both = new RegExp(`^(${NUMBER})\\s*(?:-|bis)\\s*(${NUMBER})$`, "i").exec(t);
   if (both) {
@@ -12950,9 +12974,9 @@ function drawToDraft(draw) {
     }))
   };
 }
-var optNumber = (text2) => {
-  if (text2.trim() === "") return null;
-  const n3 = parseDecimal(text2);
+var optNumber = (text3) => {
+  if (text3.trim() === "") return null;
+  const n3 = parseDecimal(text3);
   return Number.isFinite(n3) ? n3 : "invalid";
 };
 function draftToInput2(draft) {
@@ -13565,9 +13589,9 @@ function latestLpa(draws) {
   for (const d of draws) {
     const r2 = d.results.find((x) => x.analyteId === LPA_ANALYTE_ID);
     if (!r2) continue;
-    const time = d.time ?? "";
-    if (!best || d.date > best.date || d.date === best.date && time > best.time) {
-      best = { date: d.date, time, value: r2.value, comparator: r2.comparator, unit: r2.unit };
+    const time2 = d.time ?? "";
+    if (!best || d.date > best.date || d.date === best.date && time2 > best.time) {
+      best = { date: d.date, time: time2, value: r2.value, comparator: r2.comparator, unit: r2.unit };
     }
   }
   return best ? { date: best.date, value: best.value, comparator: best.comparator, unit: best.unit } : null;
@@ -13685,8 +13709,8 @@ function substanceDraftToInput(d) {
     }
   } : { ok: false, errors: p.errors };
 }
-function emptyEntryDraft(date, time = "") {
-  return { id: null, substanceId: "", date, time, amount: "", route: "", site: "", notes: "" };
+function emptyEntryDraft(date, time2 = "") {
+  return { id: null, substanceId: "", date, time: time2, amount: "", route: "", site: "", notes: "" };
 }
 function entryToDraft(e) {
   return {
@@ -13823,11 +13847,11 @@ var SITE_SUGGESTIONS = [
   "Oberarm links",
   "Oberarm rechts"
 ];
-function emptyHrtDraft(date, time = "") {
+function emptyHrtDraft(date, time2 = "") {
   return {
     id: null,
     date,
-    time,
+    time: time2,
     status: "taken",
     hormone: "",
     amount: "",
@@ -13870,9 +13894,9 @@ function hrtToDraft(e) {
     notes: e.notes ?? ""
   };
 }
-function optNumber2(text2) {
-  if (text2.trim() === "") return null;
-  const v = parseDecimal(text2);
+function optNumber2(text3) {
+  if (text3.trim() === "") return null;
+  const v = parseDecimal(text3);
   return Number.isFinite(v) ? v : null;
 }
 function computedAmount(d) {
@@ -14081,9 +14105,9 @@ function roundTo2(value2, decimals) {
   const f = 10 ** decimals;
   return Math.round(value2 * f) / f;
 }
-function positive(text2) {
-  if (text2.trim() === "") return null;
-  const v = parseDecimal(text2);
+function positive(text3) {
+  if (text3.trim() === "") return null;
+  const v = parseDecimal(text3);
   return Number.isFinite(v) && v > 0 ? v : null;
 }
 function totalConcentration(ingredients) {
@@ -14232,7 +14256,7 @@ var TEMPLATE = {
   ]
 };
 function templateItems(section) {
-  return TEMPLATE[section].map((text2, i) => ({ id: `${section}-v${i + 1}`, text: text2, done: false }));
+  return TEMPLATE[section].map((text3, i) => ({ id: `${section}-v${i + 1}`, text: text3, done: false }));
 }
 function defaultChecklist() {
   return {
@@ -14245,7 +14269,7 @@ function defaultChecklist() {
 }
 var TEMPLATE_TEXT = new Map(
   Object.keys(TEMPLATE).flatMap(
-    (section) => TEMPLATE[section].map((text2, i) => [`${section}-v${i + 1}`, text2])
+    (section) => TEMPLATE[section].map((text3, i) => [`${section}-v${i + 1}`, text3])
   )
 );
 function parseItems(value2) {
@@ -14254,9 +14278,9 @@ function parseItems(value2) {
   const seen = /* @__PURE__ */ new Set();
   for (const v of value2) {
     if (!v || typeof v !== "object") continue;
-    const { id: id4, text: text2, t, done, d } = v;
+    const { id: id4, text: text3, t, done, d } = v;
     if (typeof id4 !== "string" || !id4 || seen.has(id4)) continue;
-    const raw = typeof text2 === "string" ? text2 : typeof t === "string" ? t : TEMPLATE_TEXT.get(id4);
+    const raw = typeof text3 === "string" ? text3 : typeof t === "string" ? t : TEMPLATE_TEXT.get(id4);
     if (typeof raw !== "string") continue;
     const clean2 = raw.trim().slice(0, ITEM_MAX_LENGTH);
     if (!clean2) continue;
@@ -14298,13 +14322,13 @@ var update = (list2, section, items) => ({
   ...list2,
   [section]: items
 });
-function addItem(list2, section, text2, id4) {
-  const clean2 = text2.trim().slice(0, ITEM_MAX_LENGTH);
+function addItem(list2, section, text3, id4) {
+  const clean2 = text3.trim().slice(0, ITEM_MAX_LENGTH);
   if (!clean2 || list2[section].some((i) => i.id === id4)) return list2;
   return update(list2, section, [...list2[section], { id: id4, text: clean2, done: false }]);
 }
-function editItem(list2, section, id4, text2) {
-  const clean2 = text2.trim().slice(0, ITEM_MAX_LENGTH);
+function editItem(list2, section, id4, text3) {
+  const clean2 = text3.trim().slice(0, ITEM_MAX_LENGTH);
   if (!clean2) return list2;
   return update(
     list2,
@@ -14399,8 +14423,8 @@ function withHrtInterval(raw, hormone, days3) {
   else map[key] = days3;
   return JSON.stringify(map);
 }
-function parseIntervalInput(text2) {
-  const t = text2.trim();
+function parseIntervalInput(text3) {
+  const t = text3.trim();
   if (t === "") return { ok: true, days: null };
   if (!/^\d+$/.test(t)) return { ok: false, error: "Bitte ganze Tage angeben, z. B. 7." };
   const days3 = Number(t);
@@ -14494,14 +14518,14 @@ function hrtDayItems(entries, intervals, days3, today) {
     }
     for (const [date, dayList] of byDay) {
       const taken = dayList.find((e) => e.status === "taken");
-      const time = (taken ?? dayList[0]).time;
+      const time2 = (taken ?? dayList[0]).time;
       out.push({
         key: `hrt-fix:${key}:${date}`,
         date,
         hormone,
-        time,
+        time: time2,
         done: true,
-        detail: taken ? `Eingetragen${time ? ` um ${time} Uhr` : ""}` : "Als ausgelassen eingetragen"
+        detail: taken ? `Eingetragen${time2 ? ` um ${time2} Uhr` : ""}` : "Als ausgelassen eingetragen"
       });
     }
     const last = sorted[sorted.length - 1];
@@ -14600,8 +14624,8 @@ var SCALE_FIELDS = [
   },
   { key: "cellMass", label: "Zellmasse des K\xF6rpers", metricId: builtinMetricId(36) }
 ];
-function normalizeLabel(text2) {
-  return text2.toLowerCase().replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ß/g, "ss").replace(/ı/g, "i").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z]/g, "");
+function normalizeLabel(text3) {
+  return text3.toLowerCase().replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ß/g, "ss").replace(/ı/g, "i").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z]/g, "");
 }
 function editDistance(a, b) {
   const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -14620,12 +14644,12 @@ function editDistance(a, b) {
 var NORMALIZED = SCALE_FIELDS.map((f) => ({ field: f, norm: normalizeLabel(f.label) }));
 function fieldOfRow(row2) {
   if (/\d{2,}/.test(row2)) return null;
-  const text2 = normalizeLabel(row2);
-  if (text2.length < 3) return null;
+  const text3 = normalizeLabel(row2);
+  if (text3.length < 3) return null;
   let best = null;
   for (const { field, norm: norm6 } of NORMALIZED) {
-    if (text2.length > norm6.length + 4) continue;
-    const score = 1 - editDistance(text2, norm6) / Math.max(text2.length, norm6.length);
+    if (text3.length > norm6.length + 4) continue;
+    const score = 1 - editDistance(text3, norm6) / Math.max(text3.length, norm6.length);
     if (!best || score > best.score) best = { field, score };
   }
   return best && best.score >= 0.7 ? best.field : null;
@@ -14725,14 +14749,14 @@ var round = (v, decimals) => {
   const f = 10 ** decimals;
   return Math.round(v * f) / f;
 };
-function cutDecimals(text2, decimals) {
-  const m = /^(\d+)(?:[.,](\d+))?$/.exec(text2.trim());
-  if (!m) return Number(text2.replace(",", "."));
+function cutDecimals(text3, decimals) {
+  const m = /^(\d+)(?:[.,](\d+))?$/.exec(text3.trim());
+  if (!m) return Number(text3.replace(",", "."));
   const frac = (m[2] ?? "").slice(0, decimals);
   return Number(frac ? `${m[1]}.${frac}` : m[1]);
 }
-function nearReading(text2, previous, withDecimal) {
-  const digits = text2.replace(/\D/g, "");
+function nearReading(text3, previous, withDecimal) {
+  const digits = text3.replace(/\D/g, "");
   let best = null;
   for (let i = 0; i < digits.length; i++) {
     for (let j = i + 1; j <= digits.length; j++) {
@@ -14976,11 +15000,11 @@ var latin1 = (bytes) => {
   return s;
 };
 function findPdfImage(bytes) {
-  const text2 = latin1(bytes);
-  if (!text2.startsWith("%PDF")) return null;
+  const text3 = latin1(bytes);
+  if (!text3.startsWith("%PDF")) return null;
   let best = null;
   const re = /<<((?:(?!>>\s*stream)[\s\S])*?\/Subtype\s*\/Image[\s\S]*?)>>\s*stream\r?\n/g;
-  for (let m = re.exec(text2); m; m = re.exec(text2)) {
+  for (let m = re.exec(text3); m; m = re.exec(text3)) {
     const dict = m[1] ?? "";
     const num5 = (key) => Number(new RegExp(`/${key}\\s+(\\d+)`).exec(dict)?.[1] ?? NaN);
     const width = num5("Width");
@@ -14991,10 +15015,10 @@ function findPdfImage(bytes) {
     if (filter !== "DCTDecode" && filter !== "FlateDecode") continue;
     if (filter === "FlateDecode" && /\/DecodeParms|\/Predictor/.test(dict)) continue;
     const start = m.index + m[0].length;
-    const end = text2.indexOf("endstream", start);
+    const end = text3.indexOf("endstream", start);
     if (end < 0) continue;
     let stop = end;
-    while (stop > start && (text2[stop - 1] === "\n" || text2[stop - 1] === "\r")) stop--;
+    while (stop > start && (text3[stop - 1] === "\n" || text3[stop - 1] === "\r")) stop--;
     if (!best || width * height > best.width * best.height) {
       best = { width, height, bitsPerComponent, filter, data: bytes.slice(start, stop) };
     }
@@ -15035,8 +15059,8 @@ var AG_RATIO_ID = builtin(38);
 var SKELETAL_MASS_METRIC_ID = builtin(39);
 var ANDROID_FAT_METRIC_ID = builtin(40);
 var GYNOID_FAT_METRIC_ID = builtin(41);
-var positive2 = (text2) => {
-  const v = parseDecimal(text2 ?? "");
+var positive2 = (text3) => {
+  const v = parseDecimal(text3 ?? "");
   return Number.isFinite(v) && v > 0 ? v : null;
 };
 var round2 = (v, decimals) => {
@@ -15120,8 +15144,8 @@ function glucoseStats(readings) {
       ranges
     };
   }
-  const mean11 = values.reduce((a, b) => a + b, 0) / n3;
-  const sd2 = n3 > 1 ? Math.sqrt(values.reduce((a, b) => a + (b - mean11) ** 2, 0) / (n3 - 1)) : null;
+  const mean12 = values.reduce((a, b) => a + b, 0) / n3;
+  const sd2 = n3 > 1 ? Math.sqrt(values.reduce((a, b) => a + (b - mean12) ** 2, 0) / (n3 - 1)) : null;
   for (const v of values) {
     const r2 = RANGES.find((x) => v < x.max);
     ranges[r2.key] += 100 / n3;
@@ -15130,10 +15154,10 @@ function glucoseStats(readings) {
   return {
     count: n3,
     days: days3,
-    mean: mean11,
+    mean: mean12,
     sd: sd2,
-    cv: sd2 !== null && mean11 > 0 ? sd2 / mean11 * 100 : null,
-    gmi: days3 >= 10 ? 3.31 + 0.02392 * mean11 : null,
+    cv: sd2 !== null && mean12 > 0 ? sd2 / mean12 * 100 : null,
+    gmi: days3 >= 10 ? 3.31 + 0.02392 * mean12 : null,
     min: Math.min(...values),
     max: Math.max(...values),
     ranges
@@ -15385,16 +15409,16 @@ function winAnsiByte(ch) {
   if (code >= 32 && code < 127 || code >= 160 && code <= 255) return code;
   return 63;
 }
-function pdfText(text2) {
+function pdfText(text3) {
   let out = "";
-  for (const ch of text2.replace(/\s+/g, " ")) {
+  for (const ch of text3.replace(/\s+/g, " ")) {
     const c = String.fromCharCode(winAnsiByte(ch));
     out += c === "\\" || c === "(" || c === ")" ? `\\${c}` : c;
   }
   return out;
 }
-function wrapText(text2, width = WRAP_CHARS) {
-  const words = text2.replace(/\s+/g, " ").trim().split(" ");
+function wrapText(text3, width = WRAP_CHARS) {
+  const words = text3.replace(/\s+/g, " ").trim().split(" ");
   const lines = [];
   let line = "";
   for (let word of words) {
@@ -15421,25 +15445,25 @@ function checklistPdf(doc) {
   const pages = [];
   let ops = [];
   let y = PAGE_H - MARGIN;
-  const text2 = (x, yy, font, size, value2, gray = 0) => ops.push(
+  const text3 = (x, yy, font, size, value2, gray = 0) => ops.push(
     `${n(gray)} g BT /${font} ${size} Tf ${n(x)} ${n(yy)} Td (${pdfText(value2)}) Tj ET 0 g`
   );
   const header3 = (first) => {
     if (first) {
       for (const line of wrapText(doc.title, 50)) {
         y -= 18;
-        text2(MARGIN, y, "F2", 16, line);
+        text3(MARGIN, y, "F2", 16, line);
       }
       if (doc.subtitle) {
         y -= 16;
-        text2(MARGIN, y, "F1", 10, doc.subtitle, 0.4);
+        text3(MARGIN, y, "F1", 10, doc.subtitle, 0.4);
       }
       y -= 10;
       ops.push(`0.8 G 0.5 w ${MARGIN} ${n(y)} m ${PAGE_W - MARGIN} ${n(y)} l S 0 G`);
       y -= 8;
     } else {
       y -= 12;
-      text2(MARGIN, y, "F1", 9, doc.title, 0.4);
+      text3(MARGIN, y, "F1", 9, doc.title, 0.4);
       y -= 12;
     }
   };
@@ -15452,7 +15476,7 @@ function checklistPdf(doc) {
   header3(true);
   if (doc.items.length === 0) {
     y -= LINE;
-    text2(MARGIN, y, "F1", ITEM_SIZE, "Keine Punkte.", 0.4);
+    text3(MARGIN, y, "F1", ITEM_SIZE, "Keine Punkte.", 0.4);
   }
   for (const item2 of doc.items) {
     const lines = wrapText(item2.text);
@@ -15469,7 +15493,7 @@ function checklistPdf(doc) {
     }
     lines.forEach((line, i) => {
       if (i > 0) y -= LINE;
-      text2(MARGIN + 18, y, "F1", ITEM_SIZE, line, item2.done ? 0.45 : 0);
+      text3(MARGIN + 18, y, "F1", ITEM_SIZE, line, item2.done ? 0.45 : 0);
     });
     y -= 5;
   }
@@ -15988,17 +16012,17 @@ function hex(color) {
 }
 var num3 = (v) => (Math.round(v * 100) / 100).toString();
 var rgb = (c) => c.map((x) => num3(x)).join(" ");
-function textWidth(text2, size, bold = false) {
+function textWidth(text3, size, bold = false) {
   const table2 = bold ? HELVETICA_BOLD_WIDTHS : HELVETICA_WIDTHS;
   let w = 0;
-  for (const ch of text2.replace(/\s+/g, " ")) {
+  for (const ch of text3.replace(/\s+/g, " ")) {
     const b = winAnsiByte(ch);
     w += table2[b - 32] ?? 556;
   }
   return w * size / 1e3;
 }
-function wrapToWidth(text2, maxWidth, size, bold = false) {
-  const words = text2.replace(/\s+/g, " ").trim().split(" ");
+function wrapToWidth(text3, maxWidth, size, bold = false) {
+  const words = text3.replace(/\s+/g, " ").trim().split(" ");
   const lines = [];
   let line = "";
   const fits = (t) => textWidth(t, size, bold) <= maxWidth;
@@ -16225,9 +16249,9 @@ var WHITE = [1, 1, 1];
 var tint = (c, amount) => [0, 1, 2].map((i) => c[i] + (1 - c[i]) * amount);
 var TITLE = "Bericht f\xFCr den Arzttermin";
 var PDF_MARKS = { low: "\u2013", high: "+", normal: "", none: "" };
-function fit(text2, max, size, bold = false) {
-  if (textWidth(text2, size, bold) <= max) return text2;
-  let t = text2;
+function fit(text3, max, size, bold = false) {
+  if (textWidth(text3, size, bold) <= max) return text3;
+  let t = text3;
   while (t.length > 1 && textWidth(`${t}\u2026`, size, bold) > max) t = t.slice(0, -1);
   return `${t.trimEnd()}\u2026`;
 }
@@ -16256,21 +16280,21 @@ var Layout = class {
     }
     return false;
   }
-  heading(text2, color = ACCENT) {
+  heading(text3, color = ACCENT) {
     this.ensure(48);
     this.y += 10;
     this.page.rect(M, this.y, 4, 16, { fill: color, radius: 2 });
-    this.page.text(M + 12, this.y + 13, text2, { size: 13, bold: true, color: INK });
+    this.page.text(M + 12, this.y + 13, text3, { size: 13, bold: true, color: INK });
     this.y += 26;
   }
-  note(text2) {
+  note(text3) {
     this.ensure(14);
-    this.page.text(M, this.y + 9, fit(text2, CONTENT_W, 8), { size: 8, color: MUTED });
+    this.page.text(M, this.y + 9, fit(text3, CONTENT_W, 8), { size: 8, color: MUTED });
     this.y += 14;
   }
-  subheading(text2) {
+  subheading(text3) {
     this.ensure(30);
-    this.page.text(M, this.y + 12, text2, { size: 9, bold: true, color: MUTED });
+    this.page.text(M, this.y + 12, text3, { size: 9, bold: true, color: MUTED });
     this.y += 18;
   }
   table(columns, rows2) {
@@ -16631,8 +16655,8 @@ var H = {
   lab: /^(labor|lab|praxis|einsender)$/i
 };
 var clean = (s) => s.replace(/\s+/g, " ").trim().replace(/:$/, "");
-function parseDateCell(text2) {
-  const t = clean(text2);
+function parseDateCell(text3) {
+  const t = clean(text3);
   if (t === "") return null;
   const pad7 = (n3) => String(n3).padStart(2, "0");
   const make = (y, m2, d) => {
@@ -16673,8 +16697,8 @@ function parseDateCell(text2) {
   }
   return null;
 }
-function parseTimeCell(text2) {
-  const t = clean(text2);
+function parseTimeCell(text3) {
+  const t = clean(text3);
   const m = /^(\d{1,2}):(\d{2})/.exec(t);
   const pad7 = (n3) => String(n3).padStart(2, "0");
   if (m) {
@@ -16739,8 +16763,8 @@ function parseLabTable(rows2, fallbackDate) {
     const parsed = c.date >= 0 ? parseDateCell(cell2(row2, c.date)) : null;
     if (parsed) {
       lastDate = parsed;
-      const time = c.time >= 0 ? parseTimeCell(cell2(row2, c.time)) : null;
-      return { date: parsed.date, time: time ?? parsed.time };
+      const time2 = c.time >= 0 ? parseTimeCell(cell2(row2, c.time)) : null;
+      return { date: parsed.date, time: time2 ?? parsed.time };
     }
     if (lastDate) return lastDate;
     return fallbackDate ? { date: fallbackDate, time: null } : null;
@@ -16751,23 +16775,23 @@ function parseLabTable(rows2, fallbackDate) {
       const name = cell2(row2, c.name);
       const raw = cell2(row2, c.value);
       if (name === "" && raw === "") return;
-      const text2 = `${name} ${raw}`.trim();
+      const text3 = `${name} ${raw}`.trim();
       if (name === "") {
-        result.skipped.push({ line, text: text2, reason: "Parameter fehlt" });
+        result.skipped.push({ line, text: text3, reason: "Parameter fehlt" });
         return;
       }
       const when2 = dateOf(row2);
       if (!when2) {
         result.skipped.push({
           line,
-          text: text2,
+          text: text3,
           reason: "Datum fehlt \u2013 bitte im Import ein Datum w\xE4hlen"
         });
         return;
       }
       const v = parseLabValue(raw);
       if (!v) {
-        result.skipped.push({ line, text: text2, reason: raw === "" ? "Wert fehlt" : "kein Zahlenwert" });
+        result.skipped.push({ line, text: text3, reason: raw === "" ? "Wert fehlt" : "kein Zahlenwert" });
         return;
       }
       let refLow = null;
@@ -17157,8 +17181,8 @@ function placeOnBar(value2, comparator, range) {
   const low = range.low ?? 0;
   const high = range.high;
   if (high === null || !(high > low)) return null;
-  const span = BAR_RANGE_END - BAR_RANGE_START;
-  const raw = BAR_RANGE_START + (value2 - low) / (high - low) * span;
+  const span2 = BAR_RANGE_END - BAR_RANGE_START;
+  const raw = BAR_RANGE_START + (value2 - low) / (high - low) * span2;
   const position = Math.min(100, Math.max(0, raw));
   return {
     position: Math.round(position * 10) / 10,
@@ -17181,14 +17205,14 @@ var SOURCE_LABEL = {
 var DONE_MARK = /^(?:[-*+]\s*)?(?:\[[xX✓✔]\]|☑|☒|✓|✔|✅|✔️)\s*/u;
 var OPEN_MARK = /^(?:[-*+]\s*)?(?:\[\s?\]|☐|◻|□|○|◯|⬜)\s*/u;
 var BULLET = /^(?:[-*+•·◦▪▫‣–—]|\d{1,3}[.)])\s+/u;
-function clip(text2, notes) {
-  if ([...text2].length <= TEXT_MAX) return text2;
+function clip(text3, notes) {
+  if ([...text3].length <= TEXT_MAX) return text3;
   notes.push(`Ein Punkt war l\xE4nger als ${TEXT_MAX} Zeichen und wurde gek\xFCrzt.`);
-  return [...text2].slice(0, TEXT_MAX).join("");
+  return [...text3].slice(0, TEXT_MAX).join("");
 }
-function parseChecklistText(text2, fallbackName) {
+function parseChecklistText(text3, fallbackName) {
   const notes = [];
-  const lines = text2.replace(/\r\n?/g, "\n").split("\n").map((l) => l.replace(/\u00a0/g, " ").trim()).filter((l) => l !== "");
+  const lines = text3.replace(/\r\n?/g, "\n").split("\n").map((l) => l.replace(/\u00a0/g, " ").trim()).filter((l) => l !== "");
   const parsed = lines.map((line) => {
     const heading = /^#{1,6}\s+(.*)$/.exec(line);
     if (heading) return { text: heading[1].trim(), done: false, marked: false, heading: true };
@@ -17212,8 +17236,8 @@ function parseChecklistText(text2, fallbackName) {
   const items = parsed.filter((p) => p.text !== "" && !p.heading).map((p) => ({ text: clip(p.text, notes), done: p.done }));
   return { name: name || "Importierte Checkliste", items, notes };
 }
-function parseCsv(text2) {
-  const clean2 = text2.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
+function parseCsv(text3) {
+  const clean2 = text3.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
   const firstLine = clean2.split("\n")[0] ?? "";
   const count = (ch) => firstLine.split(ch).length - 1;
   const sep = [";", "	", ","].reduce((best, ch) => count(ch) > count(best) ? ch : best, ";");
@@ -17288,10 +17312,10 @@ function rowsToChecklist(rows2, name) {
   if (textCol < 0) return { name, items: [], notes: ["Es wurde keine Spalte mit Text gefunden."] };
   const items = [];
   for (const r2 of body) {
-    const text2 = (r2[textCol] ?? "").trim();
-    if (text2 === "") continue;
+    const text3 = (r2[textCol] ?? "").trim();
+    if (text3 === "") continue;
     items.push({
-      text: clip(text2, notes),
+      text: clip(text3, notes),
       done: doneCol >= 0 && DONE_VALUE.test((r2[doneCol] ?? "").trim())
     });
   }
@@ -17435,15 +17459,15 @@ var ENTITIES = {
   quot: '"',
   apos: "'"
 };
-function decodeXml(text2) {
-  return text2.replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g, (_, e) => {
+function decodeXml(text3) {
+  return text3.replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g, (_, e) => {
     if (e.startsWith("#x")) return String.fromCodePoint(parseInt(e.slice(2), 16));
     if (e.startsWith("#")) return String.fromCodePoint(parseInt(e.slice(1), 10));
     return ENTITIES[e] ?? "";
   });
 }
-function encodeXml(text2) {
-  return text2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "");
+function encodeXml(text3) {
+  return text3.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "");
 }
 function texts(xml) {
   let out = "";
@@ -17477,10 +17501,10 @@ function numberText(v) {
 }
 async function readXlsx(bytes, inflateRaw) {
   const entries = await readZip(bytes, inflateRaw);
-  const text2 = new TextDecoder("utf-8");
+  const text3 = new TextDecoder("utf-8");
   const file = (name) => {
     const e = entries.find((x) => x.name.toLowerCase() === name.toLowerCase());
-    return e ? text2.decode(e.data) : null;
+    return e ? text3.decode(e.data) : null;
   };
   const workbook = file("xl/workbook.xml");
   if (!workbook) throw new Error("Die Datei ist keine Excel-Arbeitsmappe (.xlsx).");
@@ -17497,7 +17521,7 @@ async function readXlsx(bytes, inflateRaw) {
       }
     }
   }
-  const sheetXml = (sheetPath ? file(sheetPath) : null) ?? entries.filter((e) => /^xl\/worksheets\/[^/]+\.xml$/i.test(e.name)).sort((a, b) => a.name.localeCompare(b.name, void 0, { numeric: true })).map((e) => text2.decode(e.data))[0] ?? null;
+  const sheetXml = (sheetPath ? file(sheetPath) : null) ?? entries.filter((e) => /^xl\/worksheets\/[^/]+\.xml$/i.test(e.name)).sort((a, b) => a.name.localeCompare(b.name, void 0, { numeric: true })).map((e) => text3.decode(e.data))[0] ?? null;
   if (!sheetXml) throw new Error("In der Excel-Datei wurde kein Tabellenblatt gefunden.");
   const shared = [];
   const sst = file("xl/sharedStrings.xml");
@@ -17691,8 +17715,8 @@ function plannedTrainings(plans, days3) {
     for (const day of plan.days) {
       for (const [i, slot] of (day.slots ?? []).entries()) {
         for (const date of days3) {
-          const hit = slot.weekday !== null ? slot.weekday === isoWeekday(date) : slot.date === date;
-          if (!hit) continue;
+          const hit2 = slot.weekday !== null ? slot.weekday === isoWeekday(date) : slot.date === date;
+          if (!hit2) continue;
           out.push({
             key: `plan:${plan.id}:${day.id}:${i}:${date}`,
             date,
@@ -17846,8 +17870,8 @@ var DEFAULT_REMINDERS = {
 };
 var HRT_INTERVAL_SAMPLES = 4;
 var TIME5 = /^([01]\d|2[0-3]):([0-5]\d)$/;
-function validTime(time) {
-  return TIME5.test(time.trim());
+function validTime(time2) {
+  return TIME5.test(time2.trim());
 }
 function parseReminderSettings(raw) {
   const out = {
@@ -17866,9 +17890,9 @@ function parseReminderSettings(raw) {
   for (const kind of REMINDER_KINDS) {
     const r2 = data[kind];
     if (typeof r2 !== "object" || r2 === null) continue;
-    const { on, time } = r2;
+    const { on, time: time2 } = r2;
     if (typeof on === "boolean") out[kind].on = on;
-    if (typeof time === "string" && validTime(time)) out[kind].time = time.trim();
+    if (typeof time2 === "string" && validTime(time2)) out[kind].time = time2.trim();
   }
   return out;
 }
@@ -17890,16 +17914,16 @@ function nextHrtDoses(entries) {
     for (let i = 1; i < dates.length; i++) gaps.push(isoDiff(dates[i - 1], dates[i]));
     const recent = gaps.slice(-HRT_INTERVAL_SAMPLES).sort((a, b) => a - b);
     const mid = Math.floor(recent.length / 2);
-    const median5 = recent.length % 2 === 1 ? recent[mid] : Math.round((recent[mid - 1] + recent[mid]) / 2);
-    if (median5 < 1) continue;
+    const median6 = recent.length % 2 === 1 ? recent[mid] : Math.round((recent[mid - 1] + recent[mid]) / 2);
+    if (median6 < 1) continue;
     const last = dates[dates.length - 1];
-    out.push({ hormone: g2.hormone, last, intervalDays: median5, next: shiftDays(last, median5) });
+    out.push({ hormone: g2.hormone, last, intervalDays: median6, next: shiftDays(last, median6) });
   }
   return out.sort((a, b) => a.next.localeCompare(b.next) || a.hormone.localeCompare(b.hormone));
 }
-function pendingKinds(settings, today, time, shown, allowHrt) {
+function pendingKinds(settings, today, time2, shown, allowHrt) {
   return REMINDER_KINDS.filter(
-    (k) => settings[k].on && (k !== "hrt" || allowHrt) && time >= settings[k].time && !shown.has(`${k}:${today}`)
+    (k) => settings[k].on && (k !== "hrt" || allowHrt) && time2 >= settings[k].time && !shown.has(`${k}:${today}`)
   );
 }
 function dueNotices(kinds, today, status) {
@@ -18124,8 +18148,8 @@ function describePages(pages) {
   if (sorted.length === 1) return `Buch S. ${first}`;
   return contiguous ? `Buch S. ${first}\u2013${last}` : `Buch S. ${sorted.join(", ")}`;
 }
-function normalize(text2) {
-  return text2.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").normalize("NFD").replace(/[̀-ͯ]/g, "");
+function normalize(text3) {
+  return text3.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 function searchTerms(query) {
   return [
@@ -18160,24 +18184,24 @@ function searchFaq(questions, query) {
 function termPattern(term) {
   return term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ae/g, "(?:ae|\xE4)").replace(/oe/g, "(?:oe|\xF6)").replace(/ue/g, "(?:ue|\xFC)").replace(/ss/g, "(?:ss|\xDF)");
 }
-function highlight(text2, query) {
+function highlight(text3, query) {
   const terms = searchTerms(query);
-  if (terms.length === 0 || text2 === "") return [{ text: text2, hit: false }];
+  if (terms.length === 0 || text3 === "") return [{ text: text3, hit: false }];
   const re = new RegExp(
     terms.map(termPattern).sort((a, b) => b.length - a.length).join("|"),
     "giu"
   );
   const parts2 = [];
   let last = 0;
-  for (const m of text2.matchAll(re)) {
+  for (const m of text3.matchAll(re)) {
     const start = m.index ?? 0;
     if (m[0] === "") continue;
-    if (start > last) parts2.push({ text: text2.slice(last, start), hit: false });
+    if (start > last) parts2.push({ text: text3.slice(last, start), hit: false });
     parts2.push({ text: m[0], hit: true });
     last = start + m[0].length;
   }
-  if (last < text2.length) parts2.push({ text: text2.slice(last), hit: false });
-  return parts2.length ? parts2 : [{ text: text2, hit: false }];
+  if (last < text3.length) parts2.push({ text: text3.slice(last), hit: false });
+  return parts2.length ? parts2 : [{ text: text3, hit: false }];
 }
 var BOOKS = {
   masterclass: {
@@ -18700,11 +18724,11 @@ function trainingReview(log, exercises, count = REVIEW_SESSIONS) {
   }
   const groupVolume = [...groups.values()].reduce((sum, g2) => sum + g2.volumeKg, 0);
   const hasBefore = before.length > 0;
-  const rows2 = [...groups.values()].map(({ hit, ...g2 }) => {
+  const rows2 = [...groups.values()].map(({ hit: hit2, ...g2 }) => {
     const prev = hasBefore ? previous.get(g2.group) ?? 0 : null;
     return {
       ...g2,
-      sessions: hit.size,
+      sessions: hit2.size,
       sharePercent: groupVolume > 0 ? Math.round(g2.volumeKg / groupVolume * 100) : 0,
       previousVolumeKg: prev,
       changePercent: prev !== null && prev > 0 ? Math.round((g2.volumeKg - prev) / prev * 100) : null
@@ -18898,8 +18922,8 @@ function underTargetMuscles(log, exercises, machines, targets, today, focus = NO
   const extra = weeks.map((w) => extraSets?.(w) ?? null);
   const weeksWithTraining = maps.filter((m) => m.totalSets > 0).length;
   if (weeksWithTraining < weeksCount) return { kind: "insufficient", weeksWithTraining, weeks };
-  const groupLabel = /* @__PURE__ */ new Map();
-  for (const g2 of MUSCLE_GROUPS) for (const p of g2.parts) groupLabel.set(p, g2.label);
+  const groupLabel2 = /* @__PURE__ */ new Map();
+  for (const g2 of MUSCLE_GROUPS) for (const p of g2.parts) groupLabel2.set(p, g2.label);
   const below = [];
   const untrained = [];
   for (const id4 of MUSCLE_IDS) {
@@ -18911,7 +18935,7 @@ function underTargetMuscles(log, exercises, machines, targets, today, focus = NO
     const entry2 = {
       id: id4,
       label: MUSCLE_LABELS[id4],
-      group: groupLabel.get(id4) ?? MUSCLE_LABELS[id4],
+      group: groupLabel2.get(id4) ?? MUSCLE_LABELS[id4],
       weekly,
       average,
       target
@@ -18991,10 +19015,10 @@ function reviewGroupLabels(groups, log, exercises, machines, workoutIds, focus =
 function baseLabel(label) {
   return label.replace(/ \(„[^“]*“\)$/, "");
 }
-function mergeLabeledGroups(groups, labels) {
+function mergeLabeledGroups(groups, labels2) {
   const merged = /* @__PURE__ */ new Map();
   for (const g2 of groups) {
-    const label = labels.get(g2.group)?.label ?? g2.group;
+    const label = labels2.get(g2.group)?.label ?? g2.group;
     const key = g2.group === NO_MUSCLE_GROUP ? `\0${g2.group}` : baseLabel(label);
     const cur = merged.get(key);
     if (!cur) {
@@ -19017,7 +19041,7 @@ function mergeLabeledGroups(groups, labels) {
   for (const [key, { row: row2, sources }] of merged) {
     rows2.push(row2);
     if (sources.length === 1) {
-      outLabels.set(row2.group, labels.get(row2.group) ?? { label: row2.group, detail: null });
+      outLabels.set(row2.group, labels2.get(row2.group) ?? { label: row2.group, detail: null });
     } else {
       outLabels.set(row2.group, {
         label: key,
@@ -19239,8 +19263,8 @@ function karvonen(max, resting) {
 function formatZone(z) {
   return z ? `${z.from}\u2013${z.to}` : "";
 }
-function parseZone(text2) {
-  const t = text2.trim();
+function parseZone(text3) {
+  const t = text3.trim();
   if (t === "") return null;
   const m = /^(\d{2,3})\s*(?:-|–|—|bis)\s*(\d{2,3})$/.exec(t);
   if (!m) return "invalid";
@@ -19267,8 +19291,8 @@ function heartPreview(p, draft) {
 function heartInput(draft) {
   const p = new FormParser();
   const max = p.integer("heartMax", draft.max);
-  const zones = draft.zones.map((text2, i) => {
-    const z = parseZone(text2);
+  const zones = draft.zones.map((text3, i) => {
+    const z = parseZone(text3);
     if (z === "invalid") {
       p.error(`heartZone${i + 1}`, "Bitte als \u201Evon-bis\u201C eingeben, z. B. 120-135.");
       return null;
@@ -20119,16 +20143,16 @@ function planDraftToInput(d, defaults = () => []) {
         exercises: checked.ok ? checked.exercises : [],
         slots: day.slots.map((s, j) => {
           const f = (name) => `days.${i}.slots.${j}.${name}`;
-          const time = textOrNull(s.time);
-          if (time !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+          const time2 = textOrNull(s.time);
+          if (time2 !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time2)) {
             p.error(f("time"), "Bitte eine Uhrzeit wie 18:30 angeben.");
           }
           if (s.kind === "weekday") {
             const weekday2 = p.integer(f("weekday"), s.weekday);
-            return { weekday: weekday2, date: null, time };
+            return { weekday: weekday2, date: null, time: time2 };
           }
           const date = p.required(f("date"), s.date, "Bitte ein Datum w\xE4hlen.");
-          return { weekday: null, date, time };
+          return { weekday: null, date, time: time2 };
         })
       };
     })
@@ -20151,17 +20175,17 @@ function describeSetDraft(s) {
   if (s.duration.trim())
     parts2.push(`${s.duration.trim()}${s.duration.includes(":") ? "" : " min"}`);
   if (s.distance.trim()) parts2.push(`${s.distance.trim()} km`);
-  const text2 = parts2.join(" \xB7 ") || "Werte offen";
-  return s.isWarmup ? `${text2} (Warm up)` : text2;
+  const text3 = parts2.join(" \xB7 ") || "Werte offen";
+  return s.isWarmup ? `${text3} (Warm up)` : text3;
 }
 function describePlanSets(sets2) {
   if (sets2.length === 0) return "keine S\xE4tze";
   const groups = [];
   for (const s of sets2) {
-    const text2 = describeSetDraft(s);
+    const text3 = describeSetDraft(s);
     const lastGroup = groups.at(-1);
-    if (lastGroup && lastGroup.text === text2) lastGroup.count += 1;
-    else groups.push({ text: text2, count: 1 });
+    if (lastGroup && lastGroup.text === text3) lastGroup.count += 1;
+    else groups.push({ text: text3, count: 1 });
   }
   return groups.map(
     (g2) => g2.count === 1 ? g2.text : g2.text === "Werte offen" ? `${g2.count} S\xE4tze, Werte offen` : `${g2.count} \xD7 ${g2.text}`
@@ -20449,8 +20473,8 @@ __export(machines_exports, {
 });
 
 // src/domain/search.ts
-function normalizeSearch2(text2) {
-  return text2.toLocaleLowerCase("de-DE").replace(/ß/g, "ss").normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+function normalizeSearch2(text3) {
+  return text3.toLocaleLowerCase("de-DE").replace(/ß/g, "ss").normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 }
 function filterOptions(options, query, limit = 8) {
   const words = normalizeSearch2(query).split(/\s+/).filter(Boolean);
@@ -20461,8 +20485,8 @@ function filterOptions(options, query, limit = 8) {
     const first = words[0] ?? "";
     const rank = first === "" ? 2 : label.startsWith(first) ? 0 : label.includes(` ${first}`) ? 1 : 2;
     const exact = (o.exact ?? []).map(normalizeSearch2);
-    const hit = words.some((w) => exact.includes(w)) ? 0 : 1;
-    return { o, hit, rank, label, prio: o.priority ?? 0, usage: o.usage ?? 0 };
+    const hit2 = words.some((w) => exact.includes(w)) ? 0 : 1;
+    return { o, hit: hit2, rank, label, prio: o.priority ?? 0, usage: o.usage ?? 0 };
   }).filter(
     (x) => x !== null
   ).sort(
@@ -20593,8 +20617,8 @@ var RELATED = {
   fahrradergometer: ["crosstrainer", "ruderger\xE4t"],
   ruderger\u00E4t: ["fahrradergometer", "rudern"]
 };
-function compactSearch(text2) {
-  return normalizeSearch2(text2).replace(/[^a-z0-9]/g, "");
+function compactSearch(text3) {
+  return normalizeSearch2(text3).replace(/[^a-z0-9]/g, "");
 }
 function editDistance2(a, b, max = 2) {
   if (Math.abs(a.length - b.length) > max) return max + 1;
@@ -20624,10 +20648,10 @@ function matchingGroups(query) {
   if (q.length < 3) return [];
   const out = [];
   COMPACT_GROUPS.forEach((terms, i) => {
-    const hit = terms.some(
+    const hit2 = terms.some(
       (t) => t === q || q.length >= 4 && t.startsWith(q) || t.length >= 4 && q.includes(t) || editDistance2(q, t, typoBudget(t.length)) <= typoBudget(t.length)
     );
-    if (hit) out.push(i);
+    if (hit2) out.push(i);
   });
   return out;
 }
@@ -20776,9 +20800,9 @@ function machineForm(m) {
     archived: m.archived
   };
 }
-function splitList(text2, separators = /[,;\n]/) {
+function splitList(text3, separators = /[,;\n]/) {
   const out = [];
-  for (const part of text2.split(separators)) {
+  for (const part of text3.split(separators)) {
     const v = part.trim();
     if (v && !out.includes(v)) out.push(v);
   }
@@ -20927,11 +20951,11 @@ function filterMachines(list2, f) {
     if (f.muscle === NO_MUSCLE && m.muscleGroups.length > 0) return false;
     if (f.muscle && f.muscle !== NO_MUSCLE && !m.muscleGroups.includes(f.muscle)) return false;
     if (words.length === 0) return true;
-    const text2 = haystack(m);
-    if (words.every((w) => text2.includes(w))) return true;
-    const compact = compactSearch(text2);
+    const text3 = haystack(m);
+    if (words.every((w) => text3.includes(w))) return true;
+    const compact = compactSearch(text3);
     return synonyms.some(
-      (t) => t.length >= 4 ? compact.includes(t) : text2.split(/[^a-z0-9]+/).includes(t)
+      (t) => t.length >= 4 ? compact.includes(t) : text3.split(/[^a-z0-9]+/).includes(t)
     );
   });
 }
@@ -20955,16 +20979,16 @@ function describeImport(r2) {
   if (r2.updated) parts2.push(`${r2.updated} aktualisiert`);
   if (r2.unchanged) parts2.push(`${r2.unchanged} unver\xE4ndert`);
   if (r2.archived) parts2.push(`${r2.archived} nicht mehr enthalten (archiviert)`);
-  let text2 = `Import abgeschlossen: ${parts2.join(", ")}; ${r2.images} Bilder verkn\xFCpft.`;
+  let text3 = `Import abgeschlossen: ${parts2.join(", ")}; ${r2.images} Bilder verkn\xFCpft.`;
   if (r2.missingImages.length) {
     const shown = r2.missingImages.slice(0, 3).join("; ");
-    text2 += ` ${r2.missingImages.length} Bilder fehlen im Ordner (z. B. ${shown}${r2.missingImages.length > 3 ? " \u2026" : ""}).`;
+    text3 += ` ${r2.missingImages.length} Bilder fehlen im Ordner (z. B. ${shown}${r2.missingImages.length > 3 ? " \u2026" : ""}).`;
   }
   if (r2.skipped.length) {
     const shown = r2.skipped.slice(0, 3).join("; ");
-    text2 += ` Nicht \xFCbernommen (${r2.skipped.length}): ${shown}${r2.skipped.length > 3 ? " \u2026" : ""}`;
+    text3 += ` Nicht \xFCbernommen (${r2.skipped.length}): ${shown}${r2.skipped.length > 3 ? " \u2026" : ""}`;
   }
-  return text2;
+  return text3;
 }
 var MACHINE_SORT_LABELS = {
   name: "Maschine",
@@ -21295,14 +21319,14 @@ function weeklyNutritionDetail(days3, foods, bls) {
     }
   const meals = [...groups.entries()].map(([label, e]) => {
     const count = e.protein.length;
-    const mean11 = e.protein.reduce((a, b) => a + b, 0) / count;
+    const mean12 = e.protein.reduce((a, b) => a + b, 0) / count;
     const min = Math.min(...e.protein);
     const max = Math.max(...e.protein);
     const covered = e.leuTotal > 0 ? e.leuKnown / e.leuTotal : 0;
     return {
       label,
       count,
-      protein: g(mean11),
+      protein: g(mean12),
       leucine: e.leuKnown > 0 ? g(e.leucine / count) : "\u2013",
       sub: `${count === 1 ? "1 Mahlzeit" : `${count} Mahlzeiten`}${count > 1 ? `, Eiwei\xDF ${g(min)}\u2013${g(max)}` : ""} \xB7 Leucin-Angabe f\xFCr ${pct(covered)} des Eiwei\xDFes`
     };
@@ -21961,8 +21985,8 @@ var Writer = class {
     this.y += 22;
   }
   /** Höhe eines Textblocks. */
-  linesOf(text2, width, size, bold = false) {
-    return wrapToWidth(safe(text2), width, size, bold);
+  linesOf(text3, width, size, bold = false) {
+    return wrapToWidth(safe(text3), width, size, bold);
   }
   /** Aufzählung mit Punkten; Rückgabe: Höhe. `draw=false` misst nur. */
   bullets(items, x, y, w, dot, draw, numbered = false) {
@@ -22169,8 +22193,8 @@ var Writer = class {
     });
     this.y += 12;
   }
-  paragraph(text2, size = 8, color = C.muted) {
-    const lines = this.linesOf(text2, CW, size);
+  paragraph(text3, size = 8, color = C.muted) {
+    const lines = this.linesOf(text3, CW, size);
     this.ensure(lines.length * (size + 3) + 6);
     lines.forEach((l) => {
       this.page.text(M2, this.y + size, l, { size, color });
@@ -22723,8 +22747,8 @@ function sleepInputError(value2, field) {
   if (value2 < def.min || value2 > def.max) return `Erlaubt: ${def.min}\u2013${def.max}`;
   return null;
 }
-function parseClock2(text2) {
-  const t = text2.trim();
+function parseClock2(text3) {
+  const t = text3.trim();
   if (t === "") return null;
   const m = /^(\d{1,2})[:.](\d{2})$/.exec(t);
   if (!m) return void 0;
@@ -22828,12 +22852,16 @@ function missingValues(input) {
       out.push({ ...base, date: today, reason: "due", rhythm: rule.rhythm });
     }
   }
-  return out.sort(
-    (a, b) => a.date !== b.date ? a.date < b.date ? 1 : -1 : a.name.localeCompare(b.name, "de")
-  );
+  const position = new Map(orderedMetrics(input.metrics).map((o, i) => [o.metric.id, i]));
+  const at = (id4) => position.get(id4) ?? Number.MAX_SAFE_INTEGER;
+  return out.sort((a, b) => {
+    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+    const diff = at(a.metricId) - at(b.metricId);
+    return diff !== 0 ? diff : a.name.localeCompare(b.name, "de");
+  });
 }
-function parseFillInput(text2) {
-  const t = text2.trim().replace(/\s/g, "").replace(",", ".");
+function parseFillInput(text3) {
+  const t = text3.trim().replace(/\s/g, "").replace(",", ".");
   if (t === "") return null;
   return /^-?\d+(\.\d+)?$/.test(t) ? Number(t) : Number.NaN;
 }
@@ -23271,10 +23299,10 @@ function wakeAdvice(input, inside) {
       basis: `${times.length} von ${ADVICE_DAYS} N\xE4chten erfasst (mind. ${MIN_DAYS})`
     };
   }
-  const median5 = times[Math.floor(times.length / 2)];
-  const off = times.filter((t) => Math.abs(t - median5) > LIMITS.wakeDeviationMin).length;
-  const clock6 = `${String(Math.floor(median5 / 60)).padStart(2, "0")}:${String(median5 % 60).padStart(2, "0")}`;
-  const basis = `\xFCbliche Aufstehzeit ${clock6} Uhr, an ${days2(off)} mehr als 60 Min. abweichend (${times.length} N\xE4chte)`;
+  const median6 = times[Math.floor(times.length / 2)];
+  const off = times.filter((t) => Math.abs(t - median6) > LIMITS.wakeDeviationMin).length;
+  const clock7 = `${String(Math.floor(median6 / 60)).padStart(2, "0")}:${String(median6 % 60).padStart(2, "0")}`;
+  const basis = `\xFCbliche Aufstehzeit ${clock7} Uhr, an ${days2(off)} mehr als 60 Min. abweichend (${times.length} N\xE4chte)`;
   if (off > 0) {
     return {
       ...base,
@@ -23693,7 +23721,7 @@ function glucoseIssues(readings, from, to) {
   for (const g2 of readings) {
     const date = g2.measuredAt.slice(0, 10);
     if (!inRange5(date, from, to)) continue;
-    const time = g2.measuredAt.slice(11, 16);
+    const time2 = g2.measuredAt.slice(11, 16);
     const ref = { kind: "glucose", date };
     if (g2.mgDl < RULES.glucoseLow || g2.mgDl > RULES.glucoseHigh) {
       out.push({
@@ -23702,7 +23730,7 @@ function glucoseIssues(readings, from, to) {
         area: "Blutzucker",
         kind: "outlier",
         ref,
-        text: `${formatDate(date)}, ${time} Uhr: ${formatNumber(g2.mgDl, 0)} mg/dl \u2013 Einheit (mmol/l?) oder Tippfehler?`
+        text: `${formatDate(date)}, ${time2} Uhr: ${formatNumber(g2.mgDl, 0)} mg/dl \u2013 Einheit (mmol/l?) oder Tippfehler?`
       });
     }
     const k = `${g2.measuredAt}|${g2.mgDl}`;
@@ -23713,7 +23741,7 @@ function glucoseIssues(readings, from, to) {
         area: "Blutzucker",
         kind: "duplicate",
         ref,
-        text: `${formatDate(date)}, ${time} Uhr: ${formatNumber(g2.mgDl, 0)} mg/dl ist mehrfach gespeichert.`
+        text: `${formatDate(date)}, ${time2} Uhr: ${formatNumber(g2.mgDl, 0)} mg/dl ist mehrfach gespeichert.`
       });
     }
     seen.add(k);
@@ -24000,8 +24028,8 @@ function otherIntakes(stacks, intakes, caffeineIntakeIds = []) {
 var QUICK_CAFFEINE_LINKS = { inWater: true, toSupplements: true };
 var WEIGHT_MIN_KG = 20;
 var WEIGHT_MAX_KG = 400;
-function parseWeight(text2) {
-  const t = text2.trim().replace(",", ".");
+function parseWeight(text3) {
+  const t = text3.trim().replace(",", ".");
   if (t === "") return { ok: false, error: "Bitte ein Gewicht eingeben." };
   const n3 = Number(t);
   if (!Number.isFinite(n3)) return { ok: false, error: "Bitte eine Zahl eingeben, z. B. 82,4." };
@@ -24013,8 +24041,8 @@ function parseWeight(text2) {
   }
   return { ok: true, kg: Math.round(n3 * 10) / 10 };
 }
-function caffeineEntry(drinkId, time, amount) {
-  const r2 = buildIntake({ drinkId, time, amount });
+function caffeineEntry(drinkId, time2, amount) {
+  const r2 = buildIntake({ drinkId, time: time2, amount });
   if (!r2.ok) return r2;
   const drink2 = findDrink(r2.intake.drinkId);
   return {
@@ -24083,8 +24111,8 @@ var numberIn = (t) => {
   const m = /(\d+(?:[.,]\d+)?)/.exec(t);
   return m ? Number(m[1].replace(",", ".")) : null;
 };
-function parseOneInput(text2, ctx) {
-  const t = norm4(text2);
+function parseOneInput(text3, ctx) {
+  const t = norm4(text3);
   if (t === "") return { ok: false, error: `Beispiele: ${ONE_INPUT_EXAMPLES}` };
   const num5 = numberIn(t);
   if (/\bkg\b/.test(t) || /^gewicht\b/.test(t) || /^\d+(?:[.,]\d+)?$/.test(t)) {
@@ -24114,14 +24142,14 @@ function parseOneInput(text2, ctx) {
   }
   if (num5 !== null) {
     const words = t.replace(/(\d+(?:[.,]\d+)?)\s*(g|mg|µg|kcal)?/g, " ").trim();
-    const hit = ctx.nutrients.find((n3) => {
+    const hit2 = ctx.nutrients.find((n3) => {
       const l = norm4(n3.label);
       return words.length >= 3 && (l === words || l.startsWith(words) || words.startsWith(l));
     });
-    if (hit && num5 > 0)
+    if (hit2 && num5 > 0)
       return {
         ok: true,
-        intent: { kind: "fast", key: hit.key, label: hit.label, unit: hit.unit, amount: num5 }
+        intent: { kind: "fast", key: hit2.key, label: hit2.label, unit: hit2.unit, amount: num5 }
       };
   }
   const stacks = ctx.stacks.filter((s) => norm4(s.name).includes(t) || t.includes(norm4(s.name)));
@@ -24404,8 +24432,8 @@ function stem(word) {
   if (word.length < 4) return word;
   return word.replace(/(en|er|n|e|s)$/, "");
 }
-function wordsOf(text2) {
-  return normText(text2).split(/[^a-z0-9]+/).filter((w) => w.length >= 2 && !STOP.has(w));
+function wordsOf(text3) {
+  return normText(text3).split(/[^a-z0-9]+/).filter((w) => w.length >= 2 && !STOP.has(w));
 }
 function wordMatches(query, hay) {
   const q = stem(query);
@@ -24435,8 +24463,8 @@ function matchFood(name, foods, rank = /* @__PURE__ */ new Map()) {
     ambiguous
   };
 }
-function splitFreeText(text2) {
-  return text2.split(/\r?\n|;|,(?!\d)|\s\+\s|\s+und\s+/i).map((s) => s.trim()).filter((s) => s.length > 0);
+function splitFreeText(text3) {
+  return text3.split(/\r?\n|;|,(?!\d)|\s\+\s|\s+und\s+/i).map((s) => s.trim()).filter((s) => s.length > 0);
 }
 function splitQuantity(part) {
   const spaced = part.replace(/(\d)([a-zA-ZäöüÄÖÜß])/g, "$1 $2").replace(/\s+/g, " ").trim();
@@ -24502,9 +24530,9 @@ function amountFor(q, food) {
     return { amount: roundAmountText(q.value), note: `Menge als ${unit} gelesen.`, assumed: true };
   return { amount: null, note: "Menge ohne Einheit \u2013 bitte eintragen.", assumed: true };
 }
-function parseFreeText(text2, foods, rank = /* @__PURE__ */ new Map()) {
+function parseFreeText(text3, foods, rank = /* @__PURE__ */ new Map()) {
   const byId = new Map(foods.map((f) => [f.id, f]));
-  return splitFreeText(text2).map((part) => {
+  return splitFreeText(text3).map((part) => {
     const q = splitQuantity(part);
     const m = matchFood(q.name, foods, rank);
     const food = m.foodId ? byId.get(m.foodId) ?? null : null;
@@ -24610,15 +24638,15 @@ function checkQuick(f, strict = false) {
   const num5 = {};
   const missing = [];
   for (const d of QUICK_FIELDS) {
-    const text2 = f[d.field].trim();
-    if (text2 === "") {
+    const text3 = f[d.field].trim();
+    if (text3 === "") {
       if (d.required) {
         missing.push(d.field);
         if (strict) errors[d.field] = "Pflichtfeld";
       }
       continue;
     }
-    const v = parseDecimal(text2);
+    const v = parseDecimal(text3);
     if (!Number.isFinite(v)) errors[d.field] = "keine Zahl";
     else if (v < 0) errors[d.field] = "nicht negativ";
     else if (v > QUICK_MAX) errors[d.field] = "zu gro\xDF";
@@ -24664,10 +24692,10 @@ function addToValues(base, add) {
 function quickFromValues(values) {
   const form = emptyQuickForm();
   const rest = {};
-  for (const [key, text2] of Object.entries(values)) {
+  for (const [key, text3] of Object.entries(values)) {
     const def = QUICK_FIELDS.find((d) => d.key === key);
-    if (def) form[def.field] = text2;
-    else rest[key] = text2;
+    if (def) form[def.field] = text3;
+    else rest[key] = text3;
   }
   return { form, rest };
 }
@@ -24741,8 +24769,8 @@ function recentGripTimes(list2, today, count = GRIP_WINDOW_COUNT) {
   return list2.filter((m) => m.date <= today && minutesOf2(m.time) !== null).map((m) => ({ date: m.date, time: String(m.time).trim() })).sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time)).slice(0, count).map((m) => m.time);
 }
 var TIME6 = /^([01]\d|2[0-3]):([0-5]\d)$/;
-var minutesOf2 = (time) => {
-  const m = TIME6.exec(String(time ?? "").trim());
+var minutesOf2 = (time2) => {
+  const m = TIME6.exec(String(time2 ?? "").trim());
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 };
 var clock2 = (min) => {
@@ -24773,8 +24801,8 @@ function usualGripWindow(times, minCount = GRIP_WINDOW_MIN_COUNT) {
     total: mins.length
   };
 }
-function inGripWindow(time, w) {
-  const t = minutesOf2(time);
+function inGripWindow(time2, w) {
+  const t = minutesOf2(time2);
   const s = minutesOf2(w?.start);
   if (t === null || s === null) return null;
   const diff = ((t - s) % 1440 + 1440) % 1440;
@@ -25157,8 +25185,8 @@ var PLAN_ICONS = [
 ];
 var DEFAULT_PLAN_ICON = "strength";
 var BY_KEY = new Map(PLAN_ICONS.map((i) => [i.key, i]));
-function tokens(text2) {
-  return normalizeSearch2(text2).replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter(Boolean);
+function tokens(text3) {
+  return normalizeSearch2(text3).replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter(Boolean);
 }
 function matchesAt(words, i, keyword) {
   const parts2 = keyword.split(" ");
@@ -25168,8 +25196,8 @@ function matchesAt(words, i, keyword) {
   return w === keyword || w.startsWith(keyword);
 }
 function detectPlanIcon(name, description = "") {
-  for (const text2 of [name, description]) {
-    const words = tokens(text2);
+  for (const text3 of [name, description]) {
+    const words = tokens(text3);
     for (let i = 0; i < words.length; i++) {
       let best = null;
       for (const icon of PLAN_ICONS) {
@@ -25532,10 +25560,10 @@ var RESTING_HR_NORMS = {
     ]
   }
 };
-var hrv = (ageMin, ageMax, p2, median5, p98) => {
-  const lo = (Math.log(median5) - Math.log(p2)) / 2.0537;
-  const hi = (Math.log(p98) - Math.log(median5)) / 2.0537;
-  const at = (z2) => Math.exp(Math.log(median5) + z2 * (z2 < 0 ? lo : hi));
+var hrv = (ageMin, ageMax, p2, median6, p98) => {
+  const lo = (Math.log(median6) - Math.log(p2)) / 2.0537;
+  const hi = (Math.log(p98) - Math.log(median6)) / 2.0537;
+  const at = (z2) => Math.exp(Math.log(median6) + z2 * (z2 < 0 ? lo : hi));
   const z = [-1.6449, -1.2816, -0.6745, 0, 0.6745, 1.2816, 1.6449];
   const values = z.map((x) => Math.round(at(x) * 10) / 10);
   return {
@@ -25613,8 +25641,8 @@ var BODY_FAT_NORMS = {
 function bandFor(table2, sex, age) {
   const bands = table2.bands[sex];
   if (bands.length === 0) return null;
-  const hit = bands.find((b) => age >= b.ageMin && (b.ageMax === null || age < b.ageMax));
-  if (hit) return hit;
+  const hit2 = bands.find((b) => age >= b.ageMin && (b.ageMax === null || age < b.ageMax));
+  if (hit2) return hit2;
   return age < (bands[0]?.ageMin ?? 0) ? bands[0] ?? null : bands.at(-1) ?? null;
 }
 function bandLabel(band) {
@@ -25657,8 +25685,8 @@ function assess(table2, sex, age, value2) {
   if (!band) return null;
   const { percentile, clamped } = percentileOf(band.points, value2);
   const betterThan = table2.higherIsBetter ? percentile : 100 - percentile;
-  const median5 = band.points.find(([p]) => p === 50)?.[1] ?? NaN;
-  return { percentile, betterThan, level: levelOfRank(betterThan), band, median: median5, clamped };
+  const median6 = band.points.find(([p]) => p === 50)?.[1] ?? NaN;
+  return { percentile, betterThan, level: levelOfRank(betterThan), band, median: median6, clamped };
 }
 function rankText(result, sex) {
   const group = `${sex === "male" ? "der M\xE4nner" : "der Frauen"} ${bandLabel(result.band)}`;
@@ -30121,8 +30149,8 @@ function stepsByTime(json, size = 60) {
 var pad3 = (n3) => String(n3).padStart(2, "0");
 function bucketLabel(start, size) {
   const end = start + size;
-  const clock6 = (m) => m >= 1440 ? "24:00" : `${pad3(Math.floor(m / 60))}:${pad3(m % 60)}`;
-  return `${clock6(start)}\u2013${clock6(end)}`;
+  const clock7 = (m) => m >= 1440 ? "24:00" : `${pad3(Math.floor(m / 60))}:${pad3(m % 60)}`;
+  return `${clock7(start)}\u2013${clock7(end)}`;
 }
 
 // src/domain/supplementSleep.ts
@@ -30257,8 +30285,8 @@ function minutesOf3(measuredAt, date) {
   const ms = Date.parse(`${d}T00:00:00Z`) - Date.parse(`${date}T00:00:00Z`);
   return t + Math.round(ms / 6e4 / DAY_MIN2) * DAY_MIN2;
 }
-function mealGlucose(date, time, readings) {
-  const start = minutesOfDay(time);
+function mealGlucose(date, time2, readings) {
+  const start = minutesOfDay(time2);
   if (start === null) return null;
   const points2 = readings.map((r2) => ({ at: minutesOf3(r2.measuredAt, date), v: r2.mgDl })).filter((p) => p.at !== null).sort((a, b) => a.at - b.at);
   const before = points2.filter((p) => p.at >= start - BASE_WINDOW && p.at <= start);
@@ -30316,14 +30344,14 @@ function sessionsOf(entries) {
   return out.map((s, i) => ({ s, i })).sort((a, b) => a.s.date.localeCompare(b.s.date) || a.i - b.i).map(({ s }) => s);
 }
 function recordHistory(log) {
-  const byExercise = /* @__PURE__ */ new Map();
+  const byExercise2 = /* @__PURE__ */ new Map();
   for (const s of log) {
-    const list2 = byExercise.get(s.exerciseId) ?? [];
+    const list2 = byExercise2.get(s.exerciseId) ?? [];
     list2.push(s);
-    byExercise.set(s.exerciseId, list2);
+    byExercise2.set(s.exerciseId, list2);
   }
   const events = [];
-  for (const [exerciseId, entries] of byExercise) {
+  for (const [exerciseId, entries] of byExercise2) {
     const category = entries[0]?.exerciseCategory;
     const name = entries[0]?.exerciseName ?? "";
     const sessions2 = sessionsOf(entries);
@@ -30384,16 +30412,16 @@ function recordHistory(log) {
 var MIN_NIGHTS2 = 3;
 var DAY2 = 1440;
 var NOON = 720;
-function clock3(time) {
-  const m = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
+function clock3(time2) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(time2.trim());
   if (!m) return null;
   const h = Number(m[1]);
   const min = Number(m[2]);
   if (h > 23 || min > 59) return null;
   return h * 60 + min;
 }
-function bedAxis(time) {
-  const c = clock3(time);
+function bedAxis(time2) {
+  const c = clock3(time2);
   return c === null ? null : (c - NOON + DAY2) % DAY2;
 }
 function axisClock(value2) {
@@ -30657,9 +30685,9 @@ var NAVY2 = hex("#0B1F3A");
 var ORANGE = hex("#F39A22");
 var WHITE2 = [1, 1, 1];
 var LIGHT = [0.75, 0.82, 0.9];
-function fit2(text2, max, size, bold = false) {
-  if (textWidth(text2, size, bold) <= max) return text2;
-  let t = text2;
+function fit2(text3, max, size, bold = false) {
+  if (textWidth(text3, size, bold) <= max) return text3;
+  let t = text3;
   while (t.length > 1 && textWidth(`${t}\u2026`, size, bold) > max) t = t.slice(0, -1);
   return `${t.trimEnd()}\u2026`;
 }
@@ -30679,11 +30707,11 @@ var Writer2 = class {
     this.page.text(A4_W - M3, 18, this.title, { size: 8, color: LIGHT, align: "right" });
     this.y = 48;
   }
-  heading(text2) {
+  heading(text3) {
     this.ensure(44);
     this.y += 10;
     this.page.rect(M3, this.y, 4, 18, { fill: ORANGE, radius: 2 });
-    this.page.text(M3 + 12, this.y + 14, text2, { size: 14, bold: true, color: INK2 });
+    this.page.text(M3 + 12, this.y + 14, text3, { size: 14, bold: true, color: INK2 });
     this.y += 30;
   }
 };
@@ -30741,10 +30769,10 @@ function periodReviewToPdf(r2, opts) {
     xs.push(acc);
     acc += c.w * CW2;
   }
-  const cell2 = (i, y, text2, bold = false, color = INK2) => {
+  const cell2 = (i, y, text3, bold = false, color = INK2) => {
     const c = cols[i];
     const x = c.align === "right" ? (xs[i] ?? M3) + c.w * CW2 - 6 : (xs[i] ?? M3) + 6;
-    w.page.text(x, y, text2, { size: 8.5, bold, color, align: c.align });
+    w.page.text(x, y, text3, { size: 8.5, bold, color, align: c.align });
   };
   w.ensure(22);
   w.page.rect(M3, w.y, CW2, 20, { fill: NAVY2, radius: 4 });
@@ -31181,7 +31209,7 @@ function changeOf(series2) {
     if (p.value > max.value) max = p;
     sum += p.value;
   }
-  const mean11 = sum / pts.length;
+  const mean12 = sum / pts.length;
   let change2 = null;
   let base = null;
   let basis;
@@ -31210,7 +31238,7 @@ function changeOf(series2) {
     last,
     min,
     max,
-    mean: mean11,
+    mean: mean12,
     change: change2,
     changePercent: change2 !== null && base !== null && base !== 0 ? change2 / Math.abs(base) * 100 : null,
     basis
@@ -31751,17 +31779,17 @@ var Layout2 = class {
     }
     return false;
   }
-  heading(text2, color = INK3) {
+  heading(text3, color = INK3) {
     this.ensure(40);
     this.y += 8;
     this.page.rect(M4, this.y, 4, 18, { fill: color, radius: 2 });
-    this.page.text(M4 + 12, this.y + 14, text2, { size: 15, bold: true, color: INK3 });
+    this.page.text(M4 + 12, this.y + 14, text3, { size: 15, bold: true, color: INK3 });
     this.y += 30;
   }
 };
-function fitText(text2, max, size, bold = false) {
-  if (textWidth(text2, size, bold) <= max) return text2;
-  let t = text2;
+function fitText(text3, max, size, bold = false) {
+  if (textWidth(text3, size, bold) <= max) return text3;
+  let t = text3;
   while (t.length > 1 && textWidth(`${t}\u2026`, size, bold) > max) t = t.slice(0, -1);
   return `${t.trimEnd()}\u2026`;
 }
@@ -31890,12 +31918,12 @@ function dailySection(l, report) {
 function sparkline(p, c, from, to, x, y, w, h, color) {
   const t0 = Date.parse(from);
   const t1 = Date.parse(to);
-  const span = Math.max(1, t1 - t0);
+  const span2 = Math.max(1, t1 - t0);
   const pts = [...c.series.points].sort((a, b) => a.date.localeCompare(b.date));
   const lo = c.min.value;
   const hi = c.max.value;
   const range = hi - lo || Math.max(1, Math.abs(hi) * 0.1);
-  const px = (d) => x + (Date.parse(d) - t0) / span * w;
+  const px = (d) => x + (Date.parse(d) - t0) / span2 * w;
   const py = (v) => hi === lo ? y + h / 2 : y + h - (v - lo) / range * h;
   p.line(x, y + h, x + w, y + h, LINE4, 0.5);
   const coords = pts.map((pt) => [px(pt.date), py(pt.value)]);
@@ -32350,9 +32378,9 @@ var MACRO_NAMES = {
   other: "Sonstiges"
 };
 var tint3 = (c, amount) => [0, 1, 2].map((i) => c[i] + (1 - c[i]) * amount);
-function fit3(text2, max, size, bold = false) {
-  if (textWidth(text2, size, bold) <= max) return text2;
-  let t = text2;
+function fit3(text3, max, size, bold = false) {
+  if (textWidth(text3, size, bold) <= max) return text3;
+  let t = text3;
   while (t.length > 1 && textWidth(`${t}\u2026`, size, bold) > max) t = t.slice(0, -1);
   return `${t.trimEnd()}\u2026`;
 }
@@ -32394,8 +32422,8 @@ var Layout3 = class {
     this.page.text(M5 + 10, this.y + 11.5, title, { size: 11.5, bold: true, color: INK4 });
     this.y += 24;
   }
-  muted(text2) {
-    for (const line of wrapToWidth(text2, CONTENT_W3, 9)) {
+  muted(text3) {
+    for (const line of wrapToWidth(text3, CONTENT_W3, 9)) {
       this.ensure(14);
       this.page.text(M5, this.y + 9, line, { size: 9, color: MUTED4 });
       this.y += 13;
@@ -32458,13 +32486,13 @@ function overview(l, days3) {
     let x = M5 + ROW_PAD;
     cells.forEach((cell2, i) => {
       const c = cols[i];
-      const span = opts.span && i === 1;
-      const tx = c.align === "right" && !span ? x + c.w : x + (span ? 8 : 0);
-      l.page.text(tx, l.y + 10.5, span ? cell2 : fit3(cell2, c.w - 4, 8.5, opts.bold), {
+      const span2 = opts.span && i === 1;
+      const tx = c.align === "right" && !span2 ? x + c.w : x + (span2 ? 8 : 0);
+      l.page.text(tx, l.y + 10.5, span2 ? cell2 : fit3(cell2, c.w - 4, 8.5, opts.bold), {
         size: 8.5,
         bold: opts.bold,
         color: opts.colors?.[i] ?? (opts.muted ? MUTED4 : INK4),
-        align: span ? "left" : c.align
+        align: span2 ? "left" : c.align
       });
       x += c.w;
     });
@@ -32648,10 +32676,10 @@ function needBlock(l, d) {
   let lx = barX;
   const ly = intakeY + barH + 15;
   for (const seg of n3.segments) {
-    const text2 = `${MACRO_NAMES[seg.key] ?? seg.key} ${formatKcal(seg.kcal)}`;
+    const text3 = `${MACRO_NAMES[seg.key] ?? seg.key} ${formatKcal(seg.kcal)}`;
     p.rect(lx, ly - 6.5, 7, 7, { fill: MACRO_COLORS[seg.key] ?? MUTED4, radius: 1.5 });
-    p.text(lx + 10, ly, text2, { size: 7.5, color: MUTED4 });
-    lx += 10 + textWidth(text2, 7.5) + 12;
+    p.text(lx + 10, ly, text3, { size: 7.5, color: MUTED4 });
+    lx += 10 + textWidth(text3, 7.5) + 12;
   }
   p.line(lx, ly - 7, lx, ly + 1, INK4, 1, 2);
   p.text(lx + 5, ly, n3.label, { size: 7.5, color: MUTED4 });
@@ -32861,8 +32889,8 @@ function mealsBlock(l, d) {
       }
     }
     if (m.direct.length > 0) {
-      const text2 = `Fasttracking: ${m.direct.map((v) => `${v.label} ${v.value}`).join(" \xB7 ")}`;
-      for (const line of wrapToWidth(text2, CONTENT_W3 - 16, 8)) {
+      const text3 = `Fasttracking: ${m.direct.map((v) => `${v.label} ${v.value}`).join(" \xB7 ")}`;
+      for (const line of wrapToWidth(text3, CONTENT_W3 - 16, 8)) {
         l.ensure(12);
         l.page.text(M5 + 8, l.y + 9, line, { size: 8, color: MUTED4 });
         l.y += 11;
@@ -34007,6 +34035,43 @@ var APP_FAQ = [
     keywords: ["wochenziel", "hauptziel", "empfehlung", "fettabbau", "muskelaufbau"]
   },
   {
+    id: "was-ist-das-trainingsprofil",
+    area: "Insights & Ziele",
+    device: "beide",
+    question: "Was ist das Trainingsprofil?",
+    answer: "Unter Settings \u2192 Trainingsprofil stehen freiwillige Angaben zu deinem Training: Ziel, Phase, Erfahrung, Tage und Zeit, Schwerpunkte, Einschr\xE4nkungen und ausgeschlossene \xDCbungen. Danach gelten bzw. ruhen die Trainingsregeln in Insights \u2192 Training \u2013 z. B. meldet ein Muskel mit \u201Ebewusst wenig\u201C kein zu geringes Volumen, und eine Einschr\xE4nkung an der Schulter l\xE4sst Regeln mit \xDCberkopf-\xDCbungen ruhen.",
+    keywords: [
+      "trainingsprofil",
+      "schwerpunkt",
+      "verletzung",
+      "einschr\xE4nkung",
+      "ausgeschlossene \xFCbung"
+    ]
+  },
+  {
+    id: "wie-halte-ich-schmerzen-fest",
+    area: "Insights & Ziele",
+    device: "beide",
+    question: "Wie halte ich Schmerzen fest?",
+    answer: "Schreib den Schmerz einfach in eine Notiz \u2013 z. B. beim Satz, bei Recovery oder beim Schlaf: \u201ESchulter rechts tut weh\u201C. Steht keine Stufe dabei, fragt die App unter dem Feld nach der Einordnung von 1 bis 10 und h\xE4ngt sie an (\u201ESchmerz 6/10\u201C). \u201EStark\u201C, \u201Emassiv\u201C, \u201Ehart\u201C oder \u201Eintensiv\u201C z\xE4hlt ohne Zahl als mindestens 5; \u201Ekeine Schmerzen\u201C z\xE4hlt nicht. Insights \u2192 Training zeigt dazu die passende Regel. Das ist keine Diagnose.",
+    keywords: ["schmerz", "weh", "verletzung", "schmerzskala", "notiz", "beschwerden"]
+  },
+  {
+    id: "woher-kommen-die-trainingsregeln",
+    area: "Insights & Ziele",
+    device: "beide",
+    question: "Woher kommen die Trainingsregeln in Insights \u2192 Training?",
+    answer: "Aus einer freigegebenen Tabelle mit Regeln zu \xDCbungsauswahl, Volumen, Frequenz, Intensit\xE4t, Wiederholungen und Trainingsmodellen. Jede Regel nennt, auf welche deiner Einheiten sie sich st\xFCtzt, und ihre Quellen. Empfehlung und Begr\xFCndung erscheinen nur mit Einwilligung (Settings \u2192 Hauptziele). Die App \xE4ndert deinen Plan nicht selbst.",
+    keywords: [
+      "trainingsregel",
+      "regelkatalog",
+      "volumen",
+      "\xFCbungsauswahl",
+      "split",
+      "trainingsmodell"
+    ]
+  },
+  {
     id: "wie-erstelle-ich-einen-datenauszug-fuer-einen-ze",
     area: "Insights & Ziele",
     device: "pc",
@@ -34228,23 +34293,23 @@ var STOP2 = new Set(
     " "
   )
 );
-function foldFaq(text2) {
-  return text2.toLowerCase().replace(/ß/g, "ss").replace(/ae/g, "\xE4").replace(/oe/g, "\xF6").replace(/ue/g, "\xFC").replace(/[„“”"'’()?!.,:;/→–-]+/g, " ").replace(/\s+/g, " ").trim();
+function foldFaq(text3) {
+  return text3.toLowerCase().replace(/ß/g, "ss").replace(/ae/g, "\xE4").replace(/oe/g, "\xF6").replace(/ue/g, "\xFC").replace(/[„“”"'’()?!.,:;/→–-]+/g, " ").replace(/\s+/g, " ").trim();
 }
 var FOLDED_SYNONYMS = SYNONYMS.map((g2) => g2.map(foldFaq));
 function expandWord(word) {
   const w = foldFaq(word);
   const out = /* @__PURE__ */ new Set([w]);
   for (const group of FOLDED_SYNONYMS) {
-    const hit = group.some(
+    const hit2 = group.some(
       (s) => s === w || w.length >= 4 && s.startsWith(w) || s.length >= 4 && w.startsWith(s)
     );
-    if (hit) for (const s of group) out.add(s);
+    if (hit2) for (const s of group) out.add(s);
   }
   return [...out];
 }
-function fieldOf2(text2) {
-  const t = foldFaq(text2);
+function fieldOf2(text3) {
+  const t = foldFaq(text3);
   return { text: t, words: t.split(" ") };
 }
 function has2(f, alt) {
@@ -34338,9 +34403,9 @@ function openTabs(items, section) {
 function marksMatch(items, tokens2) {
   const list2 = tokens2.split(/\s+/).filter(Boolean);
   if (list2.length === 0) return false;
-  const hit = (name, t) => t.endsWith("*") ? name.startsWith(t.slice(0, -1)) : name === t;
+  const hit2 = (name, t) => t.endsWith("*") ? name.startsWith(t.slice(0, -1)) : name === t;
   return items.some(
-    (i) => list2.some((t) => hit(i.key, t) || (i.fields ?? []).some((f) => hit(f, t)))
+    (i) => list2.some((t) => hit2(i.key, t) || (i.fields ?? []).some((f) => hit2(f, t)))
   );
 }
 function openAnchors(items) {
@@ -34600,10 +34665,10 @@ function foodLine(i) {
 function trainingLine(i) {
   const t = i.training;
   if (t.done.length) {
-    const text2 = t.done.map(
+    const text3 = t.done.map(
       (w) => `${w.title}${w.running ? " (l\xE4uft)" : ""} \xB7 ${w.setCount} ${w.setCount === 1 ? "Arbeitssatz" : "Arbeitss\xE4tze"}`
     ).join(" \xB7 ");
-    return { key: "training", label: "Training", value: text2, state: "ok" };
+    return { key: "training", label: "Training", value: text3, state: "ok" };
   }
   if (t.dayKind === "rest")
     return { key: "training", label: "Training", value: "Restday", state: "ok" };
@@ -34720,7 +34785,7 @@ var round5 = (v, digits) => Math.round(v * 10 ** digits) / 10 ** digits;
 function blsFill(food, empty2, hasAminos, limits = { carbsG: null, fatG: null }) {
   const byCode = new Map(food.values.map((v) => [v.code, v]));
   const values = {};
-  const labels = [];
+  const labels2 = [];
   const cap = (field, v) => {
     const top = field === "sugarG" || field === "starchG" ? limits.carbsG : field === "saturatedFatG" || field === "monoFatG" || field === "polyFatG" ? limits.fatG : 100;
     return top === null ? Math.min(100, v) : Math.min(top, v);
@@ -34732,7 +34797,7 @@ function blsFill(food, empty2, hasAminos, limits = { carbsG: null, fatG: null })
     const amount = v?.amount != null ? v.amount : v?.flag ? 0 : null;
     if (amount === null) continue;
     values[key] = round5(cap(key, amount), 2);
-    labels.push(label);
+    labels2.push(label);
   }
   let aminos = null;
   if (!hasAminos) {
@@ -34743,10 +34808,10 @@ function blsFill(food, empty2, hasAminos, limits = { carbsG: null, fatG: null })
     }
     if (Object.keys(out).length > 0) {
       aminos = out;
-      labels.push("Aminos\xE4uren");
+      labels2.push("Aminos\xE4uren");
     }
   }
-  return { values, aminos, labels };
+  return { values, aminos, labels: labels2 };
 }
 var BLS_LINK = "BLS-Bezug: Code";
 function withBlsLink(notes, code) {
@@ -34830,8 +34895,8 @@ function median(values) {
 }
 function sampleSd2(values) {
   if (values.length < 2) return 0;
-  const mean11 = values.reduce((a, v) => a + v, 0) / values.length;
-  const sq = values.reduce((a, v) => a + (v - mean11) ** 2, 0);
+  const mean12 = values.reduce((a, v) => a + v, 0) / values.length;
+  const sq = values.reduce((a, v) => a + (v - mean12) ** 2, 0);
   return Math.sqrt(sq / (values.length - 1));
 }
 function positionOf(value2, low, high) {
@@ -34969,7 +35034,7 @@ function lateTraining(workouts, sleep) {
       `${formatNumber(Math.abs(latencyDiff), 0)} Minuten ${latencyDiff > 0 ? "l\xE4nger" : "k\xFCrzer"} zum Einschlafen gebraucht`
     );
   }
-  const text2 = `Nach sp\xE4tem Training (Ende weniger als 3 Stunden vor deiner \xFCblichen Zubettgehzeit um ${clock4(usualBed)} Uhr) hast du im Mittel ${parts2.join(" und ")} als nach fr\xFCherem Training (${late.length} sp\xE4te, ${early.length} fr\xFChere Trainingstage).`;
+  const text3 = `Nach sp\xE4tem Training (Ende weniger als 3 Stunden vor deiner \xFCblichen Zubettgehzeit um ${clock4(usualBed)} Uhr) hast du im Mittel ${parts2.join(" und ")} als nach fr\xFCherem Training (${late.length} sp\xE4te, ${early.length} fr\xFChere Trainingstage).`;
   return {
     kind: "ok",
     late: late.length,
@@ -34978,7 +35043,7 @@ function lateTraining(workouts, sleep) {
     sleepDiff,
     latencyDiff,
     notable,
-    text: text2
+    text: text3
   };
 }
 
@@ -35386,9 +35451,9 @@ function nameText(m) {
   return t;
 }
 function nameTokens(m) {
-  const text2 = nameText(m);
-  const words = text2.split(/[^a-z0-9]+/).filter((w) => w && !STOP4.has(w));
-  const compact = compactSearch(text2);
+  const text3 = nameText(m);
+  const words = text3.split(/[^a-z0-9]+/).filter((w) => w && !STOP4.has(w));
+  const compact = compactSearch(text3);
   const groups = [];
   COMPACT_GROUPS2.forEach((terms, i) => {
     if (terms.some((t) => t.length >= 5 && compact.includes(t))) groups.push(`#g${i}`);
@@ -35479,9 +35544,9 @@ __export(gymShare_exports, {
 var BUNDLE_FORMAT = "lifespan-studios";
 var PHOTO_MAX_SIDE = 480;
 var PHOTO_QUALITY = 0.72;
-function parseBundle(text2) {
+function parseBundle(text3) {
   try {
-    const doc = JSON.parse(text2);
+    const doc = JSON.parse(text3);
     if (doc?.format !== BUNDLE_FORMAT || !Array.isArray(doc.studios)) return null;
     return { ...doc, machines: Array.isArray(doc.machines) ? doc.machines : [] };
   } catch {
@@ -35713,12 +35778,12 @@ function startArranger(o) {
     const e = entry2();
     for (const g2 of collectGroups(o.root)) {
       const natural = g2.units.map((u) => u.id);
-      const ordered = e && e.order.length ? arrangedIds(natural, e) : natural;
-      const changed = ordered.some((id4, i) => id4 !== natural[i]);
+      const ordered2 = e && e.order.length ? arrangedIds(natural, e) : natural;
+      const changed = ordered2.some((id4, i) => id4 !== natural[i]);
       const children = Array.from(g2.container.children);
       const slots = g2.units.map((u) => children.indexOf(u.el));
       const orderOf = /* @__PURE__ */ new Map();
-      ordered.forEach((id4, k) => {
+      ordered2.forEach((id4, k) => {
         const u = g2.units.find((x) => x.id === id4);
         if (u) orderOf.set(u.el, slots[k] ?? k);
       });
@@ -35951,17 +36016,17 @@ function startArranger(o) {
   }
   const onDown = (ev) => {
     if (ev.button !== 0) return;
-    const hit = unitAt(ev.target);
+    const hit2 = unitAt(ev.target);
     if (arranging) {
-      if (!hit) return;
+      if (!hit2) return;
       ev.preventDefault();
-      beginDrag(hit.unit, hit.group, ev.pointerId, ev.clientX, ev.clientY);
+      beginDrag(hit2.unit, hit2.group, ev.pointerId, ev.clientX, ev.clientY);
       return;
     }
-    if (!hit || ev.target.closest(INTERACTIVE)) return;
+    if (!hit2 || ev.target.closest(INTERACTIVE)) return;
     cancelPending();
     html.dataset.arrangePending = "1";
-    const p = { unit: hit.unit, x: ev.clientX, y: ev.clientY, id: ev.pointerId, timer: 0 };
+    const p = { unit: hit2.unit, x: ev.clientX, y: ev.clientY, id: ev.pointerId, timer: 0 };
     p.timer = window.setTimeout(() => {
       if (pending !== p) return;
       pending = null;
@@ -36248,10 +36313,10 @@ function restStats(log, today, weeks = 4) {
   }
   rests.sort((a, b) => a - b);
   const m = Math.floor(rests.length / 2);
-  const median5 = rests.length === 0 ? null : rests.length % 2 === 1 ? rests[m] : (rests[m - 1] + rests[m]) / 2;
+  const median6 = rests.length === 0 ? null : rests.length % 2 === 1 ? rests[m] : (rests[m - 1] + rests[m]) / 2;
   return {
     n: rests.length,
-    medianSeconds: median5 === null ? null : Math.round(median5),
+    medianSeconds: median6 === null ? null : Math.round(median6),
     sessions: sessions2.size
   };
 }
@@ -36356,12 +36421,12 @@ function trainingRuleHits(log, today, rules = TRAINING_RULES, minSessions = RULE
     entry2.patterns.set(p, names);
     sessions2.set(s.workoutId, entry2);
   }
-  const ordered = [...sessions2.entries()].sort(
+  const ordered2 = [...sessions2.entries()].sort(
     (a, b) => b[1].date.localeCompare(a[1].date) || b[0].localeCompare(a[0])
   );
   const hits = [];
   for (const rule of rules) {
-    const relevant = ordered.filter(([, e]) => rule.group.some((g2) => e.patterns.has(g2))).slice(0, minSessions);
+    const relevant = ordered2.filter(([, e]) => rule.group.some((g2) => e.patterns.has(g2))).slice(0, minSessions);
     if (relevant.length < minSessions) continue;
     if (!relevant.every(([, e]) => rule.group.every((g2) => g2 === rule.only || !e.patterns.has(g2))))
       continue;
@@ -36381,6 +36446,6324 @@ function trainingRuleHits(log, today, rules = TRAINING_RULES, minSessions = RULE
   return hits;
 }
 
+// src/domain/trainingCatalog.ts
+var trainingCatalog_exports = {};
+__export(trainingCatalog_exports, {
+  GUARD_GROUP: () => GUARD_GROUP,
+  RULE_GROUPS: () => RULE_GROUPS,
+  TRAINING_CATALOG: () => TRAINING_CATALOG,
+  approvedModel: () => approvedModel,
+  approvedRule: () => approvedRule,
+  approvedSplit: () => approvedSplit,
+  guardRules: () => guardRules,
+  isApproved: () => isApproved,
+  ruleSources: () => ruleSources,
+  sourceText: () => sourceText
+});
+
+// src/data/trainingsregeln.json
+var trainingsregeln_default = {
+  source: "Trainingsregeln-freigegeben-2026-11-28.ods",
+  approvedOn: "2026-11-28",
+  rules: [
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-001",
+      status: "freigegeben",
+      area: "Beinbeuger",
+      condition: "In den letzten Einheiten mit Beinbeuger-\xDCbung nur liegender (bzw. stehender) Beinbeuger, kein sitzender",
+      metric: "Bewegungsmuster leg_curl_lying ohne leg_curl_seated",
+      threshold: "3 Einheiten mit Beinbeuger-Muster",
+      period: "laufend (letzte Einheiten)",
+      recommendation: "Sitzenden Beinbeuger in den Plan aufnehmen (Schl\xFCssel\xFCbung), 2\u20133 \xD7 8\u201312 mit 1\u20132 RIR.",
+      reason: "Sitzend ist die H\xFCfte gebeugt \u2013 die zweigelenkigen Beinbeuger arbeiten unter Last in gedehnter Position. In 12 Wochen wuchsen die Beinbeuger sitzend um 14,1 % statt 9,3 % liegend, der lange Bizeps-femoris-Kopf um 14,4 % statt 6,5 %.",
+      alternative: "Liegend (H\xFCfte gestreckt) bleibt wirksam (+9,3 %) und belastet den Muskel eher in verk\xFCrzter Position; Nordic Curls (in der App unter \u201Eliegend\u201C) erh\xF6hten die Sarkomere in Serie um 25\u201349 % \u2013 gut als Erg\xE4nzung, wenn kein sitzendes Ger\xE4t da ist.",
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: "\xDCbung ausgeschlossen / Verletzung; Ger\xE4t fehlt im aktiven Gym \u2192 Alternative Rum\xE4nisches Kreuzheben nennen",
+      sourceIds: [
+        "Q-MC",
+        "Q-01",
+        "Q-17"
+      ],
+      masterclassRef: "Teil I Kap. 6 (S. 25\u201326) und Kap. 17 (S. 56)",
+      evidence: "hoch",
+      dataNote: "vorhanden (Bewegungsmuster je Maschine/\xDCbung)",
+      review: "Schwelle 3 Einheiten vom Nutzer (25.11.2026).",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-002",
+      status: "freigegeben",
+      area: "Beinbeuger",
+      condition: "Nur sitzender Beinbeuger, nie liegender bzw. Nordic Curl",
+      metric: "leg_curl_seated ohne leg_curl_lying",
+      threshold: "3 Einheiten mit Beinbeuger-Muster",
+      period: "laufend",
+      recommendation: "Optional: liegenden Beinbeuger oder Nordic Curls erg\xE4nzen (z. B. 2 \xD7 8\u201312 bzw. Nordic 2\u20133 \xD7 pro Woche \xFCber \u2265 8 Wochen).",
+      reason: "Abwechslung der Gelenkstellung trainiert den Muskel auch in verk\xFCrzter Position; Nordic Curls erh\xF6hten die Sarkomere in Serie deutlich (bis +49 %), Faszikel schrumpften nach 3 Wochen Pause wieder um 12\u201316 %.",
+      alternative: "Sitzend bleibt die wirksamere Haupt\xFCbung (+14,1 % vs. +9,3 %) \u2013 nicht ersetzen, nur erg\xE4nzen.",
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: "\xDCbung ausgeschlossen / Verletzung",
+      sourceIds: [
+        "Q-MC",
+        "Q-01",
+        "Q-17"
+      ],
+      masterclassRef: "Teil I Kap. 6 (S. 25\u201326)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: "ENTSCHEIDEN: Die Masterclass empfiehlt als zweite Beinbeuger-\xDCbung das Rum\xE4nische Kreuzheben (TR-UE-003), nicht den liegenden Beinbeuger. Regel behalten (Wunsch: beide Richtungen) oder sperren? Der liegende Beinbeuger ist ebenfalls eine Option die angboten werden kann. Liegender Beinbeuger (Lying Leg Curl)\n\n* H\xFCftposition: Die H\xFCfte ist weitgehend gestreckt.\n* Muskelspannung: Die Hamstrings starten in einer weniger stark vorgedehnten, eher verk\xFCrzten Position.\n* Praxis & Komfort: Oft angenehm f\xFCr Einsteiger, im Deload oder wenn eine sitzende Maschine nicht optimal passt.\n* Einsatz im Plan: Gut geeignet als Erg\xE4nzung im Trainingsplan oder f\xFCr einseitiges (unilaterales) Arbeiten, je nach Ger\xE4t.",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-003",
+      status: "freigegeben",
+      area: "Beinbeuger",
+      condition: "Keine \xDCbung mit H\xFCftstreckung f\xFCr die Beinbeuger (Rum\xE4nisches Kreuzheben o. \xE4.)",
+      metric: "kein Muster deadlift (bzw. back_extension) neben leg_curl_*",
+      threshold: "3 Einheiten mit Beinbeuger-Muster",
+      period: "laufend",
+      recommendation: "Rum\xE4nisches Kreuzheben als zweite Beinbeuger-\xDCbung aufnehmen (2\u20133 \xD7 6\u201310, 1\u20133 RIR).",
+      reason: "Die Beinbeuger beugen das Knie UND strecken die H\xFCfte. Kniebeugen und Hip Thrusts trainieren die Beinbeuger kaum \u2013 die H\xFCftstreckung braucht eine eigene \xDCbung.",
+      alternative: "Wer nur Kreuzheben macht, erg\xE4nzt umgekehrt den sitzenden Beinbeuger (TR-UE-001).",
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: "R\xFCcken-/Bandscheibenbeschwerden im Profil",
+      sourceIds: [
+        "Q-MC",
+        "Q-12",
+        "Q-13"
+      ],
+      masterclassRef: "Teil I Kap. 2 (S. 14), Kap. 17 (S. 56\u201357)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-004",
+      status: "freigegeben",
+      area: "Trizeps",
+      condition: "Nur Pushdowns/Dips (neutrale Armposition), keine \xDCberkopf-\xDCbung",
+      metric: "triceps bzw. dip ohne triceps_overhead",
+      threshold: "3 Einheiten mit Trizeps-Muster",
+      period: "laufend",
+      recommendation: "Mindestens eine \xDCberkopf-Extension aufnehmen (einarmig am Kabel, Kurzhantel, Overhead-Rope).",
+      reason: "\xDCber Kopf ist der zweigelenkige lange Kopf gedehnt. In 12 Wochen wuchs der Trizeps \xFCber Kopf um 19,9 % statt 13,9 %, der lange Kopf um 28,5 % statt 19,6 % \u2013 bei 34\u201339 % weniger Gewicht.",
+      alternative: "Pushdowns und Dips bleiben sinnvoll f\xFCr schwere Lasten und Kraft; ideal ist die Kombination.",
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: "Schulterbeschwerden im Profil",
+      sourceIds: [
+        "Q-MC",
+        "Q-02"
+      ],
+      masterclassRef: "Teil I Kap. 6 (S. 25), Kap. 17 (S. 55)",
+      evidence: "hoch",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-005",
+      status: "freigegeben",
+      area: "Waden",
+      condition: "Nur sitzendes Wadenheben",
+      metric: "calf_seated ohne calf_standing",
+      threshold: "3 Einheiten mit Waden-Muster",
+      period: "laufend",
+      recommendation: "Wadenheben mit gestrecktem Knie (stehend oder an der Beinpresse) aufnehmen, tief in die Dehnung, kurz halten; am Satzende Teilwiederholungen unten.",
+      reason: "Sitzend (Knie gebeugt) ist der zweigelenkige Gastrocnemius schon verk\xFCrzt: er wuchs sitzend um ~1 %, stehend um 9\u201312 %; der Soleus legte in beiden Varianten gleich zu. Teilwiederholungen im gedehnten Bereich: +15 % vs. +7 % voll.",
+      alternative: "Sitzendes Wadenheben nur erg\xE4nzend (Soleus).",
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: "Achillessehnenbeschwerden im Profil",
+      sourceIds: [
+        "Q-MC",
+        "Q-03",
+        "Q-04"
+      ],
+      masterclassRef: "Teil I Kap. 2 (S. 13), Kap. 17 (S. 56)",
+      evidence: "hoch",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-006",
+      status: "freigegeben",
+      area: "Quadrizeps",
+      condition: "Nur Mehrgelenks\xFCbungen (Beinpresse, Kniebeuge/Hack, Belt Squat), kein Beinstrecker",
+      metric: "leg_press/hack_squat/belt_squat ohne leg_extension (bzw. sissy_squat)",
+      threshold: "3 Einheiten mit Quadrizeps-Muster",
+      period: "laufend",
+      recommendation: "Beinstrecker aufnehmen, Lehne nach hinten geneigt (etwa 40\xB0 H\xFCftwinkel), 2 \xD7 10\u201315.",
+      reason: "Der Rectus femoris (beugt auch die H\xFCfte) wuchs am Beinstrecker um 13,2 %, an der Beinpresse nur um 1,1 %. Mit zur\xFCckgelehnter Lehne wuchs der obere Rectus femoris um 12,4 % statt 4,6 % aufrecht.",
+      alternative: "Mehrgelenks\xFCbungen bleiben die Basis f\xFCr Vasti, Ges\xE4\xDF und Adduktoren (TR-UE-007).",
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: "Kniebeschwerden im Profil",
+      sourceIds: [
+        "Q-MC",
+        "Q-05",
+        "Q-06"
+      ],
+      masterclassRef: "Teil I Kap. 2 (S. 13), Kap. 17 (S. 56)",
+      evidence: "hoch",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-007",
+      status: "freigegeben",
+      area: "Quadrizeps / Ges\xE4\xDF",
+      condition: "Nur Beinstrecker, keine Mehrgelenks\xFCbung f\xFCr die Beine",
+      metric: "leg_extension ohne leg_press/hack_squat/belt_squat/step_up",
+      threshold: "3 Einheiten mit Quadrizeps-Muster",
+      period: "laufend",
+      recommendation: "Beinpresse oder tiefe Kniebeuge aufnehmen (3 \xD7 5\u201312).",
+      reason: "Die Beinpresse baute Ges\xE4\xDF (+15,4 %) und Adductor magnus (+6,2 %) auf, der Beinstrecker praktisch nicht. Grund- und Isolations\xFCbungen erg\xE4nzen sich.",
+      alternative: "Beinstrecker behalten f\xFCr den Rectus femoris.",
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: "Knie-/H\xFCftbeschwerden im Profil",
+      sourceIds: [
+        "Q-MC",
+        "Q-05"
+      ],
+      masterclassRef: "Teil I Kap. 2 (S. 13)",
+      evidence: "hoch",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-008",
+      status: "freigegeben",
+      area: "Obere Brust",
+      condition: "Nur Flach- bzw. Negativdr\xFCcken, keine Schr\xE4gbank",
+      metric: "press_flat/press_decline ohne press_incline",
+      threshold: "3 Einheiten mit Brust-Muster",
+      period: "laufend",
+      recommendation: "Schr\xE4gbankdr\xFCcken mit etwa 30\xB0 (Bereich 15\u201345\xB0) aufnehmen.",
+      reason: "Der obere (Schl\xFCsselbein-)Anteil ist bei etwa 30\xB0 am aktivsten; \xFCber 45\xB0 \xFCbernimmt zunehmend die vordere Schulter. Mit Schr\xE4gbank wuchs die obere Brust etwas st\xE4rker als mit Flachbank.",
+      alternative: "\u201E\u221245\xB0 f\xFCr unten\u201C ist nicht durch Wachstumsdaten belegt \u2013 keine Empfehlung f\xFCr Negativdr\xFCcken.",
+      display: "Insights + Planung",
+      appliesTo: "Muskelaufbau",
+      exceptions: "Schulterbeschwerden im Profil",
+      sourceIds: [
+        "Q-MC",
+        "Q-07",
+        "Q-08"
+      ],
+      masterclassRef: "Teil I Kap. 2 (S. 13\u201314), Kap. 17 (S. 55)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-009",
+      status: "freigegeben",
+      area: "Brust",
+      condition: "Nur Druck\xFCbungen, keine Fly-Bewegung",
+      metric: "press_* ohne fly",
+      threshold: "3 Einheiten mit Brust-Muster",
+      period: "laufend",
+      recommendation: "Butterfly / Pec Deck mit Fokus auf die Dehnung erg\xE4nzen (2\u20133 \xD7 10\u201315).",
+      reason: "Butterfly trainiert oberen und mittleren Anteil \xE4hnlich gut (+17\u201321 %) und belastet die Brust in der Dehnung.",
+      alternative: null,
+      display: "Insights + Planung",
+      appliesTo: "Muskelaufbau",
+      exceptions: "Schulterbeschwerden im Profil",
+      sourceIds: [
+        "Q-MC",
+        "Q-09"
+      ],
+      masterclassRef: "Teil I Kap. 2 (S. 13), Kap. 17 (S. 55\u201357)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-010",
+      status: "freigegeben",
+      area: "Bizeps",
+      condition: "Nur eine Curl-Art (nur Incline oder nur Preacher/Scott)",
+      metric: "Muster biceps_curl + \xDCbungsname (incline/schr\xE4g bzw. preacher/scott)",
+      threshold: "3 Einheiten mit Bizeps-Muster",
+      period: "laufend",
+      recommendation: "Incline Curls und Preacher Curls kombinieren; Hammer Curls erg\xE4nzen Brachialis und Unterarm.",
+      reason: "Incline Curls (Arm hinter dem K\xF6rper) betonen eher den oberen, Preacher Curls eher den unteren Bizeps; Training im gedehnten Teil f\xF6rdert den unteren Bizeps. * Arm- und Schulterposition: Bei Incline Curls lehnst du dich an eine Schr\xE4gbank; die Arme h\xE4ngen seitlich hinter dem K\xF6rper. Das dehnt den zweigelenkigen Bizeps besonders stark \xFCber die Schulter. Bei Preacher Curls liegen die Oberarme auf einem Pult (Scott-Bank oder Maschine), was Schwung verhindert und die Schulter fixiert.\n* Widerstandsverlauf (Strength Curve): Bei Incline Curls (mit Kurzhanteln) ist die Spannung in der gestreckten Startposition gering und nimmt zur Spitze hin zu. Bei Preacher Curls ist der Widerstand oft schon im unteren Bereich hoch und l\xE4sst nach oben hin nach.\n* Muskelaufbau & Schwerpunkt: Studien zeigen, dass Incline Curls tendenziell mehr Wachstum im eher schulternahen/mittleren Bereich des Bizeps f\xF6rdern, w\xE4hrend Preacher Curls st\xE4rker auf den ellbogennahen Bereich sowie den Brachialis (und teils Brachioradialis) wirken.",
+      alternative: null,
+      display: "Insights + Planung",
+      appliesTo: "Muskelaufbau",
+      exceptions: "Schulterbeschwerden oder Verletzungen der Schulter",
+      sourceIds: [
+        "Q-MC",
+        "Q-10",
+        "Q-11"
+      ],
+      masterclassRef: "Teil I Kap. 17 (S. 55)",
+      evidence: "mittel",
+      dataNote: "teilweise \u2013 das Muster unterscheidet die Curl-Arten nicht; Erkennung \xFCber den \xDCbungsnamen",
+      review: "ENTSCHEIDEN: Erkennung nur \xFCber den \xDCbungsnamen m\xF6glich (ungenau). Behalten.",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-011",
+      status: "freigegeben",
+      area: "R\xFCcken",
+      condition: "Nur vertikales Ziehen (Latzug/Klimmzug) ODER nur Rudern",
+      metric: "pulldown ohne row bzw. row ohne pulldown",
+      threshold: "3 Einheiten mit R\xFCcken-Muster",
+      period: "laufend",
+      recommendation: "Die fehlende Zugrichtung erg\xE4nzen: Latzug/Klimmzug plus Rudern mit voller Streckung vorne.",
+      reason: "Der Latissimus zieht den Arm nach unten und hinten; der mittlere Trapez zieht das Schulterblatt zur\xFCck (Rudern). Beide Zugrichtungen decken die Funktionen ab.",
+      alternative: null,
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil I Kap. 2 (S. 14), Kap. 17 (S. 55)",
+      evidence: "gering",
+      dataNote: "vorhanden",
+      review: "Hinweis: Vergleichsstudien zum Wachstum fehlen hier, die Regel folgt der Funktionslogik der Masterclass.",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-012",
+      status: "freigegeben",
+      area: "Ges\xE4\xDF",
+      condition: "Nur Hip Thrust/Glute Kick, keine Kniebeuge, Beinpresse oder Split Squat",
+      metric: "hip_thrust/glute_kick ohne leg_press/hack_squat/belt_squat/step_up",
+      threshold: "3 Einheiten mit Ges\xE4\xDF-Muster",
+      period: "laufend",
+      recommendation: "Tiefe Kniebeuge, Beinpresse oder Bulgarian Split Squat erg\xE4nzen.",
+      reason: "Hip Thrust und Kniebeuge bauen gleich viel Ges\xE4\xDF auf \u2013 die Kniebeuge trainiert zus\xE4tzlich Quadrizeps und Adduktoren. Tiefe Kniebeugen: Ges\xE4\xDF +6,7 % statt +2,2 % bei halben.",
+      alternative: "Die Glute Bridge ist dem Hip Thrust nicht \xFCberlegen (halber Bewegungsweg) \u2013 keine Empfehlung.",
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: "Knie-/H\xFCftbeschwerden im Profil",
+      sourceIds: [
+        "Q-MC",
+        "Q-12",
+        "Q-13"
+      ],
+      masterclassRef: "Teil I Kap. 17 (S. 56)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-013",
+      status: "freigegeben",
+      area: "Seitliche Schulter",
+      condition: "Keine Seitheben-\xDCbung",
+      metric: "kein Muster lateral_raise",
+      threshold: "3 Einheiten mit Schulter-/Push-Muster",
+      period: "laufend",
+      recommendation: "Seitheben aufnehmen (Kabel oder Kurzhantel nach Wahl), 2\u20133 \xD7 10\u201315.",
+      reason: "Druck\xFCbungen trainieren vor allem die vordere Schulter; der seitliche Anteil braucht Seitheben. Kabel und Kurzhantel brachten gleiches Wachstum (+3\u20135 % in 8 Wochen).",
+      alternative: null,
+      display: "Insights + Planung",
+      appliesTo: "Muskelaufbau",
+      exceptions: "Schulterbeschwerden im Profil",
+      sourceIds: [
+        "Q-MC",
+        "Q-14"
+      ],
+      masterclassRef: "Teil I Kap. 17 (S. 55)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-014",
+      status: "freigegeben",
+      area: "Hintere Schulter",
+      condition: "Keine \xDCbung f\xFCr die hintere Schulter",
+      metric: "kein Muster reverse_fly",
+      threshold: "3 Einheiten mit Pull-/R\xFCcken-Muster",
+      period: "laufend",
+      recommendation: "Reverse Flys, Face Pulls oder Rear-Delt-Maschine aufnehmen.",
+      reason: "Der hintere Anteil hebt den Arm nach hinten \u2013 Rudern trifft ihn nur teilweise.",
+      alternative: null,
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil I Kap. 2 (S. 14), Kap. 17 (S. 55)",
+      evidence: "gering",
+      dataNote: "vorhanden",
+      review: "Funktionslogik, keine Vergleichsstudie.",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "\xDCbungsauswahl",
+      id: "TR-UE-015",
+      status: "freigegeben",
+      area: "alle Muskeln",
+      condition: "Ein trainierter Muskel hat keine \xDCbung, die ihn unter Last in die Dehnung bringt",
+      metric: "Blatt \u201EBewegungsmuster\u201C, Spalte \u201EDehnung\u201C = ja",
+      threshold: "3 Einheiten mit dem Muskel",
+      period: "laufend",
+      recommendation: "Je Muskel eine Grund\xFCbung + mindestens eine \xDCbung in der Dehnung (Baukasten Kap. 17).",
+      reason: "Muskeln wachsen h\xE4ufig st\xE4rker, wenn sie unter Last in gedehnter Position arbeiten (Beinbeuger, Trizeps, Waden, Beinstrecker zur\xFCckgelehnt). Ausl\xF6ser ist hohe Kraft bei langer Muskell\xE4nge \u2013 die Last z\xE4hlt.",
+      alternative: "Voller Bewegungsumfang bleibt Standard; Teilwiederholungen im gedehnten Drittel am Satzende optional.",
+      display: "Insights + Planung",
+      appliesTo: "Muskelaufbau",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-01",
+        "Q-02",
+        "Q-03",
+        "Q-04"
+      ],
+      masterclassRef: "Teil I Kap. 6 (S. 25\u201326), Kap. 17 (S. 56\u201357), Kap. 18 (S. 59)",
+      evidence: "hoch",
+      dataNote: "vorhanden (Zuordnung Dehnung je Muster im Blatt \u201EBewegungsmuster\u201C)",
+      review: "Zuordnung \u201EDehnung\u201C je Bewegungsmuster bitte im Blatt \u201EBewegungsmuster\u201C pr\xFCfen.",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Volumen",
+      id: "TR-VO-001",
+      status: "freigegeben",
+      area: "alle Muskeln",
+      condition: "Harte S\xE4tze je Muskel und Woche unter der Mindestdosis",
+      metric: "harte Arbeitss\xE4tze (keine Aufw\xE4rms\xE4tze; mit RPE: \u2265 7), indirekte S\xE4tze anteilig (Muskelanteile der App)",
+      threshold: "< 4 je Woche",
+      period: "2 Kalenderwochen in Folge",
+      recommendation: "Auf mindestens 4, besser 6\u201310 harte S\xE4tze pro Woche bringen.",
+      reason: "Ab etwa 4 harten S\xE4tzen pro Woche w\xE4chst ein Muskel messbar bzw. bleibt erhalten; 6\u201310 liefern sehr effizient einen gro\xDFen Teil des Effekts.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "alle Ziele",
+      exceptions: "Muskel bewusst nicht trainiert (Verletzung / Priorit\xE4t \u201Eniedrig\u201C im Profil)",
+      sourceIds: [
+        "Q-MC",
+        "Q-20",
+        "Q-21"
+      ],
+      masterclassRef: "Teil I Kap. 4 (S. 19), Kap. 9 (S. 34\u201335)",
+      evidence: "hoch",
+      dataNote: "vorhanden (Wochenvolumen je Muskel)",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Volumen",
+      id: "TR-VO-002",
+      status: "freigegeben",
+      area: "alle Muskeln",
+      condition: "Ziel Muskelaufbau, Wochenvolumen unter 6",
+      metric: "harte S\xE4tze je Muskel und Woche",
+      threshold: "< 6 je Woche",
+      period: "4 Wochen im Mittel",
+      recommendation: "Schrittweise auf \u2265 6 harte S\xE4tze steigern (alle 4\u20136 Wochen +1\u20132 S\xE4tze), wenn Leistung und Erholung stimmen und ein Muskelzuwachs noch nicht zu verzeichnen ist.",
+      reason: "Jeder zus\xE4tzliche Wochensatz brachte im Mittel +0,37 % Muskelzuwachs (\u2265 6  S\xE4tze: 9,8 %, 5\u20139: 6,6 %, < 5: 5,4 %). Das ACSM-Positionspapier 2026 empfiehlt f\xFCr Muskelaufbau mindestens 10 S\xE4tze pro Woche.",
+      alternative: "6\u201310 S\xE4tze sind die zeiteffiziente Basis (Einsteiger, wenig Zeit, HIT).",
+      display: "Insights",
+      appliesTo: "Muskelaufbau, Fortgeschrittene",
+      exceptions: "Di\xE4tphase (TR-VO-006); HIT-Modell (TR-MO-002)",
+      sourceIds: [
+        "Q-MC",
+        "Q-20",
+        "Q-21",
+        "Q-22"
+      ],
+      masterclassRef: "Teil I Kap. 4 (S. 19\u201320), Kap. 9 (S. 34\u201335), Kap. 16 (S. 52)",
+      evidence: "hoch",
+      dataNote: "vorhanden; Ziel braucht das Trainingsprofil",
+      review: "ENTSCHEIDEN: Ziel (Muskelaufbau/Kraft/Gesundheit) steht nicht in deiner Liste der Angaben \u2013 ins Trainingsprofil aufnehmen? JA",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Volumen",
+      id: "TR-VO-003",
+      status: "freigegeben",
+      area: "alle Muskeln",
+      condition: "Wochenvolumen \xFCber 20 harte S\xE4tze",
+      metric: "harte S\xE4tze je Muskel und Woche",
+      threshold: "> 20 je Woche",
+      period: "3 Wochen in Folge",
+      recommendation: "Hinweis: \xFCber 20 S\xE4tze nur zeitlich begrenzt f\xFCr Schwerpunktmuskeln und mit Erm\xFCdungskontrolle.",
+      reason: "Mehr Volumen bringt weiter mehr Wachstum, aber mit abnehmendem Ertrag; \xFCber 20 S\xE4tze gibt es wenig Daten.",
+      alternative: "Schwerpunktmuskel aus dem Profil: Hinweis entf\xE4llt, solange Leistung steigt.",
+      display: "Insights",
+      appliesTo: "alle Ziele",
+      exceptions: "Schwerpunktmuskel mit steigender Leistung",
+      sourceIds: [
+        "Q-MC",
+        "Q-21",
+        "Q-23"
+      ],
+      masterclassRef: "Teil I Kap. 4 (S. 19), Kap. 9 (S. 35)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Volumen",
+      id: "TR-VO-004",
+      status: "freigegeben",
+      area: "alle Muskeln",
+      condition: "Zu viele harte S\xE4tze f\xFCr einen Muskel in einer Einheit",
+      metric: "fraktionelle S\xE4tze je Muskel und Einheit",
+      threshold: "> 4 (Hinweis ab > 4)",
+      period: "je Einheit",
+      recommendation: "Volumen auf mehr Einheiten verteilen: 2\u20133 harte S\xE4tze pro Muskel und Einheit.",
+      reason: "Ab etwa 11 fraktionellen S\xE4tzen pro Muskel und Einheit war kein Zusatznutzen f\xFCr Wachstum mehr nachweisbar (Preprint), f\xFCr Kraft schon ab etwa 2 direkten S\xE4tzen.",
+      alternative: null,
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-24"
+      ],
+      masterclassRef: "Teil I Kap. 4 (S. 19\u201320), Kap. 9 (S. 34)",
+      evidence: "gering",
+      dataNote: "vorhanden",
+      review: "ENTSCHEIDEN: Schwelle f\xFCr den Hinweis (> 4 aus der Empfehlung 2\u20134",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Volumen",
+      id: "TR-VO-005",
+      status: "freigegeben",
+      area: "Schwerpunktmuskeln",
+      condition: "Schwerpunktmuskel (Profil) stagniert, Erholung gut",
+      metric: "keine Steigerung Last \xD7 Wdh. in den \xDCbungen des Muskels, Schlaf \u2265 7 h",
+      threshold: "3 Einheiten ohne Steigerung",
+      period: "4\u20136 Wochen",
+      recommendation: "F\xFCr diesen Muskel 1\u20132 S\xE4tze pro Woche erg\xE4nzen (h\xF6chstens bis etwa 20).",
+      reason: "Beim Steigern zuerst Last und Wiederholungen; erst wenn das stockt und die Erholung gut ist, alle 4\u20136 Wochen 1\u20132 S\xE4tze erg\xE4nzen \u2013 immer nur eine Stellschraube.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "Muskelaufbau",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil I Kap. 1 (S. 12), Kap. 4 (S. 20), Kap. 9 (S. 35)",
+      evidence: "mittel",
+      dataNote: "vorhanden; Schwerpunkte aus dem Trainingsprofil",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Volumen",
+      id: "TR-VO-006",
+      status: "freigegeben",
+      area: "alle Muskeln",
+      condition: "Di\xE4t (Kaloriendefizit), Wochenvolumen deutlich \xFCber dem Erhaltungsbedarf",
+      metric: "Energiebilanz aus Nutrition (Defizit) bzw. Phase im Profil; harte S\xE4tze je Muskel",
+      threshold: "> 6 je Woche im Defizit",
+      period: "laufend",
+      recommendation: "Hinweis: Im Defizit reichen 6-8 harte S\xE4tze pro Muskel zum Erhalt; Gewichte halten, nah am Versagen bleiben, keine neuen riskanten \xDCbungen.",
+      reason: "20 S\xE4tze pro Woche sch\xFCtzten die Magermasse im Defizit nicht besser als 6-8. Schweres, intensives Training ist der wichtigste Schutz der Muskulatur.",
+      alternative: "Intensit\xE4t nie senken \u2013 h\xF6chstens das Volumen.",
+      display: "Insights",
+      appliesTo: "alle in Di\xE4t",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-25"
+      ],
+      masterclassRef: "Teil I Kap. 10 (S. 37\u201338)",
+      evidence: "mittel",
+      dataNote: "Energiebilanz vorhanden; Phase evtl. im Profil",
+      review: "ENTSCHEIDEN: Di\xE4tphase aus der Energiebilanz erkennen oder als Angabe \u201EPhase\u201C (Aufbau/Erhalt/Di\xE4t) im Trainingsprofil?",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Frequenz",
+      id: "TR-FR-001",
+      status: "freigegeben",
+      area: "alle Muskeln",
+      condition: "Muskel nur 1 \xD7 pro Woche trainiert, Wochenvolumen > 6",
+      metric: "Einheiten mit harten S\xE4tzen f\xFCr den Muskel je Woche",
+      threshold: "1 \xD7 / Woche bei > 6 S\xE4tzen",
+      period: "3 Wochen",
+      recommendation: "Den Muskel auf 2\u20133 Einheiten pro Woche verteilen (je 2\u20136 S\xE4tze).",
+      reason: "Bei gleichem Wochenvolumen ist die Frequenz f\xFCr Wachstum fast egal \u2013 aber pro Einheit lassen sich nur begrenzt viele produktive S\xE4tze unterbringen. Deshalb verteilt man h\xF6heres Volumen besser.",
+      alternative: "Bei \u2264 6 Wochens\xE4tzen ist 1 \xD7 pro Woche in Ordnung.",
+      display: "Insights + Planung",
+      appliesTo: "Muskelaufbau",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-21",
+        "Q-26"
+      ],
+      masterclassRef: "Teil I Kap. 9 (S. 34\u201335), Kap. 16 (S. 52)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Frequenz",
+      id: "TR-FR-002",
+      status: "freigegeben",
+      area: "Kraft\xFCbungen",
+      condition: "Ziel Kraft: Haupt\xFCbung seltener als 2 \xD7 pro Woche",
+      metric: "Kniebeuge/Bankdr\xFCcken/Kreuzheben je Woche",
+      threshold: "< 2 \xD7 / Woche",
+      period: "4 Wochen",
+      recommendation: "Die Kraft\xFCbung 2\u20133 \xD7 pro Woche mit wenigen schweren S\xE4tzen \xFCben.",
+      reason: "F\xFCr Kraft wirkt die Frequenz stark (etwa +3 % je zus\xE4tzlicher Einheit), f\xFCr Masse z\xE4hlt die Menge.",
+      alternative: null,
+      display: "Insights + Planung",
+      appliesTo: "Ziel Kraft",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-21"
+      ],
+      masterclassRef: "Teil I Kap. 9 (S. 34\u201335)",
+      evidence: "mittel",
+      dataNote: "vorhanden; Ziel aus Profil",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Intensit\xE4t",
+      id: "TR-IN-001",
+      status: "freigegeben",
+      area: "alle \xDCbungen",
+      condition: "Arbeitss\xE4tze \xFCberwiegend weit vom Versagen",
+      metric: "Anteil Arbeitss\xE4tze mit RPE \u2264 6 (RIR \u2265 4)",
+      threshold: "> 50 % der Arbeitss\xE4tze mit RPE",
+      period: "4 Wochen",
+      recommendation: "Arbeitss\xE4tze n\xE4her ans Versagen: Standard 1\u20132 RIR (RPE 8\u20139).",
+      reason: "Je n\xE4her ein Satz am Versagen endet, desto mehr Wachstum. Bei 5+ RIR ist der Reiz deutlich geringer (aber nicht null). RPE = 10 \u2212 RIR.",
+      alternative: "Aufw\xE4rms\xE4tze bleiben weit vom Versagen.",
+      display: "Insights",
+      appliesTo: "Muskelaufbau",
+      exceptions: "nur S\xE4tze mit RPE-Angabe z\xE4hlen",
+      sourceIds: [
+        "Q-MC",
+        "Q-28",
+        "Q-29"
+      ],
+      masterclassRef: "Teil I Kap. 4 (S. 20), Kap. 11 (S. 40\u201341)",
+      evidence: "hoch",
+      dataNote: "vorhanden (RPE je Satz)",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Intensit\xE4t",
+      id: "TR-IN-002",
+      status: "freigegeben",
+      area: "freie Grund\xFCbungen",
+      condition: "H\xE4ufig \u201EFail\u201C bei schweren freien Grund\xFCbungen",
+      metric: "Fail bei Kniebeuge/Kreuzheben/Bankdr\xFCcken mit Langhantel (Muster + Ausr\xFCstung)",
+      threshold: "\u2265 2 Fail-S\xE4tze",
+      period: "in den letzten 3 Einheiten der \xDCbung",
+      recommendation: "Bei freien Grund\xFCbungen 1\u20133 RIR halten; echtes Versagen nur im letzten Satz an Maschinen und Isolations\xFCbungen.",
+      reason: "Versagen bringt gegen\xFCber 1\u20132 RIR h\xF6chstens einen trivialen Vorteil (Quadrizeps 6,96 % vs. 6,98 %), erzeugt aber mehr Erm\xFCdung und verl\xE4ngert die Erholung (48 h statt 6 h).",
+      alternative: null,
+      display: "Insights + Training",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-30",
+        "Q-31"
+      ],
+      masterclassRef: "Teil I Kap. 5 (S. 23), Kap. 11 (S. 40\u201341)",
+      evidence: "hoch",
+      dataNote: "vorhanden (Fail, Muster, Ausr\xFCstung)",
+      review: "ENTSCHEIDEN: gilt auch f\xFCr dich mit HIT-Modell? (HIT nimmt Versagen bewusst in Kauf \u2013 Vorschlag: Regel bei erkanntem HIT nur f\xFCr freie Langhantel\xFCbungen und Kurzhantel\xFCbungen",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Intensit\xE4t",
+      id: "TR-IN-003",
+      status: "freigegeben",
+      area: "alle \xDCbungen",
+      condition: "Alle Arbeitss\xE4tze einer \xDCbung bis \u201EFail\u201C bei mehreren S\xE4tzen",
+      metric: "Fail in jedem Arbeitssatz, \u2265 3 Arbeitss\xE4tze je \xDCbung",
+      threshold: "3 Einheiten",
+      period: "laufend",
+      recommendation: "Versagen nur im letzten Satz; die S\xE4tze davor mit 1\u20132 RIR.",
+      reason: "Gleiches Wachstum mit 1\u20132 RIR wie mit Versagen, aber deutlich weniger Erm\xFCdung; bei hohem Volumen eher mehr Reserve einplanen.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-30"
+      ],
+      masterclassRef: "Teil I Kap. 11 (S. 40\u201341)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Intensit\xE4t",
+      id: "TR-IN-004",
+      status: "freigegeben",
+      area: "Kalibrierung",
+      condition: "Kein einziger Satz bis zum Versagen an einer sicheren \xDCbung",
+      metric: "Fail an Maschine/Isolation",
+      threshold: "0",
+      period: "8 Wochen",
+      recommendation: "Gelegentlich einen Satz an einer Maschine bis zum Versagen ausf\xFChren, um die eigene RIR-Sch\xE4tzung zu pr\xFCfen.",
+      reason: "Wir untersch\xE4tzen unsere Reserve im Schnitt um knapp eine Wiederholung, bei S\xE4tzen \xFCber 12 Wiederholungen deutlich mehr.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "alle Ziele",
+      exceptions: "Verletzung im Profil",
+      sourceIds: [
+        "Q-MC",
+        "Q-29",
+        "Q-16"
+      ],
+      masterclassRef: "Teil I Kap. 4 (S. 20), Kap. 11 (S. 41)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Wiederholungen",
+      id: "TR-WH-001",
+      status: "freigegeben",
+      area: "alle \xDCbungen",
+      condition: "Arbeitss\xE4tze mit sehr vielen Wiederholungen",
+      metric: "Wdh. je Arbeitssatz",
+      threshold: "> 15",
+      period: "\xDCbung in den letzten 3 Einheiten",
+      recommendation: "Last erh\xF6hen, sodass etwa 5\u201315 Wiederholungen bis 0\u20133 RIR m\xF6glich sind (Grund\xFCbungen 5\u201312, Isolation 5\u201312).",
+      reason: "Lasten von etwa 30\u201385 % 1RM bauen \xE4hnlich viel Muskel auf, wenn der Satz nah ans Versagen geht; unter etwa 30 % 1RM wird es ineffizient (20 % 1RM: 8,9 % statt ~20 % Wachstum).",
+      alternative: "Kraftausdauer-Ziel: hohe Wiederholungen gewollt.",
+      display: "Insights",
+      appliesTo: "Muskelaufbau",
+      exceptions: "Modell Kraftausdauer",
+      sourceIds: [
+        "Q-MC",
+        "Q-32",
+        "Q-33"
+      ],
+      masterclassRef: "Teil I Kap. 3 (S. 16\u201317), Kap. 16 (S. 51)",
+      evidence: "hoch",
+      dataNote: "vorhanden",
+      review: "ENTSCHEIDEN: Schwelle \u201E> 15 Wdh",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Wiederholungen",
+      id: "TR-WH-002",
+      status: "freigegeben",
+      area: "Kraft\xFCbungen",
+      condition: "Ziel Kraft, aber kaum schwere S\xE4tze",
+      metric: "Arbeitss\xE4tze mit \u2264 6 Wdh. bei Grund\xFCbungen",
+      threshold: "< 1 je Woche",
+      period: "4 Wochen",
+      recommendation: "Regelm\xE4\xDFig schwer trainieren (> 75\u201380 % 1RM, etwa 3\u20136 Wdh.), 2\u20133 \xD7 pro Woche.",
+      reason: "F\xFCr Maximalkraft sind schwere Lasten besser; das ACSM 2026 nennt f\xFCr Kraft mindestens 80 % 1RM und zwei Einheiten pro Woche.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "Ziel Kraft",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-22"
+      ],
+      masterclassRef: "Teil I Kap. 3 (S. 17), Kap. 16 (S. 52)",
+      evidence: "hoch",
+      dataNote: "vorhanden; Ziel aus Profil",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Pausen",
+      id: "TR-PA-001",
+      status: "freigegeben",
+      area: "Grund\xFCbungen",
+      condition: "Satzpausen bei schweren Grund\xFCbungen zu kurz",
+      metric: "Zeit zwischen zwei abgehakten S\xE4tzen derselben \xDCbung (Zeitstempel), Median je \xDCbung",
+      threshold: "< 2 min",
+      period: "letzte 3 Einheiten der \xDCbung",
+      recommendation: "Bei Kniebeuge, Kreuzheben, Bankdr\xFCcken, Rudern 2\u20134 min pausieren, mit Kraftfokus 3\u20135 min.",
+      reason: "3 statt 1 Minute Pause: Oberschenkel +13,3 % statt +6,9 %, Kniebeuge +15,2 % statt +7,6 %. Kurze Pausen kosten vor allem Wiederholungen im n\xE4chsten Satz.",
+      alternative: null,
+      display: "Insights + Training",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-34",
+        "Q-35"
+      ],
+      masterclassRef: "Teil I Kap. 13 (S. 44\u201345)",
+      evidence: "hoch",
+      dataNote: "NEU: Zeitstempel je Satz (wird gebaut)",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Pausen",
+      id: "TR-PA-002",
+      status: "freigegeben",
+      area: "Isolation / Maschinen",
+      condition: "Satzpausen bei Isolations\xFCbungen sehr kurz",
+      metric: "Pause zwischen S\xE4tzen derselben \xDCbung",
+      threshold: "< 60 s",
+      period: "letzte 3 Einheiten der \xDCbung",
+      recommendation: "1,5\u20132,5 min pausieren.",
+      reason: "Pausen \xFCber 60 Sekunden bringen einen kleinen Vorteil f\xFCr Wachstum, \xFCber etwa 90 Sekunden hinaus keinen weiteren.",
+      alternative: "Pausen \xFCber 3 min bei Isolation sind nicht n\xF6tig (kein Hinweis, nur Zeitverlust).",
+      display: "Insights + Training",
+      appliesTo: "Muskelaufbau",
+      exceptions: "Modell Kraftausdauer",
+      sourceIds: [
+        "Q-MC",
+        "Q-36"
+      ],
+      masterclassRef: "Teil I Kap. 13 (S. 44\u201345)",
+      evidence: "mittel",
+      dataNote: "NEU: Zeitstempel",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Pausen",
+      id: "TR-PA-003",
+      status: "freigegeben",
+      area: "alle \xDCbungen",
+      condition: "Wiederholungen brechen von Satz zu Satz stark ein",
+      metric: "Wdh. Satz n+1 gegen\xFCber Satz n bei gleichem Gewicht, mit Pause aus Zeitstempel",
+      threshold: "> 2 Wdh. weniger",
+      period: "letzte 3 Einheiten",
+      recommendation: "Pause verl\xE4ngern \u2013 sie ist lang genug, wenn du im n\xE4chsten Satz h\xF6chstens 1\u20132 Wiederholungen weniger schaffst.",
+      reason: "Faustregel der Masterclass; kurze Pausen senken das effektive Volumen.",
+      alternative: null,
+      display: "Training (Hinweis beim n\xE4chsten Mal)",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil I Kap. 13 (S. 45)",
+      evidence: "gering",
+      dataNote: "NEU: Zeitstempel",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Pausen",
+      id: "TR-PA-004",
+      status: "freigegeben",
+      area: "Zeitsparen",
+      condition: "Einheit dauert deutlich l\xE4nger als geplant",
+      metric: "Dauer aus erstem bis letztem Zeitstempel vs. \u201EZeit pro Einheit\u201C im Profil",
+      threshold: "> 20 % \xFCber Plan",
+      period: "3 Einheiten",
+      recommendation: "Nicht konkurrierende \xDCbungen abwechseln (z. B. Curls + Wadenheben, Brust + R\xFCcken); Dropsets am letzten Satz von Maschinen-/Isolations\xFCbungen (1\u20132 Drops \xE0 20\u201330 %).",
+      reason: "So bekommt jeder Muskel trotzdem \u2265 2 min Pause. Dropsets bauen genauso viel Muskel auf wie normale S\xE4tze, oft in der H\xE4lfte bis einem Drittel der Zeit.",
+      alternative: null,
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-37"
+      ],
+      masterclassRef: "Teil I Kap. 12 (S. 42\u201343), Kap. 13 (S. 45)",
+      evidence: "mittel",
+      dataNote: "NEU: Zeitstempel + Profil",
+      review: "ENTSCHEIDEN: Schwelle \u201E> 20 % \xFCber Plan\u201C",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Progression",
+      id: "TR-PR-001",
+      status: "freigegeben",
+      area: "alle \xDCbungen",
+      condition: "\xDCbung stagniert",
+      metric: "Last \xD7 Wdh. im ersten Arbeitssatz ohne Steigerung",
+      threshold: "3 Einheiten der \xDCbung",
+      period: "laufend",
+      recommendation: "Doppelprogression pr\xFCfen (erst Wdh. bis zur Obergrenze, dann Gewicht +2\u201310 %); Schlaf, Volumen und Ern\xE4hrung pr\xFCfen. Plateaus bei Fortgeschrittenen sind normal.",
+      reason: "Ohne Steigerung kein langfristiger Fortschritt; Gewicht oder Wiederholungen zu steigern wirkt gleich. ACSM: +2\u201310 %, wenn an zwei Einheiten in Folge 1\u20132 Wdh. \xFCber dem Ziel gelingen.",
+      alternative: null,
+      display: "Insights + Training",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-38",
+        "Q-39"
+      ],
+      masterclassRef: "Teil I Kap. 4 (S. 20), Kap. 16 (S. 51)",
+      evidence: "hoch",
+      dataNote: "vorhanden (doppelte Progression ist schon in der App)",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Progression",
+      id: "TR-PR-002",
+      status: "freigegeben",
+      area: "Programm",
+      condition: "Grundstruktur des Plans wird h\xE4ufig ge\xE4ndert",
+      metric: "Plan-/\xDCbungswechsel",
+      threshold: "Wechsel < 12 Wochen nach Planbeginn",
+      period: "laufend",
+      recommendation: "Einem Programm mindestens 12 Wochen geben und danach immer nur eine Stellschraube \xE4ndern (z. B. +2 S\xE4tze f\xFCr einen Muskel).",
+      reason: "Nur so erkennst du, was wirkt. St\xE4ndiges Wechseln (\u201EMuscle Confusion\u201C) ist kein Vorteil.",
+      alternative: "Empfehlungen der App erg\xE4nzen \xDCbungen, statt den Plan umzubauen.",
+      display: "Planung",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil I Kap. 1 (S. 12), Kap. 16 (S. 51)",
+      evidence: "mittel",
+      dataNote: "vorhanden (Pl\xE4ne mit Datum)",
+      review: "Auch als Grundregel f\xFCr die App: h\xF6chstens eine \xC4nderungsempfehlung je Muskel gleichzeitig.",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Progression",
+      id: "TR-PR-003",
+      status: "freigegeben",
+      area: "Erholung",
+      condition: "Muskel nach harter Einheit zu fr\xFCh wieder hart trainiert und Leistung f\xE4llt",
+      metric: "Abstand zwischen Einheiten mit Fail bzw. schweren Grund\xFCbungen f\xFCr denselben Muskel; erster Arbeitssatz schw\xE4cher als zuletzt",
+      threshold: "< 48 h und Leistungsabfall",
+      period: "laufend",
+      recommendation: "Nach S\xE4tzen bis zum Versagen und schweren Grund\xFCbungen 48\u201372 h bis zur n\xE4chsten harten Einheit; mit 1\u20133 RIR und Isolation reichen oft 24\u201348 h. Nach Leistung entscheiden, nicht nach Muskelkater.",
+      reason: "Bis zum Versagen trainiert war die Bankdr\xFCck-Leistung erst nach 48 h zur\xFCck, mit Reserve schon nach 6 h. Gef\xFChlte und tats\xE4chliche Erholung fallen oft auseinander.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-31"
+      ],
+      masterclassRef: "Teil I Kap. 5 (S. 22\u201323)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Progression",
+      id: "TR-PR-004",
+      status: "freigegeben",
+      area: "R\xFCckkehr",
+      condition: "Muskel nach l\xE4ngerer Pause wieder trainiert",
+      metric: "Tage ohne Training des Muskels",
+      threshold: "\u2265 14 Tage",
+      period: "beim Wiedereinstieg",
+      recommendation: "Mit weniger Volumen einsteigen und \xFCber 1\u20133 Wochen steigern.",
+      reason: "Nach Pausen und bei neuen \xDCbungen flie\xDFen die ersten 1\u20133 Wochen vor allem in die Reparatur (Repeated-Bout-Effekt).",
+      alternative: null,
+      display: "Training + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil I Kap. 5 (S. 23), Kap. 9 (S. 35)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: "ENTSCHEIDEN: Schwelle 14 Tage",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Deload",
+      id: "TR-DL-001",
+      status: "freigegeben",
+      area: "gesamt",
+      condition: "Mehrere Zeichen von Erm\xFCdung",
+      metric: "Stagnation in \u2265 3 \xDCbungen (TR-PR-001) UND (Schlaf < 7 h im Mittel ODER Gelenkschmerz im Profil/Notizen)",
+      threshold: "alle 4\u20138 Wochen pr\xFCfen",
+      period: "4\u20138 Wochen",
+      recommendation: "5\u20137 Tage mit halbiertem Volumen und 2\u20133 RIR mehr trainieren (Frequenz und \xDCbungen beibehalten).",
+      reason: "Eine Woche komplette Pause brachte keinen Wachstumsvorteil, eher etwas Kraftverlust. Deloads sind ein Werkzeug bei Bedarf, keine Pflicht.",
+      alternative: "Keine komplette Trainingspause empfehlen.",
+      display: "Insights",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-40",
+        "Q-41"
+      ],
+      masterclassRef: "Teil I Kap. 16 (S. 52), Kap. 18 (S. 59)",
+      evidence: "mittel",
+      dataNote: "vorhanden (Schlaf, S\xE4tze); Gelenkschmerz NEU",
+      review: "ENTSCHEIDEN: Schmerz/Gelenkbeschwerden erfassen (siehe TR-VE-002)?",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Aufw\xE4rmen",
+      id: "TR-AW-001",
+      status: "freigegeben",
+      area: "erste schwere \xDCbung",
+      condition: "Erste schwere \xDCbung der Einheit ohne Aufw\xE4rmsatz",
+      metric: "erste Mehrgelenks\xFCbung ohne Satz mit \u201EAufw\xE4rmen\u201C",
+      threshold: "3 Einheiten",
+      period: "laufend",
+      recommendation: "2\u20133 Aufw\xE4rms\xE4tze mit steigender Last, z. B. 50 % \xD7 8, 70 % \xD7 4, 85 % \xD7 1\u20132 des Arbeitsgewichts; weitere \xDCbungen f\xFCr dasselbe Gelenk 0\u20131 Aufw\xE4rmsatz.",
+      reason: "Das beste Aufw\xE4rmen f\xFCr Krafttraining ist die \xDCbung selbst mit steigender Last \u2013 es verbessert Maximalkraft und Wiederholungsleistung am verl\xE4sslichsten.",
+      alternative: null,
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-42"
+      ],
+      masterclassRef: "Teil I Kap. 14 (S. 46\u201347)",
+      evidence: "mittel",
+      dataNote: "vorhanden (Aufw\xE4rmsatz-Markierung)",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Aufw\xE4rmen",
+      id: "TR-AW-002",
+      status: "freigegeben",
+      area: "alle \xDCbungen",
+      condition: "Aufw\xE4rmsatz bis zum Versagen",
+      metric: "Satz mit \u201EAufw\xE4rmen\u201C und Fail bzw. RPE \u2265 9",
+      threshold: "1",
+      period: "je Einheit",
+      recommendation: "Aufw\xE4rms\xE4tze weit vom Versagen halten.",
+      reason: "Aufw\xE4rms\xE4tze dienen Technik und Ann\xE4herung an die Arbeitslast; Versagen kostet nur Leistung f\xFCr die Arbeitss\xE4tze.",
+      alternative: null,
+      display: "Training",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil I Kap. 11 (S. 40), Kap. 16 (S. 51)",
+      evidence: "gering",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Planung",
+      id: "TR-PL-001",
+      status: "freigegeben",
+      area: "Reihenfolge",
+      condition: "Isolations\xFCbung vor der Grund\xFCbung desselben Muskels",
+      metric: "Reihenfolge der \xDCbungen (Position) und Zeitstempel",
+      threshold: "3 Einheiten",
+      period: "laufend",
+      recommendation: "Wichtigste und schwerste \xDCbungen an den Anfang der Einheit.",
+      reason: "Die erste \xDCbung setzt den Hauptreiz bei voller Leistungsf\xE4higkeit.",
+      alternative: "Bewusste Vorerm\xFCdung: Regel im Profil abschaltbar.",
+      display: "Planung",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil I Kap. 16 (S. 52), Kap. 18 (S. 59)",
+      evidence: "gering",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Planung",
+      id: "TR-PL-002",
+      status: "freigegeben",
+      area: "Split-Wahl",
+      condition: "Plan passt nicht zu den geplanten Tagen pro Woche",
+      metric: "Tage pro Woche (Profil) vs. erkannte Split-Art (Blatt \u201ESplits\u201C)",
+      threshold: "Abweichung",
+      period: "laufend",
+      recommendation: "3 Tage: 3 \xD7 Ganzk\xF6rper oder Oberk\xF6rper/Unterk\xF6rper/Ganzk\xF6rper \xB7 4 Tage: 2 \xD7 Oberk\xF6rper/Unterk\xF6rper oder Push/Pull/Beine/Ganzk\xF6rper \xB7 5 Tage: Push/Pull/Beine + Oberk\xF6rper/Unterk\xF6rper.",
+      reason: "Split oder Ganzk\xF6rper ist bei gleichem Wochenvolumen gleichwertig (14 Studien, 392 Teilnehmer) \u2013 entscheidend ist, dass der Split zu den Tagen passt und jeder Muskel 2\u20133 \xD7 pro Woche trainiert wird.",
+      alternative: "Kein Wechsel empfehlen, nur weil ein anderer Split \u201Ebesser\u201C w\xE4re.",
+      display: "Insights + Planung",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-43"
+      ],
+      masterclassRef: "Teil I Kap. 16 (S. 51\u201353)",
+      evidence: "hoch",
+      dataNote: "vorhanden; Tage aus Profil",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Planung",
+      id: "TR-PL-003",
+      status: "freigegeben",
+      area: "Bro-Split",
+      condition: "Klassischer Body-Part-Split: jeder Muskel 1 \xD7 pro Woche mit sehr vielen S\xE4tzen",
+      metric: "Split \u201EBro-Split\u201C erkannt und > 11 S\xE4tze je Muskel und Einheit",
+      threshold: "2 Wochen",
+      period: "laufend",
+      recommendation: "Volumen pro Einheit begrenzen und jeden Muskel 2 \xD7 pro Woche trainieren (z. B. Push/Pull/Beine + Oberk\xF6rper/Unterk\xF6rper).",
+      reason: "Wettkampf-Bodybuilder trainieren oft 12\u201330 S\xE4tze pro Muskel und Einheit \u2013 weit mehr als zeiteffizient; Profi-Pl\xE4ne lassen sich wegen Genetik und Pharmakologie nicht \xFCbertragen.",
+      alternative: null,
+      display: "Insights + Planung",
+      appliesTo: "Fitness/Gesundheit, Naturals",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-44",
+        "Q-24"
+      ],
+      masterclassRef: "Teil I Kap. 15 (S. 49\u201350)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Planung",
+      id: "TR-PL-004",
+      status: "freigegeben",
+      area: "Ruhetage",
+      condition: "Keine trainingsfreien Tage",
+      metric: "Tage ohne Training je Woche",
+      threshold: "0",
+      period: "2 Wochen",
+      recommendation: "1\u20132 komplett freie Tage pro Woche einplanen.",
+      reason: "Hilft Schlaf und Motivation. Feste Regeln wie \u201Emaximal 3 Tage am St\xFCck\u201C sind Erfahrungswerte; hohe Frequenzen sind bei passendem Volumen unproblematisch.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil I Kap. 13 (S. 45)",
+      evidence: "gering",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Modelle",
+      id: "TR-MO-001",
+      status: "freigegeben",
+      area: "HIT",
+      condition: "HIT-Modell erkannt, aber mehr als 2 Arbeitss\xE4tze je \xDCbung",
+      metric: "Modell HIT (Blatt \u201EModelle\u201C): Fail und/oder RPE 8\u201310; Arbeitss\xE4tze je \xDCbung",
+      threshold: "> 2 Arbeitss\xE4tze je \xDCbung",
+      period: "letzte 3 Einheiten",
+      recommendation: "Bei HIT 1\u20132 harte Arbeitss\xE4tze pro \xDCbung (nach dem Aufw\xE4rmen).",
+      reason: "HIT-artiges Training mit 1\u20132 harten S\xE4tzen pro \xDCbung ist sehr zeiteffizient, erzeugt wenig Erm\xFCdung und ist f\xFCr Kraft nahezu optimal.",
+      alternative: "F\xFCr maximales Wachstum bringen mehr harte S\xE4tze mehr \u2013 mit abnehmendem Ertrag (TR-VO-002).",
+      display: "Insights + Planung",
+      appliesTo: "Modell HIT",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-19",
+        "Q-20"
+      ],
+      masterclassRef: "Teil I Kap. 4 (S. 19\u201320)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: "Vom Nutzer festgelegt (25.11.2026): HIT = Fail und/oder RPE 8\u201310; ideal 1\u20132 Arbeitss\xE4tze je \xDCbung, so empfehlen.",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Modelle",
+      id: "TR-MO-002",
+      status: "freigegeben",
+      area: "HIT",
+      condition: "HIT-Modell, aber Wochenvolumen eines Muskels unter der Mindestdosis",
+      metric: "harte S\xE4tze je Muskel und Woche",
+      threshold: "< 4",
+      period: "2 Wochen",
+      recommendation: "Den Muskel h\xE4ufiger einplanen oder eine zweite \xDCbung erg\xE4nzen, damit mindestens 4 (besser 6\u201310) harte S\xE4tze pro Woche erreicht werden.",
+      reason: "Auch bei HIT gilt die Dosis-Wirkungs-Kurve: etwa 4 Wochens\xE4tze sind die Mindestdosis, 6\u201310 liefern den Gro\xDFteil des Effekts.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "Modell HIT",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-20"
+      ],
+      masterclassRef: "Teil I Kap. 4 (S. 19), Kap. 9 (S. 34)",
+      evidence: "hoch",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Modelle",
+      id: "TR-MO-003",
+      status: "freigegeben",
+      area: "Kraftausdauer",
+      condition: "Kraftausdauer erkannt, aber Ziel Muskelaufbau",
+      metric: "Modell Kraftausdauer (\u2265 15 Wdh., kurze Pausen) vs. Ziel im Profil",
+      threshold: "4 Wochen",
+      period: "laufend",
+      recommendation: "F\xFCr Muskelaufbau Pausen \u2265 90 s und Lasten f\xFCr 5\u201320 Wdh. nah am Versagen.",
+      reason: "Kurze Pausen kosten Wiederholungen und damit effektives Volumen; unter etwa 30 % 1RM wird es ineffizient.",
+      alternative: "F\xFCr Kraftausdauer als Ziel passt das Modell.",
+      display: "Insights",
+      appliesTo: "Ziel Muskelaufbau",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-36",
+        "Q-33"
+      ],
+      masterclassRef: "Teil I Kap. 3 (S. 17), Kap. 13 (S. 44)",
+      evidence: "mittel",
+      dataNote: "NEU: Zeitstempel; Ziel aus Profil",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Cardio",
+      id: "TR-CA-001",
+      status: "freigegeben",
+      area: "Ausdauer",
+      condition: "W\xF6chentliche Ausdauer unter der WHO-Untergrenze",
+      metric: "Cardio-Minuten je Woche (moderat; intensiv z\xE4hlt doppelt)",
+      threshold: "< 150 min moderat bzw. < 75 min intensiv",
+      period: "2 Wochen",
+      recommendation: "150\u2013300 min moderat oder 75\u2013150 min intensiv pro Woche, \xFCberwiegend locker nach dem Sprechtest, dazu 1\u20132 Intervalleinheiten.",
+      reason: "Jede zus\xE4tzliche MET-Stufe Fitness senkt das Sterberisiko um etwa 13 %; Kraft plus Ausdauer senkt die Gesamtsterblichkeit um 40 %. Cardio bremst weder Muskelwachstum noch Maximalkraft.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-45",
+        "Q-18",
+        "Q-57",
+        "Q-46"
+      ],
+      masterclassRef: "Teil I Kap. 8 (S. 30\u201331)",
+      evidence: "hoch",
+      dataNote: "vorhanden (Cardio, HF-Zonen)",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Cardio",
+      id: "TR-CA-002",
+      status: "freigegeben",
+      area: "Reihenfolge",
+      condition: "Cardio vor dem Krafttraining in derselben Einheit",
+      metric: "Zeitstempel/Reihenfolge Cardio-\xDCbung vor Kraft\xFCbungen",
+      threshold: "3 Einheiten",
+      period: "laufend",
+      recommendation: "Kraft zuerst; f\xFCr Sprung- und Sprintziele mindestens 3 Stunden Abstand.",
+      reason: "Kraft zuerst bringt einen kleinen Vorteil f\xFCr die Beinkraft; Explosivkraft wird nur gehemmt, wenn beides direkt hintereinander stattfindet.",
+      alternative: "F\xFCr Wachstum und Maximalkraft spielt die Reihenfolge laut Meta-Analyse keine Rolle.",
+      display: "Insights",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-46",
+        "Q-47"
+      ],
+      masterclassRef: "Teil I Kap. 8 (S. 30\u201331)",
+      evidence: "mittel",
+      dataNote: "vorhanden (Position) bzw. NEU (Zeitstempel)",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Cardio",
+      id: "TR-CA-003",
+      status: "freigegeben",
+      area: "Intervalle",
+      condition: "Keine intensiven Intervalle",
+      metric: "Cardio-Minuten in Zone 4\u20135",
+      threshold: "0",
+      period: "4 Wochen",
+      recommendation: "1\u20132 intensive Intervalleinheiten pro Woche erg\xE4nzen \u2013 bei wenig Zeit eher mehr Intensit\xE4t.",
+      reason: "HIIT verbessert die VO2max etwas st\xE4rker als Dauertraining (+1,2 ml/kg/min) und bringt gleichen Fettverlust mit rund 40 % weniger Zeit.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "alle Ziele",
+      exceptions: "Herz-Kreislauf-Einschr\xE4nkung im Profil",
+      sourceIds: [
+        "Q-MC",
+        "Q-48",
+        "Q-27"
+      ],
+      masterclassRef: "Teil I Kap. 8 (S. 31)",
+      evidence: "mittel",
+      dataNote: "vorhanden (HF-Zonen)",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Cardio",
+      id: "TR-CA-004",
+      status: "freigegeben",
+      area: "Alltag",
+      condition: "Schritte unter dem Zielbereich",
+      metric: "Schritte pro Tag (Mittel)",
+      threshold: "< 7000",
+      period: "2 Wochen",
+      recommendation: "Schritte schrittweise um 1.000 pro Tag steigern, Ziel 7.000\u201310.000.",
+      reason: "Jede zus\xE4tzlichen 1.000 Schritte gehen mit rund 15 % geringerer Sterblichkeit einher; der Nutzen flacht unter 60 Jahren bei 8.000\u201310.000 ab, bei \xC4lteren bei 6.000\u20138.000.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "alle Ziele",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-49"
+      ],
+      masterclassRef: "Teil I Kap. 8 (S. 31)",
+      evidence: "mittel",
+      dataNote: "vorhanden (NEAT/Schritte)",
+      review: "Hinweis: Schritte gibt es schon unter Training \u2192 NEAT; nur \xFCbernehmen, wenn es im Bereich Training erscheinen soll.",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Verletzungen",
+      id: "TR-VE-001",
+      status: "freigegeben",
+      area: "Verletzungen / Ausschl\xFCsse",
+      condition: "\xDCbung oder Muskel im Trainingsprofil ausgeschlossen bzw. verletzt",
+      metric: "Trainingsprofil: Verletzungen, ausgeschlossene \xDCbungen",
+      threshold: "\u2014",
+      period: "laufend",
+      recommendation: "Diese \xDCbung nie empfehlen; f\xFCr den Muskel eine Variante mit anderem Bewegungsmuster vorschlagen und den Rest des K\xF6rpers weiter trainieren.",
+      reason: "Den Rest weitertrainieren (Oberk\xF6rper bei Beinverletzung, das gesunde Bein) \u2013 davon gibt es sogar einen leichten \xDCbertragungseffekt auf die verletzte Seite.",
+      alternative: null,
+      display: "Insights + Planung",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil IV Kap. 10 (S. 185\u2013186)",
+      evidence: "mittel",
+      dataNote: "NEU: Trainingsprofil",
+      review: "Grundregel: hat Vorrang vor allen anderen Regeln.",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Verletzungen",
+      id: "TR-VE-002",
+      status: "freigegeben",
+      area: "Schmerz-Monitoring",
+      condition: "Schmerz bei einer \xDCbung angegeben",
+      metric: "Schmerz 0\u201310 w\xE4hrend/nach der \xDCbung und am n\xE4chsten Morgen",
+      threshold: "0\u20132 weiter \xB7 3\u20135 halten, wenn bis morgen abklingt \xB7 > 5 oder morgens schlimmer \u2192 reduzieren",
+      period: "je \xDCbung",
+      recommendation: "0\u20132: weiter und langsam steigern \xB7 3\u20135: Belastung halten \xB7 > 5 oder am n\xE4chsten Morgen schlimmer: Last reduzieren (anpassen: weniger Last, anderer Winkel, langsameres Tempo), nicht komplett stoppen.",
+      reason: "Beim Schmerz-Monitoring-Modell erholten sich Sportler mit Achillessehnenbeschwerden genauso gut wie mit sechs Wochen Pause. Ausl\xF6sende \xDCbungen besser anpassen statt streichen.",
+      alternative: null,
+      display: "Training + Insights",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-50"
+      ],
+      masterclassRef: "Teil IV Kap. 4 (S. 166\u2013167)",
+      evidence: "mittel",
+      dataNote: "NEU: Schmerzwert je \xDCbung (eigenes Feld n\xF6tig)",
+      review: "ENTSCHEIDEN: Schmerz-Feld (0\u201310) je \xDCbung im Training einbauen? Grundsatz 4: nur Hinweis auf die Regel der Masterclass, keine Diagnose.",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Verletzungen",
+      id: "TR-VE-003",
+      status: "freigegeben",
+      area: "Abkl\xE4rung",
+      condition: "Anhaltende Beschwerden",
+      metric: "Schmerz-Monitoring (TR-VE-002): Ruheschmerz bzw. keine Besserung",
+      threshold: "Ruheschmerz oder 6\u20138 Wochen ohne Besserung",
+      period: "laufend",
+      recommendation: "Hinweis: \xE4rztlich und physiotherapeutisch abkl\xE4ren lassen.",
+      reason: "Stufe 4 (dauerhafte Ruheschmerzen) bzw. 6\u20138 Wochen ohne Besserung: Abkl\xE4rung, um z. B. einen Teilriss auszuschlie\xDFen.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil IV Kap. 4 (S. 166\u2013167)",
+      evidence: "mittel",
+      dataNote: "NEU: Schmerzwert",
+      review: "Nur Hinweis, keine Diagnose (Grundsatz 4).",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Verletzungen",
+      id: "TR-VE-004",
+      status: "freigegeben",
+      area: "Belastungsspr\xFCnge",
+      condition: "Wochenvolumen eines Muskels springt stark an",
+      metric: "harte S\xE4tze je Muskel: Woche vs. Mittel der 3 Wochen davor",
+      threshold: "> +20 %",
+      period: "je Woche",
+      recommendation: "Belastung um h\xF6chstens 10\u201320 % pro Woche steigern \u2013 keine pl\xF6tzlichen Spr\xFCnge.",
+      reason: "Pl\xF6tzliche Belastungsspitzen erh\xF6hen das Verletzungsrisiko, eine gut aufgebaute hohe Grundbelastung sch\xFCtzt eher. (Die Kennzahl ACWR ist methodisch umstritten.)",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "alle",
+      exceptions: "R\xFCckkehr nach Pause (TR-PR-004)",
+      sourceIds: [
+        "Q-MC",
+        "Q-51",
+        "Q-52"
+      ],
+      masterclassRef: "Teil IV Kap. 4 (S. 167)",
+      evidence: "gering",
+      dataNote: "vorhanden",
+      review: "Faustregel der Masterclass; App zeigt nur Hinweis.",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-001",
+      status: "freigegeben",
+      area: "Seitheben",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Kein Wechsel zwischen Kabel- und Kurzhantel-Seitheben empfehlen.",
+      reason: "Beide brachten bei Trainierten gleiches Wachstum (+3\u20135 % in 8 Wochen).",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-14"
+      ],
+      masterclassRef: "Teil I Kap. 17 (S. 55\u201356)",
+      evidence: "hoch",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-002",
+      status: "freigegeben",
+      area: "Ges\xE4\xDF",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Glute Bridge nicht als Ersatz f\xFCr den Hip Thrust empfehlen.",
+      reason: "Kein Wachstumsvorteil belegt; halber Bewegungsweg, weniger Arbeit.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-15"
+      ],
+      masterclassRef: "Teil I Kap. 17 (S. 56)",
+      evidence: "mittel",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-003",
+      status: "freigegeben",
+      area: "Tempo",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Kein bestimmtes Tempo vorschreiben; nur warnen bei Wiederholungen \xFCber 10 s.",
+      reason: "0,5\u20138 s pro Wiederholung f\xFChren zu \xE4hnlichem Wachstum; Superslow (> 10 s) schneidet tendenziell schlechter ab.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-53"
+      ],
+      masterclassRef: "Teil I Kap. 7 (S. 28\u201329)",
+      evidence: "hoch",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-004",
+      status: "freigegeben",
+      area: "Muskelkater / Pump",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Muskelkater und Pump nie als Erfolgsma\xDFstab verwenden.",
+      reason: "Mechanische Spannung ist der Haupttreiber; Schaden bremst anfangs sogar.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-54"
+      ],
+      masterclassRef: "Teil I Kap. 3 (S. 16\u201317)",
+      evidence: "mittel",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-005",
+      status: "freigegeben",
+      area: "Split",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Keinen Wechsel Split \u2194 Ganzk\xF6rper empfehlen, nur weil eine Form \u201Ebesser\u201C w\xE4re.",
+      reason: "Bei gleichem Wochenvolumen kein Unterschied (14 Studien).",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-43"
+      ],
+      masterclassRef: "Teil I Kap. 16 (S. 51)",
+      evidence: "hoch",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-006",
+      status: "freigegeben",
+      area: "Deload",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Keine komplette Trainingspause als Deload empfehlen.",
+      reason: "Eine Woche Pause brachte keinen Vorteil, eher Kraftverlust.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-40"
+      ],
+      masterclassRef: "Teil I Kap. 16 (S. 52)",
+      evidence: "hoch",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-007",
+      status: "freigegeben",
+      area: "Forced Reps",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Forced Reps nicht empfehlen.",
+      reason: "Nutzen nicht belegt, verl\xE4ngert die Erholung.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil I Kap. 12 (S. 42\u201343)",
+      evidence: "mittel",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-008",
+      status: "freigegeben",
+      area: "Abf\xE4lschen",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Leichtes Abf\xE4lschen am Satzende nicht bem\xE4ngeln, aber nicht als Fortschritt werten.",
+      reason: "Schwung-Curls bauten gleich viel Muskel auf; messbare Progression braucht saubere Ausf\xFChrung.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-55"
+      ],
+      masterclassRef: "Teil I Kap. 12 (S. 42\u201343)",
+      evidence: "mittel",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-009",
+      status: "freigegeben",
+      area: "Dehnen",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Dehnen nicht zur Verletzungspr\xE4vention empfehlen.",
+      reason: "Dehnen ver\xE4nderte das Verletzungsrisiko nicht (\u22124 %); Krafttraining senkte es um 68 %.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-56"
+      ],
+      masterclassRef: "Teil I Kap. 14 (S. 46\u201347)",
+      evidence: "mittel",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-010",
+      status: "freigegeben",
+      area: "Cardio",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Cardio nicht streichen lassen, um Muskelaufbau zu sch\xFCtzen.",
+      reason: "Cardio bremst weder Wachstum noch Maximalkraft (43 Studien).",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-46"
+      ],
+      masterclassRef: "Teil I Kap. 8 (S. 30)",
+      evidence: "hoch",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-011",
+      status: "freigegeben",
+      area: "Profi-Pl\xE4ne",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Keine Profi-Pl\xE4ne mit 20+ S\xE4tzen pro Muskel und Einheit empfehlen.",
+      reason: "Genetik und Pharmakologie wirken mit; 77 % der Wettkampf-Amateure gaben Steroidkonsum an.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-44"
+      ],
+      masterclassRef: "Teil I Kap. 1 (S. 12), Kap. 15 (S. 49\u201350)",
+      evidence: "mittel",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-012",
+      status: "freigegeben",
+      area: "Hormone",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Keine Aussagen zu Hormonspitzen nach dem Training als Wachstumsfaktor.",
+      reason: "Kurzfristige Testosteron-/GH-Anstiege sagten kein Wachstum voraus.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-32"
+      ],
+      masterclassRef: "Teil I Kap. 3 (S. 16)",
+      evidence: "mittel",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-013",
+      status: "freigegeben",
+      area: "Problemzonen",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Keine Bauch- oder Zonen\xFCbungen zum gezielten Fettabbau empfehlen; Ganzk\xF6rpertraining statt endloser Bauch\xFCbungen.",
+      reason: "Spot-Training brachte in 13 Studien (1.158 Personen) keinen lokalen Fettverlust; Problemzonen gehen zuletzt.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-73",
+        "Q-74"
+      ],
+      masterclassRef: "Teil VII Kap. 2 (S. 268\u2013269)",
+      evidence: "mittel",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-014",
+      status: "freigegeben",
+      area: "N\xFCchterncardio",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "N\xFCchterntraining nicht als Fettabbau-Vorteil empfehlen.",
+      reason: "Mehr Fettoxidation w\xE4hrend des Tages, aber laut Meta-Analyse kein Vorteil bei der Fettmasse.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-75",
+        "Q-76"
+      ],
+      masterclassRef: "Teil VII Kap. 3 (S. 270)",
+      evidence: "mittel",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-015",
+      status: "freigegeben",
+      area: "Fettverbrennungspuls",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Keinen \u201EFettverbrennungspuls\u201C (FATmax) als Ziel f\xFCr Fettabbau vorgeben.",
+      reason: "F\xFCr den Fettverlust z\xE4hlt der Gesamtverbrauch, nicht der Fettanteil an der verbrannten Energie.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-77"
+      ],
+      masterclassRef: "Teil VII Kap. 3 (S. 270)",
+      evidence: "mittel",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-016",
+      status: "freigegeben",
+      area: "Nachbrenneffekt",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "Keine Empfehlung mit dem Nachbrenneffekt begr\xFCnden.",
+      reason: "Der Nachbrenneffekt macht nur 6\u201315 % der Trainingskalorien aus.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-78"
+      ],
+      masterclassRef: "Teil VII Kap. 6 (S. 276\u2013277)",
+      evidence: "mittel",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Keine Empfehlung",
+      id: "TR-NO-017",
+      status: "freigegeben",
+      area: "K\xE4lte",
+      condition: "Schutzregel \u2013 gilt immer",
+      metric: "\u2014",
+      threshold: "\u2014",
+      period: "\u2014",
+      recommendation: "K\xE4lte/Eisb\xE4der nicht als Fettabbau-Strategie empfehlen.",
+      reason: "K\xE4lte verbraucht meist nur 3\u201325 kcal pro Tag zus\xE4tzlich.",
+      alternative: null,
+      display: "alle",
+      appliesTo: "alle",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-79"
+      ],
+      masterclassRef: "Teil VII Kap. 7 (S. 278\u2013279)",
+      evidence: "mittel",
+      dataNote: "\u2014",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Fettabbau",
+      id: "TR-FA-001",
+      status: "freigegeben",
+      area: "gesamt",
+      condition: "Ziel Fettabbau, aber weniger als 2 Krafteinheiten pro Woche",
+      metric: "Krafttrainingseinheiten je Woche; Ziel/Phase aus dem Profil",
+      threshold: "< 2 je Woche",
+      period: "2 Wochen",
+      recommendation: "2\u20134 Krafteinheiten pro Woche beibehalten; Intensit\xE4t halten, Volumen bei Bedarf leicht senken.",
+      reason: "Krafttraining und Protein sind die wichtigsten Hebel f\xFCr die K\xF6rperzusammensetzung; je schlanker, desto gr\xF6\xDFer der Muskelanteil an jedem verlorenen Kilo. Ohne Training verloren 56 % der Studiengruppen 1,5\u20133 kg fettfreie Masse, mit Training nur 8 %.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "Ziel Fettabbau / Di\xE4t",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-62",
+        "Q-63"
+      ],
+      masterclassRef: "Teil VII Kap. 5 (S. 274\u2013275), Kap. 13 (S. 293); Teil I Kap. 10 (S. 37)",
+      evidence: "hoch",
+      dataNote: "vorhanden; Ziel aus Profil",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Fettabbau",
+      id: "TR-FA-002",
+      status: "freigegeben",
+      area: "Alltag",
+      condition: "Schritte sinken in der Di\xE4t",
+      metric: "Schritte (Wochenmittel) vs. Mittel der 2 Wochen vor Di\xE4tbeginn",
+      threshold: "\u221215 % oder mehr",
+      period: "laufend in der Di\xE4t",
+      recommendation: "Schrittziel halten (z. B. 8.000\u201312.000 pro Tag) \u2013 Telefonate im Gehen, Treppe statt Aufzug, Rad statt Auto.",
+      reason: "Wenn Energie fehlt, sinkt die Alltagsbewegung unbemerkt. NEAT kann sich zwischen gleich gro\xDFen Menschen um bis zu ~2.000 kcal pro Tag unterscheiden; bei \xDCberf\xFCtterung entschied die Zunahme an Alltagsbewegung, wer Fett ansetzte.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "Ziel Fettabbau / Di\xE4t",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-64"
+      ],
+      masterclassRef: "Teil VII Kap. 4 (S. 273), Kap. 6 (S. 276\u2013277)",
+      evidence: "mittel",
+      dataNote: "vorhanden (Schritte/NEAT)",
+      review: "ENTSCHEIDEN: Schwelle \u201E\u221215 %",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Fettabbau",
+      id: "TR-FA-003",
+      status: "freigegeben",
+      area: "Cardio",
+      condition: "Ziel Fettabbau, mehr Cardio und gleichzeitig sinkende Kraftleistung",
+      metric: "Cardio-Minuten je Woche steigen UND Stagnation/Abfall in \u2265 3 Kraft\xFCbungen",
+      threshold: "4 Wochen",
+      period: "laufend",
+      recommendation: "Cardio nach Vorliebe (Dauer, Intervalle, Sportart) \u2013 aber so legen, dass das Krafttraining nicht leidet: Kraft zuerst bzw. \u2265 3 h Abstand; gelenkschonend Rad, Ruderger\xE4t oder Crosstrainer.",
+      reason: "F\xFCr den Fettverlust z\xE4hlen Gesamtverbrauch und Durchhalten: Zwei Meta-Analysen fanden keinen Unterschied zwischen Intervall- und Dauertraining, eine etwas mehr Fettverlust mit (Sprint-)Intervallen. Das Krafttraining sch\xFCtzt die Muskeln.",
+      alternative: "Intervalle sparen oft Zeit (Zeitvorteil umstritten).",
+      display: "Insights",
+      appliesTo: "Ziel Fettabbau / Di\xE4t",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-27",
+        "Q-65",
+        "Q-66"
+      ],
+      masterclassRef: "Teil VII Kap. 6 (S. 276\u2013277); Teil I Kap. 8 (S. 31)",
+      evidence: "mittel",
+      dataNote: "vorhanden",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Fettabbau",
+      id: "TR-FA-004",
+      status: "freigegeben",
+      area: "Schlaf",
+      condition: "In der Di\xE4t zu wenig Schlaf",
+      metric: "Schlafdauer (7-Tage-Mittel) w\xE4hrend Di\xE4tphase",
+      threshold: "< 7 h",
+      period: "laufend in der Di\xE4t",
+      recommendation: "Schlaf als festen Teil des Di\xE4tplans behandeln: 7\u20139 Stunden mit festen Zeiten.",
+      reason: "Bei gleichem Defizit verloren Menschen mit 5,5 statt 8,5 Stunden Zeit im Bett nur 0,6 statt 1,4 kg Fett, aber 2,4 statt 1,5 kg fettfreie Masse \u2013 und waren hungriger.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "Ziel Fettabbau / Di\xE4t",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-67",
+        "Q-68"
+      ],
+      masterclassRef: "Teil VII Kap. 7 (S. 278\u2013279)",
+      evidence: "mittel",
+      dataNote: "vorhanden (Schlaf)",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Fettabbau",
+      id: "TR-FA-005",
+      status: "freigegeben",
+      area: "Tempo",
+      condition: "Gewicht sinkt zu schnell",
+      metric: "Gewicht (Wochenmittel) \u2013 Ver\xE4nderung pro Woche",
+      threshold: "> 1 % pro Woche",
+      period: "2 Wochen in Folge",
+      recommendation: "Langsamer abnehmen: 0,5\u20131 % des K\xF6rpergewichts pro Woche, je schlanker desto langsamer (~0,5 %); Defizit etwa 300\u2013500 kcal.",
+      reason: "Wer 0,7 % statt 1,4 % pro Woche verlor, gewann bei gleichem Gewichtsverlust 2,1 % Magermasse, die schnellere Gruppe nichts.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "Ziel Fettabbau / Di\xE4t",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-69",
+        "Q-70"
+      ],
+      masterclassRef: "Teil VII Kap. 4\u20135, 13 (S. 273\u2013275, 293); Teil I Kap. 10 (S. 37\u201338)",
+      evidence: "mittel",
+      dataNote: "vorhanden (K\xF6rpergewicht)",
+      review: "Grenzt an Ern\xE4hrung \u2013 nur Hinweis, keine Kalorienvorgabe der App.",
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Fettabbau",
+      id: "TR-FA-006",
+      status: "freigegeben",
+      area: "Stillstand",
+      condition: "Fortschritt in der Di\xE4t stockt",
+      metric: "Gewicht (Wochenmittel) unver\xE4ndert",
+      threshold: "2\u20133 Wochen",
+      period: "laufend in der Di\xE4t",
+      recommendation: "Zuerst pr\xFCfen: Ist die Alltagsbewegung gesunken? Wird mehr gegessen als notiert? Dann 100\u2013200 kcal weniger oder 2.000 Schritte mehr. Di\xE4tpause (1\u20132 Wochen Erhalt) nur, wenn Hunger und Motivation kippen.",
+      reason: "Der Spareffekt einer normalen Di\xE4t liegt bei rund 90 kcal pro Tag; Di\xE4tpausen brachten Kraftsportlern gleichen Fettverlust, aber weniger Hunger \u2013 kein Trick f\xFCr mehr Fettabbau.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "Ziel Fettabbau / Di\xE4t",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC",
+        "Q-71",
+        "Q-60",
+        "Q-72"
+      ],
+      masterclassRef: "Teil VII Kap. 4 (S. 272\u2013273), Kap. 13 (S. 293)",
+      evidence: "mittel",
+      dataNote: "vorhanden (Gewicht, Schritte, Ern\xE4hrung)",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    },
+    {
+      group: "Fettabbau",
+      id: "TR-FA-007",
+      status: "freigegeben",
+      area: "Ausgangswerte",
+      condition: "Di\xE4t beginnt ohne Ausgangswerte",
+      metric: "Phase \u201EDi\xE4t\u201C neu; keine Taillenmessung, Fotos oder Kraftwerte in den 14 Tagen davor",
+      threshold: "\u2014",
+      period: "bei Di\xE4tbeginn",
+      recommendation: "Ausgangswerte festhalten: Gewicht als Wochenmittel, Taillenumfang, Fotos, Kraftwerte, Schritte.",
+      reason: "Kraft und K\xF6rperumf\xE4nge zeigen den Muskelerhalt; Waagen-Schwankungen sind oft Wasser und Glykogen.",
+      alternative: null,
+      display: "Insights",
+      appliesTo: "Ziel Fettabbau / Di\xE4t",
+      exceptions: null,
+      sourceIds: [
+        "Q-MC"
+      ],
+      masterclassRef: "Teil VII Kap. 13 (S. 293); Teil I Kap. 10 (S. 38)",
+      evidence: "gering",
+      dataNote: "vorhanden (K\xF6rper, Check-ins, Training)",
+      review: null,
+      approvedOn: "2026-11-28",
+      note: null
+    }
+  ],
+  splits: [
+    {
+      name: "Ganzk\xF6rper",
+      id: "GK",
+      status: "freigegeben",
+      unitTypes: "jede Einheit: Brust/Schulter + R\xFCcken + Beine",
+      detection: "jede Einheit enth\xE4lt Druck-, Zug- und Beinmuster",
+      daysPerWeek: "2\u20135",
+      frequency: "2\u20135 \xD7 je Muskel",
+      classification: "gleichwertig zu Splits; ideal bei 3 Tagen und f\xFCr Einsteiger",
+      source: "Q-MC Kap. 16; Q-43",
+      review: null,
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "Oberk\xF6rper/Unterk\xF6rper",
+      id: "UL",
+      status: "freigegeben",
+      unitTypes: "Upper: Brust, R\xFCcken, Schulter, Arme \xB7 Lower: Beine, Ges\xE4\xDF, Waden",
+      detection: "Einheiten abwechselnd nur Oberk\xF6rper- bzw. nur Bein-/Ges\xE4\xDFmuster",
+      daysPerWeek: "4",
+      frequency: "2 \xD7",
+      classification: "gut f\xFCr Fortgeschrittene (Beispielplan B)",
+      source: "Q-MC Kap. 16",
+      review: null,
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "Push/Pull/Beine",
+      id: "PPL",
+      status: "freigegeben",
+      unitTypes: "Push: Brust, Schulter vorne/seitlich, Trizeps \xB7 Pull: R\xFCcken, hintere Schulter, Bizeps \xB7 Beine",
+      detection: "Druckmuster / Zugmuster / Beinmuster je Einheit getrennt",
+      daysPerWeek: "3 oder 6",
+      frequency: "1 \xD7 (3 Tage) bzw. 2 \xD7 (6 Tage)",
+      classification: "bei 3 Tagen nur 1 \xD7 je Muskel \u2192 Hinweis TR-FR-001",
+      source: "Q-MC Kap. 16",
+      review: null,
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "PPL + Oberk\xF6rper/Unterk\xF6rper",
+      id: "PPLUL",
+      status: "freigegeben",
+      unitTypes: "Push, Pull, Beine, Upper, Lower",
+      detection: "Folge aus PPL und UL innerhalb einer Woche",
+      daysPerWeek: "5",
+      frequency: "2 \xD7",
+      classification: "Beispielplan C der Masterclass",
+      source: "Q-MC Kap. 16 (S. 53)",
+      review: null,
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "Push/Pull/Beine + Ganzk\xF6rper",
+      id: "PPLGK",
+      status: "freigegeben",
+      unitTypes: "Push, Pull, Beine, Ganzk\xF6rper",
+      detection: "PPL-Folge + eine Ganzk\xF6rper-Einheit",
+      daysPerWeek: "4",
+      frequency: "2 \xD7",
+      classification: "Masterclass-Vorschlag f\xFCr 4 Tage",
+      source: "Q-MC Kap. 16 (S. 51)",
+      review: null,
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "Oberk\xF6rper/Unterk\xF6rper/Ganzk\xF6rper",
+      id: "ULGK",
+      status: "freigegeben",
+      unitTypes: "Upper, Lower, Ganzk\xF6rper",
+      detection: "je eine UL-Einheit + eine GK-Einheit",
+      daysPerWeek: "3",
+      frequency: "2 \xD7",
+      classification: "Masterclass-Vorschlag f\xFCr 3 Tage",
+      source: "Q-MC Kap. 16 (S. 51)",
+      review: null,
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "Torso/Limbs",
+      id: "TL",
+      status: "freigegeben",
+      unitTypes: "Torso: Brust, R\xFCcken, Schulter \xB7 Limbs: Arme + Beine",
+      detection: "Einheiten nur Rumpfmuskeln bzw. nur Arme + Beine",
+      daysPerWeek: "4",
+      frequency: "2 \xD7",
+      classification: "gleichwertig, wenn das Wochenvolumen stimmt",
+      source: "Q-MC Kap. 16 (Prinzip)",
+      review: "ENTSCHEIDEN: nicht in der Masterclass beschrieben \u2013 Erkennungsregel von Claude",
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "2er-Split (A/B)",
+      id: "S2",
+      status: "freigegeben",
+      unitTypes: "zwei verschiedene Einheitstypen im Wechsel",
+      detection: "genau 2 wiederkehrende Einheitstypen",
+      daysPerWeek: "2\u20134",
+      frequency: "1\u20132 \xD7",
+      classification: "Sammelbegriff; konkrete Form (UL, TL) hat Vorrang",
+      source: "Q-MC Kap. 16 (Prinzip)",
+      review: "Erkennung \xFCber wiederkehrende Einheitstypen (Muskelrubriken)",
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "3er-Split",
+      id: "S3",
+      status: "freigegeben",
+      unitTypes: "drei verschiedene Einheitstypen",
+      detection: "3 wiederkehrende Einheitstypen (z. B. PPL oder Brust/R\xFCcken/Beine)",
+      daysPerWeek: "3\u20136",
+      frequency: "1\u20132 \xD7",
+      classification: null,
+      source: "Q-MC Kap. 16 (Prinzip)",
+      review: "wie oben",
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "4er-Split",
+      id: "S4",
+      status: "freigegeben",
+      unitTypes: "vier verschiedene Einheitstypen",
+      detection: "4 wiederkehrende Einheitstypen",
+      daysPerWeek: "4\u20135",
+      frequency: "1 \xD7",
+      classification: "1 \xD7 je Muskel \u2192 Hinweis TR-FR-001 bei > 6 Wochens\xE4tzen",
+      source: "Q-MC Kap. 16 (Prinzip)",
+      review: "wie oben",
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "5er-Split / Bro-Split",
+      id: "S5",
+      status: "freigegeben",
+      unitTypes: "je Einheit eine Muskelgruppe: Brust, R\xFCcken, Schulter, Arme, Beine",
+      detection: "5 Einheitstypen mit je einer Hauptrubrik",
+      daysPerWeek: "5\u20136",
+      frequency: "1 \xD7",
+      classification: "typisch Wettkampf-Bodybuilder; hohes Volumen je Einheit \u2192 TR-PL-003",
+      source: "Q-MC Kap. 15; Q-44",
+      review: null,
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "PHUL",
+      id: "PHUL",
+      status: "freigegeben",
+      unitTypes: "Upper Power, Lower Power, Upper Hypertrophie, Lower Hypertrophie",
+      detection: "UL-Folge; je H\xE4lfte einmal schwer (\u2264 6 Wdh.) und einmal moderat (8\u201315 Wdh.)",
+      daysPerWeek: "4",
+      frequency: "2 \xD7",
+      classification: "Kraft + Muskelaufbau kombiniert; passt zu \u201EKraft \xF6fter \xFCben\u201C",
+      source: "Q-MC Kap. 9/16 (Prinzip)",
+      review: "ENTSCHEIDEN: nicht in der Masterclass beschrieben \u2013 Erkennungsregel von Claude",
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "PHAT",
+      id: "PHAT",
+      status: "freigegeben",
+      unitTypes: "Upper Power, Lower Power, R\xFCcken/Schulter Hypertrophie, Beine Hypertrophie, Brust/Arme Hypertrophie",
+      detection: "2 Power-Einheiten (\u2264 6 Wdh.) + 3 Hypertrophie-Einheiten (8\u201315 Wdh.)",
+      daysPerWeek: "5",
+      frequency: "2 \xD7",
+      classification: "Kraft + Muskelaufbau kombiniert",
+      source: "Q-MC Kap. 9/16 (Prinzip)",
+      review: "ENTSCHEIDEN: nicht in der Masterclass beschrieben \u2013 Erkennungsregel von Claude",
+      approvedOn: "2026-11-28"
+    }
+  ],
+  models: [
+    {
+      name: "High Intensity Training (allgemein)",
+      id: "HIT",
+      status: "freigegeben",
+      setsPerExercise: "1\u20132 Arbeitss\xE4tze je \xDCbung",
+      reps: "6\u201312",
+      intensity: "Fail und/oder RPE 8\u201310",
+      rests: "2\u20133 min",
+      frequency: "2\u20133 \xD7 je Muskel",
+      detection: "\u2265 70 % der Arbeitss\xE4tze Fail oder RPE 8\u201310 UND im Mittel \u2264 2 Arbeitss\xE4tze je \xDCbung",
+      recommendation: "1\u20132 harte Arbeitss\xE4tze je \xDCbung (TR-MO-001); Mindestdosis \u2265 4 Wochens\xE4tze je Muskel (TR-MO-002)",
+      classification: "sehr zeiteffizient, wenig Erm\xFCdung, f\xFCr Kraft nahezu optimal; f\xFCr maximales Wachstum nicht das Maximum",
+      source: "Q-MC Kap. 4; Q-19; Q-20",
+      review: "Festlegung des Nutzers 25.11.2026: Fail und/oder RPE 8\u201310, ideal 1\u20132 Arbeitss\xE4tze je \xDCbung",
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "HIT nach Mentzer (Heavy Duty)",
+      id: "HIT-M",
+      status: "freigegeben",
+      setsPerExercise: "1 Arbeitssatz je \xDCbung, wenige \xDCbungen",
+      reps: "6\u201310",
+      intensity: "bis Versagen, Intensit\xE4tstechniken",
+      rests: "lang",
+      frequency: "sehr niedrig (je Muskel alle 5\u20137+ Tage)",
+      detection: "HIT erkannt UND je Muskel \u2264 1 \xD7 pro Woche, \u2264 2 \xDCbungen je Muskel",
+      recommendation: "Mindestdosis pr\xFCfen (TR-MO-002); Forced Reps nicht empfehlen (TR-NO-007)",
+      classification: "in der Masterclass nicht eigens beschrieben; niedrige Frequenz ist bei gleichem Volumen kein Nachteil, das Volumen bleibt aber sehr niedrig",
+      source: "Q-58; Q-MC Kap. 4/9",
+      review: "ENTSCHEIDEN: Frequenwechsel auf 3 mal w\xF6chentlich empfehlen.",
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "HIT nach Yates (Blood & Guts)",
+      id: "HIT-Y",
+      status: "freigegeben",
+      setsPerExercise: "nach Aufw\xE4rms\xE4tzen 1 Arbeitssatz je \xDCbung, 3\u20134 \xDCbungen je Muskel",
+      reps: "6\u201310 (Beine mehr)",
+      intensity: "bis Versagen, teils Teilwdh./Forced Reps",
+      rests: "2\u20133 min",
+      frequency: "1 \xD7 je Muskel (4er-Split)",
+      detection: "HIT erkannt UND 4er-Split UND 3\u20134 \xDCbungen je Muskel",
+      recommendation: "Aufw\xE4rmen beibehalten (TR-AW-001); Forced Reps nicht empfehlen (TR-NO-007)",
+      classification: "in der Masterclass nicht eigens beschrieben",
+      source: "Q-59; Q-MC Kap. 4/12",
+      review: "ENTSCHEIDEN: Frequenwechsel auf 3 mal w\xF6chentlich empfehlen.",
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "Volumentraining",
+      id: "VOL",
+      status: "freigegeben",
+      setsPerExercise: "3\u20136 Arbeitss\xE4tze je \xDCbung",
+      reps: "6\u201315",
+      intensity: "RPE 7\u20139, selten Fail",
+      rests: "1,5\u20133 min",
+      frequency: "2 \xD7 je Muskel",
+      detection: "im Mittel \u2265 3 Arbeitss\xE4tze je \xDCbung, \xFCberwiegend RPE 7\u20139",
+      recommendation: "Wochenvolumen 10\u201320 (TR-VO-002/003); je Einheit \u2264 6\u201311 S\xE4tze je Muskel (TR-VO-004)",
+      classification: "mehr absolutes Wachstum mit abnehmendem Ertrag; mehr Zeit und Erm\xFCdung",
+      source: "Q-MC Kap. 4/9; Q-21",
+      review: null,
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "Krafttraining",
+      id: "KRAFT",
+      status: "freigegeben",
+      setsPerExercise: "3\u20135 Arbeitss\xE4tze bei Grund\xFCbungen",
+      reps: "1\u20136",
+      intensity: "RPE 7\u20139 (2\u20134 RIR)",
+      rests: "3\u20135 min",
+      frequency: "Haupt\xFCbung 2\u20133 \xD7 pro Woche",
+      detection: "Grund\xFCbungen \xFCberwiegend \u2264 6 Wdh., lange Pausen",
+      recommendation: "Kraft\xFCbung 2\u20133 \xD7 pro Woche (TR-FR-002); lange Pausen (TR-PA-001)",
+      classification: "Frequenz wirkt f\xFCr Kraft stark; Periodisierung macht etwas st\xE4rker (ES ~0,3)",
+      source: "Q-MC Kap. 3/9/16; Q-22",
+      review: null,
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "Kraftausdauer",
+      id: "KA",
+      status: "freigegeben",
+      setsPerExercise: "2\u20134 Arbeitss\xE4tze",
+      reps: "15\u201330",
+      intensity: "mittel bis hoch",
+      rests: "< 60\u201390 s",
+      frequency: "2\u20133 \xD7",
+      detection: "\xFCberwiegend \u2265 15 Wdh. UND kurze Pausen (Zeitstempel)",
+      recommendation: "Bei Ziel Muskelaufbau: TR-MO-003",
+      classification: "unter ~30 % 1RM ineffizient f\xFCr Wachstum; kurze Pausen kosten Wiederholungen",
+      source: "Q-MC Kap. 3/13; Q-33; Q-36",
+      review: null,
+      approvedOn: "2026-11-28"
+    },
+    {
+      name: "Bodybuilding-Split (Wettkampf)",
+      id: "BB",
+      status: "freigegeben",
+      setsPerExercise: "4\u20135 \xDCbungen je Muskel \xE0 3\u20136 S\xE4tze",
+      reps: "7\u201312",
+      intensity: "nah am Versagen",
+      rests: "1\u20132 min",
+      frequency: "1 \xD7 je Muskel, 5\u20136 Einheiten",
+      detection: "5er-Split UND > 11 S\xE4tze je Muskel und Einheit",
+      recommendation: "TR-PL-003",
+      classification: "weit \xFCber zeiteffizientem Volumen; Profi-Pl\xE4ne nicht \xFCbertragbar",
+      source: "Q-MC Kap. 15; Q-44",
+      review: null,
+      approvedOn: "2026-11-28"
+    }
+  ],
+  patterns: [
+    {
+      pattern: "row",
+      label: "Rudern",
+      mainMuscle: "Latissimus, mittlerer Trapez",
+      joints: "mehrgelenkig",
+      stretch: "teilweise",
+      variantGroup: "R\xFCcken: horizontal",
+      hint: "volle Streckung vorne",
+      correction: null
+    },
+    {
+      pattern: "pulldown",
+      label: "Latzug",
+      mainMuscle: "Latissimus",
+      joints: "mehrgelenkig",
+      stretch: "teilweise",
+      variantGroup: "R\xFCcken: vertikal",
+      hint: "oben ganz strecken",
+      correction: null
+    },
+    {
+      pattern: "press_flat",
+      label: "Brustpresse flach",
+      mainMuscle: "Brust (mittlerer Anteil)",
+      joints: "mehrgelenkig",
+      stretch: "teilweise",
+      variantGroup: "Brust: Druck",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "press_incline",
+      label: "Brustpresse schr\xE4g",
+      mainMuscle: "Brust (oberer Anteil)",
+      joints: "mehrgelenkig",
+      stretch: "teilweise",
+      variantGroup: "Brust: Druck",
+      hint: "etwa 30\xB0 (15\u201345\xB0)",
+      correction: null
+    },
+    {
+      pattern: "press_decline",
+      label: "Brustpresse negativ",
+      mainMuscle: "Brust (unterer Anteil)",
+      joints: "mehrgelenkig",
+      stretch: "teilweise",
+      variantGroup: "Brust: Druck",
+      hint: "\u201E\u221245\xB0 f\xFCr unten\u201C nicht belegt",
+      correction: null
+    },
+    {
+      pattern: "shoulder_press",
+      label: "Schulterdr\xFCcken",
+      mainMuscle: "vordere Schulter",
+      joints: "mehrgelenkig",
+      stretch: "nein",
+      variantGroup: "Schulter vorne",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "dip",
+      label: "Dips",
+      mainMuscle: "Brust (unten), Trizeps",
+      joints: "mehrgelenkig",
+      stretch: "teilweise",
+      variantGroup: "Trizeps: Grund",
+      hint: "kontrolliert umkehren",
+      correction: null
+    },
+    {
+      pattern: "fly",
+      label: "Butterfly",
+      mainMuscle: "Brust (oben + mitte)",
+      joints: "eingelenkig",
+      stretch: "ja",
+      variantGroup: "Brust: Fly",
+      hint: "tiefe Dehnung",
+      correction: null
+    },
+    {
+      pattern: "reverse_fly",
+      label: "Reverse Butterfly",
+      mainMuscle: "hintere Schulter",
+      joints: "eingelenkig",
+      stretch: "nein",
+      variantGroup: "Schulter hinten",
+      hint: "auch Face Pulls",
+      correction: null
+    },
+    {
+      pattern: "leg_press",
+      label: "Beinpresse",
+      mainMuscle: "Quadrizeps (Vasti), Ges\xE4\xDF, Adduktoren",
+      joints: "mehrgelenkig",
+      stretch: "teilweise",
+      variantGroup: "Quadrizeps: Grund",
+      hint: "Ges\xE4\xDF +15 %, Rectus femoris +1 %",
+      correction: null
+    },
+    {
+      pattern: "hack_squat",
+      label: "Hack-/Pendulum-Squat (auch Kniebeuge)",
+      mainMuscle: "Quadrizeps, Ges\xE4\xDF, Adduktoren",
+      joints: "mehrgelenkig",
+      stretch: "ja (tief)",
+      variantGroup: "Quadrizeps: Grund",
+      hint: "tief schl\xE4gt halb",
+      correction: null
+    },
+    {
+      pattern: "belt_squat",
+      label: "Belt Squat",
+      mainMuscle: "Quadrizeps, Ges\xE4\xDF",
+      joints: "mehrgelenkig",
+      stretch: "ja (tief)",
+      variantGroup: "Quadrizeps: Grund",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "leg_extension",
+      label: "Beinstrecker",
+      mainMuscle: "Quadrizeps inkl. Rectus femoris",
+      joints: "eingelenkig",
+      stretch: "ja (Lehne zur\xFCck)",
+      variantGroup: "Quadrizeps: Isolation",
+      hint: "Lehne ~40\xB0 H\xFCftwinkel",
+      correction: null
+    },
+    {
+      pattern: "leg_curl_seated",
+      label: "Beinbeuger sitzend",
+      mainMuscle: "Beinbeuger (alle K\xF6pfe)",
+      joints: "eingelenkig",
+      stretch: "ja",
+      variantGroup: "Beinbeuger: Kniebeugung",
+      hint: "Schl\xFCssel\xFCbung",
+      correction: null
+    },
+    {
+      pattern: "leg_curl_lying",
+      label: "Beinbeuger liegend/stehend (auch Nordic)",
+      mainMuscle: "Beinbeuger",
+      joints: "eingelenkig",
+      stretch: "nein (Nordic: exzentrisch lang)",
+      variantGroup: "Beinbeuger: Kniebeugung",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "adduction",
+      label: "Adduktion",
+      mainMuscle: "Adduktoren",
+      joints: "eingelenkig",
+      stretch: "teilweise",
+      variantGroup: "Adduktoren",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "abduction",
+      label: "Abduktion",
+      mainMuscle: "Gluteus medius/minimus",
+      joints: "eingelenkig",
+      stretch: "nein",
+      variantGroup: "Ges\xE4\xDF seitlich",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "glute_kick",
+      label: "Glute Kick",
+      mainMuscle: "Ges\xE4\xDF",
+      joints: "eingelenkig",
+      stretch: "teilweise",
+      variantGroup: "Ges\xE4\xDF: Isolation",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "hip_thrust",
+      label: "Hip Thrust (auch Glute Bridge)",
+      mainMuscle: "Ges\xE4\xDF",
+      joints: "eingelenkig (H\xFCfte)",
+      stretch: "nein",
+      variantGroup: "Ges\xE4\xDF: H\xFCftstreckung",
+      hint: "gleich viel Ges\xE4\xDF wie Kniebeuge",
+      correction: null
+    },
+    {
+      pattern: "reverse_hyper",
+      label: "Reverse Hyper",
+      mainMuscle: "Ges\xE4\xDF, unterer R\xFCcken",
+      joints: "eingelenkig",
+      stretch: "teilweise",
+      variantGroup: "H\xFCftstreckung",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "back_extension",
+      label: "R\xFCckenstrecker",
+      mainMuscle: "unterer R\xFCcken, Ges\xE4\xDF, Beinbeuger",
+      joints: "eingelenkig (H\xFCfte)",
+      stretch: "teilweise",
+      variantGroup: "H\xFCftstreckung",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "calf_standing",
+      label: "Wade stehend",
+      mainMuscle: "Gastrocnemius + Soleus",
+      joints: "eingelenkig",
+      stretch: "ja",
+      variantGroup: "Waden",
+      hint: "tief dehnen, kurz halten",
+      correction: null
+    },
+    {
+      pattern: "calf_seated",
+      label: "Wade sitzend",
+      mainMuscle: "Soleus",
+      joints: "eingelenkig",
+      stretch: "nein (Gastrocnemius verk\xFCrzt)",
+      variantGroup: "Waden",
+      hint: "nur erg\xE4nzend",
+      correction: null
+    },
+    {
+      pattern: "tibialis",
+      label: "Tibialis",
+      mainMuscle: "vorderer Schienbeinmuskel",
+      joints: "eingelenkig",
+      stretch: "teilweise",
+      variantGroup: "Tibialis",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "biceps_curl",
+      label: "Bizepscurl",
+      mainMuscle: "Bizeps",
+      joints: "eingelenkig",
+      stretch: "je nach Variante (Incline ja)",
+      variantGroup: "Bizeps",
+      hint: "Incline + Preacher kombinieren",
+      correction: null
+    },
+    {
+      pattern: "triceps",
+      label: "Trizeps (Pushdown)",
+      mainMuscle: "Trizeps",
+      joints: "eingelenkig",
+      stretch: "nein",
+      variantGroup: "Trizeps: neutral",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "triceps_overhead",
+      label: "Trizeps \xDCberkopf",
+      mainMuscle: "Trizeps (langer Kopf)",
+      joints: "eingelenkig",
+      stretch: "ja",
+      variantGroup: "Trizeps: \xFCber Kopf",
+      hint: "+40 % Wachstum gg\xFC. neutral",
+      correction: null
+    },
+    {
+      pattern: "forearm",
+      label: "Unterarm",
+      mainMuscle: "Unterarme",
+      joints: "eingelenkig",
+      stretch: "teilweise",
+      variantGroup: "Unterarm",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "crunch",
+      label: "Bauch/Crunch",
+      mainMuscle: "Bauch",
+      joints: "eingelenkig",
+      stretch: "teilweise",
+      variantGroup: "Rumpf",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "rotation",
+      label: "Rotation",
+      mainMuscle: "schr\xE4ge Bauchmuskeln",
+      joints: "eingelenkig",
+      stretch: "teilweise",
+      variantGroup: "Rumpf",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "lateral_raise",
+      label: "Seitheben",
+      mainMuscle: "seitliche Schulter",
+      joints: "eingelenkig",
+      stretch: "nein",
+      variantGroup: "Schulter seitlich",
+      hint: "Kabel = Kurzhantel",
+      correction: null
+    },
+    {
+      pattern: "pullover",
+      label: "\xDCberzug",
+      mainMuscle: "Latissimus",
+      joints: "eingelenkig",
+      stretch: "ja",
+      variantGroup: "R\xFCcken: Schulterextension",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "shrug",
+      label: "Shrug",
+      mainMuscle: "oberer Trapez",
+      joints: "eingelenkig",
+      stretch: "teilweise",
+      variantGroup: "Trapez oben",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "hip_flexion",
+      label: "H\xFCftbeugen",
+      mainMuscle: "H\xFCftbeuger",
+      joints: "eingelenkig",
+      stretch: "teilweise",
+      variantGroup: "H\xFCftbeuger",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "deadlift",
+      label: "Kreuzheben (auch Rum\xE4nisch)",
+      mainMuscle: "Beinbeuger, Ges\xE4\xDF, unterer R\xFCcken",
+      joints: "mehrgelenkig",
+      stretch: "ja (Rum\xE4nisch)",
+      variantGroup: "Beinbeuger: H\xFCftstreckung",
+      hint: "zweite Beinbeuger-\xDCbung",
+      correction: null
+    },
+    {
+      pattern: "sissy_squat",
+      label: "Sissy Squat",
+      mainMuscle: "Quadrizeps inkl. Rectus femoris",
+      joints: "mehrgelenkig",
+      stretch: "ja",
+      variantGroup: "Quadrizeps: Isolation",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "rotator_cuff",
+      label: "Rotatorenmanschette",
+      mainMuscle: "Rotatorenmanschette",
+      joints: "eingelenkig",
+      stretch: "teilweise",
+      variantGroup: "Schulter-Stabilit\xE4t",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "neck",
+      label: "Nacken",
+      mainMuscle: "Nackenmuskulatur",
+      joints: "eingelenkig",
+      stretch: "teilweise",
+      variantGroup: "Nacken",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "step_up",
+      label: "Step-up (auch Ausfallschritt, Bulgarian)",
+      mainMuscle: "Ges\xE4\xDF, Quadrizeps",
+      joints: "mehrgelenkig",
+      stretch: "ja (Bulgarian)",
+      variantGroup: "Ges\xE4\xDF/Quadrizeps",
+      hint: null,
+      correction: null
+    },
+    {
+      pattern: "upright_row",
+      label: "Aufrechtes Rudern",
+      mainMuscle: "seitliche Schulter, Trapez",
+      joints: "mehrgelenkig",
+      stretch: "nein",
+      variantGroup: "Schulter seitlich",
+      hint: null,
+      correction: null
+    }
+  ],
+  profile: [
+    {
+      field: "Trainingserfahrung",
+      kind: "Auswahl",
+      options: "Einsteiger (< 1 Jahr) \xB7 Fortgeschritten (1\u20133 Jahre) \xB7 Erfahren (> 3 Jahre)",
+      example: "Erfahren",
+      usedFor: "Volumen-Startwert (6\u201310 vs. 10\u201320), Progressionstempo",
+      origin: "vom Nutzer gew\xFCnscht",
+      value: "Einsteiger (< 1 Jahr) \xB7 Fortgeschritten (1\u20133 Jahre) \xB7 Erfahren (> 3 Jahre)"
+    },
+    {
+      field: "Tage pro Woche (geplant)",
+      kind: "Zahl",
+      options: "1\u20137",
+      example: "4",
+      usedFor: "Split-Vorschlag (TR-PL-002), Frequenz",
+      origin: "vom Nutzer gew\xFCnscht",
+      value: "Oberk\xF6rper/Unterk\xF6rper, Torso Limbs, Ganzk\xF6rper und Push Pull Legs vorrangig Empfehlen"
+    },
+    {
+      field: "Zeit pro Einheit (geplant)",
+      kind: "Minuten",
+      options: "20\u2013180",
+      example: "75",
+      usedFor: "Zeitsparen (TR-PA-004), Satzzahl je Einheit",
+      origin: "vom Nutzer gew\xFCnscht",
+      value: "Jeder Satz sollte ca 1 Minute ben\xF6tigen (Bilateral) und Unilateral 2-3 Minuten. Bei einer Pausenzeit von 3 Minuten pro Satz. 80-90 Minuten Trainingsdauer reichen vollkommen aus um ein effizientes Training zu gestalten."
+    },
+    {
+      field: "Schwachstellen / Priorit\xE4ten",
+      kind: "Muskelauswahl mit Stufe",
+      options: "je Muskel: hoch \xB7 normal \xB7 niedrig",
+      example: "Beinbeuger hoch, Waden hoch",
+      usedFor: "Schwerpunktmuskeln (TR-VO-003/005), Reihenfolge der Empfehlungen",
+      origin: "vom Nutzer gew\xFCnscht",
+      value: "Erst die gro\xDFen Muskelanteile dann ins Detail zu den kleinen. Erst der Lattisimus dann die hintere Schulter \u2026"
+    },
+    {
+      field: "Ausgeschlossene \xDCbungen",
+      kind: "\xDCbungs-/Maschinenauswahl + Grund",
+      options: "nicht m\xF6glich \xB7 nicht gew\xFCnscht",
+      example: "Kniebeuge mit Langhantel \u2013 nicht gew\xFCnscht",
+      usedFor: "werden nie empfohlen (TR-VE-001)",
+      origin: "vom Nutzer gew\xFCnscht",
+      value: "nicht gew\xFCnschte \xDCbungen werden nicht empfohlen."
+    },
+    {
+      field: "Verletzungen / Einschr\xE4nkungen",
+      kind: "K\xF6rperregion + Text + seit/bis",
+      options: "Schulter, Ellbogen, Handgelenk, R\xFCcken, H\xFCfte, Knie, Sprunggelenk \u2026",
+      example: "Knie links seit 10/2026",
+      usedFor: "\xDCbungen mit dieser Region werden nicht empfohlen bzw. angepasst (TR-VE-001)",
+      origin: "vom Nutzer gew\xFCnscht",
+      value: "Nach 4 Wochen leichtes Volumentraining empfehlen wenn Schmerzen nicht mehr erw\xE4hnt werden"
+    },
+    {
+      field: "Gym / Ger\xE4te",
+      kind: "aus \u201EMeine Gyms\u201C",
+      options: "aktives Gym",
+      example: "dasGym Wien",
+      usedFor: "Empfehlungen nur mit Ger\xE4ten, die es im Gym gibt",
+      origin: "vorhanden",
+      value: "Empfehlungen nur mit Ger\xE4ten, die es im Gym gibt wenn eines angelegt und aktiv ist."
+    },
+    {
+      field: "Ziel",
+      kind: "Auswahl",
+      options: "Muskelaufbau \xB7 Kraft \xB7 Fettabbau \xB7 Gesundheit/Fitness \xB7 Kraftausdauer",
+      example: "Muskelaufbau",
+      usedFor: "Volumen- und Wiederholungsregeln (TR-VO-002, TR-WH-002, TR-FR-002, TR-MO-003, TR-FA-*)",
+      origin: "ENTSCHEIDEN: Vorschlag von Claude",
+      value: "Vorschlag von Claude"
+    },
+    {
+      field: "Phase",
+      kind: "Auswahl",
+      options: "Aufbau \xB7 Erhalt \xB7 Di\xE4t (oder aus der Energiebilanz)",
+      example: "Aufbau",
+      usedFor: "Volumen in der Di\xE4t (TR-VO-006), Fettabbau-Regeln (TR-FA-*)",
+      origin: "ENTSCHEIDEN: Vorschlag von Claude",
+      value: "Vorschlag von Claude"
+    },
+    {
+      field: "Vorerm\xFCdung erlaubt",
+      kind: "Ja/Nein",
+      options: null,
+      example: "Nein",
+      usedFor: "schaltet TR-PL-001 ab",
+      origin: "ENTSCHEIDEN: Vorschlag von Claude",
+      value: "Vorerm\xFCdung ist m\xF6glich. Ja"
+    }
+  ],
+  timestamps: [
+    {
+      id: "ZS-01",
+      topic: "Wann",
+      rule: "Beim Abhaken eines Satzes (\u201EDone\u201C) im laufenden Training wird ein interner Zeitstempel (UTC, Millisekunden) gespeichert; er wird nicht angezeigt.",
+      decidedBy: "Nutzer 25.11.2026"
+    },
+    {
+      id: "ZS-02",
+      topic: "Erneutes Abhaken",
+      rule: "Wird ein Satz abgew\xE4hlt und wieder abgehakt, bleibt die alte (erste) Uhrzeit.",
+      decidedBy: "Nutzer 25.11.2026"
+    },
+    {
+      id: "ZS-03",
+      topic: "Nachtr\xE4gliches Erfassen",
+      rule: "Bei nachtr\xE4glich erfassten oder bearbeiteten Einheiten wird kein Zeitstempel gesetzt.",
+      decidedBy: "Nutzer 25.11.2026"
+    },
+    {
+      id: "ZS-04",
+      topic: "Unplausibel",
+      rule: "Werden drei oder mehr S\xE4tze bzw. \xDCbungen innerhalb einer Minute abgehakt, z\xE4hlen diese Zeitstempel nicht f\xFCr Auswertungen (bleiben aber gespeichert).",
+      decidedBy: "Nutzer 25.11.2026"
+    },
+    {
+      id: "ZS-05",
+      topic: "PC und APP",
+      rule: "Gilt gleich am PC und am Handy; der Zeitstempel wird exportiert und abgeglichen.",
+      decidedBy: "Grundregel APP = PC"
+    },
+    {
+      id: "ZS-06",
+      topic: "Auswertungen",
+      rule: "Pausen (TR-PA-*), Dauer je \xDCbung und Einheit (TR-PA-004), Reihenfolge (TR-CA-002, TR-PL-001), Modell Kraftausdauer.",
+      decidedBy: "Claude"
+    }
+  ],
+  sources: [
+    {
+      id: "Q-MC",
+      type: "Masterclass-Buch",
+      title: "iCoach.Me \u2013 Die Masterclass (Teil I Training, Teil IV Verletzungen & Regeneration)",
+      author: "iCoach.Me",
+      year: "2026",
+      journal: "474 Seiten, Stand 30.10.2026",
+      ref: "in der App: iCoach.me \u2192 Downloads",
+      note: null
+    },
+    {
+      id: "Q-01",
+      type: "Studie",
+      title: "Greater hamstrings muscle hypertrophy but similar damage protection after training at long versus short muscle lengths",
+      author: "Maeo S et al.",
+      year: "2021",
+      journal: "Med Sci Sports Exerc 53(4):825\u2013837",
+      ref: "PMID 33009197",
+      note: "Beinbeuger sitzend vs. liegend"
+    },
+    {
+      id: "Q-02",
+      type: "Studie",
+      title: "Triceps brachii hypertrophy is substantially greater after elbow extension training performed in the overhead versus neutral arm position",
+      author: "Maeo S et al.",
+      year: "2023",
+      journal: "Eur J Sport Sci 23(7):1240\u20131250",
+      ref: "DOI 10.1080/17461391.2022.2100279",
+      note: "Trizeps \xFCber Kopf"
+    },
+    {
+      id: "Q-03",
+      type: "Studie",
+      title: "Triceps surae muscle hypertrophy is greater after standing versus seated calf-raise training",
+      author: "Kinoshita M, Maeo S et al.",
+      year: "2023",
+      journal: "Front Physiol 14:1272106",
+      ref: "DOI 10.3389/fphys.2023.1272106",
+      note: "Waden stehend vs. sitzend"
+    },
+    {
+      id: "Q-04",
+      type: "Studie",
+      title: "Greater gastrocnemius muscle hypertrophy after partial range of motion training performed at long muscle lengths",
+      author: "Kassiano W et al.",
+      year: "2023",
+      journal: "J Strength Cond Res 37(9):1746\u20131753",
+      ref: "PMID 37015016",
+      note: "Teilwiederholungen gedehnt"
+    },
+    {
+      id: "Q-05",
+      type: "Studie",
+      title: "Hypertrophic effects of single- versus multi-joint exercise: knee extension vs. leg press",
+      author: "Kinoshita M, Maeo S et al.",
+      year: "2026",
+      journal: "Med Sci Sports Exerc",
+      ref: "DOI 10.1249/MSS.0000000000003957",
+      note: "Beinstrecker vs. Beinpresse"
+    },
+    {
+      id: "Q-06",
+      type: "Studie",
+      title: "The effects of hip flexion angle on quadriceps femoris muscle hypertrophy in the leg extension exercise",
+      author: "Larsen S et al.",
+      year: "2025",
+      journal: "J Sports Sci",
+      ref: "PMID 39699974",
+      note: "Beinstrecker zur\xFCckgelehnt"
+    },
+    {
+      id: "Q-07",
+      type: "Studie",
+      title: "Effect of five bench inclinations on the EMG activity of the pectoralis major, anterior deltoid, and triceps brachii",
+      author: "Rodr\xEDguez-Ridao D et al.",
+      year: "2020",
+      journal: "Int J Environ Res Public Health 17(19):7339",
+      ref: "PMID 33049982",
+      note: "Schr\xE4gbank 30\xB0"
+    },
+    {
+      id: "Q-08",
+      type: "Studie",
+      title: "Effects of horizontal and incline bench press on neuromuscular adaptations in untrained young men",
+      author: "Chaves SFN et al.",
+      year: "2020",
+      journal: "Int J Exerc Sci 13(6):859\u2013872",
+      ref: "digitalcommons.wku.edu/ijes/vol13/iss6/12",
+      note: null
+    },
+    {
+      id: "Q-09",
+      type: "Studie",
+      title: "Pectoralis clavicular and sternocostal thicknesses increase similarly \u2026 pec deck",
+      author: "Pinto MD et al.",
+      year: "2025",
+      journal: "J Strength Cond Res 39(5):523\u2013530",
+      ref: "DOI 10.1519/JSC.0000000000005045",
+      note: "Butterfly"
+    },
+    {
+      id: "Q-10",
+      type: "Studie",
+      title: "Distinct muscle growth and strength adaptations after preacher and incline biceps curls",
+      author: "Kassiano W et al.",
+      year: "2025",
+      journal: "Int J Sports Med 46(5):334\u2013343",
+      ref: null,
+      note: null
+    },
+    {
+      id: "Q-11",
+      type: "Studie",
+      title: "Training in the initial range of motion promotes greater muscle adaptations than at final in the arm curl",
+      author: "Pedrosa GF et al.",
+      year: "2023",
+      journal: "Sports 11(2):39",
+      ref: "DOI 10.3390/sports11020039",
+      note: null
+    },
+    {
+      id: "Q-12",
+      type: "Studie",
+      title: "Hip thrust and back squat training elicit similar gluteus muscle hypertrophy",
+      author: "Plotkin DL et al.",
+      year: "2023",
+      journal: "Front Physiol 14:1279170",
+      ref: "PMID 37877099",
+      note: null
+    },
+    {
+      id: "Q-13",
+      type: "Studie",
+      title: "Effects of squat training with different depths on lower limb muscle volumes",
+      author: "Kubo K, Ikebukuro T, Yata H",
+      year: "2019",
+      journal: "Eur J Appl Physiol 119:1933\u20131942",
+      ref: "DOI 10.1007/s00421-019-04181-y",
+      note: "tiefe vs. halbe Kniebeuge"
+    },
+    {
+      id: "Q-14",
+      type: "Studie",
+      title: "Dumbbell versus cable lateral raises for lateral deltoid hypertrophy",
+      author: "Larsen S et al.",
+      year: "2025",
+      journal: "Front Physiol 16:1611468",
+      ref: "DOI 10.3389/fphys.2025.1611468",
+      note: null
+    },
+    {
+      id: "Q-15",
+      type: "Studie",
+      title: "Biomechanical differences between hip thrust and glute bridge for hip extensors",
+      author: "Zabaleta-Korta A, Fern\xE1ndez-Pe\xF1a E",
+      year: "2024",
+      journal: "Cultura, Ciencia y Deporte 19(59)",
+      ref: "DOI 10.12800/ccd.v19i59.2084",
+      note: null
+    },
+    {
+      id: "Q-16",
+      type: "Studie",
+      title: "Novel resistance training-specific RPE scale measuring repetitions in reserve",
+      author: "Zourdos MC et al.",
+      year: "2016",
+      journal: "J Strength Cond Res 30(1):267\u2013275",
+      ref: "PMID 26049792",
+      note: "RIR-Skala"
+    },
+    {
+      id: "Q-17",
+      type: "Studie",
+      title: "Multiscale hamstring muscle adaptations following 9 weeks of eccentric training",
+      author: "Andrews MH et al.",
+      year: "2025",
+      journal: "J Sport Health Sci 14:100996",
+      ref: "DOI 10.1016/j.jshs.2024.100996",
+      note: "Nordic Curls"
+    },
+    {
+      id: "Q-18",
+      type: "Meta-Analyse",
+      title: "Cardiorespiratory fitness as a quantitative predictor of all-cause mortality and cardiovascular events",
+      author: "Kodama S et al.",
+      year: "2009",
+      journal: "JAMA 301(19):2024\u20132035",
+      ref: "PMID 19454641",
+      note: "MET"
+    },
+    {
+      id: "Q-19",
+      type: "Meta-Analyse",
+      title: "Single vs. multiple sets of resistance exercise for muscle hypertrophy",
+      author: "Krieger JW",
+      year: "2010",
+      journal: "J Strength Cond Res 24(4):1150\u20131159",
+      ref: "PMID 20300012",
+      note: null
+    },
+    {
+      id: "Q-20",
+      type: "Meta-Analyse",
+      title: "Dose-response relationship between weekly resistance training volume and increases in muscle mass",
+      author: "Schoenfeld BJ, Ogborn D, Krieger JW",
+      year: "2017",
+      journal: "J Sports Sci 35(11):1073\u20131082",
+      ref: "PMID 27433992",
+      note: null
+    },
+    {
+      id: "Q-21",
+      type: "Meta-Analyse",
+      title: "The resistance training dose response: meta-regressions \u2026 weekly volume and frequency",
+      author: "Pelland JC et al.",
+      year: "2026",
+      journal: "Sports Med 56(2):481\u2013505",
+      ref: "DOI 10.1007/s40279-025-02344-w",
+      note: null
+    },
+    {
+      id: "Q-22",
+      type: "Positionspapier",
+      title: "ACSM Position Stand: Resistance training prescription \u2026 overview of reviews",
+      author: "Currier BS et al.",
+      year: "2026",
+      journal: "Med Sci Sports Exerc 58(4):851\u2013872",
+      ref: "DOI 10.1249/MSS.0000000000003897",
+      note: null
+    },
+    {
+      id: "Q-23",
+      type: "Studie",
+      title: "Resistance training volume enhances muscle hypertrophy but not strength in trained men",
+      author: "Schoenfeld BJ et al.",
+      year: "2019",
+      journal: "Med Sci Sports Exerc 51(1):94\u2013103",
+      ref: "PMID 30153194",
+      note: null
+    },
+    {
+      id: "Q-24",
+      type: "Preprint",
+      title: "Is there too much of a good thing? Meta-regressions of per-session volume",
+      author: "Remmert JF et al.",
+      year: "2025",
+      journal: "SportRxiv (nicht begutachtet)",
+      ref: "sportrxiv.org/index.php/server/preprint/view/537",
+      note: null
+    },
+    {
+      id: "Q-25",
+      type: "Studie",
+      title: "Resistance training volume does not influence lean mass preservation during energy restriction",
+      author: "Roth C et al.",
+      year: "2023",
+      journal: "Scand J Med Sci Sports 33(1):20\u201335",
+      ref: "DOI 10.1111/sms.14237",
+      note: null
+    },
+    {
+      id: "Q-26",
+      type: "Meta-Analyse",
+      title: "How many times per week should a muscle be trained to maximize muscle hypertrophy?",
+      author: "Schoenfeld BJ, Grgic J, Krieger J",
+      year: "2019",
+      journal: "J Sports Sci 37(11):1286\u20131295",
+      ref: "DOI 10.1080/02640414.2018.1555906",
+      note: null
+    },
+    {
+      id: "Q-27",
+      type: "Meta-Analyse",
+      title: "HIIT vs. moderate-intensity continuous training on body composition",
+      author: "Wewege M et al.",
+      year: "2017",
+      journal: "Obes Rev 18(6):635\u2013646",
+      ref: "PMID 28401638",
+      note: null
+    },
+    {
+      id: "Q-28",
+      type: "Meta-Analyse",
+      title: "Dose\u2013response relationship between proximity to failure, strength gain and hypertrophy",
+      author: "Robinson ZP et al.",
+      year: "2024",
+      journal: "Sports Med 54:2209\u20132231",
+      ref: null,
+      note: null
+    },
+    {
+      id: "Q-29",
+      type: "Meta-Analyse",
+      title: "Accuracy in predicting repetitions to task failure in resistance exercise",
+      author: "Halperin I et al.",
+      year: "2022",
+      journal: "Sports Med 52(2):377\u2013390",
+      ref: "PMID 34542869",
+      note: null
+    },
+    {
+      id: "Q-30",
+      type: "Studie",
+      title: "Similar muscle hypertrophy following eight weeks of training to failure or with RIR",
+      author: "Refalo MC et al.",
+      year: "2024",
+      journal: "J Sports Sci",
+      ref: "PMID 38393985",
+      note: null
+    },
+    {
+      id: "Q-31",
+      type: "Studie",
+      title: "Time course of recovery following resistance training leading or not to failure",
+      author: "Mor\xE1n-Navarro R et al.",
+      year: "2017",
+      journal: "Eur J Appl Physiol 117:2387\u20132399",
+      ref: "PMID 28965198",
+      note: null
+    },
+    {
+      id: "Q-32",
+      type: "Studie",
+      title: "Neither load nor systemic hormones determine resistance training-mediated hypertrophy",
+      author: "Morton RW et al.",
+      year: "2016",
+      journal: "J Appl Physiol 121(1):129\u2013138",
+      ref: "PMID 27174923",
+      note: null
+    },
+    {
+      id: "Q-33",
+      type: "Studie",
+      title: "Effects of different intensities of resistance training with equated volume load",
+      author: "Lasevicius T et al.",
+      year: "2018",
+      journal: "Eur J Sport Sci 18(6):772\u2013780",
+      ref: "PMID 29564973",
+      note: null
+    },
+    {
+      id: "Q-34",
+      type: "Studie",
+      title: "Longer interset rest periods enhance muscle strength and hypertrophy in resistance-trained men",
+      author: "Schoenfeld BJ et al.",
+      year: "2016",
+      journal: "J Strength Cond Res 30(7):1805\u20131812",
+      ref: "PMID 26605807",
+      note: null
+    },
+    {
+      id: "Q-35",
+      type: "Review",
+      title: "Effects of rest interval duration in resistance training on measures of muscular strength",
+      author: "Grgic J et al.",
+      year: "2018",
+      journal: "Sports Med 48(1):137\u2013151",
+      ref: "DOI 10.1007/s40279-017-0788-x",
+      note: null
+    },
+    {
+      id: "Q-36",
+      type: "Meta-Analyse",
+      title: "Give it a rest: Bayesian meta-analysis on inter-set rest interval duration and hypertrophy",
+      author: "Singer A et al.",
+      year: "2024",
+      journal: "Front Sports Act Living 6:1429789",
+      ref: "PMID 39205815",
+      note: null
+    },
+    {
+      id: "Q-37",
+      type: "Meta-Analyse",
+      title: "Muscular adaptations in drop set vs. traditional training",
+      author: "Coleman M et al.",
+      year: "2022",
+      journal: "Int J Strength Cond 2(1)",
+      ref: "DOI 10.47206/ijsc.v2i1.135",
+      note: null
+    },
+    {
+      id: "Q-38",
+      type: "Studie",
+      title: "Progressive overload without progressing load?",
+      author: "Plotkin D et al.",
+      year: "2022",
+      journal: "PeerJ 10:e14142",
+      ref: "PMID 36199287",
+      note: null
+    },
+    {
+      id: "Q-39",
+      type: "Positionspapier",
+      title: "Progression models in resistance training for healthy adults",
+      author: "American College of Sports Medicine",
+      year: "2009",
+      journal: "Med Sci Sports Exerc 41(3):687\u2013708",
+      ref: "PMID 19204579",
+      note: null
+    },
+    {
+      id: "Q-40",
+      type: "Studie",
+      title: "Gaining more from doing less? One-week deload period",
+      author: "Coleman M et al.",
+      year: "2024",
+      journal: "PeerJ 12:e16777",
+      ref: "PMID 38274324",
+      note: null
+    },
+    {
+      id: "Q-41",
+      type: "Konsens",
+      title: "Integrating deloading into strength and physique sports training programmes: Delphi consensus",
+      author: "Bell L et al.",
+      year: "2023",
+      journal: "Sports Med Open 9",
+      ref: "DOI 10.1186/s40798-023-00633-0",
+      note: null
+    },
+    {
+      id: "Q-42",
+      type: "Review",
+      title: "The effect of warm-up in resistance training and strength performance",
+      author: "Ribeiro B et al.",
+      year: "2021",
+      journal: "Motricidade 17(1):87\u201394",
+      ref: "DOI 10.6063/motricidade.21143",
+      note: null
+    },
+    {
+      id: "Q-43",
+      type: "Meta-Analyse",
+      title: "Efficacy of split versus full-body resistance training on strength and muscle growth",
+      author: "Ramos-Campo DJ et al.",
+      year: "2024",
+      journal: "J Strength Cond Res 38(7):1330\u20131340",
+      ref: "PMID 38595233",
+      note: null
+    },
+    {
+      id: "Q-44",
+      type: "Studie",
+      title: "Training practices and ergogenic aids used by male bodybuilders",
+      author: "Hackett DA, Johnson NA, Chow CM",
+      year: "2013",
+      journal: "J Strength Cond Res 27(6):1609\u20131617",
+      ref: "PMID 22990567",
+      note: null
+    },
+    {
+      id: "Q-45",
+      type: "Leitlinie",
+      title: "WHO 2020 guidelines on physical activity and sedentary behaviour",
+      author: "Bull FC et al.",
+      year: "2020",
+      journal: "Br J Sports Med 54(24):1451\u20131462",
+      ref: "PMID 33239350",
+      note: null
+    },
+    {
+      id: "Q-46",
+      type: "Meta-Analyse",
+      title: "Compatibility of concurrent aerobic and strength training for skeletal muscle size and function",
+      author: "Schumann M et al.",
+      year: "2022",
+      journal: "Sports Med 52:601\u2013612",
+      ref: "PMID 34757594",
+      note: null
+    },
+    {
+      id: "Q-47",
+      type: "Meta-Analyse",
+      title: "Effects of concurrent training sequence on VO2max and lower limb strength",
+      author: "Gao J, Yu L",
+      year: "2023",
+      journal: "Front Physiol 14:1072679",
+      ref: "DOI 10.3389/fphys.2023.1072679",
+      note: null
+    },
+    {
+      id: "Q-48",
+      type: "Meta-Analyse",
+      title: "Effectiveness of HIT and continuous endurance training for VO2max improvements",
+      author: "Milanovi\u0107 Z, Spori\u0161 G, Weston M",
+      year: "2015",
+      journal: "Sports Med 45(10):1469\u20131481",
+      ref: "DOI 10.1007/s40279-015-0365-0",
+      note: null
+    },
+    {
+      id: "Q-49",
+      type: "Meta-Analyse",
+      title: "Daily steps and all-cause mortality: a meta-analysis of 15 international cohorts",
+      author: "Paluch AE et al.",
+      year: "2022",
+      journal: "Lancet Public Health 7(3):e219\u2013e228",
+      ref: "PMID 35258519",
+      note: null
+    },
+    {
+      id: "Q-50",
+      type: "Studie",
+      title: "Continued sports activity, using a pain-monitoring model, during rehabilitation in Achilles tendinopathy",
+      author: "Silbernagel KG et al.",
+      year: "2007",
+      journal: "Am J Sports Med 35(6):897\u2013906",
+      ref: "DOI 10.1177/0363546506298279",
+      note: null
+    },
+    {
+      id: "Q-51",
+      type: "Review",
+      title: "The training-injury prevention paradox",
+      author: "Gabbett TJ",
+      year: "2016",
+      journal: "Br J Sports Med 50(5):273\u2013280",
+      ref: "DOI 10.1136/bjsports-2015-095788",
+      note: null
+    },
+    {
+      id: "Q-52",
+      type: "Review",
+      title: "Acute:chronic workload ratio: conceptual issues and fundamental pitfalls",
+      author: "Impellizzeri FM et al.",
+      year: "2020",
+      journal: "Int J Sports Physiol Perform 15(6):907\u2013913",
+      ref: "DOI 10.1123/ijspp.2019-0864",
+      note: null
+    },
+    {
+      id: "Q-53",
+      type: "Meta-Analyse",
+      title: "Effect of repetition duration during resistance training on muscle hypertrophy",
+      author: "Schoenfeld BJ, Ogborn DI, Krieger JW",
+      year: "2015",
+      journal: "Sports Med 45(4):577\u2013585",
+      ref: "PMID 25601394",
+      note: null
+    },
+    {
+      id: "Q-54",
+      type: "Studie",
+      title: "Resistance training-induced changes in integrated myofibrillar protein synthesis \u2026",
+      author: "Damas F et al.",
+      year: "2016",
+      journal: "J Physiol 594(18):5209\u20135222",
+      ref: "PMID 27219125",
+      note: null
+    },
+    {
+      id: "Q-55",
+      type: "Studie",
+      title: "Do cheaters prosper? Externally supplied momentum during resistance training",
+      author: "Augustin F et al.",
+      year: "2025",
+      journal: "Int J Exerc Sci 18(3):329\u2013342",
+      ref: "digitalcommons.wku.edu/ijes/vol18/iss3/5",
+      note: null
+    },
+    {
+      id: "Q-56",
+      type: "Meta-Analyse",
+      title: "The effectiveness of exercise interventions to prevent sports injuries",
+      author: "Lauersen JB, Bertelsen DM, Andersen LB",
+      year: "2014",
+      journal: "Br J Sports Med 48(11):871\u2013877",
+      ref: "PMID 24100287",
+      note: null
+    },
+    {
+      id: "Q-57",
+      type: "Meta-Analyse",
+      title: "Muscle-strengthening activities are associated with lower risk and mortality in major NCDs",
+      author: "Momma H et al.",
+      year: "2022",
+      journal: "Br J Sports Med 56(13):755\u2013763",
+      ref: "DOI 10.1136/bjsports-2021-105061",
+      note: "Kraft + Ausdauer \u221240 %"
+    },
+    {
+      id: "Q-60",
+      type: "Meta-Analyse",
+      title: "Continuous versus intermittent dieting \u2026 ICECAP trial",
+      author: "Peos JJ et al.",
+      year: "2021",
+      journal: "Med Sci Sports Exerc 53(8):1685\u20131698",
+      ref: null,
+      note: "Di\xE4tpausen bei Kraftsportlern"
+    },
+    {
+      id: "Q-58",
+      type: "Buch",
+      title: "Heavy Duty",
+      author: "Mentzer M, Little J",
+      year: "1993",
+      journal: null,
+      ref: null,
+      note: "nicht Teil der Masterclass \u2013 bitte pr\xFCfen"
+    },
+    {
+      id: "Q-59",
+      type: "Buch / Video",
+      title: "Blood & Guts (Trainingssystem)",
+      author: "Yates D",
+      year: null,
+      journal: null,
+      ref: null,
+      note: "nicht Teil der Masterclass \u2013 genaue Quelle bitte erg\xE4nzen"
+    },
+    {
+      id: "Q-62",
+      type: "Studie",
+      title: "Higher compared with lower dietary protein during an energy deficit combined with intense exercise",
+      author: "Longland TM et al.",
+      year: "2016",
+      journal: "Am J Clin Nutr 103(3):738\u2013746",
+      ref: "PMID 26817506",
+      note: null
+    },
+    {
+      id: "Q-63",
+      type: "Review",
+      title: "Separate and combined effects of energy restriction and exercise on fat-free mass in middle-aged and older adults",
+      author: "Weinheimer EM, Sands LP, Campbell WW",
+      year: "2010",
+      journal: "Nutr Rev 68(7):375\u2013388",
+      ref: "PMID 20591106",
+      note: null
+    },
+    {
+      id: "Q-64",
+      type: "Studie",
+      title: "Role of nonexercise activity thermogenesis in resistance to fat gain in humans",
+      author: "Levine JA, Eberhardt NL, Jensen MD",
+      year: "1999",
+      journal: "Science 283(5399):212\u2013214",
+      ref: "PMID 9880251",
+      note: null
+    },
+    {
+      id: "Q-65",
+      type: "Meta-Analyse",
+      title: "Interval training versus moderate-intensity continuous training on body adiposity",
+      author: "Keating SE et al.",
+      year: "2017",
+      journal: "Obes Rev 18(8):943\u2013964",
+      ref: "PMID 28513103",
+      note: null
+    },
+    {
+      id: "Q-66",
+      type: "Meta-Analyse",
+      title: "Is interval training the magic bullet for fat loss?",
+      author: "Viana RB et al.",
+      year: "2019",
+      journal: "Br J Sports Med",
+      ref: null,
+      note: null
+    },
+    {
+      id: "Q-67",
+      type: "Studie",
+      title: "Insufficient sleep undermines dietary efforts to reduce adiposity",
+      author: "Nedeltcheva AV et al.",
+      year: "2010",
+      journal: "Ann Intern Med 153(7):435\u2013441",
+      ref: "PMID 20921542",
+      note: null
+    },
+    {
+      id: "Q-68",
+      type: "Studie",
+      title: "Influence of sleep restriction on weight loss outcomes associated with caloric restriction",
+      author: "Wang X et al.",
+      year: "2018",
+      journal: "Sleep 41(5):zsy027",
+      ref: "PMID 29438540",
+      note: null
+    },
+    {
+      id: "Q-69",
+      type: "Studie",
+      title: "Effect of two different weight-loss rates on body composition and strength in elite athletes",
+      author: "Garthe I et al.",
+      year: "2011",
+      journal: "Int J Sport Nutr Exerc Metab 21(2):97\u2013104",
+      ref: "PMID 21558571",
+      note: null
+    },
+    {
+      id: "Q-70",
+      type: "Review",
+      title: "Evidence-based recommendations for natural bodybuilding contest preparation: nutrition and supplementation",
+      author: "Helms ER, Aragon AA, Fitschen PJ",
+      year: "2014",
+      journal: "J Int Soc Sports Nutr 11:20",
+      ref: "PMID 24864135",
+      note: null
+    },
+    {
+      id: "Q-71",
+      type: "Studie",
+      title: "Metabolic adaptation is an illusion, only present when participants are in negative energy balance",
+      author: "Martins C et al.",
+      year: "2020",
+      journal: "Am J Clin Nutr 112(5):1212\u20131218",
+      ref: null,
+      note: null
+    },
+    {
+      id: "Q-72",
+      type: "Studie",
+      title: "Intermittent energy restriction attenuates the loss of fat free mass in resistance trained individuals",
+      author: "Campbell BI et al.",
+      year: "2020",
+      journal: "J Funct Morphol Kinesiol 5(1):19",
+      ref: null,
+      note: "Refeeds"
+    },
+    {
+      id: "Q-73",
+      type: "Meta-Analyse",
+      title: "Exercise-induced localized fat reduction (spot reduction): systematic review with meta-analysis",
+      author: "Ramirez-Campillo R et al.",
+      year: "2022",
+      journal: "Hum Mov 23",
+      ref: null,
+      note: null
+    },
+    {
+      id: "Q-74",
+      type: "Studie",
+      title: "The effect of abdominal exercise on abdominal fat",
+      author: "Vispute SS et al.",
+      year: "2011",
+      journal: "J Strength Cond Res 25(9):2559\u20132564",
+      ref: "PMID 21804427",
+      note: null
+    },
+    {
+      id: "Q-75",
+      type: "Meta-Analyse",
+      title: "Effect of overnight fasted exercise on weight loss and body composition",
+      author: "Hackett D, Hagstrom AD",
+      year: "2017",
+      journal: "J Funct Morphol Kinesiol 2(4):43",
+      ref: null,
+      note: null
+    },
+    {
+      id: "Q-76",
+      type: "Studie",
+      title: "Body composition changes associated with fasted versus non-fasted aerobic exercise",
+      author: "Schoenfeld BJ et al.",
+      year: "2014",
+      journal: "J Int Soc Sports Nutr 11:54",
+      ref: "PMID 25429252",
+      note: null
+    },
+    {
+      id: "Q-77",
+      type: "Studie",
+      title: "Determination of the exercise intensity that elicits maximal fat oxidation",
+      author: "Achten J, Gleeson M, Jeukendrup AE",
+      year: "2002",
+      journal: "Med Sci Sports Exerc 34(1):92\u201397",
+      ref: null,
+      note: null
+    },
+    {
+      id: "Q-78",
+      type: "Review",
+      title: "Effects of exercise intensity and duration on the excess post-exercise oxygen consumption",
+      author: "LaForgia J, Withers RT, Gore CJ",
+      year: "2006",
+      journal: "J Sports Sci 24(12):1247\u20131264",
+      ref: "PMID 17101527",
+      note: null
+    },
+    {
+      id: "Q-79",
+      type: "Studie",
+      title: "15O PET measurement of blood flow and oxygen consumption in cold-activated human brown fat",
+      author: "Muzik O et al.",
+      year: "2013",
+      journal: "J Nucl Med 54(4):523\u2013531",
+      ref: "PMID 23362317",
+      note: null
+    }
+  ]
+};
+
+// src/domain/trainingCatalog.ts
+var TRAINING_CATALOG = trainingsregeln_default;
+var RULE_GROUPS = [
+  ...new Set(TRAINING_CATALOG.rules.map((r2) => r2.group))
+];
+var GUARD_GROUP = "Keine Empfehlung";
+var RULES3 = new Map(TRAINING_CATALOG.rules.map((r2) => [r2.id, r2]));
+var SOURCES2 = new Map(TRAINING_CATALOG.sources.map((s) => [s.id, s]));
+var SPLITS = new Map(TRAINING_CATALOG.splits.map((s) => [s.id, s]));
+var MODELS = new Map(TRAINING_CATALOG.models.map((m) => [m.id, m]));
+var isApproved = (x) => x.status === "freigegeben";
+function approvedRule(id4) {
+  const r2 = RULES3.get(id4);
+  return r2 && isApproved(r2) ? r2 : null;
+}
+function approvedSplit(id4) {
+  const s = SPLITS.get(id4);
+  return s && isApproved(s) ? s : null;
+}
+function approvedModel(id4) {
+  const m = MODELS.get(id4);
+  return m && isApproved(m) ? m : null;
+}
+var guardRules = () => TRAINING_CATALOG.rules.filter((r2) => r2.group === GUARD_GROUP && isApproved(r2));
+function ruleSources(rule) {
+  return rule.sourceIds.flatMap((id4) => {
+    const s = SOURCES2.get(id4);
+    return s ? [s] : [];
+  });
+}
+function sourceText(s) {
+  const head2 = [s.author, s.year ? `(${s.year})` : null].filter(Boolean).join(" ");
+  const tail = [s.title, s.journal, s.ref].filter(Boolean).join(". ");
+  return head2 ? `${head2}: ${tail}` : tail;
+}
+
+// src/domain/trainingProfile.ts
+var trainingProfile_exports = {};
+__export(trainingProfile_exports, {
+  EMPTY_TRAINING_PROFILE: () => EMPTY_TRAINING_PROFILE,
+  LIMITATION_REGIONS: () => LIMITATION_REGIONS,
+  PRIORITY_LABELS: () => PRIORITY_LABELS,
+  PROFILE_LIMITS: () => PROFILE_LIMITS,
+  TRAINING_EXPERIENCE: () => TRAINING_EXPERIENCE,
+  TRAINING_GOALS: () => TRAINING_GOALS,
+  TRAINING_PHASES: () => TRAINING_PHASES,
+  TRAINING_PROFILE_KEY: () => TRAINING_PROFILE_KEY,
+  effectiveGoals: () => effectiveGoals,
+  hasLimitation: () => hasLimitation,
+  isEmptyProfile: () => isEmptyProfile,
+  limitationActive: () => limitationActive,
+  parseTrainingProfile: () => parseTrainingProfile,
+  profileFromInput: () => profileFromInput,
+  profileToInput: () => profileToInput,
+  serializeTrainingProfile: () => serializeTrainingProfile,
+  withPhaseSince: () => withPhaseSince
+});
+var TRAINING_PROFILE_KEY = "ui.training_profile";
+var TRAINING_GOALS = [
+  { id: "muscle", label: "Muskelaufbau" },
+  { id: "strength", label: "Kraft" },
+  { id: "fat_loss", label: "Fettabbau" },
+  { id: "health", label: "Gesundheit/Fitness" },
+  { id: "endurance", label: "Kraftausdauer" }
+];
+var TRAINING_PHASES = [
+  { id: "build", label: "Aufbau" },
+  { id: "maintain", label: "Erhalt" },
+  { id: "diet", label: "Di\xE4t" }
+];
+var TRAINING_EXPERIENCE = [
+  { id: "beginner", label: "Einsteiger (< 1 Jahr)" },
+  { id: "intermediate", label: "Fortgeschritten (1\u20133 Jahre)" },
+  { id: "advanced", label: "Erfahren (> 3 Jahre)" }
+];
+var PRIORITY_LABELS = {
+  high: "Schwerpunkt",
+  low: "bewusst wenig"
+};
+var EMPTY_TRAINING_PROFILE = {
+  goal: null,
+  phase: null,
+  phaseSince: null,
+  experience: null,
+  daysPerWeek: null,
+  minutesPerSession: null,
+  priorities: [],
+  excludedExerciseIds: [],
+  limitations: [],
+  preExhaustion: true
+};
+var PROFILE_LIMITS = {
+  daysMin: 1,
+  daysMax: 7,
+  minutesMin: 10,
+  minutesMax: 240,
+  /** Vorgabe des Nutzers: 80–90 Minuten reichen für ein effizientes Training */
+  minutesEnough: 90,
+  textMax: 200,
+  listMax: 40
+};
+var ISO5 = /^\d{4}-\d{2}-\d{2}$/;
+var oneOf = (list2, v) => list2.some((x) => x.id === v) ? v : null;
+var intIn = (v, min, max) => typeof v === "number" && Number.isInteger(v) && v >= min && v <= max ? v : null;
+var text2 = (v, max) => typeof v === "string" ? v.trim().slice(0, max) : "";
+function parseTrainingProfile(raw) {
+  let o = {};
+  try {
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
+      o = parsed;
+  } catch {
+    o = {};
+  }
+  const L = PROFILE_LIMITS;
+  const groups = new Set(MUSCLE_GROUPS.map((g2) => g2.id));
+  const seen = /* @__PURE__ */ new Set();
+  const priorities = (Array.isArray(o.priorities) ? o.priorities : []).flatMap((p) => {
+    const x = p ?? {};
+    const group = typeof x.group === "string" ? x.group : "";
+    const level = x.level === "high" || x.level === "low" ? x.level : null;
+    if (!groups.has(group) || !level || seen.has(group)) return [];
+    seen.add(group);
+    return [{ group, level }];
+  }).slice(0, L.listMax);
+  const excludedExerciseIds = [
+    ...new Set(
+      (Array.isArray(o.excludedExerciseIds) ? o.excludedExerciseIds : []).filter(
+        (x) => typeof x === "string" && x.length > 0 && x.length <= 80
+      )
+    )
+  ].slice(0, 200);
+  const limitations = (Array.isArray(o.limitations) ? o.limitations : []).flatMap((p) => {
+    const x = p ?? {};
+    const region = text2(x.region, 60);
+    if (!region) return [];
+    const date = (v) => typeof v === "string" && ISO5.test(v) ? v : null;
+    return [{ region, text: text2(x.text, L.textMax), from: date(x.from), to: date(x.to) }];
+  }).slice(0, L.listMax);
+  const phase = oneOf(TRAINING_PHASES, o.phase);
+  return {
+    goal: oneOf(TRAINING_GOALS, o.goal),
+    phase,
+    phaseSince: phase && typeof o.phaseSince === "string" && ISO5.test(o.phaseSince) ? o.phaseSince : null,
+    experience: oneOf(TRAINING_EXPERIENCE, o.experience),
+    daysPerWeek: intIn(o.daysPerWeek, L.daysMin, L.daysMax),
+    minutesPerSession: intIn(o.minutesPerSession, L.minutesMin, L.minutesMax),
+    priorities,
+    excludedExerciseIds,
+    limitations,
+    preExhaustion: o.preExhaustion !== false
+  };
+}
+var serializeTrainingProfile = (p) => JSON.stringify(parseTrainingProfile(JSON.stringify(p)));
+function effectiveGoals(profile, mainGoals = []) {
+  if (profile.goal) return [profile.goal];
+  const map = {
+    muscle_gain: "muscle",
+    strength: "strength",
+    fat_loss: "fat_loss",
+    longevity: "health"
+  };
+  return [...new Set(mainGoals.flatMap((g2) => map[g2] ? [map[g2]] : []))];
+}
+var limitationActive = (l, today) => (l.from === null || l.from <= today) && (l.to === null || l.to >= today);
+function hasLimitation(profile, today, regions) {
+  const active = profile.limitations.filter((l) => limitationActive(l, today));
+  if (!regions.length) return active.length > 0;
+  return active.some((l) => {
+    const hay = `${l.region} ${l.text}`.toLowerCase();
+    return regions.some((r2) => hay.includes(r2.toLowerCase()));
+  });
+}
+var LIMITATION_REGIONS = [
+  "Schulter",
+  "Ellbogen",
+  "Handgelenk",
+  "Nacken",
+  "R\xFCcken",
+  "H\xFCfte",
+  "Knie",
+  "Sprunggelenk",
+  "Achillessehne"
+];
+function profileToInput(p) {
+  return {
+    goal: p.goal ?? "",
+    phase: p.phase ?? "",
+    experience: p.experience ?? "",
+    daysPerWeek: p.daysPerWeek === null ? "" : String(p.daysPerWeek),
+    minutesPerSession: p.minutesPerSession === null ? "" : String(p.minutesPerSession),
+    priorities: Object.fromEntries(p.priorities.map((x) => [x.group, x.level])),
+    excludedExerciseIds: [...p.excludedExerciseIds],
+    limitations: p.limitations.map((l) => ({
+      region: l.region,
+      text: l.text,
+      from: l.from ?? "",
+      to: l.to ?? ""
+    })),
+    preExhaustion: p.preExhaustion
+  };
+}
+function profileFromInput(i) {
+  const L = PROFILE_LIMITS;
+  const errors = {};
+  const whole = (raw, min, max, key, what) => {
+    const t = raw.trim();
+    if (!t) return null;
+    const n3 = Number(t);
+    if (!/^\d+$/.test(t) || n3 < min || n3 > max) {
+      errors[key] = `${what}: ganze Zahl von ${min} bis ${max}.`;
+      return null;
+    }
+    return n3;
+  };
+  const daysPerWeek = whole(i.daysPerWeek, L.daysMin, L.daysMax, "daysPerWeek", "Tage pro Woche");
+  const minutesPerSession = whole(
+    i.minutesPerSession,
+    L.minutesMin,
+    L.minutesMax,
+    "minutesPerSession",
+    "Zeit pro Einheit"
+  );
+  const limitations = [];
+  i.limitations.forEach((l, row2) => {
+    const region = l.region.trim();
+    const note = l.text.trim();
+    if (!region && !note && !l.from && !l.to) return;
+    if (!region) {
+      errors[`limitation.${row2}`] = "Bitte die K\xF6rperregion w\xE4hlen.";
+      return;
+    }
+    if (l.from && !ISO5.test(l.from) || l.to && !ISO5.test(l.to)) {
+      errors[`limitation.${row2}`] = "Bitte ein g\xFCltiges Datum eingeben.";
+      return;
+    }
+    if (l.from && l.to && l.from > l.to) {
+      errors[`limitation.${row2}`] = "\u201Ebis\u201C liegt vor \u201Eseit\u201C.";
+      return;
+    }
+    limitations.push({ region, text: note, from: l.from || null, to: l.to || null });
+  });
+  if (Object.keys(errors).length) return { ok: false, errors };
+  const value2 = parseTrainingProfile(
+    JSON.stringify({
+      goal: i.goal || null,
+      phase: i.phase || null,
+      experience: i.experience || null,
+      daysPerWeek,
+      minutesPerSession,
+      priorities: Object.entries(i.priorities).filter(([, level]) => level === "high" || level === "low").map(([group, level]) => ({ group, level })),
+      excludedExerciseIds: i.excludedExerciseIds,
+      limitations,
+      preExhaustion: i.preExhaustion
+    })
+  );
+  return { ok: true, value: value2 };
+}
+function withPhaseSince(prev, next, today) {
+  if (!next.phase) return { ...next, phaseSince: null };
+  if (prev.phase === next.phase) return { ...next, phaseSince: prev.phaseSince ?? today };
+  return { ...next, phaseSince: today };
+}
+var isEmptyProfile = (p) => serializeTrainingProfile(p) === serializeTrainingProfile(EMPTY_TRAINING_PROFILE);
+
+// src/domain/trainingAdvisor.ts
+var trainingAdvisor_exports = {};
+__export(trainingAdvisor_exports, {
+  ADVISOR: () => ADVISOR,
+  CALF_IMAGE_RULES: () => CALF_IMAGE_RULES,
+  COMPOUND: () => COMPOUND,
+  LEGACY_COVERED: () => LEGACY_COVERED,
+  MODEL_ADVICE: () => MODEL_ADVICE,
+  VARIETY_SPECS: () => VARIETY_SPECS,
+  byExercise: () => byExercise,
+  completeWeeks: () => completeWeeks,
+  groupLabel: () => groupLabel,
+  gymPatternSet: () => gymPatternSet,
+  hasGoal: () => hasGoal,
+  hasModel: () => hasModel,
+  hit: () => hit,
+  hitsFor: () => hitsFor,
+  isHard: () => isHard,
+  muscleGroupLabel: () => muscleGroupLabel,
+  trainingAdvice: () => trainingAdvice,
+  weekLoads: () => weekLoads
+});
+
+// src/domain/recoveryCockpit.ts
+var recoveryCockpit_exports = {};
+__export(recoveryCockpit_exports, {
+  BAND_LABELS: () => BAND_LABELS,
+  BASELINE_DAYS: () => BASELINE_DAYS2,
+  BASELINE_MIN: () => BASELINE_MIN,
+  DEFAULT_SLEEP_TARGET: () => DEFAULT_SLEEP_TARGET,
+  FACTOR_LABELS: () => FACTOR_LABELS,
+  FACTOR_MIN_NIGHTS: () => FACTOR_MIN_NIGHTS,
+  FORECAST_FACTORS: () => FORECAST_FACTORS,
+  FORECAST_LABELS: () => FORECAST_LABELS,
+  MUSCLE_FULL_LOAD: () => MUSCLE_FULL_LOAD,
+  MUSCLE_READY_PCT: () => MUSCLE_READY_PCT,
+  MUSCLE_RECOVERY_HOURS: () => MUSCLE_RECOVERY_HOURS,
+  RECOVERY_LAB: () => RECOVERY_LAB,
+  SCORE_WEIGHTS: () => SCORE_WEIGHTS,
+  baselineOf: () => baselineOf,
+  factorEffects: () => factorEffects,
+  gripMarker: () => gripMarker,
+  groupLoads: () => groupLoads,
+  hrvBaselineUntil: () => hrvBaselineUntil,
+  hrvForecast: () => hrvForecast,
+  muscleRecovery: () => muscleRecovery,
+  pctFromBase: () => pctFromBase,
+  plannedGroups: () => plannedGroups,
+  recoveryDays: () => recoveryDays,
+  recoveryLab: () => recoveryLab,
+  scoreAverageBefore: () => scoreAverageBefore,
+  scoreBand: () => scoreBand,
+  selfPart: () => selfPart,
+  sessionTime: () => sessionTime
+});
+var SCORE_WEIGHTS = { hrv: 0.35, restingHr: 0.2, sleep: 0.25, self: 0.2 };
+var BASELINE_DAYS2 = 28;
+var BASELINE_MIN = 5;
+var DEFAULT_SLEEP_TARGET = 480;
+var clamp = (v, lo = 0, hi = 100) => Math.min(hi, Math.max(lo, v));
+var mean10 = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
+function baselineOf(values) {
+  if (values.length < BASELINE_MIN) return null;
+  const m = mean10(values);
+  const sd2 = Math.sqrt(mean10(values.map((v) => (v - m) ** 2)));
+  return { mean: m, sd: Math.max(sd2, Math.abs(m) * 0.05, 0.1), count: values.length };
+}
+function byDate(rows2) {
+  const m = /* @__PURE__ */ new Map();
+  for (const r2 of rows2) m.set(r2.date, r2);
+  return m;
+}
+function dailyValues(inp) {
+  const hrv2 = /* @__PURE__ */ new Map();
+  const rhr = /* @__PURE__ */ new Map();
+  for (const r2 of inp.wearableRecovery) {
+    if (r2.hrvMs !== null && r2.hrvMs > 0) hrv2.set(r2.date, r2.hrvMs);
+    if (r2.hrAvg !== null && r2.hrAvg > 0) rhr.set(r2.date, r2.hrAvg);
+  }
+  for (const m of inp.measurements) {
+    if (m.metricId === HRV_METRIC_ID) hrv2.set(m.date, m.value);
+    if (m.metricId === RESTING_HR_METRIC_ID) rhr.set(m.date, m.value);
+  }
+  return { hrv: hrv2, rhr };
+}
+function baselineBefore(values, date) {
+  const from = addDaysIso(date, -BASELINE_DAYS2);
+  const xs = [];
+  for (const [d, v] of values) if (d >= from && d < date) xs.push(v);
+  return baselineOf(xs);
+}
+function selfPart(r2) {
+  if (!r2) return null;
+  const xs = [];
+  if (r2.readiness !== null) xs.push(r2.readiness * 10);
+  if (r2.fatigue !== null) xs.push((10 - r2.fatigue) * 10);
+  if (r2.soreness !== null) xs.push((10 - r2.soreness) * 10);
+  if (r2.stress !== null) xs.push((10 - r2.stress) * 10);
+  return xs.length ? clamp(mean10(xs)) : null;
+}
+function recoveryDays(inp, from, to) {
+  const { hrv: hrv2, rhr } = dailyValues(inp);
+  const logs = byDate(inp.recoveryLogs);
+  const sleepLogs = byDate(inp.sleepLogs);
+  const measured = byDate(inp.wearableSleep);
+  const target = inp.sleepTargetMin && inp.sleepTargetMin > 0 ? inp.sleepTargetMin : DEFAULT_SLEEP_TARGET;
+  const out = [];
+  for (let d = from; d <= to; d = addDaysIso(d, 1)) {
+    const h = hrv2.get(d) ?? null;
+    const r2 = rhr.get(d) ?? null;
+    const hb = baselineBefore(hrv2, d);
+    const rb = baselineBefore(rhr, d);
+    const log = sleepLogs.get(d);
+    const ms = measured.get(d);
+    const msMin = ms && (ms.lightS ?? 0) + (ms.deepS ?? 0) + (ms.remS ?? 0) > 0 ? Math.round(((ms.lightS ?? 0) + (ms.deepS ?? 0) + (ms.remS ?? 0)) / 60) : null;
+    const sleepMin = log ? log.sleepMin : msMin;
+    let phases = null;
+    if (ms && msMin !== null) {
+      phases = {
+        deep: Math.round((ms.deepS ?? 0) / 60),
+        light: Math.round((ms.lightS ?? 0) / 60),
+        rem: Math.round((ms.remS ?? 0) / 60),
+        awake: Math.round((ms.interruptionS ?? 0) / 60)
+      };
+    } else if (log && (log.deepMin !== null || log.lightMin !== null || log.remMin !== null)) {
+      phases = {
+        deep: log.deepMin ?? 0,
+        light: log.lightMin ?? 0,
+        rem: log.remMin ?? 0,
+        awake: log.awakeMin ?? 0
+      };
+    }
+    const self = logs.get(d) ?? null;
+    const parts2 = {
+      hrv: h !== null && hb ? clamp(50 + 25 * ((h - hb.mean) / hb.sd)) : null,
+      restingHr: r2 !== null && rb ? clamp(50 - 25 * ((r2 - rb.mean) / rb.sd)) : null,
+      sleep: sleepMin !== null && sleepMin > 0 ? clamp(sleepMin / target * 100) : null,
+      self: selfPart(self)
+    };
+    let sum = 0;
+    let weight = 0;
+    let n3 = 0;
+    for (const k of Object.keys(SCORE_WEIGHTS)) {
+      const v = parts2[k];
+      if (v === null) continue;
+      sum += v * SCORE_WEIGHTS[k];
+      weight += SCORE_WEIGHTS[k];
+      n3 += 1;
+    }
+    out.push({
+      date: d,
+      hrv: h,
+      restingHr: r2,
+      sleepMin,
+      phases,
+      self,
+      hrvBase: hb,
+      restingHrBase: rb,
+      parts: parts2,
+      score: n3 >= 2 ? Math.round(sum / weight) : null
+    });
+  }
+  return out;
+}
+function scoreBand(score) {
+  return score >= 70 ? "high" : score >= 50 ? "normal" : "low";
+}
+var BAND_LABELS = {
+  high: "Gut erholt",
+  normal: "Im \xFCblichen Bereich",
+  low: "Weniger erholt als \xFCblich"
+};
+function scoreAverageBefore(days3, date) {
+  const from = addDaysIso(date, -BASELINE_DAYS2);
+  const xs = days3.filter((d) => d.date >= from && d.date < date && d.score !== null).map((d) => d.score);
+  return xs.length >= BASELINE_MIN ? Math.round(mean10(xs)) : null;
+}
+function pctFromBase(value2, base) {
+  if (value2 === null || !base || base.mean === 0) return null;
+  return (value2 - base.mean) / base.mean * 100;
+}
+var MUSCLE_RECOVERY_HOURS = 72;
+var MUSCLE_FULL_LOAD = 10;
+var MUSCLE_READY_PCT = 80;
+function groupLoads(values) {
+  const out = {};
+  for (const g2 of MUSCLE_GROUPS) out[g2.id] = Math.max(0, ...g2.parts.map((p) => values[p] ?? 0));
+  return out;
+}
+function sessionTime(date, time2) {
+  const [y, m, d] = date.split("-").map(Number);
+  const [hh, mm] = (time2 ?? "12:00").split(":").map(Number);
+  return new Date(y ?? 2e3, (m ?? 1) - 1, d ?? 1, hh ?? 12, mm ?? 0).getTime();
+}
+function remaining(load2, sinceMs) {
+  const h = sinceMs / 36e5;
+  return h < 0 ? 0 : load2 * Math.max(0, 1 - h / MUSCLE_RECOVERY_HOURS);
+}
+function muscleRecovery(log, exercises, machines, workouts, now, focus = NO_FOCUS) {
+  const nowDate = new Date(now);
+  const today = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, "0")}-${String(nowDate.getDate()).padStart(2, "0")}`;
+  const from = addDaysIso(today, -Math.ceil(MUSCLE_RECOVERY_HOURS / 24) - 1);
+  const startOf = new Map(workouts.map((w) => [w.id, sessionTime(w.date, w.startTime)]));
+  const sessions2 = /* @__PURE__ */ new Map();
+  for (const s of log) {
+    if (s.date < from || s.date > today) continue;
+    const at = startOf.get(s.workoutId) ?? sessionTime(s.date, null);
+    if (at > now) continue;
+    const e = sessions2.get(s.workoutId) ?? { at, sets: [] };
+    e.sets.push(s);
+    sessions2.set(s.workoutId, e);
+  }
+  const loads = [...sessions2.values()].map((x) => ({
+    at: x.at,
+    groups: groupLoads(muscleMapData(x.sets, exercises, machines, () => true, focus).sets)
+  }));
+  return MUSCLE_GROUPS.map((g2) => {
+    const at = (t) => loads.reduce((a, l) => a + remaining(l.groups[g2.id] ?? 0, t - l.at), 0);
+    const load2 = at(now);
+    const pct2 = Math.round(clamp(100 * (1 - load2 / MUSCLE_FULL_LOAD)));
+    let readyAt = null;
+    if (pct2 < MUSCLE_READY_PCT) {
+      const limit = MUSCLE_FULL_LOAD * (1 - MUSCLE_READY_PCT / 100);
+      for (let h = 1; h <= MUSCLE_RECOVERY_HOURS; h++) {
+        const t = now + h * 36e5;
+        if (at(t) <= limit) {
+          readyAt = t;
+          break;
+        }
+      }
+    }
+    return { id: g2.id, label: g2.label, pct: pct2, load: Math.round(load2 * 10) / 10, readyAt };
+  });
+}
+function plannedGroups(exerciseNames, exercises, machines, focus = NO_FOCUS) {
+  const byName2 = new Map(exercises.map((e) => [e.name.trim().toLowerCase(), e]));
+  const sets2 = [];
+  for (const n3 of exerciseNames) {
+    const e = byName2.get(n3.trim().toLowerCase());
+    if (e && e.category === "strength")
+      sets2.push({
+        exerciseId: e.id,
+        exerciseCategory: e.category,
+        isWarmup: false,
+        reps: 10,
+        weightKg: null
+      });
+  }
+  if (!sets2.length) return [];
+  const loads = groupLoads(muscleMapData(sets2, exercises, machines, () => true, focus).sets);
+  return MUSCLE_GROUPS.map((g2) => ({ id: g2.id, label: g2.label, sets: loads[g2.id] ?? 0 })).filter((g2) => g2.sets >= 0.5).sort((a, b) => b.sets - a.sets);
+}
+function gripMarker(grip, today) {
+  const list2 = grip.filter((g2) => g2.date <= today).map((g2) => ({ date: g2.date, value: (g2.leftKg + g2.rightKg) / 2 })).filter((g2) => g2.value > 0).sort((a, b) => a.date.localeCompare(b.date));
+  const last = list2[list2.length - 1];
+  if (!last) return null;
+  const from = addDaysIso(last.date, -BASELINE_DAYS2);
+  const before = list2.filter((g2) => g2.date >= from && g2.date < last.date).map((g2) => g2.value);
+  const base = before.length >= 2 ? mean10(before) : null;
+  return {
+    date: last.date,
+    value: last.value,
+    baseline: base,
+    baselineCount: before.length,
+    pct: base ? (last.value - base) / base * 100 : null,
+    recent: list2.slice(-8)
+  };
+}
+var FACTOR_MIN_NIGHTS = 7;
+var FACTOR_LABELS = {
+  sleep: "Schlaf mindestens 7,5 h",
+  meal: "Letzte Mahlzeit mindestens 3 h vor dem Einschlafen",
+  caffeine: "Letztes Koffein vor 14 Uhr",
+  training: "Training am Vortag",
+  stress: "Stress ab 6 am Vortag (Selbsteinsch\xE4tzung)"
+};
+var minutesOf4 = (hhmm) => {
+  if (!hhmm) return null;
+  const m = /^(\d{1,2}):(\d{2})/.exec(hhmm.length > 5 ? hhmm.slice(11, 16) || hhmm : hhmm);
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+};
+function sleepStartMin(ms, log) {
+  const t = minutesOf4(ms?.sleepStart ?? log?.bedTime ?? null);
+  if (t === null) return null;
+  return t < 12 * 60 ? t + 24 * 60 : t;
+}
+function factorEffects(inp, from, to) {
+  const { hrv: hrv2 } = dailyValues(inp);
+  const ctx = byDate(inp.context);
+  const logs = byDate(inp.recoveryLogs);
+  const sleepLogs = byDate(inp.sleepLogs);
+  const measured = byDate(inp.wearableSleep);
+  const trained = new Set(inp.workouts.filter((w) => w.status === "done").map((w) => w.date));
+  const days3 = recoveryDays(inp, from, to);
+  const groups = {
+    sleep: { with: [], without: [] },
+    meal: { with: [], without: [] },
+    caffeine: { with: [], without: [] },
+    training: { with: [], without: [] },
+    stress: { with: [], without: [] }
+  };
+  const all = [];
+  for (const day of days3) {
+    const v = hrv2.get(day.date);
+    if (v === void 0) continue;
+    all.push(v);
+    const prev = addDaysIso(day.date, -1);
+    const add = (k, yes) => {
+      if (yes === null) return;
+      (yes ? groups[k].with : groups[k].without).push(v);
+    };
+    add("sleep", day.sleepMin !== null ? day.sleepMin >= 450 : null);
+    const c = ctx.get(prev);
+    const start = sleepStartMin(measured.get(day.date), sleepLogs.get(day.date));
+    const meal = minutesOf4(c?.mealLast ?? null);
+    add("meal", start !== null && meal !== null ? start - meal >= 180 : null);
+    const last = minutesOf4(c?.caffeineLast ?? null);
+    add("caffeine", last === null || last < 14 * 60);
+    add("training", trained.has(prev));
+    const s = logs.get(prev)?.stress ?? null;
+    add("stress", s !== null ? s >= 6 : null);
+  }
+  const overall = all.length ? mean10(all) : null;
+  return Object.keys(groups).map((key) => {
+    const g2 = groups[key];
+    const mw = g2.with.length ? mean10(g2.with) : null;
+    const mo = g2.without.length ? mean10(g2.without) : null;
+    const enough = g2.with.length >= FACTOR_MIN_NIGHTS && g2.without.length >= FACTOR_MIN_NIGHTS && overall;
+    return {
+      key,
+      label: FACTOR_LABELS[key],
+      withCount: g2.with.length,
+      withoutCount: g2.without.length,
+      meanWith: mw,
+      meanWithout: mo,
+      pct: enough && mw !== null && mo !== null && overall ? (mw - mo) / overall * 100 : null
+    };
+  });
+}
+var FORECAST_FACTORS = ["meal", "caffeine", "sleep"];
+var FORECAST_LABELS = {
+  meal: "Abendessen mindestens 3 h vor dem Schlafen",
+  caffeine: "Kein Koffein nach 14 Uhr",
+  sleep: "Mindestens 7,5 h schlafen",
+  training: "Heute trainieren",
+  stress: "Stressiger Tag"
+};
+function hrvForecast(base, effects, chosen) {
+  if (!base) return null;
+  let shift3 = 0;
+  for (const e of effects) {
+    const yes = chosen[e.key];
+    if (yes === void 0 || e.pct === null || e.meanWith === null || e.meanWithout === null)
+      continue;
+    const mid = (e.meanWith + e.meanWithout) / 2;
+    shift3 += ((yes ? e.meanWith : e.meanWithout) - mid) * 0.5;
+  }
+  const expected = base.mean + shift3;
+  return { expected, low: expected - base.sd / 2, high: expected + base.sd / 2, base };
+}
+function hrvBaselineUntil(inp, today) {
+  const { hrv: hrv2 } = dailyValues(inp);
+  return baselineBefore(hrv2, addDaysIso(today, 1));
+}
+var RECOVERY_LAB = [
+  { label: "CRP", pattern: /\bcrp\b|c-reaktiv/i },
+  { label: "CK (Kreatinkinase)", pattern: /\bck\b|kreatin(in)?kinase|creatin(e)? ?kinase/i },
+  { label: "Ferritin", pattern: /ferritin/i },
+  { label: "Vitamin D", pattern: /vitamin ?d|25-?oh/i },
+  { label: "H\xE4moglobin", pattern: /h(ä|ae)moglobin|\bhb\b/i },
+  { label: "Cortisol", pattern: /cortisol|kortisol/i },
+  { label: "Testosteron", pattern: /testosteron/i }
+];
+function recoveryLab(draws) {
+  const sorted = [...draws].sort((a, b) => b.date.localeCompare(a.date));
+  const out = [];
+  for (const item2 of RECOVERY_LAB) {
+    for (const d of sorted) {
+      const r2 = d.results.find(
+        (x) => item2.pattern.test(x.analyteName) && !/^kreatinin$|creatinine?$/i.test(x.analyteName.trim())
+      );
+      if (!r2) continue;
+      const outside = r2.refLow === null && r2.refHigh === null ? null : r2.refLow !== null && r2.value < r2.refLow || r2.refHigh !== null && r2.value > r2.refHigh;
+      out.push({
+        label: item2.label,
+        name: r2.analyteName,
+        value: r2.value,
+        comparator: r2.comparator,
+        unit: r2.unit,
+        date: d.date,
+        refLow: r2.refLow,
+        refHigh: r2.refHigh,
+        outside
+      });
+      break;
+    }
+  }
+  return out;
+}
+
+// src/domain/trainingAdvisorMore.ts
+var trainingAdvisorMore_exports = {};
+__export(trainingAdvisorMore_exports, {
+  ADVISOR_MORE: () => ADVISOR_MORE,
+  moreHits: () => moreHits,
+  nightMinutes: () => nightMinutes2
+});
+var F2 = formatNumber;
+var ADVISOR_MORE = {
+  // ---- Pausen
+  restSessions: 3,
+  /** TR-PA-001: Median unter 2 min bei Mehrgelenksübungen */
+  compoundRestSec: 120,
+  /** TR-PA-002: Median unter 60 s bei Eingelenksübungen */
+  isolationRestSec: 60,
+  /** TR-PA-003: mehr als 2 Wiederholungen weniger im nächsten Satz bei gleichem Gewicht */
+  repDrop: 2,
+  /** TR-PA-004: mehr als 20 % über der geplanten Zeit, 3 Einheiten */
+  durationOver: 0.2,
+  durationSessions: 3,
+  // ---- Progression
+  /** TR-PR-001: 3 Einheiten der Übung ohne Steigerung im ersten Arbeitssatz */
+  stallSessions: 3,
+  /** eigene Abgrenzung: die letzte Einheit der Übung liegt höchstens so viele Tage zurück */
+  stallMaxAgeDays: 21,
+  /** TR-PR-003: unter 48 h nach einer harten Einheit für denselben Muskel */
+  earlyHours: 48,
+  /** eigene Abgrenzung: nur Einheiten der letzten 14 Tage */
+  earlyDays: 14,
+  /** TR-PR-004: mindestens 14 Tage ohne Training des Muskels */
+  returnGapDays: 14,
+  /** eigene Abgrenzung: Hinweis bis 14 Tage nach dem Wiedereinstieg */
+  returnShowDays: 14,
+  /** TR-PR-002: neuer Plan weniger als 12 Wochen nach dem vorigen */
+  planWeeks: 12,
+  /** eigene Abgrenzung: Pläne, die innerhalb von 7 Tagen angelegt wurden, gelten als ein Programm */
+  planGroupDays: 7,
+  // ---- Aufwärmen
+  warmupSessions: 3,
+  /** TR-AW-002: Aufwärmsatz mit Fail oder RPE ab 9 */
+  warmupHardRpe: 9,
+  // ---- Planung
+  orderSessions: 3,
+  restDayWeeks: 2,
+  // ---- Cardio
+  cardioWeeks: 2,
+  /** TR-CA-001: unter 150 min moderat je Woche; intensive Minuten zählen doppelt */
+  cardioMinMinutes: 150,
+  intenseFactor: 2,
+  /** „intensiv“ = Zone 4–5 (TR-CA-003) */
+  intenseZone: 4,
+  cardioFirstSessions: 3,
+  /** eigene Abgrenzung: Cardio-Blöcke unter 10 min vor dem Krafttraining gelten als Aufwärmen */
+  cardioFirstMinMinutes: 10,
+  intervalWeeks: 4,
+  /** TR-CA-004: Mittel unter 7.000 Schritten, 2 Wochen */
+  stepsMin: 7e3,
+  stepsDays: 14,
+  /** eigene Abgrenzung: mindestens 10 Tage mit Schritten */
+  stepsMinDays: 10,
+  // ---- Verletzungen
+  /** TR-VE-004: mehr als +20 % gegen das Mittel der 3 Wochen davor */
+  jumpShare: 0.2,
+  jumpWeeks: 3,
+  /** eigene Abgrenzung: Mittel davor mindestens 4 harte Sätze und Anstieg um mindestens 2 Sätze */
+  jumpMinBase: 4,
+  jumpMinSets: 2,
+  /** TR-VE-002: Schmerz 3–5 halten, über 5 reduzieren; nur Angaben der letzten 14 Tage */
+  painHold: 3,
+  painReduce: 5,
+  painDays: 14,
+  /** TR-VE-003: 6 Wochen ohne Besserung (Angaben über mindestens 42 Tage, zuletzt nicht niedriger) */
+  painPersistDays: 42,
+  // ---- Erholung
+  /** Schlaf ab 7 h gilt als gut (TR-VO-005) bzw. darunter als Zeichen von Ermüdung (TR-DL-001) */
+  sleepHours: 7,
+  sleepDays: 14,
+  /** eigene Abgrenzung: mindestens 7 Nächte mit Werten */
+  sleepMinNights: 7,
+  /** TR-VO-005: höchstens bis etwa 20 Wochensätze */
+  focusMaxSets: 20,
+  /** TR-DL-001: Stagnation in mindestens 3 Übungen */
+  deloadExercises: 3,
+  // ---- Fettabbau
+  /** TR-FA-001: weniger als 2 Krafteinheiten je Woche, 2 Wochen */
+  dietStrengthPerWeek: 2,
+  dietStrengthWeeks: 2,
+  /** TR-FA-002: Schritte um 15 % oder mehr unter dem Mittel der 2 Wochen vor Diätbeginn */
+  stepsDropShare: 0.15,
+  /** eigene Abgrenzung: mindestens 5 Tage mit Schritten je Zeitraum */
+  stepsCompareMinDays: 5,
+  /** TR-FA-003: eigene Abgrenzung für „mehr Cardio“: mindestens 30 min je Woche mehr */
+  cardioUpMinutes: 30,
+  /** TR-FA-004: 7-Tage-Mittel unter 7 h (eigene Abgrenzung: mindestens 5 Nächte) */
+  dietSleepDays: 7,
+  dietSleepMinNights: 5,
+  /** TR-FA-005: mehr als 1 % je Woche, 2 Wochen in Folge (eigene Abgrenzung: 3 Wiegungen je Woche) */
+  lossMaxPctWeek: 1,
+  lossWeeks: 2,
+  weighInsPerWeek: 3,
+  /** TR-FA-006: „unverändert“ = unter 0,25 % je Woche (Regel der App wie in den Verbindungen), 3 Wochen */
+  stallPctWeek: 0.25,
+  stallWeeks: 3,
+  /** TR-FA-007: Ausgangswerte aus den 14 Tagen vor Diätbeginn (eigene Abgrenzung: Hinweis bis 14 Tage danach) */
+  baselineDays: 14
+};
+var ISOLATION = new Set(
+  TRAINING_CATALOG.patterns.filter((p) => (p.joints ?? "").startsWith("eingelenkig")).map((p) => p.pattern)
+);
+var clock5 = (sec2) => `${Math.floor(sec2 / 60)}:${String(Math.round(sec2 % 60)).padStart(2, "0")} min`;
+var diffDays = (a, b) => Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / 864e5);
+var median3 = (xs) => {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 === 1 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+var mean11 = (xs) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+var time = (s) => {
+  const t = s.doneAt ? Date.parse(s.doneAt) : Number.NaN;
+  return Number.isFinite(t) ? t : null;
+};
+function restPairs(sets2) {
+  const timed = sets2.map((s) => ({ s, t: time(s) })).filter((x) => x.t !== null).sort((x, y) => x.t - y.t);
+  const out = [];
+  for (let i = 1; i < timed.length; i += 1) {
+    const sec2 = (timed[i].t - timed[i - 1].t) / 1e3;
+    if (sec2 > 0 && sec2 <= REST_MAX_SECONDS) out.push({ sec: sec2, a: timed[i - 1].s, b: timed[i].s });
+  }
+  return out;
+}
+var patternOf = (s) => gripPatternOf(s.machineId ?? null, s.exerciseName);
+function firstSetValue(sets2) {
+  const s = [...sets2].sort((a, b) => a.setIndex - b.setIndex)[0];
+  if (!s || !s.weightKg || !s.reps || s.weightKg <= 0 || s.reps <= 0) return null;
+  return { value: s.weightKg * s.reps, text: `${F2(s.weightKg, 1)} kg \xD7 ${s.reps}` };
+}
+function stalls(m) {
+  const A = ADVISOR_MORE;
+  const out = [];
+  for (const [exerciseId, e] of m.exercises) {
+    if (e.sessions.length < A.stallSessions + 1) continue;
+    const recent = e.sessions.slice(0, A.stallSessions);
+    const base = firstSetValue(e.sessions[A.stallSessions]);
+    const values = recent.map(firstSetValue);
+    const newest = recent[0]?.[0];
+    if (!base || !newest || values.some((v) => v === null)) continue;
+    if (diffDays(newest.date, m.today) > A.stallMaxAgeDays) continue;
+    if (Math.max(...values.map((v) => v.value)) > base.value) continue;
+    out.push({
+      exerciseId,
+      name: e.name,
+      group: m.mainGroup(newest),
+      text: `${e.name}: zuletzt ${values[0].text}, vor ${A.stallSessions} Einheiten ${base.text}`
+    });
+  }
+  return out.sort((a, b) => a.name.localeCompare(b.name, "de"));
+}
+function sleepMean(m, days3, minNights) {
+  const from = shiftDays(m.today, -(days3 - 1));
+  const nights = (m.c.inp.sleep ?? []).filter(
+    (s) => s.date >= from && s.date <= m.today && s.minutes > 0
+  );
+  const avg2 = mean11(nights.map((s) => s.minutes));
+  return avg2 === null || nights.length < minNights ? null : { hours: avg2 / 60, n: nights.length };
+}
+var inDietOrFatLoss = (c) => c.inDiet || hasGoal(c, "fat_loss");
+function restHits(m) {
+  const A = ADVISOR_MORE;
+  const { c } = m;
+  const short = (kinds, limit) => {
+    const items = [];
+    for (const e of m.exercises.values()) {
+      const pattern = e.sessions[0]?.[0]?.pattern;
+      if (!pattern || !kinds.has(pattern)) continue;
+      const timed = e.sessions.map(restPairs).filter((p) => p.length > 0);
+      if (timed.length < A.restSessions) continue;
+      const med2 = median3(
+        timed.slice(0, A.restSessions).flat().map((p) => p.sec)
+      );
+      if (med2 !== null && med2 < limit) items.push(`${e.name}: Median ${clock5(med2)}`);
+    }
+    return items.sort((a, b) => a.localeCompare(b, "de"));
+  };
+  const r12 = approvedRule("TR-PA-001");
+  if (r12) {
+    const items = short(COMPOUND, A.compoundRestSec);
+    if (items.length)
+      m.out.push(
+        hit(
+          r12,
+          `In den letzten ${A.restSessions} Einheiten mit Satz-Zeitpunkten lag die Satzpause bei Mehrgelenks\xFCbungen im Median unter ${A.compoundRestSec / 60} Minuten.`,
+          items
+        )
+      );
+  }
+  const r2 = approvedRule("TR-PA-002");
+  if (r2 && hasGoal(c, "muscle") && !hasModel(c, "KA")) {
+    const items = short(ISOLATION, A.isolationRestSec);
+    if (items.length)
+      m.out.push(
+        hit(
+          r2,
+          `In den letzten ${A.restSessions} Einheiten mit Satz-Zeitpunkten lag die Satzpause bei Eingelenks\xFCbungen im Median unter ${A.isolationRestSec} Sekunden.`,
+          items
+        )
+      );
+  }
+  const r3 = approvedRule("TR-PA-003");
+  if (r3) {
+    const items = [];
+    for (const e of m.exercises.values()) {
+      const drops = e.sessions.slice(0, A.restSessions).map(
+        (sets2) => restPairs(sets2).find(
+          (p) => p.a.weightKg !== null && p.a.weightKg === p.b.weightKg && (p.a.reps ?? 0) - (p.b.reps ?? 0) > A.repDrop && (p.b.reps ?? 0) > 0
+        )
+      );
+      if (drops.length < A.restSessions || drops.some((d2) => !d2)) continue;
+      const d = drops[0];
+      items.push(`${e.name}: zuletzt ${d.a.reps} \u2192 ${d.b.reps} Wdh. nach ${clock5(d.sec)} Pause`);
+    }
+    if (items.length)
+      m.out.push(
+        hit(
+          r3,
+          `In jeder der letzten ${A.restSessions} Einheiten der \xDCbung fielen die Wiederholungen bei gleichem Gewicht von einem Satz zum n\xE4chsten um mehr als ${A.repDrop}.`,
+          items.sort((a, b) => a.localeCompare(b, "de"))
+        )
+      );
+  }
+  const r4 = approvedRule("TR-PA-004");
+  const planned = c.inp.profile.minutesPerSession;
+  if (r4 && planned) {
+    const durations = m.raw.map((s) => {
+      const times = s.entries.map(time).filter((t) => t !== null);
+      const strength = s.entries.some((e) => e.exerciseCategory === "strength" && !e.isWarmup);
+      return times.length >= 2 && strength ? { date: s.date, min: (Math.max(...times) - Math.min(...times)) / 6e4 } : null;
+    }).filter((d) => d !== null).slice(0, A.durationSessions);
+    if (durations.length === A.durationSessions && durations.every((d) => d.min > planned * (1 + A.durationOver)))
+      m.out.push(
+        hit(
+          r4,
+          `Geplant sind ${planned} Minuten je Einheit (Trainingsprofil); die letzten ${A.durationSessions} Einheiten mit Satz-Zeitpunkten dauerten vom ersten bis zum letzten Satz mehr als ${Math.round(A.durationOver * 100)} % l\xE4nger.`,
+          durations.map((d) => `${formatDate(d.date)}: ${F2(d.min, 0)} min`)
+        )
+      );
+  }
+}
+function progressionHits(m, stalled) {
+  const A = ADVISOR_MORE;
+  const { c } = m;
+  const r12 = approvedRule("TR-PR-001");
+  if (r12 && stalled.length)
+    m.out.push(
+      hit(
+        r12,
+        `Bei ${stalled.length === 1 ? "einer \xDCbung" : `${stalled.length} \xDCbungen`} lag Last \xD7 Wiederholungen im ersten Arbeitssatz in den letzten ${A.stallSessions} Einheiten nie \xFCber der Einheit davor.`,
+        stalled.map((s) => s.text)
+      )
+    );
+  const r3 = approvedRule("TR-PR-003");
+  if (r3) {
+    const items2 = [];
+    const from = shiftDays(m.today, -(A.earlyDays - 1));
+    for (const e of m.exercises.values()) {
+      const [s1, s0] = e.sessions;
+      const first = s1?.[0];
+      if (!s1 || !s0 || !first || first.date < from) continue;
+      const v1 = firstSetValue(s1);
+      const v0 = firstSetValue(s0);
+      if (!v1 || !v0 || v1.value >= v0.value) continue;
+      const group = m.mainGroup(first);
+      const start = Math.min(...s1.map(time).filter((t) => t !== null));
+      const hard = c.sessions.find((h) => {
+        if (h.id === first.workoutId || h.date > first.date) return false;
+        const stimulus = h.sets.some(
+          (x) => m.mainGroup(x) === group && (x.isFailure || x.pattern && COMPOUND.has(x.pattern))
+        );
+        if (!stimulus) return false;
+        const end = Math.max(...h.sets.map(time).filter((t) => t !== null));
+        if (Number.isFinite(start) && Number.isFinite(end))
+          return start > end && (start - end) / 36e5 < A.earlyHours;
+        return diffDays(h.date, first.date) === 1;
+      });
+      if (hard)
+        items2.push(
+          `${e.name} am ${formatDate(first.date)}: ${v1.text} statt ${v0.text}; ${groupLabel(group)} zuletzt am ${formatDate(hard.date)} hart trainiert`
+        );
+    }
+    if (items2.length)
+      m.out.push(
+        hit(
+          r3,
+          `Weniger als ${A.earlyHours} Stunden nach einer harten Einheit f\xFCr denselben Muskel war der erste Arbeitssatz schw\xE4cher als in der Einheit davor.`,
+          items2.sort((a, b) => a.localeCompare(b, "de"))
+        )
+      );
+  }
+  const returning = /* @__PURE__ */ new Set();
+  const r4 = approvedRule("TR-PR-004");
+  const dates = /* @__PURE__ */ new Map();
+  const horizon = shiftDays(m.today, -180);
+  for (const s of c.sessions) {
+    if (s.date < horizon) continue;
+    const load2 = c.groupSets(s.sets.filter(isHard));
+    for (const g2 of MUSCLE_GROUPS)
+      if ((load2[g2.id] ?? 0) >= ADVISOR.sessionCounts)
+        dates.set(g2.id, [...dates.get(g2.id) ?? [], s.date]);
+  }
+  const items = [];
+  for (const g2 of MUSCLE_GROUPS) {
+    const list2 = [...new Set(dates.get(g2.id) ?? [])].sort().reverse();
+    const [last, before] = list2;
+    if (!last || !before) continue;
+    const gap = diffDays(before, last);
+    if (gap >= A.returnGapDays && diffDays(last, m.today) <= A.returnShowDays) {
+      returning.add(g2.id);
+      items.push(`${g2.label}: ${gap} Tage Pause bis ${formatDate(last)}`);
+    }
+  }
+  if (r4 && items.length)
+    m.out.push(
+      hit(
+        r4,
+        `Nach mindestens ${A.returnGapDays} Tagen ohne Training wurde der Muskel in den letzten ${A.returnShowDays} Tagen wieder trainiert.`,
+        items
+      )
+    );
+  const r2 = approvedRule("TR-PR-002");
+  if (r2) {
+    const plans = (c.inp.plans ?? []).filter((p) => /^\d{4}-\d{2}-\d{2}/.test(p.createdAt)).map((p) => ({ name: p.name, date: p.createdAt.slice(0, 10) })).filter((p) => p.date <= m.today).sort((a, b) => a.date.localeCompare(b.date));
+    const programs = [];
+    for (const p of plans) {
+      const cur = programs.at(-1);
+      if (cur && diffDays(cur.last, p.date) <= A.planGroupDays) {
+        cur.names.push(p.name);
+        cur.last = p.date;
+      } else programs.push({ start: p.date, last: p.date, names: [p.name] });
+    }
+    const now = programs.at(-1);
+    const before = programs.at(-2);
+    const limit = A.planWeeks * 7;
+    if (now && before) {
+      const gap = diffDays(before.start, now.start);
+      if (gap < limit && diffDays(now.start, m.today) <= limit) {
+        const names = (list2) => list2.map((n3) => `\u201E${n3}\u201C`).join(", ");
+        m.out.push(
+          hit(
+            r2,
+            `${now.names.length === 1 ? "Der Plan" : "Die Pl\xE4ne"} ${names(now.names)} ${now.names.length === 1 ? "wurde" : "wurden"} am ${formatDate(now.start)} angelegt \u2013 ${gap < 14 ? `${gap} Tage` : `${Math.floor(gap / 7)} Wochen`} nach ${names(before.names)} (${formatDate(before.start)}).`
+          )
+        );
+      }
+    }
+  }
+  return { returning };
+}
+function warmupHits(m) {
+  const A = ADVISOR_MORE;
+  const strength = m.raw.filter((s) => s.entries.some((e) => e.exerciseCategory === "strength"));
+  const r12 = approvedRule("TR-AW-001");
+  if (r12) {
+    const cold = strength.map((s) => {
+      const first = s.entries.find((e) => {
+        const p = e.exerciseCategory === "strength" ? patternOf(e) : null;
+        return p !== null && COMPOUND.has(p);
+      });
+      if (!first) return null;
+      const warm = s.entries.some((e) => e.exerciseId === first.exerciseId && e.isWarmup);
+      return { date: s.date, name: first.exerciseName, warm };
+    }).filter((x) => x !== null).slice(0, A.warmupSessions);
+    if (cold.length === A.warmupSessions && cold.every((x) => !x.warm))
+      m.out.push(
+        hit(
+          r12,
+          `In den letzten ${A.warmupSessions} Einheiten hatte die erste Mehrgelenks\xFCbung keinen Satz mit \u201EAufw\xE4rmen\u201C.`,
+          cold.map((x) => `${formatDate(x.date)}: ${x.name}`)
+        )
+      );
+  }
+  const r2 = approvedRule("TR-AW-002");
+  if (r2) {
+    const items = strength.slice(0, A.warmupSessions).flatMap(
+      (s) => s.entries.filter(
+        (e) => e.exerciseCategory === "strength" && e.isWarmup && (e.isFailure || e.rpe !== null && e.rpe >= A.warmupHardRpe)
+      ).map(
+        (e) => `${formatDate(s.date)}: ${e.exerciseName} (${e.isFailure ? "Fail" : `RPE ${F2(e.rpe ?? 0, 0)}`})`
+      )
+    );
+    if (items.length)
+      m.out.push(
+        hit(
+          r2,
+          `In den letzten ${A.warmupSessions} Einheiten ging ein Aufw\xE4rmsatz bis zum Versagen bzw. RPE ${A.warmupHardRpe} oder h\xF6her.`,
+          [...new Set(items)]
+        )
+      );
+  }
+}
+function planHits(m) {
+  const A = ADVISOR_MORE;
+  const { c } = m;
+  const profile = c.inp.profile;
+  const r12 = approvedRule("TR-PL-001");
+  if (r12 && !profile.preExhaustion) {
+    const found = c.sessions.map((s) => {
+      const order = [...new Map(s.sets.map((x) => [x.exerciseId, x])).values()];
+      for (let i = 0; i < order.length; i += 1) {
+        const iso2 = order[i];
+        if (!iso2.pattern || !ISOLATION.has(iso2.pattern)) continue;
+        const group = m.mainGroup(iso2);
+        const comp = order.slice(i + 1).find((x) => x.pattern && COMPOUND.has(x.pattern) && m.mainGroup(x) === group);
+        if (comp)
+          return `${formatDate(s.date)}: ${iso2.exerciseName} vor ${comp.exerciseName} (${groupLabel(group)})`;
+      }
+      const both = order.some(
+        (x) => x.pattern && ISOLATION.has(x.pattern) && order.some(
+          (y) => y.pattern && COMPOUND.has(y.pattern) && m.mainGroup(y) === m.mainGroup(x)
+        )
+      );
+      return both ? "" : null;
+    }).filter((x) => x !== null).slice(0, A.orderSessions);
+    if (found.length === A.orderSessions && found.every((x) => x !== ""))
+      m.out.push(
+        hit(
+          r12,
+          `In den letzten ${A.orderSessions} Einheiten mit Eingelenks- und Mehrgelenks\xFCbung f\xFCr denselben Muskel stand die Eingelenks\xFCbung davor.`,
+          found
+        )
+      );
+  }
+  const r2 = approvedRule("TR-PL-002");
+  const days3 = profile.daysPerWeek;
+  if (r2 && days3 && c.split?.daysPerWeek) {
+    const allowed = /* @__PURE__ */ new Set();
+    for (const part of c.split.daysPerWeek.split(/oder|,|\//)) {
+      const range = /(\d+)\s*[–-]\s*(\d+)/.exec(part);
+      const single = /(\d+)/.exec(part);
+      if (range) for (let d = Number(range[1]); d <= Number(range[2]); d += 1) allowed.add(d);
+      else if (single) allowed.add(Number(single[1]));
+    }
+    if (allowed.size && !allowed.has(days3))
+      m.out.push(
+        hit(
+          r2,
+          `Geplant sind ${days3} Tage pro Woche (Trainingsprofil); erkannt wurde der Split \u201E${c.split.name}\u201C, den die Tabelle f\xFCr ${c.split.daysPerWeek} Tage f\xFChrt.`
+        )
+      );
+  }
+  const r3 = approvedRule("TR-PL-003");
+  if (r3 && hasModel(c, "BB"))
+    m.out.push(
+      hit(
+        r3,
+        `Erkannt wurde ein 5er-Split, bei dem ein Muskel in einer Einheit mehr als 11 S\xE4tze bekommt.`
+      )
+    );
+  const r4 = approvedRule("TR-PL-004");
+  if (r4) {
+    const trained = new Set(c.inp.setLog.filter((s) => !s.isWarmup).map((s) => s.date));
+    const weeks = completeWeeks(m.today, A.restDayWeeks);
+    const full = weeks.every(
+      (w) => Array.from({ length: 7 }, (_, i) => shiftDays(w.start, i)).every((d) => trained.has(d))
+    );
+    if (full)
+      m.out.push(
+        hit(
+          r4,
+          `In den letzten ${A.restDayWeeks} vollen Wochen (${formatDate(weeks.at(-1)?.start ?? "")} bis ${formatDate(weeks[0]?.end ?? "")}) gab es keinen Tag ohne Training.`
+        )
+      );
+  }
+}
+function cardioBlocks(m) {
+  const zones = m.c.inp.heartZones ?? [];
+  return m.c.inp.setLog.filter((s) => s.exerciseCategory === "cardio" && !s.isWarmup && (s.durationSeconds ?? 0) > 0).map((s) => {
+    const i = blockIntensity({ hrAvg: s.hrAvg ?? null, rpe: s.rpe }, zones);
+    return {
+      date: s.date,
+      workoutId: s.workoutId,
+      minutes: (s.durationSeconds ?? 0) / 60,
+      zone: i.zone,
+      known: i.source !== "assumed"
+    };
+  });
+}
+function cardioMinutesByWeek(m, blocks, count) {
+  return completeWeeks(m.today, count).map((w) => {
+    const list2 = blocks.filter((b) => b.date >= w.start && b.date <= w.end);
+    const intense = list2.filter((b) => b.zone >= ADVISOR_MORE.intenseZone).reduce((a, b) => a + b.minutes, 0);
+    const total = list2.reduce((a, b) => a + b.minutes, 0);
+    return { ...w, total, intense, moderate: total - intense };
+  });
+}
+function cardioHits(m, blocks) {
+  const A = ADVISOR_MORE;
+  const { c } = m;
+  const r12 = approvedRule("TR-CA-001");
+  if (r12) {
+    const weeks = cardioMinutesByWeek(m, blocks, A.cardioWeeks);
+    const eq = (w) => w.moderate + A.intenseFactor * w.intense;
+    if (weeks.length === A.cardioWeeks && weeks.every((w) => eq(w) < A.cardioMinMinutes))
+      m.out.push(
+        hit(
+          r12,
+          `In den letzten ${A.cardioWeeks} vollen Wochen lagen die erfassten Cardio-Minuten unter ${A.cardioMinMinutes} je Woche (intensive Minuten in Zone 4\u20135 z\xE4hlen doppelt).`,
+          [...weeks].reverse().map(
+            (w) => `${formatDate(w.start)} bis ${formatDate(w.end)}: ${F2(w.moderate, 0)} min moderat, ${F2(w.intense, 0)} min intensiv`
+          )
+        )
+      );
+  }
+  const r2 = approvedRule("TR-CA-002");
+  if (r2) {
+    const mixed = m.raw.map((s) => {
+      const firstStrength = s.entries.findIndex(
+        (e) => e.exerciseCategory === "strength" && !e.isWarmup
+      );
+      const cardio = s.entries.findIndex(
+        (e) => e.exerciseCategory === "cardio" && !e.isWarmup && (e.durationSeconds ?? 0) >= A.cardioFirstMinMinutes * 60
+      );
+      if (firstStrength < 0 || cardio < 0) return null;
+      const ts = time(s.entries[firstStrength]);
+      const tc = time(s.entries[cardio]);
+      const before = ts !== null && tc !== null ? tc < ts : cardio < firstStrength;
+      return { date: s.date, name: s.entries[cardio].exerciseName, before };
+    }).filter((x) => x !== null).slice(0, A.cardioFirstSessions);
+    if (mixed.length === A.cardioFirstSessions && mixed.every((x) => x.before))
+      m.out.push(
+        hit(
+          r2,
+          `In den letzten ${A.cardioFirstSessions} Einheiten mit Cardio und Kraft stand der Cardio-Block (ab ${A.cardioFirstMinMinutes} Minuten, ohne Aufw\xE4rmen) vor dem ersten Kraftsatz.`,
+          mixed.map((x) => `${formatDate(x.date)}: ${x.name}`)
+        )
+      );
+  }
+  const r3 = approvedRule("TR-CA-003");
+  if (r3 && !hasLimitation(c.inp.profile, m.today, ["herz", "kreislauf", "blutdruck"])) {
+    const weeks = completeWeeks(m.today, A.intervalWeeks);
+    const from = weeks.at(-1)?.start ?? "";
+    const to = weeks[0]?.end ?? "";
+    const list2 = blocks.filter((b) => b.date >= from && b.date <= to);
+    const known = list2.filter((b) => b.known);
+    if (known.length > 0 && !known.some((b) => b.zone >= A.intenseZone))
+      m.out.push(
+        hit(
+          r3,
+          `In den letzten ${A.intervalWeeks} vollen Wochen lag kein Cardio-Block in Zone 4\u20135 (${known.length} von ${list2.length} Bl\xF6cken mit Puls oder RPE, zusammen ${F2(
+            known.reduce((a, b) => a + b.minutes, 0),
+            0
+          )} min).`
+        )
+      );
+  }
+  const r4 = approvedRule("TR-CA-004");
+  if (r4) {
+    const from = shiftDays(m.today, -(A.stepsDays - 1));
+    const days3 = (c.inp.steps ?? []).filter(
+      (s) => s.date >= from && s.date <= m.today && s.steps > 0
+    );
+    const avg2 = mean11(days3.map((s) => s.steps));
+    if (avg2 !== null && days3.length >= A.stepsMinDays && avg2 < A.stepsMin)
+      m.out.push(
+        hit(
+          r4,
+          `Mittel der letzten ${A.stepsDays} Tage: ${F2(avg2, 0)} Schritte (${days3.length} Tage mit Werten).`
+        )
+      );
+  }
+}
+function loadHits(m, stalled, returning) {
+  const A = ADVISOR_MORE;
+  const { c } = m;
+  const weeks = weekLoads(c, A.jumpWeeks + 1);
+  const last = weeks[0];
+  const rv = approvedRule("TR-VE-004");
+  if (rv && last && weeks.length === A.jumpWeeks + 1) {
+    const items = [];
+    for (const g2 of MUSCLE_GROUPS) {
+      if (returning.has(g2.id)) continue;
+      const base = mean11(weeks.slice(1).map((w) => w.sets[g2.id] ?? 0)) ?? 0;
+      const now = last.sets[g2.id] ?? 0;
+      if (base >= A.jumpMinBase && now - base >= A.jumpMinSets && now > base * (1 + A.jumpShare))
+        items.push(
+          `${g2.label}: ${F2(now, 1)} S\xE4tze statt \xD8 ${F2(base, 1)} (+${F2((now / base - 1) * 100, 0)} %)`
+        );
+    }
+    if (items.length)
+      m.out.push(
+        hit(
+          rv,
+          `In der letzten vollen Woche lagen die harten S\xE4tze um mehr als ${Math.round(A.jumpShare * 100)} % \xFCber dem Mittel der ${A.jumpWeeks} Wochen davor.`,
+          items
+        )
+      );
+  }
+  const sleep = sleepMean(m, A.sleepDays, A.sleepMinNights);
+  const r5 = approvedRule("TR-VO-005");
+  if (r5 && hasGoal(c, "muscle") && sleep && sleep.hours >= A.sleepHours && last) {
+    const items = [];
+    for (const g2 of MUSCLE_GROUPS) {
+      if (!c.high.has(g2.id) || (last.sets[g2.id] ?? 0) >= A.focusMaxSets) continue;
+      const mine = stalled.filter((s) => s.group === g2.id);
+      const tracked = [...m.exercises.values()].filter(
+        (e) => e.sessions.length >= A.stallSessions + 1 && e.sessions[0]?.[0] && m.mainGroup(e.sessions[0][0]) === g2.id
+      );
+      if (mine.length && mine.length === tracked.length)
+        items.push(
+          `${g2.label}: ${mine.map((s) => s.name).join(", ")} ohne Steigerung; ${F2(last.sets[g2.id] ?? 0, 1)} S\xE4tze in der letzten vollen Woche`
+        );
+    }
+    if (items.length)
+      m.out.push(
+        hit(
+          r5,
+          `Ein Schwerpunktmuskel aus dem Trainingsprofil stagniert, bei im Mittel ${F2(sleep.hours, 1)} h Schlaf in den letzten ${A.sleepDays} Tagen.`,
+          items
+        )
+      );
+  }
+  const rd = approvedRule("TR-DL-001");
+  if (rd && stalled.length >= A.deloadExercises) {
+    const signs = [];
+    if (sleep && sleep.hours < A.sleepHours)
+      signs.push(`Schlaf im Mittel ${F2(sleep.hours, 1)} h in den letzten ${A.sleepDays} Tagen`);
+    const limits = c.inp.profile.limitations.filter((l) => limitationActive(l, m.today));
+    if (limits.length)
+      signs.push(`Einschr\xE4nkung im Trainingsprofil: ${limits.map((l) => l.region).join(", ")}`);
+    const pains = recentPain(m, A.painDays);
+    if (pains.length)
+      signs.push(
+        `Schmerz in ${pains.length === 1 ? "einer Notiz" : `${pains.length} Notizen`} der letzten ${A.painDays} Tage`
+      );
+    if (signs.length)
+      m.out.push(
+        hit(
+          rd,
+          `${stalled.length} \xDCbungen ohne Steigerung in den letzten ${A.stallSessions} Einheiten und dazu: ${signs.join("; ")}.`,
+          stalled.map((s) => s.name)
+        )
+      );
+  }
+}
+var recentPain = (m, days3) => {
+  const from = shiftDays(m.today, -(days3 - 1));
+  return (m.c.inp.pain ?? []).filter((p) => p.date >= from && p.date <= m.today);
+};
+var painText = (p) => [
+  formatDate(p.date),
+  p.exercise ?? p.source,
+  [p.region, p.side].filter(Boolean).join(" ") || null,
+  p.effective !== null ? `Stufe ${p.effective}${p.level === null ? " (mindestens, aus \u201Estark\u201C o. \xE4.)" : ""}` : "ohne Einordnung"
+].filter(Boolean).join(" \xB7 ");
+function painHits(m) {
+  const A = ADVISOR_MORE;
+  const all = m.c.inp.pain ?? [];
+  if (!all.length) return;
+  const recent = recentPain(m, A.painDays);
+  const r2 = approvedRule("TR-VE-002");
+  if (r2 && recent.length) {
+    const top = Math.max(...recent.map((p) => p.effective ?? 0));
+    const open = recent.filter((p) => p.effective === null).length;
+    const stage = top > A.painReduce ? `h\xF6chste Stufe ${top} (\xFCber ${A.painReduce}: reduzieren)` : top >= A.painHold ? `h\xF6chste Stufe ${top} (${A.painHold}\u2013${A.painReduce}: Belastung halten, wenn es bis zum n\xE4chsten Morgen abklingt)` : top > 0 ? `h\xF6chste Stufe ${top} (0\u20132: weiter und langsam steigern)` : "noch ohne Einordnung";
+    m.out.push(
+      hit(
+        r2,
+        `In den letzten ${A.painDays} Tagen steht in ${recent.length === 1 ? "einer Notiz" : `${recent.length} Notizen`} ein Schmerz, ${stage}${open && top > 0 ? `; ${open} ohne Einordnung` : ""}.`,
+        [...recent].reverse().map(painText)
+      )
+    );
+  }
+  const r3 = approvedRule("TR-VE-003");
+  if (r3) {
+    const items = [];
+    const rest = recent.filter((p) => p.atRest);
+    for (const p of rest) items.push(`Schmerz in Ruhe bzw. nachts: ${painText(p)}`);
+    const byRegion = /* @__PURE__ */ new Map();
+    for (const p of all)
+      if (p.region && p.date <= m.today)
+        byRegion.set(p.region, [...byRegion.get(p.region) ?? [], p]);
+    for (const [region, list2] of byRegion) {
+      const first = list2[0];
+      const lastOne = list2.at(-1);
+      if (!first || !lastOne || list2.length < 2) continue;
+      const span2 = diffDays(first.date, lastOne.date);
+      if (span2 < A.painPersistDays || diffDays(lastOne.date, m.today) > A.painDays) continue;
+      const a = first.effective;
+      const b = lastOne.effective;
+      if (a !== null && b !== null && b < a) continue;
+      items.push(
+        `${region}: Schmerz in ${list2.length} Notizen \xFCber ${span2} Tage (${formatDate(first.date)} bis ${formatDate(lastOne.date)}), zuletzt nicht niedriger`
+      );
+    }
+    if (items.length)
+      m.out.push(
+        hit(
+          r3,
+          `Die Notizen zeigen Schmerz in Ruhe bzw. nachts oder \xFCber mindestens ${A.painPersistDays / 7} Wochen ohne Besserung.`,
+          items
+        )
+      );
+  }
+}
+function fatLossHits(m, stalled, blocks) {
+  const A = ADVISOR_MORE;
+  const { c } = m;
+  if (!inDietOrFatLoss(c)) return;
+  const profile = c.inp.profile;
+  const why = hasGoal(c, "fat_loss") ? "Ziel Fettabbau" : profile.phase === "diet" ? "Phase Di\xE4t im Trainingsprofil" : "Di\xE4t aus Gewichtsverlauf und Energiebilanz erkannt";
+  const r12 = approvedRule("TR-FA-001");
+  if (r12) {
+    const weeks = completeWeeks(m.today, A.dietStrengthWeeks).map((w) => ({
+      ...w,
+      n: c.sessions.filter((s) => s.date >= w.start && s.date <= w.end).length
+    }));
+    if (weeks.every((w) => w.n < A.dietStrengthPerWeek))
+      m.out.push(
+        hit(
+          r12,
+          `${why}; in den letzten ${A.dietStrengthWeeks} vollen Wochen gab es weniger als ${A.dietStrengthPerWeek} Krafteinheiten je Woche.`,
+          [...weeks].reverse().map((w) => `${formatDate(w.start)} bis ${formatDate(w.end)}: ${w.n}`)
+        )
+      );
+  }
+  const r2 = approvedRule("TR-FA-002");
+  const since = profile.phase === "diet" ? profile.phaseSince : null;
+  const lastWeek = completeWeeks(m.today, 1)[0];
+  if (r2 && since && lastWeek && since <= lastWeek.start) {
+    const stepsIn = (from, to) => (c.inp.steps ?? []).filter((s) => s.date >= from && s.date <= to && s.steps > 0);
+    const before = stepsIn(shiftDays(since, -14), shiftDays(since, -1));
+    const now = stepsIn(lastWeek.start, lastWeek.end);
+    const a = mean11(before.map((s) => s.steps));
+    const b = mean11(now.map((s) => s.steps));
+    if (a !== null && b !== null && before.length >= A.stepsCompareMinDays && now.length >= A.stepsCompareMinDays && b <= a * (1 - A.stepsDropShare))
+      m.out.push(
+        hit(
+          r2,
+          `Di\xE4t seit ${formatDate(since)} (Trainingsprofil): Die Schritte der letzten vollen Woche liegen ${F2((1 - b / a) * 100, 0)} % unter dem Mittel der 2 Wochen vor dem Beginn.`,
+          [
+            `letzte volle Woche: \xD8 ${F2(b, 0)} Schritte`,
+            `2 Wochen vor Beginn: \xD8 ${F2(a, 0)} Schritte`
+          ]
+        )
+      );
+  }
+  const r3 = approvedRule("TR-FA-003");
+  if (r3 && stalled.length >= A.deloadExercises) {
+    const weeks = cardioMinutesByWeek(m, blocks, 4);
+    const recent = mean11(weeks.slice(0, 2).map((w) => w.total)) ?? 0;
+    const before = mean11(weeks.slice(2).map((w) => w.total)) ?? 0;
+    if (recent - before >= A.cardioUpMinutes)
+      m.out.push(
+        hit(
+          r3,
+          `${why}; Cardio stieg von \xD8 ${F2(before, 0)} auf \xD8 ${F2(recent, 0)} min je Woche (je 2 volle Wochen), und ${stalled.length} Kraft\xFCbungen zeigen keine Steigerung.`,
+          stalled.map((s) => s.name)
+        )
+      );
+  }
+  const r4 = approvedRule("TR-FA-004");
+  const sleep = sleepMean(m, A.dietSleepDays, A.dietSleepMinNights);
+  if (r4 && sleep && sleep.hours < A.sleepHours)
+    m.out.push(
+      hit(
+        r4,
+        `${why}; Schlaf im Mittel ${F2(sleep.hours, 1)} h in den letzten ${A.dietSleepDays} Tagen (${sleep.n} N\xE4chte).`
+      )
+    );
+  const weekly = completeWeeks(m.today, A.stallWeeks + 1).map((w) => {
+    const list2 = (c.inp.weights ?? []).filter((x) => x.date >= w.start && x.date <= w.end);
+    return {
+      ...w,
+      kg: list2.length >= A.weighInsPerWeek ? mean11(list2.map((x) => x.value)) : null
+    };
+  });
+  const change2 = (i) => {
+    const now = weekly[i]?.kg;
+    const prev = weekly[i + 1]?.kg;
+    return now && prev ? (prev - now) / prev * 100 : null;
+  };
+  const weekText = (i) => `${formatDate(weekly[i]?.start ?? "")} bis ${formatDate(weekly[i]?.end ?? "")}: \xD8 ${F2(weekly[i]?.kg ?? 0, 1)} kg`;
+  const r5 = approvedRule("TR-FA-005");
+  const fast = Array.from({ length: A.lossWeeks }, (_, i) => change2(i));
+  if (r5 && fast.every((v) => v !== null && v > A.lossMaxPctWeek))
+    m.out.push(
+      hit(
+        r5,
+        `${why}; das Wochenmittel des Gewichts sank ${A.lossWeeks} Wochen in Folge um mehr als ${A.lossMaxPctWeek} % (${fast.map((v) => `${F2(v ?? 0, 1)} %`).reverse().join(", ")}).`,
+        [2, 1, 0].map(weekText)
+      )
+    );
+  const r6 = approvedRule("TR-FA-006");
+  const flat = Array.from({ length: A.stallWeeks - 1 }, (_, i) => change2(i));
+  if (r6 && (hasGoal(c, "fat_loss") || profile.phase === "diet") && flat.every((v) => v !== null && Math.abs(v) < A.stallPctWeek))
+    m.out.push(
+      hit(
+        r6,
+        `${why}; das Wochenmittel des Gewichts \xE4nderte sich ${A.stallWeeks} Wochen lang um weniger als ${F2(A.stallPctWeek, 2)} % je Woche.`,
+        [2, 1, 0].map(weekText)
+      )
+    );
+  const r7 = approvedRule("TR-FA-007");
+  if (r7 && since && since <= m.today && diffDays(since, m.today) <= A.baselineDays) {
+    const from = shiftDays(since, -A.baselineDays);
+    const within = (d) => d >= from && d <= m.today;
+    const missing = [];
+    if (c.inp.waistDates && !c.inp.waistDates.some(within)) missing.push("Taillenumfang");
+    if (c.inp.photoDates && !c.inp.photoDates.some(within)) missing.push("Fotos (Check-in)");
+    if (!c.sessions.some((s) => within(s.date))) missing.push("Kraftwerte (keine Krafteinheit)");
+    if (missing.length) {
+      const weighIns = (c.inp.weights ?? []).filter((w) => within(w.date)).length;
+      if (c.inp.weights && weighIns < A.weighInsPerWeek)
+        missing.push(`Gewicht als Wochenmittel (${weighIns} Wiegungen)`);
+      const stepDays = (c.inp.steps ?? []).filter((x) => within(x.date) && x.steps > 0).length;
+      if (c.inp.steps && stepDays < A.stepsCompareMinDays)
+        missing.push(`Schritte (${stepDays} Tage mit Werten)`);
+      m.out.push(
+        hit(
+          r7,
+          `Di\xE4t seit ${formatDate(since)} (Trainingsprofil): Aus den ${A.baselineDays} Tagen davor bis heute fehlen Ausgangswerte.`,
+          missing
+        )
+      );
+    }
+  }
+}
+function nightMinutes2(logs) {
+  const min = (t) => {
+    const m = /^(\d{1,2}):(\d{2})/.exec(t);
+    return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+  };
+  return logs.flatMap((s) => {
+    const bed = min(s.bedTime);
+    const wake = min(s.wakeTime);
+    if (bed === null || wake === null) return [];
+    const inBed = (wake - bed + 1440) % 1440;
+    const minutes = inBed - (s.sleepLatencyMin ?? 0) - (s.awakeMin ?? 0);
+    return minutes > 0 ? [{ date: s.date, minutes }] : [];
+  });
+}
+function moreHits(c) {
+  const main = /* @__PURE__ */ new Map();
+  const mainGroup = (s) => {
+    const key = `${s.exerciseId}|${s.machineId ?? ""}`;
+    let g2 = main.get(key);
+    if (g2 === void 0) {
+      const load2 = c.groupSets([s]);
+      g2 = MUSCLE_GROUPS.map((x) => ({ id: x.id, v: load2[x.id] ?? 0 })).sort((a, b) => b.v - a.v)[0]?.id ?? "";
+      main.set(key, g2);
+    }
+    return g2;
+  };
+  const byWorkout = /* @__PURE__ */ new Map();
+  for (const s of c.inp.setLog) {
+    if (s.date > c.inp.today) continue;
+    const e = byWorkout.get(s.workoutId) ?? { id: s.workoutId, date: s.date, entries: [] };
+    e.entries.push(s);
+    byWorkout.set(s.workoutId, e);
+  }
+  const raw = [...byWorkout.values()].sort(
+    (a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)
+  );
+  const m = { c, today: c.inp.today, mainGroup, raw, exercises: byExercise(c), out: [] };
+  const stalled = stalls(m);
+  const blocks = cardioBlocks(m);
+  restHits(m);
+  const { returning } = progressionHits(m, stalled);
+  warmupHits(m);
+  planHits(m);
+  cardioHits(m, blocks);
+  loadHits(m, stalled, returning);
+  painHits(m);
+  fatLossHits(m, stalled, blocks);
+  return m.out;
+}
+
+// src/domain/trainingAdvisor.ts
+var F3 = formatNumber;
+var ADVISOR = {
+  /** TR-UE-*: Einheiten mit dem Muster, auf die sich eine Regel stützt */
+  varietySessions: 3,
+  /** harter Satz: Arbeitssatz; mit RPE-Angabe ab diesem Wert */
+  hardRpe: 7,
+  /** TR-VO-001 / TR-MO-002: Mindestdosis je Muskel und Woche, in so vielen Wochen in Folge */
+  minDose: 4,
+  minDoseWeeks: 2,
+  /** TR-VO-002: Ziel Muskelaufbau, Mittel über so viele Wochen */
+  growthMin: 6,
+  growthWeeks: 4,
+  /** TR-VO-003 */
+  volumeMax: 20,
+  volumeMaxWeeks: 3,
+  /** TR-VO-004: Sätze je Muskel und Einheit, geprüft in den letzten Einheiten */
+  perSessionMax: 4,
+  perSessionSessions: 3,
+  /** TR-VO-006: Wochensätze je Muskel im Defizit */
+  dietMax: 6,
+  /** TR-FR-001: Wochenvolumen, ab dem eine Einheit je Woche zu wenig ist; Wochen in Folge */
+  frequencyVolume: 6,
+  frequencyWeeks: 3,
+  /** Ein Muskel zählt in einer Einheit als trainiert ab so vielen Satz-Anteilen */
+  sessionCounts: 1,
+  /** TR-FR-002 / TR-WH-002: Ziel Kraft, Hauptübung je Woche, schwere Sätze, Wochen */
+  strengthPerWeek: 2,
+  heavyReps: 6,
+  heavyPerWeek: 1,
+  strengthWeeks: 4,
+  /** TR-IN-001: Anteil der Sätze mit RPE bis zu diesem Wert, Tage, Mindestzahl Sätze mit RPE */
+  lowRpe: 6,
+  lowRpeShare: 0.5,
+  lowRpeDays: 28,
+  lowRpeMinSets: 10,
+  /** TR-IN-002: Fail-Sätze in den letzten Einheiten der Übung */
+  failSets: 2,
+  failSessions: 3,
+  /** TR-IN-003: alle Arbeitssätze bis Fail, ab so vielen Arbeitssätzen, in so vielen Einheiten */
+  allFailSets: 3,
+  allFailSessions: 3,
+  /** TR-IN-004: kein Fail an Maschinen in so vielen Tagen (ab so vielen Maschinensätzen) */
+  noFailDays: 56,
+  noFailMinSets: 10,
+  /** TR-WH-001: Wiederholungen je Arbeitssatz, in den letzten Einheiten der Übung */
+  manyReps: 15,
+  manyRepsSessions: 3,
+  /** TR-MO-001: Arbeitssätze je Übung im HIT-Modell, letzte Einheiten */
+  hitSetsMax: 2,
+  hitSessions: 3,
+  /** Modell-Erkennung: Zeitraum in Tagen und Mindestzahl Arbeitssätze */
+  modelDays: 28,
+  modelMinSets: 12,
+  hitShare: 0.7,
+  volSets: 3,
+  enduranceReps: 15,
+  enduranceRestSec: 90,
+  strengthRestSec: 180,
+  /** Split-Erkennung: letzte Einheiten, Mindestzahl */
+  splitSessions: 12,
+  splitMinSessions: 3
+};
+var isHard = (s) => s.rpe === null || s.rpe === void 0 || s.rpe >= ADVISOR.hardRpe;
+function sessionsOf2(log, today) {
+  const byId = /* @__PURE__ */ new Map();
+  for (const s of log) {
+    if (s.isWarmup || s.date > today || s.exerciseCategory !== "strength") continue;
+    const pattern = gripPatternOf(s.machineId ?? null, s.exerciseName);
+    const e = byId.get(s.workoutId) ?? {
+      id: s.workoutId,
+      date: s.date,
+      sets: [],
+      patterns: /* @__PURE__ */ new Map()
+    };
+    e.sets.push({ ...s, pattern });
+    if (pattern) {
+      const names = e.patterns.get(pattern) ?? /* @__PURE__ */ new Set();
+      names.add(s.exerciseName);
+      e.patterns.set(pattern, names);
+    }
+    byId.set(s.workoutId, e);
+  }
+  return [...byId.values()].sort(
+    (a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)
+  );
+}
+function completeWeeks(today, count) {
+  const monday = weekStart(today);
+  return Array.from({ length: count }, (_, i) => {
+    const start = shiftDays(monday, -7 * (i + 1));
+    return { start, end: shiftDays(start, 6) };
+  });
+}
+var groupLabel = (id4) => MUSCLE_GROUPS.find((g2) => g2.id === id4)?.label ?? id4;
+var hit = (rule, basis, items = []) => ({
+  rule,
+  basis,
+  items
+});
+var hasGoal = (c, g2) => c.goals.includes(g2);
+var hasModel = (c, id4) => c.models.some((m) => m.id === id4);
+var labels = (patterns) => patterns.map((p) => PATTERN_LABELS[p]).join(", ");
+var QUAD = ["leg_press", "hack_squat", "belt_squat"];
+var CHEST_PRESS = ["press_flat", "press_incline", "press_decline"];
+var VARIETY_SPECS = [
+  {
+    id: "TR-UE-001",
+    group: ["leg_curl_lying", "leg_curl_seated"],
+    has: ["leg_curl_lying"],
+    missing: ["leg_curl_seated"],
+    subject: "Beinbeuger"
+  },
+  {
+    id: "TR-UE-002",
+    group: ["leg_curl_lying", "leg_curl_seated"],
+    has: ["leg_curl_seated"],
+    missing: ["leg_curl_lying"],
+    subject: "Beinbeuger"
+  },
+  {
+    id: "TR-UE-003",
+    group: ["leg_curl_lying", "leg_curl_seated"],
+    has: [],
+    missing: ["deadlift", "back_extension"],
+    notWith: ["r\xFCcken", "bandscheibe"],
+    subject: "Beinbeuger"
+  },
+  {
+    id: "TR-UE-004",
+    group: ["triceps", "dip", "triceps_overhead"],
+    has: ["triceps", "dip"],
+    missing: ["triceps_overhead"],
+    notWith: ["schulter"],
+    subject: "Trizeps"
+  },
+  {
+    id: "TR-UE-005",
+    group: ["calf_seated", "calf_standing"],
+    has: ["calf_seated"],
+    missing: ["calf_standing"],
+    notWith: ["achilles"],
+    subject: "Waden"
+  },
+  {
+    id: "TR-UE-006",
+    group: [...QUAD, "leg_extension", "sissy_squat"],
+    has: QUAD,
+    missing: ["leg_extension", "sissy_squat"],
+    notWith: ["knie"],
+    subject: "Quadrizeps"
+  },
+  {
+    id: "TR-UE-007",
+    group: [...QUAD, "leg_extension", "step_up"],
+    has: ["leg_extension"],
+    missing: [...QUAD, "step_up"],
+    notWith: ["knie", "h\xFCft"],
+    subject: "Quadrizeps"
+  },
+  {
+    id: "TR-UE-008",
+    group: CHEST_PRESS,
+    has: ["press_flat", "press_decline"],
+    missing: ["press_incline"],
+    goal: "muscle",
+    notWith: ["schulter"],
+    subject: "Brust"
+  },
+  {
+    id: "TR-UE-009",
+    group: [...CHEST_PRESS, "fly"],
+    has: CHEST_PRESS,
+    missing: ["fly"],
+    goal: "muscle",
+    notWith: ["schulter"],
+    subject: "Brust"
+  },
+  {
+    id: "TR-UE-011",
+    group: ["pulldown", "row"],
+    has: ["pulldown"],
+    missing: ["row"],
+    subject: "R\xFCcken"
+  },
+  {
+    id: "TR-UE-011",
+    group: ["pulldown", "row"],
+    has: ["row"],
+    missing: ["pulldown"],
+    subject: "R\xFCcken"
+  },
+  {
+    id: "TR-UE-012",
+    group: ["hip_thrust", "glute_kick", ...QUAD, "step_up"],
+    has: ["hip_thrust", "glute_kick"],
+    missing: [...QUAD, "step_up"],
+    notWith: ["knie", "h\xFCft"],
+    subject: "Ges\xE4\xDF"
+  },
+  {
+    id: "TR-UE-013",
+    group: ["shoulder_press", ...CHEST_PRESS, "dip", "lateral_raise", "upright_row"],
+    has: [],
+    missing: ["lateral_raise"],
+    goal: "muscle",
+    notWith: ["schulter"],
+    subject: "Schulter und Dr\xFCcken"
+  },
+  {
+    id: "TR-UE-014",
+    group: ["row", "pulldown", "pullover", "reverse_fly"],
+    has: [],
+    missing: ["reverse_fly"],
+    subject: "R\xFCcken und Ziehen"
+  }
+];
+function lastWith(c, group, n3) {
+  const list2 = c.sessions.filter((s) => group.some((g2) => s.patterns.has(g2))).slice(0, n3);
+  return list2.length >= n3 ? list2 : null;
+}
+var span = (list2) => {
+  const dates = list2.map((s) => s.date).sort();
+  return `${formatDate(dates[0] ?? "")} bis ${formatDate(dates.at(-1) ?? "")}`;
+};
+function varietyHits(c) {
+  const hits = [];
+  const missing = /* @__PURE__ */ new Set();
+  const n3 = ADVISOR.varietySessions;
+  for (const spec of VARIETY_SPECS) {
+    const rule = approvedRule(spec.id);
+    if (!rule) continue;
+    if (spec.goal && !hasGoal(c, spec.goal)) continue;
+    if (spec.notWith && hasLimitation(c.inp.profile, c.inp.today, spec.notWith)) continue;
+    if (!spec.missing.some(c.possible)) continue;
+    const list2 = lastWith(c, spec.group, n3);
+    if (!list2) continue;
+    if (spec.has.length && !list2.every((s) => spec.has.some((p) => s.patterns.has(p)))) continue;
+    const from = list2.map((s) => s.date).sort()[0] ?? "";
+    const since = c.sessions.filter((s) => s.date >= from);
+    if (since.some((s) => spec.missing.some((p) => s.patterns.has(p)))) continue;
+    const used = [
+      ...new Set(
+        list2.flatMap(
+          (s) => (spec.has.length ? spec.has : spec.group).flatMap((p) => [...s.patterns.get(p) ?? []])
+        )
+      )
+    ].sort((a, b) => a.localeCompare(b, "de"));
+    for (const p of spec.missing) missing.add(p);
+    hits.push(
+      hit(
+        rule,
+        `In deinen letzten ${n3} Einheiten mit ${spec.subject} (${span(list2)}) kam ${labels(spec.missing)} nicht vor.`,
+        used
+      )
+    );
+  }
+  return { hits, missing };
+}
+function curlHit(c) {
+  const rule = approvedRule("TR-UE-010");
+  if (!rule || !hasGoal(c, "muscle")) return null;
+  if (hasLimitation(c.inp.profile, c.inp.today, ["schulter"])) return null;
+  const list2 = lastWith(c, ["biceps_curl"], ADVISOR.varietySessions);
+  if (!list2) return null;
+  const names = list2.flatMap((s) => [...s.patterns.get("biceps_curl") ?? []]);
+  const incline = names.some((n3) => /incline|schräg/i.test(n3));
+  const preacher = names.some((n3) => /preacher|scott/i.test(n3));
+  if (incline === preacher) return null;
+  return hit(
+    rule,
+    `In deinen letzten ${list2.length} Einheiten mit Bizeps-Curls (${span(list2)}) kam nur ${incline ? "die Incline-Variante" : "die Preacher- bzw. Scott-Variante"} vor (erkannt am \xDCbungsnamen).`,
+    [...new Set(names)].sort((a, b) => a.localeCompare(b, "de"))
+  );
+}
+function stretchHits(c, covered) {
+  const rule = approvedRule("TR-UE-015");
+  if (!rule || !hasGoal(c, "muscle")) return [];
+  const families = /* @__PURE__ */ new Map();
+  for (const p of TRAINING_CATALOG.patterns) {
+    const family = (p.variantGroup ?? "").split(":")[0]?.trim() ?? "";
+    if (!family) continue;
+    const f = families.get(family) ?? { all: [], stretch: [] };
+    f.all.push(p.pattern);
+    if ((p.stretch ?? "").startsWith("ja")) f.stretch.push(p.pattern);
+    families.set(family, f);
+  }
+  const out = [];
+  for (const [family, f] of families) {
+    if (!f.stretch.length || f.stretch.some((p) => covered.has(p))) continue;
+    const can = f.stretch.filter(c.possible);
+    if (!can.length) continue;
+    const list2 = lastWith(c, f.all, ADVISOR.varietySessions);
+    if (!list2) continue;
+    const from = list2.map((s) => s.date).sort()[0] ?? "";
+    if (c.sessions.some((s) => s.date >= from && f.stretch.some((p) => s.patterns.has(p))))
+      continue;
+    out.push(
+      hit(
+        rule,
+        `${family}: In deinen letzten ${list2.length} Einheiten (${span(list2)}) kam keine \xDCbung vor, die den Muskel unter Last in die Dehnung bringt.`,
+        [`m\xF6glich laut Tabelle: ${labels(can)}`]
+      )
+    );
+  }
+  return out;
+}
+function weekLoads(c, count) {
+  return completeWeeks(c.inp.today, count).map((w) => {
+    const inWeek2 = c.sessions.filter((s) => s.date >= w.start && s.date <= w.end);
+    const sets2 = c.groupSets(inWeek2.flatMap((s) => s.sets.filter(isHard)));
+    const sessions2 = {};
+    for (const s of inWeek2) {
+      const one = c.groupSets(s.sets.filter(isHard));
+      for (const g2 of MUSCLE_GROUPS)
+        if ((one[g2.id] ?? 0) >= ADVISOR.sessionCounts) sessions2[g2.id] = (sessions2[g2.id] ?? 0) + 1;
+    }
+    return { ...w, sets: sets2, sessions: sessions2 };
+  });
+}
+var weeksText = (weeks, id4) => weeks.map((w) => F3(w.sets[id4] ?? 0, 1)).reverse().join(" \xB7 ");
+function volumeHits(c) {
+  const A = ADVISOR;
+  const out = [];
+  const weeks = weekLoads(c, 4);
+  const trained = MUSCLE_GROUPS.filter(
+    (g2) => !c.low.has(g2.id) && weeks.some((w) => (w.sets[g2.id] ?? 0) > 0)
+  );
+  const hit001 = /* @__PURE__ */ new Set();
+  const hit2 = (rule, basis, items) => out.push({ rule, basis, items });
+  const dose = weeks.slice(0, A.minDoseWeeks);
+  const under = trained.filter((g2) => dose.every((w) => (w.sets[g2.id] ?? 0) < A.minDose));
+  const doseRule = approvedRule(hasModel(c, "HIT") ? "TR-MO-002" : "TR-VO-001");
+  if (doseRule && under.length) {
+    for (const g2 of under) hit001.add(g2.id);
+    hit2(
+      doseRule,
+      `In den letzten ${A.minDoseWeeks} vollen Wochen lagen ${under.length === 1 ? "bei einem Muskel" : `bei ${under.length} Muskeln`} die harten S\xE4tze unter ${A.minDose} je Woche.`,
+      under.map((g2) => `${g2.label}: ${weeksText(dose, g2.id)} S\xE4tze`)
+    );
+  }
+  const rule002 = approvedRule("TR-VO-002");
+  if (rule002 && hasGoal(c, "muscle") && c.inp.profile.experience !== "beginner" && !c.inDiet && !hasModel(c, "HIT")) {
+    const mean12 = (id4) => weeks.slice(0, A.growthWeeks).reduce((a, w) => a + (w.sets[id4] ?? 0), 0) / A.growthWeeks;
+    const low = trained.filter((g2) => !hit001.has(g2.id) && mean12(g2.id) < A.growthMin);
+    if (low.length)
+      hit2(
+        rule002,
+        `Im Mittel der letzten ${A.growthWeeks} vollen Wochen lagen die harten S\xE4tze unter ${A.growthMin} je Woche.`,
+        low.map((g2) => `${g2.label}: \xD8 ${F3(mean12(g2.id), 1)} S\xE4tze je Woche`)
+      );
+  }
+  const rule003 = approvedRule("TR-VO-003");
+  if (rule003) {
+    const span3 = weeks.slice(0, A.volumeMaxWeeks);
+    const high = trained.filter(
+      (g2) => !c.high.has(g2.id) && span3.every((w) => (w.sets[g2.id] ?? 0) > A.volumeMax)
+    );
+    if (high.length)
+      hit2(
+        rule003,
+        `In den letzten ${A.volumeMaxWeeks} vollen Wochen lagen die harten S\xE4tze jede Woche \xFCber ${A.volumeMax}.`,
+        high.map((g2) => `${g2.label}: ${weeksText(span3, g2.id)} S\xE4tze`)
+      );
+  }
+  const rule004 = approvedRule("TR-VO-004");
+  if (rule004) {
+    const items = [];
+    for (const s of c.sessions.slice(0, A.perSessionSessions)) {
+      const one = c.groupSets(s.sets.filter(isHard));
+      for (const g2 of MUSCLE_GROUPS)
+        if ((one[g2.id] ?? 0) > A.perSessionMax)
+          items.push(`${g2.label}: ${F3(one[g2.id] ?? 0, 1)} S\xE4tze am ${formatDate(s.date)}`);
+    }
+    if (items.length)
+      hit2(
+        rule004,
+        `In deinen letzten ${A.perSessionSessions} Einheiten bekam ein Muskel mehr als ${A.perSessionMax} harte S\xE4tze in einer Einheit.`,
+        items
+      );
+  }
+  const rule006 = approvedRule("TR-VO-006");
+  const lastWeek = weeks[0];
+  if (rule006 && c.inDiet && lastWeek) {
+    const over = trained.filter((g2) => (lastWeek.sets[g2.id] ?? 0) > A.dietMax);
+    if (over.length)
+      hit2(
+        rule006,
+        `Du bist in einer Di\xE4tphase (${c.inp.profile.phase === "diet" ? "Trainingsprofil" : "aus der Energiebilanz erkannt"}); in der letzten vollen Woche lagen die harten S\xE4tze \xFCber ${A.dietMax}.`,
+        over.map((g2) => `${g2.label}: ${F3(lastWeek.sets[g2.id] ?? 0, 1)} S\xE4tze`)
+      );
+  }
+  const ruleFr = approvedRule("TR-FR-001");
+  if (ruleFr && hasGoal(c, "muscle")) {
+    const span3 = weeks.slice(0, A.frequencyWeeks);
+    const once = trained.filter(
+      (g2) => span3.every((w) => (w.sessions[g2.id] ?? 0) === 1 && (w.sets[g2.id] ?? 0) > A.frequencyVolume)
+    );
+    if (once.length)
+      hit2(
+        ruleFr,
+        `In den letzten ${A.frequencyWeeks} vollen Wochen wurde der Muskel nur einmal je Woche trainiert, bei mehr als ${A.frequencyVolume} harten S\xE4tzen.`,
+        once.map((g2) => `${g2.label}: ${weeksText(span3, g2.id)} S\xE4tze`)
+      );
+  }
+  return out;
+}
+var MAIN_LIFTS = [
+  { label: "Kniebeuge", test: /kniebeuge|(?<!hack |belt |sissy |hacken)squat/i },
+  { label: "Bankdr\xFCcken", test: /bankdrücken|bench press/i },
+  { label: "Kreuzheben", test: /kreuzheben|deadlift/i }
+];
+var isBarbell = (name, equipment) => /langhantel|barbell|\blh\b/i.test(`${name} ${equipment ?? ""}`);
+var isDumbbell = (name, equipment) => /kurzhantel|dumbbell|\bkh\b/i.test(`${name} ${equipment ?? ""}`);
+function strengthHits(c) {
+  if (!hasGoal(c, "strength")) return [];
+  const A = ADVISOR;
+  const out = [];
+  const weeks = completeWeeks(c.inp.today, A.strengthWeeks);
+  const from = weeks.at(-1)?.start ?? "";
+  const to = weeks[0]?.end ?? "";
+  const inSpan = c.sessions.filter((s) => s.date >= from && s.date <= to);
+  const rare = [];
+  const light = [];
+  for (const lift of MAIN_LIFTS) {
+    const sets2 = inSpan.flatMap(
+      (s) => s.sets.filter((x) => lift.test.test(x.exerciseName)).map((x) => ({ ...x, session: s.id }))
+    );
+    if (!sets2.length) continue;
+    const sessions2 = new Set(sets2.map((x) => x.session)).size;
+    if (sessions2 / A.strengthWeeks < A.strengthPerWeek)
+      rare.push(`${lift.label}: ${F3(sessions2 / A.strengthWeeks, 1)} \xD7 je Woche`);
+    const heavy = sets2.filter((x) => x.reps !== null && x.reps <= A.heavyReps).length;
+    if (heavy / A.strengthWeeks < A.heavyPerWeek)
+      light.push(`${lift.label}: ${heavy} schwere S\xE4tze in ${A.strengthWeeks} Wochen`);
+  }
+  const fr = approvedRule("TR-FR-002");
+  if (fr && rare.length)
+    out.push(
+      hit(
+        fr,
+        `In den letzten ${A.strengthWeeks} vollen Wochen kam die Haupt\xFCbung seltener als ${A.strengthPerWeek} \xD7 je Woche vor.`,
+        rare
+      )
+    );
+  const wh = approvedRule("TR-WH-002");
+  if (wh && light.length)
+    out.push(
+      hit(
+        wh,
+        `In den letzten ${A.strengthWeeks} vollen Wochen gab es bei der Haupt\xFCbung weniger als ${A.heavyPerWeek} Arbeitssatz je Woche mit h\xF6chstens ${A.heavyReps} Wiederholungen.`,
+        light
+      )
+    );
+  return out;
+}
+function byExercise(c) {
+  const out = /* @__PURE__ */ new Map();
+  for (const s of c.sessions) {
+    const groups = /* @__PURE__ */ new Map();
+    for (const x of s.sets) groups.set(x.exerciseId, [...groups.get(x.exerciseId) ?? [], x]);
+    for (const [id4, sets2] of groups) {
+      const e = out.get(id4) ?? { name: sets2[0]?.exerciseName ?? id4, sessions: [] };
+      e.sessions.push(sets2);
+      out.set(id4, e);
+    }
+  }
+  return out;
+}
+function intensityHits(c) {
+  const A = ADVISOR;
+  const out = [];
+  const exercises = byExercise(c);
+  const equipment = new Map(c.inp.exercises.map((e) => [e.id, e.equipment]));
+  const r12 = approvedRule("TR-IN-001");
+  if (r12 && hasGoal(c, "muscle")) {
+    const from = shiftDays(c.inp.today, -(A.lowRpeDays - 1));
+    const rated = c.sessions.filter((s) => s.date >= from).flatMap((s) => s.sets.filter((x) => x.rpe !== null && x.rpe !== void 0));
+    const low = rated.filter((x) => (x.rpe ?? 10) <= A.lowRpe).length;
+    if (rated.length >= A.lowRpeMinSets && low / rated.length > A.lowRpeShare)
+      out.push(
+        hit(
+          r12,
+          `In den letzten ${A.lowRpeDays} Tagen hatten ${low} von ${rated.length} Arbeitss\xE4tzen mit RPE-Angabe h\xF6chstens RPE ${A.lowRpe} (${F3(low / rated.length * 100)} %).`
+        )
+      );
+  }
+  const r2 = approvedRule("TR-IN-002");
+  if (r2) {
+    const hitModel = hasModel(c, "HIT");
+    const items = [];
+    for (const [id4, e] of exercises) {
+      const eq = equipment.get(id4);
+      const free = e.sessions[0]?.[0]?.machineId == null;
+      const applies = hitModel ? free && (isBarbell(e.name, eq) || isDumbbell(e.name, eq)) : free && isBarbell(e.name, eq) && MAIN_LIFTS.some((l) => l.test.test(e.name));
+      if (!applies) continue;
+      const fails = e.sessions.slice(0, A.failSessions).reduce((a, sets2) => a + sets2.filter((x) => x.isFailure).length, 0);
+      if (fails >= A.failSets) items.push(`${e.name}: ${fails} Fail-S\xE4tze`);
+    }
+    if (items.length)
+      out.push(
+        hit(
+          r2,
+          `In den letzten ${A.failSessions} Einheiten der \xDCbung gab es mindestens ${A.failSets} S\xE4tze bis \u201EFail\u201C${hitModel ? " (HIT-Modell erkannt: gepr\xFCft werden nur freie Lang- und Kurzhantel\xFCbungen)" : ""}.`,
+          items.sort((a, b) => a.localeCompare(b, "de"))
+        )
+      );
+  }
+  const r3 = approvedRule("TR-IN-003");
+  if (r3) {
+    const items = [...exercises.values()].filter((e) => {
+      const last = e.sessions.slice(0, A.allFailSessions);
+      return last.length >= A.allFailSessions && last.every((sets2) => sets2.length >= A.allFailSets && sets2.every((x) => x.isFailure));
+    }).map((e) => e.name).sort((a, b) => a.localeCompare(b, "de"));
+    if (items.length)
+      out.push(
+        hit(
+          r3,
+          `In den letzten ${A.allFailSessions} Einheiten der \xDCbung ging jeder von mindestens ${A.allFailSets} Arbeitss\xE4tzen bis \u201EFail\u201C.`,
+          items
+        )
+      );
+  }
+  const r4 = approvedRule("TR-IN-004");
+  if (r4 && !hasLimitation(c.inp.profile, c.inp.today, [])) {
+    const from = shiftDays(c.inp.today, -(A.noFailDays - 1));
+    const machine = c.sessions.filter((s) => s.date >= from).flatMap((s) => s.sets.filter((x) => x.machineId != null));
+    if (machine.length >= A.noFailMinSets && !machine.some((x) => x.isFailure))
+      out.push(
+        hit(
+          r4,
+          `In den letzten ${A.noFailDays} Tagen ging keiner von ${machine.length} Arbeitss\xE4tzen an Maschinen bis \u201EFail\u201C.`
+        )
+      );
+  }
+  const r5 = approvedRule("TR-WH-001");
+  if (r5 && hasGoal(c, "muscle") && !hasModel(c, "KA")) {
+    const median6 = (xs) => {
+      const s = [...xs].sort((a, b) => a - b);
+      const m = Math.floor(s.length / 2);
+      return s.length % 2 ? s[m] ?? 0 : ((s[m - 1] ?? 0) + (s[m] ?? 0)) / 2;
+    };
+    const items = [...exercises.values()].filter((e) => {
+      const last = e.sessions.slice(0, A.manyRepsSessions);
+      return last.length >= A.manyRepsSessions && last.every((sets2) => {
+        const reps = sets2.flatMap((x) => x.reps !== null ? [x.reps] : []);
+        return reps.length > 0 && median6(reps) > A.manyReps;
+      });
+    }).map((e) => e.name).sort((a, b) => a.localeCompare(b, "de"));
+    if (items.length)
+      out.push(
+        hit(
+          r5,
+          `In den letzten ${A.manyRepsSessions} Einheiten der \xDCbung lagen die Arbeitss\xE4tze im Mittel \xFCber ${A.manyReps} Wiederholungen.`,
+          items
+        )
+      );
+  }
+  return out;
+}
+var COMPOUND = new Set(
+  TRAINING_CATALOG.patterns.filter((p) => p.joints === "mehrgelenkig").map((p) => p.pattern)
+);
+function modelStats(c) {
+  const A = ADVISOR;
+  const from = shiftDays(c.inp.today, -(A.modelDays - 1));
+  const sessions2 = c.sessions.filter((s) => s.date >= from);
+  const sets2 = sessions2.flatMap((s) => s.sets);
+  if (sets2.length < A.modelMinSets) return null;
+  const hard = sets2.filter((x) => x.isFailure || (x.rpe ?? 0) >= 8).length;
+  let pairs = 0;
+  for (const s of sessions2) pairs += new Set(s.sets.map((x) => x.exerciseId)).size;
+  const rated = sets2.filter((x) => x.rpe !== null && x.rpe !== void 0);
+  const withReps = sets2.filter((x) => x.reps !== null);
+  const compound = withReps.filter((x) => x.pattern !== null && COMPOUND.has(x.pattern));
+  return {
+    sets: sets2.length,
+    hardShare: hard / sets2.length,
+    setsPerExercise: pairs ? sets2.length / pairs : 0,
+    rpe79Share: rated.length ? rated.filter((x) => (x.rpe ?? 0) >= 7 && (x.rpe ?? 0) <= 9).length / rated.length : null,
+    enduranceShare: withReps.length ? withReps.filter((x) => (x.reps ?? 0) >= A.enduranceReps).length / withReps.length : 0,
+    heavyShare: compound.length ? compound.filter((x) => (x.reps ?? 99) <= A.heavyReps).length / compound.length : null,
+    restSec: restStats(c.inp.setLog, c.inp.today, A.modelDays / 7).medianSeconds
+  };
+}
+function muscleShape(c) {
+  const weeks = weekLoads(c, 2);
+  const maxPerWeek = Math.max(0, ...weeks.flatMap((w) => Object.values(w.sessions)));
+  const main = /* @__PURE__ */ new Map();
+  let total = 0;
+  let count = 0;
+  let maxSets = 0;
+  for (const s of c.sessions.slice(0, ADVISOR.splitSessions)) {
+    const perGroup = /* @__PURE__ */ new Map();
+    for (const x of s.sets) {
+      let g2 = main.get(x.exerciseId);
+      if (g2 === void 0) {
+        const load2 = c.groupSets([x]);
+        g2 = MUSCLE_GROUPS.map((m) => ({ id: m.id, v: load2[m.id] ?? 0 })).sort(
+          (a, b) => b.v - a.v
+        )[0]?.id;
+        main.set(x.exerciseId, g2 ?? "");
+      }
+      if (!g2) continue;
+      perGroup.set(g2, (perGroup.get(g2) ?? /* @__PURE__ */ new Set()).add(x.exerciseId));
+    }
+    for (const set of perGroup.values()) {
+      total += set.size;
+      count += 1;
+    }
+    maxSets = Math.max(maxSets, ...Object.values(c.groupSets(s.sets)));
+  }
+  return { exercisesPerMuscle: count ? total / count : 0, maxPerWeek, setsPerSession: maxSets };
+}
+function detectModels(c, stats2) {
+  if (!stats2) return [];
+  const A = ADVISOR;
+  const ids = [];
+  const shape = muscleShape(c);
+  const hitModel = stats2.hardShare >= A.hitShare && stats2.setsPerExercise <= A.hitSetsMax;
+  if (hitModel) {
+    if (c.split?.id === "S4" && shape.exercisesPerMuscle >= 3 && shape.exercisesPerMuscle <= 4)
+      ids.push("HIT-Y");
+    else if (shape.maxPerWeek <= 1 && shape.exercisesPerMuscle <= 2) ids.push("HIT-M");
+    ids.push("HIT");
+  }
+  if (c.split?.id === "S5" && shape.setsPerSession > 11) ids.push("BB");
+  const endurance = stats2.enduranceShare > 0.5 && stats2.restSec !== null && stats2.restSec < A.enduranceRestSec;
+  if (endurance) ids.push("KA");
+  if (!endurance && stats2.heavyShare !== null && stats2.heavyShare > 0.5 && (stats2.restSec === null || stats2.restSec >= A.strengthRestSec))
+    ids.push("KRAFT");
+  if (!hitModel && stats2.setsPerExercise >= A.volSets && stats2.rpe79Share !== null && stats2.rpe79Share > 0.5)
+    ids.push("VOL");
+  return ids.flatMap((id4) => {
+    const m = approvedModel(id4);
+    return m ? [m] : [];
+  });
+}
+function modelHits(c) {
+  const A = ADVISOR;
+  const out = [];
+  const r12 = approvedRule("TR-MO-001");
+  if (r12 && hasModel(c, "HIT")) {
+    const items = /* @__PURE__ */ new Map();
+    for (const s of c.sessions.slice(0, A.hitSessions)) {
+      const count = /* @__PURE__ */ new Map();
+      for (const x of s.sets) {
+        const e = count.get(x.exerciseId) ?? { name: x.exerciseName, n: 0 };
+        e.n += 1;
+        count.set(x.exerciseId, e);
+      }
+      for (const e of count.values())
+        if (e.n > A.hitSetsMax) items.set(e.name, Math.max(items.get(e.name) ?? 0, e.n));
+    }
+    if (items.size)
+      out.push(
+        hit(
+          r12,
+          `HIT-Modell erkannt; in den letzten ${A.hitSessions} Einheiten hatten \xDCbungen mehr als ${A.hitSetsMax} Arbeitss\xE4tze.`,
+          [...items].sort((a, b) => a[0].localeCompare(b[0], "de")).map(([name, n3]) => `${name}: ${n3} Arbeitss\xE4tze`)
+        )
+      );
+  }
+  const r3 = approvedRule("TR-MO-003");
+  if (r3 && hasModel(c, "KA") && hasGoal(c, "muscle"))
+    out.push(
+      hit(
+        r3,
+        `In den letzten ${A.modelDays} Tagen lagen die meisten Arbeitss\xE4tze bei mindestens ${A.enduranceReps} Wiederholungen mit kurzen Pausen \u2013 dein Ziel ist Muskelaufbau.`
+      )
+    );
+  return out;
+}
+function kindOf(c, s, base) {
+  const load2 = c.groupSets(s.sets);
+  const total = MUSCLE_GROUPS.reduce((a, g2) => a + (load2[g2.id] ?? 0), 0);
+  if (total <= 0) return base?.type ?? "unknown";
+  const share2 = (ids) => ids.reduce((a, id4) => a + (load2[id4] ?? 0), 0) / total;
+  const top = MUSCLE_GROUPS.map((g2) => ({ id: g2.id, v: (load2[g2.id] ?? 0) / total })).sort(
+    (a, b) => b.v - a.v
+  )[0];
+  const LEGS = MUSCLE_GROUPS.map((g2) => g2.id).filter(
+    (id4) => !["chest", "shoulders", "arms", "back", "core", "forearms", "neck"].includes(id4)
+  );
+  const type = base?.type ?? "unknown";
+  if (type === "legs" || type === "core" || type === "unknown") return type;
+  if (top && top.v >= 0.6 && ["chest", "shoulders", "arms", "back"].includes(top.id))
+    return `part:${top.id}`;
+  const arms = share2(["arms", "forearms"]);
+  const legs = share2(LEGS);
+  const torso = share2(["chest", "back", "shoulders"]);
+  if (torso >= 0.7 && arms <= 0.2 && legs <= 0.2 && type === "upper") return "torso";
+  if (arms + legs >= 0.7 && arms >= 0.2 && legs >= 0.2) return "limbs";
+  return type;
+}
+function detectSplit(c) {
+  const A = ADVISOR;
+  const base = new Map(sessionSplits(c.inp.setLog, c.inp.exercises).map((s) => [s.workoutId, s]));
+  const recent = c.sessions.slice(0, A.splitSessions);
+  const kinds = recent.map((s) => ({ s, kind: kindOf(c, s, base.get(s.id)) })).filter((k) => k.kind !== "unknown" && k.kind !== "core");
+  if (kinds.length < A.splitMinSessions) return null;
+  const n3 = (k) => kinds.filter((x) => x.kind === k).length;
+  const share2 = (...ks) => ks.reduce((a, k) => a + n3(k), 0) / kinds.length;
+  const parts2 = [...new Set(kinds.map((k) => k.kind).filter((k) => k.startsWith("part:")))];
+  const partShare = kinds.filter((k) => k.kind.startsWith("part:")).length / kinds.length;
+  const upperLike = n3("upper") + n3("torso");
+  let id4 = null;
+  const power = (list2) => list2.filter((k) => {
+    const reps = k.s.sets.flatMap((x) => x.reps !== null ? [x.reps] : []).sort((a, b) => a - b);
+    return reps.length > 0 && (reps[Math.floor(reps.length / 2)] ?? 99) <= A.heavyReps;
+  }).length;
+  if (n3("torso") && n3("limbs") && share2("torso", "limbs") >= 0.75) id4 = "TL";
+  else if (n3("push") && n3("pull") && n3("legs")) {
+    if (share2("push", "pull", "legs") >= 0.75) id4 = "PPL";
+    if (upperLike && share2("push", "pull", "legs") < 0.9 && share2("push", "pull", "legs", "upper", "torso") >= 0.85)
+      id4 = "PPLUL";
+    else if (n3("full") && share2("push", "pull", "legs") < 0.9 && share2("push", "pull", "legs", "full") >= 0.85)
+      id4 = "PPLGK";
+  } else if (upperLike && n3("legs") && share2("upper", "torso", "legs") >= 0.75) {
+    id4 = "UL";
+    const ul = kinds.filter((k) => k.kind === "upper" || k.kind === "torso" || k.kind === "legs");
+    const upper = ul.filter((k) => k.kind !== "legs");
+    const lower = ul.filter((k) => k.kind === "legs");
+    const pu = power(upper);
+    const pl = power(lower);
+    if (pu > 0 && pu < upper.length && pl > 0 && pl < lower.length) id4 = "PHUL";
+  } else if (upperLike && n3("legs") && n3("full") && share2("upper", "torso", "legs", "full") >= 0.85)
+    id4 = "ULGK";
+  else if (share2("full") >= 0.6) id4 = "GK";
+  if (!id4 && partShare >= 0.5 && parts2.length >= 3) {
+    const heavy = power(kinds);
+    const distinct2 = parts2.length + (n3("legs") ? 1 : 0);
+    if (heavy >= 2 && upperLike && n3("legs")) id4 = "PHAT";
+    else if (distinct2 >= 5) id4 = "S5";
+    else if (distinct2 === 4) id4 = "S4";
+    else id4 = "S3";
+  }
+  if (!id4) {
+    const counts = /* @__PURE__ */ new Map();
+    for (const k of kinds) counts.set(k.kind, (counts.get(k.kind) ?? 0) + 1);
+    const recurring = [...counts.values()].filter((v) => v >= 2);
+    const covered = recurring.reduce((a, v) => a + v, 0) / kinds.length;
+    if (covered >= 0.8 && recurring.length >= 2 && recurring.length <= 5)
+      id4 = recurring.length === 5 ? "S5" : `S${recurring.length}`;
+  }
+  return id4 ? approvedSplit(id4) : null;
+}
+function ordered(hits) {
+  const groups = [...new Set(TRAINING_CATALOG.rules.map((r2) => r2.group))];
+  return [...hits].sort(
+    (a, b) => groups.indexOf(a.rule.group) - groups.indexOf(b.rule.group) || a.rule.id.localeCompare(b.rule.id)
+  );
+}
+function trainingAdvice(inp) {
+  const sessions2 = sessionsOf2(inp.setLog, inp.today);
+  const goals = effectiveGoals(inp.profile, inp.mainGoals ?? []);
+  const inDiet = inp.profile.phase === "diet" || inp.profile.phase === null && inp.dietDetected === true;
+  const machines = inp.machines ?? [];
+  const focus = inp.focus ?? NO_FOCUS;
+  const groupSets = (sets2) => groupLoads(muscleMapData(sets2, inp.exercises, machines, () => true, focus).sets);
+  const excludedIds = new Set(inp.profile.excludedExerciseIds);
+  const own = /* @__PURE__ */ new Map();
+  for (const e of inp.exercises) {
+    if (e.archived || e.category !== "strength") continue;
+    const p = gripPatternOf(e.machineId ?? null, e.name);
+    if (!p) continue;
+    const n3 = own.get(p) ?? { all: 0, out: 0 };
+    n3.all += 1;
+    if (excludedIds.has(e.id)) n3.out += 1;
+    own.set(p, n3);
+  }
+  const gym = inp.gymPatterns ?? null;
+  const c = {
+    inp,
+    sessions: sessions2,
+    goals,
+    inDiet,
+    split: null,
+    models: [],
+    groupSets,
+    low: new Set(inp.profile.priorities.filter((p) => p.level === "low").map((p) => p.group)),
+    high: new Set(inp.profile.priorities.filter((p) => p.level === "high").map((p) => p.group)),
+    possible: (p) => {
+      const n3 = own.get(p);
+      return (!gym || gym.has(p)) && !(n3 && n3.out === n3.all);
+    }
+  };
+  c.split = detectSplit(c);
+  const stats2 = modelStats(c);
+  c.models = detectModels(c, stats2);
+  const variety = varietyHits(c);
+  const curl = curlHit(c);
+  const hits = [
+    ...variety.hits,
+    ...curl ? [curl] : [],
+    ...stretchHits(c, variety.missing),
+    ...volumeHits(c),
+    ...strengthHits(c),
+    ...intensityHits(c),
+    ...modelHits(c),
+    ...moreHits(c)
+  ];
+  return { hits: ordered(hits), split: c.split, models: c.models, goals, inDiet, stats: stats2 };
+}
+var muscleGroupLabel = groupLabel;
+function gymPatternSet(gymMachineIds, machines, exercises) {
+  if (gymMachineIds.length === 0) return null;
+  const names = new Map(machines.map((m) => [m.id, m.name ?? null]));
+  const out = /* @__PURE__ */ new Set();
+  for (const id4 of gymMachineIds) {
+    const p = gripPatternOf(id4, names.get(id4) ?? null);
+    if (p) out.add(p);
+  }
+  for (const e of exercises) {
+    if (e.archived || e.machineId || e.category !== "strength") continue;
+    const p = gripPatternOf(null, e.name);
+    if (p) out.add(p);
+  }
+  return out;
+}
+var MODEL_ADVICE = {
+  "HIT-M": "Frequenz auf 3 \xD7 w\xF6chentlich wechseln.",
+  "HIT-Y": "Frequenz auf 3 \xD7 w\xF6chentlich wechseln."
+};
+var LEGACY_COVERED = /* @__PURE__ */ new Set([
+  "leg-curl-seated",
+  "leg-curl-lying",
+  "triceps-overhead",
+  "calf-standing"
+]);
+var CALF_IMAGE_RULES = /* @__PURE__ */ new Set(["TR-UE-005"]);
+function hitsFor(hits, place) {
+  return hits.filter((h) => {
+    const display = h.rule.display ?? "";
+    return display.includes(place) || display === "alle";
+  });
+}
+
+// src/domain/painNotes.ts
+var painNotes_exports = {};
+__export(painNotes_exports, {
+  DATED_NOTE_TABLES: () => DATED_NOTE_TABLES,
+  PAIN_MAX: () => PAIN_MAX,
+  PAIN_MIN: () => PAIN_MIN,
+  PAIN_STRONG_MIN: () => PAIN_STRONG_MIN,
+  findPain: () => findPain,
+  noteSourcesFromTables: () => noteSourcesFromTables,
+  painEntries: () => painEntries,
+  painLevelText: () => painLevelText,
+  painPrompt: () => painPrompt,
+  painSourcesOf: () => painSourcesOf,
+  withPainLevel: () => withPainLevel
+});
+var PAIN_MIN = 1;
+var PAIN_MAX = 10;
+var PAIN_STRONG_MIN = 5;
+var TERMS2 = [
+  /schmerz\w*/i,
+  /\bweh\s?getan\b|\bwehgetan\b|\bweh\s?tun\b|\bwehtun\b|\bweh\b/i,
+  /verletz\w*/i,
+  /\bzerrung\w*|\bgezerrt\b/i,
+  /\bstechen\w*|\bsticht\b/i,
+  /\bpain\w*/i,
+  /\bhurt\w*/i,
+  /\bach(?:e|es|ed|ing)\b/i,
+  /\binjur\w*/i,
+  /\bstrained\b|\bsprain\w*/i
+];
+var FREE = /schmerzfrei\w*|schmerzlos\w*|beschwerdefrei\w*|pain[- ]?free|painless|unverletzt/i;
+var NEG_BEFORE = /(?:^|[\s,(])(?:kein|keine|keinen|keinem|keiner|keinerlei|ohne|nicht|nie|niemals|no|not|without|never|kaum)$|n't$/i;
+var GONE_AFTER = /^(?:\S+\s+){0,2}(?:weg|vorbei|abgeklungen|verschwunden|gone)\b/i;
+var STRONG = /\b(?:stark\w*|massiv\w*|hart\w*|intensiv\w*|strong\w*|severe\w*|massive\w*|hard|intense\w*)\b/i;
+var REST = /\bruheschmerz\w*|\bin ruhe\b|\bnachts?\b|\bim liegen\b|\bim sitzen\b|\bbeim schlafen\b|\bat rest\b|\bat night\b|\bresting\b|\bwhile sleeping\b/i;
+var UNIT_AFTER = /^\s*(?:kg|x|×|wdh\w*|wh\b|tag\w*|woche\w*|min\w*|sek\w*|s\b|sätz\w*|satz\b|reps?\b|days?\b|weeks?\b|sets?\b|mal\b|h\b|uhr\b|°|%|cm|mm|jahr\w*|monat\w*|,\d|\.\d)/i;
+var REGIONS = [
+  { region: "Achillessehne", test: /achilles\w*/i },
+  { region: "Sprunggelenk", test: /sprunggelenk\w*|knöchel\w*|\bankle\w*/i },
+  { region: "Knie", test: /\bknie\w*|\bknee\w*|patella\w*/i },
+  { region: "H\xFCfte", test: /\bhüft\w*|\bhip\b|\bhips\b|\bleiste\w*|\bgroin\b/i },
+  {
+    region: "R\xFCcken",
+    test: /rücken\w*|\bkreuz\b|\blws\b|\bbws\b|lendenwirbel\w*|bandscheibe\w*|ischias\w*|\bback\b|\bspine\b/i
+  },
+  { region: "Nacken", test: /\bnacken\w*|\bneck\b|\bhws\b/i },
+  { region: "Schulter", test: /schulter\w*|\bshoulder\w*|rotatorenmanschette\w*/i },
+  { region: "Ellbogen", test: /ell(?:en)?bogen\w*|\belbow\w*/i },
+  { region: "Handgelenk", test: /handgelenk\w*|\bwrist\w*/i },
+  { region: "Hand", test: /\bhand\b|\bhände\w*|\bfinger\w*|\bdaumen\w*|\bthumb\w*/i },
+  { region: "Unterarm", test: /unterarm\w*|\bforearm\w*/i },
+  { region: "Bizeps", test: /bizeps\w*|\bbiceps\w*/i },
+  { region: "Trizeps", test: /trizeps\w*|\btriceps\w*/i },
+  { region: "Brust", test: /\bbrust\w*|\bchest\b|\bpec\w*/i },
+  { region: "Bauch", test: /\bbauch\w*|\babdom\w*/i },
+  { region: "Ges\xE4\xDF", test: /gesäß\w*|\bglute\w*|\bpo\b/i },
+  {
+    region: "Oberschenkel",
+    test: /oberschenkel\w*|quadrizeps\w*|\bquad\w*|beinbeuger\w*|hamstring\w*|adduktor\w*/i
+  },
+  { region: "Wade", test: /\bwade\w*|\bcalf\b|\bcalves\b|schienbein\w*|\bshin\w*/i },
+  { region: "Fu\xDF", test: /\bfuß\w*|\bfüße\w*|\bferse\w*|\bfoot\b|\bfeet\b|\bheel\w*/i },
+  { region: "Kopf", test: /\bkopf\w*|\bhead\w*|migräne\w*/i }
+];
+function levelIn(clause, at) {
+  const ok = (n3) => Number.isInteger(n3) && n3 >= 0 && n3 <= PAIN_MAX ? n3 : null;
+  const scale = /(\d{1,2})\s*(?:\/|von|out of|of)\s*10\b/i.exec(clause);
+  if (scale) return ok(Number(scale[1]));
+  const named = /\b(?:stufe|level|skala|scale|vas|nrs)\s*:?\s*(\d{1,2})\b/i.exec(clause);
+  if (named) return ok(Number(named[1]));
+  const rest = clause.slice(at);
+  const direct = /^\s*[:=]?\s*(\d{1,2})(?!\d)/.exec(rest);
+  if (direct && !UNIT_AFTER.test(rest.slice(direct[0].length))) return ok(Number(direct[1]));
+  return null;
+}
+function sideIn(clause) {
+  if (/\bbeidseit\w*|\bbeide[rn]?\b|\bboth\b/i.test(clause)) return "beidseitig";
+  const left = /\blink\w*|\bleft\b|\bli\.?(?=\s|$)/i.test(clause);
+  const right = /\brecht[es]{0,2}n?\b|\brechts\b|\bright\b|\bre\.?(?=\s|$)/i.test(clause);
+  if (left && right) return "beidseitig";
+  return left ? "links" : right ? "rechts" : null;
+}
+var regionIn = (text3) => REGIONS.find((r2) => r2.test.test(text3))?.region ?? null;
+function findPain(text3) {
+  if (!text3) return [];
+  const out = [];
+  for (const raw of text3.split(/[.;!?\n]+|\s[–—-]\s|\baber\b|\bbut\b/i)) {
+    const clause = raw.trim();
+    if (!clause) continue;
+    if (FREE.test(clause)) continue;
+    let found = null;
+    for (const term of TERMS2) {
+      const m = term.exec(clause);
+      if (m && (!found || m.index < found.index)) found = m;
+    }
+    if (!found) continue;
+    const before = clause.slice(0, found.index).trimEnd();
+    const lastWords = before.split(/\s+/).slice(-3);
+    if (lastWords.some((_, i) => NEG_BEFORE.test(lastWords.slice(0, i + 1).join(" ")))) continue;
+    const after = clause.slice(found.index + found[0].length).trimStart();
+    if (GONE_AFTER.test(after)) continue;
+    const level = levelIn(clause, found.index + found[0].length);
+    if (level === 0) continue;
+    const strong = STRONG.test(clause);
+    out.push({
+      term: found[0],
+      level,
+      strong,
+      effective: level ?? (strong ? PAIN_STRONG_MIN : null),
+      region: regionIn(clause) ?? regionIn(text3),
+      side: sideIn(clause),
+      rest: REST.test(clause),
+      clause
+    });
+  }
+  return out;
+}
+function painPrompt(text3) {
+  const list2 = findPain(text3);
+  const open = list2.find((m) => m.level === null);
+  if (!open || list2.some((m) => m.level !== null)) return null;
+  return { term: open.term, min: open.strong ? PAIN_STRONG_MIN : PAIN_MIN };
+}
+var painLevelText = (level) => `Schmerz ${level}/10`;
+function withPainLevel(text3, level) {
+  const n3 = Math.min(PAIN_MAX, Math.max(PAIN_MIN, Math.round(level)));
+  const base = text3.trimEnd();
+  return base ? `${base} \u2013 ${painLevelText(n3)}` : painLevelText(n3);
+}
+function painEntries(notes) {
+  const out = [];
+  for (const n3 of notes) {
+    const list2 = findPain(n3.text);
+    if (!list2.length) continue;
+    const top = [...list2].sort((a, b) => (b.effective ?? 0) - (a.effective ?? 0))[0];
+    if (!top) continue;
+    out.push({
+      date: n3.date,
+      source: n3.source,
+      exercise: n3.exercise ?? null,
+      region: top.region ?? list2.find((m) => m.region)?.region ?? null,
+      // Seite und „in Ruhe“ können in einem anderen Satzteil stehen als die Stufe („… – Schmerz 6/10“)
+      side: top.side ?? list2.find((m) => m.side)?.side ?? null,
+      level: top.level,
+      effective: top.effective,
+      atRest: n3.atRest === true || list2.some((m) => m.rest),
+      text: (n3.text ?? "").trim()
+    });
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+var DATED_NOTE_TABLES = [
+  ["sleep_log", "notes", "Sleep", true],
+  ["sleep_nap", "notes", "Nickerchen", true],
+  ["recovery_log", "notes", "Recovery", false],
+  ["training_day_status", "notes", "Tagesstatus", false],
+  ["grip_strength_measurement", "notes", "Griffkraft", false],
+  ["neat_day", "notes", "Alltagsbewegung", false],
+  ["meal", "notes", "Mahlzeit", false],
+  ["nutrition_day_entry", "notes", "Ern\xE4hrung", false],
+  ["supplement_intake", "notes", "Supplements", false],
+  ["hrt_entry", "notes", "HRT", false],
+  ["protocol_entry", "notes", "Protokoll", false],
+  ["glucose_reading", "notes", "Glukose", false],
+  ["lab_draw", "notes", "Labor", false],
+  ["checkin_photo", "notes", "Check-in", false],
+  ["lifestyle_note", "text", "Lebensstil-Notiz", false],
+  ["lifetime_record", "notes", "Lebenszeit-Eintrag", false]
+];
+function noteSourcesFromTables(tables, from, to) {
+  const out = [];
+  const str2 = (v) => typeof v === "string" ? v : "";
+  const rows2 = (name) => tables[name] ?? [];
+  const add = (date, source, text3, more = {}) => {
+    const t = text3.trim();
+    if (t && date >= from && date <= to) out.push({ date, source, text: t, ...more });
+  };
+  for (const [table2, column, label, atRest] of DATED_NOTE_TABLES)
+    for (const r2 of rows2(table2)) add(str2(r2.date), label, str2(r2[column]), atRest ? { atRest } : {});
+  const metrics = new Map(rows2("body_metric").map((m) => [str2(m.id), str2(m.name)]));
+  for (const r2 of rows2("body_measurement"))
+    add(str2(r2.date), `K\xF6rperwert: ${metrics.get(str2(r2.metric_id)) ?? ""}`.trim(), str2(r2.notes));
+  const draws = new Map(rows2("lab_draw").map((d) => [str2(d.id), str2(d.date)]));
+  for (const r2 of rows2("lab_result")) add(draws.get(str2(r2.draw_id)) ?? "", "Labor", str2(r2.notes));
+  const workouts = new Map(rows2("workout").map((w) => [str2(w.id), w]));
+  for (const w of workouts.values()) add(str2(w.date), `Training: ${str2(w.title)}`, str2(w.notes));
+  const exercises = new Map(rows2("exercise").map((e) => [str2(e.id), e]));
+  const wex = new Map(rows2("workout_exercise").map((x) => [str2(x.id), x]));
+  const exerciseNote = (x, text3) => {
+    const w = x ? workouts.get(str2(x.workout_id)) : void 0;
+    const e = x ? exercises.get(str2(x.exercise_id)) : void 0;
+    if (!w || !e) return;
+    const name = str2(e.name);
+    const kind = str2(e.category) === "cardio" ? "Cardio" : "Training";
+    add(str2(w.date), `${kind}: ${name}`, text3, { exercise: name });
+  };
+  for (const x of wex.values()) exerciseNote(x, str2(x.notes));
+  for (const s of rows2("workout_set"))
+    exerciseNote(wex.get(str2(s.workout_exercise_id)), str2(s.notes));
+  return out.sort((a, b) => a.date.localeCompare(b.date) || a.source.localeCompare(b.source));
+}
+function painSourcesOf(inp) {
+  const out = [];
+  const seen = /* @__PURE__ */ new Set();
+  const add = (n3) => {
+    const key = `${n3.date}|${n3.source}|${n3.text ?? ""}`;
+    if (!n3.text || seen.has(key)) return;
+    seen.add(key);
+    out.push(n3);
+  };
+  for (const s of inp.setLog)
+    add({
+      date: s.date,
+      source: `${s.exerciseCategory === "cardio" ? "Cardio" : "Training"}: ${s.exerciseName}`,
+      text: s.notes,
+      exercise: s.exerciseName
+    });
+  for (const s of inp.sleep) add({ date: s.date, source: "Sleep", text: s.notes, atRest: true });
+  for (const r2 of inp.recovery) add({ date: r2.date, source: "Recovery", text: r2.notes });
+  for (const b of inp.measurements)
+    add({ date: b.date, source: `K\xF6rperwert: ${b.metricName}`, text: b.notes });
+  for (const g2 of inp.grip ?? []) add({ date: g2.date, source: "Griffkraft", text: g2.notes });
+  return out;
+}
+
 // src/domain/trainingRecovery.ts
 var trainingRecovery_exports = {};
 __export(trainingRecovery_exports, {
@@ -36390,27 +42773,27 @@ __export(trainingRecovery_exports, {
 });
 var HRV_BASELINE_DAYS = 28;
 var HRV_BASELINE_MIN = 5;
-var median3 = (xs) => {
+var median4 = (xs) => {
   const s = [...xs].sort((a, b) => a - b);
   const m = Math.floor(s.length / 2);
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 };
-var byDate = (xs) => new Map(xs.map((x) => [x.date, x.value]));
+var byDate2 = (xs) => new Map(xs.map((x) => [x.date, x.value]));
 function nextDayRecovery(workouts, series2, today, count = 8) {
   const days3 = /* @__PURE__ */ new Map();
   for (const w of workouts) {
     if (w.status !== "done" || shiftDays(w.date, 1) > today) continue;
     days3.set(w.date, [...days3.get(w.date) ?? [], w]);
   }
-  const hrv2 = byDate(series2.hrv);
-  const readiness2 = byDate(series2.readiness);
-  const soreness = byDate(series2.soreness);
+  const hrv2 = byDate2(series2.hrv);
+  const readiness2 = byDate2(series2.readiness);
+  const soreness = byDate2(series2.soreness);
   return [...days3.entries()].sort((a, b) => b[0].localeCompare(a[0])).slice(0, count).map(([date, list2]) => {
     const next = shiftDays(date, 1);
     const from = shiftDays(date, -HRV_BASELINE_DAYS);
     const base = series2.hrv.filter((p) => p.date >= from && p.date < date).map((p) => p.value);
     const h = hrv2.get(next) ?? null;
-    const ref = base.length >= HRV_BASELINE_MIN ? median3(base) : null;
+    const ref = base.length >= HRV_BASELINE_MIN ? median4(base) : null;
     return {
       date,
       titles: list2.map((w) => w.title),
@@ -36636,15 +43019,15 @@ var num4 = (s) => {
   const x = s === void 0 ? NaN : Number(s);
   return Number.isFinite(x) ? x : null;
 };
-function parseTcx(text2) {
-  const act = /<Activity\b[^>]*Sport="([^"]*)"[^>]*>([\s\S]*?)<\/Activity>/i.exec(text2);
+function parseTcx(text3) {
+  const act = /<Activity\b[^>]*Sport="([^"]*)"[^>]*>([\s\S]*?)<\/Activity>/i.exec(text3);
   if (!act) return null;
   const sport = act[1] ?? "Other";
   const body = act[2] ?? "";
   const id4 = /<Id>([^<]+)<\/Id>/i.exec(body)?.[1]?.trim();
   const laps = [...body.matchAll(/<Lap\b([^>]*)>([\s\S]*?)<\/Lap>/gi)];
   if (laps.length === 0) return null;
-  let time = 0;
+  let time2 = 0;
   let dist = 0;
   let hasDist = false;
   let kcal3 = 0;
@@ -36658,7 +43041,7 @@ function parseTcx(text2) {
     if (firstStart === null && s) firstStart = s;
     const b = lap[2] ?? "";
     const t = num4(/<TotalTimeSeconds>([^<]+)</i.exec(b)?.[1]) ?? 0;
-    time += t;
+    time2 += t;
     const d = num4(/<DistanceMeters>([^<]+)</i.exec(b.replace(/<Track>[\s\S]*<\/Track>/i, ""))?.[1]);
     if (d !== null) {
       dist += d;
@@ -36679,13 +43062,13 @@ function parseTcx(text2) {
   }
   const start = firstStart ?? id4 ?? null;
   const ms = start ? Date.parse(start) : NaN;
-  if (!Number.isFinite(ms) || time <= 0) return null;
+  if (!Number.isFinite(ms) || time2 <= 0) return null;
   return {
     format: "tcx",
     sport,
     kind: kindOfSport(sport),
     start: new Date(ms).toISOString(),
-    durationSeconds: Math.round(time),
+    durationSeconds: Math.round(time2),
     distanceM: hasDist ? Math.round(dist) : null,
     hrAvg: hrTime > 0 ? Math.round(hrWeighted / hrTime) : null,
     hrMax,
@@ -36699,8 +43082,8 @@ function parseTcx(text2) {
 }
 function parseActivityFile(bytes) {
   if (isFit(bytes)) return parseFit(bytes);
-  const text2 = new TextDecoder("utf-8").decode(bytes);
-  return /<TrainingCenterDatabase/i.test(text2) ? parseTcx(text2) : null;
+  const text3 = new TextDecoder("utf-8").decode(bytes);
+  return /<TrainingCenterDatabase/i.test(text3) ? parseTcx(text3) : null;
 }
 var KIND_TITLES = {
   run: "Laufen",
@@ -36726,7 +43109,7 @@ function localStart(iso2) {
   };
 }
 function activityWorkout(a, exerciseId, fileName = "") {
-  const { date, time } = localStart(a.start);
+  const { date, time: time2 } = localStart(a.start);
   const metrics = {
     hrAvg: a.hrAvg,
     hrMax: a.hrMax,
@@ -36740,7 +43123,7 @@ function activityWorkout(a, exerciseId, fileName = "") {
   return {
     id: null,
     date,
-    startTime: time,
+    startTime: time2,
     durationMin: Math.max(1, Math.round(a.durationSeconds / 60)),
     title: KIND_TITLES[a.kind],
     planDayId: null,
@@ -36784,385 +43167,6 @@ __export(todayStart_exports, {
   startMuscles: () => startMuscles,
   todayStart: () => todayStart
 });
-
-// src/domain/recoveryCockpit.ts
-var recoveryCockpit_exports = {};
-__export(recoveryCockpit_exports, {
-  BAND_LABELS: () => BAND_LABELS,
-  BASELINE_DAYS: () => BASELINE_DAYS2,
-  BASELINE_MIN: () => BASELINE_MIN,
-  DEFAULT_SLEEP_TARGET: () => DEFAULT_SLEEP_TARGET,
-  FACTOR_LABELS: () => FACTOR_LABELS,
-  FACTOR_MIN_NIGHTS: () => FACTOR_MIN_NIGHTS,
-  FORECAST_FACTORS: () => FORECAST_FACTORS,
-  FORECAST_LABELS: () => FORECAST_LABELS,
-  MUSCLE_FULL_LOAD: () => MUSCLE_FULL_LOAD,
-  MUSCLE_READY_PCT: () => MUSCLE_READY_PCT,
-  MUSCLE_RECOVERY_HOURS: () => MUSCLE_RECOVERY_HOURS,
-  RECOVERY_LAB: () => RECOVERY_LAB,
-  SCORE_WEIGHTS: () => SCORE_WEIGHTS,
-  baselineOf: () => baselineOf,
-  factorEffects: () => factorEffects,
-  gripMarker: () => gripMarker,
-  groupLoads: () => groupLoads,
-  hrvBaselineUntil: () => hrvBaselineUntil,
-  hrvForecast: () => hrvForecast,
-  muscleRecovery: () => muscleRecovery,
-  pctFromBase: () => pctFromBase,
-  plannedGroups: () => plannedGroups,
-  recoveryDays: () => recoveryDays,
-  recoveryLab: () => recoveryLab,
-  scoreAverageBefore: () => scoreAverageBefore,
-  scoreBand: () => scoreBand,
-  selfPart: () => selfPart,
-  sessionTime: () => sessionTime
-});
-var SCORE_WEIGHTS = { hrv: 0.35, restingHr: 0.2, sleep: 0.25, self: 0.2 };
-var BASELINE_DAYS2 = 28;
-var BASELINE_MIN = 5;
-var DEFAULT_SLEEP_TARGET = 480;
-var clamp = (v, lo = 0, hi = 100) => Math.min(hi, Math.max(lo, v));
-var mean10 = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
-function baselineOf(values) {
-  if (values.length < BASELINE_MIN) return null;
-  const m = mean10(values);
-  const sd2 = Math.sqrt(mean10(values.map((v) => (v - m) ** 2)));
-  return { mean: m, sd: Math.max(sd2, Math.abs(m) * 0.05, 0.1), count: values.length };
-}
-function byDate2(rows2) {
-  const m = /* @__PURE__ */ new Map();
-  for (const r2 of rows2) m.set(r2.date, r2);
-  return m;
-}
-function dailyValues(inp) {
-  const hrv2 = /* @__PURE__ */ new Map();
-  const rhr = /* @__PURE__ */ new Map();
-  for (const r2 of inp.wearableRecovery) {
-    if (r2.hrvMs !== null && r2.hrvMs > 0) hrv2.set(r2.date, r2.hrvMs);
-    if (r2.hrAvg !== null && r2.hrAvg > 0) rhr.set(r2.date, r2.hrAvg);
-  }
-  for (const m of inp.measurements) {
-    if (m.metricId === HRV_METRIC_ID) hrv2.set(m.date, m.value);
-    if (m.metricId === RESTING_HR_METRIC_ID) rhr.set(m.date, m.value);
-  }
-  return { hrv: hrv2, rhr };
-}
-function baselineBefore(values, date) {
-  const from = addDaysIso(date, -BASELINE_DAYS2);
-  const xs = [];
-  for (const [d, v] of values) if (d >= from && d < date) xs.push(v);
-  return baselineOf(xs);
-}
-function selfPart(r2) {
-  if (!r2) return null;
-  const xs = [];
-  if (r2.readiness !== null) xs.push(r2.readiness * 10);
-  if (r2.fatigue !== null) xs.push((10 - r2.fatigue) * 10);
-  if (r2.soreness !== null) xs.push((10 - r2.soreness) * 10);
-  if (r2.stress !== null) xs.push((10 - r2.stress) * 10);
-  return xs.length ? clamp(mean10(xs)) : null;
-}
-function recoveryDays(inp, from, to) {
-  const { hrv: hrv2, rhr } = dailyValues(inp);
-  const logs = byDate2(inp.recoveryLogs);
-  const sleepLogs = byDate2(inp.sleepLogs);
-  const measured = byDate2(inp.wearableSleep);
-  const target = inp.sleepTargetMin && inp.sleepTargetMin > 0 ? inp.sleepTargetMin : DEFAULT_SLEEP_TARGET;
-  const out = [];
-  for (let d = from; d <= to; d = addDaysIso(d, 1)) {
-    const h = hrv2.get(d) ?? null;
-    const r2 = rhr.get(d) ?? null;
-    const hb = baselineBefore(hrv2, d);
-    const rb = baselineBefore(rhr, d);
-    const log = sleepLogs.get(d);
-    const ms = measured.get(d);
-    const msMin = ms && (ms.lightS ?? 0) + (ms.deepS ?? 0) + (ms.remS ?? 0) > 0 ? Math.round(((ms.lightS ?? 0) + (ms.deepS ?? 0) + (ms.remS ?? 0)) / 60) : null;
-    const sleepMin = log ? log.sleepMin : msMin;
-    let phases = null;
-    if (ms && msMin !== null) {
-      phases = {
-        deep: Math.round((ms.deepS ?? 0) / 60),
-        light: Math.round((ms.lightS ?? 0) / 60),
-        rem: Math.round((ms.remS ?? 0) / 60),
-        awake: Math.round((ms.interruptionS ?? 0) / 60)
-      };
-    } else if (log && (log.deepMin !== null || log.lightMin !== null || log.remMin !== null)) {
-      phases = {
-        deep: log.deepMin ?? 0,
-        light: log.lightMin ?? 0,
-        rem: log.remMin ?? 0,
-        awake: log.awakeMin ?? 0
-      };
-    }
-    const self = logs.get(d) ?? null;
-    const parts2 = {
-      hrv: h !== null && hb ? clamp(50 + 25 * ((h - hb.mean) / hb.sd)) : null,
-      restingHr: r2 !== null && rb ? clamp(50 - 25 * ((r2 - rb.mean) / rb.sd)) : null,
-      sleep: sleepMin !== null && sleepMin > 0 ? clamp(sleepMin / target * 100) : null,
-      self: selfPart(self)
-    };
-    let sum = 0;
-    let weight = 0;
-    let n3 = 0;
-    for (const k of Object.keys(SCORE_WEIGHTS)) {
-      const v = parts2[k];
-      if (v === null) continue;
-      sum += v * SCORE_WEIGHTS[k];
-      weight += SCORE_WEIGHTS[k];
-      n3 += 1;
-    }
-    out.push({
-      date: d,
-      hrv: h,
-      restingHr: r2,
-      sleepMin,
-      phases,
-      self,
-      hrvBase: hb,
-      restingHrBase: rb,
-      parts: parts2,
-      score: n3 >= 2 ? Math.round(sum / weight) : null
-    });
-  }
-  return out;
-}
-function scoreBand(score) {
-  return score >= 70 ? "high" : score >= 50 ? "normal" : "low";
-}
-var BAND_LABELS = {
-  high: "Gut erholt",
-  normal: "Im \xFCblichen Bereich",
-  low: "Weniger erholt als \xFCblich"
-};
-function scoreAverageBefore(days3, date) {
-  const from = addDaysIso(date, -BASELINE_DAYS2);
-  const xs = days3.filter((d) => d.date >= from && d.date < date && d.score !== null).map((d) => d.score);
-  return xs.length >= BASELINE_MIN ? Math.round(mean10(xs)) : null;
-}
-function pctFromBase(value2, base) {
-  if (value2 === null || !base || base.mean === 0) return null;
-  return (value2 - base.mean) / base.mean * 100;
-}
-var MUSCLE_RECOVERY_HOURS = 72;
-var MUSCLE_FULL_LOAD = 10;
-var MUSCLE_READY_PCT = 80;
-function groupLoads(values) {
-  const out = {};
-  for (const g2 of MUSCLE_GROUPS) out[g2.id] = Math.max(0, ...g2.parts.map((p) => values[p] ?? 0));
-  return out;
-}
-function sessionTime(date, time) {
-  const [y, m, d] = date.split("-").map(Number);
-  const [hh, mm] = (time ?? "12:00").split(":").map(Number);
-  return new Date(y ?? 2e3, (m ?? 1) - 1, d ?? 1, hh ?? 12, mm ?? 0).getTime();
-}
-function remaining(load2, sinceMs) {
-  const h = sinceMs / 36e5;
-  return h < 0 ? 0 : load2 * Math.max(0, 1 - h / MUSCLE_RECOVERY_HOURS);
-}
-function muscleRecovery(log, exercises, machines, workouts, now, focus = NO_FOCUS) {
-  const nowDate = new Date(now);
-  const today = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, "0")}-${String(nowDate.getDate()).padStart(2, "0")}`;
-  const from = addDaysIso(today, -Math.ceil(MUSCLE_RECOVERY_HOURS / 24) - 1);
-  const startOf = new Map(workouts.map((w) => [w.id, sessionTime(w.date, w.startTime)]));
-  const sessions2 = /* @__PURE__ */ new Map();
-  for (const s of log) {
-    if (s.date < from || s.date > today) continue;
-    const at = startOf.get(s.workoutId) ?? sessionTime(s.date, null);
-    if (at > now) continue;
-    const e = sessions2.get(s.workoutId) ?? { at, sets: [] };
-    e.sets.push(s);
-    sessions2.set(s.workoutId, e);
-  }
-  const loads = [...sessions2.values()].map((x) => ({
-    at: x.at,
-    groups: groupLoads(muscleMapData(x.sets, exercises, machines, () => true, focus).sets)
-  }));
-  return MUSCLE_GROUPS.map((g2) => {
-    const at = (t) => loads.reduce((a, l) => a + remaining(l.groups[g2.id] ?? 0, t - l.at), 0);
-    const load2 = at(now);
-    const pct2 = Math.round(clamp(100 * (1 - load2 / MUSCLE_FULL_LOAD)));
-    let readyAt = null;
-    if (pct2 < MUSCLE_READY_PCT) {
-      const limit = MUSCLE_FULL_LOAD * (1 - MUSCLE_READY_PCT / 100);
-      for (let h = 1; h <= MUSCLE_RECOVERY_HOURS; h++) {
-        const t = now + h * 36e5;
-        if (at(t) <= limit) {
-          readyAt = t;
-          break;
-        }
-      }
-    }
-    return { id: g2.id, label: g2.label, pct: pct2, load: Math.round(load2 * 10) / 10, readyAt };
-  });
-}
-function plannedGroups(exerciseNames, exercises, machines, focus = NO_FOCUS) {
-  const byName2 = new Map(exercises.map((e) => [e.name.trim().toLowerCase(), e]));
-  const sets2 = [];
-  for (const n3 of exerciseNames) {
-    const e = byName2.get(n3.trim().toLowerCase());
-    if (e && e.category === "strength")
-      sets2.push({
-        exerciseId: e.id,
-        exerciseCategory: e.category,
-        isWarmup: false,
-        reps: 10,
-        weightKg: null
-      });
-  }
-  if (!sets2.length) return [];
-  const loads = groupLoads(muscleMapData(sets2, exercises, machines, () => true, focus).sets);
-  return MUSCLE_GROUPS.map((g2) => ({ id: g2.id, label: g2.label, sets: loads[g2.id] ?? 0 })).filter((g2) => g2.sets >= 0.5).sort((a, b) => b.sets - a.sets);
-}
-function gripMarker(grip, today) {
-  const list2 = grip.filter((g2) => g2.date <= today).map((g2) => ({ date: g2.date, value: (g2.leftKg + g2.rightKg) / 2 })).filter((g2) => g2.value > 0).sort((a, b) => a.date.localeCompare(b.date));
-  const last = list2[list2.length - 1];
-  if (!last) return null;
-  const from = addDaysIso(last.date, -BASELINE_DAYS2);
-  const before = list2.filter((g2) => g2.date >= from && g2.date < last.date).map((g2) => g2.value);
-  const base = before.length >= 2 ? mean10(before) : null;
-  return {
-    date: last.date,
-    value: last.value,
-    baseline: base,
-    baselineCount: before.length,
-    pct: base ? (last.value - base) / base * 100 : null,
-    recent: list2.slice(-8)
-  };
-}
-var FACTOR_MIN_NIGHTS = 7;
-var FACTOR_LABELS = {
-  sleep: "Schlaf mindestens 7,5 h",
-  meal: "Letzte Mahlzeit mindestens 3 h vor dem Einschlafen",
-  caffeine: "Letztes Koffein vor 14 Uhr",
-  training: "Training am Vortag",
-  stress: "Stress ab 6 am Vortag (Selbsteinsch\xE4tzung)"
-};
-var minutesOf4 = (hhmm) => {
-  if (!hhmm) return null;
-  const m = /^(\d{1,2}):(\d{2})/.exec(hhmm.length > 5 ? hhmm.slice(11, 16) || hhmm : hhmm);
-  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
-};
-function sleepStartMin(ms, log) {
-  const t = minutesOf4(ms?.sleepStart ?? log?.bedTime ?? null);
-  if (t === null) return null;
-  return t < 12 * 60 ? t + 24 * 60 : t;
-}
-function factorEffects(inp, from, to) {
-  const { hrv: hrv2 } = dailyValues(inp);
-  const ctx = byDate2(inp.context);
-  const logs = byDate2(inp.recoveryLogs);
-  const sleepLogs = byDate2(inp.sleepLogs);
-  const measured = byDate2(inp.wearableSleep);
-  const trained = new Set(inp.workouts.filter((w) => w.status === "done").map((w) => w.date));
-  const days3 = recoveryDays(inp, from, to);
-  const groups = {
-    sleep: { with: [], without: [] },
-    meal: { with: [], without: [] },
-    caffeine: { with: [], without: [] },
-    training: { with: [], without: [] },
-    stress: { with: [], without: [] }
-  };
-  const all = [];
-  for (const day of days3) {
-    const v = hrv2.get(day.date);
-    if (v === void 0) continue;
-    all.push(v);
-    const prev = addDaysIso(day.date, -1);
-    const add = (k, yes) => {
-      if (yes === null) return;
-      (yes ? groups[k].with : groups[k].without).push(v);
-    };
-    add("sleep", day.sleepMin !== null ? day.sleepMin >= 450 : null);
-    const c = ctx.get(prev);
-    const start = sleepStartMin(measured.get(day.date), sleepLogs.get(day.date));
-    const meal = minutesOf4(c?.mealLast ?? null);
-    add("meal", start !== null && meal !== null ? start - meal >= 180 : null);
-    const last = minutesOf4(c?.caffeineLast ?? null);
-    add("caffeine", last === null || last < 14 * 60);
-    add("training", trained.has(prev));
-    const s = logs.get(prev)?.stress ?? null;
-    add("stress", s !== null ? s >= 6 : null);
-  }
-  const overall = all.length ? mean10(all) : null;
-  return Object.keys(groups).map((key) => {
-    const g2 = groups[key];
-    const mw = g2.with.length ? mean10(g2.with) : null;
-    const mo = g2.without.length ? mean10(g2.without) : null;
-    const enough = g2.with.length >= FACTOR_MIN_NIGHTS && g2.without.length >= FACTOR_MIN_NIGHTS && overall;
-    return {
-      key,
-      label: FACTOR_LABELS[key],
-      withCount: g2.with.length,
-      withoutCount: g2.without.length,
-      meanWith: mw,
-      meanWithout: mo,
-      pct: enough && mw !== null && mo !== null && overall ? (mw - mo) / overall * 100 : null
-    };
-  });
-}
-var FORECAST_FACTORS = ["meal", "caffeine", "sleep"];
-var FORECAST_LABELS = {
-  meal: "Abendessen mindestens 3 h vor dem Schlafen",
-  caffeine: "Kein Koffein nach 14 Uhr",
-  sleep: "Mindestens 7,5 h schlafen",
-  training: "Heute trainieren",
-  stress: "Stressiger Tag"
-};
-function hrvForecast(base, effects, chosen) {
-  if (!base) return null;
-  let shift3 = 0;
-  for (const e of effects) {
-    const yes = chosen[e.key];
-    if (yes === void 0 || e.pct === null || e.meanWith === null || e.meanWithout === null)
-      continue;
-    const mid = (e.meanWith + e.meanWithout) / 2;
-    shift3 += ((yes ? e.meanWith : e.meanWithout) - mid) * 0.5;
-  }
-  const expected = base.mean + shift3;
-  return { expected, low: expected - base.sd / 2, high: expected + base.sd / 2, base };
-}
-function hrvBaselineUntil(inp, today) {
-  const { hrv: hrv2 } = dailyValues(inp);
-  return baselineBefore(hrv2, addDaysIso(today, 1));
-}
-var RECOVERY_LAB = [
-  { label: "CRP", pattern: /\bcrp\b|c-reaktiv/i },
-  { label: "CK (Kreatinkinase)", pattern: /\bck\b|kreatin(in)?kinase|creatin(e)? ?kinase/i },
-  { label: "Ferritin", pattern: /ferritin/i },
-  { label: "Vitamin D", pattern: /vitamin ?d|25-?oh/i },
-  { label: "H\xE4moglobin", pattern: /h(ä|ae)moglobin|\bhb\b/i },
-  { label: "Cortisol", pattern: /cortisol|kortisol/i },
-  { label: "Testosteron", pattern: /testosteron/i }
-];
-function recoveryLab(draws) {
-  const sorted = [...draws].sort((a, b) => b.date.localeCompare(a.date));
-  const out = [];
-  for (const item2 of RECOVERY_LAB) {
-    for (const d of sorted) {
-      const r2 = d.results.find(
-        (x) => item2.pattern.test(x.analyteName) && !/^kreatinin$|creatinine?$/i.test(x.analyteName.trim())
-      );
-      if (!r2) continue;
-      const outside = r2.refLow === null && r2.refHigh === null ? null : r2.refLow !== null && r2.value < r2.refLow || r2.refHigh !== null && r2.value > r2.refHigh;
-      out.push({
-        label: item2.label,
-        name: r2.analyteName,
-        value: r2.value,
-        comparator: r2.comparator,
-        unit: r2.unit,
-        date: d.date,
-        refLow: r2.refLow,
-        refHigh: r2.refHigh,
-        outside
-      });
-      break;
-    }
-  }
-  return out;
-}
-
-// src/domain/todayStart.ts
 var ROTATION_DAYS = 28;
 var norm5 = (t) => t.trim().toLowerCase();
 var usableDays = (plan) => plan.days.filter((d) => d.exercises.length > 0);
@@ -37307,6 +43311,24 @@ __export(connections_exports, {
   noData: () => noData,
   sortFindings: () => sortFindings,
   valuesIn: () => valuesIn
+});
+
+// src/domain/connDiet.ts
+var connDiet_exports = {};
+__export(connDiet_exports, {
+  DIET_LIMITS: () => DIET_LIMITS,
+  EA_LIMITS: () => EA_LIMITS,
+  JUMP_LIMITS: () => JUMP_LIMITS,
+  STEP_LIMITS: () => STEP_LIMITS,
+  WEEK_PATTERN: () => WEEK_PATTERN,
+  dietFindings: () => dietFindings,
+  dietState: () => dietState,
+  energyAvailability: () => energyAvailability,
+  liftChanges: () => liftChanges,
+  stepsInDiet: () => stepsInDiet,
+  strengthRetention: () => strengthRetention,
+  weekPattern: () => weekPattern,
+  weightJump: () => weightJump
 });
 
 // src/domain/connTypes.ts
@@ -37467,8 +43489,8 @@ function metricByDay(measurements, metricId) {
   return [...byDay].map(([date, value2]) => ({ date, value: value2 })).sort((a, b) => a.date < b.date ? -1 : 1);
 }
 var valuesIn = (points2, from, to) => points2.filter((p) => p.date >= from && p.date <= to).map((p) => p.value);
-function minutesOf5(time) {
-  const m = /^(\d{1,2}):(\d{2})/.exec(time ?? "");
+function minutesOf5(time2) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(time2 ?? "");
   if (!m) return null;
   const v = Number(m[1]) * 60 + Number(m[2]);
   return v >= 0 && v < 1440 ? v : null;
@@ -37486,8 +43508,375 @@ function noData(base, summary) {
   return { ...base, status: "nodata", summary, advice: null, rows: [] };
 }
 
+// src/domain/connWeightJump.ts
+var connWeightJump_exports = {};
+__export(connWeightJump_exports, {
+  JUMP_LIMITS: () => JUMP_LIMITS,
+  JUMP_METRICS: () => JUMP_METRICS,
+  TREND_LABELS: () => TREND_LABELS,
+  isWeightJump: () => isWeightJump,
+  trendBefore: () => trendBefore,
+  weightJump: () => weightJump
+});
+var F4 = formatNumber;
+var JUMP_LIMITS = {
+  /** Ab dieser Abweichung vom erwarteten Wert (bzw. vom 7-Tage-Mittel) gilt die Wiegung als Sprung */
+  jumpKg: 0.5,
+  /** Mittel der 7 Tage davor: so viele Wiegungen mindestens */
+  meanMinWeighIns: 4,
+  /** Tendenz: so viele Wiegungen, höchstens so viele Tage zurück (Nutzer 28.11.2026) */
+  trendWeighIns: 7,
+  trendMaxDays: 14,
+  /** Ab dieser Änderung je Woche gilt der Verlauf als fallend bzw. steigend (Regel der App) */
+  trendFlatKgWeek: 0.2,
+  carbsG: 50,
+  saltG: 2,
+  /** relative Abweichung von der üblichen Menge */
+  share: 0.25,
+  massShare: 0.2,
+  lastMealMin: 60,
+  /** Eine letzte Mahlzeit ab dieser Uhrzeit gilt als sehr spät (21:00, Regel der App) */
+  veryLateMealMin: 21 * 60,
+  lateWaterMl: 300,
+  /** Trinkmenge des Vortags: ab dieser Abweichung von der üblichen Menge */
+  waterMl: 500,
+  /** Zusammensetzung der Waage: Mittel der 7 Tage davor ab so vielen Werten */
+  compMinValues: 3,
+  /** Körperwasser bzw. Fettmasse laut Waage werden ab dieser Abweichung genannt */
+  compWaterL: 0.3,
+  compMassKg: 0.3
+};
+var JUMP_METRICS = {
+  waterPct: builtinMetricId(32),
+  icw: builtinMetricId(33),
+  ecw: builtinMetricId(34),
+  fatMass: builtinMetricId(25),
+  fatPct: BODY_FAT_METRIC_ID,
+  muscleMass: builtinMetricId(3),
+  leanMass: builtinMetricId(29)
+};
+var SHORT_MAX = 3;
+var TREND_LABELS = {
+  falling: "fallend",
+  flat: "gleichbleibend",
+  rising: "steigend"
+};
+function trendBefore(points2, date, flatPerWeek = JUMP_LIMITS.trendFlatKgWeek) {
+  const lim = JUMP_LIMITS;
+  const from = shiftDays(date, -lim.trendMaxDays);
+  const inWindow = points2.filter((p) => p.date >= from && p.date < date);
+  if (inWindow.length < lim.trendWeighIns) return { trend: null, found: inWindow.length };
+  const used = inWindow.slice(-lim.trendWeighIns);
+  const xs = used.map((p) => -(daysBetween(p.date, date) - 1));
+  const ys = used.map((p) => p.value);
+  const mx = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const my = ys.reduce((a, b) => a + b, 0) / ys.length;
+  let sxy = 0;
+  let sxx = 0;
+  xs.forEach((x, i) => {
+    sxy += (x - mx) * ((ys[i] ?? my) - my);
+    sxx += (x - mx) ** 2;
+  });
+  const slope = sxx > 0 ? sxy / sxx : 0;
+  const perWeek = slope * 7;
+  const first = used[0];
+  return {
+    trend: {
+      count: used.length,
+      days: first ? daysBetween(first.date, date) - 1 : 0,
+      perWeek,
+      expected: my - slope * mx,
+      direction: Math.abs(perWeek) < flatPerWeek ? "flat" : perWeek < 0 ? "falling" : "rising"
+    },
+    found: inWindow.length
+  };
+}
+var trendText = (t, unit, digits = 1) => `${TREND_LABELS[t.direction]}, ${formatSigned(t.perWeek, digits)} ${unit} je Woche`;
+var hm4 = (minutes) => {
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes - h * 60);
+  return m ? `${h} h ${m} min` : `${h} h`;
+};
+var foodsText = (list2, unit, digits = 0) => list2.map((f) => `${f.name} (${F4(f.value, digits)} ${unit})`).join(", ");
+function compValue(inp, metricId, date, flat) {
+  const points2 = metricByDay(inp.measurements, metricId);
+  const today = points2.find((p) => p.date === date);
+  if (!today) return null;
+  const prior = valuesIn(points2, shiftDays(date, -7), shiftDays(date, -1));
+  const mean12 = prior.length >= JUMP_LIMITS.compMinValues ? avg(prior) : null;
+  if (mean12 === null) return null;
+  return {
+    today: today.value,
+    mean: mean12,
+    delta: today.value - mean12,
+    trend: trendBefore(points2, date, flat).trend
+  };
+}
+function weightJump(inp) {
+  const lim = JUMP_LIMITS;
+  const base = {
+    id: "V2",
+    area: "diet",
+    title: "Gewichtssprung erkl\xE4ren",
+    method: `Letzte Wiegung (heute oder gestern) gegen den Verlauf davor: Aus den letzten ${lim.trendWeighIns} Wiegungen (h\xF6chstens ${lim.trendMaxDays} Tage zur\xFCck) entsteht eine Ausgleichsgerade \u2013 ihre Steigung ist die Tendenz (unter \xB1${F4(lim.trendFlatKgWeek, 1)} kg je Woche \u201Egleichbleibend\u201C), ihre Fortsetzung der erwartete Wert. Ab \xB1${F4(lim.jumpKg, 1)} kg Abweichung vom erwarteten Wert gilt die Wiegung als Sprung; ohne Tendenz z\xE4hlt das Mittel der 7 Tage davor (mind. ${lim.meanMinWeighIns} Wiegungen). Werte der Waage (K\xF6rperwasser, intra- und extrazellul\xE4res Wasser, Fett- und Muskelmasse) vom Wiegetag stehen gegen das Mittel ihrer 7 Tage davor (mind. ${lim.compMinValues} Werte), mit eigener Tendenz ab ${lim.trendWeighIns} Werten; sie sind Sch\xE4tzwerte der Bioimpedanz. Der Vortag wird mit deinen \xFCblichen Werten verglichen (Mittel bzw. Median der 14 Tage davor, mind. 5 Tage): Kohlenhydrate (\xB1${lim.carbsG} g und \xB125 %), Salz (\xB1${lim.saltG} g und \xB125 %), Essensmenge (\xB120 %), Trinkmenge (\xB1${lim.waterMl} ml und \xB125 %), Uhrzeit der letzten Mahlzeit (ab ${lim.lastMealMin} Minuten sp\xE4ter oder ab ${clockOf(lim.veryLateMealMin)} Uhr), Trinken ab 20 Uhr (ab ${lim.lateWaterMl} ml mehr), Training am Vortag. Bei auff\xE4lligen Kohlenhydraten, Salz oder Essensmenge stehen die Lebensmittel mit den gr\xF6\xDFten Beitr\xE4gen dabei. \u201EN\xFCchtern gewogen\u201C hei\xDFt: vor der Uhrzeit der Wiegung ist am selben Tag nichts gegessen oder getrunken eingetragen. Salz und Essensmenge nur aus Lebensmitteln mit Angabe.`,
+    sources: [CONN_SOURCES.weightSwing]
+  };
+  const weights = metricByDay(inp.measurements, WEIGHT_METRIC_ID);
+  const last = weights.filter((w) => w.date <= inp.today).at(-1);
+  if (!last || daysBetween(last.date, inp.today) - 1 > 1)
+    return noData(base, "Keine Wiegung von heute oder gestern.");
+  const prior = valuesIn(weights, shiftDays(last.date, -7), shiftDays(last.date, -1));
+  const mean12 = prior.length >= lim.meanMinWeighIns ? avg(prior) : null;
+  const { trend, found } = trendBefore(weights, last.date);
+  if (mean12 === null && trend === null)
+    return noData(
+      base,
+      `F\xFCr den Vergleich braucht es mindestens ${lim.meanMinWeighIns} Wiegungen in den 7 Tagen davor.`
+    );
+  const reference = trend ? trend.expected : mean12 ?? last.value;
+  const diff = last.value - reference;
+  const when2 = last.date === inp.today ? "Heute" : `Am ${formatDate(last.date)}`;
+  const missing = lim.trendWeighIns - found;
+  const head2 = trend ? `${when2} ${F4(last.value, 1)} kg \u2013 ${formatSigned(diff, 1)} kg zum erwarteten Wert aus dem Verlauf (${F4(trend.expected, 1)} kg). Tendenz der letzten ${trend.count} Wiegungen: ${trendText(trend, "kg")}.` : `${when2} ${F4(last.value, 1)} kg \u2013 ${formatSigned(diff, 1)} kg zum Mittel der 7 Tage davor (${F4(reference, 1)} kg). F\xFCr eine Tendenz fehlen noch ${missing} ${missing === 1 ? "Wiegung" : "Wiegungen"} (${lim.trendWeighIns} in h\xF6chstens ${lim.trendMaxDays} Tagen).`;
+  const weighMin = inp.measurements.filter((m) => m.metricId === WEIGHT_METRIC_ID && m.date === last.date).map((m) => minutesOf5(m.time)).filter((m) => m !== null).sort((a, b) => a - b).at(-1) ?? null;
+  const rows2 = [
+    {
+      label: "Wiegung",
+      value: `${F4(last.value, 1)} kg`,
+      note: weighMin === null ? formatDate(last.date) : `${formatDate(last.date)}, ${clockOf(weighMin)} Uhr`
+    }
+  ];
+  if (trend) {
+    rows2.push(
+      {
+        label: "Erwarteter Wert aus dem Verlauf",
+        value: `${F4(trend.expected, 1)} kg`,
+        note: `${trend.count} Wiegungen in ${trend.days} Tagen`
+      },
+      {
+        label: "Tendenz",
+        value: `${formatSigned(trend.perWeek, 1)} kg je Woche`,
+        note: TREND_LABELS[trend.direction]
+      }
+    );
+  }
+  if (mean12 !== null)
+    rows2.push({
+      label: "Mittel der 7 Tage davor",
+      value: `${F4(mean12, 1)} kg`,
+      note: `${prior.length} Wiegungen`
+    });
+  const M6 = JUMP_METRICS;
+  const comp = (id4, flat) => compValue(inp, id4, last.date, flat);
+  const icw = comp(M6.icw, 0.2);
+  const ecw = comp(M6.ecw, 0.2);
+  const waterPct = comp(M6.waterPct, 0.3);
+  const fatMass = comp(M6.fatMass, 0.2);
+  const fatPct = comp(M6.fatPct, 0.3);
+  const muscle = comp(M6.muscleMass, 0.2);
+  const lean = comp(M6.leanMass, 0.2);
+  const compRow = (label, c, unit) => {
+    if (!c) return;
+    rows2.push({
+      label: `${label} (Waage)`,
+      value: `${F4(c.today, 1)} ${unit}`,
+      note: `${formatSigned(c.delta, 1)} ${unit} zum Mittel der 7 Tage davor (${F4(c.mean, 1)} ${unit})${c.trend ? ` \xB7 Tendenz ${trendText(c.trend, unit)}` : ""}`
+    });
+  };
+  compRow("K\xF6rperwasseranteil", waterPct, "%");
+  compRow("Intrazellul\xE4res Wasser", icw, "l");
+  compRow("Extrazellul\xE4res Wasser", ecw, "l");
+  compRow("K\xF6rperfettmasse", fatMass, "kg");
+  compRow("K\xF6rperfettanteil", fatPct, "%");
+  compRow("Skelettmuskelmasse", muscle, "kg");
+  compRow("Magermasse", lean, "kg");
+  const waterDeltaL = icw && ecw ? icw.delta + ecw.delta : waterPct && mean12 !== null ? waterPct.today / 100 * last.value - waterPct.mean / 100 * mean12 : null;
+  const fatDeltaKg = fatMass?.delta ?? (fatPct && mean12 !== null ? fatPct.today / 100 * last.value - fatPct.mean / 100 * mean12 : null);
+  const compParts = [];
+  if (waterDeltaL !== null)
+    compParts.push(
+      `K\xF6rperwasser ${formatSigned(waterDeltaL, 1)} l${icw && ecw ? ` (intrazellul\xE4r ${formatSigned(icw.delta, 1)} l, extrazellul\xE4r ${formatSigned(ecw.delta, 1)} l)` : ""}`
+    );
+  if (fatDeltaKg !== null) compParts.push(`Fettmasse ${formatSigned(fatDeltaKg, 1)} kg`);
+  if (muscle) compParts.push(`Skelettmuskelmasse ${formatSigned(muscle.delta, 1)} kg`);
+  else if (lean) compParts.push(`Magermasse ${formatSigned(lean.delta, 1)} kg`);
+  const compText = compParts.length ? ` Laut Waage gegen\xFCber dem Mittel der 7 Tage davor: ${compParts.join(", ")}.` : "";
+  if (Math.abs(diff) < lim.jumpKg)
+    return {
+      ...base,
+      status: "ok",
+      summary: `${head2}${compText}`,
+      advice: trend ? "Im \xFCblichen Schwankungsbereich \u2013 die Wiegung passt zur Tendenz, kein Sprung." : "Im \xFCblichen Schwankungsbereich \u2013 kein Sprung.",
+      rows: rows2
+    };
+  const sign = diff > 0 ? 1 : -1;
+  const flagged = [];
+  const foods = [];
+  if (waterDeltaL !== null && waterDeltaL * sign >= lim.compWaterL)
+    flagged.push(`K\xF6rperwasser laut Waage ${formatSigned(waterDeltaL, 1)} l`);
+  if (fatDeltaKg !== null && fatDeltaKg * sign >= lim.compMassKg)
+    flagged.push(`Fettmasse laut Waage ${formatSigned(fatDeltaKg, 1)} kg`);
+  const eve = shiftDays(last.date, -1);
+  const day = inp.intake.find((d) => d.date === eve) ?? null;
+  const usual = inp.intake.filter(
+    (d) => d.date >= shiftDays(eve, -14) && d.date < eve && d.energyKcal >= COMPLETE_DAY_KCAL
+  );
+  if (day && day.energyKcal > 0 && usual.length >= 5) {
+    const check = (label, value2, base0, abs, share2, unit, digits = 0) => {
+      if (value2 === null || base0 === null || base0 <= 0) return false;
+      const delta = (value2 - base0) * sign;
+      const hit2 = delta >= abs && delta >= base0 * share2;
+      rows2.push({
+        label: `${label} am Vortag`,
+        value: `${F4(value2, digits)} ${unit}`,
+        note: `\xFCblich ${F4(base0, digits)} ${unit}${hit2 ? " \u2013 auff\xE4llig" : ""}`
+      });
+      if (hit2)
+        flagged.push(`${label} ${F4(value2, digits)} ${unit} (\xFCblich ${F4(base0, digits)} ${unit})`);
+      return hit2;
+    };
+    const top = (label, list2, unit, digits = 0) => {
+      if (!list2?.length) return;
+      rows2.push({ label: `${label} am Vortag`, value: foodsText(list2, unit, digits) });
+      foods.push(`${label}: ${foodsText(list2, unit, digits)}`);
+    };
+    if (check(
+      "Kohlenhydrate",
+      day.carbsG,
+      avg(usual.map((d) => d.carbsG)),
+      lim.carbsG,
+      lim.share,
+      "g"
+    ) && sign > 0)
+      top("Gr\xF6\xDFte Kohlenhydratquellen", day.top?.carbs, "g");
+    const salts = usual.flatMap((d) => d.saltG === null ? [] : [d.saltG]);
+    if (check(
+      "Salz",
+      day.saltG,
+      salts.length >= 5 ? avg(salts) : null,
+      lim.saltG,
+      lim.share,
+      "g",
+      1
+    ) && sign > 0)
+      top("Gr\xF6\xDFte Salzquellen", day.top?.salt, "g", 1);
+    if (check("Essensmenge", day.massG, avg(usual.map((d) => d.massG)), 0, lim.massShare, "g") && sign > 0)
+      top("Gr\xF6\xDFte Mengen", day.top?.mass, "g");
+    const drank = usual.filter((d) => d.waterMl > 0).map((d) => d.waterMl);
+    if (day.waterMl > 0 && drank.length >= 5)
+      check("Trinkmenge", day.waterMl, avg(drank), lim.waterMl, lim.share, "ml");
+    const lastMeals = usual.flatMap((d) => d.lastMealMin === null ? [] : [d.lastMealMin]);
+    const usualLast = lastMeals.length >= 5 ? med(lastMeals) : null;
+    if (day.lastMealMin !== null) {
+      const later = usualLast !== null && day.lastMealMin - usualLast >= lim.lastMealMin;
+      const veryLate = day.lastMealMin >= lim.veryLateMealMin;
+      const hit2 = sign > 0 && (later || veryLate);
+      const gap = weighMin !== null ? 1440 - day.lastMealMin + weighMin : null;
+      const extras = [
+        veryLate ? "sehr sp\xE4t" : null,
+        day.lastMealKcal !== null ? `${F4(day.lastMealKcal)} kcal` : null,
+        gap !== null ? `${hm4(gap)} vor der Wiegung` : null
+      ].filter((x) => x !== null);
+      rows2.push({
+        label: "Letzte Mahlzeit am Vortag",
+        value: `${clockOf(day.lastMealMin)} Uhr`,
+        note: [
+          usualLast !== null ? `\xFCblich ${clockOf(usualLast)} Uhr` : null,
+          ...extras,
+          hit2 ? "auff\xE4llig" : null
+        ].filter((x) => x !== null).join(" \xB7 ")
+      });
+      if (hit2)
+        flagged.push(
+          `letzte Mahlzeit um ${clockOf(day.lastMealMin)} Uhr${usualLast !== null ? ` (\xFCblich ${clockOf(usualLast)} Uhr)` : ""}${extras.length ? ` \u2013 ${extras.join(", ")}` : ""}`
+        );
+    }
+    const timed = usual.filter((d) => d.waterTimed);
+    if (day.waterTimed && timed.length >= 5) {
+      const usualLate = avg(timed.map((d) => d.waterLateMl)) ?? 0;
+      const hit2 = sign > 0 && day.waterLateMl - usualLate >= lim.lateWaterMl;
+      rows2.push({
+        label: "Trinken ab 20 Uhr am Vortag",
+        value: `${F4(day.waterLateMl)} ml`,
+        note: `\xFCblich ${F4(usualLate)} ml${hit2 ? " \u2013 auff\xE4llig" : ""}`
+      });
+      if (hit2)
+        flagged.push(`${F4(day.waterLateMl)} ml nach 20 Uhr getrunken (\xFCblich ${F4(usualLate)} ml)`);
+    }
+  }
+  const trained = inp.workouts.filter((w) => w.date === eve && w.status === "done");
+  if (trained.length) {
+    rows2.push({
+      label: "Training am Vortag",
+      value: trained.map((w) => w.title).join(", "),
+      note: "kann Wasser im Muskel binden"
+    });
+    if (sign > 0) flagged.push(`Training am Vortag (${trained.map((w) => w.title).join(", ")})`);
+  }
+  const weighDay = inp.intake.find((d) => d.date === last.date) ?? null;
+  let fastedNote = "";
+  if (weighMin === null) {
+    rows2.push({
+      label: "N\xFCchtern gewogen?",
+      value: "unbekannt",
+      note: "Die Wiegung hat keine Uhrzeit"
+    });
+    fastedNote = " Ob n\xFCchtern gewogen wurde, l\xE4sst sich ohne Uhrzeit der Wiegung nicht pr\xFCfen.";
+  } else {
+    const mealsBefore = (weighDay?.meals ?? []).filter((m) => m.min < weighMin && m.energyKcal > 0);
+    const drinksBefore = (weighDay?.drinks ?? []).filter((d) => d.min < weighMin);
+    const kcal3 = mealsBefore.reduce((a, m) => a + m.energyKcal, 0);
+    const grams = mealsBefore.reduce((a, m) => a + (m.massG ?? 0), 0);
+    const ml = drinksBefore.reduce((a, d) => a + d.ml, 0);
+    if (mealsBefore.length || ml > 0) {
+      const parts2 = [
+        mealsBefore.length ? `${F4(kcal3)} kcal gegessen${grams > 0 ? ` (${F4(grams)} g)` : ""}` : null,
+        ml > 0 ? `${F4(ml)} ml getrunken` : null
+      ].filter((x) => x !== null);
+      rows2.push({
+        label: "N\xFCchtern gewogen?",
+        value: "nein",
+        note: `vor der Wiegung um ${clockOf(weighMin)} Uhr: ${parts2.join(", ")}`
+      });
+      if (sign > 0)
+        flagged.push(
+          `nicht n\xFCchtern gewogen (vor ${clockOf(weighMin)} Uhr schon ${parts2.join(" und ")})`
+        );
+      fastedNote = " Der Vergleich mit n\xFCchternen Wiegungen der Tage davor ist dadurch eingeschr\xE4nkt.";
+    } else {
+      rows2.push({
+        label: "N\xFCchtern gewogen?",
+        value: "ja",
+        note: `vor der Wiegung um ${clockOf(weighMin)} Uhr ist nichts eingetragen`
+      });
+    }
+  }
+  const out = trend ? " Die Wiegung f\xE4llt aus der Tendenz heraus." : "";
+  const more = flagged.length - SHORT_MAX;
+  const short = `${formatSigned(diff, 1)} kg zum ${trend ? "erwarteten Wert aus dem Verlauf" : "Mittel der 7 Tage davor"} (${F4(reference, 1)} kg). ${flagged.length ? `Auff\xE4llig: ${flagged.slice(0, SHORT_MAX).join("; ")}${more > 0 ? ` und ${more} ${more === 1 ? "weiterer Punkt" : "weitere Punkte"}` : ""}.` : !day || day.energyKcal <= 0 ? "F\xFCr den Vortag ist keine Ern\xE4hrung erfasst." : "Am Vortag war nichts Erfasstes auff\xE4llig anders."}`;
+  const foodsSentence = foods.length ? ` ${foods.join(". ")}.` : "";
+  if (!day || day.energyKcal <= 0)
+    return {
+      ...base,
+      status: "info",
+      summary: `${head2}${out}${compText}${flagged.length ? ` Auff\xE4llig: ${flagged.join("; ")}.` : ""} F\xFCr den Vortag ist keine Ern\xE4hrung erfasst.${fastedNote}`,
+      short,
+      advice: "Einzelne Tageswerte schwanken um 1\u20132 kg durch Wasser und Glykogen. Entscheidend ist das Wochenmittel.",
+      rows: rows2
+    };
+  return {
+    ...base,
+    status: "info",
+    summary: `${head2}${out}${compText} ${flagged.length ? `Am Vortag bzw. bei der Wiegung anders als \xFCblich: ${flagged.join("; ")}.` : "Am Vortag war nichts Erfasstes auff\xE4llig anders."}${foodsSentence}${fastedNote}`,
+    short,
+    advice: flagged.length ? sign > 0 ? "Sehr wahrscheinlich Wasser und Glykogen, kein Fett \u2013 kein Grund, die Kalorien zu \xE4ndern. Entscheidend ist das Wochenmittel." : "Sehr wahrscheinlich weniger Wasser und Glykogen, nicht zus\xE4tzlicher Fettverlust. Entscheidend ist das Wochenmittel." : "Einzelne Tageswerte schwanken um 1\u20132 kg durch Wasser und Glykogen. Warte das Wochenmittel ab, bevor du etwas \xE4nderst.",
+    rows: rows2
+  };
+}
+var isWeightJump = (f) => !!f && f.id === "V2" && f.status === "info";
+
 // src/domain/connDiet.ts
-var F2 = formatNumber;
+var F5 = formatNumber;
 var DIET_LIMITS = {
   /** Empfohlene Abnahme für Trainierte (T02-137) */
   lossMinPctWeek: 0.5,
@@ -37563,8 +43952,8 @@ var dietRows = (s) => {
   if (s.weightNow !== null && s.weightBefore !== null && s.lossPctWeek !== null)
     rows2.push({
       label: "Gewicht (Mittel 7 Tage)",
-      value: `${F2(s.weightNow, 1)} kg`,
-      note: `${formatSigned(-s.lossPctWeek, 2)} % je Woche (vor 2 Wochen ${F2(s.weightBefore, 1)} kg)`
+      value: `${F5(s.weightNow, 1)} kg`,
+      note: `${formatSigned(-s.lossPctWeek, 2)} % je Woche (vor 2 Wochen ${F5(s.weightBefore, 1)} kg)`
     });
   if (s.balanceKcal !== null)
     rows2.push({
@@ -37573,7 +43962,7 @@ var dietRows = (s) => {
       note: `Zufuhr \u2212 berechneter Verbrauch, ${s.balanceDays} Tage`
     });
   if (s.proteinPerKg !== null)
-    rows2.push({ label: "Eiwei\xDF (\xD8 14 Tage)", value: `${F2(s.proteinPerKg, 1)} g/kg` });
+    rows2.push({ label: "Eiwei\xDF (\xD8 14 Tage)", value: `${F5(s.proteinPerKg, 1)} g/kg` });
   return rows2;
 };
 function strengthRetention(inp) {
@@ -37604,7 +43993,7 @@ function strengthRetention(inp) {
     ...lifts.map((l) => ({
       label: l.name,
       value: `${formatSigned(l.changePct, 1)} %`,
-      note: `1RM gesch\xE4tzt ${F2(l.before, 1)} \u2192 ${F2(l.recent, 1)} kg`
+      note: `1RM gesch\xE4tzt ${F5(l.before, 1)} \u2192 ${F5(l.recent, 1)} kg`
     }))
   ];
   const strength = `Kraft: ${down.length} von ${lifts.length} Haupt\xFCbungen gefallen, ${up.length} gestiegen`;
@@ -37624,7 +44013,7 @@ function strengthRetention(inp) {
         ...base,
         status: "act",
         summary,
-        advice: `Die Kraft f\xE4llt und du nimmst schneller ab als ${F2(lim.lossMaxPctWeek, 0)} % je Woche \u2013 das Defizit ist zu gro\xDF. Iss 150\u2013300 kcal mehr, bis du bei ${F2(lim.lossMinPctWeek, 1)}\u2013${F2(lim.lossMaxPctWeek, 0)} % je Woche liegst; Eiwei\xDF hoch halten und weiter schwer trainieren.`,
+        advice: `Die Kraft f\xE4llt und du nimmst schneller ab als ${F5(lim.lossMaxPctWeek, 0)} % je Woche \u2013 das Defizit ist zu gro\xDF. Iss 150\u2013300 kcal mehr, bis du bei ${F5(lim.lossMinPctWeek, 1)}\u2013${F5(lim.lossMaxPctWeek, 0)} % je Woche liegst; Eiwei\xDF hoch halten und weiter schwer trainieren.`,
         rows: rows2
       };
     if (s.proteinPerKg !== null && s.proteinPerKg < lim.proteinMinPerKg)
@@ -37632,7 +44021,7 @@ function strengthRetention(inp) {
         ...base,
         status: "act",
         summary,
-        advice: `Die Kraft f\xE4llt bei ${F2(s.proteinPerKg, 1)} g Eiwei\xDF je kg. Erh\xF6he auf mindestens ${F2(lim.proteinMinPerKg, 1)} g/kg \u2013 in der Di\xE4t eher ${F2(lim.proteinDietPerKg, 0)} g/kg und mehr.`,
+        advice: `Die Kraft f\xE4llt bei ${F5(s.proteinPerKg, 1)} g Eiwei\xDF je kg. Erh\xF6he auf mindestens ${F5(lim.proteinMinPerKg, 1)} g/kg \u2013 in der Di\xE4t eher ${F5(lim.proteinDietPerKg, 0)} g/kg und mehr.`,
         rows: rows2
       };
     return {
@@ -37648,7 +44037,7 @@ function strengthRetention(inp) {
       ...base,
       status: "info",
       summary,
-      advice: `Du nimmst schneller ab als ${F2(lim.lossMaxPctWeek, 0)} % je Woche, die Kraft h\xE4lt bisher. Beobachte die Haupt\xFCbungen \u2013 f\xE4llt die Kraft, das Defizit um 150\u2013300 kcal verkleinern.`,
+      advice: `Du nimmst schneller ab als ${F5(lim.lossMaxPctWeek, 0)} % je Woche, die Kraft h\xE4lt bisher. Beobachte die Haupt\xFCbungen \u2013 f\xE4llt die Kraft, das Defizit um 150\u2013300 kcal verkleinern.`,
       rows: rows2
     };
   return {
@@ -37656,132 +44045,6 @@ function strengthRetention(inp) {
     status: "ok",
     summary,
     advice: "Die Kraft bleibt stabil \u2013 ein gutes Zeichen daf\xFCr, dass du Fett und nicht Muskulatur verlierst.",
-    rows: rows2
-  };
-}
-var JUMP_LIMITS = {
-  /** Ab dieser Abweichung vom 7-Tage-Mittel gilt die Wiegung als Sprung */
-  jumpKg: 0.5,
-  carbsG: 50,
-  saltG: 2,
-  /** relative Abweichung von der üblichen Menge */
-  share: 0.25,
-  massShare: 0.2,
-  lastMealMin: 60,
-  lateWaterMl: 300
-};
-function weightJump(inp) {
-  const base = {
-    id: "V2",
-    area: "diet",
-    title: "Gewichtssprung erkl\xE4ren",
-    method: "Letzte Wiegung (heute oder gestern) gegen das Mittel der Wiegungen der 7 Tage davor (mind. 4). Ab \xB10,5 kg wird der Vortag mit deinen \xFCblichen Werten verglichen (Mittel bzw. Median der 14 Tage davor, mind. 5 Tage): Kohlenhydrate (\xB150 g und \xB125 %), Salz (\xB12 g und \xB125 %), Essensmenge (\xB120 %), Uhrzeit der letzten Mahlzeit (ab 60 Minuten sp\xE4ter), Trinken ab 20 Uhr (ab 300 ml mehr), Training am Vortag. Salz und Essensmenge nur aus Lebensmitteln mit Angabe.",
-    sources: [CONN_SOURCES.weightSwing]
-  };
-  const weights = metricByDay(inp.measurements, WEIGHT_METRIC_ID);
-  const last = weights.filter((w) => w.date <= inp.today).at(-1);
-  if (!last || daysBetween(last.date, inp.today) > 1)
-    return noData(base, "Keine Wiegung von heute oder gestern.");
-  const prior = valuesIn(weights, shiftDays(last.date, -7), shiftDays(last.date, -1));
-  const trend = prior.length >= 4 ? avg(prior) : null;
-  if (trend === null)
-    return noData(
-      base,
-      "F\xFCr den Vergleich braucht es mindestens 4 Wiegungen in den 7 Tagen davor."
-    );
-  const diff = last.value - trend;
-  const when2 = last.date === inp.today ? "Heute" : `Am ${formatDate(last.date)}`;
-  const head2 = `${when2} ${F2(last.value, 1)} kg \u2013 ${formatSigned(diff, 1)} kg zum Mittel der 7 Tage davor (${F2(trend, 1)} kg).`;
-  const rows2 = [
-    { label: "Wiegung", value: `${F2(last.value, 1)} kg`, note: formatDate(last.date) },
-    {
-      label: "Mittel der 7 Tage davor",
-      value: `${F2(trend, 1)} kg`,
-      note: `${prior.length} Wiegungen`
-    }
-  ];
-  const lim = JUMP_LIMITS;
-  if (Math.abs(diff) < lim.jumpKg)
-    return {
-      ...base,
-      status: "ok",
-      summary: head2,
-      advice: "Im \xFCblichen Schwankungsbereich \u2013 kein Sprung.",
-      rows: rows2
-    };
-  const eve = shiftDays(last.date, -1);
-  const day = inp.intake.find((d) => d.date === eve) ?? null;
-  const usual = inp.intake.filter(
-    (d) => d.date >= shiftDays(eve, -14) && d.date < eve && d.energyKcal >= COMPLETE_DAY_KCAL
-  );
-  const sign = diff > 0 ? 1 : -1;
-  const flagged = [];
-  if (day && day.energyKcal > 0 && usual.length >= 5) {
-    const check = (label, value2, base0, abs, share2, unit, digits = 0) => {
-      if (value2 === null || base0 === null || base0 <= 0) return;
-      const delta = (value2 - base0) * sign;
-      const hit = delta >= abs && delta >= base0 * share2;
-      rows2.push({
-        label: `${label} am Vortag`,
-        value: `${F2(value2, digits)} ${unit}`,
-        note: `\xFCblich ${F2(base0, digits)} ${unit}${hit ? " \u2013 auff\xE4llig" : ""}`
-      });
-      if (hit)
-        flagged.push(`${label} ${F2(value2, digits)} ${unit} (\xFCblich ${F2(base0, digits)} ${unit})`);
-    };
-    check("Kohlenhydrate", day.carbsG, avg(usual.map((d) => d.carbsG)), lim.carbsG, lim.share, "g");
-    const salts = usual.flatMap((d) => d.saltG === null ? [] : [d.saltG]);
-    check("Salz", day.saltG, salts.length >= 5 ? avg(salts) : null, lim.saltG, lim.share, "g", 1);
-    check("Essensmenge", day.massG, avg(usual.map((d) => d.massG)), 0, lim.massShare, "g");
-    const lastMeals = usual.flatMap((d) => d.lastMealMin === null ? [] : [d.lastMealMin]);
-    const usualLast = lastMeals.length >= 5 ? med(lastMeals) : null;
-    if (day.lastMealMin !== null && usualLast !== null) {
-      const hit = sign > 0 && day.lastMealMin - usualLast >= lim.lastMealMin;
-      rows2.push({
-        label: "Letzte Mahlzeit am Vortag",
-        value: `${clockOf(day.lastMealMin)} Uhr`,
-        note: `\xFCblich ${clockOf(usualLast)} Uhr${hit ? " \u2013 auff\xE4llig" : ""}`
-      });
-      if (hit)
-        flagged.push(
-          `letzte Mahlzeit um ${clockOf(day.lastMealMin)} Uhr (\xFCblich ${clockOf(usualLast)} Uhr)`
-        );
-    }
-    const timed = usual.filter((d) => d.waterTimed);
-    if (day.waterTimed && timed.length >= 5) {
-      const usualLate = avg(timed.map((d) => d.waterLateMl)) ?? 0;
-      const hit = sign > 0 && day.waterLateMl - usualLate >= lim.lateWaterMl;
-      rows2.push({
-        label: "Trinken ab 20 Uhr am Vortag",
-        value: `${F2(day.waterLateMl)} ml`,
-        note: `\xFCblich ${F2(usualLate)} ml${hit ? " \u2013 auff\xE4llig" : ""}`
-      });
-      if (hit)
-        flagged.push(`${F2(day.waterLateMl)} ml nach 20 Uhr getrunken (\xFCblich ${F2(usualLate)} ml)`);
-    }
-  }
-  const trained = inp.workouts.filter((w) => w.date === eve && w.status === "done");
-  if (trained.length) {
-    rows2.push({
-      label: "Training am Vortag",
-      value: trained.map((w) => w.title).join(", "),
-      note: "kann Wasser im Muskel binden"
-    });
-    if (sign > 0) flagged.push(`Training am Vortag (${trained.map((w) => w.title).join(", ")})`);
-  }
-  if (!day || day.energyKcal <= 0)
-    return {
-      ...base,
-      status: "info",
-      summary: `${head2} F\xFCr den Vortag ist keine Ern\xE4hrung erfasst.`,
-      advice: "Einzelne Tageswerte schwanken um 1\u20132 kg durch Wasser und Glykogen. Entscheidend ist das Wochenmittel.",
-      rows: rows2
-    };
-  return {
-    ...base,
-    status: "info",
-    summary: flagged.length ? `${head2} Am Vortag anders als \xFCblich: ${flagged.join("; ")}.` : `${head2} Am Vortag war nichts Erfasstes auff\xE4llig anders.`,
-    advice: flagged.length ? sign > 0 ? "Sehr wahrscheinlich Wasser und Glykogen, kein Fett \u2013 kein Grund, die Kalorien zu \xE4ndern. Entscheidend ist das Wochenmittel." : "Sehr wahrscheinlich weniger Wasser und Glykogen, nicht zus\xE4tzlicher Fettverlust. Entscheidend ist das Wochenmittel." : "Einzelne Tageswerte schwanken um 1\u20132 kg durch Wasser und Glykogen. Warte das Wochenmittel ab, bevor du etwas \xE4nderst.",
     rows: rows2
   };
 }
@@ -37830,12 +44093,12 @@ function weekPattern(inp) {
   const rows2 = [
     {
       label: "Montag\u2013Freitag",
-      value: `${F2(mWd)} kcal`,
+      value: `${F5(mWd)} kcal`,
       note: `${wd.length} von ${allWd} Tagen erfasst`
     },
     {
       label: "Samstag\u2013Sonntag",
-      value: `${F2(mWe)} kcal`,
+      value: `${F5(mWe)} kcal`,
       note: `${we.length} von ${allWe} Tagen erfasst`
     }
   ];
@@ -37846,29 +44109,29 @@ function weekPattern(inp) {
     rows2.push(
       {
         label: "Trainingstage",
-        value: `${F2(avg(tr.map((d) => d.energyKcal)) ?? 0)} kcal`,
+        value: `${F5(avg(tr.map((d) => d.energyKcal)) ?? 0)} kcal`,
         note: `${tr.length} Tage`
       },
       {
         label: "Ruhetage",
-        value: `${F2(avg(rest.map((d) => d.energyKcal)) ?? 0)} kcal`,
+        value: `${F5(avg(rest.map((d) => d.energyKcal)) ?? 0)} kcal`,
         note: `${rest.length} Tage`
       }
     );
   const goal = inp.goal?.energyKcal ?? null;
-  if (goal) rows2.push({ label: "Kalorienziel", value: `${F2(goal)} kcal` });
+  if (goal) rows2.push({ label: "Kalorienziel", value: `${F5(goal)} kcal` });
   const gap = covWd - covWe >= WEEK_PATTERN.coverageGap;
-  const cover2 = gap ? ` Wochenendtage sind seltener erfasst (${F2(covWe)} % gegen ${F2(covWd)} %).` : "";
+  const cover2 = gap ? ` Wochenendtage sind seltener erfasst (${F5(covWe)} % gegen ${F5(covWd)} %).` : "";
   const summary = `Am Wochenende im Mittel ${formatSigned(diff, 0)} kcal je Tag gegen\xFCber Montag\u2013Freitag.${cover2}`;
   if (diff >= WEEK_PATTERN.diffKcal) {
     const s = dietState(inp);
     const perWeek = diff * 2;
-    const eats2 = s.balanceKcal !== null && s.balanceKcal < 0 ? ` Bei einer mittleren Bilanz von ${formatSigned(s.balanceKcal, 0)} kcal sind das rund ${F2(perWeek / -s.balanceKcal, 1)} Tage Defizit.` : "";
+    const eats2 = s.balanceKcal !== null && s.balanceKcal < 0 ? ` Bei einer mittleren Bilanz von ${formatSigned(s.balanceKcal, 0)} kcal sind das rund ${F5(perWeek / -s.balanceKcal, 1)} Tage Defizit.` : "";
     return {
       ...base,
       status: "act",
       summary,
-      advice: `Die zwei Wochenendtage bringen zusammen rund ${F2(perWeek)} kcal mehr als zwei Wochentage.${eats2} Plane das Wochenende wie einen Wochentag ein (feste Mahlzeiten, Getr\xE4nke und Snacks mitz\xE4hlen) oder gleiche es an den Wochentagen bewusst aus.`,
+      advice: `Die zwei Wochenendtage bringen zusammen rund ${F5(perWeek)} kcal mehr als zwei Wochentage.${eats2} Plane das Wochenende wie einen Wochentag ein (feste Mahlzeiten, Getr\xE4nke und Snacks mitz\xE4hlen) oder gleiche es an den Wochentagen bewusst aus.`,
       rows: rows2
     };
   }
@@ -37907,18 +44170,18 @@ function stepsInDiet(inp) {
   const kg2 = s.weightNow ?? metricByDay(inp.measurements, WEIGHT_METRIC_ID).at(-1)?.value ?? null;
   const kcal3 = kg2 ? diff * kg2 * KCAL_PER_STEP_AND_KG : null;
   const rows2 = [
-    { label: "Schritte (\xD8 letzte 14 Tage)", value: F2(mNow), note: `${now.length} Tage` },
-    { label: "Schritte (\xD8 14 Tage davor)", value: F2(mBefore), note: `${before.length} Tage` },
+    { label: "Schritte (\xD8 letzte 14 Tage)", value: F5(mNow), note: `${now.length} Tage` },
+    { label: "Schritte (\xD8 14 Tage davor)", value: F5(mBefore), note: `${before.length} Tage` },
     ...kcal3 !== null ? [
       {
         label: "Unterschied im Verbrauch",
         value: `${formatSigned(kcal3, 0)} kcal je Tag`,
-        note: `bei ${F2(kg2 ?? 0, 1)} kg`
+        note: `bei ${F5(kg2 ?? 0, 1)} kg`
       }
     ] : [],
     ...dietRows(s)
   ];
-  const summary = `Schritte ${formatSigned(diff, 0)} je Tag gegen\xFCber den 14 Tagen davor (${F2(mBefore)} \u2192 ${F2(mNow)})${kcal3 !== null ? `, das sind ${formatSigned(kcal3, 0)} kcal je Tag` : ""}.`;
+  const summary = `Schritte ${formatSigned(diff, 0)} je Tag gegen\xFCber den 14 Tagen davor (${F5(mBefore)} \u2192 ${F5(mNow)})${kcal3 !== null ? `, das sind ${formatSigned(kcal3, 0)} kcal je Tag` : ""}.`;
   const dropped = -diff >= STEP_LIMITS.dropSteps && -diff >= mBefore * STEP_LIMITS.dropShare;
   if (dropped && s.inDiet)
     return {
@@ -37989,18 +44252,18 @@ function energyAvailability(inp) {
   const rows2 = [
     {
       label: "Energieverf\xFCgbarkeit",
-      value: `${F2(ea)} kcal je kg FFM`,
+      value: `${F5(ea)} kcal je kg FFM`,
       note: `${days3.length} Tage`
     },
-    { label: "Zufuhr (\xD8)", value: `${F2(intake)} kcal` },
-    { label: "Trainingsenergie (\xD8)", value: `${F2(training)} kcal` },
+    { label: "Zufuhr (\xD8)", value: `${F5(intake)} kcal` },
+    { label: "Trainingsenergie (\xD8)", value: `${F5(training)} kcal` },
     {
       label: "Fettfreie Masse",
-      value: `${F2(ffm, 1)} kg`,
-      note: `${F2(kg2, 1)} kg bei ${F2(fat2.value, 1)} % K\xF6rperfett (${formatDate(fat2.date)})`
+      value: `${F5(ffm, 1)} kg`,
+      note: `${F5(kg2, 1)} kg bei ${F5(fat2.value, 1)} % K\xF6rperfett (${formatDate(fat2.date)})`
     }
   ];
-  const summary = `Energieverf\xFCgbarkeit ${F2(ea)} kcal je kg fettfreier Masse und Tag (Mittel aus ${days3.length} Tagen).`;
+  const summary = `Energieverf\xFCgbarkeit ${F5(ea)} kcal je kg fettfreier Masse und Tag (Mittel aus ${days3.length} Tagen).`;
   if (ea < EA_LIMITS.low)
     return {
       ...base,
@@ -38034,7 +44297,7 @@ var dietFindings = (inp) => [
 ];
 
 // src/domain/connHealth.ts
-var F3 = formatNumber;
+var F6 = formatNumber;
 var BP_SYSTOLIC_METRIC_ID = "00000000-0000-7000-8000-000000000014";
 var BP_DIASTOLIC_METRIC_ID = "00000000-0000-7000-8000-000000000015";
 var BP = {
@@ -38080,7 +44343,7 @@ function bloodPressure(inp) {
   const rows2 = [
     {
       label: "Blutdruck (\xD8 14 Tage)",
-      value: `${F3(mSys)}${mDia !== null ? `/${F3(mDia)}` : ""} mmHg`,
+      value: `${F6(mSys)}${mDia !== null ? `/${F6(mDia)}` : ""} mmHg`,
       note: `${recentSys.length} Messtage \xB7 Heimmessung ab ${BP.homeSys}/${BP.homeDia} erh\xF6ht`
     }
   ];
@@ -38100,7 +44363,7 @@ function bloodPressure(inp) {
     saltDiff = (avg(high) ?? 0) - (avg(low) ?? 0);
     rows2.push({
       label: `Systolisch nach Tagen ab ${BP.saltG} g Salz`,
-      value: `${F3(avg(high) ?? 0)} gegen ${F3(avg(low) ?? 0)} mmHg`,
+      value: `${F6(avg(high) ?? 0)} gegen ${F6(avg(low) ?? 0)} mmHg`,
       note: `${high.length} und ${low.length} Tage \xB7 ${formatSigned(saltDiff, 0)} mmHg`
     });
     if (Math.abs(saltDiff) >= BP.diffMmHg)
@@ -38121,7 +44384,7 @@ function bloodPressure(inp) {
       rows2.push({
         label: "Gewicht und systolischer Wert",
         value: Math.abs(r2) >= BP.minR ? r2 > 0 ? "steigen gemeinsam" : "gegenl\xE4ufig" : "kein deutlicher Zusammenhang",
-        note: `Korrelation ${F3(r2, 2)} aus ${pairs.length} Tagen`
+        note: `Korrelation ${F6(r2, 2)} aus ${pairs.length} Tagen`
       });
       if (r2 >= BP.minR) parts2.push("an schwereren Tagen ist der Blutdruck h\xF6her");
     }
@@ -38136,12 +44399,12 @@ function bloodPressure(inp) {
       potassium = avg(values);
       rows2.push({
         label: "Kalium (\xD8 erfasste Tage)",
-        value: `${F3(potassium ?? 0)} mg`,
-        note: `${values.length} Tage mit BLS-Bezug \xB7 Referenz ${F3(BP.potassiumMg)} mg (DGE)`
+        value: `${F6(potassium ?? 0)} mg`,
+        note: `${values.length} Tage mit BLS-Bezug \xB7 Referenz ${F6(BP.potassiumMg)} mg (DGE)`
       });
     }
   }
-  const head2 = `Blutdruck im Mittel ${F3(mSys)}${mDia !== null ? `/${F3(mDia)}` : ""} mmHg (${recentSys.length} Messtage in 14 Tagen)`;
+  const head2 = `Blutdruck im Mittel ${F6(mSys)}${mDia !== null ? `/${F6(mDia)}` : ""} mmHg (${recentSys.length} Messtage in 14 Tagen)`;
   const summary = `${head2}${parts2.length ? `; ${parts2.join("; ")}` : ""}.`;
   const elevated = mSys >= BP.homeSys || mDia !== null && mDia >= BP.homeDia;
   const lowK = potassium !== null && potassium < BP.potassiumMg * 0.7;
@@ -38183,15 +44446,15 @@ function microGapList(inp) {
   const group = referenceGroup(inp.profile ?? null, t);
   const gaps = [];
   for (const [key, info] of Object.entries(inp.nutrients)) {
-    const mean11 = avg(days3.map((d) => d.values[key] ?? 0)) ?? 0;
-    const pct2 = nutrientPercents(key, mean11, info.unit, group).reference.percent;
+    const mean12 = avg(days3.map((d) => d.values[key] ?? 0)) ?? 0;
+    const pct2 = nutrientPercents(key, mean12, info.unit, group).reference.percent;
     if (pct2 === null || pct2 >= MICRO_GAPS.share) continue;
     const foods = (inp.ownFoods ?? []).flatMap((f) => {
       const v = f.values[key] ?? 0;
       const p = v > 0 ? nutrientPercents(key, v, info.unit, group).reference.percent : null;
       return p !== null && p >= 5 ? [{ name: f.name, amount: f.amount, unit: f.unit, percent: p }] : [];
     }).sort((a, b) => b.percent - a.percent).slice(0, MICRO_GAPS.maxFoods);
-    gaps.push({ key, label: info.label, unit: info.unit, mean: mean11, percent: pct2, foods });
+    gaps.push({ key, label: info.label, unit: info.unit, mean: mean12, percent: pct2, foods });
   }
   gaps.sort((a, b) => a.percent - b.percent);
   return { gaps, days: days3.length, logged: all.length };
@@ -38224,11 +44487,11 @@ function microGaps(inp) {
       advice: "Keine L\xFCcke erkennbar.",
       rows: []
     };
-  const amount = (v) => F3(v, v < 10 ? 1 : 0);
+  const amount = (v) => F6(v, v < 10 ? 1 : 0);
   const rows2 = gaps.map((g2) => ({
     label: g2.label,
-    value: `${F3(g2.percent)} % des Referenzwerts`,
-    note: `\xD8 ${amount(g2.mean)} ${g2.unit}${g2.foods.length ? ` \xB7 deine Quellen: ${g2.foods.map((f) => `${f.name} (${F3(f.amount)} ${f.unit}: ${F3(f.percent)} %)`).join(", ")}` : " \xB7 keine deiner Lebensmittel liefert nennenswert davon"}`
+    value: `${F6(g2.percent)} % des Referenzwerts`,
+    note: `\xD8 ${amount(g2.mean)} ${g2.unit}${g2.foods.length ? ` \xB7 deine Quellen: ${g2.foods.map((f) => `${f.name} (${F6(f.amount)} ${f.unit}: ${F6(f.percent)} %)`).join(", ")}` : " \xB7 keine deiner Lebensmittel liefert nennenswert davon"}`
   }));
   const more = res.gaps.length - gaps.length;
   return {
@@ -38242,7 +44505,7 @@ function microGaps(inp) {
 var healthFindings = (inp) => [bloodPressure(inp), microGaps(inp)];
 
 // src/domain/connSleep.ts
-var F4 = formatNumber;
+var F7 = formatNumber;
 var SLEEP_LEVERS = {
   days: 56,
   /** Mindestzahl Nächte je Gruppe */
@@ -38284,7 +44547,7 @@ function compare(label, outcome, nights) {
 }
 var row = (c) => ({
   label: `${c.label} \u2192 ${c.outcome}`,
-  value: c.diff === null ? "zu wenige N\xE4chte" : `${F4(c.meanWith ?? 0)} gegen ${F4(c.meanWithout ?? 0)} min`,
+  value: c.diff === null ? "zu wenige N\xE4chte" : `${F7(c.meanWith ?? 0)} gegen ${F7(c.meanWithout ?? 0)} min`,
   note: `${c.withN} N\xE4chte mit, ${c.withoutN} ohne${c.diff !== null ? ` \xB7 ${formatSigned(c.diff, 0)} min` : ""}`
 });
 function sleepLevers(inp) {
@@ -38436,7 +44699,7 @@ function alcoholNights(inp) {
     const mb = avg(b) ?? 0;
     rows2.push({
       label,
-      value: `${F4(ma)} gegen ${F4(mb)} ${unit}`,
+      value: `${F7(ma)} gegen ${F7(mb)} ${unit}`,
       note: `${a.length} N\xE4chte nach Alkohol, ${b.length} ohne`
     });
     parts2.push(`${label} ${formatSigned(ma - mb, 0)} ${unit}`);
@@ -38456,8 +44719,8 @@ function alcoholNights(inp) {
 var sleepFindings = (inp) => [sleepLevers(inp), alcoholNights(inp)];
 
 // src/domain/connTraining.ts
-var F5 = formatNumber;
-var clock5 = (seconds) => `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, "0")} min`;
+var F8 = formatNumber;
+var clock6 = (seconds) => `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, "0")} min`;
 var workSets = (log, from, to) => log.filter(
   (s) => !s.isWarmup && s.exerciseCategory === "strength" && s.date >= from && s.date <= to
 );
@@ -38526,7 +44789,7 @@ function weeklyGroupSets(inp, count) {
     mainGroup
   };
 }
-function restPairs(log, from, to) {
+function restPairs2(log, from, to) {
   const groups = /* @__PURE__ */ new Map();
   for (const s of workSets(log, from, to)) {
     if (!s.doneAt) continue;
@@ -38626,26 +44889,26 @@ function plateau(inp) {
   for (const p of list2) {
     const from = p.peak.date > shiftDays(t, -27) ? shiftDays(p.peak.date, 1) : shiftDays(t, -27);
     const causes = [];
-    const add = (flag, text2, lever) => {
+    const add = (flag, text3, lever) => {
       if (!flag) return;
-      causes.push(text2);
+      causes.push(text3);
       levers.add(lever);
     };
     const sets2 = weeks.rows.find((r2) => r2.id === weeks.mainGroup.get(p.exerciseId));
     const perWeek = sets2 ? avg(sets2.sets) ?? 0 : null;
     if (sets2 && perWeek !== null) {
       const group = sets2.label;
-      add(perWeek < PLATEAU.setsMin, `${group} nur ${F5(perWeek, 1)} S\xE4tze je Woche`, "volume-low");
-      add(perWeek > PLATEAU.setsMax, `${group} ${F5(perWeek, 1)} S\xE4tze je Woche`, "volume-high");
+      add(perWeek < PLATEAU.setsMin, `${group} nur ${F8(perWeek, 1)} S\xE4tze je Woche`, "volume-low");
+      add(perWeek > PLATEAU.setsMax, `${group} ${F8(perWeek, 1)} S\xE4tze je Woche`, "volume-high");
     }
-    const rests = restPairs(inp.setLog, from, t).filter((r2) => r2.exerciseId === p.exerciseId).map((r2) => r2.restSeconds);
+    const rests = restPairs2(inp.setLog, from, t).filter((r2) => r2.exerciseId === p.exerciseId).map((r2) => r2.restSeconds);
     const rest = rests.length >= 3 ? med(rests) : null;
-    if (rest !== null) add(rest < PLATEAU.restSeconds, `Pausen im Median ${clock5(rest)}`, "rest");
+    if (rest !== null) add(rest < PLATEAU.restSeconds, `Pausen im Median ${clock6(rest)}`, "rest");
     const rpes = workSets(inp.setLog, from, t).flatMap(
       (s) => s.exerciseId === p.exerciseId && s.rpe !== null ? [s.rpe] : []
     );
     const rpe = rpes.length >= 3 ? avg(rpes) : null;
-    if (rpe !== null) add(rpe < PLATEAU.rpeMin, `RPE im Mittel ${F5(rpe, 1)}`, "rpe");
+    if (rpe !== null) add(rpe < PLATEAU.rpeMin, `RPE im Mittel ${F8(rpe, 1)}`, "rpe");
     const days3 = inp.nutrition.filter(
       (d) => d.date >= from && d.date <= t && d.energyKcal >= COMPLETE_DAY_KCAL
     );
@@ -38659,7 +44922,7 @@ function plateau(inp) {
     const kg2 = avg(valuesIn(weights, from, t)) ?? weights.at(-1)?.value ?? null;
     const protein = days3.length >= 5 && kg2 ? (avg(days3.map((d) => d.proteinG)) ?? 0) / kg2 : null;
     if (protein !== null)
-      add(protein < DIET_LIMITS.proteinMinPerKg, `Eiwei\xDF ${F5(protein, 1)} g/kg`, "protein");
+      add(protein < DIET_LIMITS.proteinMinPerKg, `Eiwei\xDF ${F8(protein, 1)} g/kg`, "protein");
     const nights = inp.sleep.filter((s) => s.date >= from && s.date <= t).map((s) => s.sleepMin);
     const sleep = nights.length >= 5 ? avg(nights) : null;
     if (sleep !== null)
@@ -38671,7 +44934,7 @@ function plateau(inp) {
     rows2.push({
       label: p.name,
       value: `seit ${formatDate(p.peak.date)} kein Bestwert`,
-      note: `${p.sessionsSince} Einheiten, bester Wert seither ${F5(p.bestSince, 1)} kg gegen\xFCber ${F5(p.peak.value, 1)} kg${causes.length ? ` \xB7 auff\xE4llig: ${causes.join(", ")}` : " \xB7 nichts Erfasstes auff\xE4llig"}`
+      note: `${p.sessionsSince} Einheiten, bester Wert seither ${F8(p.bestSince, 1)} kg gegen\xFCber ${F8(p.peak.value, 1)} kg${causes.length ? ` \xB7 auff\xE4llig: ${causes.join(", ")}` : " \xB7 nichts Erfasstes auff\xE4llig"}`
     });
   }
   const LEVER_TEXT = {
@@ -38717,7 +44980,7 @@ function restEffect(inp) {
     sources: [CONN_SOURCES.restLength, CONN_SOURCES.restGrowth]
   };
   const t = inp.today;
-  const pairs = restPairs(inp.setLog, shiftDays(t, -(REST_EFFECT.days - 1)), t).filter(
+  const pairs = restPairs2(inp.setLog, shiftDays(t, -(REST_EFFECT.days - 1)), t).filter(
     (p) => p.sameWeight
   );
   if (pairs.length < REST_EFFECT.minPairs)
@@ -38741,27 +45004,27 @@ function restEffect(inp) {
     rows2.push({
       label: name,
       value: `${formatSigned(-(avg(list2.map((p) => p.reps - p.nextReps)) ?? 0), 1)} Wdh.`,
-      note: `Pause im Median ${clock5(med(list2.map((p) => p.restSeconds)) ?? 0)}, ${list2.length} Satzpaare`
+      note: `Pause im Median ${clock6(med(list2.map((p) => p.restSeconds)) ?? 0)}, ${list2.length} Satzpaare`
     });
   }
   const rated = buckets.filter((b) => b.n >= REST_EFFECT.minBucket && b.drop !== null);
   const most = [...rated].sort((a, b) => b.n - a.n)[0];
   const enough = rated.find((b) => (b.drop ?? 99) <= REST_EFFECT.okDrop);
   const all = avg(pairs.map((p) => p.reps - p.nextReps)) ?? 0;
-  const summary = `Im Mittel ${formatSigned(-all, 1)} Wiederholungen von Satz zu Satz bei gleichem Gewicht (${pairs.length} Satzpaare, Pause im Median ${clock5(med(pairs.map((p) => p.restSeconds)) ?? 0)}).`;
+  const summary = `Im Mittel ${formatSigned(-all, 1)} Wiederholungen von Satz zu Satz bei gleichem Gewicht (${pairs.length} Satzpaare, Pause im Median ${clock6(med(pairs.map((p) => p.restSeconds)) ?? 0)}).`;
   if (most && (most.drop ?? 0) > REST_EFFECT.highDrop)
     return {
       ...base,
       status: "act",
       summary,
-      advice: `Bei deiner h\xE4ufigsten Pause (${most.label}) verlierst du im Mittel ${F5(most.drop ?? 0, 1)} Wiederholungen \u2013 das kostet Volumen. ${enough && enough.from > most.from ? `Ab ${enough.label} sind es nur noch ${F5(enough.drop ?? 0, 1)}: Stelle den Pausentimer dorthin.` : "Verl\xE4ngere die Pause, bis der n\xE4chste Satz h\xF6chstens 1\u20132 Wiederholungen weniger schafft (schwere Grund\xFCbungen 2\u20134 Minuten)."}`,
+      advice: `Bei deiner h\xE4ufigsten Pause (${most.label}) verlierst du im Mittel ${F8(most.drop ?? 0, 1)} Wiederholungen \u2013 das kostet Volumen. ${enough && enough.from > most.from ? `Ab ${enough.label} sind es nur noch ${F8(enough.drop ?? 0, 1)}: Stelle den Pausentimer dorthin.` : "Verl\xE4ngere die Pause, bis der n\xE4chste Satz h\xF6chstens 1\u20132 Wiederholungen weniger schafft (schwere Grund\xFCbungen 2\u20134 Minuten)."}`,
       rows: rows2
     };
   return {
     ...base,
     status: rated.length ? "ok" : "nodata",
     summary,
-    advice: rated.length ? `Deine Pausen reichen: Der n\xE4chste Satz verliert h\xF6chstens ${F5(REST_EFFECT.highDrop, 0)} Wiederholungen.${enough ? ` Schon ab ${enough.label} sind es ${F5(enough.drop ?? 0, 1)}.` : ""}` : null,
+    advice: rated.length ? `Deine Pausen reichen: Der n\xE4chste Satz verliert h\xF6chstens ${F8(REST_EFFECT.highDrop, 0)} Wiederholungen.${enough ? ` Schon ab ${enough.label} sind es ${F8(enough.drop ?? 0, 1)}.` : ""}` : null,
     rows: rows2
   };
 }
@@ -38792,10 +45055,10 @@ function fatigueMarkers(inp) {
   const rows2 = [];
   const hits = [];
   let evaluated = 0;
-  const mark = (label, value2, note, hit) => {
+  const mark = (label, value2, note, hit2) => {
     evaluated += 1;
-    rows2.push({ label, value: value2, note: `${note}${hit ? " \u2013 auff\xE4llig" : ""}` });
-    if (hit) hits.push(label);
+    rows2.push({ label, value: value2, note: `${note}${hit2 ? " \u2013 auff\xE4llig" : ""}` });
+    if (hit2) hits.push(label);
   };
   const rpe = (from, to) => workSets(inp.setLog, from, to).flatMap((s) => s.rpe !== null ? [s.rpe] : []);
   const rNow = rpe(recentFrom, t);
@@ -38803,7 +45066,7 @@ function fatigueMarkers(inp) {
   if (rNow.length >= 6 && rBase.length >= 6) {
     const a = avg(rNow) ?? 0;
     const b = avg(rBase) ?? 0;
-    mark("Anstrengung (RPE)", F5(a, 1), `davor ${F5(b, 1)}`, a - b >= FATIGUE.rpeRise);
+    mark("Anstrengung (RPE)", F8(a, 1), `davor ${F8(b, 1)}`, a - b >= FATIGUE.rpeRise);
   } else {
     const ex = (from, to) => inp.workouts.flatMap(
       (w) => w.status === "done" && w.date >= from && w.date <= to && w.perceivedExertion !== null ? [w.perceivedExertion] : []
@@ -38813,8 +45076,8 @@ function fatigueMarkers(inp) {
     if (a.length >= 2 && b.length >= 4)
       mark(
         "Anstrengung der Einheiten",
-        F5(avg(a) ?? 0, 1),
-        `davor ${F5(avg(b) ?? 0, 1)}`,
+        F8(avg(a) ?? 0, 1),
+        `davor ${F8(avg(b) ?? 0, 1)}`,
         (avg(a) ?? 0) - (avg(b) ?? 0) >= 1
       );
   }
@@ -38826,8 +45089,8 @@ function fatigueMarkers(inp) {
     const b = avg(hBase) ?? 0;
     mark(
       "HRV",
-      `${F5(a)} ms`,
-      `davor ${F5(b)} ms (${formatSigned((a - b) / b * 100, 0)} %)`,
+      `${F8(a)} ms`,
+      `davor ${F8(b)} ms (${formatSigned((a - b) / b * 100, 0)} %)`,
       (b - a) / b >= FATIGUE.hrvDropShare
     );
   }
@@ -38844,8 +45107,8 @@ function fatigueMarkers(inp) {
     const b = avg(gBase) ?? 0;
     mark(
       "Griffkraft",
-      `${F5(a, 1)} kg`,
-      `davor ${F5(b, 1)} kg (${formatSigned((a - b) / b * 100, 0)} %)`,
+      `${F8(a, 1)} kg`,
+      `davor ${F8(b, 1)} kg (${formatSigned((a - b) / b * 100, 0)} %)`,
       (b - a) / b >= FATIGUE.gripDropShare
     );
   }
@@ -38868,8 +45131,8 @@ function fatigueMarkers(inp) {
   if (pNow.length >= 4 && pBase.length >= 8)
     rows2.push({
       label: "Ruhepuls (z\xE4hlt nicht mit)",
-      value: `${F5(avg(pNow) ?? 0)} bpm`,
-      note: `davor ${F5(avg(pBase) ?? 0)} bpm`
+      value: `${F8(avg(pNow) ?? 0)} bpm`,
+      note: `davor ${F8(avg(pBase) ?? 0)} bpm`
     });
   if (evaluated < 2)
     return noData(
@@ -38932,8 +45195,8 @@ function cardioEfficiency(inp) {
     if (best === null || Math.abs(change2) > Math.abs(best)) best = change2;
     rows2.push({
       label: name,
-      value: `${F5(first.eff, 2)} \u2192 ${F5(last.eff, 2)} W je Schlag`,
-      note: `${formatSigned(change2, 1)} % in ${sessions2.length} Einheiten \xB7 zuletzt ${F5(last.watt)} W bei ${F5(last.hr)} bpm (${formatDate(last.date)})`
+      value: `${F8(first.eff, 2)} \u2192 ${F8(last.eff, 2)} W je Schlag`,
+      note: `${formatSigned(change2, 1)} % in ${sessions2.length} Einheiten \xB7 zuletzt ${F8(last.watt)} W bei ${F8(last.hr)} bpm (${formatDate(last.date)})`
     });
     texts2.push(`${name} ${formatSigned(change2, 1)} %`);
   }
@@ -39111,7 +45374,7 @@ function doseResponse(inp) {
     const change2 = avg(changes);
     rows2.push({
       label: r2.label,
-      value: `${F5(perWeek, 1)} S\xE4tze je Woche`,
+      value: `${F8(perWeek, 1)} S\xE4tze je Woche`,
       note: `${doseZone(perWeek)}${change2 === null ? " \xB7 Kraft: zu wenige Einheiten" : ` \xB7 Kraft ${formatSigned(change2, 1)} % (${changes.length} ${changes.length === 1 ? "\xDCbung" : "\xDCbungen"})`}`
     });
     if (change2 !== null && change2 < DOSE.progressPct) {
@@ -39179,10 +45442,22 @@ var connIntake_exports = {};
 __export(connIntake_exports, {
   LAST_MEAL_MIN_KCAL: () => LAST_MEAL_MIN_KCAL,
   LATE_WATER_FROM_MIN: () => LATE_WATER_FROM_MIN,
+  TOP_FOODS: () => TOP_FOODS,
   dayIntake: () => dayIntake
 });
 var LATE_WATER_FROM_MIN = 20 * 60;
 var LAST_MEAL_MIN_KCAL = 200;
+var TOP_FOODS = 3;
+function topFoods(eaten, value2) {
+  const byName2 = /* @__PURE__ */ new Map();
+  for (const m of eaten)
+    for (const i of m.items) {
+      const v = value2(i);
+      if (v === null || !(v > 0)) continue;
+      byName2.set(i.foodName, (byName2.get(i.foodName) ?? 0) + v);
+    }
+  return [...byName2].map(([name, v]) => ({ name, value: v })).sort((a, b) => b.value - a.value || a.name.localeCompare(b.name, "de")).slice(0, TOP_FOODS);
+}
 function dayIntake(date, meals, water) {
   const eaten = meals.filter((m) => m.energyKcal > 0 || m.items.length > 0);
   const drinks = [
@@ -39197,7 +45472,14 @@ function dayIntake(date, meals, water) {
       massG += i.amount;
       if (i.saltG !== null && i.saltG !== void 0) saltG = (saltG ?? 0) + i.saltG;
     }
-  const timed = eaten.map((m) => ({ min: minutesOf5(m.time), energyKcal: m.energyKcal, carbsG: m.carbsG })).filter((m) => m.min !== null).sort((a, b) => a.min - b.min);
+  const timed = eaten.map((m) => ({
+    min: minutesOf5(m.time),
+    energyKcal: m.energyKcal,
+    carbsG: m.carbsG,
+    massG: m.items.reduce((a, i) => a + i.amount, 0)
+  })).filter(
+    (m) => m.min !== null
+  ).sort((a, b) => a.min - b.min);
   const last = [...timed].reverse().find((m) => m.energyKcal >= LAST_MEAL_MIN_KCAL) ?? null;
   const sum = (f) => eaten.reduce((a, m) => a + f(m), 0);
   return {
@@ -39211,6 +45493,12 @@ function dayIntake(date, meals, water) {
     lastMealMin: last?.min ?? null,
     lastMealKcal: last?.energyKcal ?? null,
     meals: timed,
+    drinks: drinks.filter((d) => d.min !== null).sort((a, b) => a.min - b.min),
+    top: {
+      carbs: topFoods(eaten, (i) => i.carbsG),
+      salt: topFoods(eaten, (i) => i.saltG ?? null),
+      mass: topFoods(eaten, (i) => i.amount)
+    },
     waterMl: drinks.reduce((a, d) => a + d.ml, 0),
     waterLateMl: drinks.filter((d) => d.min !== null && d.min >= LATE_WATER_FROM_MIN).reduce((a, d) => a + d.ml, 0),
     waterTimed: drinks.some((d) => d.min !== null)
@@ -39495,7 +45783,7 @@ function strapBeats(packets) {
   }
   return out;
 }
-var median4 = (values) => {
+var median5 = (values) => {
   const s = [...values].sort((a, b) => a - b);
   const mid = Math.floor(s.length / 2);
   return s.length % 2 === 1 ? s[mid] ?? 0 : ((s[mid - 1] ?? 0) + (s[mid] ?? 0)) / 2;
@@ -39515,7 +45803,7 @@ function validBeats(beats) {
       if (n3 && inRange9[k]) around.push(n3.rr);
     }
     if (around.length < 2) return true;
-    const m = median4(around);
+    const m = median5(around);
     return Math.abs(b.rr - m) <= STRAP.artifactShare * m;
   });
 }
@@ -39714,8 +46002,10 @@ export {
   chestStrap_exports as chestStrap,
   compactSearch,
   conditions_exports as conditions,
+  connDiet_exports as connDiet,
   connFit_exports as connFit,
   connIntake_exports as connIntake,
+  connWeightJump_exports as connWeightJump,
   connections_exports as connections,
   countAfterClick,
   coverage,
@@ -39868,6 +46158,7 @@ export {
   openItems_exports as openItems,
   optionalOf,
   overviewToday_exports as overviewToday,
+  painNotes_exports as painNotes,
   parseChecklistText,
   parseCsv,
   parseDecimal,
@@ -39937,12 +46228,16 @@ export {
   targetFor,
   targetGoals_exports as targetGoals,
   todayStart_exports as todayStart,
+  trainingAdvisor_exports as trainingAdvisor,
+  trainingAdvisorMore_exports as trainingAdvisorMore,
   trainingCalc_exports as trainingCalc,
+  trainingCatalog_exports as trainingCatalog,
   trainingCoverage_exports as trainingCoverage,
   trainingGroupLabels_exports as trainingGroupLabels,
   trainingInsights_exports as trainingInsights,
   trainingKind_exports as trainingKind,
   trainingNutrition_exports as trainingNutrition,
+  trainingProfile_exports as trainingProfile,
   trainingProgress_exports as trainingProgress,
   trainingRecovery_exports as trainingRecovery,
   trainingReview_exports as trainingReview,

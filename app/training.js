@@ -174,11 +174,14 @@ export function workoutsTab() {
   const dayOptions = plans.flatMap((p) => p.days.map((d) => ({ value: d.row.id, label: `${p.row.name} – ${d.row.name}` })));
   const a = S.active;
   const blocked = Boolean(a);
-  const exercises = O.exercisesOf(db).map((e) => ({ ...e, archived: Boolean(db.exercises.get(e.id)?.archived), usageCount: S.catalog.usage?.[e.id] ?? 0 }));
+  // Nutzung als Zahl (1.186.0): `catalog.usage` hält je Übung die Trainings, nicht die Anzahl – vorher fiel die
+  // Reihenfolge „häufig genutzte zuerst“ deshalb auf das Alphabet zurück.
+  const usageCount = (id) => X.C.usageOf(S.catalog, S.workouts ?? [], [id]).count;
+  const exercises = O.exercisesOf(db).map((e) => ({ ...e, archived: Boolean(db.exercises.get(e.id)?.archived), usageCount: usageCount(e.id) }));
   const cardioOptions = D.workoutDraft.cardioChoices(
     [...db.exercises.values()]
       .filter((e) => (e.category ?? "strength") === "cardio")
-      .map((e) => ({ id: e.id, name: e.name, category: "cardio", archived: Boolean(e.archived), usageCount: S.catalog.usage?.[e.id] ?? 0 })),
+      .map((e) => ({ id: e.id, name: e.name, category: "cardio", archived: Boolean(e.archived), usageCount: usageCount(e.id) })),
   );
   void exercises;
   const planSel = S.trainPlanDay && dayOptions.some((o) => o.value === S.trainPlanDay) ? S.trainPlanDay : "";

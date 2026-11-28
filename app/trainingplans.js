@@ -6,6 +6,17 @@ import { planCalendarHtml, plansView } from "./plancalendar.js";
 import * as GD from "./gymsdata.js";
 import { actionBtn, esc, fieldError, notice, X } from "./training.js";
 import { autoAttrs, autoSaveHtml } from "./autosave.js";
+import { buildDb, today } from "./diary.js";
+import { trainingHintsHtml } from "./trainingadvice.js";
+
+/** Hinweise aus den Trainingsregeln für die Planung (1.186.0); ohne Treffer leer */
+function planningHints() {
+  try {
+    return trainingHintsHtml(buildDb(), today(), "Planung", esc);
+  } catch {
+    return "";
+  }
+}
 
 // ------------------------------------------------------------------ Pläne (PlansTab.tsx)
 
@@ -33,7 +44,8 @@ export function plansTab() {
   const head = `<section class="card card--training"><div class="wo-head"><h3>Trainingspläne</h3><button class="btn primary sm" data-act="plan-new">Neuer Plan</button></div>
       <p class="card__note">Pläne legen Trainingstage mit Übungen und Sätzen fest – auch Cardiopläne. Aus einem Tag startest du ein Training; die Sätze sind dann mit den Richtwerten vorbelegt. Termine (Wochentag oder Datum mit Uhrzeit) zeigen in der Übersicht das nächste Training.</p>
       <div class="segmented" role="group" aria-label="Darstellung der Pläne"><button class="${view === "list" ? "is-active" : ""}" data-act="plan-view" data-arg="list" aria-pressed="${view === "list"}">Liste</button><button class="${view === "calendar" ? "is-active" : ""}" data-act="plan-view" data-arg="calendar" aria-pressed="${view === "calendar"}">Kalender</button></div></section>
-    ${notice()}`;
+    ${notice()}
+    ${planningHints()}`;
   if (view === "calendar") return `${head}<section class="card card--training">${planCalendarHtml()}</section>`;
   return `${head}
     ${plans.length ? "" : `<section class="card card--training"><div class="empty-state"><p><strong>Noch keine Trainingspläne</strong></p><p class="muted small">Ein Plan ist optional. Einheiten kannst du auch ohne Plan erfassen.</p></div></section>`}

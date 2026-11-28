@@ -72,15 +72,40 @@ export function connInput(db, t) {
 }
 
 /** Eingaben und Einwilligung; je Tag und Datenstand höchstens einmal je Minute gerechnet. */
-export function connData(db = buildDb(), t = today()) {
+export function connData(db = buildDb(), t = today(), stamp = null) {
   const S = X.S;
   const now = Date.now();
   const hit = S.connCache;
-  if (hit && hit.today === t && hit.catalog === S.catalog && now - hit.at < 60000) return hit.data;
+  // `stamp` (1.186.0): Kennzeichen des Datenstands, z. B. der letzten Wiegungen – ändert es sich, wird neu gerechnet
+  if (hit && hit.today === t && hit.catalog === S.catalog && now - hit.at < 60000 && (stamp === null || hit.stamp === stamp)) return hit.data;
   const G = D.goalAdvice;
   const data = { input: connInput(db, t), consent: G.parseConsent(db.settings.get(G.AI_CONSENT_KEY) ?? null) };
-  S.connCache = { today: t, catalog: S.catalog, at: now, data };
+  S.connCache = { today: t, catalog: S.catalog, at: now, data, stamp };
   return data;
+}
+
+/**
+ * Hinweis direkt beim Wiegen (1.186.0, wie PC 1.0.255): Ist die letzte Wiegung (heute oder gestern) ein Sprung,
+ * steht hier in einer Zeile die Abweichung mit den Auffälligkeiten des Vortags; Beobachtung und Werte zum
+ * Aufklappen, Rechenweg und Fundstelle in Insights. Sonst leer. `stamp` = Kennzeichen der letzten Wiegungen.
+ */
+export function weightJumpNoteHtml(stamp = null, db = buildDb(), t = today()) {
+  const W = D.connWeightJump;
+  const data = connData(db, t, stamp);
+  const f = W.weightJump(data.input);
+  if (!W.isWeightJump(f)) return "";
+  const consent = data.consent !== null;
+  return `<div class="weight-jump" role="status"><p class="weight-jump__line"><strong>Gewichtssprung:</strong> ${esc(f.short ?? f.summary)}</p>
+    <details class="ov-more weight-jump__more"><summary>Einzelheiten</summary><p>${esc(f.summary)}</p>
+    ${consent && f.advice ? `<p class="conn-item__advice">${esc(f.advice)}</p>` : ""}
+    ${
+      f.rows.length
+        ? `<table class="data-table insights-table conn-item__rows"><tbody>${f.rows
+            .map((r) => `<tr><td>${esc(r.label)}</td><td class="tnum"><strong>${esc(r.value)}</strong>${r.note ? `<span class="sub">${esc(r.note)}</span>` : ""}</td></tr>`)
+            .join("")}</tbody></table>`
+        : ""
+    }
+    <p class="muted small">Rechenweg und Fundstelle unter Insights → Verbindungen: Diät und Körper.</p></details></div>`;
 }
 
 const link = (s) => {
@@ -166,19 +191,23 @@ export function fitRestHtml(slots, fit) {
   const g = (v) => `${D.formatNumber(Math.round(v))} g`;
   const restText = [`${D.formatNumber(Math.round(rest.energyKcal))} kcal`, rest.proteinG > 0 ? `${g(rest.proteinG)} Eiweiß` : null, rest.carbsG > 0 ? `${g(rest.carbsG)} Kohlenhydrate` : null, rest.fatG > 0 ? `${g(rest.fatG)} Fett` : null]
     .filter(Boolean)
-    .join(" · ");
-  return `<div class="fit-rest"><p class="list-head small"><b>Was passt noch?</b></p>
-    <p class="muted small">Noch offen: ${esc(restText)}</p>
+    .map((t) => t.replaceAll(" ", "\u00a0")) // Zahl und Einheit nie getrennt umbrechen
+    .join("\u00a0· ");
+  // eingeklappt (Wunsch des Nutzers 28.11.2026); nach „Eintragen“ bleibt es für diesen Tag offen
+  return `<div class="fit-rest"><details class="ov-more fit-rest__box"${X.S.fitOpen === (X.S.diaryDate ?? today()) ? " open" : ""}><summary>Was passt noch? <span class="muted small fit-rest__open">Noch offen: ${esc(restText)}</span></summary>
     <ul class="plain-list fit-rest__list">${list
       .map((s) => {
         const slot = fitSlotKey(slots, s);
         const i = shown.findIndex((x) => x.suggestion === s);
-        return `<li><span class="fit-rest__main"><strong>${esc(s.candidate.label)}</strong>
-          <span class="muted small">${esc(FI.portionText(s.factor))}${slot ? ` · in „${esc(slot.title)}“` : ""} · ${D.formatNumber(Math.round(s.nutrients.energyKcal))} kcal · ${g(s.nutrients.proteinG)} E · ${g(s.nutrients.carbsG)} KH · ${g(s.nutrients.fatG)} F</span>
-          <span class="muted small">${s.after.energyKcal >= 0 ? `danach offen: ${D.formatNumber(Math.round(s.after.energyKcal))} kcal` : `danach ${D.formatNumber(Math.round(-s.after.energyKcal))} kcal über dem Ziel`}${rest.proteinG !== null ? `, ${g(Math.max(0, s.after.proteinG))} Eiweiß offen` : ""}</span></span>
+        const nb = (t) => t.replaceAll(" ", "\u00a0");
+        return `<li><strong class="fit-rest__name">${esc(s.candidate.label)}</strong>
+          <span class="fit-rest__main">
+          <span class="muted small">${esc(FI.portionText(s.factor))}${slot ? ` · in „${esc(slot.title)}“` : ""}</span>
+          <span class="small"><b>${nb(`${D.formatNumber(Math.round(s.nutrients.energyKcal))} kcal`)}</b><span class="muted">\u00a0· ${nb(`${g(s.nutrients.proteinG)} E`)}\u00a0· ${nb(`${g(s.nutrients.carbsG)} KH`)}\u00a0· ${nb(`${g(s.nutrients.fatG)} F`)}</span></span>
+          <span class="muted small">${s.after.energyKcal >= 0 ? "danach offen" : "danach über dem Ziel"} <b>${nb(`${D.formatNumber(Math.round(Math.abs(s.after.energyKcal)))} kcal`)}</b>${rest.proteinG !== null ? `\u00a0· ${nb(g(Math.max(0, s.after.proteinG)))}\u00a0Eiweiß offen` : ""}</span></span>
           <button class="btn sm" data-act="fit-add" data-arg="${i}" ${slot ? "" : "disabled"} aria-label="${esc(s.candidate.label)} eintragen">+ Eintragen</button></li>`;
       })
-      .join("")}</ul>
+      .join("")}</ul></details>
     <p class="card__note">„Was passt noch?“: Rest = Tagesziel − bisher gegessen. Vorschläge kommen aus deinen häufigen Zusammenstellungen je Mahlzeit und deinen häufigsten Lebensmitteln (übliche Menge), skaliert in Stufen von ½ bis 2 Portionen. Energie über dem Rest zählt dreifach, fehlendes Eiweiß doppelt. „Rückgängig“ stellt den Stand davor wieder her.</p></div>`;
 }
 

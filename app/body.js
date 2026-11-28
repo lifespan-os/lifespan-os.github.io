@@ -13,6 +13,7 @@ import { dotHtml, openTabsOf } from "./openitems.js";
 import { autoAttrs, autoSaveHtml } from "./autosave.js";
 import { gripActions, gripLatestText, gripPanelHtml, initGrip } from "./gripview.js";
 import { heartActions, heartFieldsHtml, initHeartFields } from "./heartfields.js";
+import { weightJumpNoteHtml } from "./connections.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
@@ -518,6 +519,15 @@ async function readScale(file) {
  * Magermasse in Prozent, Unterhautfettanteil und BMI (Körpergröße laut Profil vom PC).
  * Körpergewicht: Wert des Tages, sonst der zuletzt erfasste bis zu diesem Tag.
  */
+/** Kennzeichen der letzten Wiegungen – ändert es sich (neue Wiegung), rechnet der Hinweis zum Gewichtssprung neu. */
+function weightStamp() {
+  const weights = B.allValues(X.S.catalog, S().local).get(B.WEIGHT_METRIC_ID) ?? [];
+  return weights
+    .slice(0, 3)
+    .map((v) => `${v.row.date}|${v.row.time ?? ""}|${v.row.value}`)
+    .join(";");
+}
+
 function derivedFor(d) {
   const weights = B.allValues(X.S.catalog, S().local).get(B.WEIGHT_METRIC_ID) ?? [];
   const last = weights.find((v) => v.row.date <= d.date);
@@ -615,6 +625,7 @@ export function viewBodyEntry() {
               .join("")}`,
           )
           .join("")}
+        ${sec.category === "weight" && isToday ? weightJumpNoteHtml(weightStamp()) : ""}
         ${sec.category === "fitness" ? gripPanelHtml(d.date) : ""}
         ${sec.category === "vital" ? heartFieldsHtml(d.date) : ""}
       </section>`;

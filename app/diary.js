@@ -31,6 +31,7 @@ import { diaryExportHtml } from "./pdfparity.js";
 import { extrasCard } from "./diaryextras.js";
 import { macroDetailsHtml } from "./diarymacros.js";
 import * as BL from "./bls.js";
+import { fitList, fitRestHtml } from "./connections.js";
 import { ensureBls } from "./blsui.js";
 export let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice, buildReturnTables }
 
@@ -301,6 +302,7 @@ export function viewDiary() {
           ).join("")}</dl><p class="card__note">Fehlende Angaben werden nicht als 0 g gezählt.</p></div>`
         : ""
     }
+    ${fitRestHtml(slots, fitList(db, date, slots, dayMacros, totals))}
     <p class="card__note">Summen aus ungerundeten Werten; angezeigt auf ganze kcal und 0,1 g gerundet.${fast || hasMealValues ? " Enthält die Fasttracking-Werte dieses Tages." : ""}${hasSuppMacros ? " Enthält Energie und Makronährstoffe aus Supplements." : ""}</p>
   </section>`;
 
@@ -648,6 +650,59 @@ export function dayIntakeValues(db, date) {
   add(fast?.values);
   for (const m of meals) add(m.values);
   return values;
+}
+
+/**
+ * Verbindungen (1.185.0): Stoffe je Tag samt Alkohol aus den BLS-Lebensmitteln und die eigenen
+ * Lebensmittel mit BLS-Bezug mit ihren Stoffen je üblicher Menge (Median der eingetragenen Mengen).
+ * Ohne BLS auf dem Handy zählen nur Supplements, Fasttracking und Werte an Mahlzeiten.
+ */
+export function connMicro(db, dates) {
+  const micro = [];
+  const amounts = new Map();
+  for (const date of dates) {
+    const meals = P.mealDay(db, date).meals;
+    const items = meals.flatMap((m) => m.items).filter((i) => i.amount > 0);
+    for (const i of items) amounts.set(i.foodId, [...(amounts.get(i.foodId) ?? []), i.amount]);
+    const supps = D.addNutrientValues(P.intakesOn(db, date).map((i) => i.nutrients));
+    const fast = P.fastDay(db, date);
+    if (!items.length && !Object.values(supps).some((v) => v > 0) && !fast) continue;
+    const values = {};
+    const add = (rec) => {
+      for (const [k, v] of Object.entries(rec ?? {})) if (Number.isFinite(v)) values[k] = (values[k] ?? 0) + v;
+    };
+    const fm = blsFoodMicro(db, meals);
+    add(fm.values);
+    add(supps);
+    add(fast?.values);
+    for (const m of meals) add(m.values);
+    // Anteil der Energie aus Lebensmitteln mit BLS-Werten (ohne Lebensmittel: 1)
+    const { foods, bls } = blsEntries(db, items);
+    let total = 0;
+    let covered = 0;
+    for (const i of items) {
+      total += i.energyKcal ?? 0;
+      const f = foods.get(i.foodId);
+      const code = f ? D.blsMicro.blsCodeOf(f) : null;
+      if (code && bls.has(code)) covered += i.energyKcal ?? 0;
+    }
+    micro.push({ date, values, alcoholG: fm.extra?.ALC ?? 0, coverage: total > 0 ? covered / total : 1 });
+  }
+  const ownFoods = [];
+  const b = ensureBls();
+  if (b) {
+    const K = D.connections;
+    for (const [foodId, list] of amounts) {
+      const f = db.foods.get(foodId);
+      const amount = K.med(list);
+      if (!f || f.archived || !amount || !D.blsMicro.blsCodeOf(f)) continue;
+      const item = [{ foodId, amount }];
+      const { foods, bls } = blsEntries(db, item, b);
+      const values = D.blsMicro.foodMicro(item, foods, bls).values;
+      if (Object.keys(values).length) ownFoods.push({ name: f.name, amount: Math.round(amount), unit: f.basis_unit === "ml" ? "ml" : "g", values });
+    }
+  }
+  return { micro, ownFoods };
 }
 
 /** Stoffe aus den BLS-Lebensmitteln eines Tages */

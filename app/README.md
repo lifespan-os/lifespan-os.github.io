@@ -21,13 +21,15 @@ damit die Dateien direkt auf GitHub Pages laufen.
 | `cardiomap.js` | Cardio in der Muskel-Körperkarte: Satz-Äquivalente, Schalter „Kraft + Cardio“, Schraffur, Kennzahlen (1.85.0) |
 | `longevityview.js` | Body & Longevity → Überblick: Leitwerte gegen Altersnormen, Laborwerte (1.77.0) |
 | `store.js` | Speicher auf dem Gerät (IndexedDB) |
-| `sw.js` | Service Worker: App offline verfügbar (nur App-Dateien, nie Nutzerdaten) |
+| `sw.js` | Service Worker: App offline verfügbar (nur App-Dateien, nie Nutzerdaten); seit 1.158.0 Start aus dem Speicher (cache first) |
+| `app.bundle.js` | Alle Module in einer Datei (1.158.0) – **erzeugt**, nicht von Hand ändern: `scripts/tools/handy/handy-buendeln.cmd` (auch am Ende von `pcdomain-erzeugen.cmd`); `index.html` lädt nur diese Datei |
 | `core.test.mjs` | Tests: `node --test core.test.mjs nutrition.test.mjs body.test.mjs focus.test.mjs pcdb.test.mjs` |
 | `label.js` | Etikett-Scanner: Nährwerte aus Text lesen (Regeln wie `src/domain/labelScan.ts`, plus spaltenweise gelesener Text) |
 | `nutrition.js` | Ernährung: Lebensmittel aus dem Export, speichern, tracken, Gerichte, Tabellen für die Rückgabedatei (mit Tests) |
 | `quickmeal.js` | Mahlzeiten schneller eintragen: Verlauf für Vorschläge/Favoriten, Eintragen mit „Rückgängig“ (1.55.0) |
 | `fastdata.js` | Fasttracking am Handy: Tages- und Mahlzeitwerte, Tabellen für die Rückgabedatei (mit Tests, 1.55.0) |
 | `food.js` | Oberfläche „Ernährung“ und „Gericht“ |
+| `mealplate.js` | „Mahlzeit erfassen“ wie am PC: Wie immer?, Suche über alle Datenbanken, Schnelleintrag, „Wird eingetragen“ (1.125.0) |
 | `ocr.js` | Texterkennung auf dem Handy (Tesseract.js aus `vendor/ocr/`, erst beim ersten Scan geladen) |
 | `vendor/ocr/` | Tesseract.js 5 + deutsche Sprachdaten; nicht im Git, holen mit `scripts/48-handy-texterkennung-laden.cmd` |
 
@@ -84,6 +86,10 @@ damit die Dateien direkt auf GitHub Pages laufen.
 Dateien in das Repository `lifespan-os.github.io` in den Ordner `app/` (Symbole nach
 `app/icons/`) hochladen. Bei Änderungen `VERSION` in `sw.js` erhöhen, damit Handys die neue
 Fassung laden.
+Seit 1.158.0: Nach jeder Änderung an `mobile/*.js` zuerst `scripts/tools/handy/handy-buendeln.cmd`
+ausführen und **`app.bundle.js` immer mit hochladen** (die einzelnen Module dürfen mit, das Handy lädt sie
+nicht mehr). Der Test `src/lib/mobileBundle.test.ts` (in 21/20) meldet ein veraltetes Bündel. Neue Module
+müssen nicht mehr in `sw.js` FILES stehen – das Bündel enthält alles, was `app.js` (auch dynamisch) lädt.
 - Heller Modus (1.1.4): Farben wie Desktop-App und Website (`app.css`, Variablen in `:root`),
   Orange als Schrift über `--orange-text` (Kontrast auf Weiß). Statusleiste `default`
   (`index.html`), `theme_color`/`background_color` hell (`manifest.webmanifest`). Auf dem iPhone
@@ -1068,7 +1074,7 @@ Erinnerungen, Schnellerfassung, Seiten anpassen, Secret Protocols und Import/Exp
 - Statt Herstellerpaketen ein Paket „Maschinenbilder“ (`key` `maschinenbilder`) mit allen Bildern jeder Maschine wie am
   PC hinterlegt (5.550 Bilder; Reihenfolge wie `bilder` in `maschinen_master.json`, eigenes Foto aus
   `machine.own_photo` zuerst, eigene Fotos im Ordner „Eigene“ sind mit `own` markiert). Bild-Feld `i` (0 = Hauptbild).
-  Teile bis 8 MB (`Maschinenbilder.json`, `Maschinenbilder-2.json` …), `index.json` mit `images`, `machines`, `files`.
+  Teile bis 3,5 MB (bis 26.11.2026: 8 MB; Claude lädt im Browser höchstens 3,8 MB je Datei hoch) (`Maschinenbilder.json`, `Maschinenbilder-2.json` …), `index.json` mit `images`, `machines`, `files`.
   Erzeuger: `scripts/tools/handy/bilderpakete-erzeugen.cmd` (liest eigene Fotos mit `eigene-fotos.mjs` über
   `node:sqlite`, nur lesend; schreibt die Teile sofort, Kopfzahlen werden am Ende eingesetzt).
 - Handy: IndexedDB `lifespan-bilder` Version 2 (frühere Herstellerpakete werden verworfen); Schlüssel = Maschinen-ID
@@ -1685,6 +1691,466 @@ Wie PC 1.0.177 (Wünsche des Nutzers vom 22.11.2026):
   wieder welche (geplante und daraus gestartete Einheit gelten als dasselbe Training). Einstellung
   `ui.training_hints_off`, mit dem PC abgeglichen.
 
+## Version 1.155.0 (25.11.2026): Bandfarben kombinierbar, Lila (wie PC 1.0.222)
+
+- Training → Übung → Geräteeinstellungen → „Resistanceband Widerstand/Farbe“: Farben als antippbare Felder unter
+  dem Eingabefeld, mehrere gleichzeitig wählbar (z. B. „Rot + Blau“); erneutes Antippen wählt ab. Neue Farbe Lila
+  (zwischen Schwarz und Silber). Eigene Angaben wie „15 kg“ bleiben erhalten und stehen hinten.
+- `core.js` (`bandParts`, `hasBandColor`, `toggleBandColor`, Test), `workoutview.js`, `appactions.js`
+  (`band-color`), `app.css`.
+
+## Version 1.154.0 (25.11.2026): Weitere Geräteeinstellungen (wie PC 1.0.221, Schema 78)
+
+- Training → Übung → Geräteeinstellungen: neue Felder „Fußstütze Winkel“, „Drehachse 1“, „Drehachse 2“,
+  „Resistanceband Anzahl“ und „Resistanceband Widerstand/Farbe“ (Farben Beige bis Gold zur Auswahl, eigene
+  Angaben möglich) – freier Text, höchstens 40 Zeichen; Spalten `footrest_angle`, `pivot_axis_1`,
+  `pivot_axis_2`, `band_count`, `band_resistance` in
+  `workout_exercise` und `training_plan_exercise`. Mit PC-Daten vor Schemastand 78 entfallen die neuen
+  Felder in der Rückgabedatei, alles andere bleibt.
+- Umbenannt: „Brustpolster Höhe“ → „Brustpolster“, „Sitztiefe“ → „Sitzweite“. Die Griffstellung steht
+  jetzt direkt neben der Griffbreite.
+- `core.js` (`SETTING_KEYS`, `SETTING_LABELS`, Rückgabedatei), `trainingdata.js` (Pläne), `workoutview.js`.
+
+## Version 1.153.0 (25.11.2026): Hinweis, wenn die PC-Daten am Handy zu alt sind
+
+- „An den PC senden“: Enthält die Datei eine Tabelle, die es beim Schemastand der geladenen PC-Exportdatei noch nicht
+  gab (z. B. „Meine Gyms“ ab Schemastand 65), meldet das Handy jetzt vorher, dass zuerst eine neue Exportdatei vom PC
+  geladen werden muss. Vorher lehnte der PC den Import ab („Tabelle „gym“ passt nicht zum Schemastand 55 der Datei“).
+  `core.js` `TABLE_SINCE`, `staleSchemaMessage`; Test vergleicht `TABLE_SINCE` mit den Migrationen der Desktop-App.
+
+## Version 1.152.0 (25.11.2026): Grafik im Querformat passt ganz ins Fenster
+
+- Health → Heart → Herzfrequenz und Schritte am Tag, groß im Querformat: bei 100 % passt die ganze Grafik ins Fenster (Breite oder Höhe nach Seitenverhältnis), vorher war sie unten abgeschnitten (`mapzoom.js` `openChartZoom`, `--fit`).
+
+## Version 1.151.0 (25.11.2026): Untere Brust in der Rubrik Brust (wie PC 1.0.220)
+
+- Muskelgruppen-Rubrik „Brust“ umfasst jetzt Brust, Obere Brust und Untere Brust (`pcdomain.js` neu gebaut).
+
+## Version 1.150.0 (25.11.2026): Griffkraft unter Body & Longevity, Grafik im Querformat, Mahlzeiten zugeklappt (wie PC 1.0.219)
+
+- Body & Longevity → Erfassen: Karte „Griffkraft“ mit letzter Messung und „Griffkraft eintragen“ (öffnet „Werte
+  erfassen“ für heute und springt zur Griffkraft); in „Werte erfassen“ zusätzlich Sprungmarke „Griffkraft“
+  (`body.js` `gripCardHtml`, `gripview.js` `gripLatestText`).
+- Health → Heart → Herzfrequenz und Schritte am Tag: Grafik antippen öffnet sie bildschirmfüllend im Querformat
+  (hochkant gehaltenes Handy: Ansicht um 90° gedreht), zoombar mit zwei Fingern, Doppeltippen oder − / +
+  (`mapzoom.js` `openChartZoom`, Attribut `data-chart-zoom`).
+- Nutrition → Tagebuch → Mahlzeiten (Liste): Voreinstellung zugeklappt, auch leere Mahlzeiten und Koffein.
+- Muskelgruppen-Rubriken erweitert (wie PC): Brust/Obere Brust, alle Schultern, gerade Bauchmuskulatur zu Bauch / Core,
+  Nacken zu Oberer Rücken / Trapez, Rücken/Latissimus.
+
+## Version 1.149.0 (25.11.2026): Stacks am Handy bearbeiten, Muskelgruppen-Rubriken (wie PC 1.0.218)
+
+- Wunsch des Nutzers: Supplement-Stacks auch am Handy anlegen, bearbeiten (Supplements hinzufügen, Menge,
+  Reihenfolge ↑/↓, entfernen, Notiz, archiviert) und löschen – Nutrition → Datenbanken → Supplementdatenbank →
+  Supplement-Stacks (Ansicht `stack-edit`). Regeln wie `save_stack` (`suppdb.js` `checkStackDraft`, `saveStack`,
+  `deleteStack`, mit Test). Ablage `supp.stacks` (id → { row, items, sent }); entfernte Einträge und gelöschte Stacks
+  gehen als Löschvermerk an den PC, Stacks samt verwendeten Supplements mit „An den PC senden“. Stand vom Handy gilt
+  überall (`SP.withPhoneStacks`, `makeDb`): Tagebuch, Quick-Eingabe, Mahlzeit-Editor. Beim Löschen verlieren
+  Einnahmen am Handy nur den Verweis (am PC `ON DELETE SET NULL`).
+- Meine Gyms → Maschine hinzufügen: Muskelgruppen im Filter als Rubriken (`D.gymMachinePick.muscleRubric`, wie PC):
+  Schulter/Schultern, Beine/Quadrizeps/Rectus Femoris, Wade/Tibialis, Unterarm/Unterarme, Core/Bauch/Seitliche
+  Bauchmuskulatur, Bizeps/Brachialis, Trapez/Oberer Rücken.
+
+## Version 1.148.0 (25.11.2026): Einheit als Plan anlegen (wie PC 1.0.217)
+
+- Wunsch des Nutzers: Beim Bearbeiten einer Einheit (nach „Änderungen verwerfen“) und in der Ansicht einer
+  abgeschlossenen Einheit (nach „Training bearbeiten“) gibt es „Als Plan anlegen“. Neuer Plan mit einem Trainingstag
+  (Name = Titel der Einheit, sonst „Training vom …“, freier Name mit „(2)“ …), Übungen, Sätze, Einstellungen und
+  Notizen als Richtwerte, Gym der Einheit – sofort unter Training → Pläne in Liste und Kalender wählbar.
+  `TR.planInputFromWorkout`, `TR.freePlanName` (+ Test), Aktion `train-as-plan` in `appactions.js`.
+
+## Version 1.147.0 (25.11.2026): Vorlagen & Rezepte und Datenbanken wie am PC
+
+- Nutrition hat die Reiter wie am PC: Tagebuch, Scanner & Tracken, Gerichte & Planen (Vorlagen & Rezepte,
+  Planen), Verlauf, Datenbanken (Lebensmitteldatenbank, BLS-Datenbank, Open Food Facts, Supplementdatenbank).
+  Gruppen und Unterreiter in `diary.js` (`GROUPS_N`, `nutritionTabs`), Punkte über `setNutritionMarks`.
+- Vorlagen & Rezepte (`recipes.js` + Tests, `recipesui.js`, Ansichten `recipes`, `recipe-edit`): Liste (archivierte auf
+  Wunsch), anlegen/bearbeiten mit Zutaten (g/ml oder Portion) und Supplementen, Regeln wie `recipe::save`, eintragen
+  (Tag, Mahlzeit, Portionen; Supplemente anteilig als Einnahme zur Mahlzeit), löschen. Gerichte vom PC lassen sich
+  ändern: Ablage `nutrition.recipes` mit derselben ID, entfernte Zutaten/Supplemente und gelöschte Gerichte
+  (`recipesDeleted`) gehen als Löschvermerk an den PC; `makeDb` nimmt `phone.recipes` (Stand vom Handy gilt, auch für
+  Suche, Planen und Tagesverlauf). Gelöschte Gerichte entfernen auch ihre Wochenplan-Einträge am Handy.
+- Lebensmitteldatenbank (`nutridb.js`, `N.foodRows`, `N.setFoodArchived`): Suche, Sortierung, „Archivierte
+  anzeigen“, Verwendung, archivieren/zurückholen, Bearbeiten öffnet das Formular, „Neues Lebensmittel“. Archivierte
+  erscheinen nicht mehr bei der Auswahl; beim Bearbeiten bleibt „archiviert“ erhalten.
+- BLS-Datenbank und Open Food Facts als Unterreiter (`blsSearchHtml`, `offSearchHtml` mit bis zu 40 Treffern).
+- Supplementdatenbank (`suppdb.js` + Tests, Ansicht `supp-db-edit`): Liste mit Werten und Verwendung, anlegen und
+  bearbeiten (Einheit, Menge, alle Nährstofffelder mit Suche, Notiz, archiviert), Regeln wie `write_supplement`.
+  Ablage `supp.supplements` mit `valueIds`; entfernte Werte gehen als Löschvermerk an den PC. Löschen nur für
+  ungesendete, unbenutzte Supplemente vom Handy. Stacks zur Ansicht (Bearbeiten am PC).
+- Export fürs Handy (`pcFromRows`): Supplemente mit Notiz, Supplementwerte mit ID, archivierte Lebensmittel auch, wenn
+  Gerichte sie nutzen. Supplemente vom PC lassen sich erst nach dem nächsten Laden einer Exportdatei bearbeiten.
+- Senden: Supplemente in Gerichten gehen mit, wenn sie in der Datei fehlen (`SP.withRecipeSupplements`).
+- Werte nachtragen → Griffkraft neu gesetzt (Wunsch des Nutzers): letzter Wert als eigene Zeile, Felder „Links (kg)“ und
+  „Rechts (kg)“ nebeneinander mit Beschriftung, darunter die Uhrzeit, dann der Hinweis zum Messfenster (`.qf-grip`).
+
+## Version 1.146.0 (25.11.2026): Maschinen fürs Gym auswählen wie PC 1.0.216
+
+- Meine Gyms → Maschine hinzufügen: Filter Hersteller und Muskelgruppe über der Suche, alle Treffer (keine
+  Begrenzung auf 25), bereits trainierte Maschinen mit „✓ n× trainiert“ zuerst, „noch nicht trainiert“
+  markiert, Maschinen im Gym markiert. Antippen wählt aus (mehrere), „N hinzufügen“ nimmt alle auf; Bild
+  antippen = Großansicht. Das Suchfeld springt beim Hineintippen nach oben. Regeln `D.gymMachinePick`
+  (src/domain/gymMachinePick.ts), `gymsui.js` `pickData`/`machineHits`/`hitsHtml`, Aktionen `gym-pick`,
+  `gym-add-picked`.
+
+## Version 1.145.0 (25.11.2026): Griffkraft und Trainingszonen erfassen, Punkt bis aufs Feld (wie PC 1.0.215)
+
+- Wunsch des Nutzers: Die APP kann die Griffkraft erfassen, Body & Longevity wie am PC. Neu `gripview.js` unter
+  „Werte erfassen“ → Fitness & Longevity (wie `GripPanel.tsx`): beide Hände (bester Versuch), dominante Hand,
+  Messmethode (Settings → Messmethoden → Griffkraft), Uhrzeit (Pflicht, Hinweis aufs übliche Messfenster),
+  Geschlecht nur ohne Profilangabe, Notiz; Auswertung sofort (Stufe, Perzentil, Skala, Vergleichsgruppe, Abstand,
+  nächste Stufe, Seitenvergleich), „So misst du richtig“, Verlauf als Linien mit Normlinien und Liste (Öffnen,
+  Löschen). Regeln aus `src/domain/grip.ts` (`D.grip`, `pcdomain.js` neu erzeugt). Speichern über
+  `logsdata.saveGrip` (jetzt auch dominante Hand, Methode, Notiz, Geschlecht; Test ergänzt).
+- Neu `heartfields.js` unter Vitalwerte: maximale Herzfrequenz und fünf Trainingszonen wie `HeartFields` am PC
+  (Tanaka/Gulati, Karvonen, eigene Werte vor berechneten). Einstellungen `heart.max`/`heart.zones` gehen mit
+  „An den PC senden“ zurück (`SYNC_KEYS`).
+- Orange Punkte bis aufs Feld: offene Punkte tragen `fields` („metric:<id>“, „grip“, wie PC 1.0.215);
+  `applyPageMarks` markiert zusätzlich alle Elemente mit `data-open` – in „Werte erfassen“ die Überschrift des
+  Bereichs und den Namen jedes fälligen Werts, bei der Griffkraft Überschrift und beide Hände.
+- To-dos: Erledigte stehen unten (`todosFor` sortiert nach erledigt, dann Position – wie `checklist.rs`),
+  die To-do-Karte steht ganz oben in den Checklisten, „To-do“ in Schnell erfassen öffnet sie oben
+  (`quickGo`, `#todos-card`).
+
+## Version 1.144.0 (25.11.2026): Mahlzeit erfassen kompakter (wie PC 1.0.214)
+
+- „Wie immer?“: Die Liste der Lebensmittel steht vollständig in der Karte (nicht mehr mit „…“ abgeschnitten),
+  da das Handy kein Darüberfahren kennt (`.plt-usual__detail` in `app.css`).
+- Suchfeld „Lebensmittel, Gericht, Supplement, Koffein …“ mit kräftigem orangem Rahmen (2 px) als Orientierung.
+
+## Version 1.143.0 (25.11.2026): Orange Punkte auch auf der Seite (wie PC 1.0.213)
+
+- Wunsch des Nutzers: Überall, wo heute noch etwas einzutragen ist, erscheint der orange Punkt – nicht nur im
+  Menü und in der unteren Leiste, sondern auch an den Knöpfen und Feldern der Ansicht. `openitems.js`
+  `PAGE_MARKS` (offener Punkt → Stelle), `marksMatch`, `applyPageMarks` (nach jedem Neuzeichnen in
+  `navshell.js` `renderNav` und bei der Prüfung alle 30 Sekunden), Klasse `.open-mark` in `app.css`.
+  Stellen: „Nacht erfassen“, „ANS-Werte erfassen“, „Heute einschätzen“, Schritte (NEAT), „+ Lebensmittel“,
+  „Werte erfassen“ (Body), „+ Hormongabe erfassen“, To-do „Hinzufügen“, „Training starten“. Reiter mit Punkt
+  wie bisher (Body, Training, Superhuman).
+
+## Version 1.142.0 (25.11.2026): Prüfrunde Dunkelmodus, schnellere Zahlenformatierung (wie PC 1.0.212)
+
+- Kontrast-Scan aller Ansichten, Reiter und einiger Bearbeitungsfenster im hellen und dunklen Design (Playwright,
+  jeder sichtbare Text gegen seinen tatsächlichen Hintergrund, Grenzwerte 4,5:1 bzw. 3:1 für große Schrift).
+  Behoben: Häkchen in „Datenqualität“/Abdeckung (`.coverage-list__icon`), erledigte To-dos und Status-Häkchen
+  (`.todo-check.is-done`, `.status-icon` jetzt `--ok-strong`), gewählter Tag in der To-do-Woche, untere Leiste
+  `.bottom` und „gut“ in den Longevity-Kacheln (`--ok-text`). Neue Tokens `--ok-text`, `--ok-strong` (hell und dunkel).
+- `formatNumber` (src/lib/format.ts) legt die Zahlenformate nur noch einmal je Nachkommastellen an
+  (beim Start gemessen 24 → 6 ms bei vierfach gedrosselter CPU). pcdomain.js neu erzeugt.
+
+## Version 1.141.0 (25.11.2026): Lücken zum PC geschlossen
+
+- **Settings → Tagesziele → „Verbrauch und Carb-Cycling“** (`goalsui.js` `extrasCard`): Verbrauch berechnet | aus
+  Gewichtsverlauf | beide (`ui.tdee_mode`) und Carb-Cycling an/aus mit ± 10/20/30 % (`ui.carb_cycling`) wie am PC
+  (GoalsPanel). Speichert sofort, geht mit „An den PC senden“ zurück.
+- **Superhuman → HRT → Nächste Laborkontrolle → „Abstände ändern“** (`supertabs.js`, `superactions.js` `labsched`):
+  Wochen nach Beginn/Änderung und Monate danach (`ui.lab_schedule`). Die drei Schlüssel stehen jetzt in `SYNC_KEYS`.
+- **Insights → Ziele → „Vorschläge aus deinen Hauptzielen“** (`goalsparity.js`): gleiche Rechnung wie am PC
+  (`goalSuggestions` aus pcdomain.js, meistgenutzte Kraftübung der letzten 12 Wochen, letzte Messwerte), „Übernehmen“
+  legt das Ziel an.
+- **Insights → Echter Verbrauch → „Als Kalorienziel übernehmen“** (`insightsview.js`): ab heute festes Kalorienziel
+  (Verbrauch + eingestelltes Defizit/Überschuss in kcal), übrige Ziele bleiben – wie am PC.
+- **Schnellerfassung → „Eingabe für alles“** (neu `oneinput.js`, wie PC `QuickEntry`): eine Zeile Text, erkannt mit
+  `oneInput.parseOneInput` (Gewicht, Wasser, Koffein-Getränk, Fasttracking-Nährstoff, Supplement-Stack), Vorschau vor
+  dem Speichern, Enter oder „Eintragen“. Eingaben im Blatt laufen über `navRoot` (input/keydown/click).
+  Koffein wird am Handy ohne die PC-Verknüpfungen „zum Wasser“/„zu Supplements“ der PC-Schnellerfassung eingetragen.
+- **Tagesverlauf → geplantes Training bearbeiten:** „Nur am … / Jeden …“ und „Workout-Mahlzeiten mitverschieben“
+  speichern sofort als Auswahl dieses Geräts (`prefs.trainEdit`, Hinweis) und gelten beim nächsten Bearbeiten wieder.
+- pcdomain.js neu erzeugt (Exporte `goalSuggestions`, `oneInput`, `quickEntry`).
+
+## Version 1.140.0 (25.11.2026): „Maschine hinzufügen“ sucht auch nach Nummer (wie PC 1.0.211)
+
+- Gym → „Maschine hinzufügen“ sucht mit der intelligenten Suche (`smartFilter` aus pcdomain.js) in der ganzen
+  Maschinendatenbank, auch nach Studionummer, dasGym-Nummer und Artikelnummer (genau passende Nummer zuerst, ab einer
+  Ziffer). Maschinen, die schon im Gym stehen, erscheinen markiert („steht schon im Gym (Nr. …)“, ✓); Antippen zeigt
+  nur einen Hinweis (`gym-has`). `gymsui.js` `machineHits`, `hitsHtml`; `app.css` `.item.is-here`.
+- PC 1.0.211 ergänzt das Referenz-Studio jetzt schon beim Ablegen der Handy-Datei (`ensure_reference`), neue Maschinen
+  mit dasGym-Nummer fehlen am Handy also nicht mehr (Ursache bei Nr. 989; `missingReferenceEntries` bleibt als Absicherung).
+
+## Version 1.139.0 (24.11.2026): Pre- und Post-Workout-Hinweis getrennt ausblenden (wie PC 1.0.210)
+
+- „✕“ an einem Trainingshinweis im Tagesverlauf blendet nur diesen Hinweis aus (Pre- oder Post-Workout), der
+  andere bleibt stehen. Schlüssel in `ui.training_hints_off` mit „|pre“ bzw. „|post“ am Ende
+  (`workoutTimeline.hintTypeOffKey`); ältere Einträge ohne Art blenden weiter beide aus. `mealtimeline.js`
+  (`mtl-hint-off`), `pcdomain.js` neu erzeugt.
+
+## Version 1.138.0 (24.11.2026): Gyms mit fremden Maschinen übernehmen (wie PC 1.0.209)
+
+- „Gyms teilen“ gibt jetzt die Angaben jeder Maschine mit (Hersteller, Serie, Name, Kategorie, Muskelgruppen,
+  Schlagworte, eigener Muskelfokus, eigenes Foto); eigene Maschinen ohne eigenes Foto bekommen ihr erstes Bild
+  aus den Maschinenbildern verkleinert mit (Längsseite 480 px, JPEG 72 %). `gymsdata.js` (`sharedMachineOf`),
+  `gymsui.js` (`scaledPhoto`).
+- „Paketdatei wählen …“: Maschinen der Datei, die es hier nicht gibt, kommen in die Karte „… neue Maschinen aus
+  der Datei“ – je Maschine „Zusammenführen mit …“ (Kandidaten mit Ähnlichkeit: Artikelnummer, Hersteller, Name mit
+  Übersetzungen und Tippfehlern, Nummer im gleichen Studio; ab 90 % vorgewählt), „Als neue Maschine übernehmen“
+  oder „Weglassen“. Neu: Maschine mit gleicher ID, `origin = app`, Muskelfokus und Foto (geht mit den
+  Trainingsdaten an den PC, neue Tabelle `machine_muscle_focus` in der Rückgabedatei). Zusammenführen: fehlender
+  Muskelfokus und – ohne Bilder und eigenes Foto – das Foto werden ergänzt. Entscheidungen merkt sich das Handy
+  (`gyms.aliases`). Regeln `machineMatch` und `gymShare` aus `pcdomain.js`; `trainingdata.js`
+  (`addSharedMachine`, `fillFromShared`, Muskelfokus im Katalog), `app.css`, `app.js` (`refreshCatalog` für Gyms).
+
+## Version 1.137.0 (24.11.2026): Gyms teilen (wie PC 1.0.208)
+
+- Training → Datenbank → Meine Gyms → Karte „Gyms teilen“: Gyms ankreuzen (vorgewählt alle außer dem
+  Referenz-Studio), „Exportieren“ gibt die Datei `Gyms teilen JJJJ-MM-TT.json` weiter (Teilen-Menü, sonst
+  Link zum Sichern). Inhalt je Gym: Name, Anschrift, Kontakt, Telefon, E-Mail, Social Media, Website, Foto und
+  Maschinen mit Nummer und Notiz – **ohne Mitgliedsnummer und Zutrittscode** (Vorder- und Rückseite).
+  Format `lifespan-studios` (Liste von Studio-Paketen), gleich wie am PC.
+- „Paketdatei wählen …“ (Studio-Pakete) liest jetzt auch diese Datei: alle Gyms werden installiert; geteilte
+  Angaben und Notizen füllen nur leere Felder, eigene bleiben. `gymsdata.js` (`shareBundle`, `parseGymFile`,
+  `installPackage`, `slug`/`packageIdOf` wie am PC) + Test, `gymsui.js`.
+
+## Version 1.136.0 (24.11.2026): Zwei neue Magazine (wie PC 1.0.208)
+
+- iCoach.me → Magazin: „Weniger Show. Mehr Kontrolle. Straight-Sätze.“ (`straight-saetze`, Training, 3 Seiten,
+  433 KB) und „Dein Griff verrät mehr, als du denkst.“ (`griffkraft`, Gesundheit & Werte, 5 Seiten, 721 KB).
+  PDFs (Seiten als JPEG 1240 px, Qualität 60, A4) unter `media/icoach/magazin/`, Titelbilder (280 px) unter
+  `icoach/magazin/` auf GitHub Pages; Einträge in `MAGAZINES` (`pcdomain.js` neu erzeugt, enthält auch das
+  Überzug-Muster der Torso Arm Pull Down aus 1.135.0).
+
+## Version 1.135.0 (24.11.2026): Muskelfokus für die Torso Arm Pull Down (wie PC 1.0.207)
+
+- Nautilus Next Generation R3 | Torso Arm Pull Down (dasGym 989) hat jetzt das Bewegungsmuster „Überzug“
+  wie die gym80 3012N Überzugmaschine – gleiche Standardverteilung (Latissimus 48 %, Teres 14 %, untere
+  Brust 14 % …) statt „Latissimus 100 %“ aus der Muskelgruppe. `focusdata.js` (neu erzeugt aus
+  `src/domain/gripFocus.ts`).
+
+## Version 1.134.0 (24.11.2026): Neue Maschinen mit dasGym-Nummer sofort im Training
+
+- Training → Übung hinzufügen (dasGym Wien): Eine Maschine mit dasGym-Nummer, die in der Maschinenliste
+  des Studios vom PC noch fehlt (z. B. Nr. 989, am PC neu angelegt), erscheint jetzt trotzdem – wie
+  `gym::ensure_reference` am PC, das die Liste erst beim Öffnen von Training bzw. Meine Gyms ergänzt.
+  Am PC aus der Liste genommene Maschinen (Löschvermerk) bleiben weg. `gymsdata.js` (+ Test).
+
+## Version 1.133.0 (24.11.2026): Linie zur Zeitachse beim Verschieben, neue Maschine (wie PC 1.0.206)
+
+- Tagesverlauf: Beim Verschieben einer Mahlzeit oder eines Symbols führt eine gestrichelte orange Linie
+  vom Eintrag zur Zeitachse. `mealtimeline.js`, `app.css`.
+- Studio-Paket dasGym Wien: neue Maschine Nr. 989 „Next Generation R3 | Torso Arm Pull Down“ (195
+  Maschinen). Ihre Bilder kommen als Bilderpaket „Neue Maschinen (Nachtrag)“ (Settings → Maschinenbilder),
+  bis das Gesamtpaket neu erzeugt wird. `studios/dasgym-wien.json`, `studios/index.json`.
+
+## Version 1.132.0 (24.11.2026): Supplemente, Wasser und Koffein verschieben (wie PC 1.0.205)
+
+- Tagebuch → Tagesverlauf: Auch die Symbole in den Spalten Supplemente, Wasser und Koffein lassen sich
+  gedrückt halten und ziehen; am Bildschirmrand läuft die Seite mit, Loslassen speichert. Steht ein
+  Symbol für mehrere Einträge, wandern alle um dieselbe Zeit. Koffein aus der Schnellerfassung am PC
+  (mit Supplement-Eintrag) wird am PC verschoben. `mealtimeline.js` (`moveMarks`), `app.css`.
+
+## Version 1.131.0 (24.11.2026): Sofort speichern – Speichern-Knöpfe entfallen (wie am PC)
+
+- Formulare speichern ohne Knopf (`autosave.js`): Beim Verlassen eines Feldes, bei Auswahl und Haken
+  wird gespeichert; danach kurz „✓ Gespeichert“ mit „Rückgängig“ (stellt den Stand davor im
+  Gerätespeicher wieder her). Ungültige Werte werden markiert und nicht gespeichert.
+- Bearbeiten und Einstellungen sofort: Werte erfassen (ganzer Tag), Messgrößen, Lebensstil-Notizen,
+  Ziele, Wochenziele, Tagesziele, Zielwerte der Körperkarte, Cardio in der Körperkarte, NEAT,
+  Werte nachtragen, Fasttracking, Wasser und geplantes Training im Tagesverlauf, To-dos,
+  Wochenübersicht, Gyms, Übungen, Maschinen, Sportarten, Trainingspläne, Checklisten, HRT-Checkliste,
+  Substanzen, Laborparameter, Lebensmittel bearbeiten.
+- Neue Einträge automatisch, sobald alle Pflichtfelder ausgefüllt sind; danach bearbeitet das
+  Formular den angelegten Eintrag: einzelner Körperwert, Schlaf, Naps, Einschätzung, Vitalwerte,
+  Blutabnahme, Lebensstil-Eintrag, Koffein, Supplement-Einnahme, HRT-Gabe, Protokoll-Eintrag,
+  Check-In, neues Lebensmittel. Bei vorausgefüllten Formularen (Koffein, erkanntes Etikett) gibt es
+  zusätzlich „Eintragen“ bzw. „Als Lebensmittel speichern“ für „gleich so“.
+- Knopf bleibt bei bewussten Aktionen: Teller „Speichern“/„Planen“, Gerichte und Rezepte, Freitext,
+  Mahlzeit kopieren, HRT-Präparat und „Trotzdem speichern“, Zuweisen, Einplanen, Termin hinzufügen,
+  Checkliste importieren, Konto umbenennen.
+
+## Version 1.130.0 (24.11.2026): Mahlzeiten verschieben, Tagesablauf wählbar (wie PC 1.0.204)
+
+- Tagebuch → Tagesverlauf: Eine Mahlzeit (gegessen oder geplant) gedrückt halten, bis sie orange
+  umrandet ist, dann ziehen; am Bildschirmrand läuft die Seite mit, Loslassen speichert die neue
+  Uhrzeit. Bei Mahlzeiten vom PC geht die neue Uhrzeit mit „Lebensmittel senden“ an den PC (auch
+  ohne neue Lebensmittel). `mealtimeline.js`, `nutrition.js` (`setMealTime`), `app.css`.
+- Overview (Reduziert) → Tagesablauf: Jeder Punkt führt zu seinem Ziel; „Offene Punkte abhaken“ zum
+  ersten noch offenen Punkt, „Schritte“ zur Schritteingabe des Tages. Unter Settings → Darstellung
+  lässt sich wählen, welche Punkte erscheinen (gilt nur auf diesem Handy). `overview.js`,
+  `settingsview.js`, `devprefs.js`.
+- Overview → Ballaststoffe, Zucker, Salz: Der Hinweis liegt nur noch hinter dem ⓘ, dort mit Link zu
+  Nutrition → Tagebuch. `overview.js`, `diaryextras.js`.
+
+## Version 1.129.0 (24.11.2026): „Jetzt eintragen“ springt zur aktuellen Uhrzeit (wie PC 1.0.203)
+
+- Tagebuch → Tagesverlauf: Der Knopf „Jetzt eintragen“ zentriert den Tagesverlauf auf die Linie
+  „jetzt“ (an anderen Tagen auf den Griff). `mealtimeline.js`.
+
+## Version 1.128.0 (24.11.2026): Katalog-Datei wie am PC – Koffein und „Überschreiben“
+
+- Import/Export → Lebensmittel- und Supplementdatenbank: Export und Import übernehmen das Koffein
+  der Lebensmittel (`caffeineMg`, mg je 100 g/ml, bis 100.000). Auch Herstellerpakete lesen es.
+- Beim Import gibt es wie am PC die Wahl „Unverändert lassen“ oder „Mit den Werten aus der Datei
+  überschreiben“; überschrieben werden nur Einträge mit anderen Werten (Erstellt-Zeitpunkt und
+  Archiv-Status bleiben), sie gehen mit „Lebensmittel senden“ an den PC.
+- `catalogfile.js`, `catalogui.js`, `vendor.js`, `app.css`; Tests `catalogfile.test.mjs`.
+
+## Version 1.127.0 (24.11.2026): Höhere Koffein-Grenze (wie PC 1.0.202)
+
+- Koffein im Lebensmittel-Formular jetzt bis 100.000 mg je 100 g/ml (Schema 77), damit auch reine
+  Pulver wie Guarana oder Matcha eingetragen werden können. `nutrition.js`.
+
+## Version 1.126.0 (24.11.2026): Koffein aus Lebensmitteln, Griffkraft mit Uhrzeit, Punkt „HRT“ (wie PC 1.0.201)
+
+- Lebensmittel haben ein Feld „Koffein (optional)“ in mg je 100 g/ml (Spalte `food.caffeine_mg`,
+  Schema 76). Für typische Getränke (Kaffee mit Milch, Espresso, Filterkaffee, Tee, Cola,
+  Energy-Drinks; nur Einheit ml) steht ein Richtwert mit „Übernehmen“ darunter.
+- Steht so ein Lebensmittel in einer Mahlzeit, zählt sein Koffein im Tagesverlauf in der Spalte
+  „Koffein“ und in allen Auswertungen (Koffein-Zeitstrahl, Schlaf) – wie `caffeine::list_with_nutrition`.
+  Auf dem Teller trägt die Zeile zusätzlich das Etikett „Koffein“ und die mg.
+- Griffkraft: Jede Messung braucht eine Uhrzeit (heute vorbelegt mit jetzt); darunter steht die
+  übliche Messzeit (90-Minuten-Fenster mit den meisten Messungen, ab drei Messungen mit Uhrzeit).
+- Checklisten: Ist unter Superhuman → HRT ein Injektionsintervall eingestellt, steht die nächste
+  Gabe automatisch als Punkt „HRT · Präparat“ am fälligen Tag in der Wochen-/Monatsübersicht und
+  unter „Heute noch einzutragen“; abgehakt, sobald an dem Tag eine Gabe (oder „ausgelassen“)
+  eingetragen ist, verstrichene Termine stehen bis zum Eintrag beim heutigen Tag („überfällig“).
+  Nur mit Secret Protocols.
+- Regeln `foodCaffeine`, `gripTiming` und `hrtSchedule.hrtDayItems` aus `pcdomain.js`;
+  `nutrition.js`, `food.js`, `mealplate.js`, `pcdb.js`, `caffeinedata.js`, `extras.js`,
+  `logsdata.js`, `todos.js`, `app.css`.
+
+## Version 1.125.0 (24.11.2026): Mahlzeit erfassen wie am PC (PC 1.0.200)
+
+- Nutrition → Scanner & Tracken: Die Karte „Mahlzeit erfassen“ ersetzt „Schnell eintragen“ und „Lebensmittel
+  suchen“. Oben Mahlzeit und Uhrzeit, „Wie immer?“ (typische Zusammenstellungen dieser Mahlzeit), dann
+  „🔍 Suche“ über alle Datenbanken – eigene Lebensmittel, BLS, Open Food Facts, Gerichte, Supplemente,
+  Stacks und Koffein, jeder Treffer mit Etikett der Spalte im Tagesverlauf – oder „⚡ Schnelleintrag“
+  (Energie kJ/kcal, Fett, ges. Fettsäuren, Kohlenhydrate, Zucker, Protein, Ballaststoffe; Pflicht nur Fett,
+  KH und Protein, 0 erlaubt; leere Energie wird berechnet).
+- „Wird eingetragen“: Mengen mit −/+, Summen, „Aus den Zutaten ein Gericht anlegen“ (auch mit Supplementen,
+  Tabelle `recipe_supplement` in der Rückgabedatei). „Speichern“ trägt Lebensmittel in die Mahlzeit ein, den
+  Schnelleintrag als Nährwerte der Mahlzeit, Supplemente als Einnahme zur Mahlzeit und Koffein zur Uhrzeit.
+- Freitext („2 Eier, 1 Toast“) legt die Lebensmittel jetzt auf den Teller. „Gegessen“ aus dem Planen trägt
+  die Supplemente des Gerichts mit ein. `mealplate.js`, `food.js`, `nutrition.js`, `diary.js`,
+  `diaryactions.js`, `app.css`, Regeln `mealBuilder` in `pcdomain.js`.
+
+## Version 1.124.0 (24.11.2026): Supplemente in Gerichten (wie PC 1.0.200, Vorbereitung)
+
+- Die Exportdatei bringt die neue Tabelle `recipe_supplement` (Supplemente in Gerichten, PC-Schema 75)
+  mit; das Handy hebt sie auf (`KEEP_TABLES` in `pcdb.js`). Hilfe-Text „Gerichte & Planen“ in
+  `pcdomain.js`. Der neue Mahlzeit-Editor (Suche über alle Datenbanken, Schnelleintrag, „Wie immer?“)
+  folgt am Handy im nächsten Schritt.
+
+## Version 1.123.0 (24.11.2026): Zurück zu „jetzt“, Favoriten je Mahlzeit (wie PC 1.0.199)
+
+- Tagesverlauf: Nach dem Speichern eines Supplements (💊) bzw. von Koffein (☕) aus dem Tagesverlauf
+  springt die Seite zurück zur aktuellen Uhrzeit. `diary.js`, `diaryactions.js`, `diarycaffeine.js`,
+  `mealtimeline.js`.
+- Lebensmittel → Schnell eintragen: Die Favoriten passen sich der gewählten Mahlzeit an – was in dieser
+  Mahlzeit schon gegessen wurde, steht vorn (mit der dort üblichen Menge). Regeln `favoriteFoods` in
+  `pcdomain.js`. `food.js`.
+
+## Version 1.122.0 (24.11.2026): Tagesverlauf – Lebensmittel, Supplement oder Koffein per Symbol (wie PC 1.0.198)
+
+- Tagesverlauf → Uhrzeit-Griff: statt „+ Lebensmittel“ drei kleine Symbole – 🍽 Lebensmittel, 💊 Supplement,
+  ☕ Koffein; der Text steht im Tooltip bzw. für Screenreader. Supplement öffnet die Einnahme mit der gewählten
+  Uhrzeit („unabhängig“), Koffein jetzt auch bei geplanten Uhrzeiten. `mealtimeline.js`, `app.css`.
+
+## Version 1.121.0 (24.11.2026): Waagen-Auswertung (Hume) zuverlässiger gelesen (wie PC 1.0.197)
+
+- Body → „Aus Bild übernehmen“: Im dunklen Hume-Screenshot werden farbige Trendpfeile, Balken und der
+  Tacho vor der Texterkennung weiß gemacht – sonst fiel der aktuelle Wert rechts vor dem Pfeil oft weg.
+- Liest ein Durchgang nur eine Zahl in der Kachel, zählt sie nicht gegen Durchgänge, die beide Werte lesen
+  (sonst konnte der Vortageswert links übernommen werden). Kleine ganze Werte (z. B. viszeraler
+  Fettindex 4 → 5) gelten nicht mehr als „starke Abweichung“. Regeln `scaleScan` in `pcdomain.js`.
+
+## Version 1.120.0 (24.11.2026): Trainingsname, geführter Tagesablauf, Datenqualität (wie PC 1.0.196)
+
+- Freies Training: Stimmen die Übungen weitgehend mit einem Trainingstag eines Plans überein (mindestens
+  zwei und 60 % gleiche Übungen), schlägt die laufende Einheit „Passt zum Trainingstag …“ vor;
+  „Übernehmen“ setzt Titel und Plan-Zuordnung, „Nicht passend“ blendet den Vorschlag aus. Frühere
+  Einheiten bleiben unverändert. Regeln `planDayMatch`. `workoutview.js`, `appactions.js`.
+- Overview „Reduziert“: „Tagesablauf“ unter „Heute“ – Morgen-Check, Wiegen (nur wer sich in den letzten
+  30 Tagen gewogen hat), Mahlzeiten (ab 80 % des Kalorienziels), Training, Wasser, Schritte, offene
+  Punkte; „Als Nächstes“ mit Sprung in den Bereich. Darunter „Datenqualität“: wie viele Bereiche für die
+  Auswertungen der letzten 4 Wochen reichen und was noch fehlt (wie Insights → „Welche Daten die
+  Auswertung verbessern“). Regeln `dayFlow`, `coverageSummary`. `overview.js`, `app.css`.
+
+## Version 1.119.0 (24.11.2026): Mikronährstoffe aus dem BLS, Auswertungen (wie PC 1.0.195)
+
+- Nutrition → Tagebuch → „Mikronährstoffe und weitere Stoffe“: Lebensmittel aus dem BLS (Marke „BLS 4.0“)
+  liefern alle ihre Stoffe je Menge – auch schon früher übernommene, weil die Werte aus dem BLS auf dem
+  Handy kommen (Nutrition → BLS laden). Stoffe mit Gegenstück im Katalog zählen dort mit (Einheit
+  umgerechnet), alle übrigen stehen unter „Weitere Stoffe aus dem BLS“.
+- Andere Lebensmittel zählen als „ohne Angabe“ (nicht 0) und werden genannt; je Stoff steht, wie viele
+  BLS-Lebensmittel keine Angabe haben.
+- Unter 70 % des DGE-Referenzwerts: Hinweis, gegebenenfalls mit deinem eigenen Supplement, das den Stoff
+  enthält – keine Kaufempfehlung. Regeln `blsMicro` aus `pcdomain.js`. `diary.js`, `app.css`.
+- Superhuman → HRT: „Nächste Laborkontrolle“ – 6 Wochen nach Beginn bzw. nach der letzten Dosisänderung,
+  danach alle 3 Monate nach der letzten Abnahme (Abstände am PC änderbar, `ui.lab_schedule`); Werte
+  Testosteron, Estradiol, Hämatokrit, Hämoglobin, PSA, Lipide, fehlende Werte der letzten Abnahme
+  werden genannt. Regeln `labSchedule`. `supertabs.js`.
+- Carb-Cycling (am PC unter Settings → Ziele einschalten, Standard aus): an Trainingstagen (Einheit
+  erfasst oder im Plan eingetragen) mehr, an Ruhetagen weniger Kohlenhydrate, Fett gleicht die Energie
+  aus. Gilt im Tagebuch und in der Overview. Regeln `carbCycle` und `dayMacroGoals`. Neue Datei
+  `carbcycle.js`, `diary.js`, `overview.js`, `sw.js`.
+- Training → Datenbank: „Maschinen je Muskel“ – je Muskel die Maschine des aktiven Gyms mit dem höchsten
+  Anteil, mit Nummer im Gym, Einstellung, gleich guten Maschinen und Alternative. Regeln
+  `machinesByMuscle`. `trainingdb.js`, `app.css`.
+- Insights: „Spätes Training und Schlaf“ und – je nach Einstellung am PC – „Echter Verbrauch“ aus dem
+  Gewichtsverlauf (nur Anzeige; übernehmen am PC). `insightsview.js`.
+- Weekly Reports: Plan für die nächste Woche als To-dos übernehmen (wie am PC: tägliche Maßnahmen an
+  jedem Tag ab heute, übrige einmal; Auswahl per Haken). `weeklyreports.js`, `app.css`.
+
+## Version 1.118.0 (24.11.2026): Overview „Reduziert“, Insights mit der letzten vollständigen Woche (wie PC 1.0.194)
+
+- Overview wählbar unter Settings → Darstellung: „Reduziert“ (Voreinstellung am Handy) zeigt oben den
+  Block „Heute“ – Erholung (Selbsteinschätzung, Schlaf, Ruhepuls, HRV), Kalorien und Protein (Tagesziel,
+  Minimum), Training (erledigt bzw. nächster Plan-Tag), offene Punkte, Wasser und Schritte – und alle
+  anderen Karten als zugeklappte Zeilen mit einer Kennzahl. „Ausführlich“ wie bisher. Regeln
+  `overviewToday` aus `pcdomain.js`. `overview.js`, `devprefs.js`, `settingsview.js`, `app.css`.
+- Insights starten mit der letzten vollständigen Woche (Montag bis Sonntag); „Diese Woche“ springt zur
+  laufenden. `insightsview.js`.
+
+## Version 1.117.0 (24.11.2026): Bedienung – Gym-Vorauswahl, Gewichtsvorschlag, Settings ohne Speichern-Knopf (wie PC 1.0.193)
+
+- Gym beim Start: Gym des Plan-Tags, sonst die Auswahl von heute, sonst das Gym mit den meisten Einheiten
+  der letzten 30 Tage (PC und Handy zusammen). Regeln `gymPreselect` aus `pcdomain.js`. `gymsui.js`.
+- Gewichtsvorschlag (doppelte Progression): beim Start aus dem Plan und beim Hinzufügen einer Kraftübung
+  stehen Gewicht und Wiederholungen schon in den Sätzen („Vorschlag eingetragen“). Alle schweren Sätze am
+  oberen Ende der Spanne (Plan, sonst 6–8), ohne „Fail“ und RPE höchstens 8 → +1 % Gewicht (auf 0,5 kg
+  gerundet, mindestens 0,5 kg), sonst gleiches Gewicht und eine Wiederholung mehr. „Wie letztes Mal“ setzt
+  die Werte der letzten Einheit. `workoutview.js`, `appactions.js`.
+- Settings speichern automatisch: Profil, Mahlzeiten, Workout-Richtwerte und Messmethoden beim Verlassen
+  eines Feldes bzw. sofort bei Auswahl und Haken; danach „Gespeichert“ mit „Rückgängig“, ungültige Werte rot
+  und nicht gespeichert. Die Speichern-Knöpfe sind weg, „Standardwerte wiederherstellen“ bleibt.
+- Settings mit Suche oben und zuklappbaren Gruppen (Profil und Konten, Ziele, Training und Ernährung,
+  Darstellung und Bedienung, Daten und Datenschutz, Hilfe und FAQ). `settingsview.js`, `app.js`,
+  `searchview.js` (FAQ öffnet die Gruppe „Hilfe und FAQ“).
+- Favoriten in „Schnell eintragen“: kurzer Name in einer Zeile (Teil vor dem ersten Komma), voller Name
+  im Tooltip. `food.js`, `app.css`.
+
+## Version 1.116.0 (24.11.2026): Makroziele mit Minimum und Tagesziel, Korrekturen (wie PC 1.0.192)
+
+- Protein, Kohlenhydrate und Fett zweistufig: das Minimum (Grundbedarf aus den Einstellungen) ist als
+  Strich im Balken markiert („✓ Minimum erreicht“ in Orange), das Ende des Balkens ist das Tagesziel
+  (Grundbedarf + Anteil für Training und Alltagsbewegung). Wochenziele, Streaks und Insights rechnen je
+  Tag mit dem Tagesziel; Tage, an denen nur das Minimum erreicht wurde, werden extra genannt.
+  `pcview.js`, `overview.js`, `insightsview.js`, `pcdb.js` (Verbrauch je Tag mit Grundumsatz und Schritten).
+- Tagessumme: Herleitung des Kalorienziels direkt unter der Zahl.
+- Gemessene Erholung heute: solange die Nacht noch nicht von der Uhr übertragen ist, steht „noch nicht
+  synchronisiert“ statt „–“ und kein Vergleich. `heart.js`.
+- Trainingskalender: Punkte und Einträge in den Farben der Rubriken (Ergometer = Cardio), Legende darunter.
+  `training.js`, `plancalendar.js`.
+- Training: Gerätenummer als Kachel nur bei eigener Nummer oder Gym-Nummer, sonst steht das Gerät im
+  Untertitel; Einheitenliste ohne leere Trenner, „1 Arbeitssatz“ in Einzahl, „Öffnen“ statt „Open“.
+  `workoutview.js`, `training.js`.
+- Sleep: Wochentabelle mit drei Zahlenspalten, Spanne und Anzahl klein darunter. `logs.js`.
+- Overview: „Nächstes Training“ einspaltig, Makrowerte in der Ernährungskarte immer rechtsbündig. `app.css`.
+
+## Version 1.115.0 (23.11.2026): Recovery-Einschätzung ohne „(optional)“ (wie PC 1.0.191)
+
+- Recovery → Tag einschätzen: Fragen und „Notizen“ ohne den Zusatz „(optional)“ – der Hinweis oben sagt
+  schon, dass alle Angaben freiwillig sind. `logs.js`.
+
+## Version 1.114.0 (23.11.2026): Ballaststoffe, Zucker, Salz im Tagebuch (wie PC 1.0.190)
+
+- Nutrition → Tagebuch: neue Karte „Ballaststoffe, Zucker, Salz“ direkt nach dem Wasserhaushalt (Ampel
+  der letzten 7 Tage wie im Overview).
+- „Details“ klappt je Stoff auf: woher er an diesem Tag kommt (Lebensmittel aller Mahlzeiten
+  zusammengefasst, Menge, Gramm, Anteil; Lebensmittel ohne Angabe extra genannt) und der Verlauf der
+  letzten 14 Tage als Säulen in Ampelfarbe mit gestricheltem Richtwert. Ohne Fasttracking.
+- Regeln `nutrientSources` aus `pcdomain.js`; `diaryextras.js` (neu, im Service Worker), `diary.js`,
+  `diaryactions.js` (`extras-toggle`), `app.css`.
+
 ## Version 1.113.0 (23.11.2026): Injektionsintervall und Erinnerung an die Hormongabe (wie PC 1.0.189)
 
 - Superhuman → HRT → Gabe erfassen: neues Feld „Injektionsintervall (in Tagen)“ je Präparat
@@ -1709,6 +2175,269 @@ Wie PC 1.0.177 (Wünsche des Nutzers vom 22.11.2026):
 - Restdays sind grün gefüllt, Krankheitstage rot; im Tagesdetail steht oben „Restday“ bzw. „Krankheit“.
 - Erfasste Einheiten im Tagesdetail öffnen per Tipp die Einheit. `plancalendar.js`, `app.css`.
 
+## Version 1.156.0 (26.11.2026): Eigene To-do-Listen, automatisches Nachziehen (wie PC 1.0.223)
+
+- Checklisten: neben den To-dos des Tages eine Karte „Listen“ – bis zu 3 eigene Listen (z. B. Einkauf, Arbeit),
+  Auswahl per Aufklappliste; Umbenennen ✎, Löschen ✕ (samt Punkten) und Neu + als Symbole. Die Punkte gehören zum
+  gewählten Tag wie normale To-dos.
+- Offene To-dos und Listenpunkte der letzten 7 Tage wandern automatisch auf heute (beim Öffnen der Checklisten und
+  für die orangen Punkte); steht dieselbe Aufgabe heute schon da, entfällt der alte Eintrag. Die Schaltfläche
+  „offene vom Vortag übernehmen“ entfällt. Bearbeiten ✎ und Löschen ✕ als Symbole in jeder Zeile.
+- Daten: neue Tabelle `todo_list` (PC Schema 79), Spalte `todo.list_id`; Löschvermerke `todo_list:<id>`.
+- `todosdata.js` (`todoLists`, `saveList`, `deleteList`, `carryForward`, Test), `todos.js`, `openitems.js`,
+  `pending.js`, `core.js` (`TABLE_SINCE`), `accountexport.js`, `app.css`.
+
+## Version 1.157.0 (26.11.2026): Griffkraft – Hinweis zur besten Messzeit (wie PC 1.0.224)
+
+- Body & Longevity → Griffkraft: Solange heute noch nicht gemessen wurde, steht oben ein Hinweis, wann eine Messung
+  am sinnvollsten ist (dein übliches 90-Minuten-Fenster: „Jetzt ist ein guter Zeitpunkt …“, „zwischen … und … Uhr
+  (in …)“ oder „für heute vorbei – besser morgen …“; unter drei Messungen mit Uhrzeit ein allgemeiner Hinweis).
+- `gripview.js` (`D.gripTiming.gripTimingHint` aus pcdomain.js), `app.css` (`.grip__hint`).
+
+## Version 1.158.0 (26.11.2026): schnellerer Start
+
+- Messung (Testbrowser, iPhone 13, Prozessor vierfach gebremst, 60 ms Netz-Verzögerung je Anfrage wie im
+  Mobilfunk): bis Inhalt sichtbar **1,76 s → 0,38 s**; ohne Netz-Verzögerung 0,89 s → 0,39 s. Kein echtes iPhone.
+- Ursache war nicht das Rechnen, sondern das Laden: Der Service Worker fragte bei jedem Start für jede der rund
+  120 Dateien erst das Netz („online zuerst“), und die Module kamen als Wasserfall nacheinander.
+- `sw.js`: App-Dateien sofort aus dem Speicher (cache first), Installation lädt frisch (`cache: "reload"`); jeder
+  Speicher enthält genau eine Version. Andere Dateien (Pakete, Studios …) wie bisher online zuerst.
+- `app.bundle.js`: alle Module in einer Datei (esbuild, verkleinert, 2,3 MB statt rund 3,5 MB in 118 Dateien);
+  `index.html` lädt nur das Bündel. Erzeugen: `scripts/tools/handy/buendeln.mjs` über `handy-buendeln.cmd`.
+- `store.getMany`: der Start liest alle Werte des Kontos in einem Lesevorgang (bisher rund 30 nacheinander).
+- Neue Version: Übernimmt der neue Service Worker, lädt die Startseite (ohne laufendes Training und offene
+  Eingabe) sofort neu, sonst Hinweis „gilt ab dem nächsten Öffnen“.
+- Bewusst nicht umgesetzt: Bereiche erst bei Bedarf laden. Die Module hängen eng zusammen (schon `appbase.js`
+  zieht 78 der 117 Module nach); nach den beiden Änderungen oben brächte das nur noch einen kleinen Teil.
+- Geprüft im Testbrowser: alle 54 Ansichten und deren Reiter ohne Fehler und mit gleichem Inhalt wie vorher,
+  Offline-Start, Wechsel auf eine neue Version (Neuladen, neuer Speicher). `core.js` `MOBILE_VERSION` 1.158.0.
+
+
+## Version 1.159.0 (26.11.2026): Neues Magazin „Die Kartoffel“ (wie PC 1.0.225)
+
+- iCoach.me → Magazin: „Die Kartoffel. Kohlenhydrat mit Upgrade.“ (`kartoffel`, Ernährung, 8 Seiten, 1,1 MB).
+  PDF (Seiten als JPEG 1240 px, Qualität 60, A4) unter `media/icoach/magazin/`, Titelbild (280 px) unter
+  `app/icoach/magazin/`; Eintrag in `MAGAZINES` (`pcdomain.js` und `app.bundle.js` neu erzeugt).
+
+
+## Version 1.160.0 (26.11.2026): Bereiche verschieben (wie PC 1.0.226)
+
+- Eine Karte 3 Sekunden gedrückt halten → alle Karten klappen zu und wackeln leicht; ziehen ordnet neu, am oberen
+  und unteren Rand läuft die Seite mit. Leiste oben: „Standard“ (Reihenfolge zurücksetzen) und „Fertig“. Das Auge
+  an jeder Karte blendet sie aus bzw. wieder ein. Gilt für jede Ansicht und jeden Reiter.
+- `startCardArrange()` in `app.js` startet `startArranger` aus `pcdomain.js` (gemeinsamer Code mit dem PC:
+  `src/ui/cardArrangeEngine.ts`, `src/domain/cardArrange.ts`); gespeichert je Konto unter `cardArrange`.
+- Ersetzt „Karten der Seite / Anordnen“ in Settings und das frühere Anpassen im Training; Settings → Anzeige
+  erklärt die Bedienung.
+- Geprüft im Testbrowser (Maus und Touch): Start nach 3 s, Zuklappen, Verschieben, Ausblenden, Speichern über
+  Neuladen; alle 54 Ansichten ohne Fehler. Kein echtes iPhone. `core.js` `MOBILE_VERSION` 1.160.0.
+
+
+
+## Version 1.161.0 (26.11.2026): Startpaket mit 2.651 Maschinen
+
+- `startpaket.json` neu erzeugt (`scripts/tools/handy/startpaket-erzeugen.py`, Schema 79): 2.651 Maschinen
+  (vorher 2.410, Stand 22.11.) – mit Nautilus Early Series, 1st Gen, Next Gen, Nitro, 2ST, XPload, MedX Strength,
+  Rogers Pendulum und Hammer Strength als eigenem Hersteller; 56 Lebensmittel, 212 Übungen, 140 Sportarten.
+- Nur der Versionsstand ändert sich (`sw.js`, `core.js` `MOBILE_VERSION` 1.161.0), damit der Service Worker das neue
+  Startpaket lädt.
+
+## Version 1.162.0 (26.11.2026): Omega-3 zählt als Fett (wie PC 1.0.227)
+
+- Steht an einem Supplement kein Fett, aber Omega-3, zählt Omega-3 als Fett („Omega-3 Gesamt“, sonst ALA + EPA +
+  DHA + DPA; mg → g), ohne eingetragene Energie zusätzlich × 9 kcal. Eingetragenes Fett bleibt. Gilt für die
+  Einnahmen des Tages, die Tagessumme und die Makroziele (`withOmega3Fat` in `pcdb.js`: `intakesOn`,
+  `dailyTotals`; Vorschau über `nutrientsForAmount` aus `pcdomain.js`). Test in `supplements.test.mjs`.
+  `core.js` `MOBILE_VERSION` 1.162.0.
+
+## Version 1.163.0 (26.11.2026): Weitere Angaben bei Lebensmitteln (wie PC 1.0.228, Schema 80)
+
+- Lebensmittel-Formular: aufklappbar „Weitere Angaben (optional): Fettsäuren, Stärke, Wasser“ – einfach und mehrfach
+  ungesättigte Fettsäuren, Trans-Fettsäuren, Stärke und Wasser in g je 100 g/ml (`nutrition.js` `DETAIL_KEYS`,
+  `DETAIL_COLUMN`; Spalten `mono_fat_g`, `poly_fat_g`, `trans_fat_g`, `starch_g`, `water_g`; Prüfung 0–100).
+- BLS-Übernahme füllt sie aus FAMS, FAPU, STARCH und WATER (`bls.js`, Wasser höchstens 100 g), Herstellerpakete und
+  Katalog-Datei lesen und schreiben `monoFatG` … `waterG` (`vendor.js` `foodRow`, `catalogfile.js`).
+- `pcdb.mealItem` liefert die Werte je Menge (Grundlage für die Details der Tagessumme und das Wasser aus Lebensmitteln).
+  Tests in `nutrition.test.mjs` und `vendor.test.mjs`. `core.js` `MOBILE_VERSION` 1.163.0.
+
+## Version 1.164.0 (26.11.2026): Details der Tagessumme und Wasser aus Lebensmitteln (wie PC 1.0.229)
+
+- Tagebuch → Tagessumme: Knopf „Details“ klappt Fett, Protein und Kohlenhydrate auf – Energieanteil, Aufteilung
+  (gesättigt, einfach/mehrfach ungesättigt, trans; Zucker, Stärke; Aminosäuren), je Mahlzeit, „Woher“ je Lebensmittel,
+  Verlauf 14 Tage (`diarymacros.js`, Rechnung `pcdomain.macroDetails` aus `src/domain/macroDetails.ts`; Eingabe
+  `diary.js` `macroInputFor`, Aktion `macro-toggle`). Werte ohne Angabe werden genannt, nie als 0 gezählt.
+- Wasserhaushalt: Wasser aus Lebensmitteln getrennt („+ … aus Lebensmitteln“, `diary.js` `foodWaterOf`, eigenes Feld
+  sonst BLS); Schalter „zum Trinkziel zählen“ je Gerät (`prefs.waterFoodInGoal`, Aktion `water-food-goal`, Standard aus).
+- Tests `diarymacros.test.mjs`. `core.js` `MOBILE_VERSION` 1.164.0, `sw.js` `lifespan-mobil-1.164.0`.
+
+## Version 1.165.0 (26.11.2026): Aminosäuren bei Lebensmitteln, Pakete ergänzen (wie PC 1.0.230, Schema 81)
+
+- Lebensmittel-Formular: aufklappbar „Aminosäuren (optional)“ in zwei Gruppen (essenziell / nicht
+  essenziell), Werte in g je 100 g/ml, Spalte `food.aminos` als JSON-Text (`aminos.js`: `AMINOS`,
+  `parseAminos`, `aminosText`, `checkedAminosText`; Prüfung je 0–100 g, zusammen ≤ 100 g).
+- BLS-Übernahme füllt die 18 Aminosäuren (HIS … TYR), Herstellerpakete und Katalog-Datei lesen und
+  schreiben `aminos`, `pcdb.mealItem` liefert sie je Menge.
+- Details der Tagessumme: Protein mit Aufteilung essenziell / nicht essenziell und allen
+  Aminosäuren in zwei Gruppen (`diarymacros.js`, Rechnung `pcdomain.macroDetails`).
+- Herstellerpakete: eine neuere Paketversion ergänzt bei vorhandenen Einträgen des Pakets fehlende
+  Werte, Aminosäuren und die Quelle (`vendor.js` `planInstall` mit `complete: true`,
+  `completingNotes`); eigene Angaben bleiben. Tests in `vendor.test.mjs`.
+- `core.js` `MOBILE_VERSION` 1.165.0, `sw.js` `lifespan-mobil-1.165.0`.
+
+## Version 1.166.0 (26.11.2026): Platz sparen in Tagessumme und Wasserhaushalt (wie PC 1.0.231)
+
+- Tagessumme: „Weitere Nährwerte“ steht rechts in derselben Zeile wie „Details“ und klappt mit Pfeil
+  auf (`diary.js`, Aktion `sum-more-toggle`, `diarymacros.macroDetailsHtml` mit `aside`).
+- Wasserhaushalt: Koffein-Getränke, Wasser aus Lebensmitteln mit Schalter und der Bedienhinweis
+  stehen hinter einem Button „Details“ (Aktion `water-details-toggle`); nicht gesendete Änderungen
+  bleiben sichtbar.
+- `core.js` `MOBILE_VERSION` 1.166.0, `sw.js` `lifespan-mobil-1.166.0`.
+
+## Version 1.167.0 (26.11.2026): Details aufklappbar, Omega-Skala, Recovery-Punkt (wie PC 1.0.232)
+
+- Details der Tagessumme: Aminosäuren-Gruppen und „Ohne Angabe“ als `<details>` (anfangs zu, `fold()` in
+  `diarymacros.js`, Klassen `md__fold*`). Omega-6 zu Omega-3 als Skala mit DGE-Obergrenze 5 : 1
+  (`pcdomain.macroDetails.omegaScale`, Klassen `omega*`).
+- Recovery: Karte „Einschätzungen“ trägt den orangen Punkt, solange heute noch nicht eingeschätzt
+  (`logs.js` `card(…, open)` mit `data-open="status-recovery"`).
+- FAQ (über `pcdomain.js`): neue Fragen zu Makro-Details, Aminosäuren, Omega-Verhältnis, „ohne Angabe“,
+  Herstellern, Geräteeinstellungen, 3D-Karte; Karten verschieben statt „… anpassen“.
+- `core.js` `MOBILE_VERSION` 1.167.0, `sw.js` `lifespan-mobil-1.167.0`.
+
+
+## Version 1.168.0 (26.11.2026): Startpaket mit DRAX und Synergy Fitness
+
+- `startpaket.json` neu erzeugt (`scripts/tools/handy/startpaket-erzeugen.py`, ohne Supplements/Muskelfokus wie zuvor):
+  Schema 81, 2.799 Maschinen (+128 DRAX, +21 Synergy Fitness, doppelte dasGym 40 entfernt), 56 Lebensmittel,
+  212 Übungen, 140 Sportarten. Lebensmittel-Spalten für Fettsäuren, Stärke, Wasser und Aminosäuren sind enthalten.
+- `core.js` `MOBILE_VERSION` 1.168.0, `sw.js` `lifespan-mobil-1.168.0` (startpaket.json steht in den SW-Dateien).
+
+## Maschinenbilder als Nachtrag (26.11.2026)
+
+- Neue Maschinen kommen als eigenes Bilderpaket „Nachtrag …“ dazu statt alle ~95 Teile neu: am PC
+  `scripts/tools/handy/bilderpakete-nachtrag.cmd`, dann nur `index.json` und `Nachtrag-<…>.json` nach `app/bilder/`.
+  `machineimages.js` brauchte keine Änderung (mehrere Pakete mit eigenem Stand, „Alle laden“ lädt nur fehlende).
+- Erster Nachtrag `Nachtrag-20261126-2121.json`: 149 Bilder (DRAX 128, Synergy 21), 2,1 MB. Basispaket bleibt
+  „maschinenbilder“ Stand 2026-11-26 13:28 (6.662 Bilder).
+
+## Version 1.169.0 (27.11.2026): Satz-Zeitpunkt und „Wie anstrengend?“ beim Cardio
+
+- Satz-Zeitpunkt (PC Schema 82, 1.0.234): Abhaken im laufenden Training setzt `doneAt` (UTC, ISO mit ms), Abwählen
+  leert ihn; beim Bearbeiten einer Einheit (`editOf`) und beim Nachtragen kein Zeitpunkt. Nicht sichtbar.
+  Rückgabedatei: `workout_set.done_at` (nur abgehakte Sätze); PC-Stände ohne die Spalte bekommen sie nicht (`fit`).
+  Vom PC gelesen: `doneAt` aus `done_at` (`core.js`).
+- Cardio „Wie anstrengend?“ je Block (`workoutview.js` `effortRow`, Aktion `cardio-effort`): fünf Stufen aus
+  `pcdomain.js` (`cardio.CARDIO_EFFORT_LEVELS`), gespeichert als RPE 2/4/6/8/10, nochmal tippen hebt auf. Ohne Stufe
+  Hinweis „Ohne Puls und Angabe zählt der Block als Zone 2“.
+- `core.js` `MOBILE_VERSION` 1.169.0, `sw.js` `lifespan-mobil-1.169.0`; `pcdomain.js`/`app.bundle.js` neu gebaut.
+
+## Version 1.170.0 (27.11.2026): BLS-Bezug, vollständige Angaben, Open Food Facts mit Fettsäuren
+
+- Lebensmittel-Formular (`food.js`, `blsui.js` `blsLinkHtml`/`applyBlsLink`): „Passender BLS-Eintrag“ – Vorschläge aus
+  `pcdomain.js` `blsMatch.blsSuggestions` (BLS muss auf dem Handy liegen), „Übernehmen“ füllt nur leere Felder
+  (`blsMatch.blsFill`) und setzt „BLS-Bezug: Code …“ in die Notiz (`blsMatch.withBlsLink`). `bls.js`: `asBlsFood`,
+  `indexEntries`. Über den Bezug zählen BLS-Mikronährstoffe mit (`blsMicro.blsCodeOf` liest ihn auch bei eigener Marke).
+- Details der Tagessumme (`diarymacros.js` `completenessHtml`): Anteil der Lebensmittelmenge mit vollständigen Angaben
+  und „Angaben fehlen“ (`macroDetails.dayCompleteness`).
+- Open Food Facts (`off.js`): optionale Spalten „einfach“, „mehrfach“, „trans“, „staerke“ (Skript 56 ab 1.0.235),
+  `cleanExtras` wie `clean_extras` im Rust-Kern, `offToForm` füllt die weiteren Angaben. Ältere Listen bleiben gültig.
+- Tests: `off.test.mjs` (weitere Angaben), zwei alte rote Tests an den heutigen Stand angepasst
+  (`nutrition.test.mjs` Mahlzeitenliste mit Workout-Mahlzeiten, `pcsettings.test.mjs` `validateMealList`).
+- `core.js` `MOBILE_VERSION` 1.170.0, `sw.js` `lifespan-mobil-1.170.0`; `pcdomain.js`/`app.bundle.js` neu gebaut.
+
+## Version 1.171.0 (27.11.2026): Messbedingungen
+
+- Messbedingung je Körperwert und Griffkraft (PC Schema 83): `waking` (nach dem Aufstehen, nüchtern), `morning`,
+  `day`, `evening`, `post_training`, `night`. `bodydata.js`: Spalte `condition` (`MEASUREMENT_COLUMNS`), `saveValue`
+  (fehlt = Wert der Vorlage, leer = keine Angabe), `saveDay` mit `conditions` je Bereich (nur Gewicht,
+  Zusammensetzung, Vitalwerte – `WITH_CONDITION`), `dayForm` liefert die häufigste Bedingung je Bereich.
+  `body.js`: Auswahl im Formular „Wert erfassen“ und in der Tageserfassung, Anzeige in der Liste.
+  `logsdata.js` `saveGrip` und `GRIP_COLUMNS` mit `condition`, `gripview.js` mit Auswahl und Anzeige.
+  `pcoverview.js` `measurement` gibt `condition` weiter. `pcdomain.js` exportiert `conditions`.
+- `core.js` `MOBILE_VERSION` 1.171.0, `sw.js` `lifespan-mobil-1.171.0`; `pcdomain.js`/`app.bundle.js` neu gebaut.
+
+## Version 1.172.0 (27.11.2026): Persönlicher Normalbereich in Insights
+
+- Karte „Persönlicher Normalbereich“ (`insightsview.js` `normalRangeCard`, wie `NormalRangeCard.tsx` am PC 1.0.237):
+  HRV, Ruhepuls, Schlafdauer, Körpergewicht, Griffkraft (stärkere Hand) – Median ± eine Standardabweichung der letzten
+  60 Tage, nur gleiche Messbedingung (`pcdomain.js` `normalRange`), jüngster Wert mit Lage, mehrere Werte hintereinander
+  außerhalb, andere Messbedingung; allgemeine Norm mit Quelle daneben (BMI-Gewicht aus der Körpergröße des Profils).
+- `core.js` `MOBILE_VERSION` 1.172.0, `sw.js` `lifespan-mobil-1.172.0`; `pcdomain.js`/`app.bundle.js` neu gebaut.
+
+## Version 1.173.0 (27.11.2026): Insights → Training mit Vorschlägen
+
+- Insights-Karte „Training“ (`insightsview.js` `trainingInsightsCard`, wie PC 1.0.238): Split der letzten Einheiten,
+  Häufigkeit je Bereich, Kraftverlauf (e1RM), Cardio je Woche, Satzpausen aus dem Satz-Zeitpunkt, „Vorschläge zur
+  Übungsauswahl“ aus dem Regelkatalog (`pcdomain.trainingRules`, ab 3 Einheiten, mit Begründung und Quelle; Gegenrichtungen
+  als „Vorschlag zur Abwechslung“), „Erholung am Folgetag“ (`pcdomain.trainingRecovery`).
+  Wade mit Abbildung `icons/wade-anatomie.svg` (im Service Worker vorgeladen).
+- `pcoverview.js` `setLog`: `doneAt` je Satz.
+- `core.js` `MOBILE_VERSION` 1.173.0, `sw.js` `lifespan-mobil-1.173.0`; `pcdomain.js`/`app.bundle.js` neu gebaut.
+
+## Version 1.174.0 (27.11.2026): Koffein nach 14 Uhr, Zeitraum bei Zusammenhängen, Wochenbericht im Detail
+
+- Insights „Koffein und Schlaf“ (`parity.js`): zusätzlich „Koffein nach 14 Uhr und Schlafdauer/-qualität“
+  (`pcdomain.insightsDaily.caffeineAfterSeries`). Alle Zusammenhänge nennen den Zeitraum der gemeinsamen Tage.
+- Weekly Reports: Abschnitt „Ernährung im Detail“ und „Eiweiß und Leucin je Mahlzeit“ in Berichten ab PC 1.0.239
+  (Anzeige über `pcdomain.weeklyReportHtml`).
+- `core.js` `MOBILE_VERSION` 1.174.0, `sw.js` `lifespan-mobil-1.174.0`; `pcdomain.js`/`app.bundle.js` neu gebaut.
+
+## Version 1.175.0 (27.11.2026): Blutwerte und Zufuhr
+
+- Health → Verlauf: Karte „Blutwerte und Zufuhr“ (`health.js` `labIntakeHtml`, Aktion `lab-intake`, wie PC 1.0.240):
+  je Abnahme Vitamin D, B12, Folsäure, Ferritin/Eisen, Zink, Magnesium, Natrium, Kalium, Calcium neben der Ø Zufuhr der
+  90 Tage davor (`pcdomain.labNutrition`, Tageswerte `diary.dayIntakeValues`).
+- `core.js` `MOBILE_VERSION` 1.175.0, `sw.js` `lifespan-mobil-1.175.0`; `pcdomain.js`/`app.bundle.js` neu gebaut.
+
+## Version 1.176.0 (27.11.2026): Aktivitäten aus FIT- und TCX-Dateien
+
+- Import/Export: Karte „Aktivitäten aus FIT- oder TCX-Dateien“ (`watchparity.js` `activityImportHtml`, Datei-Feld
+  `activity-in` in `app.js`, Aktion `act-save`): Vorschau, gleiche Startzeit am selben Tag wird übersprungen, Speichern als
+  abgeschlossene Cardio-Einheit (`pcdomain.activityFile`), geht mit „An den PC senden“ an den PC.
+- `core.js` `MOBILE_VERSION` 1.176.0, `sw.js` `lifespan-mobil-1.176.0`; `pcdomain.js`/`app.bundle.js` neu gebaut.
+
+## Version 1.177.0 (27.11.2026): kcal brutto und netto
+
+- Cardio-Blöcke: neben `device_kcal` (kcal brutto laut Gerät) gibt es `device_kcal_net` (kcal netto, PC Schema 84);
+  `trainingdata.js` (`CARDIO`), Anzeige im Cardio-Verlauf (`trainingstats.js`: „Gerät 450 brutto / 320 netto“) und im
+  Energieverbrauch (`pcdb.js`, Text aus `pcdomain.describeCardioEnergy`).
+- `core.js` `MOBILE_VERSION` 1.177.0, `sw.js` `lifespan-mobil-1.177.0`; `pcdomain.js`/`app.bundle.js` neu gebaut.
+
+## Version 1.178.0 (27.11.2026): Polar-Schlaf vollständiger
+
+- Health → Schlaf, „Letzte Nacht im Detail“ (`heart.js` `nightDetailHtml`): Schlafeffizienz (`W.sleepEfficiencyPct`, wie
+  PC), nicht erkannte Phase, Hinweis Polar-Bewertung → Qualität und neuer Block „Nightly Recharge (Polar)“ mit Ø Puls,
+  Ø HRV, Ø Atemfrequenz, Ø Schlag-zu-Schlag-Intervall, ANS Charge und Recharge-Status.
+- `wearabledata.js`: `sleepEfficiencyPct`, `describeSync` nennt „Ruhepuls in Body & Longevity“ (von Hand wie
+  `src/domain/wearable.ts` ergänzt).
+- `core.js` `MOBILE_VERSION` 1.178.0, `sw.js` `lifespan-mobil-1.178.0`; `pcdomain.js`/`app.bundle.js` neu gebaut.
+
+## Version 1.179.0 (27.11.2026): Mängel aus der Sichtprüfung
+
+- „Gemessene Erholung“ und Nightly Recharge ohne den Zusatz „laut Polar“ (`heart.js`).
+- `wearabledata.js` `measuredSleepMin`: Nacht ohne Messung (alle Phasen 0) = keine Angabe statt „0 min“ (wie PC).
+- `core.js` `MOBILE_VERSION` 1.179.0, `sw.js` `lifespan-mobil-1.179.0`; `pcdomain.js`/`app.bundle.js` neu gebaut.
+
+## Version 1.180.0 (27.11.2026): Sleep grafisch
+
+- Sleep oben neue Karten wie am PC 1.0.245 (`sleepviz.js`, Rechnungen `pcdomain.sleepVisual` = `src/domain/sleepVisual.ts`):
+  Schlafverlauf (Nacht wählbar, `S.sleepHypno`), Nightly Recharge (ANS Charge je Nacht), Anteile der Phasen (Ring),
+  Schlafphasen je Nacht (gestapelt, Schlafziel), Schlaffenster je Nacht (Schlafmitte), Schlafdauer und HRV (Punktwolke,
+  r ab 10 Nächten), Koffein und Schlafdauer (letztes Koffein ab 14 Uhr gegen sonst), niedrigste Herzfrequenz und HRV.
+- Jede Karte erklärt hinter dem ⓘ: was du siehst, was es aussagt, wie du anpasst (Texte wie am PC).
+- CSS in `app.css` (`.sleep-viz…`); `core.js` `MOBILE_VERSION` 1.180.0, `sw.js` `lifespan-mobil-1.180.0`;
+  `pcdomain.js`/`app.bundle.js` neu gebaut.
+
+## Version 1.181.0 (27.11.2026): Die Masterclass Schlaf
+
+- **iCoach.me → Downloads:** viertes Buch „Die Masterclass Schlaf“ (179 Seiten, 10 Teile, 44 Kapitel). PDF auf GitHub
+  Pages unter `media/icoach/books/iCoachMe_Die_Masterclass_Schlaf.pdf` (wie die anderen Bücher mit qpdf AES-256 und
+  Benutzerpasswort verschlüsselt).
+- **Ask iCoach.me:** Gruppe „Masterclass Schlaf“ aus `icoach/icoachme-faq-schlaf.json` (673 Fragen, IDs
+  S<Teil>-<Nr>). Buchliste und Buchangaben kommen aus `pcdomain.js` (PC 1.0.246).
+- Geändert: `icoach.js` (`BOOK_FILES`, `FAQ_FILES`), `pcdomain.js` neu erzeugt, `core.js` `MOBILE_VERSION` 1.181.0,
+  `sw.js` `lifespan-mobil-1.181.0`.
+
 ## Version 1.182.0 (27.11.2026): Mahlzeit erfassen – Suche ohne Springen
 
 - Suchfeld steht direkt unter Mahlzeit/Uhrzeit (vor „Wie immer?“). Antippen startet den Suchmodus:
@@ -1720,3 +2449,66 @@ Wie PC 1.0.177 (Wünsche des Nutzers vom 22.11.2026):
 - „Fertig“ leert die Suche, schließt die Tastatur und springt zu „Wird eingetragen“.
 - „Wie immer“ / „Oft gegessen“ / „Wie gestern“: nochmal antippen nimmt den Vorschlag wieder vom
   Teller („✓ Entfernen“), ohne dass die Seite springt.
+
+## Version 1.183.0 (27.11.2026): Gewicht 0,25–600 kg
+
+- Training: Gewicht je Satz wie am PC (1.0.250) nur 0,25 bis 600 kg; 0 kg gilt als „ohne Gewicht“.
+  RPE 1–10 war schon so. Die Meldung nennt jetzt den erlaubten Bereich.
+- Körperwerte: die neuen Bereiche der mitgelieferten Messgrößen (PC Migration 0085) kommen mit der
+  nächsten Handy-Datei vom PC; Body prüft sie wie bisher aus `min_value`/`max_value`.
+
+## Version 1.184.0 (27.11.2026): Bereiche verschieben mit Miniatur
+
+- Beim Verschieben (3 s halten) klappen die Karten nicht mehr zu: Sie werden zu Miniaturen mit
+  Überschrift in voller Größe und verkleinertem Inhalt (`zoom`, unten ausgeblendet, höchstens 11rem),
+  die gezogene Karte bekommt einen orangen Rahmen. Nur CSS (`app.css`), wie PC 1.0.251.
+
+## Version 1.185.0 (28.11.2026): Trainingsstart, Verbindungen, „Was passt noch?“
+
+- Willkommen: Der Weg der Exportdatei stimmt wieder (PC: Import/Export → „Für die Handy-App exportieren“,
+  Datei `LIFESPAN-Handy-…json` im Handy-Ordner). Fehlermeldung in `core.js` ebenso.
+- „Training“ in der unteren Leiste und im Menü führt immer zu den Einheiten (`appactions.js` `menu-go`) –
+  auch mit orangem Punkt für fehlende Schritte; der Punkt bleibt und zeigt im Untermenü auf NEAT.
+- Training → Einheiten (`training.js`): ein Hauptknopf „Heute: <Tag> starten“ wie PC 1.0.254
+  (`D.todayStart`: Termin bzw. nächster Tag nach `O.nextPlanDay`, sonst nach dem Namen der letzten
+  Einheit, sonst erster Tag des ersten Plans; ohne Plan „Freies Training starten“). Darunter Grund und
+  Muskelerholung der Gruppen des Tags (`D.recoveryCockpit.muscleRecovery/plannedGroups`). Neu am Handy:
+  HRV-Regel mit „Leichter starten (−20 %)“ (`startWorkout(…, light)`, Titel „(leicht)“). Die übrigen
+  Wege (Tag aus Plan, Freies Training, Nachtragen, Cardio) liegen unter „Anderes Training, Cardio oder
+  nachtragen“ (`S.trainMore`); Restday und Krankheit bleiben sichtbar.
+- Verbindungen (`connections.js`, Regeln aus `src/domain/conn*.ts` über `D.connections`): vier Karten in
+  Insights (`connections-diet/-training/-sleep/-health`) und die Schlaf-Karte auch unter Sleep. Daten wie
+  am PC (`connInput`): 105 Tage Insights-Daten, Mahlzeiten/Wasser/Koffein/Stoffe der letzten 56 Tage
+  (`D.connIntake.dayIntake`, `diary.js` `connMicro` mit Abdeckung und Alkohol aus dem BLS). Ergebnis
+  höchstens einmal je Minute gerechnet (`S.connCache`). Bewertung und Empfehlung nur mit Einwilligung;
+  Werte und Fundstellen aufklappbar, Rechenweg hinter dem ⓘ der Karte.
+- Startknopf bei Plänen mit nur einem Trainingstag: Die Trainingstage aller Pläne wechseln sich ab
+  (`D.todayStart`, wie PC) – der am längsten nicht trainierte Tag ist dran.
+- Verbindungen „Plateau“ und „Dosis und Wirkung“ rechnen mit den Muskelgruppen der App wie die
+  Körperkarte (`connInput` gibt `machines` und `focus` mit: `machinesOf`/`focusIndex` aus `overview.js`
+  über den Modul-Kontext, damit `connections.js` in den Node-Tests ohne Oberfläche ladbar bleibt).
+- Nutrition → Tagessumme: „Was passt noch?“ (`fitList`, `fitRestHtml`, Aktion `fit-add`) mit Vorschlägen
+  aus eigenen Zusammenstellungen und häufigen Lebensmitteln, ein Tipp trägt ein (`quickAdd`, „Rückgängig“).
+- Tagesaussage (`connections.js`: `verdictData`, `verdictCardBody`, `verdictLineHtml`; Regel
+  `D.dayVerdict` wie PC 1.0.254): dieselbe Stufe und Empfehlung in Overview (Karte „Tagesaussage“ statt
+  „Bereitschaft“, Karten-Id `readiness` bleibt), Recovery (eigene Karte oben) und Insights (eine Zeile über
+  den Karten). Erholungswert wie am PC (`D.recoveryCockpit.recoveryDays`, Uhr-Zeilen aus dem Export),
+  Bremsen aus HRV-Regel, Belastung und Griffkraft, Dauerthemen aus den Hauptziel-Regeln. Empfehlung und
+  Dauerthemen nur mit Einwilligung; Rechenweg und Fundstellen hinter dem ⓘ.
+- Brustgurt (`cheststrap.js`, Regeln `D.chestStrap` wie PC 1.0.254): in Recovery → ANS-Werte erfassen
+  „Ruhepuls und HRV mit dem Brustgurt messen“. Gelesen wird über Web Bluetooth (Pulsdienst, Merkmal
+  „Heart Rate Measurement“; Auswahl des Geräts durch den Browser), 60 s Einpendeln + 120 s Messung,
+  Bildschirm bleibt wach (`navigator.wakeLock`, wo vorhanden). „Werte übernehmen“ speichert Ruhepuls,
+  HRV und Ø Schlag-Abstand mit Messmethode „Brustgurt“ und der Uhrzeit. Web Bluetooth gibt es in
+  Chrome (Android, Windows, macOS); **Safari auf dem iPhone bietet es nicht an** – dort zeigt der
+  Baustein nur den Hinweis, am PC zu messen oder von Hand einzutragen. Geprüft mit einer Attrappe für
+  `navigator.bluetooth` (Playwright), nicht mit einem echten Gurt.
+- Health → Heart ohne Uhr-Daten: Der leere Zustand nennt alle Wege (Polar-Abgleich, Geräte-Import,
+  Brustgurt bzw. Handeingabe).
+- `pcdomain.js` neu erzeugt (enthält seitdem auch die Wertebereiche aus `inputLimits.ts`).
+- Tests: `node --test *.test.mjs` 207 bestanden. Dabei behoben: `core.test.mjs` kennt Umbau-Tabellen
+  „…_new“ (Migration 86), `mealplate.js` meldet Ereignisse nur an, wenn es ein Dokument gibt (der Test
+  `weeklyreports.test.mjs` lief unter Node nicht mehr).
+- Geprüft im iPhone-13-Format (Playwright) mit einer Testdatei aus 10 Wochen erzeugter Daten: Start,
+  Training, Insights, Sleep, Tagessumme mit Eintragen.
+

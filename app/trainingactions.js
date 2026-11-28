@@ -41,6 +41,13 @@ export const trainingActions = {
     X.rerender();
   },
   "train-start-plan-day": (el) => X.startPlanDay(el.dataset.arg),
+  // „Heute: … starten“ bzw. „Leichter starten (−20 %)“ (1.185.0)
+  "train-start-today": (el) => X.startPlanDay(el.dataset.arg, el.dataset.light === "1"),
+  // „Anderes Training, Cardio oder nachtragen“ auf- und zuklappen (bleibt für die Sitzung)
+  "train-more": () => {
+    X.S.trainMore = !X.S.trainMore;
+    X.rerender();
+  },
   "train-backfill": () => X.startBackfill(today()),
   // Kalender der Einheiten (1.103.0)
   "train-backfill-on": (el) => X.startBackfill(el.dataset.arg || today()),

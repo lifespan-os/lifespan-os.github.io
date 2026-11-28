@@ -26,11 +26,12 @@ import { goalChange, initGoals, viewGoals } from "./goalsui.js";
 import * as GL from "./goals.js";
 import { blsBoot, blsChange, blsInput, initBls, viewBls } from "./blsui.js";
 import { initOff, offBoot } from "./offui.js";
-import { initOverview, minutesSince, overviewChange, shiftOverviewDay } from "./overview.js";
+import { focusIndex, initOverview, machinesOf, minutesSince, overviewChange, shiftOverviewDay } from "./overview.js";
 import { initDaySwipe } from "./dayswipe.js";
 import { initLogs, logsChange, logsInput, viewLogEdit, viewRecovery, viewSleep } from "./logs.js";
 import * as LG from "./logsdata.js";
 import { initInsights, viewInsights } from "./insightsview.js";
+import { initConnections } from "./connections.js";
 import { initOneInput } from "./oneinput.js";
 import { initWeeklyReports } from "./weeklyreports.js";
 import { initTodos, todoChange, todoInput, viewChecklistEdit, viewTodos } from "./todos.js";
@@ -435,6 +436,9 @@ const moduleCtx = {
   go: (view, arg) => go(view, arg),
   confirmTwice: (el, text) => confirmTwice(el, text),
   refreshCatalog: () => refreshCatalog(),
+  /** Maschinen und Muskelfokus wie in der Körperkarte (für Sätze je Muskelgruppe, connections.js) */
+  machinesOf: () => machinesOf(S.catalog),
+  focusIndex: () => focusIndex(S.catalog),
   /** Trainings vom Handy als Tabellen (für die Rechnung wie am PC) */
   buildReturnTables: () =>
     C.buildReturnFile(S.catalog, S.localExercises, S.workouts.filter((w) => w.status === "done"), new Date()).tables,
@@ -501,6 +505,7 @@ initDaySwipe(
 initLogs(moduleCtx);
 
 initInsights(moduleCtx);
+initConnections(moduleCtx);
 initOneInput(moduleCtx);
 
 initExtras(moduleCtx);
@@ -534,7 +539,7 @@ const trainingCtx = {
   setNotice: (tone, text) => trainSetNotice(tone, text),
   failed: (e) => trainFailed(e),
   saveExerciseRow: (row, patch) => saveExerciseRow(row, patch),
-  startPlanDay: (id) => startPlanDay(id),
+  startPlanDay: (id, light = false) => startPlanDay(id, light),
   startFree: () => startWorkout("Freies Training"),
   startBackfill: (date) => startBackfill(date),
   startCardio: (id) => startBackfill(todayIso(), id),

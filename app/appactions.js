@@ -563,8 +563,13 @@ export const actions = {
   "menu-open": () => setMenu(true),
   "menu-go": (el) => {
     S.menuOpen = false;
-    // Links auf einen Reiter (wie #/training?tab=neat am PC); aus dem Menü immer der erste Reiter
-    if (el.dataset.arg === "training") S.trainTab = el.dataset.tab ?? (el.closest(".drawer") ? "workouts" : S.trainTab ?? "workouts");
+    // Links auf einen Reiter (wie #/training?tab=neat am PC). Aus dem Menü und der unteren Leiste führt
+    // „Training“ seit 1.185.0 immer zu den Einheiten (Trainingsstart) – auch mit orangem Punkt für
+    // fehlende Schritte; der Punkt bleibt und zeigt im Untermenü auf NEAT.
+    if (el.dataset.arg === "training") {
+      const fromNav = Boolean(el.closest(".drawer") || el.closest(".tabbar"));
+      S.trainTab = fromNav ? "workouts" : (el.dataset.tab ?? S.trainTab ?? "workouts");
+    }
     // Schritte aus der Overview (1.87.0): Tag der Overview öffnen und zum Feld „Schritte am Tag“ springen
     if (el.dataset.neatDate) {
       S.trainNeatDate = el.dataset.neatDate === todayIso() ? null : el.dataset.neatDate;

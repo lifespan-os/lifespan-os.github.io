@@ -5,6 +5,7 @@
 // Logik: logsdata.js (wie der Rust-Kern), Rechenregeln aus pcdomain.js (= src/domain).
 // Änderungen gehen mit „Körperwerte senden“ an den PC.
 
+import { connData, connectionsCard, verdictCardBody, verdictData } from "./connections.js";
 import { arrangeCards } from "./layoutedit.js";
 import * as P from "./pcdb.js";
 import * as O from "./pcoverview.js";
@@ -17,11 +18,13 @@ import { measuredSleepHtml, wearableOf } from "./heart.js";
 import { sleepVizCards } from "./sleepviz.js";
 import { caffeineIntakesOn, caffeineSettings, sleepCaffeineHtml } from "./icoach.js";
 import { autoAttrs, autoSaveHtml } from "./autosave.js";
+import { initChestStrap, strapActions, strapPanelHtml } from "./cheststrap.js";
 
 let X = null; // { S, esc, header, toast, store, uuid, rerender, go, confirmTwice }
 
 export function initLogs(ctx) {
   X = ctx;
+  initChestStrap(ctx, adoptStrap);
   document.addEventListener("pointermove", nightHover);
   document.addEventListener("pointerdown", nightHover);
 }
@@ -246,6 +249,8 @@ export function viewSleep() {
   }) });
   // Koffein vor dem Schlafen (1.45.5, wie SleepCaffeineCard am PC)
   cards.push({ id: "caffeine", node: sleepCaffeineHtml(logs, t) });
+  // Verbindungen: Schlaf-Hebel am Vorabend und Alkohol (1.185.0, wie PC 1.0.254; auch in Insights)
+  if (logs.length) cards.push({ id: "connections-sleep", node: connectionsCard((id, title, meta, body, o = {}) => card(title, meta, body, o.area ?? ""), "sleep", connData(db, t), t) });
   if (logs.length || naps.length) cards.push({ id: "entries", node: entriesCard(logs, naps, napMin) });
   out += arranged(db, "ui.sleep_layout", cards);
   return `${out}</main>`;
@@ -525,6 +530,7 @@ function editVitalsView(f) {
   return `${X.header("ANS-Werte erfassen", { back: "recovery", sub: D.ANS_TITLE })}<main class="wrap">
     <section class="card card--recovery ov-card logs-form" ${autoAttrs("log")}>
       <p class="muted small">Manuell übertragene Messwerte, z. B. von Uhr, Brustgurt oder App. Sie werden unter Body &amp; Longevity gespeichert. Alle Werte sind freiwillig. Werte vom PC entfernst du am PC; ein geleertes Feld entfernt einen hier erfassten, noch nicht gesendeten Wert.</p>
+      ${strapPanelHtml()}
       ${field("date", "Messdatum", d.date, { type: "date", error: e.date })}
       ${selectField("method", "Messmethode", d.method, [["", "Keine Angabe"], ...methods.map((m) => [m, m])], {
         hint: methods.length ? "Gilt für alle Werte dieses Messdatums." : "Messmethoden legst du unter Settings → Messmethoden (Vitalwerte) an.",
@@ -578,6 +584,8 @@ export function viewRecovery() {
       ${open ? `<p class="muted small">${open} ${open === 1 ? "Änderung" : "Änderungen"} noch nicht am PC · <button class="linkbtn" data-go="send">An den PC senden</button></p>` : ""}
     </section>`;
   const cards = [];
+  // Tagesaussage (1.185.0, wie PC 1.0.254): dieselbe Aussage wie Overview und Insights
+  cards.push({ id: "verdict", node: card("Tagesaussage", "Heute", verdictCardBody(verdictData(db, t)), "recovery") });
   if (!logs.length) {
     out += card("Keine Einschätzungen in diesem Zeitraum", "", `<p class="muted">Schätze täglich ein, wie erholt, müde, verkatert oder gestresst du dich fühlst. Es wird nichts berechnet oder bewertet.</p>`, "recovery");
   } else {
@@ -706,6 +714,7 @@ function vitalsDraft(date) {
 }
 
 export const logsActions = {
+  ...strapActions,
   "night-caffeine": () => {
     X.S.nightCaffeine = !X.S.nightCaffeine;
     X.rerender();
@@ -806,6 +815,23 @@ function recDraft(r, date) {
   return r
     ? { id: r.id, date: r.date, readiness: str(r.readiness), fatigue: str(r.fatigue), soreness: str(r.soreness), stress: str(r.stress), notes: r.notes ?? "" }
     : { id: null, date, readiness: "", fatigue: "", soreness: "", stress: "", notes: "" };
+}
+
+/**
+ * Ergebnis der Gurt-Messung (cheststrap.js) in „ANS-Werte erfassen“ übernehmen und speichern:
+ * Ruhepuls, HRV und mittlerer Schlag-Abstand mit Messmethode „Brustgurt“ und der Uhrzeit von jetzt.
+ */
+function adoptStrap(r) {
+  const f = X.S.logEdit;
+  if (!f || f.kind !== "vitals") return;
+  const input = (v, decimals) => (v === null || v === undefined ? "" : String(Number(v).toFixed(decimals)).replace(".", ","));
+  f.draft.values[VITALS[0].id] = input(r.restingHr, 0);
+  f.draft.values[VITALS[1].id] = input(r.rmssdMs, 1);
+  f.draft.values[VITALS[3].id] = input(r.meanRrMs, 0);
+  f.draft.method = D.chestStrap.STRAP_METHOD;
+  const now = new Date();
+  f.draft.time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  void saveVitals(f);
 }
 
 async function saveVitals(f) {

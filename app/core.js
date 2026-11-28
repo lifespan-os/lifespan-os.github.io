@@ -11,7 +11,7 @@ import { appDay } from "./appday.js";
 
 export const FORMAT_NAME = "performance-os-export";
 export const FORMAT_VERSION = 2;
-export const MOBILE_VERSION = "1.184.0";
+export const MOBILE_VERSION = "1.185.0";
 
 // ------------------------------------------------------------------ IDs und Zeit
 
@@ -285,7 +285,7 @@ export function parseExport(text) {
   doc = expanded.doc;
   const knownColumns = { ...(doc.columns ?? {}), ...expanded.columns };
   if (!doc || doc.format !== FORMAT_NAME) {
-    throw new Error("Das ist keine Exportdatei von LIFESPAN OS (performance-os-export.json).");
+    throw new Error("Das ist keine Exportdatei von LIFESPAN OS. Am PC: Import/Export → „Für die Handy-App exportieren“ (Datei LIFESPAN-Handy-…json).");
   }
   if (!Number.isInteger(doc.schemaVersion) || doc.schemaVersion < 38) {
     throw new Error(

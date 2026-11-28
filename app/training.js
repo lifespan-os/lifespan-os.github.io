@@ -14,7 +14,7 @@ import * as HX from "./hyrox.js";
 import * as CD from "./checklistdata.js";
 import { buildDb, today } from "./diary.js";
 import { hasWearable, workoutHeartHtml, workoutHeartOf } from "./heart.js";
-import { energyHtml, stepGoalBar } from "./overview.js";
+import { energyHtml, focusIndex, machinesOf, stepGoalBar } from "./overview.js";
 import { REVIEW_LAYOUT_KEY, viewCardioTab, viewProgressTab, viewReviewTab } from "./trainingstats.js";
 import { DB_LAYOUT_KEY, viewDatabaseTab } from "./trainingdb.js";
 import { layoutEditing } from "./layoutedit.js";
@@ -183,7 +183,48 @@ export function workoutsTab() {
   void exercises;
   const planSel = S.trainPlanDay && dayOptions.some((o) => o.value === S.trainPlanDay) ? S.trainPlanDay : "";
   const cardioSel = S.trainCardio && cardioOptions.some((o) => o.id === S.trainCardio) ? S.trainCardio : "";
-  const actions = `<div class="workouts-actions">
+  // Ein Hauptknopf (1.185.0, wie PC 1.0.254): der Trainingstag, den auch die Overview als nächsten zeigt
+  const TS = D.todayStart;
+  const startPlans = plans.map((p) => ({
+    id: p.row.id,
+    name: p.row.name,
+    days: [...p.days]
+      .sort((x, y) => (x.row.position ?? 0) - (y.row.position ?? 0))
+      .map((d) => ({ id: d.row.id, name: d.row.name, exercises: d.exercises.map((e) => ({ exerciseName: db.exercises.get(e.exerciseId)?.name ?? "" })) })),
+  }));
+  const start = TS.todayStart(startPlans, O.nextPlanDay(db, plans, day0), day0, summaries);
+  let startInfo = null;
+  if (start && !a) {
+    const RC = D.recoveryCockpit;
+    const machines = machinesOf(S.catalog);
+    const focus = focusIndex(S.catalog);
+    const exList = O.exercisesOf(db);
+    startInfo = TS.startMuscleText(TS.startMuscles(RC.plannedGroups(start.exerciseNames, exList, machines, focus), RC.muscleRecovery(O.setLog(db), exList, machines, summaries, Date.now(), focus)));
+  }
+  // HRV-Regel wie am PC: heute mehr als 20 % unter dem Mittel der 7 Vortage → leichter starten
+  const hrvRule = D.hrvRuleToday(O.measurementsBetween(db, O.HRV_METRIC_ID, P.addDays(day0, -8), day0), day0);
+  const dayButtons = `<button class="btn ${todayStatus?.kind === "rest" ? "primary" : ""}" data-act="train-day" data-arg="${todayStatus?.kind === "rest" ? "" : "rest"}" aria-pressed="${todayStatus?.kind === "rest"}" title="Heute kein Training – Regeneration">🛏 Restday</button>
+        <button class="btn ${todayStatus?.kind === "sick" ? "primary" : ""}" data-act="train-day" data-arg="${todayStatus?.kind === "sick" ? "" : "sick"}" aria-pressed="${todayStatus?.kind === "sick"}" title="Heute kein Training wegen Krankheit">🌡 Krankheit</button>`;
+  const hero = `<div class="start-hero">
+      ${hrvRule && !a ? `<p class="warn small" role="status">${esc(D.hrvRuleText(hrvRule))}</p>` : ""}
+      ${
+        a
+          ? `<button class="btn primary block start-hero__main" data-go="workout">▶ ${a.editOf ? "Weiter bearbeiten" : "Training fortsetzen"}: ${esc(a.title)}</button>`
+          : start
+            ? `<button class="btn primary block start-hero__main" data-act="train-start-today" data-arg="${esc(start.dayId)}">▶ ${esc(start.button)}</button>
+               ${hrvRule ? `<button class="btn block" data-act="train-start-today" data-arg="${esc(start.dayId)}" data-light="1" title="Gewicht der Arbeitssätze −20 %, Wiederholungen wie im Plan">▶ Leichter starten (−20 %)</button>` : ""}
+               <p class="muted small start-hero__reason">${esc(start.reason)}${startInfo ? ` ${esc(startInfo)}` : ""}</p>`
+            : `<button class="btn primary block start-hero__main" data-act="start-free">▶ Freies Training starten</button>`
+      }
+      ${activeGymSelectHtml(blocked)}
+      <div class="start-grid">${dayButtons}</div>
+    </div>`;
+  const more = Boolean(S.trainMore);
+  const actions = `${hero}
+    <button class="linkbtn start-more" data-act="train-more" aria-expanded="${more}">${more ? "▾" : "▸"} Anderes Training, Cardio oder nachtragen</button>
+    ${
+      more
+        ? `<div class="workouts-actions">
       ${
         dayOptions.length
           ? `<div class="pick-row"><div class="field"><label for="w-from-plan">Trainingstag aus Plan</label>
@@ -193,12 +234,9 @@ export function workoutsTab() {
           <button class="btn" data-act="train-start-day" ${!planSel || blocked ? "disabled" : ""}>▶ Starten</button></div>`
           : ""
       }
-      ${activeGymSelectHtml(blocked)}
       <div class="start-grid">
-        <button class="btn primary" data-act="start-free" ${blocked ? "disabled" : ""}>▶ Freies Training</button>
+        ${start ? `<button class="btn" data-act="start-free" ${blocked ? "disabled" : ""}>▶ Freies Training</button>` : ""}
         <button class="btn" data-act="train-backfill" ${blocked ? "disabled" : ""}>Nachtragen</button>
-        <button class="btn ${todayStatus?.kind === "rest" ? "primary" : ""}" data-act="train-day" data-arg="${todayStatus?.kind === "rest" ? "" : "rest"}" aria-pressed="${todayStatus?.kind === "rest"}" title="Heute kein Training – Regeneration">🛏 Restday</button>
-        <button class="btn ${todayStatus?.kind === "sick" ? "primary" : ""}" data-act="train-day" data-arg="${todayStatus?.kind === "sick" ? "" : "sick"}" aria-pressed="${todayStatus?.kind === "sick"}" title="Heute kein Training wegen Krankheit">🌡 Krankheit</button>
       </div>
       ${
         cardioOptions.length
@@ -209,7 +247,9 @@ export function workoutsTab() {
           <button class="btn" data-act="train-cardio" ${!cardioSel || blocked ? "disabled" : ""}>Erfassen</button></div>`
           : ""
       }
-    </div>`;
+    </div>`
+        : ""
+    }`;
   const banner = todayStatus
     ? `<div class="day-status-banner day-status-banner--${todayStatus.kind}" role="status"><span><strong>Heute: ${KIND_LABELS[todayStatus.kind]}</strong>${
         todayStatus.kind === "rest" ? ` – kein Training, Regeneration${streak > 1 ? ` · ${streak}. Restday in Folge` : ""}` : " – kein Training wegen Krankheit"

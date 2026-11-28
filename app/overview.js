@@ -3,6 +3,7 @@
 // unter „Übersicht anpassen“ gewählt ist (Settings `ui.overview_layout`). Daten: pcoverview.js
 // (wie der Rust-Kern), Rechnung: pcdomain.js (= src/domain der Desktop-App).
 
+import { verdictCardBody, verdictData } from "./connections.js";
 import { arrangeCards } from "./layoutedit.js";
 import * as P from "./pcdb.js";
 import * as O from "./pcoverview.js";
@@ -286,25 +287,9 @@ function dashboardCards(data, w, isToday) {
   const exportText = isToday && exportState.due ? exportState.text : null;
   const machineIds = new Set(w.exercises.filter((e) => e.machineId).map((e) => e.id));
 
-  // Tagesbereitschaft
-  const r = D.dashboard.readiness(insights, today, goal?.sleepMin ?? null, w.grip ?? []);
-  const readinessCard = card(
-    "readiness",
-    "Tagesbereitschaft",
-    isToday ? "Heute" : "An diesem Tag",
-    `<div class="readiness"><span class="readiness__light readiness__light--${r.level ?? "none"}" role="img" aria-label="${esc(r.level ? `Ampel ${LEVEL(r.level)}` : "Keine Einschätzung")}"></span>
-      <p class="readiness__headline">${esc(r.headline)}</p></div>
-    ${
-      r.factors.length
-        ? `<ul class="readiness__factors">${r.factors
-            .map((f) => `<li><span class="readiness__dot readiness__dot--${f.level}" aria-hidden="true"></span><strong>${esc(f.label)}:</strong> ${esc(f.text)}</li>`)
-            .join("")}</ul>`
-        : ""
-    }
-    ${r.missing.length ? keepNote(`Ohne Wert: ${esc(r.missing.join(", "))}.`) : ""}
-    ${note("Vergleich mit deinem eigenen Schnitt der 28 Tage davor (Griffkraft: deine Messungen der letzten 180 Tage, erscheint nur an Tagen mit Messung) – Orientierung, keine medizinische Bewertung.")}`,
-    { area: "recovery" },
-  );
+  // Tagesaussage (1.185.0, wie PC 1.0.254): dieselbe Aussage wie in Recovery und Insights; die
+  // Kennung bleibt „readiness“, damit die Anordnung der Overview weiter gilt
+  const readinessCard = card("readiness", "Tagesaussage", isToday ? "Heute" : "An diesem Tag", verdictCardBody(verdictData(undefined, today)), { area: "recovery" });
 
   // Wochenziele
   // Makroziele von heute wie in der Tagessumme: Wochenziel und Serie zählen das Tagesziel (1.116.0)

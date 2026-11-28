@@ -569,12 +569,12 @@ function presetRanges(preset, today) {
   };
 }
 function dailySeries(points2, from, to) {
-  const byDate2 = new Map(points2.map((p) => [p.date, p.value]));
+  const byDate3 = new Map(points2.map((p) => [p.date, p.value]));
   const n3 = daysBetween(from, to);
   const out = [];
   for (let i = 0; i < n3; i++) {
     const date = shiftDays(from, i);
-    out.push({ date, value: byDate2.get(date) ?? null });
+    out.push({ date, value: byDate3.get(date) ?? null });
   }
   return out;
 }
@@ -830,13 +830,13 @@ var MACRO_REFERENCES = {
   sugar: "h\xF6chstens 10 % der Energie"
 };
 function macroHistory(days3, date, key, foods, bls) {
-  const byDate2 = new Map(days3.map((d) => [d.date, d]));
+  const byDate3 = new Map(days3.map((d) => [d.date, d]));
   const defs = key === "fat" ? FAT_PARTS : key === "carbs" ? CARB_PARTS : [];
   const field = MACRO_FIELD[key];
   const out = [];
   for (let n3 = MACRO_HISTORY_DAYS - 1; n3 >= 0; n3 -= 1) {
     const d = shiftDays(date, -n3);
-    const items = (byDate2.get(d)?.meals ?? []).flatMap((m) => m.items).filter((i) => i.amount > 0);
+    const items = (byDate3.get(d)?.meals ?? []).flatMap((m) => m.items).filter((i) => i.amount > 0);
     if (items.length === 0) {
       out.push({ date: d, values: {}, totalG: null });
       continue;
@@ -1097,7 +1097,7 @@ function macroGoalRows(totals4, goals, planned = [], minimums = {}) {
     const goal = goalOf[m.key];
     if (goal === null || goal <= 0) return [];
     const actual = m.actual(totals4);
-    const remaining = Math.round((goal - actual) * 10) / 10;
+    const remaining2 = Math.round((goal - actual) * 10) / 10;
     let used = Math.min(100, actual / goal * 100);
     const segs = [];
     for (const p of planned) {
@@ -1116,13 +1116,13 @@ function macroGoalRows(totals4, goals, planned = [], minimums = {}) {
         actual,
         goal,
         percent: actual / goal * 100,
-        reached: remaining <= 0,
-        remaining,
+        reached: remaining2 <= 0,
+        remaining: remaining2,
         planned: segs,
         plannedG: segs.reduce((s, x) => s + x.value, 0),
         minimum,
         minimumPercent: minimum !== null ? minimum / goal * 100 : null,
-        minimumReached: minimum !== null ? actual >= minimum - 0.05 : remaining <= 0
+        minimumReached: minimum !== null ? actual >= minimum - 0.05 : remaining2 <= 0
       }
     ];
   });
@@ -1229,11 +1229,11 @@ function dayMacroGoals(goal, need, energy = null) {
     if (s.g === null) return [];
     return [{ key: s.key, set: s.g, unit: "g", grams: Math.round(s.g * factor), minimum: s.g }];
   });
-  const row = (key) => rows2.find((r2) => r2.key === key);
+  const row2 = (key) => rows2.find((r2) => r2.key === key);
   let carbCycle = null;
-  const carbRow = row("carbs");
+  const carbRow = row2("carbs");
   if (goal.carbCycle && carbRow && carbRow.grams !== null) {
-    const fatRow = row("fat");
+    const fatRow = row2("fat");
     const d = carbCycleDelta({ carbs: carbRow.grams, fat: fatRow?.grams ?? null }, goal.carbCycle);
     const cd = d.carbs ?? 0;
     const fd = d.fat ?? 0;
@@ -1247,17 +1247,17 @@ function dayMacroGoals(goal, need, energy = null) {
   }
   return {
     carbCycle,
-    proteinG: row("protein")?.grams ?? null,
-    carbsG: row("carbs")?.grams ?? null,
-    fatG: row("fat")?.grams ?? null,
+    proteinG: row2("protein")?.grams ?? null,
+    carbsG: row2("carbs")?.grams ?? null,
+    fatG: row2("fat")?.grams ?? null,
     baseKcal,
     needKcal,
     factor,
     rows: rows2,
     minimums: {
-      protein: row("protein")?.minimum ?? null,
-      carbs: row("carbs")?.minimum ?? null,
-      fat: row("fat")?.minimum ?? null
+      protein: row2("protein")?.minimum ?? null,
+      carbs: row2("carbs")?.minimum ?? null,
+      fat: row2("fat")?.minimum ?? null
     }
   };
 }
@@ -1272,12 +1272,12 @@ function dayMacroGoalsForPoint(goal, point) {
 }
 function macroTargetsByDate(goal, points2) {
   if (!goal) return () => null;
-  const byDate2 = new Map(points2.map((p) => [p.date, p]));
+  const byDate3 = new Map(points2.map((p) => [p.date, p]));
   const cache = /* @__PURE__ */ new Map();
   return (date) => {
     let m = cache.get(date);
     if (!m) {
-      m = dayMacroGoalsForPoint(goal, byDate2.get(date));
+      m = dayMacroGoalsForPoint(goal, byDate3.get(date));
       cache.set(date, m);
     }
     return m;
@@ -2283,6 +2283,7 @@ __export(workoutDraft_exports, {
   parseCompetition: () => parseCompetition,
   parseDurationField: () => parseDurationField,
   parseProfile: () => parseProfile,
+  parseSetWeight: () => parseSetWeight,
   planExerciseToDraft: () => planExerciseToDraft,
   planSetToDraft: () => planSetToDraft,
   profileToDraft: () => profileToDraft,
@@ -2582,9 +2583,9 @@ function describeSets(sets2) {
 function summarizeSessions(log) {
   const byWorkout = /* @__PURE__ */ new Map();
   for (const s of log) {
-    let row = byWorkout.get(s.workoutId);
-    if (!row) {
-      row = {
+    let row2 = byWorkout.get(s.workoutId);
+    if (!row2) {
+      row2 = {
         workoutId: s.workoutId,
         date: s.date,
         title: s.workoutTitle,
@@ -2596,20 +2597,20 @@ function summarizeSessions(log) {
         totalDistanceM: 0,
         totalDurationSeconds: 0
       };
-      byWorkout.set(s.workoutId, row);
+      byWorkout.set(s.workoutId, row2);
     }
     if (s.isWarmup) continue;
-    row.workingSets += 1;
-    row.totalReps += s.reps ?? 0;
-    row.volumeKg += setVolumeKg(s);
-    row.totalDistanceM += s.distanceM ?? 0;
-    row.totalDurationSeconds += s.durationSeconds ?? 0;
+    row2.workingSets += 1;
+    row2.totalReps += s.reps ?? 0;
+    row2.volumeKg += setVolumeKg(s);
+    row2.totalDistanceM += s.distanceM ?? 0;
+    row2.totalDurationSeconds += s.durationSeconds ?? 0;
     if (s.weightKg !== null && s.reps !== null && s.reps > 0) {
-      if (row.maxWeightKg === null || s.weightKg > row.maxWeightKg) {
-        row.maxWeightKg = s.weightKg;
-        row.repsAtMaxWeight = s.reps;
-      } else if (s.weightKg === row.maxWeightKg && s.reps > (row.repsAtMaxWeight ?? 0)) {
-        row.repsAtMaxWeight = s.reps;
+      if (row2.maxWeightKg === null || s.weightKg > row2.maxWeightKg) {
+        row2.maxWeightKg = s.weightKg;
+        row2.repsAtMaxWeight = s.reps;
+      } else if (s.weightKg === row2.maxWeightKg && s.reps > (row2.repsAtMaxWeight ?? 0)) {
+        row2.repsAtMaxWeight = s.reps;
       }
     }
   }
@@ -2664,30 +2665,30 @@ function personalRecords(log, category) {
   let bestSession = null;
   let longestDistance = null;
   let longestDuration = null;
-  for (const row of summarizeSessions(log)) {
-    if (row.volumeKg > 0) {
+  for (const row2 of summarizeSessions(log)) {
+    if (row2.volumeKg > 0) {
       bestSession = better(bestSession, {
-        value: row.volumeKg,
-        display: formatVolume(row.volumeKg),
-        date: row.date,
-        workoutId: row.workoutId
+        value: row2.volumeKg,
+        display: formatVolume(row2.volumeKg),
+        date: row2.date,
+        workoutId: row2.workoutId
       });
     }
-    if (row.totalDistanceM > 0) {
+    if (row2.totalDistanceM > 0) {
       longestDistance = better(longestDistance, {
-        value: row.totalDistanceM,
-        display: `${formatNumber(row.totalDistanceM / 1e3, 2)} km`,
-        date: row.date,
-        workoutId: row.workoutId
+        value: row2.totalDistanceM,
+        display: `${formatNumber(row2.totalDistanceM / 1e3, 2)} km`,
+        date: row2.date,
+        workoutId: row2.workoutId
       });
     }
-    if (row.totalDurationSeconds > 0) {
-      const min = row.totalDurationSeconds / 60;
+    if (row2.totalDurationSeconds > 0) {
+      const min = row2.totalDurationSeconds / 60;
       longestDuration = better(longestDuration, {
-        value: row.totalDurationSeconds,
+        value: row2.totalDurationSeconds,
         display: `${formatNumber(min, Number.isInteger(min) ? 0 : 1)} min`,
-        date: row.date,
-        workoutId: row.workoutId
+        date: row2.date,
+        workoutId: row2.workoutId
       });
     }
   }
@@ -3099,8 +3100,8 @@ function machineCardioKind(m) {
   return "other";
 }
 function sameCardioDevice(a, b) {
-  const norm5 = (k) => k === "walk" ? "run" : k;
-  return norm5(a) === norm5(b);
+  const norm6 = (k) => k === "walk" ? "run" : k;
+  return norm6(a) === norm6(b);
 }
 var CARDIO_EFFORT_LEVELS = [
   { rpe: 2, label: "sehr leicht", hint: "Unterhaltung m\xFChelos" },
@@ -3124,6 +3125,32 @@ function cardioEffortText(rpe) {
   return l.rpe === rpe ? `${level} \xB7 ${l.label}` : `${level} \xB7 ${l.label} (RPE ${String(rpe).replace(".", ",")})`;
 }
 var CARDIO_EFFORT_INFO = "Wie anstrengend war der Block? Ohne Puls bestimmt die Stufe die Trainingszone (1 = Zone 1 \u2026 5 = Zone 5), f\xFCr Kalorien, Zeit in Zonen und die Muskel-K\xF6rperkarte. Ohne Puls und ohne Stufe z\xE4hlt der Block als Zone 2. Gespeichert wird die Stufe als RPE (2, 4, 6, 8 oder 10).";
+
+// src/domain/inputLimits.ts
+var SET_LIMITS = {
+  rpe: { min: 1, max: 10 },
+  weightKg: { min: 0.25, max: 600, unit: "kg", zeroMeansEmpty: true },
+  powerW: { min: 1, max: 2700, unit: "W", warnAbove: 250 },
+  powerMaxW: { min: 1, max: 2700, unit: "W", warnAbove: 250 },
+  cadence: { min: 1, max: 300 },
+  cadenceMax: { min: 1, max: 300 },
+  level: { min: 1, max: 100 },
+  hrAvg: { min: 1, max: 220, unit: "bpm" },
+  hrMax: { min: 1, max: 220, unit: "bpm" },
+  deviceKcal: { min: 1, max: 2e4, unit: "kcal" },
+  deviceKcalNet: { min: 1, max: 2e4, unit: "kcal" }
+};
+var EXERTION_LIMIT = { min: 1, max: 10 };
+var num = (v) => formatNumber(v, Number.isInteger(v) ? 0 : v * 10 === Math.round(v * 10) ? 1 : 2);
+function rangeMessage(limit) {
+  return `Erlaubt: ${num(limit.min)} bis ${num(limit.max)}${limit.unit ? ` ${limit.unit}` : ""}.`;
+}
+function enforceRange(value2, limit, fail) {
+  if (value2 === null) return null;
+  if (value2 === 0 && limit.zeroMeansEmpty) return null;
+  if (value2 < limit.min || value2 > limit.max) fail(rangeMessage(limit));
+  return value2;
+}
 
 // src/domain/workoutDraft.ts
 var counter = 0;
@@ -3410,19 +3437,24 @@ function parseDurationField(p, field, text2) {
   return seconds;
 }
 function parseCardio(p, f, c) {
+  const lim = (name, value2) => enforceRange(value2, SET_LIMITS[name], (m) => p.error(f(name), m));
   return {
-    hrAvg: p.integer(f("hrAvg"), c.hrAvg),
-    hrMax: p.integer(f("hrMax"), c.hrMax),
-    powerW: p.decimal(f("powerW"), c.powerW),
+    hrAvg: lim("hrAvg", p.integer(f("hrAvg"), c.hrAvg)),
+    hrMax: lim("hrMax", p.integer(f("hrMax"), c.hrMax)),
+    powerW: lim("powerW", p.decimal(f("powerW"), c.powerW)),
     inclinePct: p.decimal(f("inclinePct"), c.inclinePct),
     elevationM: p.decimal(f("elevationM"), c.elevationM),
-    cadence: p.integer(f("cadence"), c.cadence),
-    level: p.decimal(f("level"), c.level),
-    deviceKcal: p.integer(f("deviceKcal"), c.deviceKcal),
-    deviceKcalNet: p.integer(f("deviceKcalNet"), c.deviceKcalNet),
-    powerMaxW: p.decimal(f("powerMaxW"), c.powerMaxW),
-    cadenceMax: p.integer(f("cadenceMax"), c.cadenceMax)
+    cadence: lim("cadence", p.integer(f("cadence"), c.cadence)),
+    level: lim("level", p.decimal(f("level"), c.level)),
+    deviceKcal: lim("deviceKcal", p.integer(f("deviceKcal"), c.deviceKcal)),
+    deviceKcalNet: lim("deviceKcalNet", p.integer(f("deviceKcalNet"), c.deviceKcalNet)),
+    powerMaxW: lim("powerMaxW", p.decimal(f("powerMaxW"), c.powerMaxW)),
+    cadenceMax: lim("cadenceMax", p.integer(f("cadenceMax"), c.cadenceMax))
   };
+}
+function parseSetWeight(p, field, text2) {
+  const value2 = p.decimal(field, text2);
+  return enforceRange(value2, SET_LIMITS.weightKg, (m) => p.error(field, m));
 }
 var noDefaults = () => [];
 function activeProfiles(e, defaults = noDefaults) {
@@ -3437,7 +3469,11 @@ function draftToInput(d, defaults = noDefaults) {
     durationMin: p.integer("durationMin", d.durationMin),
     title: d.title,
     planDayId: d.planDayId,
-    perceivedExertion: p.integer("perceivedExertion", d.perceivedExertion),
+    perceivedExertion: enforceRange(
+      p.integer("perceivedExertion", d.perceivedExertion),
+      EXERTION_LIMIT,
+      (m) => p.error("perceivedExertion", m)
+    ),
     notes: textOrNull(d.notes),
     status: d.status,
     competition: d.competition ? parseCompetition(p, d.competition) : null,
@@ -3453,7 +3489,7 @@ function draftToInput(d, defaults = noDefaults) {
         const f = (name) => `exercises.${i}.sets.${j}.${name}`;
         const profile = parseProfile(p, f, s.rp);
         const computed = activeProfiles(e, defaults).length > 0;
-        const weightKg = computed ? profileTotal(profile) : p.decimal(f("weightKg"), s.weightKg);
+        const weightKg = computed ? profileTotal(profile) : parseSetWeight(p, f("weightKg"), s.weightKg);
         if (!profileSumMatches(weightKg, profile)) p.error(f("weightKg"), SUM_MESSAGE);
         return {
           id: s.id,
@@ -3461,7 +3497,11 @@ function draftToInput(d, defaults = noDefaults) {
           weightKg,
           durationSeconds: parseDurationField(p, f("durationSeconds"), s.duration),
           distanceM: p.kmToMeters(f("distanceM"), s.distance),
-          rpe: p.decimal(f("rpe"), s.rpe),
+          rpe: enforceRange(
+            p.decimal(f("rpe"), s.rpe),
+            SET_LIMITS.rpe,
+            (m) => p.error(f("rpe"), m)
+          ),
           isWarmup: s.isWarmup,
           isUnilateral: s.isUnilateral,
           notes: textOrNull(s.notes),
@@ -4232,13 +4272,13 @@ function weeklyMuscleSets(log, exercises, today, count = 4) {
     const index = weeks.findIndex((w) => s.date >= w.start && s.date <= w.end);
     if (index < 0) continue;
     const group = groupOf2.get(s.exerciseId) ?? NO_MUSCLE_GROUP;
-    let row = rows2.get(group);
-    if (!row) {
-      row = { group, sets: weeks.map(() => 0), volumeKg: weeks.map(() => 0) };
-      rows2.set(group, row);
+    let row2 = rows2.get(group);
+    if (!row2) {
+      row2 = { group, sets: weeks.map(() => 0), volumeKg: weeks.map(() => 0) };
+      rows2.set(group, row2);
     }
-    row.sets[index] = (row.sets[index] ?? 0) + 1;
-    row.volumeKg[index] = (row.volumeKg[index] ?? 0) + setVolumeKg(s);
+    row2.sets[index] = (row2.sets[index] ?? 0) + 1;
+    row2.volumeKg[index] = (row2.volumeKg[index] ?? 0) + setVolumeKg(s);
   }
   const sum = (xs) => xs.reduce((a, b) => a + b, 0);
   const last = count - 1;
@@ -8974,8 +9014,8 @@ function ansPercent(value2) {
 function previousMean(values, date) {
   const before = values.filter((v) => v.date < date);
   if (before.length === 0) return null;
-  const mean10 = before.reduce((s, v) => s + v.value, 0) / before.length;
-  return { mean: Math.round(mean10 * 10) / 10, count: before.length };
+  const mean11 = before.reduce((s, v) => s + v.value, 0) / before.length;
+  return { mean: Math.round(mean11 * 10) / 10, count: before.length };
 }
 
 // src/domain/helpTexts.ts
@@ -9091,10 +9131,10 @@ function hrtDuplicateHint(dupes) {
   if (!first) return null;
   const digits = Number.isInteger(first.amount) ? 0 : Number.isInteger(first.amount * 10) ? 1 : 2;
   const amount = `${formatNumber(first.amount, digits)} ${first.unit}`;
-  const when = first.time ? `${formatDate(first.date)}, ${first.time} Uhr` : formatDate(first.date);
+  const when2 = first.time ? `${formatDate(first.date)}, ${first.time} Uhr` : formatDate(first.date);
   return {
     key: "duplicate",
-    text: dupes.length === 1 ? `Am ${when} ist bereits eine Gabe ${first.hormone} (${amount}) gespeichert \u2013 innerhalb von ${DUPLICATE_WINDOW_MIN} Minuten. Doppelt erfasst?` : `Am ${formatDate(first.date)} sind bereits ${dupes.length} Gaben ${first.hormone} innerhalb von ${DUPLICATE_WINDOW_MIN} Minuten gespeichert. Doppelt erfasst?`
+    text: dupes.length === 1 ? `Am ${when2} ist bereits eine Gabe ${first.hormone} (${amount}) gespeichert \u2013 innerhalb von ${DUPLICATE_WINDOW_MIN} Minuten. Doppelt erfasst?` : `Am ${formatDate(first.date)} sind bereits ${dupes.length} Gaben ${first.hormone} innerhalb von ${DUPLICATE_WINDOW_MIN} Minuten gespeichert. Doppelt erfasst?`
   };
 }
 
@@ -9178,6 +9218,12 @@ function hrvBelowBaseline(measurements, week) {
       below.push({ date: m.date, value: m.value, baseline, change: change2 });
   }
   return { checked, below: below.sort((a, b) => a.date.localeCompare(b.date)) };
+}
+function hrvRuleToday(measurements, today) {
+  return hrvBelowBaseline(measurements, { from: today, to: today }).below[0] ?? null;
+}
+function hrvRuleText(b) {
+  return `HRV heute ${formatNumber(b.value, 0)} ms \u2013 ${formatNumber(Math.abs(b.change) * 100, 0)} % unter deinem Mittel der 7 Vortage (${formatNumber(b.baseline, 0)} ms). Regel aus dem Weekly Report: heute nur eine leichte Einheit oder Ruhetag.`;
 }
 var GRIP_DROP = 0.1;
 function gripComparison(grip, week) {
@@ -9351,13 +9397,13 @@ function trainingIssues(setLog, workouts, week) {
     const twins = duplicateWorkouts(w, done.slice(i + 1));
     if (twins.length === 0) return;
     for (const t of twins) reported.add(t.id);
-    const when = w.startTime ? `${formatDate(w.date)}, ${w.startTime} Uhr` : formatDate(w.date);
+    const when2 = w.startTime ? `${formatDate(w.date)}, ${w.startTime} Uhr` : formatDate(w.date);
     issues.push({
       key: `dup.${w.id}`,
       date: w.date,
       area: "Training",
       ref: { kind: "workout", id: w.id, date: w.date },
-      text: `\u201E${w.title}\u201C (${when}) ist ${twins.length + 1}\xD7 mit denselben \xDCbungen gespeichert \u2013 doppelt erfasst?`
+      text: `\u201E${w.title}\u201C (${when2}) ist ${twins.length + 1}\xD7 mit denselben \xDCbungen gespeichert \u2013 doppelt erfasst?`
     });
   });
   return issues;
@@ -9559,12 +9605,12 @@ function afterTrainingComparison(loads, values) {
   for (const v of values) {
     (trained.has(shiftDays(v.date, -1)) ? after : notAfter).push(v.value);
   }
-  const avg = (xs) => xs.length > 0 ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+  const avg2 = (xs) => xs.length > 0 ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
   return {
     withCount: after.length,
     withoutCount: notAfter.length,
-    withMean: avg(after),
-    withoutMean: avg(notAfter)
+    withMean: avg2(after),
+    withoutMean: avg2(notAfter)
   };
 }
 var inRange = (date, from, to) => date >= from && date <= to;
@@ -9921,7 +9967,7 @@ function coverage(data, today) {
     from,
     today
   );
-  const recoveryDays = (key) => distinctDays(
+  const recoveryDays2 = (key) => distinctDays(
     data.recovery.filter((r2) => r2[key] !== null).map((r2) => r2.date),
     from,
     today
@@ -9952,28 +9998,28 @@ function coverage(data, today) {
     item(
       "readiness",
       "Erholung (Selbsteinsch\xE4tzung)",
-      recoveryDays("readiness"),
+      recoveryDays2("readiness"),
       weekly,
       `Ab ${MIN_WEEK_VALUES} Einsch\xE4tzungen je Woche: Wochenvergleich; zusammen mit dem Schlaf ab ${MIN_PAIRS} gemeinsamen Tagen: m\xF6glicher Zusammenhang Schlafdauer und Erholung.`
     ),
     item(
       "fatigue",
       "M\xFCdigkeit",
-      recoveryDays("fatigue"),
+      recoveryDays2("fatigue"),
       MIN_PAIRS,
       `Ab ${MIN_PAIRS} Tagen (mit Schlaf): m\xF6glicher Zusammenhang Schlafdauer und M\xFCdigkeit.`
     ),
     item(
       "stress",
       "Stress",
-      recoveryDays("stress"),
+      recoveryDays2("stress"),
       MIN_PAIRS,
       `Ab ${MIN_PAIRS} Tagen (mit Schlafqualit\xE4t der folgenden Nacht): m\xF6glicher Zusammenhang Stress und Schlaf.`
     ),
     item(
       "soreness",
       "Muskelkater",
-      recoveryDays("soreness"),
+      recoveryDays2("soreness"),
       6,
       "Je mindestens 3 Tage nach einem Training und ohne Training: Vergleich des Muskelkaters an Tagen nach dem Training."
     ),
@@ -10250,11 +10296,11 @@ function clearedAt(intakes, halfLifeH, belowMg = CLEARED_BELOW_MG) {
 }
 function formatDayTime(offset) {
   const day = Math.floor(offset / DAY_MIN);
-  const clock5 = `um ${formatClock2(offset)} Uhr`;
-  if (day <= 0) return clock5;
-  if (day === 1) return `am Folgetag ${clock5}`;
-  if (day === 2) return `\xFCbermorgen ${clock5}`;
-  return `in ${day} Tagen ${clock5}`;
+  const clock6 = `um ${formatClock2(offset)} Uhr`;
+  if (day <= 0) return clock6;
+  if (day === 1) return `am Folgetag ${clock6}`;
+  if (day === 2) return `\xFCbermorgen ${clock6}`;
+  return `in ${day} Tagen ${clock6}`;
 }
 function caffeineTimeline(intakes, bedtime, halfLifeH = DEFAULT_HALF_LIFE_H, step = 5) {
   const placed = intakes.map((i) => ({ ...i, offset: parseClock(i.time) })).filter((i) => i.offset !== null).sort((a, b) => a.offset - b.offset);
@@ -10379,9 +10425,9 @@ function relativePerformanceSeries(workouts) {
   const byDay = /* @__PURE__ */ new Map();
   for (const list2 of groups.values()) {
     if (list2.length < MIN_SAME_TITLE) continue;
-    const mean10 = list2.reduce((a, w) => a + w.volumeKg, 0) / list2.length;
+    const mean11 = list2.reduce((a, w) => a + w.volumeKg, 0) / list2.length;
     for (const w of list2)
-      byDay.set(w.date, [...byDay.get(w.date) ?? [], w.volumeKg / mean10 * 100]);
+      byDay.set(w.date, [...byDay.get(w.date) ?? [], w.volumeKg / mean11 * 100]);
   }
   return [...byDay.entries()].map(([date, values]) => ({ date, value: values.reduce((a, b) => a + b, 0) / values.length })).sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -10471,10 +10517,10 @@ var MIN_ACWR_SESSIONS = 6;
 var MIN_GROUP_DAYS = 3;
 var ACWR_COMMON_RANGE = { low: 0.8, high: 1.3, steep: 1.5 };
 function dailyLoadSeries(loads, from, to) {
-  const byDate2 = new Map(loads.map((l) => [l.date, l]));
+  const byDate3 = new Map(loads.map((l) => [l.date, l]));
   const out = [];
   for (let d = from; d <= to; d = shiftDays(d, 1)) {
-    const l = byDate2.get(d);
+    const l = byDate3.get(d);
     if (!l) out.push({ date: d, value: 0 });
     else if (l.incomplete === 0) out.push({ date: d, value: l.load });
   }
@@ -11273,9 +11319,9 @@ function weekGoalsFromInput(input) {
 }
 function proteinTargetsFor(goal, weightKg, energy, todayDate, today) {
   const g2 = goal ? withProteinFromWeight(goal, weightKg) : null;
-  const byDate2 = macroTargetsByDate(g2, energy ?? []);
+  const byDate3 = macroTargetsByDate(g2, energy ?? []);
   return (date) => {
-    const m = date === todayDate && today ? today : byDate2(date);
+    const m = date === todayDate && today ? today : byDate3(date);
     const target = m?.proteinG ?? null;
     if (target === null || target <= 0) return null;
     const minimum = m?.minimums.protein ?? target;
@@ -11349,12 +11395,12 @@ function weeklyGoals(input) {
   const sleepGoal = own.sleepMin ?? data.goal?.sleepMin ?? null;
   const nights = data.sleep.filter((s) => inWeek2(s.date));
   if (sleepGoal) {
-    const avg = nights.length > 0 ? mean3(nights.map((s) => s.sleepMin)) : 0;
+    const avg2 = nights.length > 0 ? mean3(nights.map((s) => s.sleepMin)) : 0;
     out.push({
       key: "sleep",
       label: "Schlaf",
-      share: Math.min(1, avg / sleepGoal),
-      value: nights.length > 0 ? `\xD8 ${formatDuration(Math.round(avg))}` : "noch keine Nacht",
+      share: Math.min(1, avg2 / sleepGoal),
+      value: nights.length > 0 ? `\xD8 ${formatDuration(Math.round(avg2))}` : "noch keine Nacht",
       note: `${own.sleepMin !== null ? "Eigenes Ziel" : "Ziel"} ${formatDuration(sleepGoal)} \xB7 ${nights.length} ${nights.length === 1 ? "Nacht" : "N\xE4chte"}`
     });
   }
@@ -11395,8 +11441,8 @@ function streaks(input) {
   const targetOf = proteinTargetsFor(goal, input.weightKg, data.energy, today, input.todayMacros);
   const proteinToday = targetOf(today);
   if (proteinToday !== null) {
-    const byDate2 = new Map(data.nutrition.map((n3) => [n3.date, n3.proteinG]));
-    const value2 = (d) => byDate2.get(d) ?? 0;
+    const byDate3 = new Map(data.nutrition.map((n3) => [n3.date, n3.proteinG]));
+    const value2 = (d) => byDate3.get(d) ?? 0;
     const now = value2(today);
     const g2 = (v) => `${formatNumber(v, 0)} g`;
     const minNote = proteinToday.minimum < proteinToday.target - 0.5 ? ` \xB7 Minimum ${g2(proteinToday.minimum)}` : "";
@@ -11418,12 +11464,12 @@ function streaks(input) {
   }
   const waterL = goal?.waterL ?? null;
   if (waterL !== null && waterL > 0) {
-    const byDate2 = new Map(dashboard.water.map((w) => [w.date, w.value]));
+    const byDate3 = new Map(dashboard.water.map((w) => [w.date, w.value]));
     add(
       "water",
       "Trinkziel",
       `mindestens ${formatNumber(waterL, 1)} l`,
-      (d) => (byDate2.get(d) ?? 0) / 1e3,
+      (d) => (byDate3.get(d) ?? 0) / 1e3,
       waterL,
       (v) => `${formatNumber(v, 1)} l`
     );
@@ -11441,24 +11487,24 @@ function streaks(input) {
   }
   const steps = goal?.steps ?? null;
   if (steps !== null && steps > 0) {
-    const byDate2 = new Map((data.neat ?? []).map((n3) => [n3.date, n3.steps ?? 0]));
+    const byDate3 = new Map((data.neat ?? []).map((n3) => [n3.date, n3.steps ?? 0]));
     add(
       "steps",
       "Schrittziel",
       `mindestens ${formatNumber(steps, 0)} Schritte`,
-      (d) => byDate2.get(d) ?? 0,
+      (d) => byDate3.get(d) ?? 0,
       steps,
       (v) => formatNumber(v, 0)
     );
   }
   const sleepGoal = goal?.sleepMin ?? null;
   if (sleepGoal !== null && sleepGoal > 0) {
-    const byDate2 = new Map(data.sleep.map((s) => [s.date, s.sleepMin]));
+    const byDate3 = new Map(data.sleep.map((s) => [s.date, s.sleepMin]));
     add(
       "sleep",
       "Schlafziel",
       `mindestens ${formatDuration(sleepGoal)}`,
-      (d) => byDate2.get(d) ?? 0,
+      (d) => byDate3.get(d) ?? 0,
       sleepGoal,
       (v) => formatDuration(Math.round(v))
     );
@@ -11568,8 +11614,8 @@ function formatClock3(minutes) {
   return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
 function sd(values) {
-  const avg = mean3(values);
-  return Math.sqrt(mean3(values.map((v) => (v - avg) ** 2)));
+  const avg2 = mean3(values);
+  return Math.sqrt(mean3(values.map((v) => (v - avg2) ** 2)));
 }
 function sleepRegularity(sleep, today, days3 = 14) {
   const from = shiftDays(today, -(days3 - 1));
@@ -11645,13 +11691,13 @@ function extrasCheck(extras) {
   const days3 = extras.filter((d) => d.items > 0);
   if (days3.length < MIN_EXTRA_DAYS) return { days: days3.length, checks: [] };
   const items = days3.reduce((a, d) => a + d.items, 0);
-  const avg = (f) => mean3(days3.map(f));
-  const kcal3 = avg((d) => d.energyKcal);
+  const avg2 = (f) => mean3(days3.map(f));
+  const kcal3 = avg2((d) => d.energyKcal);
   const share2 = (missing) => days3.reduce((a, d) => a + missing(d), 0) / items;
-  const fiber = avg((d) => d.fiberG);
-  const salt = avg((d) => d.saltG);
-  const sugarPct = kcal3 > 0 ? avg((d) => d.sugarG) * 4 / kcal3 * 100 : 0;
-  const satPct = kcal3 > 0 ? avg((d) => d.saturatedFatG) * 9 / kcal3 * 100 : 0;
+  const fiber = avg2((d) => d.fiberG);
+  const salt = avg2((d) => d.saltG);
+  const sugarPct = kcal3 > 0 ? avg2((d) => d.sugarG) * 4 / kcal3 * 100 : 0;
+  const satPct = kcal3 > 0 ? avg2((d) => d.saturatedFatG) * 9 / kcal3 * 100 : 0;
   return {
     days: days3.length,
     checks: [
@@ -11668,7 +11714,7 @@ function extrasCheck(extras) {
         label: "Zucker",
         level: sugarPct <= 10 ? "good" : sugarPct <= 15 ? "caution" : "low",
         value: `\xD8 ${formatNumber(
-          avg((d) => d.sugarG),
+          avg2((d) => d.sugarG),
           0
         )} g \xB7 ${formatNumber(sugarPct, 0)} % der Energie`,
         reference: "unter 10 % der Energie (WHO, freie Zucker)",
@@ -11679,7 +11725,7 @@ function extrasCheck(extras) {
         label: "Ges\xE4ttigte Fetts\xE4uren",
         level: satPct <= 10 ? "good" : satPct <= 13 ? "caution" : "low",
         value: `\xD8 ${formatNumber(
-          avg((d) => d.saturatedFatG),
+          avg2((d) => d.saturatedFatG),
           0
         )} g \xB7 ${formatNumber(satPct, 0)} % der Energie`,
         reference: "unter 10 % der Energie (WHO)",
@@ -11750,8 +11796,8 @@ __export(sleepVisual_exports, {
 });
 
 // src/domain/wearable.ts
-function minuteOf2(clock5) {
-  const m = /^(\d{1,2}):(\d{2})/.exec(clock5.trim());
+function minuteOf2(clock6) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(clock6.trim());
   if (!m) return null;
   const h = Number(m[1]);
   const min = Number(m[2]);
@@ -11797,8 +11843,8 @@ function bedMinute(s) {
 }
 function spread(values) {
   if (values.length < 3) return null;
-  const avg = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance = values.reduce((a, b) => a + (b - avg) ** 2, 0) / (values.length - 1);
+  const avg2 = values.reduce((a, b) => a + b, 0) / values.length;
+  const variance = values.reduce((a, b) => a + (b - avg2) ** 2, 0) / (values.length - 1);
   return Math.sqrt(variance);
 }
 
@@ -11832,10 +11878,10 @@ function phaseAverage(sleep) {
     (s) => s.deepS != null && s.lightS != null && s.remS != null
   );
   if (nights.length === 0) return null;
-  const avg = (pick3) => nights.reduce((a, s) => a + pick3(s), 0) / nights.length;
-  const deep = avg((s) => sec(s.deepS));
-  const light = avg((s) => sec(s.lightS));
-  const rem = avg((s) => sec(s.remS));
+  const avg2 = (pick3) => nights.reduce((a, s) => a + pick3(s), 0) / nights.length;
+  const deep = avg2((s) => sec(s.deepS));
+  const light = avg2((s) => sec(s.lightS));
+  const rem = avg2((s) => sec(s.remS));
   const total = deep + light + rem;
   if (total <= 0) return null;
   const pct2 = (x) => Math.round(x / total * 1e3) / 10;
@@ -11844,7 +11890,7 @@ function phaseAverage(sleep) {
     deepMin: Math.round(deep),
     lightMin: Math.round(light),
     remMin: Math.round(rem),
-    wakeMin: Math.round(avg((s) => sec(s.interruptionS))),
+    wakeMin: Math.round(avg2((s) => sec(s.interruptionS))),
     deepPct: pct2(deep),
     lightPct: pct2(light),
     remPct: pct2(rem)
@@ -11912,11 +11958,11 @@ function fitLine(points2) {
   return { slope, intercept: my - slope * mx };
 }
 function rechargeNights(recovery) {
-  const byDate2 = /* @__PURE__ */ new Map();
+  const byDate3 = /* @__PURE__ */ new Map();
   for (const r2 of recovery) {
     if (r2.ansCharge === null && r2.hrvMs === null && r2.hrAvg === null) continue;
-    if (byDate2.has(r2.date)) continue;
-    byDate2.set(r2.date, {
+    if (byDate3.has(r2.date)) continue;
+    byDate3.set(r2.date, {
       date: r2.date,
       ansCharge: r2.ansCharge,
       hrvMs: r2.hrvMs,
@@ -11925,19 +11971,19 @@ function rechargeNights(recovery) {
       rechargeStatus: r2.rechargeStatus
     });
   }
-  return [...byDate2.values()].sort((a, b) => a.date.localeCompare(b.date));
+  return [...byDate3.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 var LATE_CAFFEINE = "14:00";
 var MIN_GROUP = 3;
 function caffeineSleepSplit(nights, context, contextFrom, from = LATE_CAFFEINE) {
   const fromMinute = minuteOf2(from) ?? 14 * 60;
-  const byDate2 = new Map(context.map((c) => [c.date, c]));
+  const byDate3 = new Map(context.map((c) => [c.date, c]));
   const out = [];
   for (const n3 of nights) {
     if (n3.sleepMin <= 0) continue;
     const day = shiftIso(n3.date, -1);
     if (day < contextFrom) continue;
-    const c = byDate2.get(day);
+    const c = byDate3.get(day);
     const lastMinute = c?.caffeineLast ? minuteOf2(c.caffeineLast) : null;
     out.push({
       date: n3.date,
@@ -13353,7 +13399,7 @@ function akhRange(analyte, person) {
 }
 function entryRange(entry2, analyte, person) {
   if (!entry2 || entry2.unit !== analyte.unit) return null;
-  const row = entry2.rows.find((r2) => {
+  const row2 = entry2.rows.find((r2) => {
     if (r2.sex && r2.sex !== person.sex) return false;
     const needsAge = r2.ageMin !== void 0 || r2.ageMax !== void 0 && r2.ageMax !== null;
     if (needsAge && person.age === null) return false;
@@ -13363,7 +13409,7 @@ function entryRange(entry2, analyte, person) {
     }
     return true;
   });
-  return row ? { low: row.low, high: row.high, note: entry2.note ?? null } : null;
+  return row2 ? { low: row2.low, high: row2.high, note: entry2.note ?? null } : null;
 }
 function withDefaultRanges(analytes, person) {
   return analytes.map((a) => {
@@ -13800,7 +13846,7 @@ function emptyHrtDraft(date, time = "") {
     notes: ""
   };
 }
-var num = (v, decimals = 3) => v === null ? "" : numberToInput(v, decimals);
+var num2 = (v, decimals = 3) => v === null ? "" : numberToInput(v, decimals);
 function hrtToDraft(e) {
   return {
     id: e.id,
@@ -13815,9 +13861,9 @@ function hrtToDraft(e) {
     manufacturer: e.manufacturer ?? "",
     batch: e.batch ?? "",
     expiryDate: e.expiryDate ?? "",
-    vialVolumeMl: num(e.vialVolumeMl, 2),
-    concentrationMgMl: num(e.concentrationMgMl),
-    volumeMl: num(e.volumeMl, 2),
+    vialVolumeMl: num2(e.vialVolumeMl, 2),
+    concentrationMgMl: num2(e.concentrationMgMl),
+    volumeMl: num2(e.volumeMl, 2),
     needle: e.needle ?? "",
     prescription: e.prescription ?? "",
     reaction: e.reaction ?? "",
@@ -13872,8 +13918,8 @@ function applyProduct(d, p) {
     manufacturer: p.manufacturer ?? "",
     batch: p.batch ?? "",
     expiryDate: p.expiryDate ?? "",
-    vialVolumeMl: num(p.vialVolumeMl, 2),
-    concentrationMgMl: num(p.concentrationMgMl)
+    vialVolumeMl: num2(p.vialVolumeMl, 2),
+    concentrationMgMl: num2(p.concentrationMgMl)
   };
 }
 function productFromDraft(d, id4 = null) {
@@ -14418,8 +14464,8 @@ function topStage(list2) {
 var alarmKey = (s) => `${hrtKey(s.hormone)}|${s.dueDate}|${s.dueTime}`;
 function alarmText(s) {
   const h = Math.floor(s.overdueMin / 60);
-  const when = `${s.dueDate.slice(8, 10)}.${s.dueDate.slice(5, 7)}. um ${s.dueTime} Uhr`;
-  return `${s.hormone}: f\xE4llig seit ${when} (seit ${h} Stunden), Intervall ${s.intervalDays} ${s.intervalDays === 1 ? "Tag" : "Tage"}.`;
+  const when2 = `${s.dueDate.slice(8, 10)}.${s.dueDate.slice(5, 7)}. um ${s.dueTime} Uhr`;
+  return `${s.hormone}: f\xE4llig seit ${when2} (seit ${h} Stunden), Intervall ${s.intervalDays} ${s.intervalDays === 1 ? "Tag" : "Tage"}.`;
 }
 var HRT_ITEM_TITLE = "HRT";
 var dm = (iso2) => `${iso2.slice(8, 10)}.${iso2.slice(5, 7)}.`;
@@ -14572,39 +14618,39 @@ function editDistance(a, b) {
   return prev[b.length] ?? 0;
 }
 var NORMALIZED = SCALE_FIELDS.map((f) => ({ field: f, norm: normalizeLabel(f.label) }));
-function fieldOfRow(row) {
-  if (/\d{2,}/.test(row)) return null;
-  const text2 = normalizeLabel(row);
+function fieldOfRow(row2) {
+  if (/\d{2,}/.test(row2)) return null;
+  const text2 = normalizeLabel(row2);
   if (text2.length < 3) return null;
   let best = null;
-  for (const { field, norm: norm5 } of NORMALIZED) {
-    if (text2.length > norm5.length + 4) continue;
-    const score = 1 - editDistance(text2, norm5) / Math.max(text2.length, norm5.length);
+  for (const { field, norm: norm6 } of NORMALIZED) {
+    if (text2.length > norm6.length + 4) continue;
+    const score = 1 - editDistance(text2, norm6) / Math.max(text2.length, norm6.length);
     if (!best || score > best.score) best = { field, score };
   }
   return best && best.score >= 0.7 ? best.field : null;
 }
 var NUMBER2 = /\d+(?:[.,]\d+)?/g;
-function numbersIn(row) {
-  return [...row.matchAll(NUMBER2)].map((m) => ({
+function numbersIn(row2) {
+  return [...row2.matchAll(NUMBER2)].map((m) => ({
     value: Number(m[0].replace(",", ".")),
     text: m[0]
   }));
 }
 var ARROW = /[>›»?’]+/;
-function valuesOfRow(row) {
-  const firstNum = /\d/.exec(row)?.index ?? -1;
+function valuesOfRow(row2) {
+  const firstNum = /\d/.exec(row2)?.index ?? -1;
   const arrowRe = new RegExp(ARROW.source, "g");
   let arrow = null;
-  for (let m = arrowRe.exec(row); m; m = arrowRe.exec(row)) {
+  for (let m = arrowRe.exec(row2); m; m = arrowRe.exec(row2)) {
     if (firstNum >= 0 && m.index > firstNum) {
       arrow = m;
       break;
     }
   }
   if (arrow) {
-    const left = numbersIn(row.slice(0, arrow.index))[0] ?? null;
-    const rest = row.slice(arrow.index + arrow[0].length);
+    const left = numbersIn(row2.slice(0, arrow.index))[0] ?? null;
+    const rest = row2.slice(arrow.index + arrow[0].length);
     const current2 = numbersIn(rest)[0] ?? null;
     if (current2) {
       return {
@@ -14616,7 +14662,7 @@ function valuesOfRow(row) {
       };
     }
   }
-  const nums = [...row.matchAll(NUMBER2)];
+  const nums = [...row2.matchAll(NUMBER2)];
   const [a, b] = nums;
   if (a && b) {
     return {
@@ -14624,7 +14670,7 @@ function valuesOfRow(row) {
       current: Number(b[0].replace(",", ".")),
       previousText: a[0],
       currentText: b[0],
-      restText: row.slice((a.index ?? 0) + a[0].length)
+      restText: row2.slice((a.index ?? 0) + a[0].length)
     };
   }
   return a ? {
@@ -14632,17 +14678,17 @@ function valuesOfRow(row) {
     current: Number(a[0].replace(",", ".")),
     previousText: null,
     currentText: a[0],
-    restText: row.slice((a.index ?? 0) + a[0].length)
+    restText: row2.slice((a.index ?? 0) + a[0].length)
   } : null;
 }
-function splitTile(v, row, next) {
-  if (v.previous !== null || !next.trim() || fieldOfRow(next)) return { v, raw: row };
+function splitTile(v, row2, next) {
+  if (v.previous !== null || !next.trim() || fieldOfRow(next)) return { v, raw: row2 };
   const rest = next.replace(new RegExp(`^[\\s${ARROW.source.slice(1, -2)}]+`), "");
-  if (!/^\d/.test(rest)) return { v, raw: row };
-  const left = row.replace(new RegExp(`[\\s${ARROW.source.slice(1, -2)}]+$`), "");
+  if (!/^\d/.test(rest)) return { v, raw: row2 };
+  const left = row2.replace(new RegExp(`[\\s${ARROW.source.slice(1, -2)}]+$`), "");
   const joined = `${left} > ${rest}`;
   const w = valuesOfRow(joined);
-  return w && w.previous !== null ? { v: w, raw: joined } : { v, raw: row };
+  return w && w.previous !== null ? { v: w, raw: joined } : { v, raw: row2 };
 }
 function readScaleRows(rows2) {
   const found = /* @__PURE__ */ new Map();
@@ -14650,11 +14696,11 @@ function readScaleRows(rows2) {
     const field = fieldOfRow(rows2[i] ?? "");
     if (!field || found.has(field.key)) continue;
     for (let j = i + 1; j < Math.min(rows2.length, i + 4); j++) {
-      const row = rows2[j] ?? "";
-      if (fieldOfRow(row)) break;
-      const v = valuesOfRow(row);
+      const row2 = rows2[j] ?? "";
+      if (fieldOfRow(row2)) break;
+      const v = valuesOfRow(row2);
       if (v) {
-        found.set(field.key, splitTile(v, row, rows2[j + 1] ?? ""));
+        found.set(field.key, splitTile(v, row2, rows2[j + 1] ?? ""));
         break;
       }
     }
@@ -14859,8 +14905,8 @@ function sliceRanges(gray, w, h, maxHeight = 2400) {
   const busy = new Float64Array(h);
   for (let y = 0; y < h; y++) {
     let s = 0;
-    const row = y * w;
-    for (let x = 1; x < w; x++) s += Math.abs((gray[row + x] ?? 0) - (gray[row + x - 1] ?? 0));
+    const row2 = y * w;
+    for (let x = 1; x < w; x++) s += Math.abs((gray[row2 + x] ?? 0) - (gray[row2 + x - 1] ?? 0));
     busy[y] = s / w;
   }
   const out = [];
@@ -14936,10 +14982,10 @@ function findPdfImage(bytes) {
   const re = /<<((?:(?!>>\s*stream)[\s\S])*?\/Subtype\s*\/Image[\s\S]*?)>>\s*stream\r?\n/g;
   for (let m = re.exec(text2); m; m = re.exec(text2)) {
     const dict = m[1] ?? "";
-    const num4 = (key) => Number(new RegExp(`/${key}\\s+(\\d+)`).exec(dict)?.[1] ?? NaN);
-    const width = num4("Width");
-    const height = num4("Height");
-    const bitsPerComponent = num4("BitsPerComponent");
+    const num5 = (key) => Number(new RegExp(`/${key}\\s+(\\d+)`).exec(dict)?.[1] ?? NaN);
+    const width = num5("Width");
+    const height = num5("Height");
+    const bitsPerComponent = num5("BitsPerComponent");
     const filter = /\/Filter\s*\/(\w+)/.exec(dict)?.[1];
     if (!Number.isFinite(width) || !Number.isFinite(height)) continue;
     if (filter !== "DCTDecode" && filter !== "FlateDecode") continue;
@@ -14964,8 +15010,8 @@ function pixelsToRgba(raw, width, height, bitsPerComponent) {
   const out = new Uint8ClampedArray(n3 * 4);
   for (let i = 0; i < n3; i++) {
     for (let c = 0; c < 3; c++) {
-      const src2 = (i * channels + (channels === 1 ? 0 : c)) * bytesPer;
-      out[i * 4 + c] = raw[src2] ?? 0;
+      const src3 = (i * channels + (channels === 1 ? 0 : c)) * bytesPer;
+      out[i * 4 + c] = raw[src3] ?? 0;
     }
     out[i * 4 + 3] = 255;
   }
@@ -15074,8 +15120,8 @@ function glucoseStats(readings) {
       ranges
     };
   }
-  const mean10 = values.reduce((a, b) => a + b, 0) / n3;
-  const sd2 = n3 > 1 ? Math.sqrt(values.reduce((a, b) => a + (b - mean10) ** 2, 0) / (n3 - 1)) : null;
+  const mean11 = values.reduce((a, b) => a + b, 0) / n3;
+  const sd2 = n3 > 1 ? Math.sqrt(values.reduce((a, b) => a + (b - mean11) ** 2, 0) / (n3 - 1)) : null;
   for (const v of values) {
     const r2 = RANGES.find((x) => v < x.max);
     ranges[r2.key] += 100 / n3;
@@ -15084,10 +15130,10 @@ function glucoseStats(readings) {
   return {
     count: n3,
     days: days3,
-    mean: mean10,
+    mean: mean11,
     sd: sd2,
-    cv: sd2 !== null && mean10 > 0 ? sd2 / mean10 * 100 : null,
-    gmi: days3 >= 10 ? 3.31 + 0.02392 * mean10 : null,
+    cv: sd2 !== null && mean11 > 0 ? sd2 / mean11 * 100 : null,
+    gmi: days3 >= 10 ? 3.31 + 0.02392 * mean11 : null,
     min: Math.min(...values),
     max: Math.max(...values),
     ranges
@@ -15117,8 +15163,8 @@ function metricRows(measurements, metrics, categories, from, to) {
   const list2 = [...metrics].filter((m) => categories.includes(m.category)).sort((a, b) => a.position - b.position);
   for (const m of list2) {
     const values = measurements.filter((x) => x.metricId === m.id && x.date >= from && x.date <= to).map((x) => ({ date: x.date, value: x.value }));
-    const row = stat(m.name, m.unit, m.decimals, values);
-    if (row) rows2.push(row);
+    const row2 = stat(m.name, m.unit, m.decimals, values);
+    if (row2) rows2.push(row2);
   }
   return rows2;
 }
@@ -15289,7 +15335,7 @@ function buildDoctorReport(input) {
     })()
   };
 }
-var fmtStat = (row, v) => formatNumber(v, row.decimals);
+var fmtStat = (row2, v) => formatNumber(v, row2.decimals);
 
 // src/domain/pdf.ts
 var PAGE_W = 595;
@@ -15940,8 +15986,8 @@ function hex(color) {
   const v = color.replace("#", "");
   return [0, 2, 4].map((i) => parseInt(v.slice(i, i + 2), 16) / 255);
 }
-var num2 = (v) => (Math.round(v * 100) / 100).toString();
-var rgb = (c) => c.map((x) => num2(x)).join(" ");
+var num3 = (v) => (Math.round(v * 100) / 100).toString();
+var rgb = (c) => c.map((x) => num3(x)).join(" ");
 function textWidth(text2, size, bold = false) {
   const table2 = bold ? HELVETICA_BOLD_WIDTHS : HELVETICA_WIDTHS;
   let w = 0;
@@ -15997,7 +16043,7 @@ var PdfPage = class {
     const w = textWidth(value2, size, style.bold);
     const left = style.align === "right" ? x - w : style.align === "center" ? x - w / 2 : x;
     this.ops.push(
-      `${rgb(style.color ?? [0, 0, 0])} rg BT /${font} ${num2(size)} Tf ${num2(left)} ${num2(this.y(y))} Td (${pdfText(value2)}) Tj ET`
+      `${rgb(style.color ?? [0, 0, 0])} rg BT /${font} ${num3(size)} Tf ${num3(left)} ${num3(this.y(y))} Td (${pdfText(value2)}) Tj ET`
     );
   }
   /** Rechteck (optional mit runden Ecken), gefüllt und/oder umrandet. */
@@ -16007,18 +16053,18 @@ var PdfPage = class {
     const y0 = this.y(y + h);
     const parts2 = [];
     if (opts.fill) parts2.push(`${rgb(opts.fill)} rg`);
-    if (opts.stroke) parts2.push(`${rgb(opts.stroke)} RG ${num2(opts.width ?? 0.5)} w`);
-    if (r2 <= 0) parts2.push(`${num2(x0)} ${num2(y0)} ${num2(w)} ${num2(h)} re`);
+    if (opts.stroke) parts2.push(`${rgb(opts.stroke)} RG ${num3(opts.width ?? 0.5)} w`);
+    if (r2 <= 0) parts2.push(`${num3(x0)} ${num3(y0)} ${num3(w)} ${num3(h)} re`);
     else {
       const k = 0.5523 * r2;
       const x1 = x0 + w;
       const y1 = y0 + h;
       parts2.push(
-        `${num2(x0 + r2)} ${num2(y0)} m`,
-        `${num2(x1 - r2)} ${num2(y0)} l ${num2(x1 - r2 + k)} ${num2(y0)} ${num2(x1)} ${num2(y0 + r2 - k)} ${num2(x1)} ${num2(y0 + r2)} c`,
-        `${num2(x1)} ${num2(y1 - r2)} l ${num2(x1)} ${num2(y1 - r2 + k)} ${num2(x1 - r2 + k)} ${num2(y1)} ${num2(x1 - r2)} ${num2(y1)} c`,
-        `${num2(x0 + r2)} ${num2(y1)} l ${num2(x0 + r2 - k)} ${num2(y1)} ${num2(x0)} ${num2(y1 - r2 + k)} ${num2(x0)} ${num2(y1 - r2)} c`,
-        `${num2(x0)} ${num2(y0 + r2)} l ${num2(x0)} ${num2(y0 + r2 - k)} ${num2(x0 + r2 - k)} ${num2(y0)} ${num2(x0 + r2)} ${num2(y0)} c h`
+        `${num3(x0 + r2)} ${num3(y0)} m`,
+        `${num3(x1 - r2)} ${num3(y0)} l ${num3(x1 - r2 + k)} ${num3(y0)} ${num3(x1)} ${num3(y0 + r2 - k)} ${num3(x1)} ${num3(y0 + r2)} c`,
+        `${num3(x1)} ${num3(y1 - r2)} l ${num3(x1)} ${num3(y1 - r2 + k)} ${num3(x1 - r2 + k)} ${num3(y1)} ${num3(x1 - r2)} ${num3(y1)} c`,
+        `${num3(x0 + r2)} ${num3(y1)} l ${num3(x0 + r2 - k)} ${num3(y1)} ${num3(x0)} ${num3(y1 - r2 + k)} ${num3(x0)} ${num3(y1 - r2)} c`,
+        `${num3(x0)} ${num3(y0 + r2)} l ${num3(x0)} ${num3(y0 + r2 - k)} ${num3(x0 + r2 - k)} ${num3(y0)} ${num3(x0 + r2)} ${num3(y0)} c h`
       );
     }
     parts2.push(opts.fill && opts.stroke ? "B" : opts.fill ? "f" : "S");
@@ -16026,27 +16072,27 @@ var PdfPage = class {
   }
   line(x1, y1, x2, y2, color, width = 0.5, dash) {
     this.ops.push(
-      `${rgb(color)} RG ${num2(width)} w ${dash ? `[${dash} ${dash}] 0 d ` : ""}${num2(x1)} ${num2(this.y(y1))} m ${num2(x2)} ${num2(this.y(y2))} l S${dash ? " [] 0 d" : ""}`
+      `${rgb(color)} RG ${num3(width)} w ${dash ? `[${dash} ${dash}] 0 d ` : ""}${num3(x1)} ${num3(this.y(y1))} m ${num3(x2)} ${num3(this.y(y2))} l S${dash ? " [] 0 d" : ""}`
     );
   }
   /** Linienzug durch Punkte; optional als Fläche bis zur Grundlinie `baseY`. */
   polyline(points2, color, width = 1.2, area) {
     if (points2.length === 0) return;
-    const path = points2.map(([px, py], i) => `${num2(px)} ${num2(this.y(py))} ${i === 0 ? "m" : "l"}`).join(" ");
+    const path = points2.map(([px, py], i) => `${num3(px)} ${num3(this.y(py))} ${i === 0 ? "m" : "l"}`).join(" ");
     if (area && points2.length > 1) {
       const first = points2[0];
       const last = points2[points2.length - 1];
       this.ops.push(
-        `${rgb(area.fill)} rg ${path} ${num2(last[0])} ${num2(this.y(area.baseY))} l ${num2(first[0])} ${num2(this.y(area.baseY))} l h f`
+        `${rgb(area.fill)} rg ${path} ${num3(last[0])} ${num3(this.y(area.baseY))} l ${num3(first[0])} ${num3(this.y(area.baseY))} l h f`
       );
     }
-    this.ops.push(`${rgb(color)} RG ${num2(width)} w 1 J 1 j ${path} S 0 J 0 j`);
+    this.ops.push(`${rgb(color)} RG ${num3(width)} w 1 J 1 j ${path} S 0 J 0 j`);
   }
   circle(cx, cy, r2, fill) {
     const k = 0.5523 * r2;
     const y = this.y(cy);
     this.ops.push(
-      `${rgb(fill)} rg ${num2(cx + r2)} ${num2(y)} m ${num2(cx + r2)} ${num2(y + k)} ${num2(cx + k)} ${num2(y + r2)} ${num2(cx)} ${num2(y + r2)} c ${num2(cx - k)} ${num2(y + r2)} ${num2(cx - r2)} ${num2(y + k)} ${num2(cx - r2)} ${num2(y)} c ${num2(cx - r2)} ${num2(y - k)} ${num2(cx - k)} ${num2(y - r2)} ${num2(cx)} ${num2(y - r2)} c ${num2(cx + k)} ${num2(y - r2)} ${num2(cx + r2)} ${num2(y - k)} ${num2(cx + r2)} ${num2(y)} c f`
+      `${rgb(fill)} rg ${num3(cx + r2)} ${num3(y)} m ${num3(cx + r2)} ${num3(y + k)} ${num3(cx + k)} ${num3(y + r2)} ${num3(cx)} ${num3(y + r2)} c ${num3(cx - k)} ${num3(y + r2)} ${num3(cx - r2)} ${num3(y + k)} ${num3(cx - r2)} ${num3(y)} c ${num3(cx - r2)} ${num3(y - k)} ${num3(cx - k)} ${num3(y - r2)} ${num3(cx)} ${num3(y - r2)} c ${num3(cx + k)} ${num3(y - r2)} ${num3(cx + r2)} ${num3(y - k)} ${num3(cx + r2)} ${num3(y)} c f`
     );
   }
   /**
@@ -16056,14 +16102,14 @@ var PdfPage = class {
    */
   image(name, x, y, w, h, opts = {}) {
     this.ops.push(
-      `q ${opts.multiply ? "/GSmul gs " : ""}${num2(w)} 0 0 ${num2(h)} ${num2(x)} ${num2(this.y(y + h))} cm /${name} Do Q`
+      `q ${opts.multiply ? "/GSmul gs " : ""}${num3(w)} 0 0 ${num3(h)} ${num3(x)} ${num3(this.y(y + h))} cm /${name} Do Q`
     );
   }
   /** Gefülltes Dreieck (z. B. Pfeil nach oben/unten). */
   triangle(points2, fill) {
     const [a, b, c] = points2;
     this.ops.push(
-      `${rgb(fill)} rg ${num2(a[0])} ${num2(this.y(a[1]))} m ${num2(b[0])} ${num2(this.y(b[1]))} l ${num2(c[0])} ${num2(this.y(c[1]))} l h f`
+      `${rgb(fill)} rg ${num3(a[0])} ${num3(this.y(a[1]))} m ${num3(b[0])} ${num3(this.y(b[1]))} l ${num3(c[0])} ${num3(this.y(c[1]))} l h f`
     );
   }
 };
@@ -16112,7 +16158,7 @@ endstream`;
     this.pages.forEach((p, i) => {
       const id4 = 6 + i * 2;
       const content = p.ops.join("\n");
-      objects[id4] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${num2(A4_W)} ${num2(A4_H)}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>${xobjects} >> /Contents ${id4 + 1} 0 R >>`;
+      objects[id4] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${num3(A4_W)} ${num3(A4_H)}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>${xobjects} >> /Contents ${id4 + 1} 0 R >>`;
       objects[id4 + 1] = `<< /Length ${content.length} >>
 stream
 ${content}
@@ -16258,9 +16304,9 @@ var Layout = class {
     };
     this.ensure(rowH * 2);
     head2();
-    for (const row of rows2) {
+    for (const row2 of rows2) {
       if (this.ensure(rowH)) head2();
-      row.forEach((cell2, i) => {
+      row2.forEach((cell2, i) => {
         const c = columns[i];
         const w = c.width * scale - 6;
         const left = xs[i] + 3;
@@ -16346,17 +16392,17 @@ var LAB_COLUMNS = [
   { label: "Datum", width: 58 },
   { label: "davor", width: 90 }
 ];
-function labCells(row) {
-  const out = row.flag === "low" || row.flag === "high";
+function labCells(row2) {
+  const out = row2.flag === "low" || row2.flag === "high";
   return [
-    { text: row.name },
-    { text: formatLabValue(row.value, row.comparator), bold: true, color: out ? DANGER : INK },
-    { text: PDF_MARKS[row.flag], bold: true, color: DANGER },
-    { text: row.unit },
-    { text: formatRange2(row.range) || "\u2013", color: MUTED },
-    { text: formatDate(row.date), color: MUTED },
+    { text: row2.name },
+    { text: formatLabValue(row2.value, row2.comparator), bold: true, color: out ? DANGER : INK },
+    { text: PDF_MARKS[row2.flag], bold: true, color: DANGER },
+    { text: row2.unit },
+    { text: formatRange2(row2.range) || "\u2013", color: MUTED },
+    { text: formatDate(row2.date), color: MUTED },
     {
-      text: row.previous ? `${formatLabValue(row.previous.value, row.previous.comparator)} (${formatDate(row.previous.date)})` : "\u2013",
+      text: row2.previous ? `${formatLabValue(row2.previous.value, row2.previous.comparator)} (${formatDate(row2.previous.date)})` : "\u2013",
       color: MUTED
     }
   ];
@@ -16382,12 +16428,12 @@ function labSections(l, r2) {
     l.table(LAB_COLUMNS, batch.map(labCells));
     batch.length = 0;
   };
-  for (const row of r2.labs) {
-    if (row.category !== category) {
+  for (const row2 of r2.labs) {
+    if (row2.category !== category) {
       flush();
-      category = row.category;
+      category = row2.category;
     }
-    batch.push(row);
+    batch.push(row2);
   }
   flush();
 }
@@ -16646,9 +16692,9 @@ function splitHeaderUnit(header3) {
   const h = clean(header3);
   const square = /^(.*?)\s*\[([^\]]+)\]$/.exec(h);
   if (square) return { name: clean(square[1] ?? ""), unit: clean(square[2] ?? "") };
-  const round6 = /^(.*?)\s*\(([^)]+)\)$/.exec(h);
-  if (round6 && /[/%µ]|^(mg|g|ng|pg|µg|u|iu|ie|mmol|nmol|pmol|mu)\b/i.test(round6[2] ?? "")) {
-    return { name: clean(round6[1] ?? ""), unit: clean(round6[2] ?? "") };
+  const round7 = /^(.*?)\s*\(([^)]+)\)$/.exec(h);
+  if (round7 && /[/%µ]|^(mg|g|ng|pg|µg|u|iu|ie|mmol|nmol|pmol|mu)\b/i.test(round7[2] ?? "")) {
+    return { name: clean(round7[1] ?? ""), unit: clean(round7[2] ?? "") };
   }
   return { name: h, unit: "" };
 }
@@ -16686,32 +16732,32 @@ function parseLabTable(rows2, fallbackDate) {
     refHigh: col(H.refHigh),
     lab: col(H.lab)
   };
-  const cell2 = (row, i) => i >= 0 ? clean(row[i] ?? "") : "";
+  const cell2 = (row2, i) => i >= 0 ? clean(row2[i] ?? "") : "";
   const body = rows2.slice(headerIndex + 1);
   let lastDate = null;
-  const dateOf = (row) => {
-    const parsed = c.date >= 0 ? parseDateCell(cell2(row, c.date)) : null;
+  const dateOf = (row2) => {
+    const parsed = c.date >= 0 ? parseDateCell(cell2(row2, c.date)) : null;
     if (parsed) {
       lastDate = parsed;
-      const time = c.time >= 0 ? parseTimeCell(cell2(row, c.time)) : null;
+      const time = c.time >= 0 ? parseTimeCell(cell2(row2, c.time)) : null;
       return { date: parsed.date, time: time ?? parsed.time };
     }
     if (lastDate) return lastDate;
     return fallbackDate ? { date: fallbackDate, time: null } : null;
   };
   if (c.name >= 0 && c.value >= 0) {
-    body.forEach((row, i) => {
+    body.forEach((row2, i) => {
       const line = headerIndex + i + 2;
-      const name = cell2(row, c.name);
-      const raw = cell2(row, c.value);
+      const name = cell2(row2, c.name);
+      const raw = cell2(row2, c.value);
       if (name === "" && raw === "") return;
       const text2 = `${name} ${raw}`.trim();
       if (name === "") {
         result.skipped.push({ line, text: text2, reason: "Parameter fehlt" });
         return;
       }
-      const when = dateOf(row);
-      if (!when) {
+      const when2 = dateOf(row2);
+      if (!when2) {
         result.skipped.push({
           line,
           text: text2,
@@ -16727,10 +16773,10 @@ function parseLabTable(rows2, fallbackDate) {
       let refLow = null;
       let refHigh = null;
       if (c.refLow >= 0 || c.refHigh >= 0) {
-        refLow = parseLabValue(cell2(row, c.refLow))?.value ?? null;
-        refHigh = parseLabValue(cell2(row, c.refHigh))?.value ?? null;
+        refLow = parseLabValue(cell2(row2, c.refLow))?.value ?? null;
+        refHigh = parseLabValue(cell2(row2, c.refHigh))?.value ?? null;
       } else if (c.ref >= 0) {
-        const r2 = parseRange(cell2(row, c.ref));
+        const r2 = parseRange(cell2(row2, c.ref));
         refLow = r2?.low ?? null;
         refHigh = r2?.high ?? null;
       }
@@ -16741,13 +16787,13 @@ function parseLabTable(rows2, fallbackDate) {
       const split = splitHeaderUnit(name);
       result.rows.push({
         line,
-        date: when.date,
-        time: when.time,
-        lab: cell2(row, c.lab) || null,
+        date: when2.date,
+        time: when2.time,
+        lab: cell2(row2, c.lab) || null,
         name: split.name,
         value: v.value,
         comparator: v.comparator,
-        unit: cell2(row, c.unit) || split.unit,
+        unit: cell2(row2, c.unit) || split.unit,
         refLow,
         refHigh
       });
@@ -16757,16 +16803,16 @@ function parseLabTable(rows2, fallbackDate) {
   result.format = "wide";
   const skip = new Set([c.date, c.time, c.lab].filter((i) => i >= 0));
   const analyteCols = header3.map((h, i) => ({ i, ...splitHeaderUnit(h) })).filter((h) => !skip.has(h.i) && h.name !== "");
-  body.forEach((row, i) => {
+  body.forEach((row2, i) => {
     const line = headerIndex + i + 2;
-    if (row.every((x) => clean(x) === "")) return;
-    const when = dateOf(row);
-    if (!when) {
-      result.skipped.push({ line, text: cell2(row, 0), reason: "Datum fehlt oder ist ung\xFCltig" });
+    if (row2.every((x) => clean(x) === "")) return;
+    const when2 = dateOf(row2);
+    if (!when2) {
+      result.skipped.push({ line, text: cell2(row2, 0), reason: "Datum fehlt oder ist ung\xFCltig" });
       return;
     }
     for (const h of analyteCols) {
-      const raw = cell2(row, h.i);
+      const raw = cell2(row2, h.i);
       if (raw === "") continue;
       const v = parseLabValue(raw);
       if (!v) {
@@ -16775,9 +16821,9 @@ function parseLabTable(rows2, fallbackDate) {
       }
       result.rows.push({
         line,
-        date: when.date,
-        time: when.time,
-        lab: cell2(row, c.lab) || null,
+        date: when2.date,
+        time: when2.time,
+        lab: cell2(row2, c.lab) || null,
         name: h.name,
         value: v.value,
         comparator: v.comparator,
@@ -17172,7 +17218,7 @@ function parseCsv(text2) {
   const count = (ch) => firstLine.split(ch).length - 1;
   const sep = [";", "	", ","].reduce((best, ch) => count(ch) > count(best) ? ch : best, ";");
   const rows2 = [];
-  let row = [];
+  let row2 = [];
   let cell2 = "";
   let quoted = false;
   for (let i = 0; i < clean2.length; i++) {
@@ -17185,18 +17231,18 @@ function parseCsv(text2) {
       else cell2 += ch;
     } else if (ch === '"' && cell2 === "") quoted = true;
     else if (ch === sep) {
-      row.push(cell2);
+      row2.push(cell2);
       cell2 = "";
     } else if (ch === "\n") {
-      row.push(cell2);
-      rows2.push(row);
-      row = [];
+      row2.push(cell2);
+      rows2.push(row2);
+      row2 = [];
       cell2 = "";
     } else cell2 += ch;
   }
-  if (cell2 !== "" || row.length > 0) {
-    row.push(cell2);
-    rows2.push(row);
+  if (cell2 !== "" || row2.length > 0) {
+    row2.push(cell2);
+    rows2.push(row2);
   }
   return rows2;
 }
@@ -17490,7 +17536,7 @@ function safeSheetName(name) {
 }
 function writeXlsx(table2) {
   const enc = new TextEncoder();
-  const cell2 = (col, row, value2, style) => value2 === "" ? "" : `<c r="${columnName(col)}${row}" t="inlineStr"${style ? ` s="${style}"` : ""}><is><t xml:space="preserve">${encodeXml(value2)}</t></is></c>`;
+  const cell2 = (col, row2, value2, style) => value2 === "" ? "" : `<c r="${columnName(col)}${row2}" t="inlineStr"${style ? ` s="${style}"` : ""}><is><t xml:space="preserve">${encodeXml(value2)}</t></is></c>`;
   const allRows = [table2.header, ...table2.rows];
   const sheetRows = allRows.map(
     (r2, i) => `<row r="${i + 1}">${r2.map((v, c) => cell2(c, i + 1, v, i === 0 ? 1 : 0)).join("")}</row>`
@@ -17844,10 +17890,10 @@ function nextHrtDoses(entries) {
     for (let i = 1; i < dates.length; i++) gaps.push(isoDiff(dates[i - 1], dates[i]));
     const recent = gaps.slice(-HRT_INTERVAL_SAMPLES).sort((a, b) => a - b);
     const mid = Math.floor(recent.length / 2);
-    const median4 = recent.length % 2 === 1 ? recent[mid] : Math.round((recent[mid - 1] + recent[mid]) / 2);
-    if (median4 < 1) continue;
+    const median5 = recent.length % 2 === 1 ? recent[mid] : Math.round((recent[mid - 1] + recent[mid]) / 2);
+    if (median5 < 1) continue;
     const last = dates[dates.length - 1];
-    out.push({ hormone: g2.hormone, last, intervalDays: median4, next: shiftDays(last, median4) });
+    out.push({ hormone: g2.hormone, last, intervalDays: median5, next: shiftDays(last, median5) });
   }
   return out.sort((a, b) => a.next.localeCompare(b.next) || a.hormone.localeCompare(b.hormone));
 }
@@ -18629,9 +18675,9 @@ function trainingReview(log, exercises, count = REVIEW_SESSIONS) {
     }
     const index = recentIndex.get(s.workoutId);
     if (index === void 0) continue;
-    let row = groups.get(group);
-    if (!row) {
-      row = {
+    let row2 = groups.get(group);
+    if (!row2) {
+      row2 = {
         group,
         workingSets: 0,
         reps: 0,
@@ -18643,14 +18689,14 @@ function trainingReview(log, exercises, count = REVIEW_SESSIONS) {
         changePercent: null,
         hit: /* @__PURE__ */ new Set()
       };
-      groups.set(group, row);
+      groups.set(group, row2);
     }
     const volume = setVolumeKg(s);
-    row.workingSets += 1;
-    row.reps += s.reps ?? 0;
-    row.volumeKg += volume;
-    row.perSession[index] = (row.perSession[index] ?? 0) + volume;
-    row.hit.add(s.workoutId);
+    row2.workingSets += 1;
+    row2.reps += s.reps ?? 0;
+    row2.volumeKg += volume;
+    row2.perSession[index] = (row2.perSession[index] ?? 0) + volume;
+    row2.hit.add(s.workoutId);
   }
   const groupVolume = [...groups.values()].reduce((sum, g2) => sum + g2.volumeKg, 0);
   const hasBefore = before.length > 0;
@@ -18693,13 +18739,13 @@ function exercisesWithoutGroup(log, exercises, workoutIds) {
   for (const s of log) {
     if (s.isWarmup || s.exerciseCategory !== "strength" || !ids.has(s.workoutId)) continue;
     if (grouped.has(s.exerciseId)) continue;
-    const row = byId.get(s.exerciseId) ?? {
+    const row2 = byId.get(s.exerciseId) ?? {
       id: s.exerciseId,
       name: s.exerciseName.trim() || "Unbenannte \xDCbung",
       sets: 0
     };
-    row.sets += 1;
-    byId.set(s.exerciseId, row);
+    row2.sets += 1;
+    byId.set(s.exerciseId, row2);
   }
   return [...byId.values()].sort((a, b) => b.sets - a.sets || a.name.localeCompare(b.name, "de"));
 }
@@ -18968,12 +19014,12 @@ function mergeLabeledGroups(groups, labels) {
   }
   const outLabels = /* @__PURE__ */ new Map();
   const rows2 = [];
-  for (const [key, { row, sources }] of merged) {
-    rows2.push(row);
+  for (const [key, { row: row2, sources }] of merged) {
+    rows2.push(row2);
     if (sources.length === 1) {
-      outLabels.set(row.group, labels.get(row.group) ?? { label: row.group, detail: null });
+      outLabels.set(row2.group, labels.get(row2.group) ?? { label: row2.group, detail: null });
     } else {
-      outLabels.set(row.group, {
+      outLabels.set(row2.group, {
         label: key,
         detail: `zusammengefasst aus den Muskelgruppen ${sources.map((x) => `\u201E${x}\u201C`).join(", ")}`
       });
@@ -20157,7 +20203,7 @@ function trainingRows(workouts, statuses, limited = false) {
     ...days3.map((status) => ({ kind: "day", date: status.date, status })),
     ...workouts.map((workout) => ({ kind: "workout", date: workout.date, workout }))
   ];
-  return rows2.map((row, index) => ({ row, index })).sort((a, b) => b.row.date.localeCompare(a.row.date) || a.index - b.index).map((x) => x.row);
+  return rows2.map((row2, index) => ({ row: row2, index })).sort((a, b) => b.row.date.localeCompare(a.row.date) || a.index - b.index).map((x) => x.row);
 }
 function restAlarm(info) {
   return info.status?.kind === "rest" && info.restStreak > REST_LIMIT;
@@ -21249,14 +21295,14 @@ function weeklyNutritionDetail(days3, foods, bls) {
     }
   const meals = [...groups.entries()].map(([label, e]) => {
     const count = e.protein.length;
-    const mean10 = e.protein.reduce((a, b) => a + b, 0) / count;
+    const mean11 = e.protein.reduce((a, b) => a + b, 0) / count;
     const min = Math.min(...e.protein);
     const max = Math.max(...e.protein);
     const covered = e.leuTotal > 0 ? e.leuKnown / e.leuTotal : 0;
     return {
       label,
       count,
-      protein: g(mean10),
+      protein: g(mean11),
       leucine: e.leuKnown > 0 ? g(e.leucine / count) : "\u2013",
       sub: `${count === 1 ? "1 Mahlzeit" : `${count} Mahlzeiten`}${count > 1 ? `, Eiwei\xDF ${g(min)}\u2013${g(max)}` : ""} \xB7 Leucin-Angabe f\xFCr ${pct(covered)} des Eiwei\xDFes`
     };
@@ -21575,7 +21621,7 @@ function chartSvg(chart, label) {
 var list = (items, cls = "wr-list") => items.length ? `<ul class="${cls}">${items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : "";
 var box = (title, body, kind = "") => `<div class="wr-box${kind ? ` wr-box--${kind}` : ""}"><h4>${esc(title)}</h4>${body}</div>`;
 var card = (title, body, note = "") => `<div class="wr-card"><h4>${esc(title)}</h4>${body}${note ? `<p class="wr-note">${esc(note)}</p>` : ""}</div>`;
-var head = (num4, title, sub) => `<div class="wr-head"><span class="wr-head__num">${num4}</span><div><h3>${esc(title)}</h3><p>${esc(sub)}</p></div></div>`;
+var head = (num5, title, sub) => `<div class="wr-head"><span class="wr-head__num">${num5}</span><div><h3>${esc(title)}</h3><p>${esc(sub)}</p></div></div>`;
 var table = (cols, rows2, cls = "") => `<table class="wr-table${cls ? ` ${cls}` : ""}"><thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows2.map((r2) => `<tr>${r2.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
 function nutritionDetailHtml(r2) {
   const d = r2.nutrition.detail;
@@ -21901,10 +21947,10 @@ var Writer = class {
     if (this.y + h > BOTTOM2) this.newPage();
   }
   // ------------------------------------------------------------ Bausteine
-  section(num4, title, sub) {
+  section(num5, title, sub) {
     this.newPage();
     const p = this.page;
-    p.text(M2, this.y + 30, num4, { size: 32, bold: true, color: C.orange });
+    p.text(M2, this.y + 30, num5, { size: 32, bold: true, color: C.orange });
     p.text(M2 + 56, this.y + 16, safe(title), { size: 18, bold: true, color: C.navy });
     p.text(M2 + 56, this.y + 30, safe(sub), { size: 8.5, color: C.muted });
     this.y += 50;
@@ -22063,9 +22109,9 @@ var Writer = class {
       this.y += headH;
     };
     drawHead();
-    rows2.forEach((row, ri) => {
+    rows2.forEach((row2, ri) => {
       const marks = [];
-      const cells = row.map((c, i) => {
+      const cells = row2.map((c, i) => {
         const indent = opts.checkCol === i ? 11 : 0;
         const out = [];
         const starts = [];
@@ -22087,7 +22133,7 @@ var Writer = class {
       let x = x0;
       cells.forEach((lines, i) => {
         if (opts.badgeCol === i) {
-          const t = row[i] ?? "";
+          const t = row2[i] ?? "";
           const open = t === "offen";
           const bw = textWidth(t, 6.8, true) + 10;
           this.page.rect(x + 4, this.y + 4, bw, 11, {
@@ -22153,9 +22199,9 @@ function weeklyReportDoc(r2, opts) {
     const ch = 62;
     r2.kpis.forEach((k, i) => {
       const col = i % 4;
-      const row = Math.floor(i / 4);
+      const row2 = Math.floor(i / 4);
       const x = M2 + col * (cw + gap);
-      const y = w.y + row * (ch + gap);
+      const y = w.y + row2 * (ch + gap);
       const p2 = w.page;
       p2.rect(x, y, cw, ch, { stroke: C.line, width: 0.6, radius: 6, fill: C.white });
       p2.text(x + 9, y + 14, safe(k.label.toUpperCase()), { size: 6.3, bold: true, color: C.muted });
@@ -23225,10 +23271,10 @@ function wakeAdvice(input, inside) {
       basis: `${times.length} von ${ADVICE_DAYS} N\xE4chten erfasst (mind. ${MIN_DAYS})`
     };
   }
-  const median4 = times[Math.floor(times.length / 2)];
-  const off = times.filter((t) => Math.abs(t - median4) > LIMITS.wakeDeviationMin).length;
-  const clock5 = `${String(Math.floor(median4 / 60)).padStart(2, "0")}:${String(median4 % 60).padStart(2, "0")}`;
-  const basis = `\xFCbliche Aufstehzeit ${clock5} Uhr, an ${days2(off)} mehr als 60 Min. abweichend (${times.length} N\xE4chte)`;
+  const median5 = times[Math.floor(times.length / 2)];
+  const off = times.filter((t) => Math.abs(t - median5) > LIMITS.wakeDeviationMin).length;
+  const clock6 = `${String(Math.floor(median5 / 60)).padStart(2, "0")}:${String(median5 % 60).padStart(2, "0")}`;
+  const basis = `\xFCbliche Aufstehzeit ${clock6} Uhr, an ${days2(off)} mehr als 60 Min. abweichend (${times.length} N\xE4chte)`;
   if (off > 0) {
     return {
       ...base,
@@ -23807,9 +23853,9 @@ function goalProgress2(goal, series2, today, decimals = 1) {
   if (start !== null && best) {
     share2 = target === start ? 1 : Math.min(1, Math.max(0, (best.value - start) / (target - start)));
   }
-  const remaining = best && !reachedOn ? round3(Math.abs(target - best.value), decimals) : reachedOn ? 0 : null;
+  const remaining2 = best && !reachedOn ? round3(Math.abs(target - best.value), decimals) : reachedOn ? 0 : null;
   const daysLeft = goal.targetDate ? dayNumber4(goal.targetDate) - dayNumber4(today) : null;
-  const perWeekNeeded = remaining !== null && remaining > 0 && daysLeft !== null && daysLeft > 0 ? round3(remaining / daysLeft * 7, 2) : null;
+  const perWeekNeeded = remaining2 !== null && remaining2 > 0 && daysLeft !== null && daysLeft > 0 ? round3(remaining2 / daysLeft * 7, 2) : null;
   return {
     direction,
     start,
@@ -23820,7 +23866,7 @@ function goalProgress2(goal, series2, today, decimals = 1) {
     milestones,
     reachedOn,
     points: after,
-    remaining,
+    remaining: remaining2,
     perWeekNeeded,
     daysLeft
   };
@@ -24040,17 +24086,17 @@ var numberIn = (t) => {
 function parseOneInput(text2, ctx) {
   const t = norm4(text2);
   if (t === "") return { ok: false, error: `Beispiele: ${ONE_INPUT_EXAMPLES}` };
-  const num4 = numberIn(t);
+  const num5 = numberIn(t);
   if (/\bkg\b/.test(t) || /^gewicht\b/.test(t) || /^\d+(?:[.,]\d+)?$/.test(t)) {
-    if (num4 === null) return { ok: false, error: "Bitte ein Gewicht eingeben, z. B. 82,4 kg." };
-    const w = parseWeight(String(num4));
+    if (num5 === null) return { ok: false, error: "Bitte ein Gewicht eingeben, z. B. 82,4 kg." };
+    const w = parseWeight(String(num5));
     return w.ok ? { ok: true, intent: { kind: "weight", kg: w.kg } } : { ok: false, error: w.error };
   }
   for (const d of ctx.drinks ?? CAFFEINE_DRINKS) {
     const words = DRINK_WORDS[d.id] ?? [norm4(d.label)];
     if (!words.some((w) => t.includes(w))) continue;
     const free = d.portionMl === null;
-    const amount = num4 ?? (free ? d.portionMg : d.portionMl);
+    const amount = num5 ?? (free ? d.portionMg : d.portionMl);
     if (amount === null || !(amount > 0))
       return { ok: false, error: `${d.label}: bitte die Menge angeben.` };
     return { ok: true, intent: { kind: "caffeine", drinkId: d.id, label: d.label, amount } };
@@ -24061,21 +24107,21 @@ function parseOneInput(text2, ctx) {
     if (ml) {
       const v = Number(ml[1].replace(",", ".")) * (ml[2] === "l" ? 1e3 : 1);
       glasses = Math.max(1, Math.round(v / Math.max(1, ctx.glassMl)));
-    } else glasses = num4 !== null ? Math.round(num4) : 1;
+    } else glasses = num5 !== null ? Math.round(num5) : 1;
     if (!(glasses >= 1 && glasses <= 20))
       return { ok: false, error: "Wasser: 1 bis 20 Gl\xE4ser auf einmal." };
     return { ok: true, intent: { kind: "water", glasses } };
   }
-  if (num4 !== null) {
+  if (num5 !== null) {
     const words = t.replace(/(\d+(?:[.,]\d+)?)\s*(g|mg|µg|kcal)?/g, " ").trim();
     const hit = ctx.nutrients.find((n3) => {
       const l = norm4(n3.label);
       return words.length >= 3 && (l === words || l.startsWith(words) || words.startsWith(l));
     });
-    if (hit && num4 > 0)
+    if (hit && num5 > 0)
       return {
         ok: true,
-        intent: { kind: "fast", key: hit.key, label: hit.label, unit: hit.unit, amount: num4 }
+        intent: { kind: "fast", key: hit.key, label: hit.label, unit: hit.unit, amount: num5 }
       };
   }
   const stacks = ctx.stacks.filter((s) => norm4(s.name).includes(t) || t.includes(norm4(s.name)));
@@ -24561,7 +24607,7 @@ function quickIsEmpty(f) {
 var round12 = (x) => Math.round(x * 10) / 10;
 function checkQuick(f, strict = false) {
   const errors = {};
-  const num4 = {};
+  const num5 = {};
   const missing = [];
   for (const d of QUICK_FIELDS) {
     const text2 = f[d.field].trim();
@@ -24576,30 +24622,30 @@ function checkQuick(f, strict = false) {
     if (!Number.isFinite(v)) errors[d.field] = "keine Zahl";
     else if (v < 0) errors[d.field] = "nicht negativ";
     else if (v > QUICK_MAX) errors[d.field] = "zu gro\xDF";
-    else num4[d.field] = v;
+    else num5[d.field] = v;
   }
-  if (num4.saturatedFat !== void 0 && num4.fat !== void 0 && num4.saturatedFat > num4.fat) {
+  if (num5.saturatedFat !== void 0 && num5.fat !== void 0 && num5.saturatedFat > num5.fat) {
     errors.saturatedFat = "mehr als Fett";
   }
-  if (num4.sugar !== void 0 && num4.carbs !== void 0 && num4.sugar > num4.carbs) {
+  if (num5.sugar !== void 0 && num5.carbs !== void 0 && num5.sugar > num5.carbs) {
     errors.sugar = "mehr als KH";
   }
-  let kcal3 = num4.kcal ?? null;
+  let kcal3 = num5.kcal ?? null;
   let kcalDerived = false;
-  if (kcal3 === null && num4.kj !== void 0) {
-    kcal3 = round12(num4.kj / KJ_PER_KCAL);
+  if (kcal3 === null && num5.kj !== void 0) {
+    kcal3 = round12(num5.kj / KJ_PER_KCAL);
     kcalDerived = true;
   }
-  if (kcal3 === null && num4.fat !== void 0 && num4.carbs !== void 0 && num4.protein !== void 0) {
-    kcal3 = Math.round(9 * num4.fat + 4 * num4.carbs + 4 * num4.protein + 2 * (num4.fiber ?? 0));
+  if (kcal3 === null && num5.fat !== void 0 && num5.carbs !== void 0 && num5.protein !== void 0) {
+    kcal3 = Math.round(9 * num5.fat + 4 * num5.carbs + 4 * num5.protein + 2 * (num5.fiber ?? 0));
     kcalDerived = true;
   }
-  const kj = num4.kj ?? (kcal3 !== null ? Math.round(kcal3 * KJ_PER_KCAL) : null);
+  const kj = num5.kj ?? (kcal3 !== null ? Math.round(kcal3 * KJ_PER_KCAL) : null);
   const ok = missing.length === 0 && Object.keys(errors).length === 0;
   const values = {};
   if (ok) {
     for (const d of QUICK_FIELDS) {
-      const v = num4[d.field];
+      const v = num5[d.field];
       if (d.key && d.key !== "energy" && v !== void 0) values[d.key] = v;
     }
     if (kcal3 !== null) values.energy = kcal3;
@@ -25193,7 +25239,7 @@ function value(w, key) {
   }
 }
 function sortTrainingRows(rows2, key, direction) {
-  const indexed = rows2.map((row, index) => ({ row, index }));
+  const indexed = rows2.map((row2, index) => ({ row: row2, index }));
   if (key === "date") {
     return indexed.sort((a, b) => {
       const va = a.row.kind === "workout" ? value(a.row.workout, "date") : `${a.row.date} `;
@@ -25388,31 +25434,31 @@ function findNorm(norms, sex, ageYears, heightCm) {
   const first = group[0];
   const last = group[group.length - 1];
   if (!first || !last) return null;
-  const norm5 = heightCm < first.height_min_cm ? first : last;
-  return { norm: norm5, heightClamped: true };
+  const norm6 = heightCm < first.height_min_cm ? first : last;
+  return { norm: norm6, heightClamped: true };
 }
 function evaluateGrip(norms, input) {
   const found = findNorm(norms, input.sex, input.ageYears, input.heightCm);
   if (!found) return null;
-  const { norm: norm5, heightClamped } = found;
+  const { norm: norm6, heightClamped } = found;
   const averageKg2 = round13((input.leftKg + input.rightKg) / 2);
-  const zScore = (averageKg2 - norm5.mean_kg) / norm5.sd_kg;
+  const zScore = (averageKg2 - norm6.mean_kg) / norm6.sd_kg;
   const percentile = round13(normalCdf(zScore) * 100);
   const category = CATEGORY_BOUNDS.find((b) => percentile >= b.minPercentile).category;
   const nextBound = [...CATEGORY_BOUNDS].reverse().find((b) => b.minPercentile > percentile);
   let kgToNextLevel = null;
   if (nextBound) {
-    const target = nextBound.minPercentile === 10 ? norm5.p10_kg : nextBound.minPercentile === 90 ? norm5.p90_kg : norm5.mean_kg + (Z[nextBound.minPercentile] ?? 0) * norm5.sd_kg;
+    const target = nextBound.minPercentile === 10 ? norm6.p10_kg : nextBound.minPercentile === 90 ? norm6.p90_kg : norm6.mean_kg + (Z[nextBound.minPercentile] ?? 0) * norm6.sd_kg;
     kgToNextLevel = round13(Math.max(0, target - averageKg2));
   }
   return {
     averageKg: averageKg2,
-    norm: norm5,
+    norm: norm6,
     percentile,
     zScore: Math.round(zScore * 100) / 100,
     category,
-    diffToMeanKg: round13(averageKg2 - norm5.mean_kg),
-    percentOfMean: Math.round(averageKg2 / norm5.mean_kg * 100),
+    diffToMeanKg: round13(averageKg2 - norm6.mean_kg),
+    percentOfMean: Math.round(averageKg2 / norm6.mean_kg * 100),
     kgToNextLevel,
     heightClamped,
     asymmetry: evaluateAsymmetry(input.leftKg, input.rightKg, input.dominantHand)
@@ -25486,10 +25532,10 @@ var RESTING_HR_NORMS = {
     ]
   }
 };
-var hrv = (ageMin, ageMax, p2, median4, p98) => {
-  const lo = (Math.log(median4) - Math.log(p2)) / 2.0537;
-  const hi = (Math.log(p98) - Math.log(median4)) / 2.0537;
-  const at = (z2) => Math.exp(Math.log(median4) + z2 * (z2 < 0 ? lo : hi));
+var hrv = (ageMin, ageMax, p2, median5, p98) => {
+  const lo = (Math.log(median5) - Math.log(p2)) / 2.0537;
+  const hi = (Math.log(p98) - Math.log(median5)) / 2.0537;
+  const at = (z2) => Math.exp(Math.log(median5) + z2 * (z2 < 0 ? lo : hi));
   const z = [-1.6449, -1.2816, -0.6745, 0, 0.6745, 1.2816, 1.6449];
   const values = z.map((x) => Math.round(at(x) * 10) / 10);
   return {
@@ -25611,8 +25657,8 @@ function assess(table2, sex, age, value2) {
   if (!band) return null;
   const { percentile, clamped } = percentileOf(band.points, value2);
   const betterThan = table2.higherIsBetter ? percentile : 100 - percentile;
-  const median4 = band.points.find(([p]) => p === 50)?.[1] ?? NaN;
-  return { percentile, betterThan, level: levelOfRank(betterThan), band, median: median4, clamped };
+  const median5 = band.points.find(([p]) => p === 50)?.[1] ?? NaN;
+  return { percentile, betterThan, level: levelOfRank(betterThan), band, median: median5, clamped };
 }
 function rankText(result, sex) {
   const group = `${sex === "male" ? "der M\xE4nner" : "der Frauen"} ${bandLabel(result.band)}`;
@@ -27979,20 +28025,20 @@ function evaluateFor(leftKg, rightKg, dominantHand, person) {
   return { ok: true, result, person };
 }
 var evaluateMeasurement = (m, profile) => evaluateFor(m.leftKg, m.rightKg, m.dominantHand, personFor(m, profile));
-function describeNorm(norm5) {
-  const sex = norm5.sex === "male" ? "M\xE4nner" : "Frauen";
-  const height = norm5.height_max_cm === null ? `ab ${norm5.height_min_cm} cm` : `${norm5.height_min_cm}\u2013${norm5.height_max_cm} cm`;
-  return `${sex}, ${norm5.age_min}\u2013${norm5.age_max} Jahre, ${height}`;
+function describeNorm(norm6) {
+  const sex = norm6.sex === "male" ? "M\xE4nner" : "Frauen";
+  const height = norm6.height_max_cm === null ? `ab ${norm6.height_min_cm} cm` : `${norm6.height_min_cm}\u2013${norm6.height_max_cm} cm`;
+  return `${sex}, ${norm6.age_min}\u2013${norm6.age_max} Jahre, ${height}`;
 }
 var averageKg = (leftKg, rightKg) => Math.round((leftKg + rightKg) / 2 * 10) / 10;
 var markerPosition = (percentile) => Math.min(99, Math.max(1, percentile));
-function levelLimitsKg(norm5) {
-  const round6 = (n3) => Math.round(n3 * 10) / 10;
+function levelLimitsKg(norm6) {
+  const round7 = (n3) => Math.round(n3 * 10) / 10;
   return {
-    p10: norm5.p10_kg,
-    p25: round6(norm5.mean_kg - 0.6745 * norm5.sd_kg),
-    p75: round6(norm5.mean_kg + 0.6745 * norm5.sd_kg),
-    p90: norm5.p90_kg
+    p10: norm6.p10_kg,
+    p25: round7(norm6.mean_kg - 0.6745 * norm6.sd_kg),
+    p75: round7(norm6.mean_kg + 0.6745 * norm6.sd_kg),
+    p90: norm6.p90_kg
   };
 }
 function gripChartPoints(measurements, profile) {
@@ -29769,13 +29815,13 @@ function parseProtocolState(raw) {
   if (o.dozen && typeof o.dozen === "object") {
     for (const [day, counts] of Object.entries(o.dozen)) {
       if (!ISO3.test(day) || !counts || typeof counts !== "object") continue;
-      const row = {};
+      const row2 = {};
       for (const d of DAILY_DOZEN) {
         const n3 = counts[d.key];
         if (typeof n3 === "number" && Number.isInteger(n3) && n3 > 0)
-          row[d.key] = Math.min(n3, d.servings);
+          row2[d.key] = Math.min(n3, d.servings);
       }
-      if (Object.keys(row).length) out.dozen[day] = row;
+      if (Object.keys(row2).length) out.dozen[day] = row2;
     }
   }
   return out;
@@ -29783,9 +29829,9 @@ function parseProtocolState(raw) {
 function pruneDozen(dozen, today, keep = DOZEN_KEEP_DAYS) {
   const t = Date.parse(`${today}T12:00:00Z`);
   const out = {};
-  for (const [day, row] of Object.entries(dozen)) {
+  for (const [day, row2] of Object.entries(dozen)) {
     const d = Date.parse(`${day}T12:00:00Z`);
-    if (Number.isFinite(d) && (t - d) / 864e5 < keep && d <= t) out[day] = row;
+    if (Number.isFinite(d) && (t - d) / 864e5 < keep && d <= t) out[day] = row2;
   }
   return out;
 }
@@ -29811,17 +29857,17 @@ function setDozen(s, day, key, count) {
   const def = DAILY_DOZEN.find((d) => d.key === key);
   if (!def || !ISO3.test(day)) return s;
   const n3 = Math.max(0, Math.min(def.servings, Math.round(count)));
-  const row = { ...s.dozen[day] ?? {} };
-  if (n3) row[key] = n3;
-  else delete row[key];
+  const row2 = { ...s.dozen[day] ?? {} };
+  if (n3) row2[key] = n3;
+  else delete row2[key];
   const dozen = { ...s.dozen };
-  if (Object.keys(row).length) dozen[day] = row;
+  if (Object.keys(row2).length) dozen[day] = row2;
   else delete dozen[day];
   return { ...s, dozen };
 }
 function dozenDone(s, day) {
-  const row = s.dozen[day] ?? {};
-  return DAILY_DOZEN.reduce((n3, d) => n3 + Math.min(d.servings, row[d.key] ?? 0), 0);
+  const row2 = s.dozen[day] ?? {};
+  return DAILY_DOZEN.reduce((n3, d) => n3 + Math.min(d.servings, row2[d.key] ?? 0), 0);
 }
 
 // src/domain/labDoseContext.ts
@@ -30075,8 +30121,8 @@ function stepsByTime(json, size = 60) {
 var pad3 = (n3) => String(n3).padStart(2, "0");
 function bucketLabel(start, size) {
   const end = start + size;
-  const clock5 = (m) => m >= 1440 ? "24:00" : `${pad3(Math.floor(m / 60))}:${pad3(m % 60)}`;
-  return `${clock5(start)}\u2013${clock5(end)}`;
+  const clock6 = (m) => m >= 1440 ? "24:00" : `${pad3(Math.floor(m / 60))}:${pad3(m % 60)}`;
+  return `${clock6(start)}\u2013${clock6(end)}`;
 }
 
 // src/domain/supplementSleep.ts
@@ -30704,17 +30750,17 @@ function periodReviewToPdf(r2, opts) {
   w.page.rect(M3, w.y, CW2, 20, { fill: NAVY2, radius: 4 });
   cols.forEach((c, i) => cell2(i, w.y + 13.5, c.label, true, WHITE2));
   w.y += 22;
-  r2.rows.forEach((row, n3) => {
+  r2.rows.forEach((row2, n3) => {
     w.ensure(18);
     if (n3 % 2 === 1) w.page.rect(M3, w.y, CW2, 18, { fill: SOFT2 });
     const y = w.y + 12.5;
-    cell2(0, y, row.label, true);
-    cell2(1, y, row.trainings ? String(row.trainings) : "\u2013");
-    cell2(2, y, row.trainingMin ? formatDuration(row.trainingMin) : "\u2013");
-    cell2(3, y, row.kcal === null ? "\u2013" : formatNumber(row.kcal, 0));
-    cell2(4, y, row.sleepMin === null ? "\u2013" : formatDuration(row.sleepMin));
-    cell2(5, y, row.steps === null ? "\u2013" : formatNumber(row.steps, 0));
-    cell2(6, y, row.weight === null ? "\u2013" : `${formatNumber(row.weight, 1)} kg`);
+    cell2(0, y, row2.label, true);
+    cell2(1, y, row2.trainings ? String(row2.trainings) : "\u2013");
+    cell2(2, y, row2.trainingMin ? formatDuration(row2.trainingMin) : "\u2013");
+    cell2(3, y, row2.kcal === null ? "\u2013" : formatNumber(row2.kcal, 0));
+    cell2(4, y, row2.sleepMin === null ? "\u2013" : formatDuration(row2.sleepMin));
+    cell2(5, y, row2.steps === null ? "\u2013" : formatNumber(row2.steps, 0));
+    cell2(6, y, row2.weight === null ? "\u2013" : `${formatNumber(row2.weight, 1)} kg`);
     w.y += 18;
   });
   w.page.line(M3, w.y, M3 + CW2, w.y, LINE3);
@@ -31135,7 +31181,7 @@ function changeOf(series2) {
     if (p.value > max.value) max = p;
     sum += p.value;
   }
-  const mean10 = sum / pts.length;
+  const mean11 = sum / pts.length;
   let change2 = null;
   let base = null;
   let basis;
@@ -31164,7 +31210,7 @@ function changeOf(series2) {
     last,
     min,
     max,
-    mean: mean10,
+    mean: mean11,
     change: change2,
     changePercent: change2 !== null && base !== null && base !== 0 ? change2 / Math.abs(base) * 100 : null,
     basis
@@ -31750,11 +31796,11 @@ function header2(l, report, opts) {
   const gap = 10;
   const tw = (CONTENT_W2 - gap * (cols - 1)) / cols;
   for (let i = 0; i < tiles.length; i += cols) {
-    const row = tiles.slice(i, i + cols);
-    const rows2 = Math.max(1, ...row.map((t) => t.facts.length));
+    const row2 = tiles.slice(i, i + cols);
+    const rows2 = Math.max(1, ...row2.map((t) => t.facts.length));
     const th = 30 + rows2 * 15;
     l.ensure(th + gap);
-    row.forEach((t, j) => {
+    row2.forEach((t, j) => {
       const x = M4 + j * (tw + gap);
       const c = areaColor(t.area);
       l.page.rect(x, l.y, tw, th, { fill: tint2(c, 0.92), radius: 8 });
@@ -32403,7 +32449,7 @@ function overview(l, days3) {
     l.y += 20;
   };
   head2();
-  const row = (cells, opts = {}) => {
+  const row2 = (cells, opts = {}) => {
     if (l.y + 16 > BOTTOM5) {
       l.newPage();
       head2();
@@ -32430,12 +32476,12 @@ function overview(l, days3) {
   for (const d of days3) {
     const date = exportDayTitle(d.date).replace(/^(\w{2})\w*,/, "$1,");
     if (!d.hasEntries) {
-      row([date, "keine Eintr\xE4ge", "", "", "", "", "", "", "", ""], { muted: true, span: true });
+      row2([date, "keine Eintr\xE4ge", "", "", "", "", "", "", "", ""], { muted: true, span: true });
       continue;
     }
     const suppCount = d.supplements.reduce((n3, g2) => n3 + g2.items.length, 0);
     const balance2 = energyBalance(d);
-    row(
+    row2(
       [
         date,
         formatKcal(d.totals.energyKcal),
@@ -32452,11 +32498,11 @@ function overview(l, days3) {
     );
   }
   const sums = periodSums(days3);
-  const avg = averageTotals(days3);
+  const avg2 = averageTotals(days3);
   const avgNeed = averageNeed(days3);
   const dayCount2 = (n3) => `${n3} ${n3 === 1 ? "Tag" : "Tage"}`;
   if (sums) {
-    row(
+    row2(
       [
         `Summe (${dayCount2(sums.days)})`,
         formatKcal(sums.energyKcal),
@@ -32472,17 +32518,17 @@ function overview(l, days3) {
       { bold: true, fill: tint3(NAVY4, 0.92), colors: balanceColors(sums.balance) }
     );
   }
-  if (avg) {
+  if (avg2) {
     const avgBalance = sums && sums.balance !== null ? sums.balance / sums.needDays : null;
-    row(
+    row2(
       [
-        `\xD8 (${dayCount2(avg.days)})`,
-        formatKcal(avg.energyKcal),
+        `\xD8 (${dayCount2(avg2.days)})`,
+        formatKcal(avg2.energyKcal),
         avgNeed ? formatKcal(avgNeed.need) : "\u2013",
         avgBalance === null ? "\u2013" : balanceText(avgBalance),
-        formatGrams(avg.proteinG),
-        formatGrams(avg.carbsG),
-        formatGrams(avg.fatG),
+        formatGrams(avg2.proteinG),
+        formatGrams(avg2.carbsG),
+        formatGrams(avg2.fatG),
         "",
         "",
         ""
@@ -34438,10 +34484,10 @@ function extraSources(day, key) {
   return { totalG, sources, missing: [...missing].sort((a, b) => a.localeCompare(b, "de")) };
 }
 function extraHistory(daysIn, date, key, days3 = EXTRA_HISTORY_DAYS) {
-  const byDate2 = new Map(daysIn.map((d) => [d.date, dayExtrasOf(d)]));
+  const byDate3 = new Map(daysIn.map((d) => [d.date, dayExtrasOf(d)]));
   return Array.from({ length: days3 }, (_, i) => {
     const iso2 = shiftDays(date, i - (days3 - 1));
-    const d = byDate2.get(iso2);
+    const d = byDate3.get(iso2);
     if (!d || d.items === 0) return { date: iso2, grams: null, limit: null, level: null };
     const grams = gramsOf(d, key);
     return {
@@ -34564,8 +34610,8 @@ function trainingLine(i) {
   if (t.dayKind === "sick")
     return { key: "training", label: "Training", value: "Krank eingetragen", state: "ok" };
   if (t.next) {
-    const when = t.next.date === i.today ? `heute${t.next.time ? ` ${t.next.time} Uhr` : ""}` : t.next.date ? `${t.next.date.slice(8, 10)}.${t.next.date.slice(5, 7)}.${t.next.time ? ` ${t.next.time} Uhr` : ""}` : "als N\xE4chstes";
-    return { key: "training", label: "Training", value: `${t.next.name} \xB7 ${when}`, state: "open" };
+    const when2 = t.next.date === i.today ? `heute${t.next.time ? ` ${t.next.time} Uhr` : ""}` : t.next.date ? `${t.next.date.slice(8, 10)}.${t.next.date.slice(5, 7)}.${t.next.time ? ` ${t.next.time} Uhr` : ""}` : "als N\xE4chstes";
+    return { key: "training", label: "Training", value: `${t.next.name} \xB7 ${when2}`, state: "open" };
   }
   return { key: "training", label: "Training", value: "heute noch nichts", state: "none" };
 }
@@ -34784,8 +34830,8 @@ function median(values) {
 }
 function sampleSd2(values) {
   if (values.length < 2) return 0;
-  const mean10 = values.reduce((a, v) => a + v, 0) / values.length;
-  const sq = values.reduce((a, v) => a + (v - mean10) ** 2, 0);
+  const mean11 = values.reduce((a, v) => a + v, 0) / values.length;
+  const sq = values.reduce((a, v) => a + (v - mean11) ** 2, 0);
   return Math.sqrt(sq / (values.length - 1));
 }
 function positionOf(value2, low, high) {
@@ -34793,22 +34839,22 @@ function positionOf(value2, low, high) {
 }
 function normalRange(points2, today, days3 = NORMAL_DAYS) {
   const from = shiftDays(today, -(days3 - 1));
-  const byDate2 = /* @__PURE__ */ new Map();
+  const byDate3 = /* @__PURE__ */ new Map();
   for (const p of points2) {
     if (p.date < from || p.date > today || !Number.isFinite(p.value)) continue;
-    byDate2.set(p.date, p);
+    byDate3.set(p.date, p);
   }
-  const window2 = [...byDate2.values()].sort((a, b) => a.date.localeCompare(b.date));
+  const window2 = [...byDate3.values()].sort((a, b) => a.date.localeCompare(b.date));
   const latest = window2[window2.length - 1];
   if (!latest) return null;
   const condition = usualCondition(window2);
   const same2 = sameCondition(window2, condition);
   if (same2.length < NORMAL_MIN_N) return null;
   const values = same2.map((p) => p.value);
-  const med = median(values);
+  const med2 = median(values);
   const sd2 = sampleSd2(values);
-  const low = med - sd2;
-  const high = med + sd2;
+  const low = med2 - sd2;
+  const high = med2 + sd2;
   let run = 0;
   let runSide = null;
   for (let i = same2.length - 1; i >= 0; i -= 1) {
@@ -34821,7 +34867,7 @@ function normalRange(points2, today, days3 = NORMAL_DAYS) {
     n: same2.length,
     from: same2[0].date,
     to: same2[same2.length - 1].date,
-    median: med,
+    median: med2,
     sd: sd2,
     low,
     high,
@@ -35404,8 +35450,8 @@ function findCandidates(theirs, mine, {
   theirNumber = null,
   numberOf = () => null
 } = {}) {
-  const num4 = theirNumber?.trim() || null;
-  return mine.filter((m) => !m.archived && m.id !== theirs.id).map((m) => similarity(theirs, m, !!num4 && numberOf(m.id)?.trim() === num4)).filter((c) => c.score >= MIN_SCORE).sort((a, b) => b.score - a.score || a.id.localeCompare(b.id)).slice(0, limit);
+  const num5 = theirNumber?.trim() || null;
+  return mine.filter((m) => !m.archived && m.id !== theirs.id).map((m) => similarity(theirs, m, !!num5 && numberOf(m.id)?.trim() === num5)).filter((c) => c.score >= MIN_SCORE).sort((a, b) => b.score - a.score || a.id.localeCompare(b.id)).slice(0, limit);
 }
 function defaultAction(candidates) {
   const best = candidates[0];
@@ -35605,6 +35651,11 @@ function titleOf(card2) {
   const h = card2.querySelector(".card__title, h2, h3");
   return (h?.textContent ?? "").trim();
 }
+function ownChildren(el) {
+  let n3 = 0;
+  for (const c of Array.from(el.children)) if (!c.dataset.arrangeAside) n3++;
+  return n3;
+}
 function collectGroups(root) {
   const cards = Array.from(root.querySelectorAll(".card")).filter(
     (c) => !c.parentElement?.closest(".card") && !c.closest(SKIP)
@@ -35612,7 +35663,7 @@ function collectGroups(root) {
   const raw = [];
   for (const card2 of cards) {
     let el = card2;
-    while (el.parentElement && el.parentElement !== root && el.parentElement.childElementCount === 1)
+    while (el.parentElement && el.parentElement !== root && ownChildren(el.parentElement) === 1)
       el = el.parentElement;
     if (!el.parentElement || raw.some((r2) => r2.el === el)) continue;
     raw.push({ el, card: card2, title: titleOf(card2) });
@@ -36197,10 +36248,10 @@ function restStats(log, today, weeks = 4) {
   }
   rests.sort((a, b) => a - b);
   const m = Math.floor(rests.length / 2);
-  const median4 = rests.length === 0 ? null : rests.length % 2 === 1 ? rests[m] : (rests[m - 1] + rests[m]) / 2;
+  const median5 = rests.length === 0 ? null : rests.length % 2 === 1 ? rests[m] : (rests[m - 1] + rests[m]) / 2;
   return {
     n: rests.length,
-    medianSeconds: median4 === null ? null : Math.round(median4),
+    medianSeconds: median5 === null ? null : Math.round(median5),
     sessions: sessions2.size
   };
 }
@@ -36412,13 +36463,13 @@ var recentDraws = (draws, max) => [...draws].filter(
   (d) => d.results.some((r2) => LAB_NUTRIENT_LINKS.some((l) => l.analyteId === r2.analyteId))
 ).sort((a, b) => b.date.localeCompare(a.date)).slice(0, max);
 function labIntakeRows(draws, intake, max = LAB_INTAKE_DRAWS) {
-  const byDate2 = new Map(intake.map((d) => [d.date, d.values]));
+  const byDate3 = new Map(intake.map((d) => [d.date, d.values]));
   const rows2 = [];
   for (const draw of recentDraws(draws, max)) {
     const from = shiftDays(draw.date, -LAB_INTAKE_DAYS);
     const days3 = [];
     for (let d = from; d < draw.date; d = shiftDays(d, 1)) {
-      const v = byDate2.get(d);
+      const v = byDate3.get(d);
       if (v) days3.push(v);
     }
     for (const r2 of draw.results) {
@@ -36581,7 +36632,7 @@ function parseFit(bytes) {
   }
   return null;
 }
-var num3 = (s) => {
+var num4 = (s) => {
   const x = s === void 0 ? NaN : Number(s);
   return Number.isFinite(x) ? x : null;
 };
@@ -36606,24 +36657,24 @@ function parseTcx(text2) {
     const s = /StartTime="([^"]+)"/i.exec(lap[1] ?? "")?.[1] ?? null;
     if (firstStart === null && s) firstStart = s;
     const b = lap[2] ?? "";
-    const t = num3(/<TotalTimeSeconds>([^<]+)</i.exec(b)?.[1]) ?? 0;
+    const t = num4(/<TotalTimeSeconds>([^<]+)</i.exec(b)?.[1]) ?? 0;
     time += t;
-    const d = num3(/<DistanceMeters>([^<]+)</i.exec(b.replace(/<Track>[\s\S]*<\/Track>/i, ""))?.[1]);
+    const d = num4(/<DistanceMeters>([^<]+)</i.exec(b.replace(/<Track>[\s\S]*<\/Track>/i, ""))?.[1]);
     if (d !== null) {
       dist += d;
       hasDist = true;
     }
-    const c = num3(/<Calories>([^<]+)</i.exec(b)?.[1]);
+    const c = num4(/<Calories>([^<]+)</i.exec(b)?.[1]);
     if (c !== null) {
       kcal3 += c;
       hasKcal = true;
     }
-    const avg = num3(/<AverageHeartRateBpm>\s*<Value>([^<]+)</i.exec(b)?.[1]);
-    if (avg !== null && t > 0) {
-      hrWeighted += avg * t;
+    const avg2 = num4(/<AverageHeartRateBpm>\s*<Value>([^<]+)</i.exec(b)?.[1]);
+    if (avg2 !== null && t > 0) {
+      hrWeighted += avg2 * t;
       hrTime += t;
     }
-    const mx = num3(/<MaximumHeartRateBpm>\s*<Value>([^<]+)</i.exec(b)?.[1]);
+    const mx = num4(/<MaximumHeartRateBpm>\s*<Value>([^<]+)</i.exec(b)?.[1]);
     if (mx !== null) hrMax = Math.max(hrMax ?? 0, mx);
   }
   const start = firstStart ?? id4 ?? null;
@@ -36724,6 +36775,2870 @@ function activityWorkout(a, exerciseId, fileName = "") {
     ]
   };
 }
+
+// src/domain/todayStart.ts
+var todayStart_exports = {};
+__export(todayStart_exports, {
+  ROTATION_DAYS: () => ROTATION_DAYS,
+  startMuscleText: () => startMuscleText,
+  startMuscles: () => startMuscles,
+  todayStart: () => todayStart
+});
+
+// src/domain/recoveryCockpit.ts
+var recoveryCockpit_exports = {};
+__export(recoveryCockpit_exports, {
+  BAND_LABELS: () => BAND_LABELS,
+  BASELINE_DAYS: () => BASELINE_DAYS2,
+  BASELINE_MIN: () => BASELINE_MIN,
+  DEFAULT_SLEEP_TARGET: () => DEFAULT_SLEEP_TARGET,
+  FACTOR_LABELS: () => FACTOR_LABELS,
+  FACTOR_MIN_NIGHTS: () => FACTOR_MIN_NIGHTS,
+  FORECAST_FACTORS: () => FORECAST_FACTORS,
+  FORECAST_LABELS: () => FORECAST_LABELS,
+  MUSCLE_FULL_LOAD: () => MUSCLE_FULL_LOAD,
+  MUSCLE_READY_PCT: () => MUSCLE_READY_PCT,
+  MUSCLE_RECOVERY_HOURS: () => MUSCLE_RECOVERY_HOURS,
+  RECOVERY_LAB: () => RECOVERY_LAB,
+  SCORE_WEIGHTS: () => SCORE_WEIGHTS,
+  baselineOf: () => baselineOf,
+  factorEffects: () => factorEffects,
+  gripMarker: () => gripMarker,
+  groupLoads: () => groupLoads,
+  hrvBaselineUntil: () => hrvBaselineUntil,
+  hrvForecast: () => hrvForecast,
+  muscleRecovery: () => muscleRecovery,
+  pctFromBase: () => pctFromBase,
+  plannedGroups: () => plannedGroups,
+  recoveryDays: () => recoveryDays,
+  recoveryLab: () => recoveryLab,
+  scoreAverageBefore: () => scoreAverageBefore,
+  scoreBand: () => scoreBand,
+  selfPart: () => selfPart,
+  sessionTime: () => sessionTime
+});
+var SCORE_WEIGHTS = { hrv: 0.35, restingHr: 0.2, sleep: 0.25, self: 0.2 };
+var BASELINE_DAYS2 = 28;
+var BASELINE_MIN = 5;
+var DEFAULT_SLEEP_TARGET = 480;
+var clamp = (v, lo = 0, hi = 100) => Math.min(hi, Math.max(lo, v));
+var mean10 = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
+function baselineOf(values) {
+  if (values.length < BASELINE_MIN) return null;
+  const m = mean10(values);
+  const sd2 = Math.sqrt(mean10(values.map((v) => (v - m) ** 2)));
+  return { mean: m, sd: Math.max(sd2, Math.abs(m) * 0.05, 0.1), count: values.length };
+}
+function byDate2(rows2) {
+  const m = /* @__PURE__ */ new Map();
+  for (const r2 of rows2) m.set(r2.date, r2);
+  return m;
+}
+function dailyValues(inp) {
+  const hrv2 = /* @__PURE__ */ new Map();
+  const rhr = /* @__PURE__ */ new Map();
+  for (const r2 of inp.wearableRecovery) {
+    if (r2.hrvMs !== null && r2.hrvMs > 0) hrv2.set(r2.date, r2.hrvMs);
+    if (r2.hrAvg !== null && r2.hrAvg > 0) rhr.set(r2.date, r2.hrAvg);
+  }
+  for (const m of inp.measurements) {
+    if (m.metricId === HRV_METRIC_ID) hrv2.set(m.date, m.value);
+    if (m.metricId === RESTING_HR_METRIC_ID) rhr.set(m.date, m.value);
+  }
+  return { hrv: hrv2, rhr };
+}
+function baselineBefore(values, date) {
+  const from = addDaysIso(date, -BASELINE_DAYS2);
+  const xs = [];
+  for (const [d, v] of values) if (d >= from && d < date) xs.push(v);
+  return baselineOf(xs);
+}
+function selfPart(r2) {
+  if (!r2) return null;
+  const xs = [];
+  if (r2.readiness !== null) xs.push(r2.readiness * 10);
+  if (r2.fatigue !== null) xs.push((10 - r2.fatigue) * 10);
+  if (r2.soreness !== null) xs.push((10 - r2.soreness) * 10);
+  if (r2.stress !== null) xs.push((10 - r2.stress) * 10);
+  return xs.length ? clamp(mean10(xs)) : null;
+}
+function recoveryDays(inp, from, to) {
+  const { hrv: hrv2, rhr } = dailyValues(inp);
+  const logs = byDate2(inp.recoveryLogs);
+  const sleepLogs = byDate2(inp.sleepLogs);
+  const measured = byDate2(inp.wearableSleep);
+  const target = inp.sleepTargetMin && inp.sleepTargetMin > 0 ? inp.sleepTargetMin : DEFAULT_SLEEP_TARGET;
+  const out = [];
+  for (let d = from; d <= to; d = addDaysIso(d, 1)) {
+    const h = hrv2.get(d) ?? null;
+    const r2 = rhr.get(d) ?? null;
+    const hb = baselineBefore(hrv2, d);
+    const rb = baselineBefore(rhr, d);
+    const log = sleepLogs.get(d);
+    const ms = measured.get(d);
+    const msMin = ms && (ms.lightS ?? 0) + (ms.deepS ?? 0) + (ms.remS ?? 0) > 0 ? Math.round(((ms.lightS ?? 0) + (ms.deepS ?? 0) + (ms.remS ?? 0)) / 60) : null;
+    const sleepMin = log ? log.sleepMin : msMin;
+    let phases = null;
+    if (ms && msMin !== null) {
+      phases = {
+        deep: Math.round((ms.deepS ?? 0) / 60),
+        light: Math.round((ms.lightS ?? 0) / 60),
+        rem: Math.round((ms.remS ?? 0) / 60),
+        awake: Math.round((ms.interruptionS ?? 0) / 60)
+      };
+    } else if (log && (log.deepMin !== null || log.lightMin !== null || log.remMin !== null)) {
+      phases = {
+        deep: log.deepMin ?? 0,
+        light: log.lightMin ?? 0,
+        rem: log.remMin ?? 0,
+        awake: log.awakeMin ?? 0
+      };
+    }
+    const self = logs.get(d) ?? null;
+    const parts2 = {
+      hrv: h !== null && hb ? clamp(50 + 25 * ((h - hb.mean) / hb.sd)) : null,
+      restingHr: r2 !== null && rb ? clamp(50 - 25 * ((r2 - rb.mean) / rb.sd)) : null,
+      sleep: sleepMin !== null && sleepMin > 0 ? clamp(sleepMin / target * 100) : null,
+      self: selfPart(self)
+    };
+    let sum = 0;
+    let weight = 0;
+    let n3 = 0;
+    for (const k of Object.keys(SCORE_WEIGHTS)) {
+      const v = parts2[k];
+      if (v === null) continue;
+      sum += v * SCORE_WEIGHTS[k];
+      weight += SCORE_WEIGHTS[k];
+      n3 += 1;
+    }
+    out.push({
+      date: d,
+      hrv: h,
+      restingHr: r2,
+      sleepMin,
+      phases,
+      self,
+      hrvBase: hb,
+      restingHrBase: rb,
+      parts: parts2,
+      score: n3 >= 2 ? Math.round(sum / weight) : null
+    });
+  }
+  return out;
+}
+function scoreBand(score) {
+  return score >= 70 ? "high" : score >= 50 ? "normal" : "low";
+}
+var BAND_LABELS = {
+  high: "Gut erholt",
+  normal: "Im \xFCblichen Bereich",
+  low: "Weniger erholt als \xFCblich"
+};
+function scoreAverageBefore(days3, date) {
+  const from = addDaysIso(date, -BASELINE_DAYS2);
+  const xs = days3.filter((d) => d.date >= from && d.date < date && d.score !== null).map((d) => d.score);
+  return xs.length >= BASELINE_MIN ? Math.round(mean10(xs)) : null;
+}
+function pctFromBase(value2, base) {
+  if (value2 === null || !base || base.mean === 0) return null;
+  return (value2 - base.mean) / base.mean * 100;
+}
+var MUSCLE_RECOVERY_HOURS = 72;
+var MUSCLE_FULL_LOAD = 10;
+var MUSCLE_READY_PCT = 80;
+function groupLoads(values) {
+  const out = {};
+  for (const g2 of MUSCLE_GROUPS) out[g2.id] = Math.max(0, ...g2.parts.map((p) => values[p] ?? 0));
+  return out;
+}
+function sessionTime(date, time) {
+  const [y, m, d] = date.split("-").map(Number);
+  const [hh, mm] = (time ?? "12:00").split(":").map(Number);
+  return new Date(y ?? 2e3, (m ?? 1) - 1, d ?? 1, hh ?? 12, mm ?? 0).getTime();
+}
+function remaining(load2, sinceMs) {
+  const h = sinceMs / 36e5;
+  return h < 0 ? 0 : load2 * Math.max(0, 1 - h / MUSCLE_RECOVERY_HOURS);
+}
+function muscleRecovery(log, exercises, machines, workouts, now, focus = NO_FOCUS) {
+  const nowDate = new Date(now);
+  const today = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, "0")}-${String(nowDate.getDate()).padStart(2, "0")}`;
+  const from = addDaysIso(today, -Math.ceil(MUSCLE_RECOVERY_HOURS / 24) - 1);
+  const startOf = new Map(workouts.map((w) => [w.id, sessionTime(w.date, w.startTime)]));
+  const sessions2 = /* @__PURE__ */ new Map();
+  for (const s of log) {
+    if (s.date < from || s.date > today) continue;
+    const at = startOf.get(s.workoutId) ?? sessionTime(s.date, null);
+    if (at > now) continue;
+    const e = sessions2.get(s.workoutId) ?? { at, sets: [] };
+    e.sets.push(s);
+    sessions2.set(s.workoutId, e);
+  }
+  const loads = [...sessions2.values()].map((x) => ({
+    at: x.at,
+    groups: groupLoads(muscleMapData(x.sets, exercises, machines, () => true, focus).sets)
+  }));
+  return MUSCLE_GROUPS.map((g2) => {
+    const at = (t) => loads.reduce((a, l) => a + remaining(l.groups[g2.id] ?? 0, t - l.at), 0);
+    const load2 = at(now);
+    const pct2 = Math.round(clamp(100 * (1 - load2 / MUSCLE_FULL_LOAD)));
+    let readyAt = null;
+    if (pct2 < MUSCLE_READY_PCT) {
+      const limit = MUSCLE_FULL_LOAD * (1 - MUSCLE_READY_PCT / 100);
+      for (let h = 1; h <= MUSCLE_RECOVERY_HOURS; h++) {
+        const t = now + h * 36e5;
+        if (at(t) <= limit) {
+          readyAt = t;
+          break;
+        }
+      }
+    }
+    return { id: g2.id, label: g2.label, pct: pct2, load: Math.round(load2 * 10) / 10, readyAt };
+  });
+}
+function plannedGroups(exerciseNames, exercises, machines, focus = NO_FOCUS) {
+  const byName2 = new Map(exercises.map((e) => [e.name.trim().toLowerCase(), e]));
+  const sets2 = [];
+  for (const n3 of exerciseNames) {
+    const e = byName2.get(n3.trim().toLowerCase());
+    if (e && e.category === "strength")
+      sets2.push({
+        exerciseId: e.id,
+        exerciseCategory: e.category,
+        isWarmup: false,
+        reps: 10,
+        weightKg: null
+      });
+  }
+  if (!sets2.length) return [];
+  const loads = groupLoads(muscleMapData(sets2, exercises, machines, () => true, focus).sets);
+  return MUSCLE_GROUPS.map((g2) => ({ id: g2.id, label: g2.label, sets: loads[g2.id] ?? 0 })).filter((g2) => g2.sets >= 0.5).sort((a, b) => b.sets - a.sets);
+}
+function gripMarker(grip, today) {
+  const list2 = grip.filter((g2) => g2.date <= today).map((g2) => ({ date: g2.date, value: (g2.leftKg + g2.rightKg) / 2 })).filter((g2) => g2.value > 0).sort((a, b) => a.date.localeCompare(b.date));
+  const last = list2[list2.length - 1];
+  if (!last) return null;
+  const from = addDaysIso(last.date, -BASELINE_DAYS2);
+  const before = list2.filter((g2) => g2.date >= from && g2.date < last.date).map((g2) => g2.value);
+  const base = before.length >= 2 ? mean10(before) : null;
+  return {
+    date: last.date,
+    value: last.value,
+    baseline: base,
+    baselineCount: before.length,
+    pct: base ? (last.value - base) / base * 100 : null,
+    recent: list2.slice(-8)
+  };
+}
+var FACTOR_MIN_NIGHTS = 7;
+var FACTOR_LABELS = {
+  sleep: "Schlaf mindestens 7,5 h",
+  meal: "Letzte Mahlzeit mindestens 3 h vor dem Einschlafen",
+  caffeine: "Letztes Koffein vor 14 Uhr",
+  training: "Training am Vortag",
+  stress: "Stress ab 6 am Vortag (Selbsteinsch\xE4tzung)"
+};
+var minutesOf4 = (hhmm) => {
+  if (!hhmm) return null;
+  const m = /^(\d{1,2}):(\d{2})/.exec(hhmm.length > 5 ? hhmm.slice(11, 16) || hhmm : hhmm);
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+};
+function sleepStartMin(ms, log) {
+  const t = minutesOf4(ms?.sleepStart ?? log?.bedTime ?? null);
+  if (t === null) return null;
+  return t < 12 * 60 ? t + 24 * 60 : t;
+}
+function factorEffects(inp, from, to) {
+  const { hrv: hrv2 } = dailyValues(inp);
+  const ctx = byDate2(inp.context);
+  const logs = byDate2(inp.recoveryLogs);
+  const sleepLogs = byDate2(inp.sleepLogs);
+  const measured = byDate2(inp.wearableSleep);
+  const trained = new Set(inp.workouts.filter((w) => w.status === "done").map((w) => w.date));
+  const days3 = recoveryDays(inp, from, to);
+  const groups = {
+    sleep: { with: [], without: [] },
+    meal: { with: [], without: [] },
+    caffeine: { with: [], without: [] },
+    training: { with: [], without: [] },
+    stress: { with: [], without: [] }
+  };
+  const all = [];
+  for (const day of days3) {
+    const v = hrv2.get(day.date);
+    if (v === void 0) continue;
+    all.push(v);
+    const prev = addDaysIso(day.date, -1);
+    const add = (k, yes) => {
+      if (yes === null) return;
+      (yes ? groups[k].with : groups[k].without).push(v);
+    };
+    add("sleep", day.sleepMin !== null ? day.sleepMin >= 450 : null);
+    const c = ctx.get(prev);
+    const start = sleepStartMin(measured.get(day.date), sleepLogs.get(day.date));
+    const meal = minutesOf4(c?.mealLast ?? null);
+    add("meal", start !== null && meal !== null ? start - meal >= 180 : null);
+    const last = minutesOf4(c?.caffeineLast ?? null);
+    add("caffeine", last === null || last < 14 * 60);
+    add("training", trained.has(prev));
+    const s = logs.get(prev)?.stress ?? null;
+    add("stress", s !== null ? s >= 6 : null);
+  }
+  const overall = all.length ? mean10(all) : null;
+  return Object.keys(groups).map((key) => {
+    const g2 = groups[key];
+    const mw = g2.with.length ? mean10(g2.with) : null;
+    const mo = g2.without.length ? mean10(g2.without) : null;
+    const enough = g2.with.length >= FACTOR_MIN_NIGHTS && g2.without.length >= FACTOR_MIN_NIGHTS && overall;
+    return {
+      key,
+      label: FACTOR_LABELS[key],
+      withCount: g2.with.length,
+      withoutCount: g2.without.length,
+      meanWith: mw,
+      meanWithout: mo,
+      pct: enough && mw !== null && mo !== null && overall ? (mw - mo) / overall * 100 : null
+    };
+  });
+}
+var FORECAST_FACTORS = ["meal", "caffeine", "sleep"];
+var FORECAST_LABELS = {
+  meal: "Abendessen mindestens 3 h vor dem Schlafen",
+  caffeine: "Kein Koffein nach 14 Uhr",
+  sleep: "Mindestens 7,5 h schlafen",
+  training: "Heute trainieren",
+  stress: "Stressiger Tag"
+};
+function hrvForecast(base, effects, chosen) {
+  if (!base) return null;
+  let shift3 = 0;
+  for (const e of effects) {
+    const yes = chosen[e.key];
+    if (yes === void 0 || e.pct === null || e.meanWith === null || e.meanWithout === null)
+      continue;
+    const mid = (e.meanWith + e.meanWithout) / 2;
+    shift3 += ((yes ? e.meanWith : e.meanWithout) - mid) * 0.5;
+  }
+  const expected = base.mean + shift3;
+  return { expected, low: expected - base.sd / 2, high: expected + base.sd / 2, base };
+}
+function hrvBaselineUntil(inp, today) {
+  const { hrv: hrv2 } = dailyValues(inp);
+  return baselineBefore(hrv2, addDaysIso(today, 1));
+}
+var RECOVERY_LAB = [
+  { label: "CRP", pattern: /\bcrp\b|c-reaktiv/i },
+  { label: "CK (Kreatinkinase)", pattern: /\bck\b|kreatin(in)?kinase|creatin(e)? ?kinase/i },
+  { label: "Ferritin", pattern: /ferritin/i },
+  { label: "Vitamin D", pattern: /vitamin ?d|25-?oh/i },
+  { label: "H\xE4moglobin", pattern: /h(ä|ae)moglobin|\bhb\b/i },
+  { label: "Cortisol", pattern: /cortisol|kortisol/i },
+  { label: "Testosteron", pattern: /testosteron/i }
+];
+function recoveryLab(draws) {
+  const sorted = [...draws].sort((a, b) => b.date.localeCompare(a.date));
+  const out = [];
+  for (const item2 of RECOVERY_LAB) {
+    for (const d of sorted) {
+      const r2 = d.results.find(
+        (x) => item2.pattern.test(x.analyteName) && !/^kreatinin$|creatinine?$/i.test(x.analyteName.trim())
+      );
+      if (!r2) continue;
+      const outside = r2.refLow === null && r2.refHigh === null ? null : r2.refLow !== null && r2.value < r2.refLow || r2.refHigh !== null && r2.value > r2.refHigh;
+      out.push({
+        label: item2.label,
+        name: r2.analyteName,
+        value: r2.value,
+        comparator: r2.comparator,
+        unit: r2.unit,
+        date: d.date,
+        refLow: r2.refLow,
+        refHigh: r2.refHigh,
+        outside
+      });
+      break;
+    }
+  }
+  return out;
+}
+
+// src/domain/todayStart.ts
+var ROTATION_DAYS = 28;
+var norm5 = (t) => t.trim().toLowerCase();
+var usableDays = (plan) => plan.days.filter((d) => d.exercises.length > 0);
+function dayLabel3(plans, plan, day) {
+  const many = plans.filter((p) => usableDays(p).length > 0).length > 1;
+  return many && !norm5(day.name).includes(norm5(plan.name)) ? `${plan.name} \u2013 ${day.name}` : day.name;
+}
+function titleMatches(plan, day, title) {
+  const t = norm5(title).replace(/\s*\(leicht\)$/, "");
+  const d = norm5(day.name);
+  const p = norm5(plan.name);
+  return t !== "" && (t === d || t === `${p} \u2013 ${d}` || t === `${p} - ${d}` || t === `${p} ${d}`);
+}
+var when = (w) => `${w.date}T${w.startTime ?? ""}`;
+function suggestion(plans, plan, day, lead, reason) {
+  return {
+    planId: plan.id,
+    planName: plan.name,
+    dayId: day.id,
+    dayName: day.name,
+    button: `${lead}: ${dayLabel3(plans, plan, day)} starten`,
+    reason,
+    exerciseNames: day.exercises.map((e) => e.exerciseName)
+  };
+}
+function todayStart(plans, next, today, workouts = []) {
+  const done = workouts.filter((w) => w.status === "done" && w.date <= today);
+  const lead = done.some((w) => w.date === today) ? "N\xE4chstes Training" : "Heute";
+  const named = byTitle(plans, done, lead, today);
+  if (next) {
+    const plan = plans.find((p) => p.id === next.planId);
+    const day = plan?.days.find((d) => d.id === next.dayId);
+    const newerByName = named !== null && next.scheduledDate === null && named.date > (next.previousDate ?? "");
+    if (plan && day && !newerByName) {
+      if (next.scheduledDate === null && usableDays(plan).length === 1) {
+        const turn = rotation(plans, done, lead, today);
+        if (turn) return turn.start;
+      }
+      const later = next.scheduledDate !== null && next.scheduledDate > today;
+      const reason = next.scheduledDate === today ? `F\xFCr heute geplant${next.scheduledTime ? ` (${next.scheduledTime} Uhr)` : ""}.` : later ? `N\xE4chster Termin im Plan: ${weekdayName(next.scheduledDate ?? today)}, ${formatDate(next.scheduledDate ?? today)}.` : next.previousDayName && next.previousDate ? `N\xE4chster Tag im Plan \u201E${plan.name}\u201C \u2013 zuletzt \u201E${next.previousDayName}\u201C am ${formatDate(next.previousDate)}.` : `N\xE4chster Tag im Plan \u201E${plan.name}\u201C.`;
+      return suggestion(plans, plan, day, later ? "N\xE4chstes Training" : lead, reason);
+    }
+  }
+  if (named) return named.start;
+  for (const plan of plans) {
+    const day = usableDays(plan)[0];
+    if (!day) continue;
+    return suggestion(
+      plans,
+      plan,
+      day,
+      lead,
+      `Noch keine Einheit aus einem Plan \u2013 erster Tag von \u201E${plan.name}\u201C.`
+    );
+  }
+  return null;
+}
+function rotation(plans, done, lead, today) {
+  const since = shiftDays(today, -ROTATION_DAYS);
+  const last = plans.flatMap((plan) => usableDays(plan).map((day) => ({ plan, day }))).flatMap((x) => {
+    const hits = done.filter((w) => w.date >= since && titleMatches(x.plan, x.day, w.title)).sort((a, b) => when(b).localeCompare(when(a)));
+    return hits[0] ? [{ ...x, last: hits[0] }] : [];
+  }).sort((a, b) => when(a.last).localeCompare(when(b.last)));
+  const oldest = last[0];
+  const newest = last[last.length - 1];
+  if (!oldest || !newest || last.length < 2) return null;
+  return {
+    date: newest.last.date,
+    start: suggestion(
+      plans,
+      oldest.plan,
+      oldest.day,
+      lead,
+      `Deine Trainingstage wechseln sich ab: \u201E${dayLabel3(plans, oldest.plan, oldest.day)}\u201C ist am l\xE4ngsten her (zuletzt am ${formatDate(oldest.last.date)}).`
+    )
+  };
+}
+function byTitle(plans, done, lead, today) {
+  const recent = [...done].sort((a, b) => when(b).localeCompare(when(a)));
+  for (const w of recent) {
+    for (const plan of plans) {
+      const index = plan.days.findIndex((d) => titleMatches(plan, d, w.title));
+      if (index < 0) continue;
+      const usable = usableDays(plan);
+      const last = plan.days[index];
+      if (!last) continue;
+      if (usable.length === 1) {
+        const turn = rotation(plans, done, lead, today);
+        if (turn) return turn;
+      }
+      const after = plan.days.slice(index + 1).find((d) => d.exercises.length > 0) ?? usable[0];
+      if (!after) continue;
+      return {
+        date: w.date,
+        start: suggestion(
+          plans,
+          plan,
+          after,
+          lead,
+          `N\xE4chster Tag im Plan \u201E${plan.name}\u201C \u2013 zuletzt \u201E${last.name}\u201C am ${formatDate(w.date)}.`
+        )
+      };
+    }
+  }
+  return null;
+}
+function startMuscles(groups, muscles) {
+  const byId = new Map(muscles.map((m) => [m.id, m]));
+  return groups.map((g2) => {
+    const pct2 = byId.get(g2.id)?.pct ?? 100;
+    return { id: g2.id, label: g2.label, pct: pct2, ready: pct2 >= MUSCLE_READY_PCT };
+  }).sort((a, b) => a.pct - b.pct);
+}
+function startMuscleText(list2) {
+  if (!list2.length) return null;
+  const open = list2.filter((m) => !m.ready);
+  if (!open.length)
+    return `Alle Muskelgruppen dieses Tags sind erholt (mindestens ${MUSCLE_READY_PCT} %).`;
+  const ready = list2.filter((m) => m.ready).map((m) => m.label);
+  return `Noch nicht erholt: ${open.map((m) => `${m.label} ${m.pct} %`).join(", ")}${ready.length ? `. Erholt: ${ready.join(", ")}` : ""}.`;
+}
+
+// src/domain/connections.ts
+var connections_exports = {};
+__export(connections_exports, {
+  CONN_AREAS: () => CONN_AREAS,
+  CONN_AREA_TITLES: () => CONN_AREA_TITLES,
+  CONN_BOOK_LABELS: () => CONN_BOOK_LABELS,
+  CONN_DAYS: () => CONN_DAYS,
+  CONN_INTAKE_DAYS: () => CONN_INTAKE_DAYS,
+  CONN_SOURCES: () => CONN_SOURCES,
+  FINDING_STATUS_LABELS: () => FINDING_STATUS_LABELS,
+  MICRO_MIN_COVERAGE: () => MICRO_MIN_COVERAGE,
+  allFindings: () => allFindings,
+  avg: () => avg,
+  clockOf: () => clockOf,
+  daysOf: () => daysOf,
+  findingsFor: () => findingsFor,
+  med: () => med,
+  metricByDay: () => metricByDay,
+  minutesOf: () => minutesOf5,
+  noData: () => noData,
+  sortFindings: () => sortFindings,
+  valuesIn: () => valuesIn
+});
+
+// src/domain/connTypes.ts
+var FINDING_STATUS_LABELS = {
+  act: "Handlungsbedarf",
+  info: "Hinweis",
+  ok: "im Rahmen",
+  nodata: "zu wenige Werte"
+};
+var CONN_AREA_TITLES = {
+  diet: "Verbindungen: Di\xE4t und K\xF6rper",
+  training: "Verbindungen: Training",
+  sleep: "Verbindungen: Schlaf",
+  health: "Verbindungen: Gesundheit"
+};
+var CONN_BOOK_LABELS = {
+  masterclass: "Masterclass",
+  blutwerte: "Masterclass Blutwerte",
+  longevity: "Masterclass Longevity",
+  schlaf: "Masterclass Schlaf"
+};
+var MICRO_MIN_COVERAGE = 0.8;
+var src2 = (book, question, title, pages) => ({
+  book,
+  question,
+  title,
+  pages
+});
+var CONN_SOURCES = {
+  strengthInDiet: src2(
+    "masterclass",
+    "T07-013",
+    "Was sollte ich beim Abnehmen au\xDFer dem Gewicht noch messen?",
+    [38, 267]
+  ),
+  lossRate: src2(
+    "masterclass",
+    "T02-137",
+    "Wie schnell sollte ich abnehmen, ohne Muskeln zu verlieren?",
+    [108, 109]
+  ),
+  proteinDiet: src2(
+    "masterclass",
+    "T02-038",
+    "Wie viel Protein brauche ich in einer Di\xE4t?",
+    [37, 38, 75, 76, 77, 241, 242, 274]
+  ),
+  weightSwing: src2(
+    "masterclass",
+    "T07-014",
+    "Warum schwankt mein Gewicht von Tag zu Tag so stark?",
+    [267]
+  ),
+  plateau: src2("masterclass", "T03-144", "Was tun, wenn meine Kraft \xFCber Wochen stagniert?", [153]),
+  restLength: src2(
+    "masterclass",
+    "T01-109",
+    "Wie lange sollte ich zwischen den S\xE4tzen pausieren?",
+    [44, 45]
+  ),
+  restGrowth: src2(
+    "masterclass",
+    "T01-110",
+    "Bringen l\xE4ngere Satzpausen mehr Muskelwachstum?",
+    [44, 45]
+  ),
+  lastMeal: src2("schlaf", "S06-016", "Wie lange vor dem Schlafen sollte ich zuletzt essen?", [118]),
+  eveningSport: src2("schlaf", "S06-019", "St\xF6rt Sport am Abend den Schlaf?", [118]),
+  eveningAll: src2(
+    "schlaf",
+    "S06-015",
+    "Was ist das Wichtigste zum Thema \u201EEssen, Trinken und Sport am Abend\u201C?",
+    [116]
+  ),
+  awake: src2(
+    "masterclass",
+    "T12-022",
+    "Wie lange darf ich nachts wach liegen, ohne dass es ein Problem ist?",
+    [409, 410]
+  ),
+  tracking: src2("masterclass", "T02-146", "Muss ich dauerhaft Kalorien tracken?", [111, 112]),
+  scaleStill: src2(
+    "masterclass",
+    "T07-045",
+    "Meine Waage steht still \u2013 was soll ich pr\xFCfen?",
+    [67, 273, 287, 293]
+  ),
+  adaptation: src2(
+    "masterclass",
+    "T07-035",
+    "Schaltet mein Stoffwechsel in der Di\xE4t auf Sparflamme?",
+    [272, 273]
+  ),
+  microGaps: src2(
+    "masterclass",
+    "T02-011",
+    "Wie beuge ich Vitamin- und Mineralstoffl\xFCcken am einfachsten vor?",
+    [64, 65]
+  ),
+  energyHormones: src2(
+    "blutwerte",
+    "P03-086",
+    "Warum bremst Energiemangel die Fortpflanzungshormone?",
+    [70]
+  ),
+  deload: src2("masterclass", "T01-131", "Brauche ich regelm\xE4\xDFig eine Deload-Woche?", [51, 52, 59]),
+  overtraining: src2("longevity", "L02-075", "Woran erkenne ich \xDCbertraining?", [135]),
+  weeklySets: src2(
+    "masterclass",
+    "T01-033",
+    "Wie viele S\xE4tze pro Muskel und Woche brauche ich?",
+    [19, 34, 35, 152, 153, 154]
+  ),
+  manySets: src2(
+    "masterclass",
+    "T01-082",
+    "Bringen mehr als 20 S\xE4tze pro Muskel und Woche noch etwas?",
+    [34, 35]
+  ),
+  salt: src2(
+    "masterclass",
+    "T02-101",
+    "Senkt weniger Salz den Blutdruck auch, wenn er normal ist?",
+    [95, 96]
+  ),
+  potassium: src2("masterclass", "T02-080", "Wie viel Kalium brauche ich?", [89, 90]),
+  alcoholNight: src2(
+    "masterclass",
+    "T12-090",
+    "Sieht man schon ein Glas Alkohol in meinen n\xE4chtlichen Erholungswerten?",
+    [422]
+  ),
+  hrvOwn: src2("masterclass", "T12-031", "Welcher HRV-Wert und Ruhepuls sind gut?", [410, 432]),
+  sleepHours: src2(
+    "masterclass",
+    "T12-032",
+    "Wie viele Stunden Schlaf brauche ich?",
+    [22, 59, 278, 412, 413]
+  ),
+  autoregulation: src2(
+    "masterclass",
+    "T01-130",
+    "Sollte ich meine Gewichte nach Gef\xFChl (RIR/RPE) oder nach festen Prozentwerten w\xE4hlen?",
+    [52, 60]
+  )
+};
+var avg = (xs) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+function med(xs) {
+  if (!xs.length) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] ?? null : ((s[m - 1] ?? 0) + (s[m] ?? 0)) / 2;
+}
+function metricByDay(measurements, metricId) {
+  const byDay = /* @__PURE__ */ new Map();
+  for (const m of [...measurements].filter((x) => x.metricId === metricId).sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? "").localeCompare(b.time ?? "")))
+    byDay.set(m.date, m.value);
+  return [...byDay].map(([date, value2]) => ({ date, value: value2 })).sort((a, b) => a.date < b.date ? -1 : 1);
+}
+var valuesIn = (points2, from, to) => points2.filter((p) => p.date >= from && p.date <= to).map((p) => p.value);
+function minutesOf5(time) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(time ?? "");
+  if (!m) return null;
+  const v = Number(m[1]) * 60 + Number(m[2]);
+  return v >= 0 && v < 1440 ? v : null;
+}
+var clockOf = (min) => {
+  const v = (Math.round(min) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(v / 60)).padStart(2, "0")}:${String(v % 60).padStart(2, "0")}`;
+};
+function daysOf(from, to) {
+  const out = [];
+  for (let d = from; d <= to; d = shiftDays(d, 1)) out.push(d);
+  return out;
+}
+function noData(base, summary) {
+  return { ...base, status: "nodata", summary, advice: null, rows: [] };
+}
+
+// src/domain/connDiet.ts
+var F2 = formatNumber;
+var DIET_LIMITS = {
+  /** Empfohlene Abnahme für Trainierte (T02-137) */
+  lossMinPctWeek: 0.5,
+  lossMaxPctWeek: 1,
+  /** Ab dieser Abnahme bzw. diesem Defizit gilt eine Diät als erkennbar (Regel der App) */
+  dietLossPctWeek: 0.25,
+  dietBalanceKcal: -150,
+  /** Eiweiß: Untergrenze (T02-037/T02-038: 1,6 g/kg; in der Diät eher 2,0–2,7 g/kg) */
+  proteinMinPerKg: 1.6,
+  proteinDietPerKg: 2,
+  /** Kraft gilt als gefallen bzw. gestiegen ab dieser Änderung des geschätzten 1RM */
+  strengthChangePct: 2.5
+};
+var completeDays = (inp, from, to) => inp.nutrition.filter((d) => d.date >= from && d.date <= to && d.energyKcal >= COMPLETE_DAY_KCAL);
+function dietState(inp) {
+  const t = inp.today;
+  const weights = metricByDay(inp.measurements, WEIGHT_METRIC_ID);
+  const now = valuesIn(weights, shiftDays(t, -6), t);
+  const before = valuesIn(weights, shiftDays(t, -20), shiftDays(t, -14));
+  const weightNow = now.length >= 3 ? avg(now) : null;
+  const weightBefore = before.length >= 3 ? avg(before) : null;
+  const lossPctWeek = weightNow !== null && weightBefore !== null ? (weightBefore - weightNow) / weightBefore * 100 / 2 : null;
+  const energy = new Map(inp.energy.map((e) => [e.date, e.totalKcal]));
+  const days3 = completeDays(inp, shiftDays(t, -13), t);
+  const balances = days3.flatMap((d) => {
+    const total = energy.get(d.date);
+    return total ? [d.energyKcal - total] : [];
+  });
+  const balanceKcal = balances.length >= 5 ? avg(balances) : null;
+  const protein = days3.length >= 5 ? avg(days3.map((d) => d.proteinG)) : null;
+  const kg2 = weightNow ?? weights.at(-1)?.value ?? null;
+  return {
+    weightNow,
+    weightBefore,
+    lossPctWeek,
+    balanceKcal,
+    balanceDays: balances.length,
+    proteinPerKg: protein !== null && kg2 ? protein / kg2 : null,
+    inDiet: lossPctWeek !== null && lossPctWeek >= DIET_LIMITS.dietLossPctWeek || balanceKcal !== null && balanceKcal <= DIET_LIMITS.dietBalanceKcal
+  };
+}
+function liftChanges(log, today, max = 6) {
+  const from = shiftDays(today, -34);
+  const split = shiftDays(today, -13);
+  const by = /* @__PURE__ */ new Map();
+  for (const s of log) {
+    if (s.isWarmup || s.exerciseCategory !== "strength" || s.date < from || s.date > today)
+      continue;
+    const v = epley1RM(s.weightKg, s.reps);
+    if (v === null) continue;
+    const e = by.get(s.exerciseId) ?? {
+      name: s.exerciseName,
+      recent: 0,
+      before: 0,
+      sessions: /* @__PURE__ */ new Set()
+    };
+    e.sessions.add(s.workoutId);
+    if (s.date >= split) e.recent = Math.max(e.recent, v);
+    else e.before = Math.max(e.before, v);
+    by.set(s.exerciseId, e);
+  }
+  return [...by].filter(([, e]) => e.recent > 0 && e.before > 0).map(([exerciseId, e]) => ({
+    exerciseId,
+    name: e.name,
+    recent: e.recent,
+    before: e.before,
+    changePct: (e.recent - e.before) / e.before * 100,
+    sessions: e.sessions.size
+  })).sort((a, b) => b.sessions - a.sessions || a.name.localeCompare(b.name, "de")).slice(0, max);
+}
+var dietRows = (s) => {
+  const rows2 = [];
+  if (s.weightNow !== null && s.weightBefore !== null && s.lossPctWeek !== null)
+    rows2.push({
+      label: "Gewicht (Mittel 7 Tage)",
+      value: `${F2(s.weightNow, 1)} kg`,
+      note: `${formatSigned(-s.lossPctWeek, 2)} % je Woche (vor 2 Wochen ${F2(s.weightBefore, 1)} kg)`
+    });
+  if (s.balanceKcal !== null)
+    rows2.push({
+      label: "Bilanz (\xD8 14 Tage)",
+      value: `${formatSigned(s.balanceKcal, 0)} kcal`,
+      note: `Zufuhr \u2212 berechneter Verbrauch, ${s.balanceDays} Tage`
+    });
+  if (s.proteinPerKg !== null)
+    rows2.push({ label: "Eiwei\xDF (\xD8 14 Tage)", value: `${F2(s.proteinPerKg, 1)} g/kg` });
+  return rows2;
+};
+function strengthRetention(inp) {
+  const base = {
+    id: "V1",
+    area: "diet",
+    title: "Krafterhalt in der Di\xE4t",
+    method: "Gewicht: Mittel der letzten 7 Tage gegen das Mittel der Tage 14\u201320 davor (je mind. 3 Wiegungen). Kraft: bester gesch\xE4tzter 1RM (Epley, 1\u201312 Wiederholungen) der letzten 14 Tage gegen den der Tage 15\u201335 davor, f\xFCr die bis zu 6 \xDCbungen mit den meisten Einheiten; ab \xB12,5 % gilt die Kraft als gestiegen bzw. gefallen. Bilanz und Eiwei\xDF: Mittel der letzten 14 Tage aus vollst\xE4ndig erfassten Tagen (ab 1.000 kcal, mind. 5 Tage). Regel: F\xE4llt die Kraft in mindestens zwei Haupt\xFCbungen und liegt die Abnahme \xFCber 1 % je Woche, ist das Defizit zu gro\xDF.",
+    sources: [CONN_SOURCES.strengthInDiet, CONN_SOURCES.lossRate, CONN_SOURCES.proteinDiet]
+  };
+  const s = dietState(inp);
+  const lifts = liftChanges(inp.setLog, inp.today);
+  if (lifts.length < 2)
+    return noData(
+      base,
+      "F\xFCr den Kraftvergleich braucht es mindestens zwei \xDCbungen mit S\xE4tzen in den letzten 14 Tagen und in den 3 Wochen davor."
+    );
+  if (s.lossPctWeek === null)
+    return noData(
+      base,
+      "F\xFCr den Gewichtstrend fehlen Wiegungen (je 3 in den letzten 7 Tagen und vor 2 Wochen)."
+    );
+  const lim = DIET_LIMITS;
+  const down = lifts.filter((l) => l.changePct <= -lim.strengthChangePct);
+  const up = lifts.filter((l) => l.changePct >= lim.strengthChangePct);
+  const rows2 = [
+    ...dietRows(s),
+    ...lifts.map((l) => ({
+      label: l.name,
+      value: `${formatSigned(l.changePct, 1)} %`,
+      note: `1RM gesch\xE4tzt ${F2(l.before, 1)} \u2192 ${F2(l.recent, 1)} kg`
+    }))
+  ];
+  const strength = `Kraft: ${down.length} von ${lifts.length} Haupt\xFCbungen gefallen, ${up.length} gestiegen`;
+  const loss = `Gewicht ${formatSigned(-s.lossPctWeek, 2)} % je Woche`;
+  if (!s.inDiet)
+    return {
+      ...base,
+      status: "info",
+      summary: `Keine Di\xE4t erkennbar (${loss}). ${strength}.`,
+      advice: "Diese Auswertung greift in einer Di\xE4tphase (Abnahme ab 0,25 % je Woche oder Bilanz ab \u2212150 kcal).",
+      rows: rows2
+    };
+  const summary = `${loss}. ${strength}.`;
+  if (down.length >= 2) {
+    if (s.lossPctWeek > lim.lossMaxPctWeek)
+      return {
+        ...base,
+        status: "act",
+        summary,
+        advice: `Die Kraft f\xE4llt und du nimmst schneller ab als ${F2(lim.lossMaxPctWeek, 0)} % je Woche \u2013 das Defizit ist zu gro\xDF. Iss 150\u2013300 kcal mehr, bis du bei ${F2(lim.lossMinPctWeek, 1)}\u2013${F2(lim.lossMaxPctWeek, 0)} % je Woche liegst; Eiwei\xDF hoch halten und weiter schwer trainieren.`,
+        rows: rows2
+      };
+    if (s.proteinPerKg !== null && s.proteinPerKg < lim.proteinMinPerKg)
+      return {
+        ...base,
+        status: "act",
+        summary,
+        advice: `Die Kraft f\xE4llt bei ${F2(s.proteinPerKg, 1)} g Eiwei\xDF je kg. Erh\xF6he auf mindestens ${F2(lim.proteinMinPerKg, 1)} g/kg \u2013 in der Di\xE4t eher ${F2(lim.proteinDietPerKg, 0)} g/kg und mehr.`,
+        rows: rows2
+      };
+    return {
+      ...base,
+      status: "act",
+      summary,
+      advice: "Die Kraft f\xE4llt, obwohl Abnahme und Eiwei\xDF im Rahmen sind. Pr\xFCfe Schlaf und Trainingsvolumen: Zum Erhalt reichen 10\u201312 harte S\xE4tze je Muskel und Woche \u2013 entscheidend ist, weiter schwer und nah am Versagen zu trainieren.",
+      rows: rows2
+    };
+  }
+  if (s.lossPctWeek > lim.lossMaxPctWeek)
+    return {
+      ...base,
+      status: "info",
+      summary,
+      advice: `Du nimmst schneller ab als ${F2(lim.lossMaxPctWeek, 0)} % je Woche, die Kraft h\xE4lt bisher. Beobachte die Haupt\xFCbungen \u2013 f\xE4llt die Kraft, das Defizit um 150\u2013300 kcal verkleinern.`,
+      rows: rows2
+    };
+  return {
+    ...base,
+    status: "ok",
+    summary,
+    advice: "Die Kraft bleibt stabil \u2013 ein gutes Zeichen daf\xFCr, dass du Fett und nicht Muskulatur verlierst.",
+    rows: rows2
+  };
+}
+var JUMP_LIMITS = {
+  /** Ab dieser Abweichung vom 7-Tage-Mittel gilt die Wiegung als Sprung */
+  jumpKg: 0.5,
+  carbsG: 50,
+  saltG: 2,
+  /** relative Abweichung von der üblichen Menge */
+  share: 0.25,
+  massShare: 0.2,
+  lastMealMin: 60,
+  lateWaterMl: 300
+};
+function weightJump(inp) {
+  const base = {
+    id: "V2",
+    area: "diet",
+    title: "Gewichtssprung erkl\xE4ren",
+    method: "Letzte Wiegung (heute oder gestern) gegen das Mittel der Wiegungen der 7 Tage davor (mind. 4). Ab \xB10,5 kg wird der Vortag mit deinen \xFCblichen Werten verglichen (Mittel bzw. Median der 14 Tage davor, mind. 5 Tage): Kohlenhydrate (\xB150 g und \xB125 %), Salz (\xB12 g und \xB125 %), Essensmenge (\xB120 %), Uhrzeit der letzten Mahlzeit (ab 60 Minuten sp\xE4ter), Trinken ab 20 Uhr (ab 300 ml mehr), Training am Vortag. Salz und Essensmenge nur aus Lebensmitteln mit Angabe.",
+    sources: [CONN_SOURCES.weightSwing]
+  };
+  const weights = metricByDay(inp.measurements, WEIGHT_METRIC_ID);
+  const last = weights.filter((w) => w.date <= inp.today).at(-1);
+  if (!last || daysBetween(last.date, inp.today) > 1)
+    return noData(base, "Keine Wiegung von heute oder gestern.");
+  const prior = valuesIn(weights, shiftDays(last.date, -7), shiftDays(last.date, -1));
+  const trend = prior.length >= 4 ? avg(prior) : null;
+  if (trend === null)
+    return noData(
+      base,
+      "F\xFCr den Vergleich braucht es mindestens 4 Wiegungen in den 7 Tagen davor."
+    );
+  const diff = last.value - trend;
+  const when2 = last.date === inp.today ? "Heute" : `Am ${formatDate(last.date)}`;
+  const head2 = `${when2} ${F2(last.value, 1)} kg \u2013 ${formatSigned(diff, 1)} kg zum Mittel der 7 Tage davor (${F2(trend, 1)} kg).`;
+  const rows2 = [
+    { label: "Wiegung", value: `${F2(last.value, 1)} kg`, note: formatDate(last.date) },
+    {
+      label: "Mittel der 7 Tage davor",
+      value: `${F2(trend, 1)} kg`,
+      note: `${prior.length} Wiegungen`
+    }
+  ];
+  const lim = JUMP_LIMITS;
+  if (Math.abs(diff) < lim.jumpKg)
+    return {
+      ...base,
+      status: "ok",
+      summary: head2,
+      advice: "Im \xFCblichen Schwankungsbereich \u2013 kein Sprung.",
+      rows: rows2
+    };
+  const eve = shiftDays(last.date, -1);
+  const day = inp.intake.find((d) => d.date === eve) ?? null;
+  const usual = inp.intake.filter(
+    (d) => d.date >= shiftDays(eve, -14) && d.date < eve && d.energyKcal >= COMPLETE_DAY_KCAL
+  );
+  const sign = diff > 0 ? 1 : -1;
+  const flagged = [];
+  if (day && day.energyKcal > 0 && usual.length >= 5) {
+    const check = (label, value2, base0, abs, share2, unit, digits = 0) => {
+      if (value2 === null || base0 === null || base0 <= 0) return;
+      const delta = (value2 - base0) * sign;
+      const hit = delta >= abs && delta >= base0 * share2;
+      rows2.push({
+        label: `${label} am Vortag`,
+        value: `${F2(value2, digits)} ${unit}`,
+        note: `\xFCblich ${F2(base0, digits)} ${unit}${hit ? " \u2013 auff\xE4llig" : ""}`
+      });
+      if (hit)
+        flagged.push(`${label} ${F2(value2, digits)} ${unit} (\xFCblich ${F2(base0, digits)} ${unit})`);
+    };
+    check("Kohlenhydrate", day.carbsG, avg(usual.map((d) => d.carbsG)), lim.carbsG, lim.share, "g");
+    const salts = usual.flatMap((d) => d.saltG === null ? [] : [d.saltG]);
+    check("Salz", day.saltG, salts.length >= 5 ? avg(salts) : null, lim.saltG, lim.share, "g", 1);
+    check("Essensmenge", day.massG, avg(usual.map((d) => d.massG)), 0, lim.massShare, "g");
+    const lastMeals = usual.flatMap((d) => d.lastMealMin === null ? [] : [d.lastMealMin]);
+    const usualLast = lastMeals.length >= 5 ? med(lastMeals) : null;
+    if (day.lastMealMin !== null && usualLast !== null) {
+      const hit = sign > 0 && day.lastMealMin - usualLast >= lim.lastMealMin;
+      rows2.push({
+        label: "Letzte Mahlzeit am Vortag",
+        value: `${clockOf(day.lastMealMin)} Uhr`,
+        note: `\xFCblich ${clockOf(usualLast)} Uhr${hit ? " \u2013 auff\xE4llig" : ""}`
+      });
+      if (hit)
+        flagged.push(
+          `letzte Mahlzeit um ${clockOf(day.lastMealMin)} Uhr (\xFCblich ${clockOf(usualLast)} Uhr)`
+        );
+    }
+    const timed = usual.filter((d) => d.waterTimed);
+    if (day.waterTimed && timed.length >= 5) {
+      const usualLate = avg(timed.map((d) => d.waterLateMl)) ?? 0;
+      const hit = sign > 0 && day.waterLateMl - usualLate >= lim.lateWaterMl;
+      rows2.push({
+        label: "Trinken ab 20 Uhr am Vortag",
+        value: `${F2(day.waterLateMl)} ml`,
+        note: `\xFCblich ${F2(usualLate)} ml${hit ? " \u2013 auff\xE4llig" : ""}`
+      });
+      if (hit)
+        flagged.push(`${F2(day.waterLateMl)} ml nach 20 Uhr getrunken (\xFCblich ${F2(usualLate)} ml)`);
+    }
+  }
+  const trained = inp.workouts.filter((w) => w.date === eve && w.status === "done");
+  if (trained.length) {
+    rows2.push({
+      label: "Training am Vortag",
+      value: trained.map((w) => w.title).join(", "),
+      note: "kann Wasser im Muskel binden"
+    });
+    if (sign > 0) flagged.push(`Training am Vortag (${trained.map((w) => w.title).join(", ")})`);
+  }
+  if (!day || day.energyKcal <= 0)
+    return {
+      ...base,
+      status: "info",
+      summary: `${head2} F\xFCr den Vortag ist keine Ern\xE4hrung erfasst.`,
+      advice: "Einzelne Tageswerte schwanken um 1\u20132 kg durch Wasser und Glykogen. Entscheidend ist das Wochenmittel.",
+      rows: rows2
+    };
+  return {
+    ...base,
+    status: "info",
+    summary: flagged.length ? `${head2} Am Vortag anders als \xFCblich: ${flagged.join("; ")}.` : `${head2} Am Vortag war nichts Erfasstes auff\xE4llig anders.`,
+    advice: flagged.length ? sign > 0 ? "Sehr wahrscheinlich Wasser und Glykogen, kein Fett \u2013 kein Grund, die Kalorien zu \xE4ndern. Entscheidend ist das Wochenmittel." : "Sehr wahrscheinlich weniger Wasser und Glykogen, nicht zus\xE4tzlicher Fettverlust. Entscheidend ist das Wochenmittel." : "Einzelne Tageswerte schwanken um 1\u20132 kg durch Wasser und Glykogen. Warte das Wochenmittel ab, bevor du etwas \xE4nderst.",
+    rows: rows2
+  };
+}
+var WEEK_PATTERN = {
+  days: 28,
+  minWeekdays: 6,
+  minWeekendDays: 3,
+  /** Ab diesem Unterschied wird das Wochenende als Muster genannt */
+  diffKcal: 300,
+  /** Ab diesem Unterschied der erfassten Anteile (Prozentpunkte) wird die Erfassung genannt */
+  coverageGap: 25
+};
+var isWeekend = (iso2) => {
+  const d = (/* @__PURE__ */ new Date(`${iso2}T12:00:00`)).getDay();
+  return d === 0 || d === 6;
+};
+function weekPattern(inp) {
+  const base = {
+    id: "V7",
+    area: "diet",
+    title: "Wochentags-Muster",
+    method: "Letzte 28 Tage, nur vollst\xE4ndig erfasste Tage (ab 1.000 kcal): \xD8 Zufuhr Montag\u2013Freitag gegen Samstag\u2013Sonntag (mind. 6 bzw. 3 Tage) und Trainings- gegen Ruhetage (je mind. 4 Tage; nur Energie). Ab 300 kcal Unterschied wird das Wochenende als Muster genannt. Erfassung: Anteil der Tage mit vollst\xE4ndigem Eintrag je Gruppe.",
+    sources: [CONN_SOURCES.tracking, CONN_SOURCES.scaleStill]
+  };
+  const t = inp.today;
+  const from = shiftDays(t, -(WEEK_PATTERN.days - 1));
+  const to = shiftDays(t, -1);
+  const days3 = completeDays(inp, from, to);
+  const we = days3.filter((d) => isWeekend(d.date));
+  const wd = days3.filter((d) => !isWeekend(d.date));
+  if (wd.length < WEEK_PATTERN.minWeekdays || we.length < WEEK_PATTERN.minWeekendDays)
+    return noData(
+      base,
+      `Es braucht mindestens ${WEEK_PATTERN.minWeekdays} erfasste Wochentage und ${WEEK_PATTERN.minWeekendDays} erfasste Wochenendtage in 28 Tagen (bisher ${wd.length} und ${we.length}).`
+    );
+  const mWd = avg(wd.map((d) => d.energyKcal)) ?? 0;
+  const mWe = avg(we.map((d) => d.energyKcal)) ?? 0;
+  const diff = mWe - mWd;
+  let allWd = 0;
+  let allWe = 0;
+  for (let d = from; d <= to; d = shiftDays(d, 1))
+    if (isWeekend(d)) allWe += 1;
+    else allWd += 1;
+  const covWd = wd.length / allWd * 100;
+  const covWe = we.length / allWe * 100;
+  const rows2 = [
+    {
+      label: "Montag\u2013Freitag",
+      value: `${F2(mWd)} kcal`,
+      note: `${wd.length} von ${allWd} Tagen erfasst`
+    },
+    {
+      label: "Samstag\u2013Sonntag",
+      value: `${F2(mWe)} kcal`,
+      note: `${we.length} von ${allWe} Tagen erfasst`
+    }
+  ];
+  const trainingDates = new Set(inp.workouts.filter((w) => w.status === "done").map((w) => w.date));
+  const tr = days3.filter((d) => trainingDates.has(d.date));
+  const rest = days3.filter((d) => !trainingDates.has(d.date));
+  if (tr.length >= 4 && rest.length >= 4)
+    rows2.push(
+      {
+        label: "Trainingstage",
+        value: `${F2(avg(tr.map((d) => d.energyKcal)) ?? 0)} kcal`,
+        note: `${tr.length} Tage`
+      },
+      {
+        label: "Ruhetage",
+        value: `${F2(avg(rest.map((d) => d.energyKcal)) ?? 0)} kcal`,
+        note: `${rest.length} Tage`
+      }
+    );
+  const goal = inp.goal?.energyKcal ?? null;
+  if (goal) rows2.push({ label: "Kalorienziel", value: `${F2(goal)} kcal` });
+  const gap = covWd - covWe >= WEEK_PATTERN.coverageGap;
+  const cover2 = gap ? ` Wochenendtage sind seltener erfasst (${F2(covWe)} % gegen ${F2(covWd)} %).` : "";
+  const summary = `Am Wochenende im Mittel ${formatSigned(diff, 0)} kcal je Tag gegen\xFCber Montag\u2013Freitag.${cover2}`;
+  if (diff >= WEEK_PATTERN.diffKcal) {
+    const s = dietState(inp);
+    const perWeek = diff * 2;
+    const eats2 = s.balanceKcal !== null && s.balanceKcal < 0 ? ` Bei einer mittleren Bilanz von ${formatSigned(s.balanceKcal, 0)} kcal sind das rund ${F2(perWeek / -s.balanceKcal, 1)} Tage Defizit.` : "";
+    return {
+      ...base,
+      status: "act",
+      summary,
+      advice: `Die zwei Wochenendtage bringen zusammen rund ${F2(perWeek)} kcal mehr als zwei Wochentage.${eats2} Plane das Wochenende wie einen Wochentag ein (feste Mahlzeiten, Getr\xE4nke und Snacks mitz\xE4hlen) oder gleiche es an den Wochentagen bewusst aus.`,
+      rows: rows2
+    };
+  }
+  if (gap)
+    return {
+      ...base,
+      status: "info",
+      summary,
+      advice: "Erfasse die Wochenenden so vollst\xE4ndig wie die Wochentage \u2013 Wochenenden, \xD6le, Snacks und Getr\xE4nke sind die \xFCblichen L\xFCcken im Protokoll.",
+      rows: rows2
+    };
+  return { ...base, status: "ok", summary, advice: "Kein Wochenend-Muster erkennbar.", rows: rows2 };
+}
+var STEP_LIMITS = { minDays: 7, dropSteps: 1e3, dropShare: 0.1 };
+function stepsInDiet(inp) {
+  const base = {
+    id: "V8",
+    area: "diet",
+    title: "Alltagsbewegung in der Di\xE4t",
+    method: "\xD8 Schritte der letzten 14 Tage gegen die 14 Tage davor (je mind. 7 Tage mit Schritten). Ein R\xFCckgang ab 1.000 Schritten und 10 % wird genannt. Verbrauch: Schritte \xD7 K\xF6rpergewicht \xD7 0,0004 kcal (Rechenregel der App).",
+    sources: [CONN_SOURCES.adaptation, CONN_SOURCES.scaleStill]
+  };
+  const t = inp.today;
+  const steps = (from, to) => inp.neat.flatMap((n3) => n3.date >= from && n3.date <= to && n3.steps !== null ? [n3.steps] : []);
+  const now = steps(shiftDays(t, -14), shiftDays(t, -1));
+  const before = steps(shiftDays(t, -28), shiftDays(t, -15));
+  if (now.length < STEP_LIMITS.minDays || before.length < STEP_LIMITS.minDays)
+    return noData(
+      base,
+      `Es braucht Schritte an mindestens ${STEP_LIMITS.minDays} Tagen in beiden 14-Tage-Zeitr\xE4umen (bisher ${now.length} und ${before.length}).`
+    );
+  const mNow = avg(now) ?? 0;
+  const mBefore = avg(before) ?? 0;
+  const diff = mNow - mBefore;
+  const s = dietState(inp);
+  const kg2 = s.weightNow ?? metricByDay(inp.measurements, WEIGHT_METRIC_ID).at(-1)?.value ?? null;
+  const kcal3 = kg2 ? diff * kg2 * KCAL_PER_STEP_AND_KG : null;
+  const rows2 = [
+    { label: "Schritte (\xD8 letzte 14 Tage)", value: F2(mNow), note: `${now.length} Tage` },
+    { label: "Schritte (\xD8 14 Tage davor)", value: F2(mBefore), note: `${before.length} Tage` },
+    ...kcal3 !== null ? [
+      {
+        label: "Unterschied im Verbrauch",
+        value: `${formatSigned(kcal3, 0)} kcal je Tag`,
+        note: `bei ${F2(kg2 ?? 0, 1)} kg`
+      }
+    ] : [],
+    ...dietRows(s)
+  ];
+  const summary = `Schritte ${formatSigned(diff, 0)} je Tag gegen\xFCber den 14 Tagen davor (${F2(mBefore)} \u2192 ${F2(mNow)})${kcal3 !== null ? `, das sind ${formatSigned(kcal3, 0)} kcal je Tag` : ""}.`;
+  const dropped = -diff >= STEP_LIMITS.dropSteps && -diff >= mBefore * STEP_LIMITS.dropShare;
+  if (dropped && s.inDiet)
+    return {
+      ...base,
+      status: "act",
+      summary,
+      advice: "In der Di\xE4t sinkt die Alltagsbewegung oft unbemerkt \u2013 und mit ihr der Verbrauch. Bevor du weniger isst: Schritte wieder auf das fr\xFChere Niveau bringen oder etwa 2.000 Schritte je Tag mehr gehen.",
+      rows: rows2
+    };
+  if (dropped)
+    return {
+      ...base,
+      status: "info",
+      summary,
+      advice: "Deine Alltagsbewegung ist zur\xFCckgegangen. Ein festes Schrittziel h\xE4lt den Verbrauch stabil.",
+      rows: rows2
+    };
+  return { ...base, status: "ok", summary, advice: "Die Alltagsbewegung ist stabil.", rows: rows2 };
+}
+var EA_LIMITS = {
+  days: 7,
+  minDays: 5,
+  /** kcal je kg fettfreier Masse und Tag (Loucks & Thomas 2003; IOC-Konsensus REDs 2023) */
+  low: 30,
+  balanced: 45,
+  /** Körperfett-Messung höchstens so alt (Tage) */
+  bodyFatMaxAge: 60
+};
+function energyAvailability(inp) {
+  const base = {
+    id: "V10",
+    area: "diet",
+    title: "Energieverf\xFCgbarkeit",
+    method: "Energieverf\xFCgbarkeit = (Zufuhr \u2212 Trainingsenergie) \xF7 fettfreie Masse, Mittel der letzten 7 Tage aus vollst\xE4ndig erfassten Tagen (mind. 5). Trainingsenergie = berechneter Gesamtverbrauch \u2212 Grundbedarf \u2212 Schritte. Fettfreie Masse = Gewicht \xD7 (1 \u2212 K\xF6rperfett), K\xF6rperfett h\xF6chstens 60 Tage alt. Einordnung: ab 45 kcal/kg ausgeglichen, unter 30 kcal/kg niedrig (in Laborstudien an Frauen hormonelle Ver\xE4nderungen; bei M\xE4nnern liegt die Schwelle laut IOC 2023 niedriger). Die Rechnung aus Tagebuch und Sch\xE4tzwerten ist ungenau und kein Diagnosewert.",
+    sources: [CONN_SOURCES.energyHormones],
+    literature: "Mountjoy et al., IOC-Konsensus REDs 2023 (Br J Sports Med 57:1073\u20131097); Loucks & Thomas 2003 (J Clin Endocrinol Metab 88:297\u2013311)"
+  };
+  const t = inp.today;
+  const weights = metricByDay(inp.measurements, WEIGHT_METRIC_ID);
+  const fats = metricByDay(inp.measurements, BODY_FAT_METRIC_ID).filter(
+    (f) => f.date <= t && daysBetween(f.date, t) <= EA_LIMITS.bodyFatMaxAge
+  );
+  const fat2 = fats.at(-1);
+  const kgs = valuesIn(weights, shiftDays(t, -6), t);
+  const kg2 = kgs.length ? avg(kgs) : weights.at(-1)?.value ?? null;
+  if (!fat2 || !kg2)
+    return noData(
+      base,
+      "F\xFCr die fettfreie Masse fehlen Gewicht und ein K\xF6rperfett-Wert der letzten 60 Tage."
+    );
+  const ffm = kg2 * (1 - fat2.value / 100);
+  const energy = new Map(inp.energy.map((e) => [e.date, e]));
+  const from = shiftDays(t, -EA_LIMITS.days);
+  const days3 = completeDays(inp, from, shiftDays(t, -1)).flatMap((d) => {
+    const e = energy.get(d.date);
+    if (!e || e.baselineKcal === null || e.baselineKcal === void 0) return [];
+    const training2 = Math.max(0, e.totalKcal - e.baselineKcal - (e.stepKcal ?? 0));
+    return [{ intake: d.energyKcal, training: training2 }];
+  });
+  if (days3.length < EA_LIMITS.minDays)
+    return noData(
+      base,
+      `Es braucht mindestens ${EA_LIMITS.minDays} vollst\xE4ndig erfasste Tage mit berechnetem Verbrauch in den letzten 7 Tagen (bisher ${days3.length}).`
+    );
+  const intake = avg(days3.map((d) => d.intake)) ?? 0;
+  const training = avg(days3.map((d) => d.training)) ?? 0;
+  const ea = (intake - training) / ffm;
+  const rows2 = [
+    {
+      label: "Energieverf\xFCgbarkeit",
+      value: `${F2(ea)} kcal je kg FFM`,
+      note: `${days3.length} Tage`
+    },
+    { label: "Zufuhr (\xD8)", value: `${F2(intake)} kcal` },
+    { label: "Trainingsenergie (\xD8)", value: `${F2(training)} kcal` },
+    {
+      label: "Fettfreie Masse",
+      value: `${F2(ffm, 1)} kg`,
+      note: `${F2(kg2, 1)} kg bei ${F2(fat2.value, 1)} % K\xF6rperfett (${formatDate(fat2.date)})`
+    }
+  ];
+  const summary = `Energieverf\xFCgbarkeit ${F2(ea)} kcal je kg fettfreier Masse und Tag (Mittel aus ${days3.length} Tagen).`;
+  if (ea < EA_LIMITS.low)
+    return {
+      ...base,
+      status: "act",
+      summary,
+      advice: `Unter ${EA_LIMITS.low} kcal/kg gilt die Energieverf\xFCgbarkeit als niedrig. Halte so ein Defizit nicht \xFCber Wochen: bei sinkender Leistung, schlechterem Schlaf, fallender HRV oder Libido das Defizit verkleinern oder eine Di\xE4tpause einlegen. Der Wert ist eine Sch\xE4tzung, kein Diagnosewert.`,
+      rows: rows2
+    };
+  if (ea < EA_LIMITS.balanced)
+    return {
+      ...base,
+      status: "info",
+      summary,
+      advice: `Zwischen ${EA_LIMITS.low} und ${EA_LIMITS.balanced} kcal/kg: reduziert, f\xFCr eine begrenzte Di\xE4tphase \xFCblich. Beobachte Leistung, Schlaf und HRV.`,
+      rows: rows2
+    };
+  return {
+    ...base,
+    status: "ok",
+    summary,
+    advice: `Ab ${EA_LIMITS.balanced} kcal/kg gilt die Energieverf\xFCgbarkeit als ausgeglichen.`,
+    rows: rows2
+  };
+}
+var dietFindings = (inp) => [
+  strengthRetention(inp),
+  weightJump(inp),
+  weekPattern(inp),
+  stepsInDiet(inp),
+  energyAvailability(inp)
+];
+
+// src/domain/connHealth.ts
+var F3 = formatNumber;
+var BP_SYSTOLIC_METRIC_ID = "00000000-0000-7000-8000-000000000014";
+var BP_DIASTOLIC_METRIC_ID = "00000000-0000-7000-8000-000000000015";
+var BP = {
+  days: 56,
+  minDays: 5,
+  /** Salz am Vortag: ab so vielen g gilt der Tag als salzreich (DGE: bis 6 g je Tag) */
+  saltG: 6,
+  /** Heimmessung: ab 135/85 mmHg erhöht (ESH 2023) */
+  homeSys: 135,
+  homeDia: 85,
+  /** Kalium: Referenzwert der DGE in mg */
+  potassiumMg: 4e3,
+  diffMmHg: 3,
+  minPairs: 10,
+  minR: 0.3
+};
+function bloodPressure(inp) {
+  const base = {
+    id: "V16",
+    area: "health",
+    title: "Blutdruck, Salz, Kalium und Gewicht",
+    method: "Blutdruck aus den Messgr\xF6\xDFen \u201EBlutdruck systolisch/diastolisch\u201C (letzter Wert je Tag), letzte 8 Wochen. Mittel der letzten 14 Tage (mind. 5 Messtage) gegen die Schwelle der Heimmessung 135/85 mmHg. Salz: systolischer Wert am Tag nach salzreichen Tagen (ab 6 g aus Lebensmitteln mit Angabe) gegen die \xFCbrigen, je mind. 5 Tage, genannt ab 3 mmHg. Gewicht: Zusammenhang mit dem Gewicht desselben Tages (ab 10 Tagen, Korrelation ab 0,3). Kalium: \xD8 Zufuhr der letzten 14 Tage gegen 4.000 mg (DGE), nur Tage mit mindestens 80 % der Energie aus Lebensmitteln mit BLS-Bezug. Beobachtungen, keine Ursachen; ein einzelner Messwert sagt wenig.",
+    sources: [CONN_SOURCES.salt, CONN_SOURCES.potassium],
+    literature: "Heimmessung ab 135/85 mmHg erh\xF6ht: ESH-Leitlinie 2023 (J Hypertens 41:1874\u20132071)"
+  };
+  const t = inp.today;
+  const from = shiftDays(t, -(BP.days - 1));
+  const sys = metricByDay(inp.measurements, BP_SYSTOLIC_METRIC_ID).filter(
+    (p) => p.date >= from && p.date <= t
+  );
+  const dia = metricByDay(inp.measurements, BP_DIASTOLIC_METRIC_ID).filter(
+    (p) => p.date >= from && p.date <= t
+  );
+  const recentSys = valuesIn(sys, shiftDays(t, -13), t);
+  const recentDia = valuesIn(dia, shiftDays(t, -13), t);
+  if (recentSys.length < BP.minDays)
+    return noData(
+      base,
+      `Es braucht Blutdruck-Werte an mindestens ${BP.minDays} der letzten 14 Tage (bisher ${recentSys.length}). Eintragen unter Body & Longevity \u2192 Werte erfassen.`
+    );
+  const mSys = avg(recentSys) ?? 0;
+  const mDia = recentDia.length ? avg(recentDia) ?? 0 : null;
+  const rows2 = [
+    {
+      label: "Blutdruck (\xD8 14 Tage)",
+      value: `${F3(mSys)}${mDia !== null ? `/${F3(mDia)}` : ""} mmHg`,
+      note: `${recentSys.length} Messtage \xB7 Heimmessung ab ${BP.homeSys}/${BP.homeDia} erh\xF6ht`
+    }
+  ];
+  const parts2 = [];
+  const salt = new Map(
+    inp.intake.flatMap((d) => d.saltG === null ? [] : [[d.date, d.saltG]])
+  );
+  const high = [];
+  const low = [];
+  for (const p of sys) {
+    const s = salt.get(shiftDays(p.date, -1));
+    if (s === void 0) continue;
+    (s >= BP.saltG ? high : low).push(p.value);
+  }
+  let saltDiff = null;
+  if (high.length >= BP.minDays && low.length >= BP.minDays) {
+    saltDiff = (avg(high) ?? 0) - (avg(low) ?? 0);
+    rows2.push({
+      label: `Systolisch nach Tagen ab ${BP.saltG} g Salz`,
+      value: `${F3(avg(high) ?? 0)} gegen ${F3(avg(low) ?? 0)} mmHg`,
+      note: `${high.length} und ${low.length} Tage \xB7 ${formatSigned(saltDiff, 0)} mmHg`
+    });
+    if (Math.abs(saltDiff) >= BP.diffMmHg)
+      parts2.push(`nach salzreichen Tagen ${formatSigned(saltDiff, 0)} mmHg systolisch`);
+  }
+  const weight = new Map(
+    metricByDay(inp.measurements, WEIGHT_METRIC_ID).map((p) => [p.date, p.value])
+  );
+  const pairs = sys.flatMap(
+    (p) => weight.has(p.date) ? [[weight.get(p.date), p.value]] : []
+  );
+  if (pairs.length >= BP.minPairs) {
+    const r2 = pearson(
+      pairs.map((x) => x[0] ?? 0),
+      pairs.map((x) => x[1] ?? 0)
+    );
+    if (r2 !== null) {
+      rows2.push({
+        label: "Gewicht und systolischer Wert",
+        value: Math.abs(r2) >= BP.minR ? r2 > 0 ? "steigen gemeinsam" : "gegenl\xE4ufig" : "kein deutlicher Zusammenhang",
+        note: `Korrelation ${F3(r2, 2)} aus ${pairs.length} Tagen`
+      });
+      if (r2 >= BP.minR) parts2.push("an schwereren Tagen ist der Blutdruck h\xF6her");
+    }
+  }
+  let potassium = null;
+  if (inp.micro) {
+    const days3 = inp.micro.filter(
+      (d) => d.date >= shiftDays(t, -14) && d.date < t && (d.coverage ?? 0) >= MICRO_MIN_COVERAGE
+    );
+    const values = days3.map((d) => d.values.potassium ?? 0);
+    if (values.length >= BP.minDays) {
+      potassium = avg(values);
+      rows2.push({
+        label: "Kalium (\xD8 erfasste Tage)",
+        value: `${F3(potassium ?? 0)} mg`,
+        note: `${values.length} Tage mit BLS-Bezug \xB7 Referenz ${F3(BP.potassiumMg)} mg (DGE)`
+      });
+    }
+  }
+  const head2 = `Blutdruck im Mittel ${F3(mSys)}${mDia !== null ? `/${F3(mDia)}` : ""} mmHg (${recentSys.length} Messtage in 14 Tagen)`;
+  const summary = `${head2}${parts2.length ? `; ${parts2.join("; ")}` : ""}.`;
+  const elevated = mSys >= BP.homeSys || mDia !== null && mDia >= BP.homeDia;
+  const lowK = potassium !== null && potassium < BP.potassiumMg * 0.7;
+  if (elevated)
+    return {
+      ...base,
+      status: "act",
+      summary,
+      advice: `Dein Mittel liegt bei oder \xFCber ${BP.homeSys}/${BP.homeDia} mmHg (Heimmessung). Lass das \xE4rztlich einordnen. Selbst wirksam: weniger Salz${lowK ? ", mehr Kalium \xFCber Gem\xFCse, Obst, Kartoffeln und H\xFClsenfr\xFCchte" : " und reichlich Kalium aus Lebensmitteln"}, Gewicht und Alkohol im Blick.`,
+      rows: rows2
+    };
+  if (saltDiff !== null && saltDiff >= BP.diffMmHg || lowK)
+    return {
+      ...base,
+      status: "info",
+      summary,
+      advice: [
+        saltDiff !== null && saltDiff >= BP.diffMmHg ? "Nach salzreichen Tagen misst du h\xF6her \u2013 weniger Salz senkt den Blutdruck auch bei normalen Werten." : "",
+        lowK ? "Deine erfasste Kalium-Zufuhr liegt deutlich unter dem Referenzwert: mehr Gem\xFCse, Obst, Kartoffeln und H\xFClsenfr\xFCchte." : ""
+      ].filter(Boolean).join(" "),
+      rows: rows2
+    };
+  return { ...base, status: "ok", summary, advice: "Blutdruck im Rahmen der Heimmessung.", rows: rows2 };
+}
+var MICRO_GAPS = {
+  days: 14,
+  minDays: 5,
+  /** Unter diesem Anteil am Referenzwert gilt ein Stoff als Lücke (wie der Hinweis im Tagebuch) */
+  share: LOW_REFERENCE_SHARE,
+  maxGaps: 5,
+  maxFoods: 3
+};
+function microGapList(inp) {
+  if (!inp.micro || !inp.nutrients) return null;
+  const t = inp.today;
+  const all = inp.micro.filter((d) => d.date >= shiftDays(t, -MICRO_GAPS.days) && d.date < t);
+  const days3 = all.filter((d) => (d.coverage ?? 0) >= MICRO_MIN_COVERAGE);
+  if (days3.length < MICRO_GAPS.minDays) return { gaps: [], days: days3.length, logged: all.length };
+  const group = referenceGroup(inp.profile ?? null, t);
+  const gaps = [];
+  for (const [key, info] of Object.entries(inp.nutrients)) {
+    const mean11 = avg(days3.map((d) => d.values[key] ?? 0)) ?? 0;
+    const pct2 = nutrientPercents(key, mean11, info.unit, group).reference.percent;
+    if (pct2 === null || pct2 >= MICRO_GAPS.share) continue;
+    const foods = (inp.ownFoods ?? []).flatMap((f) => {
+      const v = f.values[key] ?? 0;
+      const p = v > 0 ? nutrientPercents(key, v, info.unit, group).reference.percent : null;
+      return p !== null && p >= 5 ? [{ name: f.name, amount: f.amount, unit: f.unit, percent: p }] : [];
+    }).sort((a, b) => b.percent - a.percent).slice(0, MICRO_GAPS.maxFoods);
+    gaps.push({ key, label: info.label, unit: info.unit, mean: mean11, percent: pct2, foods });
+  }
+  gaps.sort((a, b) => a.percent - b.percent);
+  return { gaps, days: days3.length, logged: all.length };
+}
+function microGaps(inp) {
+  const base = {
+    id: "V9",
+    area: "health",
+    title: "Mikron\xE4hrstoff-L\xFCcken und deine besten Quellen",
+    method: "\xD8 Zufuhr der letzten 14 erfassten Tage (mind. 5) je Stoff aus Lebensmitteln mit BLS-Bezug, Supplements und Fasttracking gegen den Referenzwert der DGE f\xFCr dein Profil. Gez\xE4hlt werden nur Tage, an denen mindestens 80 % der Energie aus Lebensmitteln mit BLS-Bezug stammen. Unter 70 % gilt als L\xFCcke (wie der Hinweis im Tagebuch). Quellen: deine eigenen Lebensmittel der letzten Wochen mit ihrer \xFCblichen Menge; gezeigt wird, wie viel Prozent des Tagesbedarfs eine \xFCbliche Portion deckt. Lebensmittel ohne BLS-Bezug z\xE4hlen nicht \u2013 die echte Zufuhr kann h\xF6her sein. Vitamin D: Eigenbildung \xFCber die Haut ist nicht erfasst.",
+    sources: [CONN_SOURCES.microGaps]
+  };
+  const res = microGapList(inp);
+  if (!res)
+    return noData(
+      base,
+      "Die Stoffe aus den Lebensmitteln sind f\xFCr diese Auswertung nicht geladen."
+    );
+  if (res.days < MICRO_GAPS.minDays)
+    return noData(
+      base,
+      res.logged >= MICRO_GAPS.minDays ? `An ${res.logged - res.days} von ${res.logged} erfassten Tagen stammen weniger als 80 % der Energie aus Lebensmitteln mit BLS-Bezug \u2013 ohne deren Stoffe ist keine Aussage m\xF6glich. Verkn\xFCpfe deine h\xE4ufigsten Lebensmittel mit dem BLS (Nutrition \u2192 Lebensmittel).` : `Es braucht mindestens ${MICRO_GAPS.minDays} erfasste Tage in den letzten 14 Tagen (bisher ${res.logged}).`
+    );
+  const gaps = res.gaps.slice(0, MICRO_GAPS.maxGaps);
+  if (!gaps.length)
+    return {
+      ...base,
+      status: "ok",
+      summary: `Kein Stoff mit Referenzwert liegt im Mittel von ${res.days} Tagen unter ${MICRO_GAPS.share} %.`,
+      advice: "Keine L\xFCcke erkennbar.",
+      rows: []
+    };
+  const amount = (v) => F3(v, v < 10 ? 1 : 0);
+  const rows2 = gaps.map((g2) => ({
+    label: g2.label,
+    value: `${F3(g2.percent)} % des Referenzwerts`,
+    note: `\xD8 ${amount(g2.mean)} ${g2.unit}${g2.foods.length ? ` \xB7 deine Quellen: ${g2.foods.map((f) => `${f.name} (${F3(f.amount)} ${f.unit}: ${F3(f.percent)} %)`).join(", ")}` : " \xB7 keine deiner Lebensmittel liefert nennenswert davon"}`
+  }));
+  const more = res.gaps.length - gaps.length;
+  return {
+    ...base,
+    status: "info",
+    summary: `Im Mittel von ${res.days} Tagen unter ${MICRO_GAPS.share} % des Referenzwerts: ${gaps.map((g2) => g2.label).join(", ")}${more > 0 ? ` und ${more} weitere` : ""}.`,
+    advice: "Schlie\xDFe L\xFCcken zuerst \xFCber Lebensmittel, die du ohnehin isst \u2013 die Zeilen nennen deine besten Quellen je \xFCblicher Portion. Wo keine passt: Vielfalt aus Gem\xFCse, Obst, H\xFClsenfr\xFCchten, Vollkorn, N\xFCssen, Fisch und Milchprodukten; Supplemente gezielt und mit Blutwert.",
+    rows: rows2
+  };
+}
+var healthFindings = (inp) => [bloodPressure(inp), microGaps(inp)];
+
+// src/domain/connSleep.ts
+var F4 = formatNumber;
+var SLEEP_LEVERS = {
+  days: 56,
+  /** Mindestzahl Nächte je Gruppe */
+  minNights: 5,
+  lateWaterMl: 500,
+  /** Letzte größere Mahlzeit bzw. Trainingsende näher als so viele Minuten am Zubettgehen */
+  gapMin: 120,
+  /** Ab diesem Unterschied (Minuten) wird ein Hebel genannt */
+  diffMin: 5,
+  /** Wachzeit in der Nacht: bis 30 Minuten üblich (T12-022) */
+  awakeMaxMin: 30
+};
+function nightsOf(inp, from) {
+  return inp.sleep.filter((s) => s.date >= from && s.date <= inp.today).map((s) => {
+    const b = minutesOf5(s.bedTime);
+    return {
+      date: s.date,
+      awake: s.awakeMin,
+      latency: s.sleepLatencyMin,
+      bed: b === null ? null : b < 12 * 60 ? b + 1440 : b
+    };
+  });
+}
+function compare(label, outcome, nights) {
+  const a = nights.flatMap((n3) => n3.has && n3.value !== null ? [n3.value] : []);
+  const b = nights.flatMap((n3) => !n3.has && n3.value !== null ? [n3.value] : []);
+  const ok = a.length >= SLEEP_LEVERS.minNights && b.length >= SLEEP_LEVERS.minNights;
+  const ma = avg(a);
+  const mb = avg(b);
+  return {
+    label,
+    outcome,
+    withN: a.length,
+    withoutN: b.length,
+    meanWith: ma,
+    meanWithout: mb,
+    diff: ok && ma !== null && mb !== null ? ma - mb : null
+  };
+}
+var row = (c) => ({
+  label: `${c.label} \u2192 ${c.outcome}`,
+  value: c.diff === null ? "zu wenige N\xE4chte" : `${F4(c.meanWith ?? 0)} gegen ${F4(c.meanWithout ?? 0)} min`,
+  note: `${c.withN} N\xE4chte mit, ${c.withoutN} ohne${c.diff !== null ? ` \xB7 ${formatSigned(c.diff, 0)} min` : ""}`
+});
+function sleepLevers(inp) {
+  const base = {
+    id: "V6",
+    area: "sleep",
+    title: "Schlaf-Hebel am Vorabend",
+    method: "Letzte 8 Wochen, je Nacht der Vorabend: Trinken ab 20 Uhr (ab 500 ml gegen weniger; nur Tage mit Uhrzeit am Glas), letzte gr\xF6\xDFere Mahlzeit (ab 200 kcal) weniger als 2 Stunden vor dem Zubettgehen gegen fr\xFCher, Trainingsende weniger als 2 Stunden vor dem Zubettgehen gegen fr\xFCher oder kein Training. Verglichen werden die mittlere Wachzeit in der Nacht und die Einschlafdauer \u2013 je Gruppe mindestens 5 N\xE4chte, genannt ab 5 Minuten Unterschied. Beobachtung, keine Ursache: Abende mit sp\xE4tem Essen sind oft auch sonst anders.",
+    sources: [
+      CONN_SOURCES.lastMeal,
+      CONN_SOURCES.eveningAll,
+      CONN_SOURCES.eveningSport,
+      CONN_SOURCES.awake
+    ]
+  };
+  const t = inp.today;
+  const from = shiftDays(t, -(SLEEP_LEVERS.days - 1));
+  const nights = nightsOf(inp, from);
+  const withAwake = nights.filter((n3) => n3.awake !== null);
+  if (withAwake.length < SLEEP_LEVERS.minNights * 2)
+    return noData(
+      base,
+      `Es braucht mindestens ${SLEEP_LEVERS.minNights * 2} N\xE4chte mit \u201EWachzeit in der Nacht\u201C (bisher ${withAwake.length}).`
+    );
+  const intake = new Map(inp.intake.map((d) => [d.date, d]));
+  const endOf = /* @__PURE__ */ new Map();
+  for (const w of inp.workouts) {
+    const start = minutesOf5(w.startTime);
+    if (w.status !== "done" || start === null) continue;
+    const end = start + (w.durationMin ?? 60);
+    endOf.set(w.date, Math.max(endOf.get(w.date) ?? 0, end));
+  }
+  const water = [];
+  const mealAwake = [];
+  const mealLatency = [];
+  const trainLatency = [];
+  for (const n3 of nights) {
+    const eve = intake.get(shiftDays(n3.date, -1));
+    if (eve?.waterTimed)
+      water.push({ has: eve.waterLateMl >= SLEEP_LEVERS.lateWaterMl, value: n3.awake });
+    if (eve && eve.lastMealMin !== null && n3.bed !== null) {
+      const late = n3.bed - eve.lastMealMin < SLEEP_LEVERS.gapMin;
+      mealAwake.push({ has: late, value: n3.awake });
+      mealLatency.push({ has: late, value: n3.latency });
+    }
+    if (n3.bed !== null) {
+      const end = endOf.get(shiftDays(n3.date, -1));
+      trainLatency.push({
+        has: end !== void 0 && n3.bed - end < SLEEP_LEVERS.gapMin,
+        value: n3.latency
+      });
+    }
+  }
+  const cmp = [
+    compare(`Ab 20 Uhr mindestens ${SLEEP_LEVERS.lateWaterMl} ml getrunken`, "Wachzeit", water),
+    compare("Letzte Mahlzeit unter 2 h vor dem Zubettgehen", "Wachzeit", mealAwake),
+    compare("Letzte Mahlzeit unter 2 h vor dem Zubettgehen", "Einschlafdauer", mealLatency),
+    compare("Training endet unter 2 h vor dem Zubettgehen", "Einschlafdauer", trainLatency)
+  ];
+  const recent = withAwake.filter((n3) => n3.date >= shiftDays(t, -13)).map((n3) => n3.awake);
+  const awake14 = recent.length >= 4 ? avg(recent) : null;
+  const rows2 = [
+    ...awake14 !== null ? [
+      {
+        label: "Wachzeit in der Nacht (\xD8 14 Tage)",
+        value: formatDuration(Math.round(awake14)),
+        note: `${recent.length} N\xE4chte \xB7 bis ${SLEEP_LEVERS.awakeMaxMin} min \xFCblich`
+      }
+    ] : [],
+    ...cmp.map(row)
+  ];
+  const LEVER = {
+    [cmp[0]?.label ?? ""]: "nach 20 Uhr weniger trinken und die Menge auf den Tag vorziehen",
+    [cmp[1]?.label ?? ""]: "die letzte gr\xF6\xDFere Mahlzeit zwei bis drei Stunden vor dem Schlafen",
+    [cmp[3]?.label ?? ""]: "intensives Training zwei bis drei Stunden vor dem Schlafen beenden"
+  };
+  const hits = cmp.filter((c) => c.diff !== null && c.diff >= SLEEP_LEVERS.diffMin);
+  const levers = [...new Set(hits.map((c) => LEVER[c.label] ?? ""))].filter(Boolean);
+  const rated = cmp.filter((c) => c.diff !== null);
+  if (!rated.length)
+    return {
+      ...base,
+      status: "nodata",
+      summary: `Noch zu wenige N\xE4chte je Gruppe (mindestens ${SLEEP_LEVERS.minNights} mit und ohne). Uhrzeiten an Gl\xE4sern, Mahlzeiten und Einheiten machen den Vergleich m\xF6glich.`,
+      advice: null,
+      rows: rows2
+    };
+  const summary = hits.length ? `Auff\xE4llig: ${hits.map((c) => `${c.label}: ${c.outcome} ${formatSigned(c.diff ?? 0, 0)} min`).join("; ")}.` : "Kein Vorabend-Faktor zeigt einen Unterschied von mindestens 5 Minuten.";
+  if (!hits.length)
+    return {
+      ...base,
+      status: "ok",
+      summary,
+      advice: "Trinken, Essenszeit und Trainingsende am Abend machen bei dir bisher keinen deutlichen Unterschied.",
+      rows: rows2
+    };
+  return {
+    ...base,
+    status: awake14 !== null && awake14 > SLEEP_LEVERS.awakeMaxMin ? "act" : "info",
+    summary,
+    advice: `Probiere es zwei Wochen lang: ${levers.join("; ")}. Danach zeigt der Vergleich, ob es bei dir wirkt.`,
+    rows: rows2
+  };
+}
+var ALCOHOL = { days: 56, minNights: 3, gramsMin: 10 };
+function alcoholNights(inp) {
+  const base = {
+    id: "V16b",
+    area: "sleep",
+    title: "Alkohol am Vorabend",
+    method: "Alkohol wird nicht eigens erfasst: Er kommt aus den Lebensmitteln des Tagebuchs mit BLS-Bezug (Stoff \u201EAlkohol (Ethanol)\u201C). Letzte 8 Wochen: N\xE4chte nach Tagen mit mindestens 10 g Alkohol gegen die \xFCbrigen N\xE4chte \u2013 HRV am Morgen und Wachzeit in der Nacht, je Gruppe mindestens 3 N\xE4chte. Getr\xE4nke ohne BLS-Bezug fehlen in der Rechnung.",
+    sources: [CONN_SOURCES.alcoholNight]
+  };
+  if (!inp.micro)
+    return noData(
+      base,
+      "Die Stoffe aus den Lebensmitteln sind f\xFCr diese Auswertung nicht geladen."
+    );
+  const t = inp.today;
+  const from = shiftDays(t, -(ALCOHOL.days - 1));
+  const alcohol = new Map(inp.micro.map((d) => [d.date, d.alcoholG ?? 0]));
+  const drinkDays = [...alcohol].filter(([d, g2]) => d >= from && g2 >= ALCOHOL.gramsMin);
+  if (drinkDays.length < ALCOHOL.minNights)
+    return noData(
+      base,
+      `Im Tagebuch stehen an ${drinkDays.length} Tagen mindestens ${ALCOHOL.gramsMin} g Alkohol aus Lebensmitteln mit BLS-Bezug \u2013 f\xFCr einen Vergleich braucht es ${ALCOHOL.minNights}.`
+    );
+  const hrv2 = new Map(metricByDay(inp.measurements, HRV_METRIC_ID).map((p) => [p.date, p.value]));
+  const logged = new Set(inp.micro.map((d) => d.date));
+  const group = (drank) => {
+    const dates = [...logged].filter(
+      (d) => d >= from && d < t && (alcohol.get(d) ?? 0) >= ALCOHOL.gramsMin === drank
+    );
+    const next = dates.map((d) => shiftDays(d, 1));
+    const h = next.flatMap((d) => hrv2.has(d) ? [hrv2.get(d)] : []);
+    const a = next.flatMap((d) => {
+      const s = inp.sleep.find((x) => x.date === d);
+      return s && s.awakeMin !== null ? [s.awakeMin] : [];
+    });
+    return { n: dates.length, hrv: h, awake: a };
+  };
+  const yes = group(true);
+  const no = group(false);
+  const rows2 = [];
+  const parts2 = [];
+  const add = (label, a, b, unit) => {
+    if (a.length < ALCOHOL.minNights || b.length < ALCOHOL.minNights) return;
+    const ma = avg(a) ?? 0;
+    const mb = avg(b) ?? 0;
+    rows2.push({
+      label,
+      value: `${F4(ma)} gegen ${F4(mb)} ${unit}`,
+      note: `${a.length} N\xE4chte nach Alkohol, ${b.length} ohne`
+    });
+    parts2.push(`${label} ${formatSigned(ma - mb, 0)} ${unit}`);
+  };
+  add("HRV am Morgen", yes.hrv, no.hrv, "ms");
+  add("Wachzeit in der Nacht", yes.awake, no.awake, "min");
+  if (!rows2.length)
+    return noData(base, "F\xFCr die N\xE4chte nach Alkohol fehlen HRV- oder Schlafwerte.");
+  return {
+    ...base,
+    status: "info",
+    summary: `N\xE4chte nach Tagen mit Alkohol gegen die \xFCbrigen: ${parts2.join(", ")}.`,
+    advice: "Schon ein Glas ist in Nachtpuls und HRV messbar. Wenn Alkohol, dann fr\xFCh am Abend \u2013 mindestens drei bis vier Stunden vor dem Schlafen.",
+    rows: rows2
+  };
+}
+var sleepFindings = (inp) => [sleepLevers(inp), alcoholNights(inp)];
+
+// src/domain/connTraining.ts
+var F5 = formatNumber;
+var clock5 = (seconds) => `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, "0")} min`;
+var workSets = (log, from, to) => log.filter(
+  (s) => !s.isWarmup && s.exerciseCategory === "strength" && s.date >= from && s.date <= to
+);
+function sessionsByExercise(log, from, to) {
+  const out = /* @__PURE__ */ new Map();
+  for (const s of workSets(log, from, to)) {
+    const v = epley1RM(s.weightKg, s.reps);
+    if (v === null) continue;
+    const e = out.get(s.exerciseId) ?? { name: s.exerciseName, best: /* @__PURE__ */ new Map() };
+    const cur = e.best.get(s.workoutId);
+    if (!cur || v > cur.value)
+      e.best.set(s.workoutId, { workoutId: s.workoutId, date: s.date, value: v });
+    out.set(s.exerciseId, e);
+  }
+  return new Map(
+    [...out].map(([id4, e]) => [
+      id4,
+      {
+        name: e.name,
+        sessions: [...e.best.values()].sort((a, b) => a.date.localeCompare(b.date))
+      }
+    ])
+  );
+}
+function weeklyGroupSets(inp, count) {
+  const machines = inp.machines ?? [];
+  const focus = inp.focus ?? NO_FOCUS;
+  const weeks = weeklyMuscleSets([], [], inp.today, count).weeks.map((w) => ({
+    start: w.start,
+    end: w.end
+  }));
+  const loads = weeks.map(
+    (w) => groupLoads(
+      muscleMapData(
+        inp.setLog,
+        inp.exercises,
+        machines,
+        (s) => s.date >= w.start && s.date <= w.end,
+        focus
+      ).sets
+    )
+  );
+  const mainGroup = /* @__PURE__ */ new Map();
+  for (const e of inp.exercises) {
+    if (e.category !== "strength") continue;
+    const one = {
+      exerciseId: e.id,
+      exerciseCategory: e.category,
+      isWarmup: false,
+      reps: 10,
+      weightKg: null
+    };
+    const load2 = groupLoads(muscleMapData([one], inp.exercises, machines, () => true, focus).sets);
+    const best = MUSCLE_GROUPS.map((g2) => ({ id: g2.id, value: load2[g2.id] ?? 0 })).sort(
+      (a, b) => b.value - a.value
+    )[0];
+    if (best && best.value > 0) mainGroup.set(e.id, best.id);
+  }
+  return {
+    weeks,
+    rows: MUSCLE_GROUPS.map((g2) => ({
+      id: g2.id,
+      label: g2.label,
+      sets: loads.map((l) => l[g2.id] ?? 0)
+    })),
+    mainGroup
+  };
+}
+function restPairs(log, from, to) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const s of workSets(log, from, to)) {
+    if (!s.doneAt) continue;
+    const at = Date.parse(s.doneAt);
+    if (!Number.isFinite(at)) continue;
+    const key = `${s.workoutId}|${s.exerciseId}`;
+    groups.set(key, [...groups.get(key) ?? [], { ...s, at }]);
+  }
+  const out = [];
+  for (const sets2 of groups.values()) {
+    sets2.sort((a, b) => a.at - b.at);
+    for (let i = 1; i < sets2.length; i += 1) {
+      const a = sets2[i - 1];
+      const b = sets2[i];
+      if (!a || !b || a.reps === null || b.reps === null) continue;
+      const rest = (b.at - a.at) / 1e3;
+      if (rest < 20 || rest > REST_MAX_SECONDS) continue;
+      out.push({
+        exerciseId: a.exerciseId,
+        exerciseName: a.exerciseName,
+        date: a.date,
+        restSeconds: rest,
+        reps: a.reps,
+        nextReps: b.reps,
+        sameWeight: a.weightKg !== null && a.weightKg === b.weightKg
+      });
+    }
+  }
+  return out;
+}
+var PLATEAU = {
+  /** Betrachteter Zeitraum (Tage) */
+  windowDays: 56,
+  /** Stillstand ab so vielen Tagen seit dem letzten Bestwert (T03-144: mehr als 3 Wochen) */
+  minDays: 21,
+  /** und mindestens so vielen Einheiten seither */
+  minSessions: 3,
+  sleepMinMin: 7 * 60,
+  deficitKcal: -300,
+  restSeconds: 90,
+  rpeMin: 7,
+  setsMin: 4,
+  setsMax: 20
+};
+function plateauExercises(log, today) {
+  const from = shiftDays(today, -(PLATEAU.windowDays - 1));
+  const out = [];
+  for (const [exerciseId, e] of sessionsByExercise(log, from, today)) {
+    if (e.sessions.length < PLATEAU.minSessions + 1) continue;
+    let peak = e.sessions[0];
+    for (const s of e.sessions) if (peak && s.value > peak.value) peak = s;
+    if (!peak) continue;
+    const since = e.sessions.filter((s) => s.date > peak.date);
+    if (since.length < PLATEAU.minSessions || daysBetween(peak.date, today) < PLATEAU.minDays)
+      continue;
+    out.push({
+      exerciseId,
+      name: e.name,
+      peak,
+      sessionsSince: since.length,
+      bestSince: Math.max(...since.map((s) => s.value))
+    });
+  }
+  return out.sort(
+    (a, b) => b.sessionsSince - a.sessionsSince || a.name.localeCompare(b.name, "de")
+  );
+}
+function plateau(inp) {
+  const base = {
+    id: "V4",
+    area: "training",
+    title: "Plateau mit Ursache",
+    method: "Plateau: Der beste gesch\xE4tzte 1RM (Epley) einer \xDCbung in den letzten 8 Wochen liegt mehr als 21 Tage zur\xFCck und wurde in mindestens 3 Einheiten seither nicht \xFCbertroffen. F\xFCr die Zeit seit dem Bestwert (h\xF6chstens 28 Tage) stehen daneben: \xD8 Schlaf (unter 7 h auff\xE4llig), \xD8 Bilanz (ab \u2212300 kcal), \xD8 Eiwei\xDF (unter 1,6 g/kg), Median der Satzpausen dieser \xDCbung (unter 90 s), \xD8 RPE der Arbeitss\xE4tze (unter 7) und Wochens\xE4tze der Muskelgruppe (unter 4 bzw. \xFCber 20). Reihenfolge der Hebel wie im Buch: Trainingsprotokoll, Kalorien, Eiwei\xDF, Schlaf.",
+    sources: [CONN_SOURCES.plateau, CONN_SOURCES.weeklySets, CONN_SOURCES.restGrowth]
+  };
+  const t = inp.today;
+  const trained = sessionsByExercise(inp.setLog, shiftDays(t, -(PLATEAU.windowDays - 1)), t);
+  if (![...trained.values()].some((e) => e.sessions.length >= PLATEAU.minSessions + 1))
+    return noData(
+      base,
+      "Es braucht mindestens eine \xDCbung mit 4 Einheiten in den letzten 8 Wochen (1\u201312 Wiederholungen)."
+    );
+  const list2 = plateauExercises(inp.setLog, t).slice(0, 3);
+  if (!list2.length)
+    return {
+      ...base,
+      status: "ok",
+      summary: "Keine \xDCbung steht seit mehr als 3 Wochen still.",
+      advice: "Kein Plateau erkennbar.",
+      rows: []
+    };
+  const weeks = weeklyGroupSets(inp, 4);
+  const energy = new Map(inp.energy.map((e) => [e.date, e.totalKcal]));
+  const weights = metricByDay(inp.measurements, WEIGHT_METRIC_ID);
+  const rows2 = [];
+  const levers = /* @__PURE__ */ new Set();
+  for (const p of list2) {
+    const from = p.peak.date > shiftDays(t, -27) ? shiftDays(p.peak.date, 1) : shiftDays(t, -27);
+    const causes = [];
+    const add = (flag, text2, lever) => {
+      if (!flag) return;
+      causes.push(text2);
+      levers.add(lever);
+    };
+    const sets2 = weeks.rows.find((r2) => r2.id === weeks.mainGroup.get(p.exerciseId));
+    const perWeek = sets2 ? avg(sets2.sets) ?? 0 : null;
+    if (sets2 && perWeek !== null) {
+      const group = sets2.label;
+      add(perWeek < PLATEAU.setsMin, `${group} nur ${F5(perWeek, 1)} S\xE4tze je Woche`, "volume-low");
+      add(perWeek > PLATEAU.setsMax, `${group} ${F5(perWeek, 1)} S\xE4tze je Woche`, "volume-high");
+    }
+    const rests = restPairs(inp.setLog, from, t).filter((r2) => r2.exerciseId === p.exerciseId).map((r2) => r2.restSeconds);
+    const rest = rests.length >= 3 ? med(rests) : null;
+    if (rest !== null) add(rest < PLATEAU.restSeconds, `Pausen im Median ${clock5(rest)}`, "rest");
+    const rpes = workSets(inp.setLog, from, t).flatMap(
+      (s) => s.exerciseId === p.exerciseId && s.rpe !== null ? [s.rpe] : []
+    );
+    const rpe = rpes.length >= 3 ? avg(rpes) : null;
+    if (rpe !== null) add(rpe < PLATEAU.rpeMin, `RPE im Mittel ${F5(rpe, 1)}`, "rpe");
+    const days3 = inp.nutrition.filter(
+      (d) => d.date >= from && d.date <= t && d.energyKcal >= COMPLETE_DAY_KCAL
+    );
+    const balances = days3.flatMap((d) => {
+      const total = energy.get(d.date);
+      return total ? [d.energyKcal - total] : [];
+    });
+    const balance2 = balances.length >= 5 ? avg(balances) : null;
+    if (balance2 !== null)
+      add(balance2 <= PLATEAU.deficitKcal, `Bilanz ${formatSigned(balance2, 0)} kcal`, "kcal");
+    const kg2 = avg(valuesIn(weights, from, t)) ?? weights.at(-1)?.value ?? null;
+    const protein = days3.length >= 5 && kg2 ? (avg(days3.map((d) => d.proteinG)) ?? 0) / kg2 : null;
+    if (protein !== null)
+      add(protein < DIET_LIMITS.proteinMinPerKg, `Eiwei\xDF ${F5(protein, 1)} g/kg`, "protein");
+    const nights = inp.sleep.filter((s) => s.date >= from && s.date <= t).map((s) => s.sleepMin);
+    const sleep = nights.length >= 5 ? avg(nights) : null;
+    if (sleep !== null)
+      add(
+        sleep < PLATEAU.sleepMinMin,
+        `Schlaf im Mittel ${formatDuration(Math.round(sleep))}`,
+        "sleep"
+      );
+    rows2.push({
+      label: p.name,
+      value: `seit ${formatDate(p.peak.date)} kein Bestwert`,
+      note: `${p.sessionsSince} Einheiten, bester Wert seither ${F5(p.bestSince, 1)} kg gegen\xFCber ${F5(p.peak.value, 1)} kg${causes.length ? ` \xB7 auff\xE4llig: ${causes.join(", ")}` : " \xB7 nichts Erfasstes auff\xE4llig"}`
+    });
+  }
+  const LEVER_TEXT = {
+    "volume-low": "mehr S\xE4tze f\xFCr die Muskelgruppe (mindestens 4, besser 6\u201310 harte S\xE4tze je Woche)",
+    "volume-high": "Volumen senken (\xFCber 20 S\xE4tze je Woche bringen kaum mehr)",
+    rest: "l\xE4ngere Satzpausen (mindestens 90 Sekunden, bei schweren Grund\xFCbungen 2\u20134 Minuten)",
+    rpe: "n\xE4her ans Muskelversagen (0\u20133 Wiederholungen Reserve)",
+    kcal: "Defizit verkleinern",
+    protein: "Eiwei\xDF auf mindestens 1,6 g/kg",
+    sleep: "mindestens 7 Stunden Schlaf"
+  };
+  const order = ["volume-low", "volume-high", "rest", "rpe", "kcal", "protein", "sleep"];
+  const todo = order.filter((k) => levers.has(k)).map((k) => LEVER_TEXT[k] ?? k);
+  const names = list2.map((p) => p.name).join(", ");
+  return {
+    ...base,
+    status: todo.length ? "act" : "info",
+    summary: `Seit \xFCber 3 Wochen ohne neuen Bestwert: ${names}.`,
+    advice: todo.length ? `Hebel in dieser Reihenfolge: ${todo.join("; ")}.` : "In Volumen, Pausen, Kalorien, Eiwei\xDF und Schlaf ist nichts Erfasstes auff\xE4llig. Pr\xFCfe Technik und \xDCbungsauswahl; h\xE4lt der Stillstand an, ist ein Gesundheitscheck der n\xE4chste Schritt.",
+    rows: rows2
+  };
+}
+var REST_BUCKETS = [
+  { label: "unter 1:30 min", from: 0, to: 90 },
+  { label: "1:30\u20132:30 min", from: 90, to: 150 },
+  { label: "2:30\u20134:00 min", from: 150, to: 240 },
+  { label: "ab 4:00 min", from: 240, to: Infinity }
+];
+var REST_EFFECT = {
+  days: 56,
+  minPairs: 10,
+  minBucket: 5,
+  /** Die Pause reicht, wenn der nächste Satz höchstens so viele Wiederholungen verliert (T01-109) */
+  okDrop: 1.5,
+  highDrop: 2
+};
+function restEffect(inp) {
+  const base = {
+    id: "V5",
+    area: "training",
+    title: "Pausenl\xE4nge und n\xE4chster Satz",
+    method: "Aus dem Zeitpunkt des Abhakens (seit PC 1.0.238 / Handy 1.169.0): Abstand zwischen zwei aufeinanderfolgenden Arbeitss\xE4tzen derselben \xDCbung mit gleichem Gewicht (20 Sekunden bis 15 Minuten; enth\xE4lt die Dauer des zweiten Satzes) und der Unterschied der Wiederholungen. Letzte 8 Wochen, mindestens 10 Satzpaare, je Pausenbereich mindestens 5. Faustregel aus dem Buch: Die Pause ist lang genug, wenn der n\xE4chste Satz h\xF6chstens 1\u20132 Wiederholungen weniger schafft.",
+    sources: [CONN_SOURCES.restLength, CONN_SOURCES.restGrowth]
+  };
+  const t = inp.today;
+  const pairs = restPairs(inp.setLog, shiftDays(t, -(REST_EFFECT.days - 1)), t).filter(
+    (p) => p.sameWeight
+  );
+  if (pairs.length < REST_EFFECT.minPairs)
+    return noData(
+      base,
+      `Noch zu wenige Satzpaare mit Zeitpunkt (${pairs.length} von ${REST_EFFECT.minPairs}). Sie entstehen beim Abhaken der S\xE4tze im laufenden Training.`
+    );
+  const buckets = REST_BUCKETS.map((b) => {
+    const list2 = pairs.filter((p) => p.restSeconds >= b.from && p.restSeconds < b.to);
+    return { ...b, n: list2.length, drop: avg(list2.map((p) => p.reps - p.nextReps)) };
+  });
+  const rows2 = buckets.filter((b) => b.n > 0).map((b) => ({
+    label: `Pause ${b.label}`,
+    value: b.n >= REST_EFFECT.minBucket && b.drop !== null ? `${formatSigned(-b.drop, 1)} Wdh.` : "zu wenige Paare",
+    note: `${b.n} Satzpaare`
+  }));
+  const byEx = /* @__PURE__ */ new Map();
+  for (const p of pairs) byEx.set(p.exerciseName, [...byEx.get(p.exerciseName) ?? [], p]);
+  for (const [name, list2] of [...byEx].sort((a, b) => b[1].length - a[1].length).slice(0, 3)) {
+    if (list2.length < REST_EFFECT.minBucket) continue;
+    rows2.push({
+      label: name,
+      value: `${formatSigned(-(avg(list2.map((p) => p.reps - p.nextReps)) ?? 0), 1)} Wdh.`,
+      note: `Pause im Median ${clock5(med(list2.map((p) => p.restSeconds)) ?? 0)}, ${list2.length} Satzpaare`
+    });
+  }
+  const rated = buckets.filter((b) => b.n >= REST_EFFECT.minBucket && b.drop !== null);
+  const most = [...rated].sort((a, b) => b.n - a.n)[0];
+  const enough = rated.find((b) => (b.drop ?? 99) <= REST_EFFECT.okDrop);
+  const all = avg(pairs.map((p) => p.reps - p.nextReps)) ?? 0;
+  const summary = `Im Mittel ${formatSigned(-all, 1)} Wiederholungen von Satz zu Satz bei gleichem Gewicht (${pairs.length} Satzpaare, Pause im Median ${clock5(med(pairs.map((p) => p.restSeconds)) ?? 0)}).`;
+  if (most && (most.drop ?? 0) > REST_EFFECT.highDrop)
+    return {
+      ...base,
+      status: "act",
+      summary,
+      advice: `Bei deiner h\xE4ufigsten Pause (${most.label}) verlierst du im Mittel ${F5(most.drop ?? 0, 1)} Wiederholungen \u2013 das kostet Volumen. ${enough && enough.from > most.from ? `Ab ${enough.label} sind es nur noch ${F5(enough.drop ?? 0, 1)}: Stelle den Pausentimer dorthin.` : "Verl\xE4ngere die Pause, bis der n\xE4chste Satz h\xF6chstens 1\u20132 Wiederholungen weniger schafft (schwere Grund\xFCbungen 2\u20134 Minuten)."}`,
+      rows: rows2
+    };
+  return {
+    ...base,
+    status: rated.length ? "ok" : "nodata",
+    summary,
+    advice: rated.length ? `Deine Pausen reichen: Der n\xE4chste Satz verliert h\xF6chstens ${F5(REST_EFFECT.highDrop, 0)} Wiederholungen.${enough ? ` Schon ab ${enough.label} sind es ${F5(enough.drop ?? 0, 1)}.` : ""}` : null,
+    rows: rows2
+  };
+}
+var FATIGUE = {
+  /** Vergleich: letzte 7 Tage gegen die 28 Tage davor */
+  recentDays: 7,
+  baseDays: 28,
+  rpeRise: 0.5,
+  hrvDropShare: 0.075,
+  gripDropShare: 0.05,
+  sleepDropMin: 30,
+  sleepMinMin: 7 * 60,
+  /** Hinweis „Entlastungswoche“ ab so vielen Markern */
+  markers: 2
+};
+function fatigueMarkers(inp) {
+  const base = {
+    id: "V11",
+    area: "training",
+    title: "Erm\xFCdung \xFCber mehrere Marker",
+    method: "Vier Marker, letzte 7 Tage gegen die 28 Tage davor: Anstrengung (\xD8 RPE der Arbeitss\xE4tze +0,5 oder mehr; ohne RPE die Anstrengung der Einheiten +1), HRV (\xD8 mindestens 7,5 % niedriger), Griffkraft (\xD8 beider H\xE4nde der letzten 14 Tage mindestens 5 % unter den 90 Tagen davor), Schlaf (\xD8 mindestens 30 Minuten k\xFCrzer oder unter 7 Stunden). Der Ruhepuls steht zur Einordnung dabei und z\xE4hlt nicht mit. Ab 2 Markern: Hinweis auf eine Entlastungswoche. Ein Marker braucht in beiden Zeitr\xE4umen genug Werte (RPE 6 S\xE4tze, HRV 4 bzw. 8, Schlaf 4 bzw. 8, Griffkraft 1 bzw. 2).",
+    sources: [CONN_SOURCES.deload, CONN_SOURCES.overtraining]
+  };
+  const t = inp.today;
+  const recentFrom = shiftDays(t, -(FATIGUE.recentDays - 1));
+  const baseFrom = shiftDays(recentFrom, -FATIGUE.baseDays);
+  const baseTo = shiftDays(recentFrom, -1);
+  const rows2 = [];
+  const hits = [];
+  let evaluated = 0;
+  const mark = (label, value2, note, hit) => {
+    evaluated += 1;
+    rows2.push({ label, value: value2, note: `${note}${hit ? " \u2013 auff\xE4llig" : ""}` });
+    if (hit) hits.push(label);
+  };
+  const rpe = (from, to) => workSets(inp.setLog, from, to).flatMap((s) => s.rpe !== null ? [s.rpe] : []);
+  const rNow = rpe(recentFrom, t);
+  const rBase = rpe(baseFrom, baseTo);
+  if (rNow.length >= 6 && rBase.length >= 6) {
+    const a = avg(rNow) ?? 0;
+    const b = avg(rBase) ?? 0;
+    mark("Anstrengung (RPE)", F5(a, 1), `davor ${F5(b, 1)}`, a - b >= FATIGUE.rpeRise);
+  } else {
+    const ex = (from, to) => inp.workouts.flatMap(
+      (w) => w.status === "done" && w.date >= from && w.date <= to && w.perceivedExertion !== null ? [w.perceivedExertion] : []
+    );
+    const a = ex(recentFrom, t);
+    const b = ex(baseFrom, baseTo);
+    if (a.length >= 2 && b.length >= 4)
+      mark(
+        "Anstrengung der Einheiten",
+        F5(avg(a) ?? 0, 1),
+        `davor ${F5(avg(b) ?? 0, 1)}`,
+        (avg(a) ?? 0) - (avg(b) ?? 0) >= 1
+      );
+  }
+  const hrv2 = metricByDay(inp.measurements, HRV_METRIC_ID);
+  const hNow = valuesIn(hrv2, recentFrom, t);
+  const hBase = valuesIn(hrv2, baseFrom, baseTo);
+  if (hNow.length >= 4 && hBase.length >= 8) {
+    const a = avg(hNow) ?? 0;
+    const b = avg(hBase) ?? 0;
+    mark(
+      "HRV",
+      `${F5(a)} ms`,
+      `davor ${F5(b)} ms (${formatSigned((a - b) / b * 100, 0)} %)`,
+      (b - a) / b >= FATIGUE.hrvDropShare
+    );
+  }
+  const gripDay = /* @__PURE__ */ new Map();
+  for (const g2 of [...inp.grip].sort(
+    (a, b) => a.date.localeCompare(b.date) || (a.time ?? "").localeCompare(b.time ?? "")
+  ))
+    gripDay.set(g2.date, (g2.leftKg + g2.rightKg) / 2);
+  const grip = [...gripDay].map(([date, value2]) => ({ date, value: value2 }));
+  const gNow = valuesIn(grip, shiftDays(t, -13), t);
+  const gBase = valuesIn(grip, shiftDays(t, -104), shiftDays(t, -14));
+  if (gNow.length >= 1 && gBase.length >= 2) {
+    const a = avg(gNow) ?? 0;
+    const b = avg(gBase) ?? 0;
+    mark(
+      "Griffkraft",
+      `${F5(a, 1)} kg`,
+      `davor ${F5(b, 1)} kg (${formatSigned((a - b) / b * 100, 0)} %)`,
+      (b - a) / b >= FATIGUE.gripDropShare
+    );
+  }
+  const sleep = (from, to) => inp.sleep.filter((s) => s.date >= from && s.date <= to).map((s) => s.sleepMin);
+  const sNow = sleep(recentFrom, t);
+  const sBase = sleep(baseFrom, baseTo);
+  if (sNow.length >= 4 && sBase.length >= 8) {
+    const a = avg(sNow) ?? 0;
+    const b = avg(sBase) ?? 0;
+    mark(
+      "Schlaf",
+      formatDuration(Math.round(a)),
+      `davor ${formatDuration(Math.round(b))}`,
+      b - a >= FATIGUE.sleepDropMin || a < FATIGUE.sleepMinMin
+    );
+  }
+  const rhr = metricByDay(inp.measurements, RESTING_HR_METRIC_ID);
+  const pNow = valuesIn(rhr, recentFrom, t);
+  const pBase = valuesIn(rhr, baseFrom, baseTo);
+  if (pNow.length >= 4 && pBase.length >= 8)
+    rows2.push({
+      label: "Ruhepuls (z\xE4hlt nicht mit)",
+      value: `${F5(avg(pNow) ?? 0)} bpm`,
+      note: `davor ${F5(avg(pBase) ?? 0)} bpm`
+    });
+  if (evaluated < 2)
+    return noData(
+      base,
+      "F\xFCr den Vergleich braucht es mindestens zwei Marker mit Werten in den letzten 7 Tagen und den 4 Wochen davor (RPE, HRV, Griffkraft, Schlaf)."
+    );
+  const summary = `${hits.length} von ${evaluated} Markern auff\xE4llig${hits.length ? `: ${hits.join(", ")}` : ""}.`;
+  if (hits.length >= FATIGUE.markers)
+    return {
+      ...base,
+      status: "act",
+      summary,
+      advice: "Mehrere Marker zeigen in dieselbe Richtung. Plane eine Entlastungswoche: 5\u20137 Tage mit halbiertem Volumen und 2\u20133 Wiederholungen mehr Reserve je Satz, gleiche \xDCbungen und H\xE4ufigkeit. Danach normal weiter.",
+      rows: rows2
+    };
+  if (hits.length === 1)
+    return {
+      ...base,
+      status: "info",
+      summary,
+      advice: "Ein einzelner Marker reicht nicht f\xFCr eine Entlastungswoche \u2013 beobachte ihn in den n\xE4chsten Tagen.",
+      rows: rows2
+    };
+  return { ...base, status: "ok", summary, advice: "Kein Zeichen f\xFCr angestaute Erm\xFCdung.", rows: rows2 };
+}
+var CARDIO_EFF = { days: 56, minSessions: 3, minSeconds: 600, changePct: 3 };
+function cardioEfficiency(inp) {
+  const base = {
+    id: "V13",
+    area: "training",
+    title: "Cardio-Effizienz",
+    method: "Leistung je Herzschlag (Watt \xF7 \xD8 Puls) je Einheit und Ger\xE4t, nach Dauer gewichtet; nur Bl\xF6cke ab 10 Minuten mit Leistung und Puls. Letzte 8 Wochen, je Ger\xE4t mindestens 3 Einheiten; verglichen werden die erste und die letzte Einheit. Steigt der Wert, leistest du bei gleichem Puls mehr. Tagesform, Temperatur und Koffein verschieben den Puls \u2013 erst mehrere Einheiten zeigen den Trend.",
+    sources: []
+  };
+  const t = inp.today;
+  const from = shiftDays(t, -(CARDIO_EFF.days - 1));
+  const by = /* @__PURE__ */ new Map();
+  for (const s of inp.setLog) {
+    if (s.date < from || s.date > t || s.exerciseCategory !== "cardio") continue;
+    const sec2 = s.durationSeconds ?? 0;
+    if (sec2 < CARDIO_EFF.minSeconds || !s.powerW || !s.hrAvg) continue;
+    const ex = by.get(s.exerciseName) ?? /* @__PURE__ */ new Map();
+    const cur = ex.get(s.workoutId) ?? { date: s.date, watt: 0, beats: 0, s: 0 };
+    cur.watt += s.powerW * sec2;
+    cur.beats += s.hrAvg * sec2;
+    cur.s += sec2;
+    ex.set(s.workoutId, cur);
+    by.set(s.exerciseName, ex);
+  }
+  const rows2 = [];
+  const texts2 = [];
+  let best = null;
+  for (const [name, m] of by) {
+    const sessions2 = [...m.values()].map((x) => ({ date: x.date, eff: x.watt / x.beats, watt: x.watt / x.s, hr: x.beats / x.s })).sort((a, b) => a.date.localeCompare(b.date));
+    if (sessions2.length < CARDIO_EFF.minSessions) continue;
+    const first = sessions2[0];
+    const last = sessions2[sessions2.length - 1];
+    if (!first || !last) continue;
+    const change2 = (last.eff - first.eff) / first.eff * 100;
+    if (best === null || Math.abs(change2) > Math.abs(best)) best = change2;
+    rows2.push({
+      label: name,
+      value: `${F5(first.eff, 2)} \u2192 ${F5(last.eff, 2)} W je Schlag`,
+      note: `${formatSigned(change2, 1)} % in ${sessions2.length} Einheiten \xB7 zuletzt ${F5(last.watt)} W bei ${F5(last.hr)} bpm (${formatDate(last.date)})`
+    });
+    texts2.push(`${name} ${formatSigned(change2, 1)} %`);
+  }
+  if (!rows2.length)
+    return noData(
+      base,
+      "Es braucht mindestens 3 Cardio-Einheiten an einem Ger\xE4t mit Leistung (Watt) und \xD8 Puls in den letzten 8 Wochen."
+    );
+  const summary = `Leistung je Herzschlag: ${texts2.join(", ")}.`;
+  const up = best !== null && best >= CARDIO_EFF.changePct;
+  const down = best !== null && best <= -CARDIO_EFF.changePct;
+  return {
+    ...base,
+    status: down ? "info" : "ok",
+    summary,
+    advice: up ? "Du leistest bei gleichem Puls mehr \u2013 deine Ausdauer verbessert sich." : down ? "Du leistest bei gleichem Puls weniger. Einzelne Tage erkl\xE4ren das oft (Schlaf, Hitze, Defizit); h\xE4lt es \xFCber mehrere Einheiten an, Umfang und Erholung pr\xFCfen." : "Die Leistung je Herzschlag ist stabil.",
+    rows: rows2
+  };
+}
+var TIMING = {
+  days: 56,
+  minSessions: 3,
+  /** Vorlauf vor dem Start in Minuten */
+  leadMin: 180,
+  carbsG: 30,
+  caffeineMg: 50,
+  /** Ab diesem Unterschied (Prozentpunkte) wird ein Zeitfenster genannt */
+  diffPct: 2
+};
+var TIME_SLOTS = [
+  { label: "vor 10 Uhr", from: 0, to: 600 },
+  { label: "10\u201315 Uhr", from: 600, to: 900 },
+  { label: "15\u201319 Uhr", from: 900, to: 1140 },
+  { label: "ab 19 Uhr", from: 1140, to: 1440 }
+];
+function sessionPerformance(inp, from) {
+  const start = new Map(
+    inp.workouts.flatMap((w) => {
+      const min = minutesOf5(w.startTime);
+      return w.status === "done" && min !== null ? [[w.id, min]] : [];
+    })
+  );
+  const perWorkout = /* @__PURE__ */ new Map();
+  for (const e of sessionsByExercise(inp.setLog, shiftDays(from, -56), inp.today).values()) {
+    e.sessions.forEach((s, i) => {
+      if (i < 2 || s.date < from) return;
+      const prev = e.sessions.slice(Math.max(0, i - 3), i);
+      const ref = avg(prev.map((p) => p.value));
+      if (!ref) return;
+      const w = perWorkout.get(s.workoutId) ?? { date: s.date, ratios: [] };
+      w.ratios.push((s.value / ref - 1) * 100);
+      perWorkout.set(s.workoutId, w);
+    });
+  }
+  return [...perWorkout].flatMap(([workoutId, w]) => {
+    const startMin = start.get(workoutId);
+    const pct2 = avg(w.ratios);
+    return startMin === void 0 || pct2 === null ? [] : [{ workoutId, date: w.date, startMin, pct: pct2 }];
+  });
+}
+function trainingTiming(inp) {
+  const base = {
+    id: "V14",
+    area: "training",
+    title: "Trainingszeit und Vorlauf",
+    method: "Leistung einer Krafteinheit = bester gesch\xE4tzter 1RM je \xDCbung gegen den Schnitt der bis zu 3 Einheiten davor, gemittelt \xFCber die \xDCbungen der Einheit (nur \xDCbungen mit mindestens 2 Einheiten davor). Letzte 8 Wochen, Einheiten mit Startzeit. Verglichen werden die Startzeit (vor 10, 10\u201315, 15\u201319, ab 19 Uhr) sowie Kohlenhydrate (ab 30 g) und Koffein (ab 50 mg) in den 3 Stunden vor dem Start \u2013 jeweils ab 3 Einheiten je Gruppe. Beobachtung, keine Ursache: Wochentag, Schlaf und Trainingstag wirken mit.",
+    sources: [CONN_SOURCES.autoregulation]
+  };
+  const t = inp.today;
+  const sessions2 = sessionPerformance(inp, shiftDays(t, -(TIMING.days - 1)));
+  if (sessions2.length < TIMING.minSessions * 2)
+    return noData(
+      base,
+      `Es braucht mindestens ${TIMING.minSessions * 2} Krafteinheiten mit Startzeit und Vorgeschichte in den letzten 8 Wochen (bisher ${sessions2.length}).`
+    );
+  const rows2 = [];
+  const group = (label, list2) => {
+    const m = list2.length >= TIMING.minSessions ? avg(list2.map((s) => s.pct)) : null;
+    rows2.push({
+      label,
+      value: m === null ? "zu wenige Einheiten" : `${formatSigned(m, 1)} %`,
+      note: `${list2.length} Einheiten`
+    });
+    return m;
+  };
+  const slots = TIME_SLOTS.map((s) => ({
+    ...s,
+    mean: group(
+      `Start ${s.label}`,
+      sessions2.filter((x) => x.startMin >= s.from && x.startMin < s.to)
+    )
+  })).filter((s) => s.mean !== null);
+  const intake = new Map(inp.intake.map((d) => [d.date, d]));
+  const withCarbs = [];
+  const withoutCarbs = [];
+  for (const s of sessions2) {
+    const day = intake.get(s.date);
+    if (!day || !day.meals.length) continue;
+    const carbs = day.meals.filter((m) => m.min <= s.startMin && m.min >= s.startMin - TIMING.leadMin).reduce((a, m) => a + m.carbsG, 0);
+    (carbs >= TIMING.carbsG ? withCarbs : withoutCarbs).push(s);
+  }
+  const cWith = group(`Kohlenhydrate ab ${TIMING.carbsG} g in den 3 h davor`, withCarbs);
+  const cWithout = group("weniger Kohlenhydrate davor", withoutCarbs);
+  let kWith = null;
+  let kWithout = null;
+  if (inp.caffeine) {
+    const a = [];
+    const b = [];
+    for (const s of sessions2) {
+      const mg = inp.caffeine.filter(
+        (c) => c.date === s.date && c.min <= s.startMin && c.min >= s.startMin - TIMING.leadMin
+      ).reduce((x, c) => x + c.mg, 0);
+      (mg >= TIMING.caffeineMg ? a : b).push(s);
+    }
+    kWith = group(`Koffein ab ${TIMING.caffeineMg} mg in den 3 h davor`, a);
+    kWithout = group("ohne Koffein davor", b);
+  }
+  const parts2 = [];
+  const sorted = [...slots].sort((a, b) => (b.mean ?? 0) - (a.mean ?? 0));
+  const top = sorted[0];
+  const low = sorted[sorted.length - 1];
+  if (top && low && top !== low && (top.mean ?? 0) - (low.mean ?? 0) >= TIMING.diffPct)
+    parts2.push(
+      `Start ${top.label}: ${formatSigned(top.mean ?? 0, 1)} %, Start ${low.label}: ${formatSigned(low.mean ?? 0, 1)} %`
+    );
+  if (cWith !== null && cWithout !== null && Math.abs(cWith - cWithout) >= TIMING.diffPct)
+    parts2.push(
+      `mit Kohlenhydraten davor ${formatSigned(cWith, 1)} %, ohne ${formatSigned(cWithout, 1)} %`
+    );
+  if (kWith !== null && kWithout !== null && Math.abs(kWith - kWithout) >= TIMING.diffPct)
+    parts2.push(
+      `mit Koffein davor ${formatSigned(kWith, 1)} %, ohne ${formatSigned(kWithout, 1)} %`
+    );
+  return {
+    ...base,
+    status: parts2.length ? "info" : "ok",
+    summary: parts2.length ? `Leistung gegen deinen Schnitt der Einheiten davor \u2013 ${parts2.join("; ")}.` : `Kein deutlicher Unterschied nach Startzeit oder Vorlauf (${sessions2.length} Einheiten).`,
+    advice: parts2.length ? "Lege schwere Einheiten, wenn m\xF6glich, in das st\xE4rkere Zeitfenster und halte den Vorlauf so, wie er bei dir besser l\xE4uft." : "Startzeit und Vorlauf machen bei dir bisher keinen deutlichen Unterschied.",
+    rows: rows2
+  };
+}
+var DOSE = {
+  weeks: 8,
+  /** Wochensätze (T01-033) */
+  minimum: 4,
+  efficient: 10,
+  high: 20,
+  /** Kraft gilt als gestiegen ab dieser Änderung in 8 Wochen */
+  progressPct: 2.5
+};
+var doseZone = (sets2) => sets2 < DOSE.minimum ? "unter der Mindestdosis" : sets2 <= DOSE.efficient ? "effizienter Bereich" : sets2 <= DOSE.high ? "mehr Wachstum, abnehmender Ertrag" : "\xFCber 20 \u2013 kaum Daten";
+function doseResponse(inp) {
+  const base = {
+    id: "V15",
+    area: "training",
+    title: "Dosis und Wirkung je Muskel",
+    method: "Arbeitss\xE4tze je Muskelgruppe und Woche, verteilt wie in der K\xF6rperkarte (Fokus der \xDCbung bzw. Maschine, sonst der Text \u201EMuskelgruppe\u201C; je Gruppe z\xE4hlt der am st\xE4rksten belastete Teil; Mittel der letzten 8 Kalenderwochen ab der ersten Woche mit Training) neben der Kraftentwicklung der \xDCbungen, deren Hauptmuskel in dieser Gruppe liegt (gesch\xE4tzter 1RM, erste gegen letzte Einheit in 8 Wochen, ab 3 Einheiten je \xDCbung). Bereiche aus dem Buch: rund 4 harte Wochens\xE4tze sind die Mindestdosis, 6\u201310 sehr effizient, 10\u201320 mehr Wachstum bei abnehmendem Ertrag, \xFCber 20 kaum Daten. Aussagekr\xE4ftig erst nach mehreren Wochen mit gleicher Verteilung.",
+    sources: [CONN_SOURCES.weeklySets, CONN_SOURCES.manySets]
+  };
+  const t = inp.today;
+  const logged = weeklyMuscleSets(inp.setLog, inp.exercises, t, DOSE.weeks);
+  const firstWeek = logged.weeks.findIndex((_, i) => logged.rows.some((r2) => (r2.sets[i] ?? 0) > 0));
+  const counted = firstWeek < 0 ? 0 : DOSE.weeks - firstWeek;
+  if (counted < 3)
+    return noData(base, `Es braucht mindestens 3 Wochen mit Krafttraining (bisher ${counted}).`);
+  const weeks = weeklyGroupSets(inp, DOSE.weeks);
+  const trends = strengthTrends(inp.setLog, t, DOSE.weeks);
+  const rows2 = [];
+  const raise = [];
+  const lower = [];
+  for (const r2 of weeks.rows) {
+    const perWeek = r2.sets.slice(firstWeek).reduce((a, b) => a + b, 0) / counted;
+    if (perWeek < 0.5) continue;
+    const changes = trends.filter((x) => weeks.mainGroup.get(x.exerciseId) === r2.id).map((x) => x.changePct);
+    const change2 = avg(changes);
+    rows2.push({
+      label: r2.label,
+      value: `${F5(perWeek, 1)} S\xE4tze je Woche`,
+      note: `${doseZone(perWeek)}${change2 === null ? " \xB7 Kraft: zu wenige Einheiten" : ` \xB7 Kraft ${formatSigned(change2, 1)} % (${changes.length} ${changes.length === 1 ? "\xDCbung" : "\xDCbungen"})`}`
+    });
+    if (change2 !== null && change2 < DOSE.progressPct) {
+      if (perWeek < DOSE.minimum) raise.push(r2.label);
+      else if (perWeek > DOSE.high) lower.push(r2.label);
+    }
+  }
+  if (!rows2.length)
+    return noData(
+      base,
+      "Die trainierten \xDCbungen sind keinem Muskel zugeordnet (Muskelgruppe oder Muskelfokus der \xDCbung bzw. Maschine fehlt)."
+    );
+  const summary = `Wochens\xE4tze und Kraftentwicklung der letzten ${counted} Wochen f\xFCr ${rows2.length} Muskelgruppen.`;
+  if (raise.length || lower.length)
+    return {
+      ...base,
+      status: "act",
+      summary,
+      advice: [
+        raise.length ? `Ohne Fortschritt bei weniger als ${DOSE.minimum} Wochens\xE4tzen: ${raise.join(", ")} \u2013 erh\xF6he auf 6\u201310 harte S\xE4tze je Woche.` : "",
+        lower.length ? `Ohne Fortschritt bei \xFCber ${DOSE.high} Wochens\xE4tzen: ${lower.join(", ")} \u2013 weniger S\xE4tze, daf\xFCr n\xE4her am Versagen.` : ""
+      ].filter(Boolean).join(" "),
+      rows: rows2
+    };
+  return {
+    ...base,
+    status: "ok",
+    summary,
+    advice: "Keine Muskelgruppe liegt ohne Fortschritt unter der Mindestdosis oder \xFCber 20 Wochens\xE4tzen.",
+    rows: rows2
+  };
+}
+var trainingFindings = (inp) => [
+  plateau(inp),
+  restEffect(inp),
+  fatigueMarkers(inp),
+  cardioEfficiency(inp),
+  trainingTiming(inp),
+  doseResponse(inp)
+];
+
+// src/domain/connections.ts
+var CONN_AREAS = ["diet", "training", "sleep", "health"];
+var CONN_DAYS = 105;
+var CONN_INTAKE_DAYS = 56;
+function findingsFor(area, inp) {
+  if (area === "diet") return dietFindings(inp);
+  if (area === "training") return trainingFindings(inp);
+  if (area === "sleep") return sleepFindings(inp);
+  return healthFindings(inp);
+}
+function allFindings(inp) {
+  return {
+    diet: dietFindings(inp),
+    training: trainingFindings(inp),
+    sleep: sleepFindings(inp),
+    health: healthFindings(inp)
+  };
+}
+var ORDER2 = { act: 0, info: 1, ok: 2, nodata: 3 };
+var sortFindings = (list2) => [...list2].sort((a, b) => ORDER2[a.status] - ORDER2[b.status]);
+
+// src/domain/connIntake.ts
+var connIntake_exports = {};
+__export(connIntake_exports, {
+  LAST_MEAL_MIN_KCAL: () => LAST_MEAL_MIN_KCAL,
+  LATE_WATER_FROM_MIN: () => LATE_WATER_FROM_MIN,
+  dayIntake: () => dayIntake
+});
+var LATE_WATER_FROM_MIN = 20 * 60;
+var LAST_MEAL_MIN_KCAL = 200;
+function dayIntake(date, meals, water) {
+  const eaten = meals.filter((m) => m.energyKcal > 0 || m.items.length > 0);
+  const drinks = [
+    ...(water?.glasses ?? []).map((g2) => ({ ml: g2.amountMl, min: minutesOf5(g2.time) })),
+    ...(water?.drinks ?? []).map((d) => ({ ml: d.amountMl, min: minutesOf5(d.time) }))
+  ];
+  if (!eaten.length && !drinks.length) return null;
+  let saltG = null;
+  let massG = 0;
+  for (const m of eaten)
+    for (const i of m.items) {
+      massG += i.amount;
+      if (i.saltG !== null && i.saltG !== void 0) saltG = (saltG ?? 0) + i.saltG;
+    }
+  const timed = eaten.map((m) => ({ min: minutesOf5(m.time), energyKcal: m.energyKcal, carbsG: m.carbsG })).filter((m) => m.min !== null).sort((a, b) => a.min - b.min);
+  const last = [...timed].reverse().find((m) => m.energyKcal >= LAST_MEAL_MIN_KCAL) ?? null;
+  const sum = (f) => eaten.reduce((a, m) => a + f(m), 0);
+  return {
+    date,
+    energyKcal: sum((m) => m.energyKcal),
+    proteinG: sum((m) => m.proteinG),
+    carbsG: sum((m) => m.carbsG),
+    fatG: sum((m) => m.fatG),
+    saltG,
+    massG,
+    lastMealMin: last?.min ?? null,
+    lastMealKcal: last?.energyKcal ?? null,
+    meals: timed,
+    waterMl: drinks.reduce((a, d) => a + d.ml, 0),
+    waterLateMl: drinks.filter((d) => d.min !== null && d.min >= LATE_WATER_FROM_MIN).reduce((a, d) => a + d.ml, 0),
+    waterTimed: drinks.some((d) => d.min !== null)
+  };
+}
+
+// src/domain/connFit.ts
+var connFit_exports = {};
+__export(connFit_exports, {
+  FIT: () => FIT,
+  fitCandidates: () => fitCandidates,
+  fitSuggestions: () => fitSuggestions,
+  portionText: () => portionText,
+  restOfDay: () => restOfDay
+});
+var FIT = {
+  factors: [0.5, 0.75, 1, 1.25, 1.5, 2],
+  minKcal: 100,
+  /** Rest, ab dem Vorschläge gezeigt werden */
+  minRestKcal: 150,
+  overShare: 0.1,
+  limit: 4
+};
+function restOfDay(goal, eaten) {
+  const rest = (g2, e) => g2 === null ? null : g2 - e;
+  return {
+    energyKcal: rest(goal.energyKcal, eaten.energyKcal),
+    proteinG: rest(goal.proteinG, eaten.proteinG),
+    carbsG: rest(goal.carbsG, eaten.carbsG),
+    fatG: rest(goal.fatG, eaten.fatG)
+  };
+}
+var sumItems = (items, foods) => {
+  let n3 = ZERO;
+  for (const i of items) {
+    const f = foods.get(i.foodId);
+    if (!f || f.archived) return null;
+    n3 = addNutrients(n3, nutrientsFor(f, i.amount));
+  }
+  return n3;
+};
+function fitCandidates(history, today, foods, mealKeys) {
+  const out = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const m of mealKeys) {
+    for (const s of mealSuggestions(history, m.key, today, { limit: 3 })) {
+      const sig = s.items.map((i) => i.foodId).sort().join("|");
+      const nutrients = sumItems(s.items, foods);
+      if (seen.has(sig) || !nutrients || nutrients.energyKcal <= 0) continue;
+      seen.add(sig);
+      const names = s.items.map((i) => foods.get(i.foodId)?.name ?? "").filter(Boolean);
+      out.push({
+        id: `m:${sig}`,
+        label: `${m.title}: ${names.slice(0, 3).join(", ")}${names.length > 3 ? ` +${names.length - 3}` : ""}`,
+        kind: "meal",
+        mealKey: m.key,
+        items: s.items,
+        nutrients
+      });
+    }
+  }
+  for (const f of favoriteFoods(history, today, { limit: 12 })) {
+    const food = foods.get(f.foodId);
+    if (!food || food.archived || seen.has(f.foodId)) continue;
+    const items = [{ foodId: f.foodId, amount: f.amount }];
+    const nutrients = sumItems(items, foods);
+    if (!nutrients || nutrients.energyKcal <= 0) continue;
+    seen.add(f.foodId);
+    out.push({ id: `f:${f.foodId}`, label: food.name, kind: "food", items, nutrients });
+  }
+  return out;
+}
+var KCAL = { protein: 4, carbs: 4, fat: 9 };
+function scoreOf(rest, n3) {
+  const restKcal = rest.energyKcal ?? 0;
+  const over = Math.max(0, n3.energyKcal - restKcal);
+  const under = Math.max(0, restKcal - n3.energyKcal);
+  let score = over * 3 + under;
+  if (rest.proteinG !== null) {
+    const miss = Math.max(0, rest.proteinG - n3.proteinG);
+    score += miss * KCAL.protein * 2 + Math.max(0, n3.proteinG - rest.proteinG) * KCAL.protein * 0.25;
+  }
+  if (rest.carbsG !== null) score += Math.abs(rest.carbsG - n3.carbsG) * KCAL.carbs * 0.5;
+  if (rest.fatG !== null) score += Math.abs(rest.fatG - n3.fatG) * KCAL.fat * 0.5;
+  return score;
+}
+function fitSuggestions(rest, candidates, limit = FIT.limit) {
+  const restKcal = rest.energyKcal;
+  if (restKcal === null || restKcal < FIT.minRestKcal) return [];
+  const out = [];
+  for (const c of candidates) {
+    let best = null;
+    for (const factor of FIT.factors) {
+      const n3 = scaleNutrients(c.nutrients, factor);
+      if (n3.energyKcal < FIT.minKcal || n3.energyKcal > restKcal * (1 + FIT.overShare)) continue;
+      const score = scoreOf(rest, n3);
+      if (best && best.score <= score) continue;
+      best = {
+        candidate: c,
+        factor,
+        items: c.items.map((i) => ({
+          foodId: i.foodId,
+          amount: Math.max(1, Math.round(i.amount * factor / 5) * 5)
+        })),
+        nutrients: n3,
+        after: {
+          energyKcal: restKcal - n3.energyKcal,
+          proteinG: (rest.proteinG ?? 0) - n3.proteinG,
+          carbsG: (rest.carbsG ?? 0) - n3.carbsG,
+          fatG: (rest.fatG ?? 0) - n3.fatG
+        },
+        score
+      };
+    }
+    if (best) out.push(best);
+  }
+  return out.sort((a, b) => a.score - b.score).slice(0, limit);
+}
+function portionText(factor) {
+  if (factor === 0.5) return "\xBD Portion";
+  if (factor === 1) return "1 Portion";
+  return `${String(factor).replace(".", ",")} Portionen`;
+}
+
+// src/domain/dayVerdict.ts
+var dayVerdict_exports = {};
+__export(dayVerdict_exports, {
+  VERDICT_ACTIONS: () => VERDICT_ACTIONS,
+  VERDICT_LITERATURE: () => VERDICT_LITERATURE,
+  VERDICT_METHOD: () => VERDICT_METHOD,
+  VERDICT_ONGOING_IDS: () => VERDICT_ONGOING_IDS,
+  VERDICT_SOURCES: () => VERDICT_SOURCES,
+  dayVerdict: () => dayVerdict,
+  verdictShort: () => verdictShort
+});
+var VERDICT_ONGOING_IDS = [
+  "sleep_hours",
+  "wake_time",
+  "sleep_latency",
+  "sleep_awake",
+  "hrv"
+];
+var VERDICT_ACTIONS = {
+  high: "Heute kannst du wie geplant und hart trainieren.",
+  normal: "Trainiere wie geplant und richte die Last im Aufw\xE4rmen nach deinem Gef\xFChl (Wiederholungen in Reserve).",
+  low: "Heute leichter trainieren \u2013 Gewicht um 20 % senken oder das Volumen halbieren \u2013 oder einen Ruhetag einplanen."
+};
+var VERDICT_SOURCES = [
+  CONN_SOURCES.hrvOwn,
+  CONN_SOURCES.sleepHours,
+  CONN_SOURCES.autoregulation,
+  CONN_SOURCES.deload
+];
+var VERDICT_LITERATURE = "HRV-gef\xFChrtes Training: D\xFCking et al. 2021 (J Sci Med Sport 24:1180\u20131192), Manresa-Rocamora et al. 2021 (Int J Environ Res Public Health 18:10299)";
+var VERDICT_METHOD = "Grundlage ist der Erholungswert aus Recovery (HRV 35 %, Ruhepuls 20 %, Schlaf 25 %, Selbsteinsch\xE4tzung 20 %; HRV und Ruhepuls gegen deinen Normalbereich der 28 Tage davor): ab 70 \u201EGut erholt\u201C, 50\u201369 \u201EIm \xFCblichen Bereich\u201C, darunter \u201EWeniger erholt als \xFCblich\u201C. Bremsen senken die Stufe: HRV heute mehr als 20 % unter dem Mittel der 7 Vortage (dann immer \u201EWeniger erholt\u201C), Belastung der letzten 3 Tage \xFCber 160 % deines Schnitts oder Griffkraft mehr als 10 % unter deinem Schnitt (je eine Stufe). Ohne Erholungswert gilt die Einsch\xE4tzung aus den vorhandenen Bereichen. Dauerthemen kommen aus den Regeln zu deinen Hauptzielen (Mittel der letzten 14 Tage). Overview, Recovery und Insights zeigen dieselbe Aussage.";
+var DOWN = { high: "normal", normal: "low", low: "low" };
+var FROM_LEVEL = { good: "high", caution: "normal", low: "low" };
+function dayVerdict(inp) {
+  const r2 = inp.readiness;
+  const score = inp.day?.score ?? null;
+  const brakes = [];
+  let band = score !== null ? scoreBand(score) : r2.level ? FROM_LEVEL[r2.level] : null;
+  if (band !== null) {
+    for (const f of r2.factors) {
+      if ((f.key === "load" || f.key === "grip") && f.level === "low") {
+        band = DOWN[band];
+        brakes.push(`${f.label}: ${f.text}`);
+      }
+    }
+    if (inp.hrvRule) {
+      band = "low";
+      brakes.push(
+        `HRV ${formatNumber(inp.hrvRule.value, 0)} ms \u2013 ${formatNumber(Math.abs(inp.hrvRule.change) * 100, 0)} % unter dem Mittel der 7 Vortage (${formatNumber(inp.hrvRule.baseline, 0)} ms)`
+      );
+    }
+  }
+  const ongoing = (inp.advice ?? []).filter((a) => a.status === "act" && VERDICT_ONGOING_IDS.includes(a.id)).map((a) => ({ id: a.id, title: a.title, basis: a.basis }));
+  const label = band ? BAND_LABELS[band] : "Noch keine Tagesaussage";
+  const scoreText = score !== null ? ` Erholungswert ${score} von 100.` : "";
+  const headline = band ? `${label}.${scoreText}${brakes.length ? ` Gebremst durch: ${brakes.join("; ")}.` : ""}` : "F\xFCr eine Tagesaussage fehlen noch Werte (mindestens zwei Bereiche aus HRV, Ruhepuls, Schlaf und Selbsteinsch\xE4tzung).";
+  return {
+    date: inp.date,
+    score,
+    band,
+    label,
+    headline,
+    action: band ? VERDICT_ACTIONS[band] : null,
+    factors: r2.factors,
+    brakes,
+    missing: r2.missing,
+    ongoing,
+    sources: VERDICT_SOURCES
+  };
+}
+function verdictShort(v) {
+  if (!v.band) return v.label;
+  return v.score !== null ? `${v.label} (${v.score} von 100)` : v.label;
+}
+
+// src/domain/chestStrap.ts
+var chestStrap_exports = {};
+__export(chestStrap_exports, {
+  STRAP: () => STRAP,
+  STRAP_HOWTO: () => STRAP_HOWTO,
+  STRAP_LITERATURE: () => STRAP_LITERATURE,
+  STRAP_METHOD: () => STRAP_METHOD,
+  STRAP_METHOD_TEXT: () => STRAP_METHOD_TEXT,
+  STRAP_SOURCES: () => STRAP_SOURCES,
+  parseHeartRate: () => parseHeartRate,
+  strapBeats: () => strapBeats,
+  strapLive: () => strapLive,
+  strapProgress: () => strapProgress,
+  strapResult: () => strapResult,
+  validBeats: () => validBeats
+});
+var STRAP_METHOD = "Brustgurt";
+var STRAP = {
+  /** Einpendeln vor dem Messfenster (Sekunden) */
+  settleSec: 60,
+  /** Messfenster (Sekunden) */
+  measureSec: 120,
+  /** Glaubhafter Bereich eines Herzschlag-Abstands (30–200 Schläge je Minute) */
+  rrMinMs: 300,
+  rrMaxMs: 2e3,
+  /** Abstand zum Median der Nachbarn, ab dem ein Schlag als Störung gilt (Anteil) */
+  artifactShare: 0.2,
+  /** Nachbarn je Seite für den Median */
+  neighbours: 5,
+  /** Lücke zwischen zwei Datenpaketen, ab der ein Paket als verloren gilt (ms über der erwarteten Zeit) */
+  lossMs: 1500,
+  /** Mindestzahl gültiger Schläge und Schlag-Paare für ein Ergebnis */
+  minBeats: 60,
+  minPairs: 50,
+  /** Anteil gestörter Schläge: darüber „eingeschränkt“ bzw. „nicht verwertbar“ */
+  warnShare: 0.05,
+  failShare: 0.15
+};
+function parseHeartRate(bytes) {
+  const flags = bytes[0];
+  if (flags === void 0) return null;
+  const at = (i) => bytes[i] ?? Number.NaN;
+  let pos = 1;
+  let bpm;
+  if (flags & 1) {
+    bpm = at(pos) + at(pos + 1) * 256;
+    pos += 2;
+  } else {
+    bpm = at(pos);
+    pos += 1;
+  }
+  if (Number.isNaN(bpm)) return null;
+  const contact = flags & 4 ? (flags & 2) !== 0 : null;
+  if (flags & 8) pos += 2;
+  const rr = [];
+  if (flags & 16) {
+    for (; pos + 1 < bytes.length; pos += 2) {
+      rr.push((at(pos) + at(pos + 1) * 256) * 1e3 / 1024);
+    }
+  }
+  return { bpm, contact, rr };
+}
+function strapBeats(packets) {
+  const out = [];
+  let lastT = null;
+  let broken = false;
+  for (const p of packets) {
+    const h = parseHeartRate(p.bytes);
+    if (!h) continue;
+    if (h.contact === false) {
+      broken = true;
+      lastT = p.tMs;
+      continue;
+    }
+    if (h.rr.length === 0) continue;
+    const expected = h.rr.reduce((a, b) => a + b, 0);
+    const lost = lastT !== null && p.tMs - lastT - expected > STRAP.lossMs;
+    h.rr.forEach((rr, i) => {
+      out.push({ tMs: p.tMs, rr, gap: i === 0 && (lost || broken) });
+    });
+    broken = false;
+    lastT = p.tMs;
+  }
+  return out;
+}
+var median4 = (values) => {
+  const s = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 === 1 ? s[mid] ?? 0 : ((s[mid - 1] ?? 0) + (s[mid] ?? 0)) / 2;
+};
+function validBeats(beats) {
+  const inRange9 = beats.map((b) => b.rr >= STRAP.rrMinMs && b.rr <= STRAP.rrMaxMs);
+  return beats.map((b, i) => {
+    if (!inRange9[i]) return false;
+    const around = [];
+    for (let k = i - 1; k >= 0 && around.length < STRAP.neighbours; k--) {
+      const n3 = beats[k];
+      if (n3 && inRange9[k]) around.push(n3.rr);
+    }
+    const before = around.length;
+    for (let k = i + 1; k < beats.length && around.length - before < STRAP.neighbours; k++) {
+      const n3 = beats[k];
+      if (n3 && inRange9[k]) around.push(n3.rr);
+    }
+    if (around.length < 2) return true;
+    const m = median4(around);
+    return Math.abs(b.rr - m) <= STRAP.artifactShare * m;
+  });
+}
+var round6 = (v, digits) => {
+  const f = 10 ** digits;
+  return Math.round(v * f) / f;
+};
+function strapResult(packets, fromMs = STRAP.settleSec * 1e3, toMs = (STRAP.settleSec + STRAP.measureSec) * 1e3) {
+  const all = strapBeats(packets);
+  const ok = validBeats(all);
+  const idx = all.map((b, i) => b.tMs >= fromMs && b.tMs <= toMs ? i : -1).filter((i) => i >= 0);
+  const beats = idx.length;
+  const validIdx = idx.filter((i) => ok[i]);
+  const valid2 = validIdx.length;
+  let sum = 0;
+  let pairs = 0;
+  for (const i of validIdx) {
+    const prev = all[i - 1];
+    const cur = all[i];
+    if (!prev || !cur || !ok[i - 1] || cur.gap || prev.tMs < fromMs) continue;
+    sum += (cur.rr - prev.rr) ** 2;
+    pairs++;
+  }
+  const hasRr = all.length > 0;
+  const artifactShare = beats > 0 ? (beats - valid2) / beats : null;
+  const base = { beats, valid: valid2, pairs, artifactShare, hasRr };
+  const empty2 = { rmssdMs: null, lnRmssd: null, meanRrMs: null, restingHr: null };
+  if (!hasRr) {
+    return {
+      ...base,
+      ...empty2,
+      quality: "none",
+      text: "Der Gurt hat keine Herzschlag-Abst\xE4nde gesendet. F\xFCr die HRV braucht es einen Brustgurt, der sie \xFCbertr\xE4gt (z. B. Polar H9/H10, Garmin HRM, Wahoo Tickr)."
+    };
+  }
+  if (valid2 < STRAP.minBeats || pairs < STRAP.minPairs) {
+    return {
+      ...base,
+      ...empty2,
+      quality: "none",
+      text: `Zu wenige g\xFCltige Herzschl\xE4ge im Messfenster (${valid2}, n\xF6tig sind ${STRAP.minBeats}). Gurt anfeuchten, enger stellen und die Messung wiederholen.`
+    };
+  }
+  const meanRr = validIdx.reduce((a, i) => a + (all[i]?.rr ?? 0), 0) / valid2;
+  const rmssd = Math.sqrt(sum / pairs);
+  const values = {
+    rmssdMs: round6(rmssd, 1),
+    lnRmssd: rmssd > 0 ? round6(Math.log(rmssd), 2) : null,
+    meanRrMs: Math.round(meanRr),
+    restingHr: Math.round(6e4 / meanRr)
+  };
+  const share2 = artifactShare ?? 0;
+  const pct2 = Math.round(share2 * 100);
+  if (share2 > STRAP.failShare) {
+    return {
+      ...base,
+      ...values,
+      quality: "poor",
+      text: `${pct2} % der Schl\xE4ge waren gest\xF6rt \u2013 das ist f\xFCr eine HRV zu viel. Bitte ruhig liegen, den Gurt anfeuchten und wiederholen.`
+    };
+  }
+  if (share2 > STRAP.warnShare) {
+    return {
+      ...base,
+      ...values,
+      quality: "limited",
+      text: `${pct2} % der Schl\xE4ge waren gest\xF6rt und wurden nicht gewertet. Der Wert ist brauchbar, aber weniger genau.`
+    };
+  }
+  return {
+    ...base,
+    ...values,
+    quality: "ok",
+    text: pct2 === 0 ? "Saubere Messung ohne gest\xF6rte Schl\xE4ge." : `Saubere Messung (${pct2} % gest\xF6rte Schl\xE4ge, nicht gewertet).`
+  };
+}
+function strapProgress(elapsedMs) {
+  const settle = STRAP.settleSec * 1e3;
+  const total = settle + STRAP.measureSec * 1e3;
+  const t = Math.max(0, elapsedMs);
+  const share2 = Math.min(1, t / total);
+  if (t < settle) {
+    return {
+      phase: "settle",
+      remainingSec: Math.ceil((settle - t) / 1e3),
+      share: share2,
+      label: "Einpendeln \u2013 ruhig liegen und normal atmen"
+    };
+  }
+  if (t < total) {
+    return {
+      phase: "measure",
+      remainingSec: Math.ceil((total - t) / 1e3),
+      share: share2,
+      label: "Messung l\xE4uft \u2013 nicht bewegen, nicht sprechen"
+    };
+  }
+  return { phase: "done", remainingSec: 0, share: 1, label: "Messung beendet" };
+}
+function strapLive(packets) {
+  let bpm = null;
+  let contact = null;
+  let beats = 0;
+  for (const p of packets) {
+    const h = parseHeartRate(p.bytes);
+    if (!h) continue;
+    bpm = h.bpm > 0 ? h.bpm : bpm;
+    contact = h.contact;
+    beats += h.rr.length;
+  }
+  return { bpm, contact, beats };
+}
+var STRAP_HOWTO = [
+  "Gurt anfeuchten und anlegen \u2013 er sendet erst mit Hautkontakt.",
+  "Jeden Morgen gleich messen: nach dem Aufstehen und dem Gang zur Toilette, in derselben Haltung (liegend oder immer sitzend).",
+  "Ruhig liegen, normal atmen, nicht sprechen."
+];
+var STRAP_METHOD_TEXT = `Die Messung dauert ${(STRAP.settleSec + STRAP.measureSec) / 60} Minuten: ${STRAP.settleSec} Sekunden Einpendeln, danach ${STRAP.measureSec} Sekunden Messfenster. Der Gurt sendet die Abst\xE4nde zwischen den Herzschl\xE4gen (RR). Gewertet werden Abst\xE4nde von ${STRAP.rrMinMs} bis ${STRAP.rrMaxMs} ms, die h\xF6chstens ${STRAP.artifactShare * 100} % vom Median ihrer Nachbarn abweichen. HRV = RMSSD: Wurzel aus dem Mittel der quadrierten Unterschiede direkt aufeinanderfolgender g\xFCltiger Schl\xE4ge. Ruhepuls = 60.000 \xF7 mittlerer Abstand. \xDCber ${STRAP.warnShare * 100} % gest\xF6rte Schl\xE4ge gilt die Messung als eingeschr\xE4nkt, \xFCber ${STRAP.failShare * 100} % wird sie nicht \xFCbernommen (Regel dieser App). Die Werte gelten nur f\xFCr diese Messart: Eine kurze Morgenmessung ist nicht mit Nachtwerten einer Uhr vergleichbar \u2013 wechsle die Messart nicht innerhalb einer Auswertung.`;
+var STRAP_SOURCES = [CONN_SOURCES.hrvOwn];
+var STRAP_LITERATURE = [
+  "Esco MR, Flatt AA. Ultra-short-term heart rate variability indexes at rest and post-exercise in athletes: evaluating the agreement with accepted recommendations. J Sports Sci Med 2014;13:535\u2013541 (lnRMSSD aus 60 Sekunden stimmt in Ruhe gut mit 5 Minuten \xFCberein; 30 und 10 Sekunden schlechter).",
+  "Nakamura FY et al. 2017 (PMID 28469745): lnRMSSD aus 1 Minute nach 1 Minute Einpendeln im Vergleich zur l\xE4ngeren Messung."
+];
 export {
   AKH_REFERENCES,
   ANS_INFO,
@@ -36796,8 +39711,12 @@ export {
   checkin_exports as checkin,
   checklistToPdf,
   checklistToXlsx,
+  chestStrap_exports as chestStrap,
   compactSearch,
   conditions_exports as conditions,
+  connFit_exports as connFit,
+  connIntake_exports as connIntake,
+  connections_exports as connections,
   countAfterClick,
   coverage,
   coverageSummary,
@@ -36812,6 +39731,7 @@ export {
   dayMacroGoalsForPoint,
   daySlots,
   dayStatus,
+  dayVerdict_exports as dayVerdict,
   defaultRepeatEnd,
   derivedComposition,
   describeAcwr,
@@ -36891,6 +39811,8 @@ export {
   hrtDueToday,
   hrtDuplicateHint,
   hrtSchedule_exports as hrtSchedule,
+  hrvRuleText,
+  hrvRuleToday,
   insights_exports as insights,
   insightsDaily_exports as insightsDaily,
   insightsLoad_exports as insightsLoad,
@@ -36980,6 +39902,7 @@ export {
   readXlsx,
   recordHistory_exports as recordHistory,
   recovery_exports as recovery,
+  recoveryCockpit_exports as recoveryCockpit,
   referenceGroup,
   repeatDates,
   report_exports as report,
@@ -37013,6 +39936,7 @@ export {
   supplementSleep_exports as supplementSleep,
   targetFor,
   targetGoals_exports as targetGoals,
+  todayStart_exports as todayStart,
   trainingCalc_exports as trainingCalc,
   trainingCoverage_exports as trainingCoverage,
   trainingGroupLabels_exports as trainingGroupLabels,

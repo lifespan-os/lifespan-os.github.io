@@ -20,6 +20,7 @@ import { dataQualityCard, goalAdviceCard } from "./extras.js";
 import { targetGoalsCard } from "./goalsparity.js";
 import { periodReviewCard } from "./reviewparity.js";
 import { reportCard } from "./pdfparity.js";
+import { connData, connectionsCard, verdictData, verdictLineHtml } from "./connections.js";
 
 let X = null; // { S, esc, header, rerender }
 
@@ -391,6 +392,9 @@ export function viewInsights() {
   cards.push({ id: "goal-advice", node: goalAdviceCard(db, card, t) });
   cards.push({ id: "normal-range", node: normalRangeCard(db, t) });
   cards.push({ id: "training-insights", node: trainingInsightsCard(db, t) });
+  // Verbindungen (1.185.0, wie PC 1.0.254): Diät und Körper, Training, Schlaf, Gesundheit
+  const conn = connData(db, t);
+  for (const area of D.connections.CONN_AREAS) cards.push({ id: `connections-${area}`, node: connectionsCard(card, area, conn, t) });
   cards.push({ id: "data-quality", node: dataQualityCard(db, card, t) });
   if (hasAny) {
     cards.push({
@@ -466,6 +470,7 @@ export function viewInsights() {
         ${week !== currentWeek ? `<button class="linkbtn" data-act="ins-week" data-arg="0">Diese Woche</button>` : ""}</div>
       <button class="btn sm" data-act="ins-week" data-arg="7" aria-label="Nächste Woche" ${week >= currentWeek ? "disabled" : ""}>›</button>
     </section>
+    ${verdictLineHtml(verdictData(db, t))}
     <div class="ov-grid">${arranged.map((c) => (c.empty && layout.emptyLast ? `<div class="overview-card--empty">${c.node}</div>` : c.node)).join("")}</div>
     ${hasAny ? "" : `<section class="card"><h3>Keine Daten in dieser und der Vorwoche</h3><p class="muted">Sobald du Schlaf, Regeneration, Training, Ernährung oder Körperwerte erfasst, entsteht hier ein Wochenrückblick. Es werden keine Werte geschätzt oder ergänzt.</p></section>`}
   </main>`;

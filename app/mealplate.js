@@ -344,20 +344,22 @@ function endSearch() {
 }
 
 // Antippen in der Suche lässt das Suchfeld (und die Tastatur) offen und markiert den Treffer kurz.
+// Unter Node (Tests) gibt es kein Dokument – dann werden keine Ereignisse angemeldet (1.185.0)
+const DOC = typeof document !== "undefined" ? document : null;
 const KEEP_FOCUS = "#quick-meal .plt-searchbar button, #quick-meal #food-results .item, #quick-meal #plt-favs .chip";
 for (const type of ["mousedown", "pointerdown"]) {
-  document.addEventListener(type, (ev) => {
+  DOC?.addEventListener(type, (ev) => {
     if (document.activeElement?.id === "food-q" && ev.target.closest?.(KEEP_FOCUS)) ev.preventDefault();
   });
 }
 // „Suchen“ auf der Tastatur: Tastatur zu, die Treffer bekommen den ganzen Bildschirm
-document.addEventListener("keydown", (ev) => {
+DOC?.addEventListener("keydown", (ev) => {
   if (ev.key === "Enter" && ev.target?.id === "food-q" && ev.target.closest("#quick-meal")) {
     ev.preventDefault();
     ev.target.blur();
   }
 });
-document.addEventListener(
+DOC?.addEventListener(
   "click",
   (ev) => {
     const hit = ev.target.closest?.("#quick-meal #food-results .item, #quick-meal #plt-favs .chip");

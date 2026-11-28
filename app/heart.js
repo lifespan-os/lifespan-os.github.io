@@ -356,7 +356,7 @@ export function heartTabHtml(catalog, state = {}) {
   const from = shift(t, -(days - 1));
   const w = wearableOf(catalog);
   if (w.heart.length + w.sleep.length + w.recovery.length === 0) {
-    return `<section class="card"><div class="empty-state"><p><strong>Noch keine Herzdaten</strong></p><p class="muted small">Verbinde deine Polar-Uhr am PC unter Import/Export → Polar und synchronisiere. Nach dem nächsten Export erscheinen hier Tagesverlauf, Ruhepuls, HRV und die Zeit in deinen Trainingszonen.</p></div></section>`;
+    return `<section class="card"><div class="empty-state"><p><strong>Noch keine Herzdaten</strong></p><p class="muted small">Herzfrequenz über den Tag, Nachtwerte und die Zeit in deinen Trainingszonen kommen von einer Uhr: am PC per Abgleich (Import/Export → Polar) oder als Datei (Import/Export → Geräte-Import, je nach Hersteller mit Verlauf über den Tag); nach dem nächsten Export erscheinen sie hier.</p><p class="muted small">Ohne Uhr geht es auch: Ruhepuls und HRV misst du morgens mit einem Brustgurt (Recovery → ANS-Werte erfassen) oder trägst sie von Hand ein. Sie fließen in die Tagesaussage ein.</p></div></section>`;
   }
   const inPeriod = (list) => list.filter((x) => x.date >= from && x.date <= t);
   const lastDay = [w.heart.at(-1)?.date, w.days.filter((d) => d.stepSamples).at(-1)?.date].filter(Boolean).sort().at(-1) ?? t;

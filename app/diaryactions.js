@@ -4,6 +4,7 @@ import * as D from "./pcdomain.js";
 import * as N from "./nutrition.js";
 import * as SP from "./supplements.js";
 import * as QM from "./quickmeal.js";
+import { fitPicked } from "./connections.js";
 import { backToNowIfFromTimeline, buildDb, itemsOf, nowTime, pad, quickAdd, today, X } from "./diary.js";
 import { buildDbCached, FAST_DAY, fastTargets, loadFast, persistSupp, readSuppForm, saveFastForm, suppHits } from "./diarysupp.js";
 
@@ -58,6 +59,14 @@ export const diaryActions = {
     const items = c ? QM.onlyKnown(c.items, foods) : [];
     if (!items.length) return X.toast("Nichts zum Übernehmen gefunden.", true);
     return quickAdd(key, items, `${c.label} (${items.length} Lebensmittel)`);
+  },
+  // „Was passt noch?“ (1.185.0): Vorschlag in die genannte Mahlzeit eintragen
+  "fit-add": (el) => {
+    const pick = fitPicked(Number(el.dataset.arg));
+    const foods = N.allFoods(X.S.catalog, X.S.food.local);
+    const items = pick ? QM.onlyKnown(pick.suggestion.items, foods) : [];
+    if (!pick || !items.length) return X.toast("Vorschlag nicht mehr vorhanden.", true);
+    return quickAdd(pick.slot.key, items, `${pick.suggestion.candidate.label} (${D.connFit.portionText(pick.suggestion.factor)})`);
   },
   "qm-suggest": (el) => {
     const [key, i] = el.dataset.arg.split("|");

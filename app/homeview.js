@@ -15,9 +15,9 @@ export function viewSetup() {
     <section class="card">
       <h3>So holst du deine Daten aufs Handy</h3>
       <ol class="steps small">
-        <li>Am PC in LIFESPAN OS unter <b>Settings</b> einen <b>Export</b> erstellen.</li>
-        <li>Die Datei <b>performance-os-export.json</b> in deinen <b>Google-Drive</b>-Ordner kopieren.</li>
-        <li>Hier auf <b>„Exportdatei laden“</b> tippen und die Datei in Google Drive auswählen.</li>
+        <li>Am PC in LIFESPAN OS <b>Import/Export</b> öffnen und auf <b>„Für die Handy-App exportieren“</b> klicken.</li>
+        <li>Die Datei <b>LIFESPAN-Handy-…json</b> liegt danach im Handy-Ordner (z. B. Google Drive oder iCloud); „Handy-Ordner öffnen“ zeigt ihn.</li>
+        <li>Hier auf <b>„Exportdatei laden“</b> tippen und die neueste Datei aus diesem Ordner auswählen.</li>
       </ol>
       ${fileButton("Exportdatei laden")}
     </section>

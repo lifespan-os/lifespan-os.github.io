@@ -712,10 +712,10 @@ export function findSet(weId, setId) {
 }
 
 /** Trainingstag (ID) aus einem Plan starten (wie „Tag starten“ am PC). */
-export function startPlanDay(dayId) {
+export function startPlanDay(dayId, light = false) {
   for (const p of S.catalog.plans) {
     const d = p.days.find((x) => x.row.id === dayId);
-    if (d) return startWorkout(d.row.name, d, p.row.gym_id ?? null);
+    if (d) return startWorkout(d.row.name, d, p.row.gym_id ?? null, light);
   }
   toast("Den Trainingstag gibt es nicht mehr.", true);
 }
@@ -750,7 +750,11 @@ export function pcWorkout(id) {
   return C.workoutFromPc(w, wex, db.setsByWex);
 }
 
-export async function startWorkout(title, planDay = null, planGymId = null) {
+/**
+ * `light` (HRV-Regel wie am PC, seit 1.185.0): Gewicht der Arbeitssätze × 0,8, auf 0,5 kg gerundet;
+ * Wiederholungen und Aufwärmsätze bleiben, der Titel bekommt „(leicht)“.
+ */
+export async function startWorkout(title, planDay = null, planGymId = null, light = false) {
   if (S.active) return go("workout");
   // Gym (1.65.0): das des Plans, sonst das aktive Gym
   const w = C.newWorkout({ title, planDayId: planDay?.row.id ?? null, gymId: planGymId || GY.activeGymIdNow() });
@@ -764,6 +768,12 @@ export async function startWorkout(title, planDay = null, planGymId = null) {
       applySuggestion(we, last, exs.get(pe.exerciseId));
       w.exercises.push(we);
     }
+  }
+  if (light) {
+    const factor = PDOM.workoutDraft.LIGHT_FACTOR;
+    for (const we of w.exercises)
+      for (const s of we.sets) if (!s.isWarmup && typeof s.weightKg === "number" && s.weightKg > 0) s.weightKg = Math.round(s.weightKg * factor * 2) / 2;
+    if (!w.title.endsWith(" (leicht)")) w.title = `${w.title} (leicht)`;
   }
   S.active = w;
   await saveNow();
